@@ -14,6 +14,7 @@ from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
     ORDER_STATE_COMPLETED,
+    ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
@@ -381,7 +382,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
     ):
         """
         When backend is notified that a payment failed, the generic method
-        _do_on_paymet_failure should be called
+        `_do_on_payment_failure` should be called
         """
         backend = DummyPaymentBackend()
 
@@ -414,7 +415,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
     ):
         """
         When backend is notified that a payment failed, the generic method
-        _do_on_paymet_failure should be called
+        `_do_on_payment_failure` should be called
         """
         backend = DummyPaymentBackend()
 
@@ -749,3 +750,43 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
         self.assertEqual(credit_card.token, f"card_{user.id}")
         self.assertEqual(credit_card.payment_provider, backend.name)
+
+    @mock.patch.object(Logger, "info")
+    @mock.patch.object(BasePaymentBackend, "_send_mail_refused_debit")
+    def test_payment_backend_dummy_handle_notification_payment_failed_should_send_mail_to_user(
+        self, mock_send_mail_refused_debit, mock_logger
+    ):
+        """
+        When backend is notified that a payment failed, the generic method
+        `_do_on_payment_failure` should be called and it should call also
+        the method that sends the email to the user.
+        """
+        backend = DummyPaymentBackend()
+
+        # Create a payment
+        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
+        first_installment = order.payment_schedule[0]
+        payment_id = backend.create_payment(
+            order, first_installment, order.main_invoice.recipient_address
+        )["payment_id"]
+
+        # Notify that payment failed
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"),
+            data={"id": payment_id, "type": "payment", "state": "failed"},
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+
+        backend.handle_notification(request)
+        order.refresh_from_db()
+
+        self.assertEqual(order.state, ORDER_STATE_NO_PAYMENT)
+
+        mock_send_mail_refused_debit.assert_called_once_with(
+            order, str(first_installment["id"])
+        )
+
+        mock_logger.assert_called_with(
+            "Mail is sent to %s from dummy payment", order.owner.email
+        )

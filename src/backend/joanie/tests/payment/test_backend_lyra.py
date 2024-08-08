@@ -1016,7 +1016,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
     ):
         """
         When backend receives a payment notification which failed, the generic
-        method `_do_on_failure` should be called.
+        method `_do_on_payment_failure` should be called.
         """
         backend = LyraBackend(self.configuration)
         order = OrderGeneratorFactory(
@@ -1534,3 +1534,184 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             ),
         ]
         self.assertLogsEquals(logger.records, expected_logs)
+
+    @patch.object(BasePaymentBackend, "_send_mail_refused_debit")
+    def test_payment_backend_lyra_handle_notification_payment_failure_sends_email(
+        self, mock_send_mail_refused_debit
+    ):
+        """
+        When backend receives a payment notification which failed, the generic
+        method `_do_on_payment_failure` should be called and it must also call
+        the method responsible to send the email to the user.
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+            email="john.doe@acme.org",
+        )
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner=user,
+            product__price=D("123.45"),
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        with self.open("lyra/requests/payment_refused.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        mock_send_mail_refused_debit.assert_called_once_with(
+            order, first_installment["id"]
+        )
+
+    def test_payment_backend_lyra_handle_notification_payment_failure_send_mail_in_user_language(
+        self,
+    ):
+        """
+        When backend receives a payment notification which failed, the generic
+        method `_do_on_payment_failure` should be called and the email must be sent
+        in the preferred language of the user.
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+            email="john.doe@acme.org",
+        )
+        product = ProductFactory(price=D("1000.00"), title="Product 1")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner=user,
+            product=product,
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        with self.open("lyra/requests/payment_refused.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], "john.doe@acme.org")
+        self.assertIn(
+            "An installment debit has failed",
+            mail.outbox[0].subject,
+        )
+        self.assertIn("Product 1", email_content)
+        self.assertIn("installment debit has failed", email_content)
+
+    def test_payment_backend_lyra_payment_failure_send_mail_in_user_language(
+        self,
+    ):
+        """
+        When backend receives a payment notification which failed, the generic
+        method `_do_on_payment_failure` should be called and the email must be sent
+        in the preferred language of the user.
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(
+            first_name="John",
+            last_name="Doe",
+            language="fr-fr",
+            email="john.doe@acme.org",
+        )
+        product = ProductFactory(price=D("1000.00"), title="Product 1")
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner=user,
+            product=product,
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        with self.open("lyra/requests/payment_refused.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], "john.doe@acme.org")
+        self.assertIn("Produit 1", email_content)
+
+    @override_settings(
+        LANGUAGES=(
+            ("en-us", ("English")),
+            ("fr-fr", ("French")),
+            ("de-de", ("German")),
+        )
+    )
+    def test_payment_backend_lyra_payment_failure_send_mail_use_fallback_language_translation(
+        self,
+    ):
+        """
+        When backend receives a payment notification which failed, the generic
+        method `_do_on_payment_failure` should be called and the email must be sent
+        in the fallback language if the translation does not exist.
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(
+            first_name="John",
+            last_name="Doe",
+            language="de-de",
+            email="john.doe@acme.org",
+        )
+        product = ProductFactory(price=D("1000.00"), title="Product 1")
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner=user,
+            product=product,
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        with self.open("lyra/requests/payment_refused.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], "john.doe@acme.org")
+        self.assertIn(
+            "An installment debit has failed",
+            mail.outbox[0].subject,
+        )
+        self.assertIn("Product 1", email_content)

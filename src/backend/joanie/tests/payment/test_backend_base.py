@@ -447,8 +447,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # - Payment has failed gracefully and changed order state to no payment
         self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
 
-        # - No email has been sent
-        self.assertEqual(len(mail.outbox), 0)
+        # - An email should be sent mentioning the payment failure
+        self.assertEqual(len(mail.outbox), 1)
 
         # - An event has been created
         self.assertPaymentFailedActivityLog(order)
@@ -530,8 +530,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
 
-        # - No email has been sent
-        self.assertEqual(len(mail.outbox), 0)
+        # - An email should be sent mentioning the payment failure
+        self.assertEqual(len(mail.outbox), 1)
 
         # - An event has been created
         self.assertPaymentFailedActivityLog(order)
@@ -1149,3 +1149,96 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # because there is no translation in german for the product title
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertIn("Product 1", email_content)
+
+    @override_settings(
+        LANGUAGES=(
+            ("en-us", ("English")),
+            ("fr-fr", ("French")),
+            ("de-de", ("German")),
+        )
+    )
+    def test_payment_backend_base_mail_sent_on_installment_payment_failure_in_french(
+        self,
+    ):
+        """
+        When an installment debit has been refused an email should be sent
+        with the information about the payment failure in the current language
+        of the user.
+        """
+        backend = TestBasePaymentBackend()
+        product = ProductFactory(title="Product 1", price=Decimal("149.00"))
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING,
+            product=product,
+            owner=UserFactory(
+                email="sam@fun-test.fr",
+                language="fr-fr",
+                first_name="John",
+                last_name="Doe",
+            ),
+            payment_schedule=[
+                {
+                    "id": "3d0efbff-6b09-4fb4-82ce-54b6bb57a809",
+                    "amount": "149.00",
+                    "due_date": "2024-08-07",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        backend.call_do_on_payment_failure(
+            order, installment_id="3d0efbff-6b09-4fb4-82ce-54b6bb57a809"
+        )
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.fr")
+        self.assertIn("Produit 1", email_content)
+
+    @override_settings(
+        LANGUAGES=(
+            ("en-us", ("English")),
+            ("fr-fr", ("French")),
+            ("de-de", ("German")),
+        )
+    )
+    def test_payment_backend_base_mail_sent_on_installment_payment_failure_use_fallback_language(
+        self,
+    ):
+        """
+        If the translation of the product title does not exists, it should use the fallback
+        language that is english.
+        """
+        backend = TestBasePaymentBackend()
+        product = ProductFactory(title="Product 1", price=Decimal("150.00"))
+        # Create on purpose another translation of the product title that is not the user language
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING,
+            product=product,
+            owner=UserFactory(
+                email="sam@fun-test.fr",
+                language="de-de",
+                first_name="John",
+                last_name="Doe",
+            ),
+            payment_schedule=[
+                {
+                    "id": "3d0efbff-6b09-4fb4-82ce-54b6bb57a809",
+                    "amount": "150.00",
+                    "due_date": "2024-08-07",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        backend.call_do_on_payment_failure(
+            order, installment_id="3d0efbff-6b09-4fb4-82ce-54b6bb57a809"
+        )
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
+        self.assertIn("Product 1", email_content)
+        self.assertIn("installment debit has failed", email_content)

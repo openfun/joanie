@@ -13,7 +13,11 @@ from django.utils.translation import override
 
 from stockholm import Money
 
-from joanie.core.enums import ORDER_STATE_COMPLETED, PAYMENT_STATE_PAID
+from joanie.core.enums import (
+    ORDER_STATE_COMPLETED,
+    PAYMENT_STATE_PAID,
+    PAYMENT_STATE_REFUSED,
+)
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -168,13 +172,65 @@ class BasePaymentBackend:
                 to_user_email=order.owner.email,
             )
 
-    @staticmethod
-    def _do_on_payment_failure(order, installment_id):
+    @classmethod
+    def _send_mail_refused_debit(cls, order, installment_id):
+        """
+        Prepare mail context when debit has been refused for an installment in the
+        the current language of the user.
+        """
+        with override(order.owner.language):
+            title = order.product.safe_translation_getter(
+                "title", language_code=order.owner.language
+            )
+            amount = Money(
+                next(
+                    installment["amount"]
+                    for installment in order.payment_schedule
+                    if installment["id"] == installment_id
+                ),
+                currency=settings.DEFAULT_CURRENCY,
+            )
+            position = order.get_position_of_last_installment(
+                state=PAYMENT_STATE_REFUSED
+            )
+            nth_installment = position + 1  # position index starts at 0
+            cls._send_mail(
+                subject=_(
+                    f"{settings.JOANIE_CATALOG_NAME} - {title} - An installment debit has failed "
+                    f"{amount} {settings.DEFAULT_CURRENCY}"
+                ),
+                template_vars={
+                    "email": order.owner.email,
+                    "fullname": order.owner.get_full_name() or order.owner.username,
+                    "course_title": title,
+                    "amount": amount,
+                    "total_price": Money(order.total),
+                    "credit_card_last_four_numbers": order.credit_card.last_numbers,
+                    "nth_installment": nth_installment,
+                    "installment_concerned_position": position,
+                    "payment_schedule": order.payment_schedule,
+                    "dashboard_order_link": (
+                        settings.JOANIE_DASHBOARD_ORDER_LINK.replace(
+                            ":orderId", str(order.id)
+                        )
+                    ),
+                    "site": {
+                        "name": settings.JOANIE_CATALOG_NAME,
+                        "url": settings.JOANIE_CATALOG_BASE_URL,
+                    },
+                },
+                template_name="installment_refused",
+                to_user_email=order.owner.email,
+            )
+
+    @classmethod
+    def _do_on_payment_failure(cls, order, installment_id):
         """
         Generic actions triggered when a failed payment has been received.
         Mark the invoice as pending.
         """
         order.set_installment_refused(installment_id)
+        cls._send_mail_refused_debit(order, installment_id)
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference):
