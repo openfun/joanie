@@ -252,7 +252,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 },
             ],
         )
-        factories.OrderFactory(
+        order_3 = factories.OrderFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
             payment_schedule=[
                 {
@@ -293,9 +293,10 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
             found_orders = Order.objects.find_today_installments()
 
-        self.assertEqual(len(found_orders), 2)
+        self.assertEqual(len(found_orders), 3)
         self.assertIn(order, found_orders)
         self.assertIn(order_2, found_orders)
+        self.assertIn(order_3, found_orders)
 
     def test_models_order_schedule_set_installment_state(self):
         """Check that the state of an installment can be set."""
