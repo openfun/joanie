@@ -50,7 +50,6 @@ const build = (state?: OrderStatesEnum): Order => {
       definition_title: "Fake definition",
       issued_on: faker.date.anytime().toString(),
     },
-    has_consent_to_terms: faker.datatype.boolean(),
     contract: {
       definition_title: "Fake contract definition",
       id: faker.string.uuid(),
