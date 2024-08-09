@@ -91,7 +91,6 @@ class DebugMailSuccessInstallmentPaid(TemplateView):
         Usage reminder :
             /__debug__/mail/installment_paid_html
         """
-        context = super().get_context_data()
         product = ProductFactory(price=Decimal("1000.00"))
         product.set_current_language("en-us")
         product.title = "Test product"
@@ -119,29 +118,26 @@ class DebugMailSuccessInstallmentPaid(TemplateView):
         current_language = translation.get_language()
         with translation.override(current_language):
             product.set_current_language(current_language)
-            context["order"] = order
-            context["course_title"] = product.title
-            context["payment_schedule"] = order.payment_schedule
-            context["amount"] = Money(order.payment_schedule[2]["amount"])
-            context["total_price"] = Money(order.product.price)
-            context["nth_installment_paid"] = order.get_count_installments_paid()
-            context["balance_remaining_to_be_paid"] = (
-                order.get_remaining_balance_to_pay()
+            return super().get_context_data(
+                order=order,
+                course_title=product.title,
+                payment_schedule=order.payment_schedule,
+                amount=Money(order.payment_schedule[2]["amount"]),
+                total_price=Money(order.product.price),
+                nth_installment_paid=order.get_count_installments_paid(),
+                balance_remaining_to_be_paid=order.get_remaining_balance_to_pay(),
+                next_installment_date=order.get_date_next_installment_to_pay(),
+                credit_card_last_four_numbers=order.credit_card.last_numbers,
+                installment_concerned_position=order.get_position_last_paid_installment(),
+                fullname=order.owner.get_full_name() or order.owner.username,
+                email=order.owner.email,
+                dashboard_order_link=settings.JOANIE_DASHBOARD_ORDER_LINK,
+                site={
+                    "name": settings.JOANIE_CATALOG_NAME,
+                    "url": settings.JOANIE_CATALOG_BASE_URL,
+                },
+                **kwargs,
             )
-            context["next_installment_date"] = order.get_date_next_installment_to_pay()
-            context["credit_card_last_four_numbers"] = order.credit_card.last_numbers
-            context["installment_concerned_position"] = (
-                order.get_position_last_paid_installment()
-            )
-            context["fullname"] = order.owner.get_full_name() or order.owner.username
-            context["email"] = order.owner.email
-            context["dashboard_order_link"] = settings.JOANIE_DASHBOARD_ORDER_LINK
-            context["site"] = {
-                "name": settings.JOANIE_CATALOG_NAME,
-                "url": settings.JOANIE_CATALOG_BASE_URL,
-            }
-
-        return context
 
 
 class DebugMailSuccessInstallmentPaidViewHtml(DebugMailSuccessInstallmentPaid):
