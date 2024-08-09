@@ -4,7 +4,7 @@ Test suite for order models
 
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest import mock
 
@@ -1259,3 +1259,62 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+
+    def test_models_order_get_date_next_installment_to_pay(self):
+        """
+        Should return the date of the next installment to pay for the user on his order's
+        payment schedule.
+        """
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING_PAYMENT)
+
+        second_date_found = order.get_date_next_installment_to_pay()
+
+        self.assertEqual(second_date_found, order.payment_schedule[1]["due_date"])
+        self.assertIsInstance(second_date_found, date)
+
+    def test_models_order_get_count_installments_paid(self):
+        """
+        Should return the number of installment that are already paid on the order's payment
+        schedule
+        """
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING_PAYMENT)
+        for payment in order.payment_schedule[:2]:
+            payment["state"] = enums.PAYMENT_STATE_PAID
+
+        count_installment_paid = order.get_count_installments_paid()
+
+        self.assertEqual(count_installment_paid, 2)
+
+    def test_models_order_get_remaining_balance_to_pay(self):
+        """
+        Should return the leftover amount still remaining to be paid on an order's
+        payment schedule
+        """
+        order = factories.OrderGeneratorFactory(
+            product=factories.ProductFactory(price=Decimal("1000.00")),
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+        )
+        order.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+
+        remains = order.get_remaining_balance_to_pay()
+
+        self.assertEqual(str(remains), str(order.payment_schedule[1]["amount"]))
+
+    def test_models_order_get_position_last_paid_installment(self):
+        """Should return the position of the last installment paid from the payment schedule."""
+        product = factories.ProductFactory(price=Decimal("1000.00"))
+        order_1 = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            product=product,
+        )
+        order_1.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+
+        self.assertEqual(0, order_1.get_position_last_paid_installment())
+
+        order_2 = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT, product=product
+        )
+        for payment in order_2.payment_schedule:
+            payment["state"] = enums.PAYMENT_STATE_PAID
+
+        self.assertEqual(1, order_2.get_position_last_paid_installment())

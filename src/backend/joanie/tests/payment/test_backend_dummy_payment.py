@@ -210,9 +210,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         order.refresh_from_db()
         self.assertEqual(order.state, ORDER_STATE_COMPLETED)
         # check email has been sent
-        self._check_order_validated_email_sent(
-            order.owner.email, order.owner.username, order
-        )
+        self._check_installment_paid_email_sent(order.owner.email, order)
 
         mock_logger.assert_called_with(
             "Mail is sent to %s from dummy payment", order.owner.email
@@ -291,9 +289,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
                 self.assertEqual(installment["state"], PAYMENT_STATE_PENDING)
 
         # check email has been sent
-        self._check_order_validated_email_sent(
-            order.owner.email, order.owner.username, order
-        )
+        self._check_installment_paid_email_sent(order.owner.email, order)
 
         mock_logger.assert_called_with(
             "Mail is sent to %s from dummy payment", order.owner.email

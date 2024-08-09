@@ -16,6 +16,7 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 from parler import models as parler_models
+from stockholm import Money
 from urllib3.util import Retry
 
 from joanie.core import enums
@@ -1216,6 +1217,41 @@ class Order(BaseModel):
             )
 
         self.flow.update()
+
+    def get_date_next_installment_to_pay(self):
+        """Get the next due date of installment to pay in the payment schedule."""
+        return next(
+            (
+                installment["due_date"]
+                for installment in self.payment_schedule
+                if installment["state"] == enums.PAYMENT_STATE_PENDING
+            ),
+            None,
+        )
+
+    def get_count_installments_paid(self):
+        """Get the number of installments paid already in the payment schedule."""
+        return sum(
+            installment["state"] == enums.PAYMENT_STATE_PAID
+            for installment in self.payment_schedule
+        )
+
+    def get_position_last_paid_installment(self):
+        """Get the position of the last installment paid in the payment schedule."""
+        last_paid_index = None
+        for index, entry in enumerate(self.payment_schedule, start=0):
+            if entry["state"] == enums.PAYMENT_STATE_PAID:
+                last_paid_index = index
+        return last_paid_index
+
+    def get_remaining_balance_to_pay(self):
+        """Get the amount of installments remaining to pay in the payment schedule."""
+        amounts = (
+            Money(installment["amount"])
+            for installment in self.payment_schedule
+            if installment["state"] == enums.PAYMENT_STATE_PENDING
+        )
+        return Money.sum(amounts)
 
 
 class OrderTargetCourseRelation(BaseModel):
