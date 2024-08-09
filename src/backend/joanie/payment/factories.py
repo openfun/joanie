@@ -18,6 +18,7 @@ class CreditCardFactory(factory.django.DjangoModelFactory):
         """Meta"""
 
         model = models.CreditCard
+        django_get_or_create = ("token",)
 
     brand = factory.Faker("credit_card_provider")
     expiration_month = factory.Faker("credit_card_expire", date_format="%m")
@@ -27,6 +28,7 @@ class CreditCardFactory(factory.django.DjangoModelFactory):
     title = factory.Faker("name")
     token = factory.Sequence(lambda k: f"card_{k:022d}")
     payment_provider = "dummy"
+    initial_issuer_transaction_identifier = factory.Faker("uuid4")
 
 
 class InvoiceFactory(factory.django.DjangoModelFactory):

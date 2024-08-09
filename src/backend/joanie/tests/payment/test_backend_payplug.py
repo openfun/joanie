@@ -12,7 +12,13 @@ from payplug.exceptions import BadRequest, Forbidden, UnknownAPIResource
 from rest_framework.test import APIRequestFactory
 
 from joanie.core import enums
-from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
+from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.core.factories import (
+    OrderFactory,
+    OrderGeneratorFactory,
+    ProductFactory,
+    UserFactory,
+)
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.payplug import PayplugBackend
 from joanie.payment.backends.payplug import factories as PayplugFactories
@@ -25,7 +31,6 @@ from joanie.payment.exceptions import (
 )
 from joanie.payment.factories import (
     BillingAddressDictFactory,
-    CreditCardFactory,
     TransactionFactory,
 )
 from joanie.payment.models import CreditCard
@@ -59,150 +64,29 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         self.assertEqual(str(context.exception), "'secret_key'")
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     def test_payment_backend_payplug_get_payment_data(self):
         """
         Payplug backend has `_get_payment_data` method which should
         return the common payload to create a payment or a one click payment.
         """
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
+        order = OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
         # pylint: disable=protected-access
-        payload = backend._get_payment_data(order, billing_address)
+        payload = backend._get_payment_data(order, first_installment, billing_address)
 
         self.assertEqual(
             payload,
             {
-                "amount": 12345,
+                "amount": 3704,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
-                    "first_name": billing_address["first_name"],
-                    "last_name": billing_address["last_name"],
-                    "address1": billing_address["address"],
-                    "city": billing_address["city"],
-                    "postcode": billing_address["postcode"],
-                    "country": billing_address["country"],
-                },
-                "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
-            },
-        )
-
-    @mock.patch.object(payplug.Payment, "create")
-    def test_payment_backend_payplug_create_payment_failed(self, mock_payplug_create):
-        """
-        When backend creates a payment, if payplug creation request failed,
-        a CreatePaymentFailed exception should be raised.
-        """
-        mock_payplug_create.side_effect = BadRequest("Endpoint unreachable")
-        backend = PayplugBackend(self.configuration)
-        order = OrderFactory(product=ProductFactory())
-        billing_address = BillingAddressDictFactory()
-
-        with self.assertRaises(CreatePaymentFailed) as context:
-            backend.create_payment(order, billing_address)
-
-        self.assertEqual(
-            str(context.exception),
-            "Bad request. The server gave the following response: `Endpoint unreachable`.",
-        )
-
-    @mock.patch.object(payplug.Payment, "create")
-    def test_payment_backend_payplug_create_payment(self, mock_payplug_create):
-        """
-        When backend creates a payment, it should return payment information.
-        """
-        mock_payplug_create.return_value = PayplugFactories.PayplugPaymentFactory()
-        backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
-
-        payload = backend.create_payment(order, billing_address)
-
-        mock_payplug_create.assert_called_once_with(
-            **{
-                "amount": 12345,
-                "allow_save_card": True,
-                "currency": "EUR",
-                "billing": {
-                    "email": "john.doe@acme.org",
-                    "first_name": billing_address["first_name"],
-                    "last_name": billing_address["last_name"],
-                    "address1": billing_address["address"],
-                    "city": billing_address["city"],
-                    "postcode": billing_address["postcode"],
-                    "country": billing_address["country"],
-                },
-                "shipping": {"delivery_type": "DIGITAL_GOODS"},
-                "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
-            }
-        )
-        self.assertEqual(len(payload), 3)
-        self.assertEqual(payload["provider_name"], "payplug")
-        self.assertIsNotNone(re.fullmatch(r"pay_\d{5}", payload["payment_id"]))
-        self.assertIsNotNone(payload["url"])
-
-    @mock.patch.object(payplug.Payment, "create")
-    def test_payment_backend_payplug_create_payment_with_installment(
-        self, mock_payplug_create
-    ):
-        """
-        When backend creates a payment, it should return payment information.
-        """
-        mock_payplug_create.return_value = PayplugFactories.PayplugPaymentFactory()
-        backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
-            owner=owner,
-            product=product,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
-        billing_address = BillingAddressDictFactory()
-
-        payload = backend.create_payment(
-            order, billing_address, installment=order.payment_schedule[0]
-        )
-
-        mock_payplug_create.assert_called_once_with(
-            **{
-                "amount": 20000,
-                "allow_save_card": True,
-                "currency": "EUR",
-                "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -214,7 +98,70 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "installment_id": str(first_installment.get("id")),
+                },
+            },
+        )
+
+    @mock.patch.object(payplug.Payment, "create")
+    def test_payment_backend_payplug_create_payment_failed(self, mock_payplug_create):
+        """
+        When backend creates a payment, if payplug creation request failed,
+        a CreatePaymentFailed exception should be raised.
+        """
+        mock_payplug_create.side_effect = BadRequest("Endpoint unreachable")
+        backend = PayplugBackend(self.configuration)
+        order = OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING)
+
+        with self.assertRaises(CreatePaymentFailed) as context:
+            backend.create_payment(
+                order,
+                order.payment_schedule[0],
+                order.main_invoice.recipient_address.to_dict(),
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "Bad request. The server gave the following response: `Endpoint unreachable`.",
+        )
+
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
+    @mock.patch.object(payplug.Payment, "create")
+    def test_payment_backend_payplug_create_payment(self, mock_payplug_create):
+        """
+        When backend creates a payment, it should return payment information.
+        """
+        mock_payplug_create.return_value = PayplugFactories.PayplugPaymentFactory()
+        backend = PayplugBackend(self.configuration)
+        product = ProductFactory(price=D("123.45"))
+        order = OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING,
+            product=product,
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        installment = order.payment_schedule[0]
+
+        payload = backend.create_payment(order, installment, billing_address)
+
+        mock_payplug_create.assert_called_once_with(
+            **{
+                "amount": 3704,
+                "allow_save_card": True,
+                "currency": "EUR",
+                "billing": {
+                    "email": order.owner.email,
+                    "first_name": billing_address["first_name"],
+                    "last_name": billing_address["last_name"],
+                    "address1": billing_address["address"],
+                    "city": billing_address["city"],
+                    "postcode": billing_address["postcode"],
+                    "country": billing_address["country"],
+                },
+                "shipping": {"delivery_type": "DIGITAL_GOODS"},
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": str(installment.get("id")),
                 },
             }
         )
@@ -223,6 +170,55 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         self.assertIsNotNone(re.fullmatch(r"pay_\d{5}", payload["payment_id"]))
         self.assertIsNotNone(payload["url"])
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
+    @mock.patch.object(payplug.Payment, "create")
+    def test_payment_backend_payplug_create_payment_with_installment(
+        self, mock_payplug_create
+    ):
+        """
+        When backend creates a payment, it should return payment information.
+        """
+        mock_payplug_create.return_value = PayplugFactories.PayplugPaymentFactory()
+        backend = PayplugBackend(self.configuration)
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+
+        payload = backend.create_payment(
+            order, order.payment_schedule[0], billing_address
+        )
+
+        mock_payplug_create.assert_called_once_with(
+            **{
+                "amount": 3704,
+                "allow_save_card": True,
+                "currency": "EUR",
+                "billing": {
+                    "email": order.owner.email,
+                    "first_name": billing_address["first_name"],
+                    "last_name": billing_address["last_name"],
+                    "address1": billing_address["address"],
+                    "city": billing_address["city"],
+                    "postcode": billing_address["postcode"],
+                    "country": billing_address["country"],
+                },
+                "shipping": {"delivery_type": "DIGITAL_GOODS"},
+                "notification_url": "https://example.com/api/v1.0/payments/notifications",
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": str(first_installment["id"]),
+                },
+            }
+        )
+        self.assertEqual(len(payload), 3)
+        self.assertEqual(payload["provider_name"], "payplug")
+        self.assertIsNotNone(re.fullmatch(r"pay_\d{5}", payload["payment_id"]))
+        self.assertIsNotNone(payload["url"])
+
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(PayplugBackend, "create_payment")
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_one_click_payment_request_failed(
@@ -233,11 +229,12 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         failed, it should fallback to create_payment method.
         """
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
 
         mock_payplug_create.side_effect = BadRequest()
         mock_backend_create_payment.return_value = {
@@ -248,19 +245,19 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         }
 
         payload = backend.create_one_click_payment(
-            order, billing_address, credit_card.token
+            order, first_installment, order.credit_card.token, billing_address
         )
 
         # - One click payment create has been called
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 12345,
+                "amount": 3704,
                 "allow_save_card": False,
                 "initiator": "PAYER",
-                "payment_method": credit_card.token,
+                "payment_method": order.credit_card.token,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -270,12 +267,17 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": str(first_installment.get("id")),
+                },
             }
         )
 
         # - As fallback `create_payment` has been called
-        mock_backend_create_payment.assert_called_once_with(order, billing_address)
+        mock_backend_create_payment.assert_called_once_with(
+            order, first_installment, billing_address
+        )
         self.assertEqual(
             payload,
             {
@@ -286,6 +288,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             },
         )
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_one_click_payment_not_authorized(
         self, mock_payplug_create
@@ -298,26 +301,28 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             is_paid=False
         )
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        credit_card = order.credit_card
 
         payload = backend.create_one_click_payment(
-            order, billing_address, credit_card.token
+            order, first_installment, credit_card.token, billing_address
         )
 
         # - One click payment create has been called
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 12345,
+                "amount": 3704,
                 "allow_save_card": False,
                 "initiator": "PAYER",
                 "payment_method": credit_card.token,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -327,7 +332,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": str(first_installment.get("id")),
+                },
             }
         )
 
@@ -337,6 +345,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         self.assertIsNotNone(payload["url"])
         self.assertFalse(payload["is_paid"])
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_one_click_payment(
         self, mock_payplug_create
@@ -349,26 +358,28 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             is_paid=True
         )
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(owner=owner, product=product)
-        billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
+        )
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        first_installment = order.payment_schedule[0]
+        credit_card = order.credit_card
 
         payload = backend.create_one_click_payment(
-            order, billing_address, credit_card.token
+            order, first_installment, credit_card.token, billing_address
         )
 
         # - One click payment create has been called
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 12345,
+                "amount": 3704,
                 "allow_save_card": False,
                 "initiator": "PAYER",
                 "payment_method": credit_card.token,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -378,7 +389,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 },
                 "shipping": {"delivery_type": "DIGITAL_GOODS"},
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
-                "metadata": {"order_id": str(order.id)},
+                "metadata": {
+                    "order_id": str(order.id),
+                    "installment_id": str(first_installment.get("id")),
+                },
             }
         )
 
@@ -388,6 +402,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         self.assertIsNotNone(payload["url"])
         self.assertTrue(payload["is_paid"])
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (30, 70)})
     @mock.patch.object(payplug.Payment, "create")
     def test_payment_backend_payplug_create_one_click_payment_with_installment(
         self, mock_payplug_create
@@ -400,58 +415,31 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             is_paid=True
         )
         backend = PayplugBackend(self.configuration)
-        owner = UserFactory(email="john.doe@acme.org")
-        product = ProductFactory(price=D("123.45"))
-        order = OrderFactory(
-            owner=owner,
-            product=product,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-            ],
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            product__price=D("123.45"),
         )
-        billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory()
+        billing_address = order.main_invoice.recipient_address.to_dict()
+        credit_card = order.credit_card
+        first_installment = order.payment_schedule[0]
 
         payload = backend.create_one_click_payment(
             order,
-            billing_address,
+            order.payment_schedule[0],
             credit_card.token,
-            installment=order.payment_schedule[0],
+            billing_address,
         )
 
         # - One click payment create has been called
         mock_payplug_create.assert_called_once_with(
             **{
-                "amount": 20000,
+                "amount": 3704,
                 "allow_save_card": False,
                 "initiator": "PAYER",
                 "payment_method": credit_card.token,
                 "currency": "EUR",
                 "billing": {
-                    "email": "john.doe@acme.org",
+                    "email": order.owner.email,
                     "first_name": billing_address["first_name"],
                     "last_name": billing_address["last_name"],
                     "address1": billing_address["address"],
@@ -463,7 +451,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                 "notification_url": "https://example.com/api/v1.0/payments/notifications",
                 "metadata": {
                     "order_id": str(order.id),
-                    "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "installment_id": str(first_installment["id"]),
                 },
             }
         )
@@ -731,21 +719,31 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         When backend receives a payment success notification, success email is sent
         """
         payment_id = "pay_00000"
-        product = ProductFactory()
         owner = UserFactory(language="en-us")
-        order = OrderFactory(
-            product=product, owner=owner, state=enums.ORDER_STATE_SUBMITTED
-        )
         backend = PayplugBackend(self.configuration)
-        billing_address = BillingAddressDictFactory()
-        payplug_billing_address = billing_address.copy()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="514070fe-c12c-48b8-97cf-5262708673a3",
+            owner=owner,
+            credit_card__is_main=True,
+            credit_card__initial_issuer_transaction_identifier="1",
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+
+        payplug_billing_address = order.main_invoice.recipient_address.to_dict()
         payplug_billing_address["address1"] = payplug_billing_address["address"]
         del payplug_billing_address["address"]
         mock_treat.return_value = PayplugFactories.PayplugPaymentFactory(
             id=payment_id,
             amount=12345,
             billing=payplug_billing_address,
-            metadata={"order_id": str(order.id)},
+            metadata={
+                "order_id": str(order.id),
+                "installment_id": first_installment["id"],
+            },
             is_paid=True,
             is_refunded=False,
         )

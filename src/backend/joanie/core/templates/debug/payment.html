@@ -31,6 +31,7 @@
       <a href="{% url "debug.payment_template" %}?one-click">One click Payment</a>
     {% endif %}
     <a href="{% url "debug.payment_template" %}?tokenize-card">Tokenize card</a>
+    <a href="{% url "debug.payment_template" %}?tokenize-card-user">Tokenize card for user</a>
     <a href="{% url "debug.payment_template" %}?zero-click">Zero click Payment</a>
   </div>
 
@@ -40,6 +41,8 @@
     <h1>Zero click Payment</h1>
   {% elif tokenize_card %}
     <h1>Tokenize card</h1>
+  {% elif tokenize_card_user %}
+    <h1>Tokenize card user</h1>
   {% else %}
     <h1>Payment</h1>
   {% endif %}

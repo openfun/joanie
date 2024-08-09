@@ -68,7 +68,9 @@ class CreditCardViewSet(
             else self.request.user.username
         )
 
-        return models.CreditCard.objects.get_cards_for_owner(username=username)
+        return models.CreditCard.objects.get_cards_for_owner(
+            username=username
+        ).order_by("-is_main", "-created_on")
 
     @action(
         methods=["POST"],

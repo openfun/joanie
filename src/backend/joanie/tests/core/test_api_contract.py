@@ -17,6 +17,7 @@ from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition
+from joanie.payment.factories import InvoiceFactory
 from joanie.tests.base import BaseAPITestCase
 
 # pylint: disable=too-many-lines,disable=duplicate-code
@@ -722,7 +723,7 @@ class ContractApiTest(BaseAPITestCase):
         contract = factories.ContractFactory(
             order__owner=user,
             organization_signatory=organization_signatory,
-            order__state=enums.ORDER_STATE_VALIDATED,
+            order__state=enums.ORDER_STATE_COMPLETED,
         )
 
         with self.assertNumQueries(7):
@@ -772,7 +773,7 @@ class ContractApiTest(BaseAPITestCase):
             },
             "order": {
                 "id": str(contract.order.id),
-                "state": enums.ORDER_STATE_VALIDATED,
+                "state": contract.order.state,
                 "course": {
                     "code": contract.order.course.code,
                     "cover": "_this_field_is_mocked",
@@ -958,7 +959,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         address = order.main_invoice.recipient_address
@@ -1004,31 +1005,33 @@ class ContractApiTest(BaseAPITestCase):
         user = factories.UserFactory(
             email="student_do@example.fr", first_name="John Doe", last_name=""
         )
-        order = factories.OrderFactory(
-            owner=user,
-            state=random.choice(
-                [
-                    enums.ORDER_STATE_PENDING,
-                    enums.ORDER_STATE_DRAFT,
-                    enums.ORDER_STATE_CANCELED,
-                    enums.ORDER_STATE_SUBMITTED,
-                ]
-            ),
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        contract = factories.ContractFactory(order=order)
-        token = self.get_user_token(user.username)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(
+                    owner=user,
+                    state=state,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                )
+                contract = factories.ContractFactory(order=order)
+                token = self.get_user_token(user.username)
 
-        response = self.client.get(
-            f"/api/v1.0/contracts/{str(contract.id)}/download/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+                response = self.client.get(
+                    f"/api/v1.0/contracts/{str(contract.id)}/download/",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
 
-        self.assertContains(
-            response,
-            "No Contract matches the given query.",
-            status_code=HTTPStatus.NOT_FOUND,
-        )
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertContains(
+                        response,
+                        "No Contract matches the given query.",
+                        status_code=HTTPStatus.NOT_FOUND,
+                    )
+                else:
+                    self.assertContains(
+                        response,
+                        "Cannot download a contract when it is not yet fully signed.",
+                        status_code=HTTPStatus.BAD_REQUEST,
+                    )
 
     def test_api_contract_download_authenticated_cannot_create(self):
         """
@@ -1039,7 +1042,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
@@ -1065,7 +1068,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
@@ -1091,7 +1094,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
@@ -1120,7 +1123,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=owner,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
@@ -1159,7 +1162,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=owner,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
@@ -1363,6 +1366,7 @@ class ContractApiTest(BaseAPITestCase):
         # Create our Course Product Relation shared by the 2 organizations above
         relation = factories.CourseProductRelationFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=0,
             organizations=[organizations[0], organizations[1]],
         )
         # Create learners who sign the contract definition
@@ -1373,8 +1377,15 @@ class ContractApiTest(BaseAPITestCase):
                 owner=learners[index],
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
                 organization=organizations[index],
+                main_invoice=InvoiceFactory(),
+                payment_schedule=[
+                    {
+                        "amount": "200.00",
+                        "due_date": "2024-01-17T00:00:00+00:00",
+                        "state": enums.PAYMENT_STATE_PAID,
+                    }
+                ],
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, learners[index], order
@@ -1387,6 +1398,7 @@ class ContractApiTest(BaseAPITestCase):
                 student_signed_on=timezone.now(),
                 organization_signed_on=timezone.now(),
             )
+            order.init_flow()
 
         # Create token for only one organization accessor
         token = self.get_user_token(user.username)
@@ -1445,6 +1457,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         relation = factories.CourseProductRelationFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=0,
             organizations=[organization],
         )
         learners = factories.UserFactory.create_batch(3)
@@ -1457,7 +1470,14 @@ class ContractApiTest(BaseAPITestCase):
                 owner=user,
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                main_invoice=InvoiceFactory(),
+                payment_schedule=[
+                    {
+                        "amount": "200.00",
+                        "due_date": "2024-01-17T00:00:00+00:00",
+                        "state": enums.PAYMENT_STATE_PAID,
+                    }
+                ],
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
@@ -1470,6 +1490,7 @@ class ContractApiTest(BaseAPITestCase):
                 student_signed_on=timezone.now(),
                 organization_signed_on=timezone.now(),
             )
+            order.init_flow()
         expected_endpoint_polling = "/api/v1.0/contracts/zip-archive/"
         token = self.get_user_token(requesting_user.username)
 
@@ -1876,7 +1897,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
@@ -1914,7 +1935,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(

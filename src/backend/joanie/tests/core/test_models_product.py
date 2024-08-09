@@ -46,10 +46,11 @@ class ProductModelsTestCase(TestCase):
     def test_models_product_course_runs_unique(self):
         """A product can only be linked once to a given course run."""
         relation = factories.ProductTargetCourseRelationFactory()
-        with self.assertRaises(ValidationError):
-            factories.ProductTargetCourseRelationFactory(
-                course=relation.course, product=relation.product
-            )
+        # As django_get_or_create is used, the same relation should be returned
+        other_relation = factories.ProductTargetCourseRelationFactory(
+            course=relation.course, product=relation.product
+        )
+        self.assertEqual(relation, other_relation)
 
     def test_models_product_course_runs_relation_sorted_by_position(self):
         """The product/course relation should be sorted by position."""

@@ -23,6 +23,51 @@ from joanie.payment.factories import InvoiceFactory
 class UtilsContractTestCase(TestCase):
     """Test suite to generate a ZIP archive of signed contract PDF files in bytes utility"""
 
+    def test_utils_contract_get_signature_backend_references_states(
+        self,
+    ):
+        """
+        From a Course Product Relation product object, we should be able to find the
+        contract's signature backend references that are attached to the validated
+        orders only for a specific course and product. It should return an iterator with
+        signature backend references.
+        All orders but the canceled ones should be returned.
+        """
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                relation = factories.CourseProductRelationFactory(
+                    product__contract_definition=factories.ContractDefinitionFactory()
+                )
+                contract = factories.ContractFactory(
+                    # order__owner=users[index],
+                    order__product=relation.product,
+                    order__course=relation.course,
+                    order__state=state,
+                    definition_checksum="1234",
+                    context={"foo": "bar"},
+                    student_signed_on=timezone.now(),
+                    organization_signed_on=timezone.now(),
+                )
+
+                signature_backend_references_generator = (
+                    contract_utility.get_signature_backend_references(
+                        course_product_relation=relation, organization=None
+                    )
+                )
+                signature_backend_references_list = list(
+                    signature_backend_references_generator
+                )
+
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertEqual(len(signature_backend_references_list), 0)
+                    self.assertEqual(signature_backend_references_list, [])
+                else:
+                    self.assertEqual(len(signature_backend_references_list), 1)
+                    self.assertEqual(
+                        signature_backend_references_list,
+                        [contract.signature_backend_reference],
+                    )
+
     def test_utils_contract_get_signature_backend_references_with_no_signed_contracts_yet(
         self,
     ):
@@ -51,8 +96,7 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_CANCELED,
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
-                        enums.ORDER_STATE_SUBMITTED,
-                        enums.ORDER_STATE_VALIDATED,
+                        enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
                 signature_backend_reference=signature_reference,
@@ -94,7 +138,7 @@ class UtilsContractTestCase(TestCase):
                 order__owner=users[index],
                 order__product=relation.product,
                 order__course=relation.course,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -142,8 +186,7 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_CANCELED,
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
-                        enums.ORDER_STATE_SUBMITTED,
-                        enums.ORDER_STATE_VALIDATED,
+                        enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
                 signature_backend_reference=signature_reference,
@@ -185,7 +228,7 @@ class UtilsContractTestCase(TestCase):
                 order__owner=users[index],
                 order__product=relation.product,
                 order__course=relation.course,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -241,8 +284,7 @@ class UtilsContractTestCase(TestCase):
                         enums.ORDER_STATE_CANCELED,
                         enums.ORDER_STATE_DRAFT,
                         enums.ORDER_STATE_PENDING,
-                        enums.ORDER_STATE_SUBMITTED,
-                        enums.ORDER_STATE_VALIDATED,
+                        enums.ORDER_STATE_COMPLETED,
                     ]
                 ),
                 signature_backend_reference=signature_reference,
@@ -291,7 +333,7 @@ class UtilsContractTestCase(TestCase):
                 order__product=relation.product,
                 order__course=None,
                 order__enrollment=enrollment,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -349,7 +391,7 @@ class UtilsContractTestCase(TestCase):
                 order__product=relation.product,
                 order__course=None,
                 order__enrollment=enrollment,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -409,7 +451,7 @@ class UtilsContractTestCase(TestCase):
                 order__product=relation.product,
                 order__course=None,
                 order__enrollment=enrollment,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -541,7 +583,7 @@ class UtilsContractTestCase(TestCase):
                 owner=users[index],
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=InvoiceFactory(
                     recipient_address__address="1 Rue de L'Exemple",
                     recipient_address__postcode=75000,
@@ -623,7 +665,7 @@ class UtilsContractTestCase(TestCase):
                 order__owner=learners[index],
                 order__product=relation.product,
                 order__course=relation.course,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
                 context={"foo": "bar"},
@@ -656,7 +698,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.ContractFactory(
             order=order, definition=order.product.contract_definition
@@ -675,7 +717,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         factories.ContractFactory(
             order=order, definition=order.product.contract_definition
@@ -692,55 +734,67 @@ class UtilsContractTestCase(TestCase):
         """
         Should return the signature backend references of orders that are owned
         by an organization and where it still awaits the organization's signature.
+        Contracts with a cancelled order should not be returned.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
-        )
-        factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="1234",
-            context="context",
-            submitted_for_signature_on=timezone.now(),
-            student_signed_on=timezone.now(),
-            organization_signed_on=None,
-        )
-        order_found = contract_utility.get_signature_references(
-            organization_id=order.organization.id, student_has_not_signed=False
-        )
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                user = factories.UserFactory()
+                order = factories.OrderFactory(
+                    owner=user,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    state=state,
+                )
+                factories.ContractFactory(
+                    order=order,
+                    definition=order.product.contract_definition,
+                    signature_backend_reference="wfl_fake_dummy_id",
+                    definition_checksum="1234",
+                    context="context",
+                    submitted_for_signature_on=timezone.now(),
+                    student_signed_on=timezone.now(),
+                    organization_signed_on=None,
+                )
+                order_found = contract_utility.get_signature_references(
+                    organization_id=order.organization.id, student_has_not_signed=False
+                )
 
-        self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertEqual(list(order_found), [])
+                else:
+                    self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
 
     def test_utils_contract_get_signature_references_student_has_not_signed(self):
         """
         Should return the signature backend references that are owned by an organization
         and where there is no signature yet but has been submitted for signature.
+        Contracts with a cancelled order should not be returned.
         """
-        user = factories.UserFactory()
-        order = factories.OrderFactory(
-            owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
-        )
-        factories.ContractFactory(
-            order=order,
-            definition=order.product.contract_definition,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="1234",
-            context="context",
-            submitted_for_signature_on=timezone.now(),
-            student_signed_on=None,
-            organization_signed_on=None,
-        )
-        order_found = contract_utility.get_signature_references(
-            organization_id=order.organization.id, student_has_not_signed=True
-        )
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                user = factories.UserFactory()
+                order = factories.OrderFactory(
+                    owner=user,
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    state=state,
+                )
+                factories.ContractFactory(
+                    order=order,
+                    definition=order.product.contract_definition,
+                    signature_backend_reference="wfl_fake_dummy_id",
+                    definition_checksum="1234",
+                    context="context",
+                    submitted_for_signature_on=timezone.now(),
+                    student_signed_on=None,
+                    organization_signed_on=None,
+                )
+                order_found = contract_utility.get_signature_references(
+                    organization_id=order.organization.id, student_has_not_signed=True
+                )
 
-        self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertEqual(list(order_found), [])
+                else:
+                    self.assertEqual(list(order_found), ["wfl_fake_dummy_id"])
 
     def test_utils_contract_get_signature_references_should_not_find_order(self):
         """
@@ -751,7 +805,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             product__contract_definition=factories.ContractDefinitionFactory(),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         contract = factories.ContractFactory(
             order=order,
@@ -799,7 +853,7 @@ class UtilsContractTestCase(TestCase):
         order = factories.OrderFactory(
             product=relation.product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             organization=organization,
         )
         factories.ContractFactory(
@@ -820,7 +874,7 @@ class UtilsContractTestCase(TestCase):
         self.assertEqual(
             models.Contract.objects.filter(
                 submitted_for_signature_on__isnull=False,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__organization_id=organization.id,
                 organization_signed_on__isnull=False,
                 student_signed_on__isnull=False,
@@ -845,7 +899,7 @@ class UtilsContractTestCase(TestCase):
                 owner=learners[index],
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
                 organization=organization,
             )
             factories.ContractFactory(
@@ -861,7 +915,7 @@ class UtilsContractTestCase(TestCase):
             owner=learners[2],
             product=relation.product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             organization=organization,
         )
         # This contract will need a full update for student and organization
@@ -901,7 +955,7 @@ class UtilsContractTestCase(TestCase):
         self.assertEqual(
             models.Contract.objects.filter(
                 submitted_for_signature_on__isnull=False,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__organization_id=organization.id,
                 organization_signed_on__isnull=True,
                 student_signed_on__isnull=True,
@@ -911,7 +965,7 @@ class UtilsContractTestCase(TestCase):
         self.assertEqual(
             models.Contract.objects.filter(
                 submitted_for_signature_on__isnull=False,
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__organization_id=organization.id,
                 organization_signed_on__isnull=True,
                 student_signed_on__isnull=False,

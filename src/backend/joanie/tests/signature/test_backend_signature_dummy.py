@@ -1,14 +1,17 @@
 """Test suite of the DummySignatureBackend"""
 
+import json
 import random
 from io import BytesIO
 
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone as django_timezone
 
 from pdfminer.high_level import extract_text as pdf_extract_text
+from rest_framework.test import APIRequestFactory
 
 from joanie.core import enums, factories
 from joanie.payment.factories import InvoiceFactory
@@ -83,13 +86,14 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         """
         Dummy backend instance get signature invitation link method in order to get the invitation
         to sign link in return.
-        Once we call the method for the invitation link, it should trigger an email with a dummy
-        link to download the file and call the handle_notification method.
         """
         backend = DummySignatureBackend()
-        expected_substring = "https://dummysignaturebackend.fr/?requestToken="
         reference, file_hash = backend.submit_for_signature(
             "title definition 1", b"file_bytes", {}
+        )
+        expected_substring = (
+            f"https://dummysignaturebackend.fr/?reference={reference}"
+            f"&eventTarget=signed"
         )
         contract = factories.ContractFactory(
             signature_backend_reference=reference,
@@ -106,10 +110,44 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         self.assertIn(expected_substring, response)
 
         contract.refresh_from_db()
+        self.assertIsNone(contract.student_signed_on)
+        self.assertIsNotNone(contract.submitted_for_signature_on)
+
+    def test_backend_dummy_signature_get_signature_invitation_link_with_learner_signed(
+        self,
+    ):
+        """
+        Dummy backend instance get signature invitation link method in order to get the invitation
+        to sign link in return. If the learner has already signed the contract, the link should
+        target the organization signature.
+        """
+        backend = DummySignatureBackend()
+        reference, file_hash = backend.submit_for_signature(
+            "title definition 1", b"file_bytes", {}
+        )
+        contract = factories.ContractFactory(
+            signature_backend_reference=reference,
+            definition_checksum=file_hash,
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=django_timezone.now(),
+            context="a small context content",
+        )
+
+        response = backend.get_signature_invitation_link(
+            recipient_email="student_do@example.fr",
+            reference_ids=[reference],
+        )
+
+        expected_substring = (
+            f"https://dummysignaturebackend.fr/?reference={reference}"
+            "&eventTarget=finished"
+        )
+        self.assertIn(expected_substring, response)
+
+        contract.refresh_from_db()
+        self.assertIsNone(contract.organization_signed_on)
         self.assertIsNotNone(contract.student_signed_on)
         self.assertIsNotNone(contract.submitted_for_signature_on)
-        # Check that an email has been sent
-        self._check_signature_completed_email_sent("student_do@example.fr")
 
     def test_backend_dummy_signature_get_signature_invitation_link_for_organization(
         self,
@@ -117,13 +155,9 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         """
         Dummy backend instance get_signature_invitation_link method should return an
         invitation link to sign the contract.
-
-        If the contract has been signed by the student, calling this method should send
-        an email to the organization signatory and call the handle notification method
-        to mimic the fact that the organization has signed the contract.
         """
         backend = DummySignatureBackend()
-        expected_substring = "https://dummysignaturebackend.fr/?requestToken="
+        expected_substring = "https://dummysignaturebackend.fr/?reference="
         reference, file_hash = backend.submit_for_signature(
             "title definition 1", b"file_bytes", {}
         )
@@ -144,10 +178,8 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
 
         contract.refresh_from_db()
         self.assertIsNotNone(contract.student_signed_on)
-        self.assertIsNotNone(contract.organization_signed_on)
-        self.assertIsNone(contract.submitted_for_signature_on)
-        # Check that an email has been sent
-        self._check_signature_completed_email_sent("student_do@example.fr")
+        self.assertIsNone(contract.organization_signed_on)
+        self.assertIsNotNone(contract.submitted_for_signature_on)
 
     def test_backend_dummy_signature_get_signature_invitation_link_with_several_contracts(
         self,
@@ -155,13 +187,9 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         """
         Dummy backend instance get_signature_invitation_link method should return an
         invitation link to sign several contracts.
-
-        For each contract implied, calling this method should send
-        an email to the organization signatory and call the handle notification method
-        to mimic the fact that the organization has signed the contract.
         """
         backend = DummySignatureBackend()
-        expected_substring = "https://dummysignaturebackend.fr/?requestToken="
+        expected_substring = "https://dummysignaturebackend.fr/?reference="
         signature_data = [
             backend.submit_for_signature("title definition 1", b"file_bytes", {}),
             backend.submit_for_signature("title definition 2", b"file_bytes", {}),
@@ -186,7 +214,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
 
         for contract in contracts:
             contract.refresh_from_db()
-            self.assertIsNotNone(contract.student_signed_on)
+            self.assertIsNone(contract.student_signed_on)
             self.assertIsNotNone(contract.submitted_for_signature_on)
 
     def test_backend_dummy_signature_delete_signature_procedure(self):
@@ -249,10 +277,15 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
             submitted_for_signature_on=django_timezone.now(),
             context="a small context content",
         )
-        mocked_request = {
-            "event_type": "signed",
-            "reference": reference,
-        }
+        mocked_request = APIRequestFactory().post(
+            reverse("webhook_signature"),
+            data={
+                "event_type": "signed",
+                "reference": reference,
+            },
+            format="json",
+        )
+        mocked_request.data = json.loads(mocked_request.body.decode("utf-8"))
 
         backend.handle_notification(mocked_request)
 
@@ -277,10 +310,15 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
             student_signed_on=django_timezone.now(),
             context="a small context content",
         )
-        mocked_request = {
-            "event_type": "finished",
-            "reference": reference,
-        }
+        mocked_request = APIRequestFactory().post(
+            reverse("webhook_signature"),
+            data={
+                "event_type": "finished",
+                "reference": reference,
+            },
+            format="json",
+        )
+        mocked_request.data = json.loads(mocked_request.body.decode("utf-8"))
 
         backend.handle_notification(mocked_request)
 
@@ -308,10 +346,15 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         event_type = random.choice(
             ["started", "stopped", "commented", "untracked_event"]
         )
-        mocked_request = {
-            "event_type": event_type,
-            "reference": reference,
-        }
+        mocked_request = APIRequestFactory().post(
+            reverse("webhook_signature"),
+            data={
+                "event_type": event_type,
+                "reference": reference,
+            },
+            format="json",
+        )
+        mocked_request.data = json.loads(mocked_request.body.decode("utf-8"))
 
         with self.assertRaises(ValidationError) as context:
             backend.handle_notification(mocked_request)
@@ -387,7 +430,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         """
         backend = DummySignatureBackend()
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
@@ -417,7 +460,7 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         """
         backend = DummySignatureBackend()
         order = factories.OrderFactory(
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(

@@ -16,6 +16,7 @@ from rest_framework.generics import get_object_or_404
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
+from joanie.payment.models import CreditCard
 
 
 class AbilitiesModelSerializer(serializers.ModelSerializer):
@@ -1129,8 +1130,13 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True, slug_field="id", source="certificate"
     )
     contract = ContractSerializer(read_only=True, exclude_abilities=True)
-    has_consent_to_terms = serializers.BooleanField(write_only=True)
     payment_schedule = OrderPaymentSerializer(many=True, read_only=True)
+    credit_card_id = serializers.SlugRelatedField(
+        queryset=CreditCard.objects.all(),
+        slug_field="id",
+        source="credit_card",
+        required=False,
+    )
 
     class Meta:
         model = models.Order
@@ -1139,6 +1145,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "contract",
             "course",
             "created_on",
+            "credit_card_id",
             "enrollment",
             "id",
             "main_invoice_reference",
@@ -1151,28 +1158,23 @@ class OrderSerializer(serializers.ModelSerializer):
             "target_enrollments",
             "total",
             "total_currency",
-            "has_consent_to_terms",
             "payment_schedule",
         ]
         read_only_fields = fields
 
     def get_target_enrollments(self, order) -> list[dict]:
         """
-        For the current order, retrieve its related enrollments.
+        For the current order, retrieve its related enrollments if the order is linked
+        to a course.
         """
+        if order.enrollment:
+            return []
+
         return EnrollmentSerializer(
             instance=order.get_target_enrollments(),
             many=True,
             context=self.context,
         ).data
-
-    def validate_has_consent_to_terms(self, value):
-        """Check that user has accepted terms and conditions."""
-        if not value:
-            message = _("You must accept the terms and conditions to proceed.")
-            raise serializers.ValidationError(message)
-
-        return value
 
     def create(self, validated_data):
         """
@@ -1196,7 +1198,6 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
         validated_data.pop("order_group", None)
-        validated_data.pop("has_consent_to_terms", None)
         return super().update(instance, validated_data)
 
     def get_total_currency(self, *args, **kwargs) -> str:

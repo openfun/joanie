@@ -5,7 +5,6 @@ from http import HTTPStatus
 from django.core.cache import cache
 
 from joanie.core import enums, factories
-from joanie.payment.factories import BillingAddressDictFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -53,72 +52,57 @@ class OrderCancelApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         order = factories.OrderFactory()
-        order.submit(
-            billing_address=BillingAddressDictFactory(),
-        )
         response = self.client.post(
             f"/api/v1.0/orders/{order.id}/cancel/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
+        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
     def test_api_order_cancel_authenticated_owned(self):
         """
-        User should able to cancel owned orders as long as they are not
-        validated
+        User should be able to cancel owned orders as long as they are not
+        completed
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        order_draft = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_DRAFT)
-        order_pending = factories.OrderFactory(
-            owner=user, state=enums.ORDER_STATE_PENDING
-        )
-        order_submitted = factories.OrderFactory(
-            owner=user, state=enums.ORDER_STATE_SUBMITTED
-        )
-
-        # Canceling draft order
-        response = self.client.post(
-            f"/api/v1.0/orders/{order_draft.id}/cancel/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        order_draft.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_draft.state, enums.ORDER_STATE_CANCELED)
-
-        # Canceling pending order
-        response = self.client.post(
-            f"/api/v1.0/orders/{order_pending.id}/cancel/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        order_pending.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_pending.state, enums.ORDER_STATE_CANCELED)
-
-        # Canceling submitted order
-        response = self.client.post(
-            f"/api/v1.0/orders/{order_submitted.id}/cancel/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        order_submitted.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertEqual(order_submitted.state, enums.ORDER_STATE_CANCELED)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(owner=user, state=state)
+                response = self.client.post(
+                    f"/api/v1.0/orders/{order.id}/cancel/",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+                order.refresh_from_db()
+                if state == enums.ORDER_STATE_COMPLETED:
+                    self.assertContains(
+                        response,
+                        "Cannot cancel a completed order",
+                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    )
+                    self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+                else:
+                    self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+                    self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
     def test_api_order_cancel_authenticated_validated(self):
         """
-        User should not able to cancel already validated order
+        User should not able to cancel already completed order
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         order_validated = factories.OrderFactory(
-            owner=user, state=enums.ORDER_STATE_VALIDATED
+            owner=user, state=enums.ORDER_STATE_COMPLETED
         )
         response = self.client.post(
             f"/api/v1.0/orders/{order_validated.id}/cancel/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order_validated.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
-        self.assertEqual(order_validated.state, enums.ORDER_STATE_VALIDATED)
+        self.assertContains(
+            response,
+            "Cannot cancel a completed order",
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
+        self.assertEqual(order_validated.state, enums.ORDER_STATE_COMPLETED)

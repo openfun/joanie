@@ -2,7 +2,8 @@
 Client API endpoints
 """
 
-# pylint: disable=too-many-ancestors, too-many-lines
+# pylint: disable=too-many-ancestors, too-many-lines, too-many-branches
+# ruff: noqa: PLR0911,PLR0912
 import io
 import uuid
 from http import HTTPStatus
@@ -28,6 +29,7 @@ from rest_framework.response import Response
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.core.api.base import NestedGenericViewSet
 from joanie.core.exceptions import NoContractToSignError
+from joanie.core.models import Address
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
@@ -200,9 +202,13 @@ class CourseProductRelationViewSet(
         Return the payment schedule for a course product relation.
         """
         course_product_relation = self.get_object()
-        course_run_dates = (
-            course_product_relation.product.get_equivalent_course_run_dates()
-        )
+
+        if course_product_relation.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            instance = course_product_relation.course
+        else:
+            instance = course_product_relation.product
+        course_run_dates = instance.get_equivalent_course_run_dates()
+
         payment_schedule = generate_payment_schedule(
             course_product_relation.product.price,
             timezone.now(),
@@ -397,6 +403,19 @@ class OrderViewSet(
                 )
             course = enrollment.course_run.course
 
+        if not serializer.initial_data.get("organization_id"):
+            organization = self._get_organization_with_least_active_orders(
+                product, course, enrollment
+            )
+            if organization:
+                serializer.initial_data["organization_id"] = organization.id
+
+        if product.price != 0 and not request.data.get("billing_address"):
+            return Response(
+                {"billing_address": "This field is required."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
         # - Validate data then create an order
         try:
             self.perform_create(serializer)
@@ -409,58 +428,21 @@ class OrderViewSet(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+        serializer.instance.init_flow(
+            billing_address=request.data.get("billing_address")
+        )
+
         # Else return the fresh new order
         return Response(serializer.data, status=HTTPStatus.CREATED)
-
-    @action(detail=True, methods=["PATCH"])
-    def submit(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
-        """
-        Submit a draft order if the conditions are filled
-        """
-        billing_address = (
-            models.Address(**request.data.get("billing_address"))
-            if request.data.get("billing_address")
-            else None
-        )
-        credit_card_id = request.data.get("credit_card_id")
-        order = self.get_object()
-
-        if order.organization is None:
-            order.organization = self._get_organization_with_least_active_orders(
-                order.product, order.course, order.enrollment
-            )
-            order.save()
-
-        return Response(
-            {"payment_info": order.submit(billing_address, credit_card_id)},
-            status=HTTPStatus.CREATED,
-        )
-
-    @action(detail=True, methods=["POST"])
-    def abort(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
-        """Change the state of the order to pending"""
-        payment_id = request.data.get("payment_id")
-
-        order = self.get_object()
-
-        if order.state == enums.ORDER_STATE_VALIDATED:
-            return Response(
-                "Cannot abort a validated order.",
-                status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            )
-
-        order.flow.pending(payment_id)
-
-        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=True, methods=["POST"])
     def cancel(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
         """Change the state of the order to cancelled"""
         order = self.get_object()
 
-        if order.state == enums.ORDER_STATE_VALIDATED:
+        if order.state == enums.ORDER_STATE_COMPLETED:
             return Response(
-                "Cannot cancel a validated order.",
+                "Cannot cancel a completed order.",
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
@@ -507,15 +489,6 @@ class OrderViewSet(
         )
 
         return response
-
-    @action(detail=True, methods=["PUT"])
-    def validate(self, request, pk=None):  # pylint: disable=no-self-use, invalid-name, unused-argument
-        """
-        Validate the order
-        """
-        order = self.get_object()
-        order.flow.validate()
-        return Response(status=HTTPStatus.OK)
 
     @extend_schema(request=None)
     @action(detail=True, methods=["POST"])
@@ -611,6 +584,45 @@ class OrderViewSet(
         )
 
         return Response(payment_infos, status=HTTPStatus.OK)
+
+    @extend_schema(
+        request={"credit_card_id": OpenApiTypes.UUID},
+        responses={
+            (200, "application/json"): OpenApiTypes.OBJECT,
+            400: serializers.ErrorResponseSerializer,
+            404: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(detail=True, methods=["POST"], url_path="payment-method")
+    def payment_method(self, request, *args, **kwargs):
+        """
+        Set the payment method for an order.
+        """
+        order = self.get_object()
+
+        credit_card_id = request.data.get("credit_card_id")
+        if not credit_card_id:
+            return Response(
+                {"credit_card_id": "This field is required."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        try:
+            credit_card = CreditCard.objects.get_card_for_owner(
+                pk=credit_card_id,
+                username=order.owner.username,
+            )
+        except CreditCard.DoesNotExist:
+            return Response(
+                {"detail": "Credit card does not exist."},
+                status=HTTPStatus.NOT_FOUND,
+            )
+
+        order.credit_card = credit_card
+        order.save()
+        order.flow.update()
+
+        return Response(status=HTTPStatus.CREATED)
 
 
 class AddressViewSet(
@@ -1175,8 +1187,8 @@ class GenericContractViewSet(
     serializer_class = serializers.ContractSerializer
     filterset_class = filters.ContractViewSetFilter
     ordering = ["-student_signed_on", "-created_on"]
-    queryset = models.Contract.objects.filter(
-        order__state=enums.ORDER_STATE_VALIDATED
+    queryset = models.Contract.objects.exclude(
+        order__state=enums.ORDER_STATE_CANCELED
     ).select_related(
         "definition",
         "order__organization",
@@ -1236,10 +1248,8 @@ class ContractViewSet(GenericContractViewSet):
         """
         contract = self.get_object()
 
-        if contract.order.state != enums.ORDER_STATE_VALIDATED:
-            raise ValidationError(
-                "Cannot get contract when an order is not yet validated."
-            )
+        if contract.order.state == enums.ORDER_STATE_CANCELED:
+            raise ValidationError("Cannot get contract when an order is cancelled.")
 
         if not contract.is_fully_signed:
             raise ValidationError(
@@ -1526,7 +1536,9 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
     filterset_class = filters.NestedOrderCourseViewSetFilter
     ordering = ["-created_on"]
     queryset = (
-        models.Order.objects.filter(state=enums.ORDER_STATE_VALIDATED)
+        models.Order.objects.filter(
+            state__in=enums.ORDER_STATES_BINDING,
+        )
         .select_related(
             "contract",
             "certificate",

@@ -4,10 +4,10 @@ Test suite for order flows.
 
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
-import random
 from http import HTTPStatus
 from unittest import mock
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
 
@@ -22,7 +22,11 @@ from joanie.lms_handler.backends.openedx import (
     OPENEDX_MODE_HONOR,
     OPENEDX_MODE_VERIFIED,
 )
-from joanie.payment.factories import BillingAddressDictFactory, InvoiceFactory
+from joanie.payment.factories import (
+    BillingAddressDictFactory,
+    CreditCardFactory,
+    InvoiceFactory,
+)
 from joanie.tests.base import BaseLogMixinTestCase
 
 
@@ -31,134 +35,51 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
     maxDiff = None
 
-    def test_flows_order_validate(self):
+    def test_flow_order_assign(self):
         """
-        Order has a validate method which is in charge to enroll owner to courses
-        with only one course run if order state is equal to validated.
+        It should set the order state to ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+        when the order has no credit card.
         """
-        owner = factories.UserFactory()
-        [course, target_course] = factories.CourseFactory.create_batch(2)
+        order = factories.OrderFactory(credit_card=None)
 
-        # - Link only one course run to target_course
-        factories.CourseRunFactory(
-            course=target_course,
-            state=CourseState.ONGOING_OPEN,
-        )
+        order.init_flow(billing_address=BillingAddressDictFactory())
 
-        product = factories.ProductFactory(
-            courses=[course], target_courses=[target_course]
-        )
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
-        order = factories.OrderFactory(
-            owner=owner,
-            product=product,
-            course=course,
-        )
-        order.submit(billing_address=BillingAddressDictFactory())
-
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
-        self.assertEqual(Enrollment.objects.count(), 0)
-
-        # - Create an invoice to mark order as validated
-        InvoiceFactory(order=order, total=order.total)
-
-        # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(23):
-            order.flow.validate()
-
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
-
-        self.assertEqual(Enrollment.objects.count(), 1)
-
-    def test_flows_order_validate_with_contract(self):
+    def test_flow_order_assign_free_product(self):
         """
-        Order has a validate method which is in charge to enroll owner to courses
-        with only one course run if order state is equal to validated. But if the
-        related product has a contract, the user should not be enrolled at this step.
+        It should set the order state to ORDER_STATE_COMPLETED
+        when the order has a free product.
         """
-        owner = factories.UserFactory()
-        [course, target_course] = factories.CourseFactory.create_batch(2)
+        order = factories.OrderFactory(product__price=0)
 
-        # - Link only one course run to target_course
-        factories.CourseRunFactory(
-            course=target_course,
-            state=CourseState.ONGOING_OPEN,
-        )
+        order.init_flow()
 
-        product = factories.ProductFactory(
-            courses=[course],
-            target_courses=[target_course],
-            contract_definition=factories.ContractDefinitionFactory(),
-        )
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
-        order = factories.OrderFactory(
-            owner=owner,
-            product=product,
-            course=course,
-        )
-        order.submit(billing_address=BillingAddressDictFactory())
-
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
-        self.assertEqual(Enrollment.objects.count(), 0)
-
-        # - Create an invoice to mark order as validated
-        InvoiceFactory(order=order, total=order.total)
-
-        # - Validate the order should not have automatically enrolled user to course run
-        with self.assertNumQueries(10):
-            order.flow.validate()
-
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
-
-        self.assertEqual(Enrollment.objects.count(), 0)
-
-    def test_flows_order_validate_with_inactive_enrollment(self):
+    def test_flow_order_assign_no_billing_address(self):
         """
-        Order has a validate method which is in charge to enroll owner to courses
-        with only one course run if order state is equal to validated. If the user has
-        already an inactive enrollment, it should be activated.
+        It should raise a TransitionNotAllowed exception
+        when the order has no billing address and the order is not free.
         """
-        owner = factories.UserFactory()
-        [course, target_course] = factories.CourseFactory.create_batch(2)
+        order = factories.OrderFactory()
 
-        # - Link only one course run to target_course
-        course_run = factories.CourseRunFactory(
-            course=target_course,
-            state=CourseState.ONGOING_OPEN,
-            is_listed=True,
-        )
+        with self.assertRaises(ValidationError):
+            order.init_flow()
 
-        product = factories.ProductFactory(
-            courses=[course], target_courses=[target_course]
-        )
+        self.assertEqual(order.state, enums.ORDER_STATE_ASSIGNED)
 
-        order = factories.OrderFactory(
-            owner=owner,
-            product=product,
-            course=course,
-        )
-        order.submit(billing_address=BillingAddressDictFactory())
+    def test_flow_order_assign_no_organization(self):
+        """
+        It should raise a TransitionNotAllowed exception
+        when the order has no organization.
+        """
+        order = factories.OrderFactory(organization=None)
 
-        # - Create an inactive enrollment for related course run
-        enrollment = factories.EnrollmentFactory(
-            user=owner, course_run=course_run, is_active=False
-        )
+        with self.assertRaises(TransitionNotAllowed):
+            order.init_flow()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_SUBMITTED)
-        self.assertEqual(Enrollment.objects.count(), 1)
-
-        # - Create an invoice to mark order as validated
-        InvoiceFactory(order=order, total=order.total)
-
-        # - Validate the order should automatically enroll user to course run
-        with self.assertNumQueries(21):
-            order.flow.validate()
-
-        enrollment.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
-
-        self.assertEqual(Enrollment.objects.count(), 1)
-        self.assertEqual(enrollment.is_active, True)
+        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
     def test_flows_order_cancel(self):
         """
@@ -184,7 +105,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
             course=course,
         )
-        order.submit()
+        order.init_flow()
 
         # - As target_course has several course runs, user should not be enrolled automatically
         self.assertEqual(Enrollment.objects.count(), 0)
@@ -230,7 +151,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product_1,
             course=course,
         )
-        order.submit()
+        order.init_flow()
         factories.OrderFactory(owner=owner, product=product_2, course=course)
 
         # - As target_course has several course runs, user should not be enrolled automatically
@@ -289,60 +210,68 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(Enrollment.objects.count(), 1)
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
-    def test_flows_order_validate_transition_success(self):
+    def test_flows_order_complete_transition_success(self):
         """
-        Test that the validate transition is successful
+        Test that the complete transition is successful
         when the order is free or has invoices and is in the
         ORDER_STATE_PENDING state
         """
         order_invoice = factories.OrderFactory(
             product=factories.ProductFactory(price="10.00"),
-            state=enums.ORDER_STATE_SUBMITTED,
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "10.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PAID,
+                }
+            ],
         )
         InvoiceFactory(order=order_invoice)
-        self.assertEqual(order_invoice.flow._can_be_state_validated(), True)  # pylint: disable=protected-access
-        order_invoice.flow.validate()
-        self.assertEqual(order_invoice.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order_invoice.flow._can_be_state_completed(), True)  # pylint: disable=protected-access
+        order_invoice.flow.complete()
+        self.assertEqual(order_invoice.state, enums.ORDER_STATE_COMPLETED)
 
         order_free = factories.OrderFactory(
             product=factories.ProductFactory(price="0.00"),
             state=enums.ORDER_STATE_DRAFT,
         )
-        order_free.submit()
-        self.assertEqual(order_free.flow._can_be_state_validated(), True)  # pylint: disable=protected-access
-        # order free are automatically validated without calling the validate method
-        # but submit need to be called nonetheless
-        self.assertEqual(order_free.state, enums.ORDER_STATE_VALIDATED)
-        with self.assertRaises(TransitionNotAllowed):
-            order_free.flow.validate()
+        order_free.init_flow()
 
-    def test_flows_order_validate_failure(self):
+        self.assertEqual(order_free.flow._can_be_state_completed(), True)  # pylint: disable=protected-access
+        # order free are automatically completed without calling the complete method
+        # but submit need to be called nonetheless
+        self.assertEqual(order_free.state, enums.ORDER_STATE_COMPLETED)
+        with self.assertRaises(TransitionNotAllowed):
+            order_free.flow.complete()
+
+    def test_flows_order_complete_failure(self):
         """
-        Test that the validate transition fails when the
+        Test that the complete transition fails when the
         order is not free and has no invoices
         """
         order_no_invoice = factories.OrderFactory(
             product=factories.ProductFactory(price="10.00"),
             state=enums.ORDER_STATE_PENDING,
         )
-        self.assertEqual(order_no_invoice.flow._can_be_state_validated(), False)  # pylint: disable=protected-access
+        self.assertEqual(order_no_invoice.flow._can_be_state_completed(), False)  # pylint: disable=protected-access
         with self.assertRaises(TransitionNotAllowed):
-            order_no_invoice.flow.validate()
+            order_no_invoice.flow.complete()
         self.assertEqual(order_no_invoice.state, enums.ORDER_STATE_PENDING)
 
-    def test_flows_order_validate_failure_when_not_pending(self):
+    def test_flows_order_complete_failure_when_not_pending(self):
         """
-        Test that the validate transition fails when the
+        Test that the complete transition fails when the
         order is not in the ORDER_STATE_PENDING state
         """
         order = factories.OrderFactory(
             product=factories.ProductFactory(price="0.00"),
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
-        self.assertEqual(order.flow._can_be_state_validated(), True)  # pylint: disable=protected-access
+        self.assertEqual(order.flow._can_be_state_completed(), True)  # pylint: disable=protected-access
         with self.assertRaises(TransitionNotAllowed):
-            order.flow.validate()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+            order.flow.complete()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
     @responses.activate
     @override_settings(
@@ -390,9 +319,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order
         order = factories.OrderFactory(product=product, owner=user)
-        order.submit()
+        order.init_flow()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 2)
         self.assertEqual(responses.calls[1].request.url, url)
@@ -450,8 +379,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order
         order = factories.OrderFactory(product=product, owner=user)
-        order.submit()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        order.init_flow()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(Enrollment.objects.count(), 1)
 
@@ -502,9 +431,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # Create an order
         order = factories.OrderFactory(product=product, owner=user)
-        order.submit()
+        order.init_flow()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 2)
         self.assertEqual(responses.calls[1].request.url, url)
@@ -537,9 +466,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             }
         ]
     )
-    def test_flows_order_validate_preexisting_enrollments_targeted(self):
+    def test_flows_order_complete_preexisting_enrollments_targeted(self):
         """
-        When an order is validated, if the user was previously enrolled for free in any of the
+        When an order is completed, if the user was previously enrolled for free in any of the
         course runs targeted by the purchased product, we should change their enrollment mode on
         these course runs to "verified".
         """
@@ -582,9 +511,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course_run=course_run, is_active=True, user=user
         )
         order = factories.OrderFactory(product=product, owner=user)
-        order.submit()
+        order.init_flow()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 4)
         self.assertEqual(responses.calls[3].request.url, url)
@@ -613,9 +542,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             }
         ]
     )
-    def test_flows_order_validate_preexisting_enrollments_targeted_moodle(self):
+    def test_flows_order_complete_preexisting_enrollments_targeted_moodle(self):
         """
-        When an order is validated, if the user was previously enrolled for free in any of the
+        When an order is completed, if the user was previously enrolled for free in any of the
         course runs targeted by the purchased product, we should change their enrollment mode on
         these course runs to "verified".
         """
@@ -715,9 +644,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order = factories.OrderFactory(product=product, owner__username="student")
 
-        order.submit()
+        order.init_flow()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 3)
 
@@ -803,22 +732,20 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
         # - Submit the order to trigger the validation as it is free
         order = factories.OrderFactory(product=product)
-        order.submit()
+        order.init_flow()
 
         order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_VALIDATED)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         self.assertEqual(len(responses.calls), 3)
 
     def test_flows_order_cancel_success(self):
         """Test that the cancel transition is successful from any state"""
-
-        order = factories.OrderFactory(
-            product=factories.ProductFactory(price="0.00"),
-            state=random.choice(enums.ORDER_STATE_CHOICES)[0],
-        )
-        order.flow.cancel()
-        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(state=state)
+                order.flow.cancel()
+                self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
     @responses.activate
     def test_flows_order_cancel_certificate_product_openedx_enrollment_mode(self):
@@ -838,12 +765,13 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course_run__is_listed=True,
             course_run__resource_link=resource_link,
             user=user,
+            is_active=True,
         )
         order = factories.OrderFactory(
             course=None,
             product=product,
             enrollment=enrollment,
-            state="validated",
+            state=enums.ORDER_STATE_COMPLETED,
             owner=user,
         )
 
@@ -926,7 +854,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course=None,
             product=product,
             enrollment=enrollment,
-            state="validated",
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         backend = LMSHandler.select_lms(resource_link)
@@ -1030,12 +958,13 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             course_run__course=course,
             course_run__is_listed=True,
             course_run__state=CourseState.FUTURE_OPEN,
+            is_active=True,
         )
         order = factories.OrderFactory(
             course=None,
             product=product,
             enrollment=enrollment,
-            state="validated",
+            state=enums.ORDER_STATE_COMPLETED,
         )
 
         def enrollment_error(*args, **kwargs):
@@ -1046,7 +975,6 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         ):
             order.flow.cancel()
 
-        self.assertEqual(enrollment.state, "failed")
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.state, "failed")
 
@@ -1121,8 +1049,8 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
 
     def test_flows_order_complete_first_paid(self):
         """
-        Test that the complete transition sets pending_payment state
-        when installments are left to be paid
+        Test that the pending_payment transition failed when the first installment
+        is not paid.
         """
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_PENDING,
@@ -1153,6 +1081,42 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.pending_payment()
 
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+    def test_flows_order_pending_payment_failed_with_unpaid_first_installment(self):
+        """
+        Test that the complete transition sets pending_payment state
+        when installments are left to be paid
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "300.00",
+                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "amount": "199.99",
+                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        with self.assertRaises(TransitionNotAllowed):
+            order.flow.pending_payment()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
     def test_flows_order_complete_first_payment_failed(self):
         """
@@ -1328,3 +1292,141 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.pending_payment()
 
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+    def test_flows_order_update_not_free_no_card_with_contract(self):
+        """
+        Test that the order state is set to `to_sign`
+        when the order is not free, owner has no card and the order has a contract.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED,
+            credit_card=None,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
+
+    def test_flows_order_update_not_free_no_card_no_contract(self):
+        """
+        Test that the order state is set to `to_save_payment_method` when the order is not free,
+        owner has no card and the order has no contract.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED,
+            credit_card=None,
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
+
+    def test_flows_order_update_not_free_with_card_no_contract(self):
+        """
+        Test that the order state is set to `pending` when the order is not free,
+        owner has a card and the order has no contract.
+        """
+        credit_card = CreditCardFactory(
+            initial_issuer_transaction_identifier="4575676657929351"
+        )
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED, owner=credit_card.owner
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+    def test_flows_order_update_not_free_with_card_with_contract(self):
+        """
+        Test that the order state is set to `to_sign` when the order is not free,
+        owner has a card and the order has a contract.
+        """
+        order = factories.OrderFactory(state=enums.ORDER_STATE_ASSIGNED)
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
+
+    def test_flows_order_update_free_no_contract(self):
+        """
+        Test that the order state is set to `completed` when the order is free and has no contract.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED,
+            product=factories.ProductFactory(price="0.00"),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    def test_flows_order_update_free_with_contract(self):
+        """
+        Test that the order state is set to `to_sign` when the order is free and has a contract.
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_ASSIGNED,
+            product=factories.ProductFactory(price="0.00"),
+        )
+        factories.ContractFactory(
+            order=order,
+            definition=factories.ContractDefinitionFactory(),
+        )
+
+        order.flow.update()
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
+
+    def test_flows_order_pending(self):
+        """
+        Test that the pending transition is successful if the order is
+        in the ASSIGNED, TO_SIGN_AND_TO_SAVE_PAYMENT_METHOD, TO_SAVE_PAYMENT_METHOD,
+        or TO_SIGN state.
+        """
+        for state in [
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_SIGNING,
+        ]:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(state=state)
+                order.flow.pending()
+                self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+    def test_flows_order_update(self):
+        """
+        Test that updating flow is transitioning as expected for all states.
+        """
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderGeneratorFactory(state=state)
+                order.flow.update()
+
+                if state == enums.ORDER_STATE_ASSIGNED:
+                    self.assertEqual(
+                        order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+                    )
+                else:
+                    self.assertEqual(order.state, state)

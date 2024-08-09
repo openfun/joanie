@@ -20,24 +20,24 @@ from joanie.tests.base import BaseAPITestCase
 class CreditCardAPITestCase(BaseAPITestCase):
     """Manage user's credit cards API test cases"""
 
-    def test_api_credit_card_get_credit_cards_without_authorization(self):
-        """Retrieve credit cards without authorization header is forbidden."""
+    def test_api_credit_card_list_without_authorization(self):
+        """List credit cards without authorization header is forbidden."""
         response = self.client.get("/api/v1.0/credit-cards/")
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.data, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_credit_card_get_credit_cards_with_bad_token(self):
-        """Retrieve credit cards with bad token is forbidden."""
+    def test_api_credit_card_list_with_bad_token(self):
+        """List credit cards with bad token is forbidden."""
         response = self.client.get(
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION="Bearer invalid_token"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.data["code"], "token_not_valid")
 
-    def test_api_credit_card_get_credit_cards_with_expired_token(self):
-        """Retrieve credit cards with an expired token is forbidden."""
+    def test_api_credit_card_list_with_expired_token(self):
+        """List credit cards with an expired token is forbidden."""
         token = self.get_user_token(
             "johndoe",
             expires_at=arrow.utcnow().shift(days=-1).datetime,
@@ -48,10 +48,9 @@ class CreditCardAPITestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.data["code"], "token_not_valid")
 
-    def test_api_credit_card_get_credit_cards_for_new_user(self):
+    def test_api_credit_card_list_for_new_user(self):
         """
-        Retrieve credit cards of a non existing user is allowed but
-        create an user first.
+        List credit cards of a non-existing user is allowed but create an user first.
         """
         username = "johndoe"
         self.assertFalse(User.objects.filter(username=username).exists())
@@ -65,9 +64,9 @@ class CreditCardAPITestCase(BaseAPITestCase):
         )
         self.assertTrue(User.objects.filter(username=username).exists())
 
-    def test_api_credit_card_get_credit_cards_list(self):
+    def test_api_credit_card_list(self):
         """
-        Authenticated user should be able to retrieve all his credit cards
+        Authenticated user should be able to list all his credit cards
         with the active payment backend.
         """
         user = UserFactory()
@@ -85,6 +84,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         content = response.json()
         results = content.pop("results")
         cards.sort(key=lambda card: card.created_on, reverse=True)
+        cards.sort(key=lambda card: card.is_main, reverse=True)
         self.assertEqual(
             [result["id"] for result in results], [str(card.id) for card in cards]
         )
@@ -99,7 +99,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         )
 
     @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
-    def test_api_credit_card_read_list_pagination(self, _mock_page_size):
+    def test_api_credit_card_list_pagination(self, _mock_page_size):
         """Pagination should work as expected."""
         user = UserFactory()
         token = self.generate_token_from_user(user)
@@ -140,7 +140,45 @@ class CreditCardAPITestCase(BaseAPITestCase):
         card_ids.remove(content["results"][0]["id"])
         self.assertEqual(card_ids, [])
 
-    def test_api_credit_card_get_credit_card(self):
+    @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
+    def test_api_credit_card_list_sorted_by_is_main_then_created_on(
+        self, _mock_page_size
+    ):
+        """
+        List credit cards should always return first the main credit card then
+        all others sorted by created_on desc.
+        """
+        user = UserFactory()
+        token = self.generate_token_from_user(user)
+        cards = CreditCardFactory.create_batch(3, owner=user)
+        cards.sort(key=lambda card: card.created_on, reverse=True)
+        cards.sort(key=lambda card: card.is_main, reverse=True)
+        sorted_card_ids = [str(card.id) for card in cards]
+
+        response = self.client.get(
+            "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        results_ids = [result["id"] for result in content["results"]]
+        self.assertListEqual(results_ids, sorted_card_ids[:2])
+        self.assertEqual(content["results"][0]["is_main"], True)
+
+        # Get page 2
+        response = self.client.get(
+            "/api/v1.0/credit-cards/?page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        results_ids = [result["id"] for result in content["results"]]
+        self.assertListEqual(results_ids, sorted_card_ids[2:])
+
+    def test_api_credit_card_get(self):
         """Retrieve authenticated user's credit card by its id is allowed."""
         user = UserFactory()
         token = self.generate_token_from_user(user)
@@ -165,8 +203,8 @@ class CreditCardAPITestCase(BaseAPITestCase):
             },
         )
 
-    def test_api_credit_card_get_non_existing_credit_card(self):
-        """Retrieve a non existing credit card should return a 404."""
+    def test_api_credit_card_get_non_existing(self):
+        """Retrieve a non-existing credit card should return a 404."""
         user = UserFactory()
         token = self.generate_token_from_user(user)
         card = CreditCardFactory.build(owner=user)
@@ -176,10 +214,9 @@ class CreditCardAPITestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_api_credit_card_get_not_owned_credit_card(self):
+    def test_api_credit_card_get_not_owned(self):
         """
-        Retrieve credit card don't owned by the
-        authenticated user should return a 404.
+        Retrieve credit card don't owned by the authenticated user should return a 404.
         """
         user = UserFactory()
         token = self.generate_token_from_user(user)
@@ -190,7 +227,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_api_credit_card_create_credit_card_is_not_allowed(self):
+    def test_api_credit_card_create_is_not_allowed(self):
         """Create a credit card is not allowed."""
         token = self.get_user_token("johndoe")
         response = self.client.post(
@@ -311,7 +348,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
 
     def test_api_credit_card_update(self):
         """
-        Update a authenticated user's credit card is allowed with a valid token.
+        Update an authenticated user's credit card is allowed with a valid token.
         Only title field should be writable !
         """
         user = UserFactory()

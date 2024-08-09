@@ -24,6 +24,20 @@ export type OrderListItem = AbstractOrder & {
   product_title: string;
 };
 
+export enum PaymentStatesEnum {
+  PAYMENT_STATE_PENDING = "pending",
+  PAYMENT_STATE_PAID = "paid",
+  PAYMENT_STATE_REFUSED = "refused",
+}
+
+export type OrderPaymentSchedule = {
+  id: string;
+  amount: number;
+  currency: string;
+  due_date: string;
+  state: PaymentStatesEnum;
+};
+
 export type Order = AbstractOrder & {
   owner: User;
   product: ProductSimple;
@@ -33,8 +47,8 @@ export type Order = AbstractOrder & {
   enrollment: Nullable<Enrollment>;
   certificate: Nullable<GeneratedCertificate>;
   main_invoice: OrderMainInvoice;
-  has_consent_to_terms: boolean;
   contract: Nullable<OrderContractDetails>;
+  payment_schedule: Nullable<OrderPaymentSchedule[]>;
 };
 
 export type OrderContractDetails = {
@@ -89,10 +103,16 @@ export enum OrderInvoiceStatusEnum {
 
 export enum OrderStatesEnum {
   ORDER_STATE_DRAFT = "draft", // order has been created
-  ORDER_STATE_SUBMITTED = "submitted", // order information have been validated
+  ORDER_STATE_ASSIGNED = "assigned", // order has been assigned to an organization
+  ORDER_STATE_TO_SAVE_PAYMENT_METHOD = "to_save_payment_method", // order needs a payment method
+  ORDER_STATE_TO_SIGN = "to_sign", // order needs a contract signature
+  ORDER_STATE_SIGNING = "signing", // order is pending for contract signature validation
   ORDER_STATE_PENDING = "pending", // payment has failed but can be retried
   ORDER_STATE_CANCELED = "canceled", // has been canceled
-  ORDER_STATE_VALIDATED = "validated", // is free or has an invoice linked
+  ORDER_STATE_PENDING_PAYMENT = "pending_payment", // payment is pending
+  ORDER_STATE_FAILED_PAYMENT = "failed_payment", // last payment has failed
+  ORDER_STATE_NO_PAYMENT = "no_payment", // no payment has been made
+  ORDER_STATE_COMPLETED = "completed", // is completed
 }
 
 export const transformOrderToOrderListItem = (order: Order): OrderListItem => {

@@ -323,8 +323,9 @@ class Organization(parler_models.TranslatableModel, BaseModel):
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
                 order__organization=self,
-                order__state=enums.ORDER_STATE_VALIDATED,
-            ).values_list("id", "signature_backend_reference")
+            )
+            .exclude(order__state=enums.ORDER_STATE_CANCELED)
+            .values_list("id", "signature_backend_reference")
         )
 
         if contract_ids and len(contracts_to_sign) != len(contract_ids):
@@ -533,6 +534,24 @@ class Course(parler_models.TranslatableModel, BaseModel):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def get_equivalent_course_run_dates(self):
+        """
+        Return a dict of dates equivalent to course run dates
+        by aggregating dates of all target course runs as follows:
+        - start: Pick the earliest start date
+        - end: Pick the latest end date
+        - enrollment_start: Pick the latest enrollment start date
+        - enrollment_end: Pick the earliest enrollment end date
+        """
+        aggregate = self.course_runs.aggregate(
+            models.Min("start"),
+            models.Max("end"),
+            models.Max("enrollment_start"),
+            models.Min("enrollment_end"),
+        )
+
+        return {key.split("__")[0]: value for key, value in aggregate.items()}
 
     def get_selling_organizations(self, product=None):
         """
@@ -1138,7 +1157,7 @@ class Enrollment(BaseModel):
                             product__contract_definition__isnull=True,
                         )
                     ),
-                    state=enums.ORDER_STATE_VALIDATED,
+                    state__in=enums.ORDER_STATE_ALLOW_ENROLLMENT,
                 )
                 if validated_user_orders.count() == 0:
                     message = _(

@@ -148,6 +148,42 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             },
         )
 
+    def test_models_organization_signature_backend_references_to_sign_states(self):
+        """Every contract with order state other than canceled should be returned."""
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                now = timezone.now()
+                organization = factories.OrganizationFactory()
+                relation = factories.CourseProductRelationFactory(
+                    organizations=[organization],
+                    product__contract_definition=factories.ContractDefinitionFactory(),
+                )
+                contract = factories.ContractFactory(
+                    order__state=state,
+                    order__product=relation.product,
+                    order__course=relation.course,
+                    order__organization=organization,
+                    signature_backend_reference=factory.Sequence(
+                        lambda n: f"wfl_fake_dummy_id_{n!s}"
+                    ),
+                    submitted_for_signature_on=now,
+                    student_signed_on=now,
+                )
+
+                if state == enums.ORDER_STATE_CANCELED:
+                    self.assertEqual(
+                        organization.signature_backend_references_to_sign(),
+                        ((), ()),
+                    )
+                else:
+                    self.assertEqual(
+                        organization.signature_backend_references_to_sign(),
+                        (
+                            (contract.id,),
+                            (contract.signature_backend_reference,),
+                        ),
+                    )
+
     def test_models_organization_signature_backend_references_to_sign(self):
         """Should return a list of references to sign."""
         now = timezone.now()
@@ -163,7 +199,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         for relation in relations:
             contracts_to_sign.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -176,7 +212,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             other_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -187,7 +223,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             signed_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -228,7 +264,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         for relation in relations:
             contracts_to_sign.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -241,7 +277,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             other_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -252,7 +288,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             signed_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -298,7 +334,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         for relation in relations:
             contracts_to_sign.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -311,7 +347,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             other_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -322,7 +358,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
             signed_contracts.append(
                 factories.ContractFactory(
-                    order__state=enums.ORDER_STATE_VALIDATED,
+                    order__state=enums.ORDER_STATE_COMPLETED,
                     order__product=relation.product,
                     order__course=relation.course,
                     order__organization=organization,
@@ -366,7 +402,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts = []
         for relation in relations:
             contract = factories.ContractFactory(
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__product=relation.product,
                 order__course=relation.course,
                 order__organization=organization,
@@ -382,7 +418,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         (invitation_url, contract_ids) = organization.contracts_signature_link(
             user=user
         )
-        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
         contracts_to_sign_ids = [contract.id for contract in contracts]
         self.assertCountEqual(contracts_to_sign_ids, contract_ids)
 
@@ -398,7 +434,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts = []
         for relation in relations:
             contract = factories.ContractFactory(
-                order__state=enums.ORDER_STATE_VALIDATED,
+                order__state=enums.ORDER_STATE_COMPLETED,
                 order__product=relation.product,
                 order__course=relation.course,
                 order__organization=organization,
@@ -417,7 +453,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         (invitation_url, contract_ids) = organization.contracts_signature_link(
             user=user, contract_ids=contracts_to_sign_ids
         )
-        self.assertIn("https://dummysignaturebackend.fr/?requestToken=", invitation_url)
+        self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
         self.assertCountEqual(contract_ids, contracts_to_sign_ids)
 
     def test_models_organization_contracts_signature_link_empty(self):

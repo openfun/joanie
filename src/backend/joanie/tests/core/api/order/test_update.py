@@ -57,6 +57,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 "contract",
                 "course",
                 "created_on",
+                "credit_card_id",
                 "enrollment",
                 "id",
                 "main_invoice_reference",
@@ -143,29 +144,17 @@ class OrderUpdateApiTest(BaseAPITestCase):
         owner = factories.UserFactory()
         *target_courses, _other_course = factories.CourseFactory.create_batch(3)
         product = factories.ProductFactory(target_courses=target_courses)
-        order = factories.OrderFactory(
-            owner=owner, product=product, state=enums.ORDER_STATE_SUBMITTED
-        )
-        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
-        models.Order.objects.all().delete()
-        order = factories.OrderFactory(
-            owner=owner, product=product, state=enums.ORDER_STATE_VALIDATED
-        )
-        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
-        Transaction.objects.all().delete()
-        Invoice.objects.all().delete()
-        models.Order.objects.all().delete()
-        order = factories.OrderFactory(
-            owner=owner, product=product, state=enums.ORDER_STATE_PENDING
-        )
-        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
-        models.Order.objects.all().delete()
-        order = factories.OrderFactory(
-            owner=owner, product=product, state=enums.ORDER_STATE_CANCELED
-        )
-        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
-        models.Order.objects.all().delete()
-        order = factories.OrderFactory(
-            owner=owner, product=product, state=enums.ORDER_STATE_DRAFT
-        )
-        self._check_api_order_update_detail(order, owner, HTTPStatus.METHOD_NOT_ALLOWED)
+
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                order = factories.OrderFactory(
+                    owner=owner, product=product, state=state
+                )
+
+                self._check_api_order_update_detail(
+                    order, owner, HTTPStatus.METHOD_NOT_ALLOWED
+                )
+
+                Transaction.objects.all().delete()
+                Invoice.objects.all().delete()
+                models.Order.objects.all().delete()

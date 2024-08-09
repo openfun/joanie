@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 # ruff: noqa: S311
 """
 Core application factories
@@ -21,9 +22,14 @@ from faker import Faker
 from timedelta_isoformat import timedelta as timedelta_isoformat
 
 from joanie.core import enums, models
-from joanie.core.models import OrderTargetCourseRelation, ProductTargetCourseRelation
+from joanie.core.models import (
+    CourseState,
+    DocumentImage,
+    OrderTargetCourseRelation,
+    ProductTargetCourseRelation,
+)
 from joanie.core.serializers import AddressSerializer
-from joanie.core.utils import image_to_base64
+from joanie.core.utils import contract_definition, file_checksum
 
 
 def generate_thumbnails_for_field(field, include_global=False):
@@ -562,6 +568,7 @@ class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ProductTargetCourseRelation
         skip_postgeneration_save = True
+        django_get_or_create = ("product", "course")
 
     product = factory.SubFactory(ProductFactory)
     course = factory.SubFactory(CourseFactory)
@@ -615,6 +622,17 @@ class OrderFactory(factory.django.DjangoModelFactory):
             course_relations = course_relations.filter(course=self.course)
         return course_relations.first().organizations.order_by("?").first()
 
+    @factory.lazy_attribute
+    def credit_card(self):
+        """Create a credit card for the order."""
+        if self.product.price == 0:
+            return None
+        from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+            CreditCardFactory,
+        )
+
+        return CreditCardFactory(owner=self.owner)
+
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
     def target_courses(self, create, extracted, **kwargs):
@@ -649,7 +667,7 @@ class OrderFactory(factory.django.DjangoModelFactory):
                 extracted.save()
                 return extracted
 
-            if self.state == enums.ORDER_STATE_VALIDATED:
+            if self.state == enums.ORDER_STATE_COMPLETED:
                 # If the order is not fee and its state is validated, create
                 # a main invoice with related transaction.
                 from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
@@ -664,6 +682,243 @@ class OrderFactory(factory.django.DjangoModelFactory):
                 return transaction.invoice
 
         return None
+
+
+class OrderGeneratorFactory(factory.django.DjangoModelFactory):
+    """A factory to create an Order"""
+
+    class Meta:
+        model = models.Order
+
+    product = factory.SubFactory(ProductFactory)
+    course = factory.LazyAttribute(lambda o: o.product.courses.order_by("?").first())
+    total = factory.LazyAttribute(lambda o: o.product.price)
+    enrollment = None
+    state = enums.ORDER_STATE_DRAFT
+
+    @factory.lazy_attribute
+    def owner(self):
+        """Retrieve the user from the enrollment when available or create a new one."""
+        if self.enrollment:
+            return self.enrollment.user
+        return UserFactory()
+
+    @factory.lazy_attribute
+    def organization(self):
+        """Retrieve the organization from the product/course relation."""
+        if self.state == enums.ORDER_STATE_DRAFT:
+            return None
+
+        course_relations = self.product.course_relations
+        if self.course:
+            course_relations = course_relations.filter(course=self.course)
+        return course_relations.first().organizations.order_by("?").first()
+
+    @factory.post_generation
+    def main_invoice(self, create, extracted, **kwargs):
+        """
+        Generate invoice if needed
+        """
+        if create:
+            if extracted is not None:
+                # If a main_invoice is passed, link it to the order.
+                extracted.order = self
+                extracted.save()
+                return extracted
+
+            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                InvoiceFactory,
+            )
+
+            return InvoiceFactory(
+                order=self,
+                total=self.total,
+            )
+        return None
+
+    @factory.post_generation
+    # pylint: disable=unused-argument
+    def contract(self, create, extracted, **kwargs):
+        """Create a contract for the order."""
+        if extracted:
+            return extracted
+
+        if self.state in [
+            enums.ORDER_STATE_TO_SIGN,
+            enums.ORDER_STATE_SIGNING,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_PENDING_PAYMENT,
+            enums.ORDER_STATE_NO_PAYMENT,
+            enums.ORDER_STATE_FAILED_PAYMENT,
+            enums.ORDER_STATE_COMPLETED,
+            enums.ORDER_STATE_CANCELED,
+        ]:
+            if not self.product.contract_definition:
+                self.product.contract_definition = ContractDefinitionFactory()
+                self.product.save()
+
+            is_signed = self.state not in [
+                enums.ORDER_STATE_TO_SIGN,
+                enums.ORDER_STATE_SIGNING,
+            ]
+            context = kwargs.get(
+                "context",
+                contract_definition.generate_document_context(
+                    contract_definition=self.product.contract_definition,
+                    user=self.owner,
+                    order=self,
+                )
+                if is_signed
+                else None,
+            )
+            student_signed_on = kwargs.get(
+                "student_signed_on", django_timezone.now() if is_signed else None
+            )
+            organization_signed_on = kwargs.get(
+                "organization_signed_on",
+                django_timezone.now() if is_signed else None,
+            )
+            submitted_for_signature_on = kwargs.get(
+                "submitted_for_signature_on",
+                django_timezone.now()
+                if student_signed_on and not organization_signed_on
+                else None,
+            )
+            definition_checksum = kwargs.get(
+                "definition_checksum",
+                "fake_test_file_hash_1" if is_signed else None,
+            )
+            signature_backend_reference = kwargs.get(
+                "signature_backend_reference",
+                f"wfl_fake_dummy_demo_dev_{uuid.uuid4()}" if is_signed else None,
+            )
+            return ContractFactory(
+                order=self,
+                student_signed_on=student_signed_on,
+                submitted_for_signature_on=submitted_for_signature_on,
+                organization_signed_on=organization_signed_on,
+                definition=self.product.contract_definition,
+                context=context,
+                definition_checksum=definition_checksum,
+                signature_backend_reference=signature_backend_reference,
+            )
+
+        return None
+
+    @factory.lazy_attribute
+    def credit_card(self):
+        """Create a credit card for the order."""
+        if self.state in [
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_PENDING_PAYMENT,
+            enums.ORDER_STATE_NO_PAYMENT,
+            enums.ORDER_STATE_FAILED_PAYMENT,
+            enums.ORDER_STATE_COMPLETED,
+            enums.ORDER_STATE_CANCELED,
+        ]:
+            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                CreditCardFactory,
+            )
+
+            return CreditCardFactory(owner=self.owner)
+
+        return None
+
+    @factory.post_generation
+    # pylint: disable=unused-argument
+    def target_courses(self, create, extracted, **kwargs):
+        """
+        If the order has a state other than draft, it should have been submitted so
+        target courses should have been copied from the product target courses.
+        """
+        if extracted:
+            self.target_courses.set(extracted)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument, too-many-branches
+    # ruff: noqa: PLR0912
+    def billing_address(self, create, extracted, **kwargs):
+        """
+        Create a billing address for the order.
+        This method also handles the state transitions of the order based on the target state
+        and whether the order is free or not.
+        It updates the payment schedule states accordingly.
+        """
+        target_state = self.state
+        if self.state not in [
+            enums.ORDER_STATE_DRAFT,
+            enums.ORDER_STATE_ASSIGNED,
+        ]:
+            self.state = enums.ORDER_STATE_DRAFT
+
+            CourseRunFactory(
+                course=self.course,
+                is_gradable=True,
+                state=CourseState.ONGOING_OPEN,
+                end=django_timezone.now() + timedelta(days=200),
+            )
+            ProductTargetCourseRelationFactory(
+                product=self.product,
+                course=self.course,
+                is_graded=True,
+            )
+
+            if extracted:
+                self.init_flow(billing_address=extracted)
+            else:
+                from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                    BillingAddressDictFactory,
+                )
+
+                self.init_flow(billing_address=BillingAddressDictFactory())
+
+        if target_state == enums.ORDER_STATE_SIGNING:
+            if not self.contract.submitted_for_signature_on:
+                self.submit_for_signature(self.owner)
+            else:
+                self.state = target_state
+                self.save()
+
+        if (
+            not self.is_free
+            and self.has_contract
+            and target_state
+            not in [
+                enums.ORDER_STATE_DRAFT,
+                enums.ORDER_STATE_ASSIGNED,
+                enums.ORDER_STATE_TO_SIGN,
+            ]
+        ):
+            self.generate_schedule()
+
+        if (
+            target_state
+            in [
+                enums.ORDER_STATE_PENDING_PAYMENT,
+                enums.ORDER_STATE_NO_PAYMENT,
+                enums.ORDER_STATE_FAILED_PAYMENT,
+                enums.ORDER_STATE_COMPLETED,
+            ]
+            and not self.is_free
+        ):
+            if target_state == enums.ORDER_STATE_PENDING_PAYMENT:
+                self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+            if target_state == enums.ORDER_STATE_NO_PAYMENT:
+                self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUSED
+            if target_state == enums.ORDER_STATE_FAILED_PAYMENT:
+                self.state = target_state
+                self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+                self.payment_schedule[1]["state"] = enums.PAYMENT_STATE_REFUSED
+            if target_state == enums.ORDER_STATE_COMPLETED:
+                self.flow.update()
+                for payment in self.payment_schedule:
+                    payment["state"] = enums.PAYMENT_STATE_PAID
+            self.save()
+            self.flow.update()
+
+        if target_state == enums.ORDER_STATE_CANCELED:
+            self.flow.cancel()
 
 
 class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
@@ -759,7 +1014,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
 
     order = factory.SubFactory(
         OrderFactory,
-        state=enums.ORDER_STATE_VALIDATED,
+        state=enums.ORDER_STATE_COMPLETED,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
     )
@@ -785,6 +1040,16 @@ class ContractFactory(factory.django.DjangoModelFactory):
                 is_main=True
             ).first()
             course_dates = self.order.get_equivalent_course_run_dates()
+
+            logo_checksum = file_checksum(self.order.organization.logo)
+            logo_image, created = DocumentImage.objects.get_or_create(
+                checksum=logo_checksum,
+                defaults={"file": self.order.organization.logo},
+            )
+            if created:
+                self.definition.images.set([logo_image])
+            organization_logo_id = str(logo_image.id)
+
             return {
                 "contract": {
                     "body": self.definition.get_body_in_html(),
@@ -822,12 +1087,11 @@ class ContractFactory(factory.django.DjangoModelFactory):
                     "phone_number": self.order.owner.phone_number,
                 },
                 "organization": {
-                    "logo": image_to_base64(self.order.organization.logo),
+                    "logo_id": organization_logo_id,
                     "name": self.order.organization.safe_translation_getter(
                         "title", language_code=self.definition.language
                     ),
                     "address": AddressSerializer(organization_address).data,
-                    "signature": image_to_base64(self.order.organization.signature),
                     "representative": self.order.organization.representative,
                     "representative_profession": self.order.organization.representative_profession,
                     "enterprise_code": self.order.organization.enterprise_code,

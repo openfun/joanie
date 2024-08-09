@@ -179,7 +179,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 owner=user,
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
+                main_invoice=payment_factories.InvoiceFactory(),
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
@@ -243,7 +244,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 owner=user,
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
+                main_invoice=payment_factories.InvoiceFactory(),
             )
             context = contract_definition.generate_document_context(
                 order.product.contract_definition, user, order
@@ -307,7 +309,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 owner=user,
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=payment_factories.InvoiceFactory(
                     recipient_address__address="1 Rue de L'Exemple",
                     recipient_address__postcode=75000,
@@ -401,7 +403,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 owner=user,
                 product=relation.product,
                 course=relation.course,
-                state=enums.ORDER_STATE_VALIDATED,
+                state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=payment_factories.InvoiceFactory(
                     recipient_address__address="1 Rue de L'Exemple",
                     recipient_address__postcode=75000,
@@ -499,7 +501,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             owner=user,
             product=relation.product,
             course=relation.course,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
+            main_invoice=payment_factories.InvoiceFactory(),
         )
         context = contract_definition.generate_document_context(
             order.product.contract_definition, user, order

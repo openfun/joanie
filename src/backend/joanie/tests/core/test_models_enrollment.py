@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler.backends.moodle import MoodleLMSBackend
@@ -262,7 +262,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Once the product purchased, enrollment should be allowed
         order = factories.OrderFactory(owner=user, product=product)
-        order.submit()
+        order.init_flow()
         factories.EnrollmentFactory(
             course_run=course_run, user=user, was_created_by_order=True
         )
@@ -345,7 +345,7 @@ class EnrollmentModelsTestCase(TestCase):
         course_relation.course_runs.set([cr1, cr2])
 
         order = factories.OrderFactory(owner=user, product=product)
-        order.submit()
+        order.init_flow()
 
         # - Enroll to cr2 should fail
         with self.assertRaises(ValidationError) as context:
@@ -518,7 +518,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
-        order.submit()
+        order.init_flow()
         order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
         self.assertFalse(order_enrollment.was_created_by_order)
@@ -550,7 +550,7 @@ class EnrollmentModelsTestCase(TestCase):
 
         # Then if user purchases the product, the flag should not have been updated
         order = factories.OrderFactory(owner=user, product=product)
-        order.submit()
+        order.init_flow()
         order_enrollment = order.get_target_enrollments().first()
         self.assertEqual(enrollment, order_enrollment)
         self.assertFalse(order_enrollment.was_created_by_order)
@@ -638,12 +638,11 @@ class EnrollmentModelsTestCase(TestCase):
             course=relation.course,
             organization=relation.organizations.first(),
         )
-        order.submit()
-
         factories.ContractFactory(
             order=order,
             definition=product.contract_definition,
         )
+        order.init_flow()
 
         with self.assertRaises(ValidationError) as context:
             factories.EnrollmentFactory(
@@ -664,12 +663,23 @@ class EnrollmentModelsTestCase(TestCase):
 
         # - Recreate a signed contract for the order
         order.contract.delete()
+        # Generates a contract for the order
+        # Defining the student signature allows to create needed objects for further enrollment
         factories.ContractFactory(
             order=order,
             definition=product.contract_definition,
             submitted_for_signature_on=timezone.now(),
             student_signed_on=timezone.now(),
         )
+        # Sets the order to SIGNING state by removing the student signature
+        order.contract.student_signed_on = None
+        order.flow.update()
+        self.assertEqual(order.state, enums.ORDER_STATE_SIGNING)
+
+        # Sets back the student signature
+        order.contract.student_signed_on = timezone.now()
+        order.flow.update()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
         # - Now the enrollment should be allowed
         factories.EnrollmentFactory(
@@ -680,3 +690,4 @@ class EnrollmentModelsTestCase(TestCase):
         )
 
         self.assertEqual(order.owner.enrollments.count(), 1)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)

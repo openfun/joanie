@@ -23,7 +23,7 @@ def generate_certificates_for_orders(orders):
 
     orders_filtered = (
         orders_queryset.filter(
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_COMPLETED,
             certificate__isnull=True,
             product__type__in=enums.PRODUCT_TYPE_CERTIFICATE_ALLOWED,
         )

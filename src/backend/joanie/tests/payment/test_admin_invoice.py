@@ -24,7 +24,7 @@ class InvoiceAdminTestCase(TestCase):
         self.client.login(username=user.username, password="password")
 
         # - Create an order with a related invoice
-        order = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
+        order = factories.OrderFactory(state=enums.ORDER_STATE_COMPLETED)
         credit_note = InvoiceFactory(
             order=order, parent=order.main_invoice, total=-order.total
         )
@@ -53,7 +53,7 @@ class InvoiceAdminTestCase(TestCase):
         self.client.login(username=user.username, password="password")
 
         # - Create an order with a related invoice
-        order = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
+        order = factories.OrderFactory(state=enums.ORDER_STATE_COMPLETED)
         TransactionFactory(invoice__parent=order.main_invoice, total=-order.total)
 
         # - Now go to the invoice admin change view
@@ -86,7 +86,7 @@ class InvoiceAdminTestCase(TestCase):
         self.client.login(username=user.username, password="password")
 
         # - Create an order with a related invoice
-        order = factories.OrderFactory(state=enums.ORDER_STATE_VALIDATED)
+        order = factories.OrderFactory(state=enums.ORDER_STATE_COMPLETED)
 
         # - And link other invoices to this invoice
         children = InvoiceFactory.create_batch(

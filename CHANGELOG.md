@@ -8,9 +8,27 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Support of payment_schedule for certificate products
+
+### Changed
+
+- Sort credit card list by is_main then descending creation date
+- Rework order statuses
+- Update the task `process_today_installment` to catch up on late
+  payments of installments that are in the past
+- Deprecated field `has_consent_to_terms` for `Order` model
+
 ### Fixed
 
 - Allow to cancel an enrollment order linked to an archived course run
+
+### Removed
+
+- Remove the `has_consent_to_terms` field from the `Order` edit view 
+  in the back office application
+
 
 ## [2.6.1] - 2024-07-25
 
@@ -44,7 +62,6 @@ and this project adheres to
 
 - Do not update OpenEdX enrollment if this one is already
   up-to-date on the remote lms
-- 
 
 ## [2.4.0] - 2024-06-21
 
