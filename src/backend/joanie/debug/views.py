@@ -25,6 +25,7 @@ from joanie.core.enums import (
     DEGREE,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
+    PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import (
     OrderGeneratorFactory,
@@ -82,7 +83,7 @@ class DebugMailSuccessPaymentViewTxt(DebugMailSuccessPayment):
     template_name = "mail/text/order_validated.txt"
 
 
-class DebugMailSuccessInstallmentPaid(TemplateView):
+class DebugMailInstallmentPayment(TemplateView):
     """Debug View to check the layout of the success installment payment by email"""
 
     def get_context_data(self, **kwargs):
@@ -128,7 +129,9 @@ class DebugMailSuccessInstallmentPaid(TemplateView):
                 balance_remaining_to_be_paid=order.get_remaining_balance_to_pay(),
                 next_installment_date=order.get_date_next_installment_to_pay(),
                 credit_card_last_four_numbers=order.credit_card.last_numbers,
-                installment_concerned_position=order.get_position_last_paid_installment(),
+                installment_concerned_position=order.get_position_of_last_installment(
+                    state=PAYMENT_STATE_PAID
+                ),
                 fullname=order.owner.get_full_name() or order.owner.username,
                 email=order.owner.email,
                 dashboard_order_link=settings.JOANIE_DASHBOARD_ORDER_LINK,
@@ -140,21 +143,21 @@ class DebugMailSuccessInstallmentPaid(TemplateView):
             )
 
 
-class DebugMailSuccessInstallmentPaidViewHtml(DebugMailSuccessInstallmentPaid):
+class DebugMailSuccessInstallmentPaidViewHtml(DebugMailInstallmentPayment):
     """Debug View to check the layout of the success installment payment email
     in html format."""
 
     template_name = "mail/html/installment_paid.html"
 
 
-class DebugMailSuccessInstallmentPaidViewTxt(DebugMailSuccessInstallmentPaid):
+class DebugMailSuccessInstallmentPaidViewTxt(DebugMailInstallmentPayment):
     """Debug View to check the layout of the success installment payment email
     in txt format."""
 
     template_name = "mail/text/installment_paid.txt"
 
 
-class DebugMailAllInstallmentPaid(DebugMailSuccessInstallmentPaid):
+class DebugMailAllInstallmentPaid(DebugMailInstallmentPayment):
     """Debug View to check the layout of when all installments are paid by email"""
 
     def get_context_data(self, **kwargs):
@@ -170,7 +173,7 @@ class DebugMailAllInstallmentPaid(DebugMailSuccessInstallmentPaid):
         context["balance_remaining_to_be_paid"] = order.get_remaining_balance_to_pay()
         context["next_installment_date"] = order.get_date_next_installment_to_pay()
         context["installment_concerned_position"] = (
-            order.get_position_last_paid_installment()
+            order.get_position_of_last_installment(state=PAYMENT_STATE_PAID)
         )
 
         return context
@@ -188,6 +191,38 @@ class DebugMailAllInstallmentPaidViewTxt(DebugMailAllInstallmentPaid):
     in txt format."""
 
     template_name = "mail/text/installments_fully_paid.txt"
+
+
+class DebugMailInstallmentRefusedPayment(DebugMailInstallmentPayment):
+    """Debug View to check the layout of when an installment debit is refused by email"""
+
+    def get_context_data(self, **kwargs):
+        """
+        Base method to prepare the document context to render in the email for the debug view.
+        """
+        context = super().get_context_data()
+        order = context.get("order")
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_REFUSED
+        context["amount"] = order.payment_schedule[2]["amount"]
+        position = order.get_position_of_last_installment(state=PAYMENT_STATE_REFUSED)
+        context["nth_installment"] = position + 1  # position index starts at 0
+        context["installment_concerned_position"] = position
+
+        return context
+
+
+class DebugMailInstallmentRefusedPaymentViewHtml(DebugMailInstallmentRefusedPayment):
+    """Debug View to check the layout of when an installment debit is refused by email
+    in html format."""
+
+    template_name = "mail/html/installment_refused.html"
+
+
+class DebugMailInstallmentRefusedPaymentViewTxt(DebugMailInstallmentRefusedPayment):
+    """Debug View to check the layout of when an installment debit is refused by email
+    in txt format."""
+
+    template_name = "mail/text/installment_refused.txt"
 
 
 class DebugPdfTemplateView(TemplateView):

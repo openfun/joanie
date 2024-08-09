@@ -128,6 +128,11 @@ class DummyPaymentBackend(BasePaymentBackend):
             order=order, amount=amount, upcoming_installment=upcoming_installment
         )
 
+    @classmethod
+    def _send_mail_refused_debit(cls, order, installment_id):
+        logger.info("Mail is sent to %s from dummy payment", order.owner.email)
+        super()._send_mail_refused_debit(order, installment_id)
+
     def _get_payment_data(
         self,
         order,

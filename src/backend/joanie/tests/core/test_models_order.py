@@ -1300,8 +1300,11 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
 
         self.assertEqual(str(remains), str(order.payment_schedule[1]["amount"]))
 
-    def test_models_order_get_position_last_paid_installment(self):
-        """Should return the position of the last installment paid from the payment schedule."""
+    def test_models_order_get_position_installment_state_paid(self):
+        """
+        Should return the position of the last installment 'paid' state in the payment schedule
+        of the order.
+        """
         product = factories.ProductFactory(price=Decimal("1000.00"))
         order_1 = factories.OrderGeneratorFactory(
             state=enums.ORDER_STATE_PENDING_PAYMENT,
@@ -1309,7 +1312,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order_1.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
 
-        self.assertEqual(0, order_1.get_position_last_paid_installment())
+        self.assertEqual(
+            0, order_1.get_position_of_last_installment(state=enums.PAYMENT_STATE_PAID)
+        )
 
         order_2 = factories.OrderGeneratorFactory(
             state=enums.ORDER_STATE_PENDING_PAYMENT, product=product
@@ -1317,4 +1322,39 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         for payment in order_2.payment_schedule:
             payment["state"] = enums.PAYMENT_STATE_PAID
 
-        self.assertEqual(1, order_2.get_position_last_paid_installment())
+        self.assertEqual(
+            1, order_2.get_position_of_last_installment(state=enums.PAYMENT_STATE_PAID)
+        )
+
+    def test_models_order_get_position_installment_state_refused(self):
+        """
+        Should return the position of the first 'refused' state installment in the payment
+        schedule of the order.
+        """
+        product = factories.ProductFactory(price=Decimal("1000.00"))
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            product=product,
+        )
+        order.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = enums.PAYMENT_STATE_REFUSED
+
+        self.assertEqual(
+            1, order.get_position_of_last_installment(state=enums.PAYMENT_STATE_REFUSED)
+        )
+
+    def test_models_order_get_position_installment_state_pending(self):
+        """
+        Should return the position of the first installment in 'pending' state in the payment
+        schedule of the order.
+        """
+        product = factories.ProductFactory(price=Decimal("1000.00"))
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            product=product,
+        )
+        order.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+
+        self.assertEqual(
+            1, order.get_position_of_last_installment(state=enums.PAYMENT_STATE_PENDING)
+        )

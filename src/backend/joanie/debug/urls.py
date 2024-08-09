@@ -12,6 +12,8 @@ from joanie.debug.views import (
     DebugInvoiceTemplateView,
     DebugMailAllInstallmentPaidViewHtml,
     DebugMailAllInstallmentPaidViewTxt,
+    DebugMailInstallmentRefusedPaymentViewHtml,
+    DebugMailInstallmentRefusedPaymentViewTxt,
     DebugMailSuccessInstallmentPaidViewHtml,
     DebugMailSuccessInstallmentPaidViewTxt,
     DebugMailSuccessPaymentViewHtml,
@@ -74,5 +76,15 @@ urlpatterns = [
         "__debug__/mail/installments-fully-paid-txt",
         DebugMailAllInstallmentPaidViewTxt.as_view(),
         name="debug.mail.installments_fully_paid_txt",
+    ),
+    path(
+        "__debug__/mail/installment-refused-html",
+        DebugMailInstallmentRefusedPaymentViewHtml.as_view(),
+        name="debug.mail.installment_refused_html",
+    ),
+    path(
+        "__debug__/mail/installment-refused-txt",
+        DebugMailInstallmentRefusedPaymentViewTxt.as_view(),
+        name="debug.mail.installment_refused_txt",
     ),
 ]
