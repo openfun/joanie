@@ -1247,6 +1247,17 @@ class Order(BaseModel):
                 position = index
         return position
 
+    def get_position_of_first_installment_pending(self):
+        """
+        Get the position of the first installment found with pending state in the payment schedule.
+        """
+        position = None
+        for index, entry in enumerate(self.payment_schedule, start=0):
+            if entry["state"] == enums.PAYMENT_STATE_PENDING:
+                position = index
+                break
+        return position
+
     def get_remaining_balance_to_pay(self):
         """Get the amount of installments remaining to pay in the payment schedule."""
         amounts = (
