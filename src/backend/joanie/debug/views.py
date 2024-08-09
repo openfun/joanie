@@ -225,6 +225,37 @@ class DebugMailInstallmentRefusedPaymentViewTxt(DebugMailInstallmentRefusedPayme
     template_name = "mail/text/installment_refused.txt"
 
 
+class DebugMailInstallmentReminderPayment(DebugMailInstallmentPayment):
+    """Debug View to check the layout of the debit installment reminder email"""
+
+    def get_context_data(self, **kwargs):
+        """
+        Base method to prepare the document context to render in the email for the debug view.
+        """
+        context = super().get_context_data()
+        order = context.get("order")
+        context["amount"] = order.payment_schedule[2]["amount"]
+        position = order.get_position_of_first_installment_pending()
+        context["nth_installment"] = position + 1  # position index starts at 0
+        context["installment_concerned_position"] = position
+
+        return context
+
+
+class DebugMailInstallmentReminderPaymentViewHtml(DebugMailInstallmentReminderPayment):
+    """Debug View to check the layout of debit reminder of installment by email
+    in html format."""
+
+    template_name = "mail/html/installment_reminder.html"
+
+
+class DebugMailInstallmentReminderPaymentViewTxt(DebugMailInstallmentReminderPayment):
+    """Debug View to check the layout of debit reminder of installment by email
+    in html format."""
+
+    template_name = "mail/text/installment_reminder.txt"
+
+
 class DebugPdfTemplateView(TemplateView):
     """
     Simple class to render the PDF template in bytes format of a document to preview.

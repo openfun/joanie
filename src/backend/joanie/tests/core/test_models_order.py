@@ -1358,3 +1358,42 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(
             1, order.get_position_of_last_installment(state=enums.PAYMENT_STATE_PENDING)
         )
+
+    def test_models_order_get_position_of_first_installment_pending(self):
+        """
+        Should return the first occurence found in the payment schedule with a pending
+        state
+        """
+        product = factories.ProductFactory(price=Decimal("1000.00"))
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            product=product,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "300.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "250.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": "250.00",
+                    "due_date": "2024-03-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
+                    "amount": "200.00",
+                    "due_date": "2024-04-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(2, order.get_position_of_first_installment_pending())
