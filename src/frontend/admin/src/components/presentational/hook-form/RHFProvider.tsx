@@ -85,7 +85,6 @@ export function RHFProvider<T extends FieldValues>({
       dirtyModal.handleOpen();
 
       router.events.emit("routeChangeError");
-      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       throw `Form is dirty`;
     };
     router.events.on("routeChangeStart", routeChangeStart);

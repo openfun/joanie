@@ -103,7 +103,8 @@ export const useOrganizations = (
           );
           await custom.methods.invalidate();
           return result;
-        } catch (e) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_error) {
           custom.methods.setError(
             intl.formatMessage(useOrganizationsMessages.errorCreate),
           );
@@ -132,7 +133,8 @@ export const useOrganizations = (
         try {
           await OrganizationRepository.removeUserAccess(orgId, accessId);
           await custom.methods.invalidate();
-        } catch (e) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_error) {
           custom.methods.setError(
             intl.formatMessage(useOrganizationsMessages.errorDelete),
           );
@@ -143,7 +145,8 @@ export const useOrganizations = (
           await OrganizationRepository.addAddress(orgId, payload);
           await custom.methods.onSuccess();
           await custom.methods.invalidate();
-        } catch (e) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_error) {
           custom.methods.setError(
             intl.formatMessage(useOrganizationsMessages.errorCreate),
           );
@@ -158,7 +161,8 @@ export const useOrganizations = (
           await OrganizationRepository.updateAddress(orgId, addressId, payload);
           await custom.methods.onSuccess();
           await custom.methods.invalidate();
-        } catch (e) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_error) {
           custom.methods.setError(
             intl.formatMessage(useOrganizationsMessages.errorUpdate),
           );
