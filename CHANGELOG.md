@@ -24,11 +24,12 @@ and this project adheres to
 ### Fixed
 
 - Improve signature backend `handle_notification` error catching
+- Prevent duplicate Address objects for a user or an organization
 - Allow to cancel an enrollment order linked to an archived course run
 
 ### Removed
 
-- Remove the `has_consent_to_terms` field from the `Order` edit view 
+- Remove the `has_consent_to_terms` field from the `Order` edit view
   in the back office application
 
 
