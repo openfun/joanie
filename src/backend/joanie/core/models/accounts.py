@@ -206,6 +206,30 @@ class Address(BaseModel):
                 name="main_address_must_be_reusable",
                 violation_error_message=_("Main address must be reusable."),
             ),
+            models.UniqueConstraint(
+                fields=[
+                    "owner",
+                    "address",
+                    "postcode",
+                    "city",
+                    "country",
+                    "first_name",
+                    "last_name",
+                ],
+                name="unique_address_per_user",
+            ),
+            models.UniqueConstraint(
+                fields=[
+                    "organization",
+                    "address",
+                    "postcode",
+                    "city",
+                    "country",
+                    "first_name",
+                    "last_name",
+                ],
+                name="unique_address_per_organization",
+            ),
         ]
 
     def __str__(self):

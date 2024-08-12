@@ -1080,7 +1080,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "billing_address": billing_address,
         }
 
-        with self.assertNumQueries(60):
+        with self.assertNumQueries(61):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1277,7 +1277,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(111):
+        with self.assertNumQueries(112):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
