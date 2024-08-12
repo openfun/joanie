@@ -22,7 +22,9 @@
       As frontend is not at the root of the repository,
       this setting allows ESLint extension to find the ./tsconfig.json file
     */
-    "project": "./tsconfig.json",
+    "projectService": {
+      "defaultProject": "./tsconfig.json"
+    },
     "ecmaFeatures": {
       "jsx": true
     }
@@ -55,6 +57,7 @@
     ],
     "@typescript-eslint/lines-between-class-members": "off",
     "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/no-throw-literal": "off",
     "arrow-parens": "error",
     "consistent-return": "off",
     "default-case": "off",
