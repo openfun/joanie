@@ -439,3 +439,69 @@ class AddressModelTestCase(TestCase):
         )
         self.assertEqual(address_1.is_main, True)
         self.assertEqual(address_2.is_main, True)
+
+    def test_models_address_unique_constraint_one_address_per_user(self):
+        """
+        Check the unique constraint `unique_address_per_user`
+        that protects to add in the database 2 identical addresses for a user.
+        """
+        owner = factories.UserFactory()
+        factories.AddressFactory(
+            owner=owner,
+            address="1 rue de l'exemple",
+            postcode="75000",
+            city="Paris",
+            country="FR",
+            first_name="firstname",
+            last_name="lastname",
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.AddressFactory(
+                owner=owner,
+                address="1 rue de l'exemple",
+                postcode="75000",
+                city="Paris",
+                country="FR",
+                first_name="firstname",
+                last_name="lastname",
+            )
+
+        self.assertEqual(
+            str(context.exception.messages[0]),
+            "Address with this Owner, Address, Postcode, City, "
+            "Country, First name and Last name already exists.",
+        )
+
+    def test_models_address_unique_constraint_one_address_per_organization(self):
+        """
+        Check the unique constraint `unique_address_per_organization`
+        that protects to add in the database 2 identical addresses for an organization.
+        """
+        organization = factories.OrganizationFactory()
+        factories.AddressFactory(
+            organization=organization,
+            address="2 rue de l'exemple",
+            postcode="75000",
+            city="Paris",
+            country="FR",
+            first_name="firstname",
+            last_name="lastname",
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.AddressFactory(
+                organization=organization,
+                address="2 rue de l'exemple",
+                postcode="75000",
+                city="Paris",
+                country="FR",
+                first_name="firstname",
+                last_name="lastname",
+            )
+
+        self.assertEqual(
+            str(context.exception.messages[0]),
+            "Address with this Organization, Address, Postcode, City, "
+            "Country, First name and Last name already exists.",
+        )
