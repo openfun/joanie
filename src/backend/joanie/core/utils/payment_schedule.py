@@ -60,7 +60,7 @@ def _withdrawal_limit_date(signed_contract_date, course_start_date):
 
 
 def _calculate_due_dates(
-    withdrawal_date, course_start_date, course_end_date, percentages_count
+    withdrawal_date, course_start_date, course_end_date, installments_count
 ):
     """
     Calculate the due dates for the order.
@@ -68,18 +68,21 @@ def _calculate_due_dates(
     Then the second one can not be before the course start date
     The last one can not be after the course end date
     """
-    if percentages_count == 1:
-        return [withdrawal_date]
+    due_dates = [withdrawal_date]
 
-    due_dates = [withdrawal_date, course_start_date]
-    for i in range(1, percentages_count - 1):
-        due_date = course_start_date + relativedelta(months=i)
+    second_date = course_start_date
+    if withdrawal_date > second_date:
+        second_date = withdrawal_date + relativedelta(months=1)
+
+    for i in range(installments_count - len(due_dates)):
+        due_date = second_date + relativedelta(months=i)
+
         if due_date > course_end_date:
             # If due date is after end date, we should stop the loop, and add the end
             # date as the last due date
             due_dates.append(course_end_date)
             break
-        due_dates.append(min(due_date, course_end_date))
+        due_dates.append(due_date)
     return due_dates
 
 

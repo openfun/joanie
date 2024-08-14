@@ -130,7 +130,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
 
     def test_models_order_schedule_2_parts(self):
         """
-        Check that order's schedule is correctly set for 1 part
+        Check that order's schedule is correctly set for 2 parts
         """
         course_run = factories.CourseRunFactory(
             enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
@@ -184,6 +184,157 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 {
                     "id": str(second_uuid),
                     "amount": "2.10",
+                    "due_date": "2024-03-01",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+    def test_models_order_schedule_3_parts(self):
+        """
+        Check that order's schedule is correctly set for 3 parts
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        contract = factories.ContractFactory(
+            student_signed_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            submitted_for_signature_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            order__product__price=6,
+            order__product__target_courses=[course_run.course],
+        )
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        third_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        mocked_now = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
+        with (
+            mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock,
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+        ):
+            uuid4_mock.side_effect = [first_uuid, second_uuid, third_uuid]
+            schedule = contract.order.generate_schedule()
+
+        self.assertEqual(
+            schedule,
+            [
+                {
+                    "id": first_uuid,
+                    "amount": Money(1.80, settings.DEFAULT_CURRENCY),
+                    "due_date": date(2024, 1, 17),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": second_uuid,
+                    "amount": Money(2.70, settings.DEFAULT_CURRENCY),
+                    "due_date": date(2024, 3, 1),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": third_uuid,
+                    "amount": Money(1.50, settings.DEFAULT_CURRENCY),
+                    "due_date": date(2024, 4, 1),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        contract.order.refresh_from_db()
+        self.assertEqual(
+            contract.order.payment_schedule,
+            [
+                {
+                    "id": str(first_uuid),
+                    "amount": "1.80",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": str(second_uuid),
+                    "amount": "2.70",
+                    "due_date": "2024-03-01",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": str(third_uuid),
+                    "amount": "1.50",
+                    "due_date": "2024-04-01",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+    def test_models_order_schedule_3_parts_session_already_started(self):
+        """
+        Check that order's schedule is correctly set for 3 parts
+        when the session has already started
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2023, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2023, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        contract = factories.ContractFactory(
+            student_signed_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            submitted_for_signature_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            order__product__price=6,
+            order__product__target_courses=[course_run.course],
+        )
+        first_uuid = uuid.UUID("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        second_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        third_uuid = uuid.UUID("a1cf9f39-594f-4528-a657-a0b9018b90ad")
+        mocked_now = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
+        with (
+            mock.patch.object(payment_schedule.uuid, "uuid4") as uuid4_mock,
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+        ):
+            uuid4_mock.side_effect = [first_uuid, second_uuid, third_uuid]
+            schedule = contract.order.generate_schedule()
+
+        self.assertEqual(
+            schedule,
+            [
+                {
+                    "id": first_uuid,
+                    "amount": Money(1.80, settings.DEFAULT_CURRENCY),
+                    "due_date": date(2024, 1, 1),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": second_uuid,
+                    "amount": Money(2.70, settings.DEFAULT_CURRENCY),
+                    "due_date": date(2024, 2, 1),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": third_uuid,
+                    "amount": Money(1.50, settings.DEFAULT_CURRENCY),
+                    "due_date": date(2024, 3, 1),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        contract.order.refresh_from_db()
+        self.assertEqual(
+            contract.order.payment_schedule,
+            [
+                {
+                    "id": str(first_uuid),
+                    "amount": "1.80",
+                    "due_date": "2024-01-01",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": str(second_uuid),
+                    "amount": "2.70",
+                    "due_date": "2024-02-01",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": str(third_uuid),
+                    "amount": "1.50",
                     "due_date": "2024-03-01",
                     "state": PAYMENT_STATE_PENDING,
                 },
