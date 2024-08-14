@@ -206,6 +206,30 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             ],
         )
 
+    def test_utils_payment_schedule_calculate_due_dates_start_date_before_withdrawal(
+        self,
+    ):
+        """
+        Check that the due dates are correctly calculated when the course start date is before
+        the withdrawal date
+        """
+        withdrawal_date = date(2024, 1, 1)
+        course_start_date = date(2023, 2, 1)
+        course_end_date = date(2024, 3, 20)
+        percentages_count = 2
+
+        due_dates = payment_schedule._calculate_due_dates(
+            withdrawal_date, course_start_date, course_end_date, percentages_count
+        )
+
+        self.assertEqual(
+            due_dates,
+            [
+                date(2024, 1, 1),
+                date(2024, 2, 1),
+            ],
+        )
+
     def test_utils_payment_schedule_calculate_installments(self):
         """
         Check that the installments are correctly calculated
