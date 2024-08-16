@@ -1176,35 +1176,18 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         The method `get_first_installment_refused` should return the first installment found
         that is in state `PAYMENT_STATE_REFUSED` in the payment schedule of an order.
         """
-        order = factories.OrderFactory(
-            state=ORDER_STATE_FAILED_PAYMENT,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_REFUSED,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=100,
         )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        # Prepare data of the 'refused' state installment
+        order.payment_schedule[1]["id"] = "1932fbc5-d971-48aa-8fee-6d637c3154a5"
+        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_REFUSED
+        # Set the rest of installments to 'pending' state
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_PENDING
+        order.payment_schedule[3]["state"] = PAYMENT_STATE_PENDING
 
         installment = order.get_first_installment_refused()
 
@@ -1212,7 +1195,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             installment,
             {
                 "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                "amount": Money("300.00"),
+                "amount": Money("30.00"),
                 "due_date": date(2024, 2, 17),
                 "state": PAYMENT_STATE_REFUSED,
             },
@@ -1223,35 +1206,14 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         The method `get_first_installment_refused` should return `None` if there is no installment
         in payment schedule found for the order with the state `PAYMENT_STATE_REFUSED`.
         """
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+            product__price=100,
         )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[3]["state"] = PAYMENT_STATE_PENDING
 
         installment = order.get_first_installment_refused()
 
@@ -1262,191 +1224,178 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         Should return the date of the next installment to pay for the user on his order's
         payment schedule.
         """
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+            product__price=100,
         )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[3]["due_date"] = date(2024, 4, 17)
 
         date_next_installment = order.get_date_next_installment_to_pay()
 
         self.assertEqual(date_next_installment, date(2024, 4, 17))
+
+    def test_models_order_get_date_next_installment_to_pay_returns_none_if_no_pending_state(
+        self,
+    ):
+        """
+        The method `get_date_next_installment_to_pay` should return None if there is no
+        `pending` state into the order's payment schedule.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=5,
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_REFUSED
+
+        result = order.get_date_next_installment_to_pay()
+
+        self.assertIsNone(result)
 
     def test_models_order_schedule_get_remaining_balance_to_pay(self):
         """
         Should return the leftover amount still remaining to be paid on an order's
         payment schedule
         """
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+            product__price=100,
         )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
 
         remains = order.get_remaining_balance_to_pay()
 
-        self.assertEqual(remains, Money("499.99"))
+        self.assertEqual(remains, Money("50.00"))
 
     def test_models_order_schedule_get_index_of_last_installment_with_paid_state(self):
         """
-        Should return the index of the last installment with state 'paid'
-        from the payment schedule.
+        Test that the method `get_installment_index` correctly returns the index of the
+        last installment with the state 'paid' in the payment schedule.
         """
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+            product__price=100,
         )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
 
         self.assertEqual(
-            0, order.get_index_of_last_installment(state=PAYMENT_STATE_PAID)
+            0,
+            order.get_installment_index(state=PAYMENT_STATE_PAID),
         )
 
         order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
 
         self.assertEqual(
-            1, order.get_index_of_last_installment(state=PAYMENT_STATE_PAID)
+            1,
+            order.get_installment_index(state=PAYMENT_STATE_PAID),
         )
 
         order.payment_schedule[2]["state"] = PAYMENT_STATE_PAID
 
         self.assertEqual(
-            2, order.get_index_of_last_installment(state=PAYMENT_STATE_PAID)
+            2,
+            order.get_installment_index(state=PAYMENT_STATE_PAID),
         )
 
     def test_models_order_schedule_get_index_of_last_installment_state_refused(self):
         """
-        Should return the index of the last installment with state 'refused'
-        from the payment schedule.
+        Test that the method `get_installment_index` correctly returns the index of the
+        last installment with the state 'refused' in the payment schedule.
         """
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_REFUSED,
-                },
-                {
-                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+            product__price=100,
         )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_REFUSED
 
         self.assertEqual(
-            1, order.get_index_of_last_installment(state=PAYMENT_STATE_REFUSED)
+            1,
+            order.get_installment_index(state=PAYMENT_STATE_REFUSED),
         )
 
-    def test_models_order_schedule_returns_a_date_object_for_due_date(self):
+    def test_models_order_schedule_get_index_of_installment_pending_state_first_occurence(
+        self,
+    ):
         """
-        Check that the `due_date` in the payment schedule is returned as a date object
-        after reloading the object from the database.
+        Test that the method `get_installment_index` correctly returns the index of the
+        first installment with the state 'pending' in the payment schedule.
         """
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING_PAYMENT,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
+            product__price=100,
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
+
+        self.assertEqual(
+            2,
+            order.get_installment_index(state=PAYMENT_STATE_PENDING, find_first=True),
         )
 
-        self.assertIsInstance(order.payment_schedule[0]["due_date"], date)
-        self.assertIsInstance(order.payment_schedule[1]["due_date"], date)
+    def test_models_order_schedule_get_index_of_installment_pending_state_last_occurence(
+        self,
+    ):
+        """
+        The method `get_installment_index` should return the last occurence in the
+        payment schedule depending the value set of
+        `find_first` parameter and also the `state` of the installment payment.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=10,
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+
+        self.assertEqual(order.get_installment_index(PAYMENT_STATE_PENDING), 2)
+
+    def test_models_order_get_index_of_installment_should_return_none_because_no_refused_state(
+        self,
+    ):
+        """
+        The method `get_installment_index` should return None if there is no 'refused' payment
+        state present in the payment schedule.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=5,
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+
+        self.assertIsNone(order.get_installment_index(PAYMENT_STATE_REFUSED))
+
+    def test_models_order_get_index_of_installment_should_return_none_because_no_paid_state(
+        self,
+    ):
+        """
+        The method `get_installment_index` should return None if there is no 'paid' payment
+        state present in the payment schedule.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=5,
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PENDING
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PENDING
+
+        self.assertIsNone(order.get_installment_index(PAYMENT_STATE_PAID))
+
+    def test_models_order_get_index_of_installment_should_return_none_because_no_pending_state(
+        self,
+    ):
+        """
+        The method `get_installment_index` should return None if there is no 'pending' payment
+        state present in the payment schedule.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=5,
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_REFUSED
+
+        self.assertIsNone(order.get_installment_index(PAYMENT_STATE_PENDING))

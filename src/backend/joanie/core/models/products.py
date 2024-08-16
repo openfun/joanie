@@ -1231,25 +1231,26 @@ class Order(BaseModel):
             None,
         )
 
-    def get_index_of_last_installment(self, state):
+    def get_installment_index(self, state, find_first=False):
         """
-        Retrieve the index of the last installment in the payment schedule based on the input
-        parameter payment state.
+        Retrieve the index of the first or last occurrence of an installment in the
+        payment schedule based on the input parameter payment state.
         """
         position = None
         for index, entry in enumerate(self.payment_schedule, start=0):
             if entry["state"] == state:
                 position = index
+                if find_first:
+                    break
         return position
 
     def get_remaining_balance_to_pay(self):
         """Get the amount of installments remaining to pay in the payment schedule."""
-        amounts = (
-            Money(installment["amount"])
+        return Money.sum(
+            installment["amount"]
             for installment in self.payment_schedule
             if installment["state"] == enums.PAYMENT_STATE_PENDING
         )
-        return Money.sum(amounts)
 
 
 class OrderTargetCourseRelation(BaseModel):
