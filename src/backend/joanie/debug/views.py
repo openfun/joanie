@@ -25,6 +25,7 @@ from joanie.core.enums import (
     DEGREE,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
+    PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import (
@@ -131,7 +132,7 @@ class DebugMailInstallmentPayment(TemplateView):
                 remaining_balance_to_pay=order.get_remaining_balance_to_pay(),
                 date_next_installment_to_pay=order.get_date_next_installment_to_pay(),
                 credit_card_last_numbers=order.credit_card.last_numbers,
-                targeted_installment_index=order.get_index_of_last_installment(
+                targeted_installment_index=order.get_installment_index(
                     state=PAYMENT_STATE_PAID
                 ),
                 fullname=order.owner.get_full_name() or order.owner.username,
@@ -171,7 +172,7 @@ class DebugMailAllInstallmentPaid(DebugMailInstallmentPayment):
         for payment in order.payment_schedule:
             payment["state"] = PAYMENT_STATE_PAID
         context["installment_amount"] = Money(order.payment_schedule[-1]["amount"])
-        context["targeted_installment_index"] = order.get_index_of_last_installment(
+        context["targeted_installment_index"] = order.get_installment_index(
             state=PAYMENT_STATE_PAID
         )
 
@@ -203,7 +204,7 @@ class DebugMailInstallmentRefusedPayment(DebugMailInstallmentPayment):
         context = super().get_context_data()
         order = context.get("order")
         order.payment_schedule[2]["state"] = PAYMENT_STATE_REFUSED
-        context["targeted_installment_index"] = order.get_index_of_last_installment(
+        context["targeted_installment_index"] = order.get_installment_index(
             state=PAYMENT_STATE_REFUSED
         )
         context["installment_amount"] = Money(order.payment_schedule[2]["amount"])
@@ -223,6 +224,38 @@ class DebugMailInstallmentRefusedPaymentViewTxt(DebugMailInstallmentRefusedPayme
     in txt format."""
 
     template_name = "mail/text/installment_refused.txt"
+
+
+class DebugMailInstallmentReminderPayment(DebugMailInstallmentPayment):
+    """Debug View to check the layout of the debit installment reminder email"""
+
+    def get_context_data(self, **kwargs):
+        """
+        Base method to prepare the document context to render in the email for the debug view.
+        """
+        context = super().get_context_data()
+        order = context.get("order")
+        context["installment_amount"] = order.payment_schedule[2]["amount"]
+        context["targeted_installment_index"] = order.get_installment_index(
+            state=PAYMENT_STATE_PENDING, find_first=True
+        )
+        context["days_until_debit"] = settings.JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS
+
+        return context
+
+
+class DebugMailInstallmentReminderPaymentViewHtml(DebugMailInstallmentReminderPayment):
+    """Debug View to check the layout of debit reminder of installment by email
+    in html format."""
+
+    template_name = "mail/html/installment_reminder.html"
+
+
+class DebugMailInstallmentReminderPaymentViewTxt(DebugMailInstallmentReminderPayment):
+    """Debug View to check the layout of debit reminder of installment by email
+    in html format."""
+
+    template_name = "mail/text/installment_reminder.txt"
 
 
 class DebugPdfTemplateView(TemplateView):
