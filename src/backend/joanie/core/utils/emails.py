@@ -1,10 +1,21 @@
 """Utility to prepare email context data variables for installment payments"""
 
+import smtplib
+from logging import getLogger
+
 from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 from stockholm import Money
 
-from joanie.core.enums import PAYMENT_STATE_PAID, PAYMENT_STATE_REFUSED
+from joanie.core.enums import (
+    PAYMENT_STATE_PAID,
+    PAYMENT_STATE_PENDING,
+    PAYMENT_STATE_REFUSED,
+)
+
+logger = getLogger(__name__)
 
 
 def prepare_context_data(
@@ -30,9 +41,9 @@ def prepare_context_data(
             "url": settings.JOANIE_CATALOG_BASE_URL,
         },
         "targeted_installment_index": (
-            order.get_index_of_last_installment(state=PAYMENT_STATE_REFUSED)
+            order.get_installment_index(state=PAYMENT_STATE_REFUSED)
             if payment_refused
-            else order.get_index_of_last_installment(state=PAYMENT_STATE_PAID)
+            else order.get_installment_index(state=PAYMENT_STATE_PAID)
         ),
     }
 
@@ -44,3 +55,39 @@ def prepare_context_data(
         context_data.update(variable_context_part)
 
     return context_data
+
+
+def prepare_context_for_upcoming_installment(
+    order, installment_amount, product_title, days_until_debit
+):
+    """
+    Prepare the context variables for the email when an upcoming installment payment
+    will be soon debited for a user.
+    """
+    context_data = prepare_context_data(
+        order, installment_amount, product_title, payment_refused=False
+    )
+    context_data["targeted_installment_index"] = order.get_installment_index(
+        state=PAYMENT_STATE_PENDING, find_first=True
+    )
+    context_data["days_until_debit"] = days_until_debit
+
+    return context_data
+
+
+def send(subject, template_vars, template_name, to_user_email):
+    """Send a mail to the user"""
+    try:
+        msg_html = render_to_string(f"mail/html/{template_name}.html", template_vars)
+        msg_plain = render_to_string(f"mail/text/{template_name}.txt", template_vars)
+        send_mail(
+            subject,
+            msg_plain,
+            settings.EMAIL_FROM,
+            [to_user_email],
+            html_message=msg_html,
+            fail_silently=False,
+        )
+    except smtplib.SMTPException as exception:
+        # no exception raised as user can't sometimes change his mail,
+        logger.error("%s purchase order mail %s not send", to_user_email, exception)
