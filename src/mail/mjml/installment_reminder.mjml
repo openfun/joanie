@@ -1,0 +1,32 @@
+<mjml>
+  <mj-include path="./partial/header.mjml" />
+  <mj-body mj-class="bg--blue-100">
+    <mj-wrapper css-class="wrapper" padding="20px 40px 40px 40px">
+    <mj-include path="./partial/welcome.mjml" />
+      <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% blocktranslate with installment_amount=installment_amount|format_currency_with_symbol targeted_installment_index=targeted_installment_index|add:1|ordinal title=product_title %}
+              For the course <strong>{{ title }}</strong>, the {{ targeted_installment_index }}
+              installment will be withdrawn on {{ days_until_debit }} days.
+            <br />
+              We will try to debit an amount of <strong>{{ installment_amount }}</strong> on the credit card
+              •••• •••• •••• {{ credit_card_last_numbers }}.
+            {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-include path="./partial/installment_table.mjml" />
+      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% blocktranslate %}
+              See order details on your dashboard : <a href="{{ dashboard_order_link }}">dashboard</a>
+            {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+    <mj-include path="./partial/footer.mjml" />
+  </mj-body>
+</mjml>
