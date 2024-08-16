@@ -445,6 +445,13 @@ class Base(Configuration):
         environ_name="JOANIE_DASHBOARD_ORDER_LINK",
         environ_prefix=None,
     )
+    # Add here the number of days ahead before notifying a user
+    # on his next installment debit
+    JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS = values.Value(
+        2,
+        environ_name="JOANIE_INSTALLMENT_REMINDER_DAYS_BEFORE",
+        environ_prefix=None,
+    )
 
     # CORS
     CORS_ALLOW_CREDENTIALS = True
