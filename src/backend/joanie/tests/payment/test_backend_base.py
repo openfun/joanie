@@ -604,7 +604,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
 
     @mock.patch(
-        "joanie.payment.backends.base.send_mail",
+        "joanie.core.utils.emails.send_mail",
         side_effect=smtplib.SMTPException("Error SMTPException"),
     )
     @mock.patch.object(Logger, "error")
