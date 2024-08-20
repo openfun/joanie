@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Send an email reminder to the user when an installment
+  will be debited on his credit card on his order's payment schedule
 - Send an email to the user when an installment debit has been
   refused
 - Send an email to the user when an installment is successfully

@@ -3,13 +3,16 @@ Test suite for payment schedule util
 """
 
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from decimal import Decimal as D
 from unittest import mock
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.core import mail
 from django.test import TestCase
 from django.test.utils import override_settings
+from django.utils import timezone
 
 from stockholm import Money
 
@@ -34,6 +37,7 @@ from joanie.tests.base import BaseLogMixinTestCase
         100: (20, 30, 30, 20),
     },
     DEFAULT_CURRENCY="EUR",
+    JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS=2,
 )
 class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
     """
@@ -777,3 +781,176 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             str(context.exception),
             "Invalid format for amount: Input value cannot be used as monetary amount : '124,00'.",
         )
+
+    def test_utils_is_next_installment_to_debit_in_payment_schedule(self):
+        """
+        The method `is_next_installment_to_debit` should return a boolean
+        whether the installment due date is equal to the passed parameter `due_date`
+        value set in the settings named `JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS`.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=D("100"),
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
+        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+        order.payment_schedule[2]["due_date"] = date(2024, 3, 17)
+        order.payment_schedule[3]["due_date"] = date(2024, 4, 17)
+        order.save()
+
+        with mock.patch(
+            "django.utils.timezone.localdate", return_value=date(2024, 2, 15)
+        ):
+            due_date = timezone.localdate() + timedelta(
+                days=settings.JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS
+            )
+        # Should return False for the 1st installment
+        self.assertEqual(
+            payment_schedule.is_next_installment_to_debit(
+                installment=order.payment_schedule[0],
+                due_date=due_date,
+            ),
+            False,
+        )
+        # Should return True for the 2nd installment
+        self.assertEqual(
+            payment_schedule.is_next_installment_to_debit(
+                installment=order.payment_schedule[1],
+                due_date=due_date,
+            ),
+            True,
+        )
+        # Should return False for the 3rd installment
+        self.assertEqual(
+            payment_schedule.is_next_installment_to_debit(
+                installment=order.payment_schedule[2],
+                due_date=due_date,
+            ),
+            False,
+        )
+        # Should return False for the 4th installment
+        self.assertEqual(
+            payment_schedule.is_next_installment_to_debit(
+                installment=order.payment_schedule[3],
+                due_date=due_date,
+            ),
+            False,
+        )
+
+    def test_utils_send_mail_reminder_for_installment_debit(self):
+        """
+        The method `send_mail_reminder_for_installment_debit` should send an email with
+        the informations about the upcoming installment. We should find the number of days
+        until the debit according to the setting `JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS`,
+        which is 2 days for this test.
+        """
+        order = factories.OrderGeneratorFactory(
+            owner=factories.UserFactory(
+                first_name="John",
+                last_name="Doe",
+                email="sam@fun-test.fr",
+                language="en-us",
+            ),
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=D("100"),
+            product__title="Product 1",
+        )
+        order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+        order.payment_schedule[1]["due_date"] = PAYMENT_STATE_PENDING
+        order.save()
+
+        payment_schedule.send_mail_reminder_for_installment_debit(
+            order, order.payment_schedule[1]
+        )
+
+        self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.fr")
+        self.assertIn("will be debited in", mail.outbox[0].subject)
+
+        # Check body
+        email_content = " ".join(mail.outbox[0].body.split())
+        fullname = order.owner.get_full_name()
+        self.assertIn(f"Hello {fullname}", email_content)
+        self.assertIn("installment will be withdrawn on 2 days", email_content)
+        self.assertIn("We will try to debit an amount of", email_content)
+        self.assertIn("30.00", email_content)
+        self.assertIn("Product 1", email_content)
+
+    def test_utils_send_mail_reminder_for_installment_debit_in_french_language(self):
+        """
+        The method `send_mail_reminder_for_installment_debit` should send an email with
+        the informations about the upcoming installment in the current language of the user
+        when the translation exists in french language.
+        """
+        owner = factories.UserFactory(
+            first_name="John",
+            last_name="Doe",
+            email="sam@fun-test.fr",
+            language="fr-fr",
+        )
+        product = factories.ProductFactory(price=D("100.00"), title="Product 1")
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = factories.OrderGeneratorFactory(
+            product=product,
+            owner=owner,
+            state=ORDER_STATE_PENDING_PAYMENT,
+        )
+        order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+        order.payment_schedule[1]["due_date"] = PAYMENT_STATE_PENDING
+        order.save()
+
+        payment_schedule.send_mail_reminder_for_installment_debit(
+            order, order.payment_schedule[1]
+        )
+
+        self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.fr")
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Produit 1", email_content)
+        self.assertIn("30,00", email_content)
+
+    @override_settings(
+        LANGUAGES=(
+            ("en-us", ("English")),
+            ("fr-fr", ("French")),
+            ("de-de", ("German")),
+        )
+    )
+    def test_utils_send_mail_reminder_for_installment_debit_should_use_fallback_language(
+        self,
+    ):
+        """
+        The method `send_mail_reminder_for_installment_debit` should send an email with
+        the informations about the upcoming installment in the fallback language if the
+        translation does not exist in the current language of the user.
+        """
+        owner = factories.UserFactory(
+            first_name="John",
+            last_name="Doe",
+            email="sam@fun-test.de",
+            language="de-de",
+        )
+        product = factories.ProductFactory(price=D("100.00"), title="Product 1")
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = factories.OrderGeneratorFactory(
+            product=product,
+            owner=owner,
+            state=ORDER_STATE_PENDING_PAYMENT,
+        )
+        order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+        order.payment_schedule[1]["due_date"] = PAYMENT_STATE_PENDING
+        order.save()
+
+        payment_schedule.send_mail_reminder_for_installment_debit(
+            order, order.payment_schedule[1]
+        )
+
+        self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.de")
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn("Product 1", email_content)
+        self.assertIn("30.00", email_content)
