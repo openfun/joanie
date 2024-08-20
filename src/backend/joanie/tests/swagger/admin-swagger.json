@@ -5193,6 +5193,43 @@
                     "title"
                 ]
             },
+            "AdminCreditCard": {
+                "type": "object",
+                "description": "Read only Serializer for CreditCard model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "brand": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "expiration_month": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "expiration_year": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "last_numbers": {
+                        "type": "string",
+                        "readOnly": true,
+                        "title": "Last 4 numbers"
+                    }
+                },
+                "required": [
+                    "brand",
+                    "expiration_month",
+                    "expiration_year",
+                    "id",
+                    "last_numbers"
+                ]
+            },
             "AdminEnrollment": {
                 "type": "object",
                 "description": "Serializer for Enrollment model",
@@ -5514,6 +5551,14 @@
                             "$ref": "#/components/schemas/AdminOrderPayment"
                         },
                         "readOnly": true
+                    },
+                    "credit_card": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCreditCard"
+                            }
+                        ],
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5521,6 +5566,7 @@
                     "contract",
                     "course",
                     "created_on",
+                    "credit_card",
                     "enrollment",
                     "id",
                     "main_invoice",
