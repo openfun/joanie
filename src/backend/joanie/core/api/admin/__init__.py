@@ -596,6 +596,7 @@ class OrderViewSet(
         "certificate",
         "certificate__certificate_definition",
         "order_group",
+        "credit_card",
     )
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["created_on"]
