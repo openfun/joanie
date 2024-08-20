@@ -668,6 +668,13 @@ class OrdersAdminApiTestCase(TestCase):
                     "type": order.main_invoice.type,
                     "updated_on": format_date(order.main_invoice.updated_on),
                 },
+                "credit_card": {
+                    "id": str(order.credit_card.id),
+                    "last_numbers": order.credit_card.last_numbers,
+                    "brand": order.credit_card.brand,
+                    "expiration_month": order.credit_card.expiration_month,
+                    "expiration_year": order.credit_card.expiration_year,
+                },
             },
         )
 
@@ -801,6 +808,13 @@ class OrdersAdminApiTestCase(TestCase):
                     "total_currency": settings.DEFAULT_CURRENCY,
                     "type": order.main_invoice.type,
                     "updated_on": format_date(order.main_invoice.updated_on),
+                },
+                "credit_card": {
+                    "id": str(order.credit_card.id),
+                    "last_numbers": order.credit_card.last_numbers,
+                    "brand": order.credit_card.brand,
+                    "expiration_month": order.credit_card.expiration_month,
+                    "expiration_year": order.credit_card.expiration_year,
                 },
             },
         )

@@ -1093,6 +1093,21 @@ class AdminOrderPaymentSerializer(serializers.Serializer):
         """Only there to avoid a NotImplementedError"""
 
 
+class AdminCreditCardSerializer(serializers.ModelSerializer):
+    """Read only Serializer for CreditCard model."""
+
+    class Meta:
+        model = payment_models.CreditCard
+        fields = [
+            "id",
+            "brand",
+            "expiration_month",
+            "expiration_year",
+            "last_numbers",
+        ]
+        read_only_fields = fields
+
+
 class AdminOrderSerializer(serializers.ModelSerializer):
     """Read only Serializer for Order model."""
 
@@ -1110,6 +1125,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     organization = AdminOrganizationLightSerializer(read_only=True)
     order_group = AdminOrderGroupSerializer(read_only=True)
     payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
+    credit_card = AdminCreditCardSerializer(read_only=True)
 
     class Meta:
         model = models.Order
@@ -1129,6 +1145,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "certificate",
             "main_invoice",
             "payment_schedule",
+            "credit_card",
         )
         read_only_fields = fields
 
