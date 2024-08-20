@@ -8,6 +8,8 @@ from datetime import date, timedelta
 
 from django.conf import settings
 from django.utils import timezone
+from django.utils.translation import gettext as _
+from django.utils.translation import override
 
 from dateutil.relativedelta import relativedelta
 from stockholm import Money, Number
@@ -15,6 +17,7 @@ from stockholm.exceptions import ConversionError
 
 from joanie.core import enums
 from joanie.core.exceptions import InvalidConversionError
+from joanie.core.utils.emails import prepare_context_for_upcoming_installment, send
 from joanie.payment import get_country_calendar
 
 logger = logging.getLogger(__name__)
@@ -144,6 +147,18 @@ def is_installment_to_debit(installment):
     )
 
 
+def is_next_installment_to_debit(installment, due_date):
+    """
+    Check if the installment is pending and also if its due date will be equal to the parameter
+    `due_date` passed.
+    """
+
+    return (
+        installment["state"] == enums.PAYMENT_STATE_PENDING
+        and installment["due_date"] == due_date
+    )
+
+
 def has_installments_to_debit(order):
     """
     Check if the order has any pending installments with reached due date.
@@ -176,3 +191,31 @@ def convert_amount_str_to_money_object(amount_str: str):
         raise InvalidConversionError(
             f"Invalid format for amount: {exception} : '{amount_str}'."
         ) from exception
+
+
+def send_mail_reminder_for_installment_debit(order, installment):
+    """
+    Prepare the context variables for the mail reminder when the next installment debit
+    from the payment schedule will happen for the owner of the order.
+    """
+    with override(order.owner.language):
+        product_title = order.product.safe_translation_getter(
+            "title", language_code=order.owner.language
+        )
+        currency = settings.DEFAULT_CURRENCY
+        days_until_debit = settings.JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS
+        installment_amount = Money(installment["amount"])
+        subject = _(
+            f"{settings.JOANIE_CATALOG_NAME} - {product_title} - "
+            f"An installment of {installment_amount} {currency} will be debited in "
+            f"{days_until_debit} days."
+        )
+
+        send(
+            subject=subject,
+            template_vars=prepare_context_for_upcoming_installment(
+                order, installment_amount, product_title, days_until_debit
+            ),
+            template_name="installment_reminder",
+            to_user_email=order.owner.email,
+        )

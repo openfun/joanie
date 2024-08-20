@@ -1,12 +1,9 @@
 """Base Payment Backend"""
 
-import smtplib
 from logging import getLogger
 
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import override
@@ -68,35 +65,13 @@ class BasePaymentBackend:
         )
 
     @classmethod
-    def _send_mail(cls, subject, template_vars, template_name, to_user_email):
-        """Send mail with the current language of the user"""
-        try:
-            msg_html = render_to_string(
-                f"mail/html/{template_name}.html", template_vars
-            )
-            msg_plain = render_to_string(
-                f"mail/text/{template_name}.txt", template_vars
-            )
-            send_mail(
-                subject,
-                msg_plain,
-                settings.EMAIL_FROM,
-                [to_user_email],
-                html_message=msg_html,
-                fail_silently=False,
-            )
-        except smtplib.SMTPException as exception:
-            # no exception raised as user can't sometimes change his mail,
-            logger.error("%s purchase order mail %s not send", to_user_email, exception)
-
-    @classmethod
     def _send_mail_subscription_success(cls, order):
         """
         Send mail with the current language of the user when an order subscription is
         confirmed
         """
         with override(order.owner.language):
-            cls._send_mail(
+            emails.send(
                 subject=_("Subscription confirmed!"),
                 template_vars={
                     "title": _("Subscription confirmed!"),
@@ -136,7 +111,7 @@ class BasePaymentBackend:
                     f"Order completed ! The last installment of {installment_amount} {currency} "
                     "has been debited"
                 )
-            cls._send_mail(
+            emails.send(
                 subject=f"{base_subject}{variable_subject_part}",
                 template_vars=emails.prepare_context_data(
                     order,
@@ -174,7 +149,7 @@ class BasePaymentBackend:
             product_title = order.product.safe_translation_getter(
                 "title", language_code=order.owner.language
             )
-            cls._send_mail(
+            emails.send(
                 subject=_(
                     f"{settings.JOANIE_CATALOG_NAME} - {product_title} - An installment debit "
                     f"has failed {installment_amount} {settings.DEFAULT_CURRENCY}"
