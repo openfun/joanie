@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Display order credit card detail in the back office
 - Send an email reminder to the user when an installment
   will be debited on his credit card on his order's payment schedule
 - Send an email to the user when an installment debit has been
