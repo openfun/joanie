@@ -9,6 +9,7 @@ from http import HTTPStatus
 from logging import Logger
 from unittest import mock
 
+from django.conf import settings
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -18,6 +19,7 @@ from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
 from joanie.payment.factories import InvoiceFactory
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -761,13 +763,17 @@ class EnrollmentApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             product=product, enrollment=enrollment, course=None
         )
+        # Generate payment schedule
+        order.generate_schedule()
         certificate = factories.OrderCertificateFactory(order=order)
         token = self.generate_token_from_user(order.owner)
 
-        response = self.client.get(
-            f"/api/v1.0/enrollments/{enrollment.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(32):
+            response = self.client.get(
+                f"/api/v1.0/enrollments/{enrollment.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
 
@@ -779,6 +785,18 @@ class EnrollmentApiTest(BaseAPITestCase):
                     "certificate_id": str(certificate.id),
                     "product_id": str(product.id),
                     "state": "draft",
+                    "payment_schedule": [
+                        {
+                            "id": str(installment["id"]),
+                            "amount": float(installment["amount"]),
+                            "currency": settings.DEFAULT_CURRENCY,
+                            "due_date": format_date(installment["due_date"]),
+                            "state": installment["state"],
+                        }
+                        for installment in order.payment_schedule
+                    ]
+                    if order.payment_schedule
+                    else None,
                 }
             ],
         )
