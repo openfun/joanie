@@ -56,7 +56,7 @@ test.describe("Order view", () => {
     });
   });
 
-  test("Check all field are the good value", async ({ page }) => {
+  test("Check all fields have the good value", async ({ page }) => {
     const order = store.list[0];
     order.main_invoice.created_on = new Date(
       Date.UTC(2024, 0, 23, 19, 30),
@@ -136,6 +136,13 @@ test.describe("Order view", () => {
           ).toBeVisible();
         }),
       );
+    }
+
+    if (order.credit_card) {
+      const creditCardLocator = page.getByTestId(
+        `credit-card-${order.credit_card!.id}`,
+      );
+      await expect(creditCardLocator).toBeVisible();
     }
   });
 
@@ -431,6 +438,27 @@ test.describe("Order view", () => {
 
     await expect(
       page.getByText("The certificate has already been generated"),
+    ).toBeVisible();
+  });
+
+  test("should display alert message when order has no credit card", async ({
+    page,
+  }) => {
+    const order = store.list[0];
+    order.credit_card = null;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: order });
+      }
+    });
+    await page.goto(PATH_ADMIN.orders.list);
+    await page.getByRole("link", { name: order.product.title }).click();
+
+    await expect(
+      page.getByRole("alert").getByText("No payment method has been defined."),
     ).toBeVisible();
   });
 });

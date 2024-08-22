@@ -174,6 +174,16 @@ export const orderViewMessages = defineMessages({
     defaultMessage: "List of sub-invoices",
     description: "Sub invoice list title",
   },
+  paymentSchedule: {
+    id: "components.templates.orders.view.paymentSchedule",
+    defaultMessage: "Payment schedule",
+    description: "Payment schedule title",
+  },
+  noPaymentMethod: {
+    id: "components.templates.orders.view.noPaymentMethod",
+    defaultMessage: "No payment method has been defined.",
+    description: "Message displayed when order has no payment method",
+  },
 });
 
 export const invoiceTypesMessages = defineMessages<OrderInvoiceTypesEnum>({
