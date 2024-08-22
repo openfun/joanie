@@ -674,6 +674,48 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         ).data
 
 
+class OrderPaymentSerializer(serializers.Serializer):
+    """
+    Serializer for the order payment
+    """
+
+    id = serializers.UUIDField(required=True)
+    amount = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        required=True,
+    )
+    currency = serializers.SerializerMethodField(read_only=True)
+    due_date = serializers.DateField(required=True)
+    state = serializers.ChoiceField(
+        choices=enums.PAYMENT_STATE_CHOICES,
+        required=True,
+    )
+
+    def to_internal_value(self, data):
+        """Used to format the amount and the due_date before validation."""
+        return super().to_internal_value(
+            {
+                "id": str(data.get("id")),
+                "amount": data.get("amount").amount_as_string(),
+                "due_date": data.get("due_date").isoformat(),
+                "state": data.get("state"),
+            }
+        )
+
+    def get_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
+
+    def create(self, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+    def update(self, instance, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+
 class OrderLightSerializer(serializers.ModelSerializer):
     """Order model light serializer."""
 
@@ -683,6 +725,7 @@ class OrderLightSerializer(serializers.ModelSerializer):
     certificate_id = serializers.SlugRelatedField(
         queryset=models.Certificate.objects.all(), slug_field="id", source="certificate"
     )
+    payment_schedule = OrderPaymentSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Order
@@ -691,6 +734,7 @@ class OrderLightSerializer(serializers.ModelSerializer):
             "certificate_id",
             "product_id",
             "state",
+            "payment_schedule",
         ]
         read_only_fields = fields
 
@@ -1029,48 +1073,6 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             "context",
         ]
         read_only_fields = ["id", "created_on"]
-
-
-class OrderPaymentSerializer(serializers.Serializer):
-    """
-    Serializer for the order payment
-    """
-
-    id = serializers.UUIDField(required=True)
-    amount = serializers.DecimalField(
-        coerce_to_string=False,
-        decimal_places=2,
-        max_digits=9,
-        min_value=D(0.00),
-        required=True,
-    )
-    currency = serializers.SerializerMethodField(read_only=True)
-    due_date = serializers.DateField(required=True)
-    state = serializers.ChoiceField(
-        choices=enums.PAYMENT_STATE_CHOICES,
-        required=True,
-    )
-
-    def to_internal_value(self, data):
-        """Used to format the amount and the due_date before validation."""
-        return super().to_internal_value(
-            {
-                "id": str(data.get("id")),
-                "amount": data.get("amount").amount_as_string(),
-                "due_date": data.get("due_date").isoformat(),
-                "state": data.get("state"),
-            }
-        )
-
-    def get_currency(self, *args, **kwargs) -> str:
-        """Return the code of currency used by the instance"""
-        return settings.DEFAULT_CURRENCY
-
-    def create(self, validated_data):
-        """Only there to avoid a NotImplementedError"""
-
-    def update(self, instance, validated_data):
-        """Only there to avoid a NotImplementedError"""
 
 
 class OrderPaymentScheduleSerializer(serializers.Serializer):
