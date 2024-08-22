@@ -30,6 +30,7 @@ import { OrderViewInvoiceSection } from "@/components/templates/orders/view/sect
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { OrderViewContractSection } from "@/components/templates/orders/view/sections/OrderViewContractSection";
 import { OrderViewCertificateSection } from "@/components/templates/orders/view/sections/OrderViewCertificateSection";
+import CreditCard from "@/components/presentational/credit-card/CreditCard";
 import { formatShortDate } from "@/utils/dates";
 
 type Props = {
@@ -223,25 +224,48 @@ export function OrderView({ order }: Props) {
           <OrderViewInvoiceSection order={order} />
           <Grid container spacing={2}>
             <Grid xs={12} lg={6} mt={2}>
-              <Typography variant="h6">Payment schedule</Typography>
-              <Table>
-                <TableBody>
-                  {order.payment_schedule?.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-testid={`order-view-payment-${row.id}`}
-                    >
-                      <TableCell>{formatShortDate(row.due_date)}</TableCell>
-                      <TableCell>
-                        {row.amount} {row.currency}
-                      </TableCell>
-                      <TableCell>
-                        <Chip label={row.state} color={stateColor(row.state)} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <Typography variant="h6">
+                <FormattedMessage {...orderViewMessages.paymentSchedule} />
+              </Typography>
+              <Box my={2}>
+                {order.credit_card ? (
+                  <CreditCard {...order.credit_card} expiration_month={5} />
+                ) : (
+                  <Alert severity="warning">
+                    <FormattedMessage {...orderViewMessages.noPaymentMethod} />
+                  </Alert>
+                )}
+              </Box>
+              {order.payment_schedule && (
+                <Box border={1} borderRadius={1} borderColor="action.disabled">
+                  <Table>
+                    <TableBody>
+                      {order.payment_schedule?.map((row) => (
+                        <TableRow
+                          key={row.id}
+                          data-testid={`order-view-payment-${row.id}`}
+                          sx={{ "&:last-child > *": { border: 0 } }}
+                        >
+                          <TableCell sx={{ borderColor: "action.disabled" }}>
+                            {formatShortDate(row.due_date)}
+                          </TableCell>
+                          <TableCell sx={{ borderColor: "action.disabled" }}>
+                            {row.amount} {row.currency}
+                          </TableCell>
+                          <TableCell sx={{ borderColor: "action.disabled" }}>
+                            <Stack alignItems="flex-end">
+                              <Chip
+                                label={row.state}
+                                color={stateColor(row.state)}
+                              />
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Box>
+              )}
             </Grid>
           </Grid>
         </Stack>
