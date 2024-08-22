@@ -16,6 +16,7 @@ and this project adheres to
 
 ### Changed
 
+- Bind payment_schedule into `OrderLightSerializer`
 - Generate payment schedule for any kind of product
 - Sort credit card list by is_main then descending creation date
 - Rework order statuses
