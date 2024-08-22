@@ -54,7 +54,7 @@ joanie_activate_http_basic_auth: false
 
 # -- joanie celery
 joanie_celery_replicas: 1
-joanie_celery_command: 
+joanie_celery_command:
   - celery
   - -A
   - joanie.celery_app
@@ -84,7 +84,7 @@ joanie_celery_readynessprobe:
 
 # Joanie cronjobs
 joanie_process_payment_schedules_cronjob_schedule: "0 3 * * *"
-
+joanie_send_mail_upcoming_debit_cronjob_schedule: "0 3 * * *"
 
 # -- resources
 {% set app_resources = {
@@ -97,6 +97,7 @@ joanie_process_payment_schedules_cronjob_schedule: "0 3 * * *"
 joanie_app_resources: "{{ app_resources }}"
 joanie_app_job_db_migrate_resources: "{{ app_resources }}"
 joanie_process_payment_schedules_cronjob_resources: "{{ app_resources }}"
+joanie_send_mail_upcoming_debit_cronjob_resources: "{{ app_resources }}"
 
 joanie_nginx_resources:
   requests:
