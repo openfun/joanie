@@ -38,6 +38,14 @@ export type OrderPaymentSchedule = {
   state: PaymentStatesEnum;
 };
 
+export type OrderCreditCard = {
+  id: string;
+  brand: string;
+  last_numbers: string;
+  expiration_month: number;
+  expiration_year: number;
+};
+
 export type Order = AbstractOrder & {
   owner: User;
   product: ProductSimple;
@@ -49,6 +57,7 @@ export type Order = AbstractOrder & {
   main_invoice: OrderMainInvoice;
   contract: Nullable<OrderContractDetails>;
   payment_schedule: Nullable<OrderPaymentSchedule[]>;
+  credit_card: Nullable<OrderCreditCard>;
 };
 
 export type OrderContractDetails = {

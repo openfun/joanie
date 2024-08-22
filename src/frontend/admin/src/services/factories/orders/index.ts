@@ -16,6 +16,7 @@ import { OrganizationFactory } from "@/services/factories/organizations";
 import { OrderGroupFactory } from "@/services/factories/order-group";
 import { CourseFactory } from "@/services/factories/courses";
 import { UsersFactory } from "@/services/factories/users";
+import { CreditCardFactory } from "@/services/factories/credit-cards";
 
 const orderPayment = (
   due_date: string,
@@ -33,7 +34,7 @@ const orderPayment = (
 const build = (state?: OrderStatesEnum): Order => {
   const totalOrder = faker.number.float({ min: 1, max: 9999 });
   state = state || faker.helpers.arrayElement(Object.values(OrderStatesEnum));
-  const order = {
+  const order: Order = {
     id: faker.string.uuid(),
     created_on: faker.date.anytime().toString(),
     state,
@@ -76,18 +77,31 @@ const build = (state?: OrderStatesEnum): Order => {
       orderPayment("7/27/2024", totalOrder / 3),
       orderPayment("8/27/2024", totalOrder / 3),
     ],
+    credit_card: CreditCardFactory(),
   };
+  if (
+    ![
+      OrderStatesEnum.ORDER_STATE_PENDING,
+      OrderStatesEnum.ORDER_STATE_NO_PAYMENT,
+      OrderStatesEnum.ORDER_STATE_PENDING_PAYMENT,
+      OrderStatesEnum.ORDER_STATE_FAILED_PAYMENT,
+      OrderStatesEnum.ORDER_STATE_COMPLETED,
+      OrderStatesEnum.ORDER_STATE_CANCELED,
+    ].includes(state)
+  ) {
+    order.credit_card = null;
+  }
   if (state === OrderStatesEnum.ORDER_STATE_COMPLETED)
-    order.payment_schedule.forEach((installment) => {
+    order.payment_schedule!.forEach((installment) => {
       installment.state = PaymentStatesEnum.PAYMENT_STATE_PAID;
     });
   if (state === OrderStatesEnum.ORDER_STATE_PENDING_PAYMENT)
-    order.payment_schedule[0].state = PaymentStatesEnum.PAYMENT_STATE_PAID;
+    order.payment_schedule![0].state = PaymentStatesEnum.PAYMENT_STATE_PAID;
   if (state === OrderStatesEnum.ORDER_STATE_NO_PAYMENT)
-    order.payment_schedule[0].state = PaymentStatesEnum.PAYMENT_STATE_REFUSED;
+    order.payment_schedule![0].state = PaymentStatesEnum.PAYMENT_STATE_REFUSED;
   if (state === OrderStatesEnum.ORDER_STATE_FAILED_PAYMENT) {
-    order.payment_schedule[0].state = PaymentStatesEnum.PAYMENT_STATE_PAID;
-    order.payment_schedule[1].state = PaymentStatesEnum.PAYMENT_STATE_REFUSED;
+    order.payment_schedule![0].state = PaymentStatesEnum.PAYMENT_STATE_PAID;
+    order.payment_schedule![1].state = PaymentStatesEnum.PAYMENT_STATE_REFUSED;
   }
   return order;
 };
