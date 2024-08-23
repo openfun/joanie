@@ -301,8 +301,31 @@ class Base(Configuration):
     }
 
     # Cache
+    # Cache
+    # Enable the alternate connection factory.
+    DJANGO_REDIS_CONNECTION_FACTORY = values.Value(
+        "django_redis.pool.ConnectionFactory",
+        environ_prefix=None,
+        environ_name="DJANGO_REDIS_CONNECTION_FACTORY",
+    )
+
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+        "redis": {
+            "BACKEND": values.Value(
+                "django_redis.cache.RedisCache", environ_name="CACHE_REDIS_BACKEND"
+            ),
+            # The hostname in LOCATION
+            "LOCATION": values.Value(
+                "redis://redis/0", environ_name="CACHE_REDIS_LOCATION"
+            ),
+            "OPTIONS": values.DictValue(
+                {
+                    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                },
+                environ_name="CACHE_REDIS_OPTIONS",
+            ),
+        },
     }
 
     JOANIE_SERIALIZER_DEFAULT_CACHE_TTL = values.PositiveIntegerValue(
@@ -594,6 +617,11 @@ class Base(Configuration):
     )
     EDX_SECRET = values.Value(None, environ_name="EDX_SECRET", environ_prefix=None)
 
+    # Delete bulk users
+    JOANIE_DELETE_BULK_USERS_REDIS_SET_KEY = values.Value(
+        None, environ_prefix=None, environ_name="JOANIE_DELETE_BULK_USERS_REDIS_SET_KEY"
+    )
+
     # pylint: disable=invalid-name
     @property
     def ENVIRONMENT(self):
@@ -878,12 +906,6 @@ class Production(Base):
 
     # Cache
     # Enable the alternate connection factory.
-    DJANGO_REDIS_CONNECTION_FACTORY = values.Value(
-        "django_redis.pool.ConnectionFactory",
-        environ_prefix=None,
-        environ_name="DJANGO_REDIS_CONNECTION_FACTORY",
-    )
-
     CACHES = {
         "default": {
             "BACKEND": values.Value(
@@ -898,6 +920,21 @@ class Production(Base):
                     "CLIENT_CLASS": "django_redis.client.DefaultClient",
                 },
                 environ_name="CACHE_DEFAULT_OPTIONS",
+            ),
+        },
+        "redis": {
+            "BACKEND": values.Value(
+                "django_redis.cache.RedisCache", environ_name="CACHE_REDIS_BACKEND"
+            ),
+            # The hostname in LOCATION
+            "LOCATION": values.Value(
+                "redis://redis/0", environ_name="CACHE_REDIS_LOCATION"
+            ),
+            "OPTIONS": values.DictValue(
+                {
+                    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                },
+                environ_name="CACHE_REDIS_OPTIONS",
             ),
         },
     }
