@@ -27,4 +27,9 @@ class Migration(migrations.Migration):
             name='order',
             field=models.OneToOneField(editable=False, on_delete=django.db.models.deletion.CASCADE, to='core.order', verbose_name='order'),
         ),
+        migrations.AlterField(
+            model_name='coursewish',
+            name='owner',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='course_wishes', to=settings.AUTH_USER_MODEL, verbose_name='Owner'),
+        ),
     ]
