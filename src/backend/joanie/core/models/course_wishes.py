@@ -18,7 +18,7 @@ class CourseWish(BaseModel):
         to=settings.AUTH_USER_MODEL,
         verbose_name=_("Owner"),
         related_name="course_wishes",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
     )
 
     course = models.ForeignKey(

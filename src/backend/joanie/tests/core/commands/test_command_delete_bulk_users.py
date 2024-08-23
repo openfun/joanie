@@ -1,4 +1,4 @@
-"""Test suite for the management command 'delete+bulk_users'"""
+"""Test suite for the management command 'delete_bulk_users'"""
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -35,7 +35,7 @@ class DeleteBulkUsersCommandTestCase(TestCase):
     def test_delete_bulk_users_with_limit(self):
         """
         Test delete_bulk_users command with limit option should delete only the number of users
-        specify in the limit option
+        specified in the limit option
         """
         redis_connection = get_redis_connection("redis")
         users = factories.UserFactory.create_batch(10)

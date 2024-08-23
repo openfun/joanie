@@ -301,7 +301,6 @@ class Base(Configuration):
     }
 
     # Cache
-    # Cache
     # Enable the alternate connection factory.
     DJANGO_REDIS_CONNECTION_FACTORY = values.Value(
         "django_redis.pool.ConnectionFactory",

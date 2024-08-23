@@ -16,8 +16,8 @@ class Command(BaseCommand):
     This command is responsible to delete all the users references in redis in the set
     with key settings.JOANIE_DELETE_BULK_USERS_REDIS_SET_KEY.
 
-    Without the --limit option, all users in the set are deleted at once. Be careful, if hundreds
-    of thousands users are in the set, it can be a long process.
+    WARNING: Without the --limit option, all users in the set are deleted at once. Be careful, if
+    hundreds of thousands users are in the set, it can be a long process.
     """
 
     help = __doc__
