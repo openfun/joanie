@@ -187,12 +187,14 @@ jobs:
           DB_USER: fun
           DB_PASSWORD: pass
           DB_PORT: 5432
+          DJANGO_CACHE_REDIS_LOCATION: redis://localhost:6379/0
       # services
       - image: cimg/postgres:12.10
         environment:
           POSTGRES_DB: test_joanie
           POSTGRES_USER: fun
           POSTGRES_PASSWORD: pass
+      - image: cimg/redis:6.2
     working_directory: ~/joanie/src/backend
     environment:
         DJANGO_CONFIGURATION: Test
