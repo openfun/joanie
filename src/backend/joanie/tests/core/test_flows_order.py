@@ -4,6 +4,7 @@ Test suite for order flows.
 
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
+from datetime import date
 from http import HTTPStatus
 from unittest import mock
 
@@ -13,6 +14,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 
 import responses
+from stockholm import Money
 from viewflow.fsm import TransitionNotAllowed
 
 from joanie.core import enums, exceptions, factories
@@ -24,6 +26,7 @@ from joanie.lms_handler.backends.openedx import (
     OPENEDX_MODE_HONOR,
     OPENEDX_MODE_VERIFIED,
 )
+from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.factories import (
     BillingAddressDictFactory,
     CreditCardFactory,
@@ -1579,3 +1582,101 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertNotIn("trans ", email_content)
         # catalog url is included in the email
         self.assertIn("https://richie.education", email_content)
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            5: (30, 70),
+        },
+    )
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_zero_click_payment",
+        side_effect=DummyPaymentBackend().create_zero_click_payment,
+    )
+    def test_flows_order_pending_transition_trigger_payment_installment_due_date_is_current_day(
+        self, mock_create_zero_click_payment
+    ):
+        """
+        Test that the post transition success action from the state
+        `ORDER_STATE_TO_SAVE_PAYMENT_METHOD` to `ORDER_STATE_PENDING` should trigger a payment if
+        when the first installment's due date of the payment schedule is on the current day.
+        This may happen when the course has already started.
+        """
+        order = factories.OrderGeneratorFactory(
+            owner=factories.UserFactory(),
+            state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            product__price="5.00",
+            product__title="Product 1",
+            product__target_courses=factories.CourseFactory.create_batch(
+                1,
+                course_runs=CourseRunFactory.create_batch(
+                    1,
+                    state=CourseState.ONGOING_OPEN,
+                    is_listed=True,
+                ),
+            ),
+        )
+        order.payment_schedule[0]["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.payment_schedule[0]["due_date"] = date(2024, 3, 17)
+        order.save()
+        order.credit_card = CreditCardFactory(owner=order.owner)
+
+        with mock.patch(
+            "django.utils.timezone.localdate", return_value=date(2024, 3, 17)
+        ):
+            order.flow.update()
+
+        mock_create_zero_click_payment.assert_called_once_with(
+            order=order,
+            credit_card_token=order.credit_card.token,
+            installment={
+                "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                "amount": Money("1.5"),
+                "due_date": date(2024, 3, 17),
+                "state": enums.PAYMENT_STATE_PENDING,
+            },
+        )
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_zero_click_payment",
+        side_effect=DummyPaymentBackend().create_zero_click_payment,
+    )
+    def test_flows_order_pending_transition_should_not_trigger_payment_if_due_date_is_next_day(
+        self, mock_create_zero_click_payment
+    ):
+        """
+        Test that the pending transition success from `ORDER_STATE_TO_SAVE_PAYMENT_METHOD` to
+        `ORDER_STATE_PENDING` but it does not trigger a payment when the first installment's
+        due date is the next day and not on the current day. In our case, the cronjob
+        will take care to process the upcoming payment the following day, so the order must be
+        in 'pending' state at the end.
+        """
+        order = factories.OrderGeneratorFactory(
+            owner=factories.UserFactory(),
+            state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            product__title="Product 2",
+            product__target_courses=factories.CourseFactory.create_batch(
+                1,
+                course_runs=CourseRunFactory.create_batch(
+                    1,
+                    state=CourseState.ONGOING_OPEN,
+                    is_listed=True,
+                ),
+            ),
+        )
+        order.payment_schedule[0]["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.payment_schedule[0]["due_date"] = date(2024, 3, 18)
+        order.save()
+        order.credit_card = CreditCardFactory(owner=order.owner)
+
+        with mock.patch(
+            "django.utils.timezone.localdate", return_value=date(2024, 3, 17)
+        ):
+            order.flow.update()
+
+        mock_create_zero_click_payment.assert_not_called()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
