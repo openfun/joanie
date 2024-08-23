@@ -6,7 +6,6 @@ from decimal import Decimal as D
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.db.models import ProtectedError
 from django.test import TestCase
 
 from joanie.core.factories import OrderFactory, ProductFactory
@@ -80,12 +79,13 @@ class InvoiceModelTestCase(TestCase):
 
     def test_models_invoice_protected(self):
         """
-        Order deletion should be blocked as long as related invoice exists.
+        Order deletion should delete in cascade all related invoices.
         """
         invoice = InvoiceFactory()
 
-        with self.assertRaises(ProtectedError):
-            invoice.order.delete()
+        _, deleted_resources = invoice.order.delete()
+
+        self.assertEqual(deleted_resources, {"core.Order": 1, "payment.Invoice": 1})
 
     def test_models_invoice_balance(self):
         """

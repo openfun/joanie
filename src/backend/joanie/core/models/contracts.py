@@ -84,7 +84,7 @@ class Contract(BaseModel):
     order = models.OneToOneField(
         "core.order",
         verbose_name=_("order"),
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         editable=False,
     )
 

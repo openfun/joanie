@@ -7,6 +7,7 @@ import logging
 from collections import defaultdict
 
 from django.apps import apps
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -462,10 +463,10 @@ class Order(BaseModel):
         validators=[MinValueValidator(0.0)],
     )
     owner = models.ForeignKey(
-        to=User,
+        to=settings.AUTH_USER_MODEL,
         verbose_name=_("owner"),
         related_name="orders",
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         db_index=True,
     )
     _has_consent_to_terms = models.BooleanField(

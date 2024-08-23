@@ -53,7 +53,7 @@ class Invoice(BaseModel):
         to="core.Order",
         verbose_name=_("order"),
         related_name="invoices",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         blank=False,
         null=False,
     )
@@ -399,7 +399,7 @@ class CreditCard(BaseModel):
     expiration_year = models.PositiveSmallIntegerField(_("expiration year"))
     last_numbers = models.CharField(_("last 4 numbers"), max_length=4)
     owner = models.ForeignKey(
-        to=User,
+        to=settings.AUTH_USER_MODEL,
         verbose_name=_("owner"),
         related_name="credit_cards",
         on_delete=models.CASCADE,
