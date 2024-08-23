@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Debit installment on pending order transition if due date is on current day
 - Display order credit card detail in the back office
 - Send an email reminder to the user when an installment
   will be debited on his credit card on his order's payment schedule
