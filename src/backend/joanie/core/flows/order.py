@@ -10,6 +10,11 @@ from sentry_sdk import capture_exception
 from viewflow import fsm
 
 from joanie.core import enums
+from joanie.core.utils.payment_schedule import (
+    has_installments_to_debit,
+    is_installment_to_debit,
+)
+from joanie.payment import get_payment_backend
 from joanie.payment.backends.base import BasePaymentBackend
 
 logger = logging.getLogger(__name__)
@@ -285,6 +290,32 @@ class OrderFlow:
             and target in [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_COMPLETED]
         ):
             self.instance.generate_schedule()
+
+        # When we generate the payment schedule and if the course has already started,
+        # the 1st installment due date of the order's payment schedule will be set to the current
+        # day. Since we only debit the next night through a cronjob, we need be able to make the
+        # user pay to have access to his course, and avoid that the has to wait the next
+        # day to start it.
+        if (
+            source == enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+            and target == enums.ORDER_STATE_PENDING
+            and has_installments_to_debit(self.instance)
+            and self.instance.credit_card
+            and self.instance.credit_card.token
+        ):
+            installment = next(
+                (
+                    installment
+                    for installment in self.instance.payment_schedule
+                    if is_installment_to_debit(installment)
+                ),
+            )
+            payment_backend = get_payment_backend()
+            payment_backend.create_zero_click_payment(
+                order=self.instance,
+                credit_card_token=self.instance.credit_card.token,
+                installment=installment,
+            )
 
         # When an order is completed, if the user was previously enrolled for free in any of the
         # course runs targeted by the purchased product, we should change their enrollment mode on
