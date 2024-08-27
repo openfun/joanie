@@ -4,15 +4,17 @@ Payment schedule utility functions.
 
 import logging
 import uuid
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.conf import settings
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
 from stockholm import Money, Number
+from stockholm.exceptions import ConversionError
 
 from joanie.core import enums
+from joanie.core.exceptions import InvalidConversionError
 from joanie.payment import get_country_calendar
 
 logger = logging.getLogger(__name__)
@@ -134,7 +136,7 @@ def is_installment_to_debit(installment):
     """
     Check if the installment is pending and has reached due date.
     """
-    due_date = timezone.localdate().isoformat()
+    due_date = timezone.localdate()
 
     return (
         installment["state"] == enums.PAYMENT_STATE_PENDING
@@ -150,3 +152,27 @@ def has_installments_to_debit(order):
     return any(
         is_installment_to_debit(installment) for installment in order.payment_schedule
     )
+
+
+def convert_date_str_to_date_object(date_str: str):
+    """
+    Converts the `date_str` string into a date object.
+    """
+    try:
+        return date.fromisoformat(date_str)
+    except ValueError as exception:
+        raise InvalidConversionError(
+            f"Invalid date format for date_str: {exception}."
+        ) from exception
+
+
+def convert_amount_str_to_money_object(amount_str: str):
+    """
+    Converts the `amount_str` string into a Money object.
+    """
+    try:
+        return Money(amount_str)
+    except ConversionError as exception:
+        raise InvalidConversionError(
+            f"Invalid format for amount: {exception} : '{amount_str}'."
+        ) from exception

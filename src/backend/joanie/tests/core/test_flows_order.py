@@ -224,7 +224,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "10.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 }
             ],
@@ -989,22 +989,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
             ],
@@ -1024,22 +1024,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
             ],
@@ -1059,22 +1059,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
@@ -1094,22 +1094,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
@@ -1130,22 +1130,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_REFUSED,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
@@ -1165,22 +1165,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
@@ -1200,22 +1200,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_REFUSED,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
@@ -1235,22 +1235,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
@@ -1270,22 +1270,22 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-02-17T00:00:00+00:00",
+                    "due_date": "2024-02-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "amount": "300.00",
-                    "due_date": "2024-03-17T00:00:00+00:00",
+                    "due_date": "2024-03-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "amount": "199.99",
-                    "due_date": "2024-04-17T00:00:00+00:00",
+                    "due_date": "2024-04-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
@@ -1306,7 +1306,7 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
