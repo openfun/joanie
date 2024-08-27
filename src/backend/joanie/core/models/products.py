@@ -1161,7 +1161,7 @@ class Order(BaseModel):
             raise ValidationError("No payment schedule found for this order")
 
         # check if current date is greater than the first installment due date
-        if timezone.now().isoformat() >= self.payment_schedule[0]["due_date"]:
+        if timezone.now().date() >= self.payment_schedule[0]["due_date"]:
             raise ValidationError(
                 "Cannot withdraw order after the first installment due date"
             )

@@ -19,6 +19,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
 )
+from joanie.core.exceptions import InvalidConversionError
 from joanie.core.utils import payment_schedule
 from joanie.tests.base import BaseLogMixinTestCase
 
@@ -186,7 +187,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         self,
     ):
         """
-        calculate due dates event with withdrawal date corresponding to the signed contract date
+        Calculate due dates event with withdrawal date corresponding to the signed contract date
         """
         withdrawal_date = date(2024, 1, 1)
         course_start_date = date(2024, 1, 10)
@@ -266,11 +267,12 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             ],
         )
 
-    def test_utils_payment_schedule_generate_2_parts_withdrawal_date_higher_than_course_date_date(
+    def test_utils_payment_schedule_generate_2_parts_withdrawal_date_higher_than_course_start_date(
         self,
     ):
         """
-        Check that order's schedule is correctly set for 1 part
+        Check that order's schedule is correctly set for 2 part when the withdrawal date is
+        higher than the course start date
         """
         total = 3
         signed_contract_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
@@ -334,7 +336,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
 
     def test_utils_payment_schedule_generate_2_parts(self):
         """
-        Check that order's schedule is correctly set for 1 part
+        Check that order's schedule is correctly set for 2 part
         """
         total = 3
         signed_contract_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
@@ -605,10 +607,10 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         """
         installment = {
             "state": PAYMENT_STATE_PENDING,
-            "due_date": date(2024, 1, 17).isoformat(),
+            "due_date": date(2024, 1, 17),
         }
 
-        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        mocked_now = date(2024, 1, 17)
         with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
             self.assertEqual(
                 payment_schedule.is_installment_to_debit(installment), True
@@ -620,10 +622,10 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         """
         installment = {
             "state": PAYMENT_STATE_PENDING,
-            "due_date": date(2024, 1, 13).isoformat(),
+            "due_date": date(2024, 1, 13),
         }
 
-        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        mocked_now = date(2024, 1, 17)
         with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
             self.assertEqual(
                 payment_schedule.is_installment_to_debit(installment), True
@@ -636,10 +638,10 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         """
         installment = {
             "state": PAYMENT_STATE_PAID,
-            "due_date": date(2024, 1, 17).isoformat(),
+            "due_date": date(2024, 1, 17),
         }
 
-        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        mocked_now = date(2024, 1, 17)
         with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
             self.assertEqual(
                 payment_schedule.is_installment_to_debit(installment), False
@@ -666,8 +668,9 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+        order.refresh_from_db()
 
-        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        mocked_now = date(2024, 1, 17)
         with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
             self.assertEqual(payment_schedule.has_installments_to_debit(order), True)
 
@@ -693,7 +696,84 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 },
             ],
         )
+        order.refresh_from_db()
 
-        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        mocked_now = date(2024, 1, 17)
         with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
             self.assertEqual(payment_schedule.has_installments_to_debit(order), False)
+
+    def test_utils_payment_schedule_convert_date_str_to_date_object(self):
+        """
+        Check that the method `convert_date_str_to_date_object` converts an isoformat string
+        of a date into a date object
+        """
+        date_str = "2024-04-26"
+
+        date_object = payment_schedule.convert_date_str_to_date_object(date_str)
+
+        self.assertEqual(date_object, date(2024, 4, 26))
+
+    def test_utils_payment_schedule_convert_date_str_to_date_object_raises_invalid_conversion(
+        self,
+    ):
+        """
+        Check that the method `convert_date_str_to_date_object` raises the exception
+        `InvalidConversionError` when a string with an incorrect ISO date format is passed as
+        the `due_date` value.
+        """
+        date_str_1 = "abc-04-26"
+        date_str_2 = "2024-08-30T14:41:08.504233"
+
+        with self.assertRaises(InvalidConversionError) as context:
+            payment_schedule.convert_date_str_to_date_object(date_str_1)
+
+        self.assertEqual(
+            str(context.exception),
+            "Invalid date format for date_str: Invalid isoformat string: 'abc-04-26'.",
+        )
+
+        with self.assertRaises(InvalidConversionError) as context:
+            payment_schedule.convert_date_str_to_date_object(date_str_2)
+
+        self.assertEqual(
+            str(context.exception),
+            "Invalid date format for date_str: Invalid isoformat "
+            "string: '2024-08-30T14:41:08.504233'.",
+        )
+
+    def test_utils_payment_schedule_convert_amount_str_to_money_object(self):
+        """
+        Check that the method `convert_amount_str_to_money_object` converts a string value
+        representing an amount into a money object.
+        """
+        item = "22.00"
+
+        amount = payment_schedule.convert_amount_str_to_money_object(item)
+
+        self.assertEqual(amount, Money("22.00"))
+
+    def test_utils_payment_schedule_convert_amount_str_to_money_object_raises_invalid_conversion(
+        self,
+    ):
+        """
+        Check that the method `convert_amount_str_to_money_object` raises the exception
+        `InvalidConversionError` when a string with an incorrect format for an amount is passed.
+        """
+        amount_1 = "abc"
+        amount_2 = "124,00"
+
+        with self.assertRaises(InvalidConversionError) as context:
+            payment_schedule.convert_amount_str_to_money_object(amount_1)
+
+        self.assertEqual(
+            str(context.exception),
+            "Invalid format for amount: Input value cannot be used as monetary amount : 'abc'.",
+        )
+
+        with self.assertRaises(InvalidConversionError) as context:
+            payment_schedule.convert_amount_str_to_money_object(amount_2)
+
+        self.assertEqual(
+            str(context.exception),
+            "Invalid format for amount: Input value cannot be used as monetary amount : '124,00'.",
+        )

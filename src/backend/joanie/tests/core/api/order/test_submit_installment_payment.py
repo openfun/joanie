@@ -1,9 +1,12 @@
 """Tests for the Order to submit installment payment API endpoint."""
 
 import uuid
+from datetime import date
 from decimal import Decimal as D
 from http import HTTPStatus
 from unittest import mock
+
+from stockholm import Money
 
 from joanie.core.enums import (
     ORDER_STATE_CANCELED,
@@ -352,8 +355,8 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             billing_address=order.main_invoice.recipient_address,
             installment={
                 "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                "amount": "300.00",
-                "due_date": "2024-02-17",
+                "amount": Money("300.00"),
+                "due_date": date(2024, 2, 17),
                 "state": PAYMENT_STATE_REFUSED,
             },
         )
@@ -432,8 +435,8 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             credit_card_token=credit_card.token,
             installment={
                 "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                "amount": "300.00",
-                "due_date": "2024-03-17",
+                "amount": Money("300.00"),
+                "due_date": date(2024, 3, 17),
                 "state": PAYMENT_STATE_REFUSED,
             },
         )
@@ -561,8 +564,8 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             credit_card_token=credit_card.token,
             installment={
                 "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                "amount": "200.00",
-                "due_date": "2024-01-17",
+                "amount": Money("200.00"),
+                "due_date": date(2024, 1, 17),
                 "state": PAYMENT_STATE_REFUSED,
             },
         )
@@ -628,8 +631,8 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             billing_address=order.main_invoice.recipient_address,
             installment={
                 "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                "amount": "200.00",
-                "due_date": "2024-01-17",
+                "amount": Money("200.00"),
+                "due_date": date(2024, 1, 17),
                 "state": PAYMENT_STATE_REFUSED,
             },
         )
@@ -696,8 +699,8 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             billing_address=order.main_invoice.recipient_address,
             installment={
                 "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                "amount": "300.00",
-                "due_date": "2024-03-17",
+                "amount": Money("300.00"),
+                "due_date": date(2024, 3, 17),
                 "state": PAYMENT_STATE_REFUSED,
             },
         )
@@ -774,8 +777,8 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             credit_card_token=credit_card.token,
             installment={
                 "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                "amount": "199.99",
-                "due_date": "2024-04-17",
+                "amount": Money("199.99"),
+                "due_date": date(2024, 4, 17),
                 "state": PAYMENT_STATE_REFUSED,
             },
         )
