@@ -3,7 +3,7 @@ Test suite for payment schedule tasks
 """
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from logging import Logger
 from unittest import mock
 from zoneinfo import ZoneInfo
@@ -12,6 +12,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from rest_framework.test import APIRequestFactory
+from stockholm import Money
 
 from joanie.core.enums import (
     ORDER_STATE_PENDING,
@@ -93,8 +94,8 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             credit_card_token=order.credit_card.token,
             installment={
                 "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                "amount": "200.00",
-                "due_date": "2024-01-17",
+                "amount": Money("200.00"),
+                "due_date": date(2024, 1, 17),
                 "state": PAYMENT_STATE_PENDING,
             },
         )
@@ -142,26 +143,26 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
+                    "amount": Money("200.00"),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_REFUSED,
                 },
                 {
                     "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
+                    "amount": Money("199.99"),
+                    "due_date": date(2024, 4, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],
@@ -230,8 +231,8 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
                 credit_card_token=order.credit_card.token,
                 installment={
                     "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ),
@@ -240,8 +241,8 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
                 credit_card_token=order.credit_card.token,
                 installment={
                     "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ),
@@ -250,6 +251,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
         mocked_now = datetime(2024, 3, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
             debit_pending_installment.run(order.id)
+
         mock_create_zero_click_payment.assert_has_calls(expected_calls, any_order=False)
 
         backend = get_payment_backend()
@@ -294,26 +296,26 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             [
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
+                    "amount": Money("200.00"),
+                    "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 2, 17),
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 3, 17),
                     "state": PAYMENT_STATE_PAID,
                 },
                 {
                     "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
+                    "amount": Money("199.99"),
+                    "due_date": date(2024, 4, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
             ],

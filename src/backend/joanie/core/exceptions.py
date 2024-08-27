@@ -29,3 +29,9 @@ class CertificateGenerationError(Exception):
     Exception raised when the certificate generation process fails due to the order not meeting
     all specified conditions.
     """
+
+
+class InvalidConversionError(Exception):
+    """
+    Exception raised when a conversion fails.
+    """
