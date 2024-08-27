@@ -1,5 +1,6 @@
 """Utils for the order payment schedule field"""
 
+from datetime import date
 from json import JSONDecoder
 from json.decoder import WHITESPACE
 
@@ -29,4 +30,5 @@ class OrderPaymentScheduleDecoder(JSONDecoder):
         payment_schedule = super().decode(s, _w)
         for installment in payment_schedule:
             installment["amount"] = Money(installment["amount"])
+            installment["due_date"] = date.fromisoformat(installment["due_date"])
         return payment_schedule

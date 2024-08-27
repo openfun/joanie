@@ -18,6 +18,9 @@ and this project adheres to
 
 ### Changed
 
+- Updated `OrderPaymentScheduleDecoder` to return a `date` object for
+  the `due_date` attribute and a `Money` object for `amount` attribute
+  in the payment_schedule, instead of string values
 - Bind payment_schedule into `OrderLightSerializer`
 - Generate payment schedule for any kind of product
 - Sort credit card list by is_main then descending creation date

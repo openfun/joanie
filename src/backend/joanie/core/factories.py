@@ -30,6 +30,10 @@ from joanie.core.models import (
 )
 from joanie.core.serializers import AddressSerializer
 from joanie.core.utils import contract_definition, file_checksum
+from joanie.core.utils.payment_schedule import (
+    convert_amount_str_to_money_object,
+    convert_date_str_to_date_object,
+)
 
 
 def generate_thumbnails_for_field(field, include_global=False):
@@ -683,6 +687,22 @@ class OrderFactory(factory.django.DjangoModelFactory):
 
         return None
 
+    @factory.post_generation
+    # pylint: disable=method-hidden
+    def payment_schedule(self, create, extracted, **kwargs):
+        """
+        Cast input strings for the fields `amount` and `due_date` into the appropriate types
+        """
+        if create and extracted:
+            for item in extracted:
+                if isinstance(item["due_date"], str):
+                    item["due_date"] = convert_date_str_to_date_object(item["due_date"])
+                if isinstance(item["amount"], str):
+                    item["amount"] = convert_amount_str_to_money_object(item["amount"])
+            self.payment_schedule = extracted
+            return extracted
+        return None
+
 
 class OrderGeneratorFactory(factory.django.DjangoModelFactory):
     """A factory to create an Order"""
@@ -919,6 +939,22 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
 
         if target_state == enums.ORDER_STATE_CANCELED:
             self.flow.cancel()
+
+    @factory.post_generation
+    # pylint: disable=method-hidden
+    def payment_schedule(self, create, extracted, **kwargs):
+        """
+        Cast input strings for the fields `amount` and `due_date` into the appropriate types
+        """
+        if create and extracted:
+            for item in extracted:
+                if isinstance(item["due_date"], str):
+                    item["due_date"] = convert_date_str_to_date_object(item["due_date"])
+                if isinstance(item["amount"], str):
+                    item["amount"] = convert_amount_str_to_money_object(item["amount"])
+            self.payment_schedule = extracted
+            return extracted
+        return None
 
 
 class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):

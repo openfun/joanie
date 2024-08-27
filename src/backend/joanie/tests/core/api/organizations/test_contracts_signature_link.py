@@ -32,7 +32,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 }
             ],
@@ -76,7 +76,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 }
             ],
@@ -127,7 +127,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 }
             ],
@@ -238,7 +238,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 }
             ],
@@ -280,7 +280,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 }
             ],
@@ -329,7 +329,6 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         access = factories.UserOrganizationAccessFactory(
             organization=organization, role="owner"
         )
-
         # Create two contracts for the same organization and course product relation
         orders = factories.OrderFactory.create_batch(
             2,
@@ -339,7 +338,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             payment_schedule=[
                 {
                     "amount": "200.00",
-                    "due_date": "2024-01-17T00:00:00+00:00",
+                    "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PAID,
                 }
             ],
