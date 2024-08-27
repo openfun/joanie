@@ -1,5 +1,6 @@
 """Test suite for `prepare_context_data` email utility for installment payments"""
 
+from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase, override_settings
@@ -24,6 +25,8 @@ class UtilsEmailPrepareContextDataInstallmentPaymentTestCase(TestCase):
     """
     Test suite for `prepare_context_data` for email utility when installment is paid or refused
     """
+
+    maxDiff = None
 
     def test_utils_emails_prepare_context_data_when_installment_debit_is_successful(
         self,
@@ -66,7 +69,7 @@ class UtilsEmailPrepareContextDataInstallmentPaymentTestCase(TestCase):
                 },
                 {
                     "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
+                    "amount": "200.00",
                     "due_date": "2024-04-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
@@ -94,8 +97,8 @@ class UtilsEmailPrepareContextDataInstallmentPaymentTestCase(TestCase):
                     "name": "Test Catalog",
                     "url": "https://richie.education",
                 },
-                "remaining_balance_to_pay": Money("499.99"),
-                "date_next_installment_to_pay": "2024-03-17",
+                "remaining_balance_to_pay": Money("500.00"),
+                "date_next_installment_to_pay": date(2024, 3, 17),
                 "targeted_installment_index": 1,
             },
         )

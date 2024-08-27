@@ -1,12 +1,15 @@
 """Test suite of the Base Payment backend"""
 
 import smtplib
+from datetime import date
 from decimal import Decimal
 from logging import Logger
 from unittest import mock
 
 from django.core import mail
 from django.test import override_settings
+
+from stockholm import Money
 
 from joanie.core import enums
 from joanie.core.factories import (
@@ -322,26 +325,26 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             [
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
+                    "amount": Money("200.00"),
+                    "due_date": date(2024, 1, 17),
                     "state": enums.PAYMENT_STATE_PAID,
                 },
                 {
                     "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 2, 17),
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 3, 17),
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
+                    "amount": Money("199.99"),
+                    "due_date": date(2024, 4, 17),
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
@@ -505,26 +508,26 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             [
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
+                    "amount": Money("200.00"),
+                    "due_date": date(2024, 1, 17),
                     "state": enums.PAYMENT_STATE_REFUSED,
                 },
                 {
                     "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 2, 17),
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
-                    "amount": "300.00",
-                    "due_date": "2024-03-17",
+                    "amount": Money("300.00"),
+                    "due_date": date(2024, 3, 17),
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": "9fcff723-7be4-4b77-87c6-2865e000f879",
-                    "amount": "199.99",
-                    "due_date": "2024-04-17",
+                    "amount": Money("199.99"),
+                    "due_date": date(2024, 4, 17),
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
