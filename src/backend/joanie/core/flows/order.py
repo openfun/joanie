@@ -11,6 +11,7 @@ from viewflow import fsm
 
 from joanie.core import enums
 from joanie.core.utils.payment_schedule import (
+    has_installment_paid,
     has_installments_to_debit,
     is_installment_to_debit,
 )
@@ -245,6 +246,23 @@ class OrderFlow:
         Mark order instance as "failed_payment".
         """
 
+    def _can_be_state_refund_payment(self):
+        """
+        An order state can be set to refund if the order's state is 'canceled' exclusively.
+        To refund, there should be at least one installment paid in the payment schedule.
+        """
+        return has_installment_paid(self.instance)
+
+    @state.transition(
+        source=enums.ORDER_STATE_CANCELED,
+        target=enums.ORDER_STATE_REFUND,
+        conditions=[_can_be_state_refund_payment],
+    )
+    def refund(self):
+        """
+        Mark an order has refund.
+        """
+
     def update(self):
         """
         Update the order state.
@@ -259,6 +277,7 @@ class OrderFlow:
             self.pending_payment,
             self.no_payment,
             self.failed_payment,
+            self.refund,
         ]:
             with suppress(fsm.TransitionNotAllowed):
                 logger.debug(
