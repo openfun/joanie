@@ -17,6 +17,7 @@ from django.utils.translation import gettext_lazy as _
 import requests
 from parler import models as parler_models
 from stockholm import Money
+from requests.exceptions import ReadTimeout
 from urllib3.util import Retry
 
 from joanie.core import enums
@@ -1020,9 +1021,30 @@ class Order(BaseModel):
         )
 
         if should_be_resubmitted:
-            backend_signature.delete_signing_procedure(
-                self.contract.signature_backend_reference
-            )
+            # The signature provider may take some time to respond with the confirmation of the
+            # deletion. If we reach the timeout limit, we should reset the contract submission
+            # values because the signature provider will delete them.
+            # We won't be able to use the `contract.signature_backend_reference` again.
+            try:
+                backend_signature.delete_signing_procedure(
+                    self.contract.signature_backend_reference
+                )
+            except ReadTimeout as exception:  # pylint: disable=unused-variable
+                message = (
+                    "Signature Provider is taking a while on deletion "
+                    f"of reference {self.contract.signature_backend_reference}."
+                )
+                logger.error(
+                    message,
+                    extra={
+                        "context": {
+                            "order": self.to_dict(),
+                            "product": self.product.to_dict(),
+                        }
+                    },
+                )
+                self.contract.reset_submission_for_signature()
+                was_already_submitted = False
 
         # We want to submit or re-submit the contract for signature in three cases:
         # 1- the contract was never submitted for signature before

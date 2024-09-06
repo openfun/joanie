@@ -28,6 +28,8 @@ and this project adheres to
 
 ### Fixed
 
+- Handle timeout in `submit_for_signature` to update the contract
+  without the outdated references
 - Prevent duplicate Address objects for a user or an organization
 - Allow to cancel an enrollment order linked to an archived course run
 
