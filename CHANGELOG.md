@@ -46,6 +46,8 @@ and this project adheres to
 
 ### Added
 
+- Added `refund` state to order flow and added refund action on payment backends
+  and cancel/refund endpoint for admin users
 - Debit installment on pending order transition if due date is on current day
 - Display order credit card detail in the back office
 - Send an email reminder to the user when an installment

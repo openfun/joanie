@@ -2,6 +2,7 @@
 Test suite for payment schedule util
 """
 
+# pylint: disable=too-many-lines
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal as D
@@ -18,12 +19,15 @@ from stockholm import Money
 
 from joanie.core import factories
 from joanie.core.enums import (
+    ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
 )
 from joanie.core.exceptions import InvalidConversionError
 from joanie.core.utils import payment_schedule
+from joanie.payment.factories import InvoiceFactory, TransactionFactory
+from joanie.payment.models import Invoice, Transaction
 from joanie.tests.base import BaseLogMixinTestCase
 
 # pylint: disable=protected-access, too-many-public-methods, too-many-lines
@@ -1001,3 +1005,221 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                     payment_schedule.has_withdrawal_period(signature_date, start_date),
                     expected_result,
                 )
+
+    def test_utils_payment_schedule_order_has_installment_paid(self):
+        """
+        Check the method `has_installment_paid` returns whether the order has
+        an installment paid or not.
+        """
+        product_1 = factories.ProductFactory(price=100)
+        order_1 = factories.OrderGeneratorFactory(
+            product=product_1,
+            state=ORDER_STATE_PENDING_PAYMENT,
+        )
+
+        self.assertTrue(payment_schedule.has_installment_paid(order_1))
+
+        product_2 = factories.ProductFactory(price=0)
+        order_2 = factories.OrderGeneratorFactory(
+            product=product_2,
+            state=ORDER_STATE_PENDING,
+        )
+
+        self.assertFalse(payment_schedule.has_installment_paid(order_2))
+
+    def test_utils_payment_schedule_get_paid_transactionst(self):
+        """
+        The method `get_paid_transactions` should return every transactions
+        that are concerned in the order's payment schedule with 'paid' state.
+        """
+        product = factories.ProductFactory(price=100)
+        order = factories.OrderGeneratorFactory(
+            product=product,
+            state=ORDER_STATE_PENDING_PAYMENT,
+        )
+        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[2]["due_date"] = date(2024, 3, 17)
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_PAID
+        # Create the invoice and the transaction for 'paid' state installments
+        for i, payment in enumerate(order.payment_schedule[1:-1]):
+            child_invoice = InvoiceFactory(
+                order=order,
+                total=0,
+                parent=order.invoices.get(parent__isnull=True),
+                recipient_address=order.main_invoice.recipient_address,
+            )
+            TransactionFactory(
+                total=D(str(payment["amount"])),
+                invoice=child_invoice,
+                reference=f"pay_{i}",
+            )
+
+        transactions = payment_schedule.get_paid_transactions(order)
+
+        # We should find 3 transactions
+        self.assertEqual(transactions.count(), 3)
+        self.assertEqual(transactions[0].total, 20)
+        self.assertEqual(transactions[1].total, 30)
+        self.assertEqual(transactions[2].total, 30)
+
+    def test_utils_payment_schedule_get_transactions_of_installment_should_not_return_transactions(
+        self,
+    ):
+        """
+        When the order is free, it `get_paid_transactions` should not return a queryset
+        of transactions.
+        """
+        order = factories.OrderGeneratorFactory(
+            product__price=0,
+            state=ORDER_STATE_PENDING,
+        )
+
+        transactions = payment_schedule.get_paid_transactions(order)
+
+        self.assertEqual(transactions.count(), 0)
+
+    def test_utils_payment_schedule_handle_refunded_transaction(self):
+        """
+        Should create a credit note invoice and transaction showing amount of the credit
+        when we are in the context to refund a transaction in the payment schedule of an order.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT, product__price=100
+        )
+
+        # Should have 1 main Invoice and 1 child Invoice
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 2)
+        # Should have 1 Transaction showing the debit transaction of the only paid installment
+        self.assertEqual(Transaction.objects.filter(invoice__order=order).count(), 1)
+
+        child_invoice = Invoice.objects.get(order=order, parent__isnull=True)
+        transaction = Transaction.objects.get(invoice__order=order)
+        # Cancel the order first and then switch the state to 'refund'
+        order.flow.cancel()
+        order.flow.refunding()
+        order_id_fragment = str(order.id).split("-", maxsplit=1)[0]
+
+        # Should create 1 new transaction et 1 credit note Invoice
+        payment_schedule.handle_refunded_transaction(
+            amount=D(transaction.total),
+            invoice=child_invoice,
+            refund_reference=f"{order_id_fragment}",
+        )
+
+        # Should have 1 main Invoice and 1 child Invoice
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 3)
+        # Should have 1 Transaction showing the debit transaction of the only paid installment
+        self.assertEqual(Transaction.objects.filter(invoice__order=order).count(), 2)
+        self.assertEqual(
+            Invoice.objects.filter(
+                order=order, total=-D(str(order.payment_schedule[0]["amount"]))
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            Transaction.objects.filter(reference=order_id_fragment).count(), 1
+        )
+
+    def test_utils_payment_schedule_handle_refunded_transaction_when_is_cancelled(self):
+        """
+        When calling handle_refunded_transaction, it should create a credit note and
+        the transaction reflecting the cash mouvement.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT, product__price=100
+        )
+
+        # Should have 1 main Invoice and 1 child Invoice
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 2)
+        # Should have 1 Transaction showing the debit transaction of the only paid installment
+        self.assertEqual(Transaction.objects.filter(invoice__order=order).count(), 1)
+
+        child_invoice = Invoice.objects.get(order=order, parent__isnull=True)
+        transaction = Transaction.objects.get(invoice__order=order)
+        # Cancel the order first and then switch the state to 'refund'
+        order.flow.cancel()
+        order.flow.refunding()
+        order_id_fragment = str(order.id).split("-", maxsplit=1)[0]
+
+        # Should create 1 new transaction et 1 credit note Invoice
+        payment_schedule.handle_refunded_transaction(
+            amount=D(transaction.total),
+            invoice=child_invoice,
+            refund_reference=f"cancel_{order_id_fragment}",
+        )
+
+        # Should have 1 main Invoice and 1 child Invoice
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 3)
+        # Should have 1 Transaction showing the debit transaction of the only paid installment
+        self.assertEqual(Transaction.objects.filter(invoice__order=order).count(), 2)
+        self.assertEqual(
+            Invoice.objects.filter(
+                order=order, total=-D(str(order.payment_schedule[0]["amount"]))
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            Transaction.objects.filter(reference=f"cancel_{order_id_fragment}").count(),
+            1,
+        )
+
+    def test_utils_payment_schedule_get_transaction_references_to_refund_returns_empty_dictionary(
+        self,
+    ):
+        """
+        The method `get_transaction_references_to_refund` should return an empty dictionary
+        if there is no paid installment on an order payment schedule.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING, product__price=1000
+        )
+
+        refund_items = payment_schedule.get_transaction_references_to_refund(order)
+
+        self.assertEqual(refund_items, {})
+
+    def test_utils_payment_schedule_get_transaction_references_to_refund(self):
+        """
+        The method `get_transaction_references_to_refund` should return the installments
+        that are refundable in the payment schedule of an order.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT, product__price=1000
+        )
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_PAID
+        transaction_1 = Transaction.objects.get(
+            reference=order.payment_schedule[0]["id"]
+        )
+        # Create transaction and invoice for the second and third paid' installments
+        transaction_2 = TransactionFactory.create(
+            reference=order.payment_schedule[1]["id"],
+            invoice__order=order,
+            invoice__parent=order.main_invoice,
+            invoice__total=0,
+            invoice__recipient_address__owner=order.owner,
+            total=str(order.payment_schedule[1]["amount"]),
+        )
+        transaction_3 = TransactionFactory.create(
+            reference=order.payment_schedule[2]["id"],
+            invoice__order=order,
+            invoice__parent=order.main_invoice,
+            invoice__total=0,
+            invoice__recipient_address__owner=order.owner,
+            total=str(order.payment_schedule[2]["amount"]),
+        )
+        first_installment = order.payment_schedule[0]
+        second_installment = order.payment_schedule[1]
+        third_installment = order.payment_schedule[2]
+
+        refund_items = payment_schedule.get_transaction_references_to_refund(order)
+
+        self.assertEqual(
+            refund_items,
+            {
+                str(transaction_1.reference): first_installment["amount"],
+                str(transaction_2.reference): second_installment["amount"],
+                str(transaction_3.reference): third_installment["amount"],
+            },
+        )

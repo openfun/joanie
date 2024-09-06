@@ -17,13 +17,16 @@ from stockholm import Money
 
 from joanie.core import factories
 from joanie.core.enums import (
+    ORDER_STATE_CANCELED,
     ORDER_STATE_COMPLETED,
     ORDER_STATE_FAILED_PAYMENT,
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_REFUNDING,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
+    PAYMENT_STATE_REFUNDED,
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.models import Order
@@ -35,7 +38,7 @@ from joanie.tests.base import ActivityLogMixingTestCase, BaseLogMixinTestCase
 @override_settings(
     JOANIE_PAYMENT_SCHEDULE_LIMITS={
         5: (30, 70),
-        10: (30, 45, 45),
+        10: (30, 35, 35),
         100: (20, 30, 30, 20),
     },
     DEFAULT_CURRENCY="EUR",
@@ -221,19 +224,19 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             [
                 {
                     "id": first_uuid,
-                    "amount": Money(1.80, settings.DEFAULT_CURRENCY),
+                    "amount": Money("1.80"),
                     "due_date": date(2024, 1, 17),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": second_uuid,
-                    "amount": Money(2.70, settings.DEFAULT_CURRENCY),
+                    "amount": Money("2.10"),
                     "due_date": date(2024, 3, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": third_uuid,
-                    "amount": Money(1.50, settings.DEFAULT_CURRENCY),
+                    "amount": Money("2.10"),
                     "due_date": date(2024, 4, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
@@ -252,13 +255,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 },
                 {
                     "id": str(second_uuid),
-                    "amount": Money("2.70"),
+                    "amount": Money("2.10"),
                     "due_date": date(2024, 3, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": str(third_uuid),
-                    "amount": Money("1.50"),
+                    "amount": Money("2.10"),
                     "due_date": date(2024, 4, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
@@ -297,19 +300,19 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             [
                 {
                     "id": first_uuid,
-                    "amount": Money(1.80, settings.DEFAULT_CURRENCY),
+                    "amount": Money("1.80"),
                     "due_date": date(2024, 1, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": second_uuid,
-                    "amount": Money(2.70, settings.DEFAULT_CURRENCY),
+                    "amount": Money("2.10"),
                     "due_date": date(2024, 2, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": third_uuid,
-                    "amount": Money(1.50, settings.DEFAULT_CURRENCY),
+                    "amount": Money("2.10"),
                     "due_date": date(2024, 3, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
@@ -328,13 +331,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
                 },
                 {
                     "id": str(second_uuid),
-                    "amount": Money("2.70"),
+                    "amount": Money("2.10"),
                     "due_date": date(2024, 2, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
                 {
                     "id": str(third_uuid),
-                    "amount": Money("1.50"),
+                    "amount": Money("2.10"),
                     "due_date": date(2024, 3, 1),
                     "state": PAYMENT_STATE_PENDING,
                 },
@@ -1399,3 +1402,81 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         order.payment_schedule[1]["state"] = PAYMENT_STATE_REFUSED
 
         self.assertIsNone(order.get_installment_index(PAYMENT_STATE_PENDING))
+
+    def test_models_order_set_installment_state_refunded(self):
+        """
+        Check that the state of an installment can be set to refunded only
+        if the installment was in state `paid` and the order's state is 'refunding',
+        else it raises an error.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_CANCELED,
+            product__price=10,
+        )
+        # First installment is paid
+        order.payment_schedule[0]["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[0]["due_date"] = date(2024, 2, 17)
+        # Second installment is pending for payment
+        order.payment_schedule[1]["id"] = "1932fbc5-d971-48aa-8fee-6d637c3154a5"
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PENDING
+        order.payment_schedule[1]["due_date"] = date(2024, 3, 17)
+        # Third installment is pending for payment
+        order.payment_schedule[2]["id"] = "168d7e8c-a1a9-4d70-9667-853bf79e502c"
+        order.payment_schedule[2]["state"] = PAYMENT_STATE_PENDING
+        order.payment_schedule[2]["due_date"] = date(2024, 4, 17)
+
+        order.flow.refunding()
+
+        order.set_installment_refunded(
+            installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
+        )
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, ORDER_STATE_REFUNDING)
+        self.assertEqual(
+            order.payment_schedule,
+            [
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": Money("3.00"),
+                    "due_date": date(2024, 2, 17),
+                    "state": PAYMENT_STATE_REFUNDED,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": Money("3.50"),
+                    "due_date": date(2024, 3, 17),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "168d7e8c-a1a9-4d70-9667-853bf79e502c",
+                    "amount": Money("3.50"),
+                    "due_date": date(2024, 4, 17),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        # Attempt to refund an installment that is still in `pending_payment` state
+        # should raise a Value Error
+        with self.assertRaises(ValueError) as context:
+            order.set_installment_refunded(
+                installment_id="1932fbc5-d971-48aa-8fee-6d637c3154a5",
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "Installment with id 1932fbc5-d971-48aa-8fee-6d637c3154a5 cannot be refund",
+        )
+
+        # Passing a fake installment id should raise a ValueError
+        with self.assertRaises(ValueError) as context:
+            order.set_installment_refunded(
+                installment_id="fake_installment_id",
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "Installment with id fake_installment_id cannot be refund",
+        )
