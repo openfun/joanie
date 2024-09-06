@@ -6,6 +6,7 @@ Test suite for order models
 import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from http import HTTPStatus
 from unittest import mock
 
 from django.contrib.sites.models import Site
@@ -13,6 +14,9 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase, override_settings
 from django.utils import timezone as django_timezone
+
+import responses
+from requests.exceptions import ReadTimeout
 
 from joanie.core import enums, factories
 from joanie.core.factories import CourseRunFactory
@@ -25,6 +29,7 @@ from joanie.payment.factories import (
 )
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.signature.backends.lex_persona import get_expected_workflow_payload
 
 
 class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
@@ -1248,3 +1253,311 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+
+    # pylint: disable=too-many-locals,unexpected-keyword-arg,no-value-for-parameter
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.lex_persona.LexPersonaBackend",
+        JOANIE_SIGNATURE_LEXPERSONA_BASE_URL="https://lex_persona.test01.com",
+        JOANIE_SIGNATURE_LEXPERSONA_CONSENT_PAGE_ID="cop_id_fake",
+        JOANIE_SIGNATURE_LEXPERSONA_SESSION_USER_ID="usr_id_fake",
+        JOANIE_SIGNATURE_LEXPERSONA_PROFILE_ID="sip_profile_id_fake",
+        JOANIE_SIGNATURE_LEXPERSONA_TOKEN="token_id_fake",
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_TIMEOUT=3,
+    )
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_models_order_submit_for_signature_step_delete_signing_procedure_timeout(
+        self,
+    ):
+        """
+        We want to test when we submit a contract to the signature provider and
+        overtime the context has changed. Then, the method `submit_for_signature` should
+        trigger the method `delete_signing_procedure` to update the contract at the signature
+        provider.
+        In this specific case, we want to test what happens to the contract if it reaches a
+        TimeOut Error on the `delete_signing_procedure` method.
+        """
+        user = factories.UserFactory(
+            email="johnnydo@example.fr",
+            first_name="Johnny",
+            last_name=".",
+            language="fr-fr",
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            state=enums.ORDER_STATE_VALIDATED,
+            product__contract_definition=factories.ContractDefinitionFactory(
+                title="Contract grade 1",
+                name=enums.CONTRACT_NAME_CHOICES[0][0],
+                description="Contract Definition",
+            ),
+        )
+        factories.UserOrganizationAccessFactory.create_batch(
+            3, organization=order.organization, role="owner"
+        )
+        workflow_id = "wfl_id_fake"
+
+        ## Create workflow
+        create_workflow_api_url = (
+            "https://lex_persona.test01.com/api/users/usr_id_fake/workflows"
+        )
+        responses.add(
+            responses.POST,
+            create_workflow_api_url,
+            status=HTTPStatus.OK,
+            json={
+                "created": 1696238245608,
+                "currentRecipientEmails": [],
+                "currentRecipientUsers": [],
+                "description": "Contract Definition",
+                "email": order.owner.email,
+                "firstName": order.owner.first_name,
+                "groupId": "grp_id_fake",
+                "id": workflow_id,
+                "lastName": ".",
+                "logs": [],
+                "name": "Contract Definition",
+                "notifiedEvents": [
+                    "recipientRefused",
+                    "recipientFinished",
+                    "workflowFinished",
+                ],
+                "progress": 0,
+                "steps": [
+                    {
+                        "allowComments": True,
+                        "hideAttachments": False,
+                        "hideWorkflowRecipients": True,
+                        "id": "stp_J5gCgaRRY4NHtbGs474WjMkA",
+                        "invitePeriod": None,
+                        "isFinished": False,
+                        "isStarted": False,
+                        "logs": [],
+                        "maxInvites": 0,
+                        "recipients": [
+                            {
+                                "consentPageId": "cop_id_fake",
+                                "country": order.main_invoice.recipient_address.country.code.upper(),  # pylint: disable=line-too-long
+                                "email": "johnnydoe@example.fr",
+                                "firstName": "Johnny",
+                                "lastName": ".",
+                                "preferredLocale": "fr",
+                            }
+                        ],
+                        "requiredRecipients": 1,
+                        "sendDownloadLink": True,
+                        "stepType": "signature",
+                        "validityPeriod": 1296000000,
+                    }
+                ],
+                "tenantId": "ten_id_fake",
+                "updated": 1696238245608,
+                "userId": "usr_id_fake",
+                "viewAuthorizedGroups": ["grp_id_fake"],
+                "viewAuthorizedUsers": [],
+                "watchers": [],
+                "workflowStatus": "stopped",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+            ],
+        )
+
+        ## upload file to workflow
+        upload_file_api_url = (
+            f"https://lex_persona.test01.com/api/workflows/{workflow_id}"
+            "/parts?createDocuments=true&ignoreAttachments=false"
+            "&signatureProfileId=sip_profile_id_fake&unzip=false&pdf2pdfa=auto"
+        )
+        responses.add(
+            responses.POST,
+            upload_file_api_url,
+            status=HTTPStatus.OK,
+            json={
+                "documents": [
+                    {
+                        "created": 1696238255558,
+                        "groupId": "grp_id_fake",
+                        "id": "doc_id_fake",
+                        "parts": [
+                            {
+                                "contentType": "application/pdf",
+                                "filename": "contract_definition.pdf",
+                                "hash": "wpTD3tstfdt9XfuFK+sv4/y6fv3lx3hwZ2gjQ2DBrxs=",
+                                "size": 123616,
+                            }
+                        ],
+                        "signatureProfileId": "sip_profile_id_fake",
+                        "tenantId": "ten_id_fake",
+                        "updated": 1696238255558,
+                        "userId": "usr_id_fake",
+                        "viewAuthorizedGroups": ["grp_id_fake"],
+                        "viewAuthorizedUsers": [],
+                        "workflowId": "wfl_id_fake",
+                        "workflowName": "Heavy Duty Wool Watch",
+                    }
+                ],
+                "ignoredAttachments": 0,
+                "parts": [
+                    {
+                        "contentType": "application/pdf",
+                        "filename": "contract_definition.pdf",
+                        "hash": "wpTD3tstfdt9XfuFK+sv4/y6fv3lx3hwZ2gjQ2DBrxs=",
+                        "size": 123616,
+                    }
+                ],
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                )
+            ],
+        )
+
+        ## Start procedure
+        start_procedure_api_url = (
+            f"https://lex_persona.test01.com/api/workflows/{workflow_id}"
+        )
+        start_procedure_response_data = get_expected_workflow_payload("started")
+        responses.add(
+            responses.PATCH,
+            start_procedure_api_url,
+            status=HTTPStatus.OK,
+            json=start_procedure_response_data,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "workflowStatus": "started",
+                    }
+                ),
+            ],
+        )
+
+        # Sign specific contract
+        responses.add(
+            responses.POST,
+            "https://lex_persona.test01.com/api/requests/",
+            json={
+                "consentPageId": "cop_id_fake",
+                "consentPageUrl": (
+                    "https://lex_persona.test01.com/?"
+                    "requestToken=eyJhbGciOiJIUzI1NiJ9#requestId=req_8KVKj7qNKNDgsN7Txx1sdvaT"
+                ),
+                "created": 1696238302063,
+                "id": "req_id_fake",
+                "steps": [
+                    {
+                        "allowComments": True,
+                        "stepId": "stp_id_fake",
+                        "workflowId": "wfl_id_fake",
+                    }
+                ],
+                "tenantId": "ten_id_fake",
+                "updated": 1696238302063,
+            },
+            status=HTTPStatus.OK,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer jwt_token",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "workflows": ["wfl_id_fake"],
+                    }
+                ),
+            ],
+        )
+
+        # Get the invitation link
+        responses.add(
+            responses.POST,
+            "https://lex_persona.test01.com/api/workflows/wfl_id_fake/invite",
+            json={"inviteUrl": "https://example.com/invite?token=jwt_token"},
+            status=HTTPStatus.OK,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {"recipientEmail": "johnnydo@example.fr"}
+                ),
+            ],
+        )
+        invitation_url = order.submit_for_signature(user=user)
+        self.assertEqual(
+            invitation_url,
+            "https://lex_persona.test01.com/?requestToken=eyJhbGciOiJIUzI1NiJ9"
+            "#requestId=req_8KVKj7qNKNDgsN7Txx1sdvaT",
+        )
+
+        # Save the timestamp of the updated_on of the contract
+        first_attempt_submission = order.contract.updated_on
+        # Now we change the contract definition to trigger the should_be_resubmitted condition
+        # and call the method delete_signing_procedure
+        order.product.contract_definition.title = "You know nothing John Snow."
+        order.product.contract_definition.save()
+
+        delete_api_endpoint_url = (
+            "https://lex_persona.test01.com/api/workflows/wfl_id_fake"
+        )
+
+        responses.add(
+            responses.DELETE,
+            delete_api_endpoint_url,
+            body=ReadTimeout(
+                "Timeout occurred when trying to delete the signing procedure"
+            ),
+        )
+
+        # Now call submit_for_signature, which should trigger the timeout in
+        # `delete_signing_procedure`.
+        # The first_attempt_submission timestamp should be different than the
+        # second_attempt_submission because it's supposed to trigger the creation of a new
+        # workflow. And here it's not the case.
+        # They are the same, which tells us that no new contract gets submitted. Meaning that
+        # we never entered the condition where it's supposed to create a signature procedure
+        # and call the method `tag_submission_for_signature`
+        with mock.patch(
+            "joanie.core.models.contracts.Contract.tag_submission_for_signature"
+        ) as mock_tag_submission_for_signature:
+            with self.assertRaises(ReadTimeout) as context:
+                order.submit_for_signature(user=user)
+
+        self.assertEqual(
+            str(context.exception),
+            "Timeout occurred when trying to delete the signing procedure",
+        )
+        mock_tag_submission_for_signature.assert_not_called()
+
+        second_attempt_submission = order.contract.updated_on
+
+        self.assertEqual(first_attempt_submission, second_attempt_submission)
+
+        contract = order.contract
+
+        self.assertIsNotNone(contract.submitted_for_signature_on)
+        self.assertIsNotNone(contract.context)
+        self.assertIsNotNone(contract.definition_checksum)
+        self.assertIsNotNone(contract.signature_backend_reference)
+
+        contract.reset_submission_for_signature()
+
+        self.assertIsNone(contract.submitted_for_signature_on)
+        self.assertIsNone(contract.context)
+        self.assertIsNone(contract.definition_checksum)
+        self.assertIsNone(contract.signature_backend_reference)
