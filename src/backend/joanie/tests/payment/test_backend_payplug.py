@@ -849,8 +849,31 @@ class PayplugBackendTestCase(BasePaymentTestCase):
         When backend receives a refund notification, it should call the
         generic method `_do_on_refund`.
         """
-        order = OrderFactory()
-        payment = TransactionFactory(invoice__order=order)
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "a45f5574-221a-420f-aac0-ebcc89a4c867",
+                    "state": enums.PAYMENT_STATE_PAID,
+                    "amount": "300.00",
+                    "due_date": "2024-10-13",
+                },
+                {
+                    "id": "573bb8ea-bb0c-4a75-a681-64cad70d05df",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                    "amount": "700.00",
+                    "due_date": "2024-11-13",
+                },
+            ],
+        )
+        payment = TransactionFactory(
+            invoice__order=order,
+            invoice__parent=order.main_invoice,
+            invoice__total=0,
+            invoice__recipient_address__owner=order.owner,
+            total=str(order.payment_schedule[0]["amount"]),
+            reference=str(order.payment_schedule[0]["id"]),
+        )
 
         mock_treat.return_value = PayplugFactories.PayplugRefundFactory(
             payment_id=payment.reference
@@ -864,9 +887,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         mock_do_on_refund.assert_called_once()
         args = mock_do_on_refund.call_args.kwargs
-        self.assertEqual(len(args), 3)
+        self.assertEqual(len(args), 4)
         self.assertIsInstance(args["amount"], D)
         self.assertEqual(args["invoice"], payment.invoice)
+        self.assertEqual(args["installment_id"], order.payment_schedule[0]["id"])
         self.assertIsNotNone(re.fullmatch(r"ref_\d{5}", args["refund_reference"]))
 
     @mock.patch.object(payplug.Payment, "abort")

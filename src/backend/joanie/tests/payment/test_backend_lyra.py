@@ -19,7 +19,9 @@ from joanie.core.enums import (
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_REFUNDED,
     PAYMENT_STATE_PAID,
+    PAYMENT_STATE_REFUNDED,
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import (
@@ -37,7 +39,11 @@ from joanie.payment.exceptions import (
     RegisterPaymentFailed,
     TokenizationCardFailed,
 )
-from joanie.payment.factories import CreditCardFactory
+from joanie.payment.factories import (
+    CreditCardFactory,
+    InvoiceFactory,
+    TransactionFactory,
+)
 from joanie.payment.models import CreditCard, Transaction
 from joanie.tests.base import BaseLogMixinTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -1826,3 +1832,319 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             mail.outbox[0].subject,
         )
         self.assertIn("Product 1", email_content)
+
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={100: (30, 35, 35)})
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_lyra_refund_transaction(self):
+        """
+        When backend requests a refund of a transaction, it should return True if
+        the action was successful.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        order = OrderGeneratorFactory(
+            owner=owner, product__price=100, state=ORDER_STATE_PENDING_PAYMENT
+        )
+        # Set manually the id of the installment
+        order.payment_schedule[0]["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        child_invoice = InvoiceFactory(
+            order=order,
+            total=0,
+            parent=order.main_invoice,
+            recipient_address=order.main_invoice.recipient_address,
+        )
+        transaction = TransactionFactory(
+            total=D(str(order.payment_schedule[0]["amount"])),
+            invoice=child_invoice,
+            reference="dbf4b89ae157499e83bea366c91daaa8",  # Transaction uuid from payment provider
+        )
+        order.flow.cancel()
+
+        with self.open("lyra/responses/refund_transaction_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Transaction/CancelOrRefund",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 3000,
+                        "currency": "EUR",
+                        "uuid": "dbf4b89ae157499e83bea366c91daaa8",
+                        "resolutionMode": "AUTO",
+                    },
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.cancel_or_refund(
+            amount=order.payment_schedule[0]["amount"],
+            reference=transaction.reference,
+        )
+
+        self.assertEqual(
+            response["answer"]["transactionDetails"]["creationContext"], "REFUND"
+        )
+
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={100: (30, 35, 35)})
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_lyra_cancel_transaction(self):
+        """
+        When backend requests a refund of a transaction that will be canceled on the payment
+        provider side, it should return True if the action was successful.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        order = OrderGeneratorFactory(
+            owner=owner, product__price=100, state=ORDER_STATE_PENDING_PAYMENT
+        )
+        # Set manually the id of the 1st installment
+        order.payment_schedule[0]["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        child_invoice = InvoiceFactory(
+            order=order,
+            total=0,
+            parent=order.main_invoice,
+            recipient_address=order.main_invoice.recipient_address,
+        )
+        transaction = TransactionFactory(
+            total=D(str(order.payment_schedule[0]["amount"])),
+            invoice=child_invoice,
+            reference="d1053bae1aad463f8975ec248fa46eb3",  # Transaction uuid from payment provider
+        )
+        order.flow.cancel()
+
+        with self.open("lyra/responses/cancel_transaction_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Transaction/CancelOrRefund",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 3000,
+                        "currency": "EUR",
+                        "uuid": "d1053bae1aad463f8975ec248fa46eb3",
+                        "resolutionMode": "AUTO",
+                    },
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.cancel_or_refund(
+            amount=order.payment_schedule[0]["amount"],
+            reference=transaction.reference,
+        )
+
+        self.assertEqual(response["answer"]["detailedStatus"], "CANCELLED")
+
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={100: (30, 35, 35)})
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_cancel_or_refund_with_wrong_transaction_reference_id(
+        self,
+    ):
+        """
+        When we request a refund/cancel of a transaction with the payment provider
+        with a transaction reference that does not exist on the payment provider side,
+        we should get in return the value False because it was not successful.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        order = OrderGeneratorFactory(
+            owner=owner, product__price=1000, state=ORDER_STATE_PENDING_PAYMENT
+        )
+        order.flow.cancel()
+
+        with self.open("lyra/responses/cancel_and_refund_failed.json") as file:
+            json_response = json.loads(file.read())
+        # Make on purpose a fake transaction id directly without creating the transaction...
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Transaction/CancelOrRefund",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 30000,
+                        "currency": "EUR",
+                        "uuid": "wrong_transaction_id",
+                        "resolutionMode": "AUTO",
+                    },
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        with (
+            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertLogs() as logger,
+        ):
+            backend.cancel_or_refund(
+                amount=order.payment_schedule[0]["amount"],
+                reference="wrong_transaction_id",
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "Error when calling Lyra API - PSP_010 : transaction not found.",
+        )
+
+        expected_logs = [
+            (
+                "INFO",
+                "Calling Lyra API https://api.lyra.com/api-payment/V4/Transaction/CancelOrRefund",
+                {
+                    "url": str,
+                    "headers": dict,
+                    "payload": dict,
+                },
+            ),
+            (
+                "ERROR",
+                "Error calling Lyra API https://api.lyra.com/api-payment/V4/Transaction/CancelOrRefund"
+                " | PSP_010: transaction not found",
+                {
+                    "url": str,
+                    "headers": dict,
+                    "payload": dict,
+                    "response_json": dict,
+                },
+            ),
+        ]
+        self.assertLogsEquals(logger.records, expected_logs)
+
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (100,)})
+    def test_payment_backend_lyra_handle_notification_refund_transaction(self):
+        """
+        When backend receives a refund payment notification, it should create a credit note,
+        a transaction reflecting the refund and also, it should set the installment has
+        'refunded' and the order's state as 'canceled'.
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(email="john.doe@acme.org")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="a7834082-a000-4de4-af6e-e09683c9a752",
+            owner=user,
+            product__price=D("123.45"),
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        first_installment["state"] = PAYMENT_STATE_PAID
+        TransactionFactory.create(
+            reference="dbf4b89a-e157-499e-83be-a366c91daaa8",
+            invoice__order=order,
+            invoice__parent=order.main_invoice,
+            invoice__total=0,
+            invoice__recipient_address__owner=order.owner,
+            total=str(order.payment_schedule[0]["amount"]),
+        )
+        order.flow.cancel()
+        order.flow.refunding()
+
+        with self.open("lyra/requests/refund_accepted_transaction.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        order.refresh_from_db()
+        refund_transaction = Transaction.objects.get(
+            reference="50369f1f6c3f4ea6a451a41662688133"
+        )
+        credit_note = refund_transaction.invoice
+        self.assertEqual(refund_transaction.total, -D("123.45"))
+        self.assertEqual(refund_transaction.total, credit_note.total)
+        self.assertEqual(
+            refund_transaction.invoice.order.main_invoice, order.main_invoice
+        )
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
+        self.assertEqual(order.state, ORDER_STATE_REFUNDED)
+
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (100,)})
+    def test_payment_backend_lyra_handle_notification_cancel_transaction(self):
+        """
+        When backend receives a cancellation notification, it should create a credit note,
+        a transaction reflecting the refund and also, it should set the installment has
+        'refunded' and the order's state as 'canceled'.
+        """
+        backend = LyraBackend(self.configuration)
+        user = UserFactory(email="john.doe@acme.org")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            id="a7834082-a000-4de4-af6e-e09683c9a752",
+            owner=user,
+            product__price=D("123.45"),
+        )
+        # Force the first installment id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        first_installment["state"] = PAYMENT_STATE_PAID
+        TransactionFactory.create(
+            reference="d1053bae1aad463f8975ec248fa46eb3",
+            invoice__order=order,
+            invoice__parent=order.main_invoice,
+            invoice__total=0,
+            invoice__recipient_address__owner=order.owner,
+            total=str(order.payment_schedule[0]["amount"]),
+        )
+        order.flow.cancel()
+        order.flow.refunding()
+
+        with self.open("lyra/requests/cancel_transaction.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        order.refresh_from_db()
+        cancel_transaction = Transaction.objects.get(
+            reference="cancel_d1053bae1aad463f8975ec248fa46eb3"
+        )
+        credit_note = cancel_transaction.invoice
+        self.assertEqual(cancel_transaction.total, -D("123.45"))
+        self.assertEqual(cancel_transaction.total, credit_note.total)
+        self.assertEqual(
+            cancel_transaction.invoice.order.main_invoice, order.main_invoice
+        )
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
+        self.assertEqual(order.state, ORDER_STATE_REFUNDED)
