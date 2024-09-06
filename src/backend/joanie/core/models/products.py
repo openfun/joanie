@@ -1131,7 +1131,6 @@ class Order(BaseModel):
                 self.save(update_fields=["payment_schedule"])
                 self.flow.update()
                 return
-
         raise ValueError(f"Installment with id {installment_id} not found")
 
     def set_installment_paid(self, installment_id):
@@ -1147,6 +1146,22 @@ class Order(BaseModel):
         """
         ActivityLog.create_payment_failed_activity_log(self)
         self._set_installment_state(installment_id, enums.PAYMENT_STATE_REFUSED)
+
+    def set_installment_refunded(self, installment_id):
+        """
+        Set the state of an installment to `refunded` in the payment schedule.
+        """
+        ActivityLog.create_payment_refunded_activity_log(self)
+
+        for installment in self.payment_schedule:
+            if (
+                installment["id"] == installment_id
+                and installment["state"] == enums.PAYMENT_STATE_PAID
+            ):
+                installment["state"] = enums.PAYMENT_STATE_REFUNDED
+                self.save(update_fields=["payment_schedule"])
+                return
+        raise ValueError(f"Installment with id {installment_id} cannot be refund")
 
     def get_first_installment_refused(self):
         """
