@@ -21,7 +21,7 @@ or is refunded :
 
 - **`_do_on_payment_success(order, payment)`**
 - **`_do_on_payment_failure(order)`**
-- **`_do_on_refund(amount, invoice, refund_reference)`**
+- **`_do_on_refund(amount, invoice, refund_reference, installment_id)`**
 
 On the other hand, your payment backend has to implement 5 methods :
 
@@ -60,18 +60,18 @@ url. To simplify this task, we have integrated a [localtunnel](https://theboroer
   First you have to start joanie application then open a localtunnel. To ease this step,
   there is a command `tunnel` available in the Makefile. So `make tunnel` will run
   joanie application then open a localtunnel. The process will stay in foreground and will
-  print all requests catched by your localtunnel. 
+  print all requests catched by your localtunnel.
 
   ```bash
   > make tunnel
 
   [+] Building 0.0s (0/0)                                                docker:desktop-linux
   [+] Running 3/3
-   ✔ Container joanie-postgresql-1  Running                                              0.0s 
-   ✔ Container joanie-app-1         Running                                              0.0s 
-   ✔ Container joanie-nginx-1       Started                                              0.1s 
+   ✔ Container joanie-postgresql-1  Running                                              0.0s
+   ✔ Container joanie-app-1         Running                                              0.0s
+   ✔ Container joanie-nginx-1       Started                                              0.1s
   ...
-  
+
   npx localtunnel -s dev-****-joanie -h https://localtunnel.me --port 8071 --print-requests
   your url is: https://dev-****-joanie.loca.lt # Copy this url
   ```

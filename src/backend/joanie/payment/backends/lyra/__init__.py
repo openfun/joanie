@@ -9,11 +9,14 @@ import logging
 from decimal import Decimal as D
 
 from django.conf import settings
+from django.db.models import Q
 
 import requests
 from rest_framework.parsers import FormParser, JSONParser
+from stockholm import Money
 
 from joanie.core.models import ActivityLog, Address, Order, User
+from joanie.core.utils import payment_schedule
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.models import CreditCard, Invoice, Transaction
@@ -374,13 +377,16 @@ class LyraBackend(BasePaymentBackend):
         initial_issuer_transaction_identifier = card_details[
             "initialIssuerTransactionIdentifier"
         ]
+        operation_category = answer["transactions"][0]["detailedStatus"]
+        parent_transaction_id = answer["transactions"][0]["transactionDetails"].get(
+            "parentTransactionUuid", None
+        )
         installment_id = None
         if (
             answer["transactions"][0]["metadata"]
             and "installment_id" in answer["transactions"][0]["metadata"]
         ):
             installment_id = answer["transactions"][0]["metadata"]["installment_id"]
-
         # Register card if user has requested it
         if card_token is not None and (
             payment_method_source != "TOKEN" or creation_context == "VERIFICATION"
@@ -401,12 +407,36 @@ class LyraBackend(BasePaymentBackend):
                 payment_provider=self.name,
             )
 
+        amount = f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"
+        # Refund a transaction operation
+        if creation_context != "VERIFICATION" and (
+            (operation_category == "CANCELLED" and answer["orderStatus"] == "UNPAID")
+            or (creation_context == "REFUND" and answer["orderStatus"] == "PAID")
+        ):
+            transaction = Transaction.objects.get(
+                Q(reference=transaction_id) | Q(reference=parent_transaction_id)
+            )
+            if not parent_transaction_id:
+                # If `parent_transaction_id` is absent, Lyra will cancel the capture of the
+                # initiated transaction amount.
+                # If `parent_transaction_id` is present, it indicates that the amount
+                # has already been captured, and  Lyra will initiate a new transaction
+                # to refund the amount.
+                transaction_id = f"cancel_{transaction_id}"
+
+            return self._do_on_refund(
+                amount=D(amount),
+                invoice=transaction.invoice.order.main_invoice,
+                refund_reference=transaction_id,
+                installment_id=installment_id,
+            )
+
         if answer["orderStatus"] == "PAID":
             billing_details = answer["customer"]["billingDetails"]
 
             payment = {
                 "id": transaction_id,
-                "amount": D(f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"),
+                "amount": D(amount),
                 "billing_address": {
                     "address": billing_details["address"],
                     "city": billing_details["city"],
@@ -484,3 +514,32 @@ class LyraBackend(BasePaymentBackend):
         """
         Abort a payment, nothing to do for Lyra
         """
+
+    def cancel_or_refund(self, amount: Money, reference: str):
+        """
+        Cancels or refunds a transaction made on the order's payment schedule.
+        The payment provider determines whether the transaction can be canceled or
+        refunded on their side. If the transaction has not yet been captured at the customer's
+        bank, it can be canceled. However, if the transaction has already been captured,
+        it means the funds have been received, and a refund process can be initiated instead.
+
+        https://docs.lyra.com/fr/rest/V4.0/api/playground/Transaction/CancelOrRefund
+        """
+        url = f"{self.api_url}Transaction/CancelOrRefund"
+
+        payload = {
+            "amount": int(amount.sub_units),
+            "currency": settings.DEFAULT_CURRENCY,
+            "uuid": str(reference),
+            "resolutionMode": "AUTO",
+        }
+
+        response_json = self._call_api(url, payload)
+
+        if response_json.get("status") != "SUCCESS":
+            raise exceptions.RegisterPaymentFailed(
+                f"The transaction reference {reference} does not "
+                "exist at the payment provider."
+            )
+
+        return response_json
