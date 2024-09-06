@@ -33,6 +33,7 @@ class ActivityLogContextField(models.JSONField):
         elif activity_log_type in [
             enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
             enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
+            enums.ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED,
         ]:
             self.validate_payment_type(value)
         else:
@@ -107,6 +108,18 @@ class ActivityLog(BaseModel):
             level=enums.ACTIVITY_LOG_LEVEL_ERROR,
             context={"order_id": str(order.id)},
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
+        )
+
+    @classmethod
+    def create_payment_refunded_activity_log(cls, order):
+        """
+        Create a payment refunded activity log
+        """
+        return cls.objects.create(
+            user=order.owner,
+            level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
+            context={"order_id": str(order.id)},
+            type=enums.ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED,
         )
 
     def __str__(self):
