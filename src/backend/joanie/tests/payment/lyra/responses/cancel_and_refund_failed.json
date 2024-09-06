@@ -1,0 +1,22 @@
+{
+	"webService": "Transaction/CancelOrRefund",
+	"version": "V4",
+	"applicationVersion": "6.22.1",
+	"status": "ERROR",
+	"answer": {
+		"errorCode": "PSP_010",
+		"errorMessage": "transaction not found",
+		"detailedErrorCode": null,
+		"detailedErrorMessage": null,
+		"ticket": "null",
+		"shopId": "69876357",
+		"_type": "V4/WebService/WebServiceError"
+	},
+	"ticket": "eb1720062ea64f9583b42206df0cded3",
+	"serverDate": "2024-10-10T13:40:03+00:00",
+	"applicationProvider": "LYRA",
+	"metadata": null,
+	"mode": "TEST",
+	"serverUrl": "https://api.lyra.com",
+	"_type": "V4/WebService/Response"
+}
