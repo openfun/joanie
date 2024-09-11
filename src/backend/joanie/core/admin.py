@@ -576,7 +576,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Order model"""
 
     actions = (ACTION_NAME_CANCEL, ACTION_NAME_GENERATE_CERTIFICATES)
-    autocomplete_fields = ["course", "organization", "owner", "product"]
+    autocomplete_fields = ["course", "enrollment", "organization", "owner", "product"]
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
     list_display = ("id", "organization", "owner", "product", "state")
     list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
