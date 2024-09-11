@@ -17,11 +17,10 @@ from django.utils.translation import gettext_lazy as _
 import requests
 from parler import models as parler_models
 from stockholm import Money
-from requests.exceptions import ReadTimeout
 from urllib3.util import Retry
 
 from joanie.core import enums
-from joanie.core.exceptions import CertificateGenerationError
+from joanie.core.exceptions import BackendTimeOut, CertificateGenerationError
 from joanie.core.fields.schedule import (
     OrderPaymentScheduleDecoder,
     OrderPaymentScheduleEncoder,
@@ -1029,17 +1028,16 @@ class Order(BaseModel):
                 backend_signature.delete_signing_procedure(
                     self.contract.signature_backend_reference
                 )
-            except ReadTimeout as exception:  # pylint: disable=unused-variable
-                message = (
-                    "Signature Provider is taking a while on deletion "
-                    f"of reference {self.contract.signature_backend_reference}."
-                )
+            except BackendTimeOut as exception:  # pylint: disable=unused-variable
                 logger.error(
-                    message,
+                    "Timeout on signature reference deletion",
                     extra={
                         "context": {
                             "order": self.to_dict(),
                             "product": self.product.to_dict(),
+                            "signature_backend_reference": (
+                                self.contract.signature_backend_reference
+                            ),
                         }
                     },
                 )

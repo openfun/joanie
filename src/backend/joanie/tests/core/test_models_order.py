@@ -16,9 +16,9 @@ from django.test import TestCase, override_settings
 from django.utils import timezone as django_timezone
 
 import responses
-from requests.exceptions import ReadTimeout
 
 from joanie.core import enums, factories
+from joanie.core.exceptions import BackendTimeOut
 from joanie.core.factories import CourseRunFactory
 from joanie.core.models import Contract, CourseState
 from joanie.core.utils import contract_definition
@@ -1291,9 +1291,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             last_name=".",
             language="fr-fr",
         )
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             owner=user,
-            state=enums.ORDER_STATE_VALIDATED,
+            state=enums.ORDER_STATE_TO_SIGN,
             product__contract_definition=factories.ContractDefinitionFactory(
                 title="Contract grade 1",
                 name=enums.CONTRACT_NAME_CHOICES[0][0],
@@ -1521,9 +1521,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         responses.add(
             responses.DELETE,
             f"https://lex_persona.test01.com/api/workflows/{workflow_id}",
-            body=ReadTimeout(
-                "Timeout occurred when trying to delete the signing procedure"
-            ),
+            body=BackendTimeOut("Timeout on signature reference deletion"),
         )
         # Prepare the data for the new document to sign on the contract
         new_workflow_id = "wfl_id_fake_2"
@@ -1720,8 +1718,12 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             [
                 (
                     "ERROR",
-                    "Signature Provider is taking a while on deletion of reference wfl_id_fake_1.",
-                    {"order": dict, "product": dict},
+                    "Timeout on signature reference deletion",
+                    {
+                        "order": dict,
+                        "product": dict,
+                        "signature_backend_reference": str,
+                    },
                 )
             ],
         )
