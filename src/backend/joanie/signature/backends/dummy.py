@@ -147,3 +147,22 @@ class DummySignatureBackend(BaseSignatureBackend):
             raise ValidationError(f"The contract {contract.id} is already fully signed")
 
         return contract.signature_backend_reference
+
+    def get_signature_state(self, reference_id: str) -> int:
+        """
+        Dummy method that returns the status of a document in the signing process.
+        It indicates whether the student and the organization have signed.
+        """
+        if not reference_id.startswith(self.prefix_workflow):
+            raise ValidationError(f"The reference does not exist: {reference_id}.")
+        try:
+            contract = Contract.objects.get(signature_backend_reference=reference_id)
+        except Contract.DoesNotExist as exception:
+            raise ValidationError(
+                f"Contract with reference id {reference_id} does not exist."
+            ) from exception
+
+        return {
+            "student": bool(contract.student_signed_on),
+            "organization": bool(contract.organization_signed_on),
+        }

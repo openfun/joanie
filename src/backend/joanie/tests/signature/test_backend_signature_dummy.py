@@ -496,3 +496,84 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
             str(context.exception.message),
             "The reference fake_signature_reference does not exist.",
         )
+
+    def test_backend_dummy_get_signature_state(self):
+        """
+        Dummy backend instance should return the value of how many people have signed the
+        document. It returns a dictionary with boolean value that gives us the information
+        if the student has signed and the organization.
+        """
+        backend = DummySignatureBackend()
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_TO_SIGN,
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        contract = factories.ContractFactory(
+            order=order,
+            definition=order.product.contract_definition,
+            signature_backend_reference="wfl_fake_dummy_id",
+            definition_checksum="1234",
+            context="context",
+            submitted_for_signature_on=django_timezone.now(),
+            student_signed_on=None,
+            organization_signed_on=None,
+        )
+
+        signature_state = backend.get_signature_state(
+            contract.signature_backend_reference
+        )
+
+        self.assertEqual(signature_state, {"student": False, "organization": False})
+
+        contract.student_signed_on = django_timezone.now()
+        contract.save()
+
+        signature_state = backend.get_signature_state(
+            contract.signature_backend_reference
+        )
+
+        self.assertEqual(signature_state, {"student": True, "organization": False})
+
+        contract.organization_signed_on = django_timezone.now()
+        contract.submitted_for_signature_on = None
+        contract.save()
+
+        signature_state = backend.get_signature_state(
+            contract.signature_backend_reference
+        )
+
+        self.assertEqual(signature_state, {"student": True, "organization": True})
+
+    def test_backend_dummy_get_signature_state_with_non_existing_reference_id(
+        self,
+    ):
+        """
+        Dummy backend instance should not return a dictionary if the passed `reference_id`
+        is not attached to any contract and raise a `ValidationError`.
+        """
+        backend = DummySignatureBackend()
+
+        with self.assertRaises(ValidationError) as context:
+            backend.get_signature_state(reference_id="wfl_fake_dummy_id_does_not_exist")
+
+        self.assertEqual(
+            str(context.exception.message),
+            "Contract with reference id wfl_fake_dummy_id_does_not_exist does not exist.",
+        )
+
+    def test_backend_dummy_get_signature_state_with_wrong_format_reference_id(
+        self,
+    ):
+        """
+        Dummy backend instance should raise a `ValidationError` if the reference_id
+        has the wrong format for the Dummy Backend.
+        """
+        backend = DummySignatureBackend()
+
+        with self.assertRaises(ValidationError) as context:
+            backend.get_signature_state(reference_id="fake_dummy_id_does_not_exist")
+
+        self.assertEqual(
+            str(context.exception.message),
+            "The reference does not exist: fake_dummy_id_does_not_exist.",
+        )

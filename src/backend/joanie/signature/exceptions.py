@@ -67,3 +67,14 @@ class DeleteSignatureProcedureFailed(APIException):
     status_code = HTTPStatus.BAD_REQUEST
     default_detail = _("Cannot delete the signature procedure.")
     default_code = "delete_signature_procedure_failed"
+
+
+class SignatureProcedureNotFound(APIException):
+    """
+    Exception triggered when retrieving the signing procedure from the signature
+    provider fails
+    """
+
+    status_code = HTTPStatus.NOT_FOUND
+    default_detail = _("The reference of signing procedure does not exist.")
+    default_code = "signature_procedure_not_found"
