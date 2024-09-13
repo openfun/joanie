@@ -9,10 +9,12 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 import requests
+from requests.exceptions import ReadTimeout
 from rest_framework.request import Request
 from sentry_sdk import capture_exception
 
 from joanie.core import enums, models
+from joanie.core.exceptions import BackendTimeout
 from joanie.core.utils.contract import order_has_organization_owner
 from joanie.signature import exceptions
 from joanie.signature.backends.base import BaseSignatureBackend
@@ -528,7 +530,20 @@ class LexPersonaBackend(BaseSignatureBackend):
         url = f"{base_url}/api/workflows/{reference_id}"
         headers = {"Authorization": f"Bearer {token}"}
 
-        response = requests.delete(url, headers=headers, timeout=timeout)
+        try:
+            response = requests.delete(url, headers=headers, timeout=timeout)
+        except ReadTimeout as exception:
+            logger.error(
+                exception,
+                extra={
+                    "context": {
+                        "signature_backend_reference": reference_id,
+                    }
+                },
+            )
+            raise BackendTimeout(
+                f"Deletion request is taking longer than expected for reference: {reference_id}"
+            ) from exception
 
         if not response.ok:
             logger.error(

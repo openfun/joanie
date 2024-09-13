@@ -15,6 +15,8 @@ and this project adheres to
 
 ### Fixed
 
+- Handle timeout and exception in `submit_for_signature` to
+  update the contract without the outdated references
 - Improve signature backend `handle_notification` error catching
 - Allow to cancel an enrollment order linked to an archived course run
 
@@ -50,7 +52,6 @@ and this project adheres to
 
 - Do not update OpenEdX enrollment if this one is already
   up-to-date on the remote lms
-- 
 
 ## [2.4.0] - 2024-06-21
 
