@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Reassign organization for pending orders
+
 ### Fixed
 
 - Improve signature backend `handle_notification` error catching
