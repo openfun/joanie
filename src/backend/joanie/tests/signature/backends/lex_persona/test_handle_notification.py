@@ -78,16 +78,8 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
 
         backend = get_signature_backend()
 
-        with (
-            self.assertRaises(ValidationError) as context,
-            self.assertLogs("joanie") as logger,
-        ):
+        with self.assertLogs("joanie") as logger:
             backend.handle_notification(request)
-
-        self.assertEqual(
-            str(context.exception),
-            "['The notification workflowStarted is not supported.']",
-        )
 
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -155,16 +147,8 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         )
         backend = get_signature_backend()
 
-        with (
-            self.assertRaises(ValidationError) as context,
-            self.assertLogs("joanie") as logger,
-        ):
+        with self.assertLogs("joanie") as logger:
             backend.handle_notification(request)
-
-        self.assertEqual(
-            str(context.exception),
-            "['The notification workflowStopped is not supported.']",
-        )
 
         self.assertEqual(len(responses.calls), 1)
         self.assertEqual(responses.calls[0].request.url, api_url)
@@ -497,16 +481,9 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
 
         backend = get_signature_backend()
 
-        with (
-            self.assertRaises(ValidationError) as context,
-            self.assertLogs("joanie") as logger,
-        ):
+        with self.assertLogs("joanie") as logger:
             backend.handle_notification(request)
 
-        self.assertEqual(
-            str(context.exception),
-            "['The contract validity date of expiration has passed.']",
-        )
         self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertIsNone(contract.student_signed_on)
         self.assertLogsEquals(

@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 
 import requests
 from rest_framework.request import Request
+from sentry_sdk import capture_exception
 
 from joanie.core import enums, models
 from joanie.core.utils.contract import order_has_organization_owner
@@ -469,25 +470,30 @@ class LexPersonaBackend(BaseSignatureBackend):
 
         reference_id = trusted_event_signature_provider.get("workflowId")
         event_type = trusted_event_signature_provider.get("eventType")
-        if event_type == "workflowFinished":
-            self.confirm_organization_signature(reference_id)
-        elif event_type == "recipientFinished":
-            self.confirm_student_signature(reference_id)
-        elif event_type == "recipientRefused":
-            self.reset_contract(reference_id)
-        else:
-            logger.error(
-                "'%s' is not an event type that we handle.",
-                event_type,
-                extra={
-                    "context": {
-                        "trusted_event_signature_provider": trusted_event_signature_provider
-                    }
-                },
-            )
-            raise ValidationError(
-                f"The notification {event_type} is not supported.",
-            )
+        try:
+            # ruff : noqa : BLE001
+            # pylint: disable=broad-exception-caught
+            if event_type == "workflowFinished":
+                self.confirm_organization_signature(reference_id)
+            elif event_type == "recipientFinished":
+                self.confirm_student_signature(reference_id)
+            elif event_type == "recipientRefused":
+                self.reset_contract(reference_id)
+            else:
+                logger.error(
+                    "'%s' is not an event type that we handle.",
+                    event_type,
+                    extra={
+                        "context": {
+                            "trusted_event_signature_provider": trusted_event_signature_provider
+                        }
+                    },
+                )
+                raise ValidationError(
+                    f"The notification {event_type} is not supported.",
+                )
+        except Exception as error:
+            capture_exception(error)
 
     def get_signature_invitation_link(self, recipient_email: str, reference_ids: list):
         """
