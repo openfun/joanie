@@ -1,11 +1,9 @@
 """Tests for the Order submit API."""
 
-import random
 from http import HTTPStatus
 from unittest import mock
 
 from django.core.cache import cache
-from django.db.models import Count, Q
 
 from joanie.core import enums, factories
 from joanie.core.api.client import OrderViewSet
@@ -218,6 +216,30 @@ class OrderSubmitApiTest(BaseAPITestCase):
 
         mocked_round_robin.assert_not_called()
 
+    @mock.patch.object(
+        OrderViewSet, "_get_organization_with_least_active_orders", return_value=None
+    )
+    def test_api_order_submit_should_auto_assign_organization_if_pending(
+        self, mocked_round_robin
+    ):
+        """
+        Order should have organization auto assigned on submit if its state is
+        pending
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        # Auto assignment should have been triggered if order has no organization linked
+        order = factories.OrderFactory(owner=user, state=enums.ORDER_STATE_PENDING)
+        self.client.patch(
+            f"/api/v1.0/orders/{order.id}/submit/",
+            content_type="application/json",
+            data={"billing_address": BillingAddressDictFactory()},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mocked_round_robin.assert_called_once()
+
     def test_api_order_submit_auto_assign_organization_with_least_orders(self):
         """
         Order auto-assignment logic should always return the organization with the least
@@ -226,32 +248,46 @@ class OrderSubmitApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        organizations = factories.OrganizationFactory.create_batch(2)
+        organization, expected_organization = (
+            factories.OrganizationFactory.create_batch(2)
+        )
 
-        relation = factories.CourseProductRelationFactory(organizations=organizations)
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization, expected_organization]
+        )
 
-        # Create randomly several orders linked to one of both organization
-        for _ in range(5):
-            factories.OrderFactory(
-                organization=random.choice(organizations),
-                product=relation.product,
-                course=relation.course,
-                state=random.choice(
-                    [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_CANCELED]
-                ),
-            )
+        # Create 3 orders for the first organization (1 draft, 1 pending, 1 canceled)
+        factories.OrderFactory(
+            organization=organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_DRAFT,
+        )
+        factories.OrderFactory(
+            organization=organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_PENDING,
+        )
+        factories.OrderFactory(
+            organization=organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_CANCELED,
+        )
 
-        organization_with_least_active_orders = (
-            relation.organizations.annotate(
-                order_count=Count(
-                    "order",
-                    filter=Q(order__course=relation.course)
-                    & Q(order__product=relation.product)
-                    & ~Q(order__state=enums.ORDER_STATE_CANCELED),
-                )
-            )
-            .order_by("order_count")
-            .first()
+        # 2 ignored orders for the second organization (1 pending, 1 canceled)
+        factories.OrderFactory(
+            organization=expected_organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_PENDING,
+        )
+        factories.OrderFactory(
+            organization=expected_organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_CANCELED,
         )
 
         # Then create an order without organization
@@ -271,4 +307,4 @@ class OrderSubmitApiTest(BaseAPITestCase):
         )
 
         order.refresh_from_db()
-        self.assertEqual(order.organization, organization_with_least_active_orders)
+        self.assertEqual(order.organization, expected_organization)

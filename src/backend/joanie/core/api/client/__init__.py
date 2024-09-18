@@ -332,7 +332,12 @@ class OrderViewSet(
             "order",
             filter=clause
             & Q(order__product=product)
-            & ~Q(order__state=enums.ORDER_STATE_CANCELED),
+            & ~Q(
+                order__state__in=[
+                    enums.ORDER_STATE_CANCELED,
+                    enums.ORDER_STATE_PENDING,
+                ]
+            ),
         )
 
         try:
@@ -425,7 +430,10 @@ class OrderViewSet(
         credit_card_id = request.data.get("credit_card_id")
         order = self.get_object()
 
-        if order.organization is None:
+        # If the order is in pending state, we want to reaffect an organization
+        # when the order is resubmit. This is a temporary fix to prevent to
+        # create a migration on the main branch.
+        if order.organization is None or order.state == enums.ORDER_STATE_PENDING:
             order.organization = self._get_organization_with_least_active_orders(
                 order.product, order.course, order.enrollment
             )
