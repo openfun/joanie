@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Fixed
 
+- Improve signature backend `handle_notification` error catching
 - Allow to cancel an enrollment order linked to an archived course run
 
 ## [2.6.1] - 2024-07-25
