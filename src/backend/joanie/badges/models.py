@@ -4,12 +4,13 @@ Declare and configure the models for the badges part
 
 from functools import lru_cache
 
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from parler import models as parler_models
 
-from joanie.core.models import BaseModel, User
+from joanie.core.models import BaseModel
 
 
 @lru_cache
@@ -105,7 +106,7 @@ class IssuedBadge(BaseModel):
     )
 
     user = models.ForeignKey(
-        to=User,
+        to=settings.AUTH_USER_MODEL,
         verbose_name=_("User"),
         related_name="issued_badges",
         on_delete=models.CASCADE,

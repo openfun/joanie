@@ -4,6 +4,7 @@ Declare and configure the models for Joanie's activity logs.
 
 import logging
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.functional import lazy
@@ -59,7 +60,7 @@ class ActivityLog(BaseModel):
     """
 
     user = models.ForeignKey(
-        to="core.User",
+        to=settings.AUTH_USER_MODEL,
         verbose_name=_("user"),
         related_name="activity_logs",
         on_delete=models.CASCADE,

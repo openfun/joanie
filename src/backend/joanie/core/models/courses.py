@@ -366,7 +366,9 @@ class OrganizationAccess(BaseModel):
         related_name="accesses",
     )
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="organization_accesses"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="organization_accesses",
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=enums.MEMBER)
 
@@ -615,7 +617,9 @@ class CourseAccess(BaseModel):
         related_name="accesses",
     )
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="course_accesses"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="course_accesses",
     )
     role = models.CharField(
         max_length=20, choices=ROLE_CHOICES, default=enums.INSTRUCTOR
@@ -1007,10 +1011,10 @@ class Enrollment(BaseModel):
         on_delete=models.RESTRICT,
     )
     user = models.ForeignKey(
-        to=User,
+        to=settings.AUTH_USER_MODEL,
         verbose_name=_("user"),
         related_name="enrollments",
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
     )
     is_active = models.BooleanField(
         help_text=_("Ticked if the user is enrolled to the course run."),
