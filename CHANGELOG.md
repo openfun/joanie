@@ -10,7 +10,6 @@ and this project adheres to
 
 ### Changed
 
-- Update round robin logic to favor author organizations
 - Reassign organization for pending orders
 
 ### Fixed
