@@ -647,35 +647,49 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        organizations = factories.OrganizationFactory.create_batch(2)
+        organization, expected_organization = (
+            factories.OrganizationFactory.create_batch(2)
+        )
 
-        relation = factories.CourseProductRelationFactory(organizations=organizations)
-        billing_address = BillingAddressDictFactory()
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization, expected_organization]
+        )
 
-        organization_with_least_active_orders, other_organization = organizations
-
-        # Create two draft orders for the first organization
-        factories.OrderFactory.create_batch(
-            2,
-            organization=organization_with_least_active_orders,
+        # Create 3 orders for the first organization (1 draft, 1 pending, 1 canceled)
+        factories.OrderFactory(
+            organization=organization,
             product=relation.product,
             course=relation.course,
             state=enums.ORDER_STATE_DRAFT,
         )
+        factories.OrderFactory(
+            organization=organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_PENDING,
+        )
+        factories.OrderFactory(
+            organization=organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_CANCELED,
+        )
 
-        # Create three draft orders for the second organization
-        factories.OrderFactory.create_batch(
-            3,
-            organization=other_organization,
+        # 3 ignored orders for the second organization (1 draft, 1 assigned, 1 canceled)
+        factories.OrderFactory(
+            organization=expected_organization,
             product=relation.product,
             course=relation.course,
             state=enums.ORDER_STATE_DRAFT,
         )
-
-        # Cancelled orders should not be taken into account
-        factories.OrderFactory.create_batch(
-            4,
-            organization=organization_with_least_active_orders,
+        factories.OrderFactory(
+            organization=expected_organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_ASSIGNED,
+        )
+        factories.OrderFactory(
+            organization=expected_organization,
             product=relation.product,
             course=relation.course,
             state=enums.ORDER_STATE_CANCELED,
@@ -686,7 +700,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": relation.course.code,
             "product_id": str(relation.product.id),
             "has_consent_to_terms": True,
-            "billing_address": billing_address,
+            "billing_address": BillingAddressDictFactory(),
         }
 
         response = self.client.post(
@@ -698,7 +712,80 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         order_id = response.json()["id"]
         order = models.Order.objects.get(id=order_id)
-        self.assertEqual(order.organization, organization_with_least_active_orders)
+        self.assertEqual(order.organization, expected_organization)
+
+    def test_api_order_create_get_organization_with_least_active_orders_prefer_author(
+        self,
+    ):
+        """
+        In case of order count equality, the method _get_organization_with_least_orders should
+        return first organization which is also an author of the course.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        organization, expected_organization = (
+            factories.OrganizationFactory.create_batch(2)
+        )
+
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization, expected_organization]
+        )
+
+        relation.course.organizations.set([expected_organization])
+
+        # Create 3 orders for the first organization (1 draft, 1 pending, 1 canceled)
+        factories.OrderFactory(
+            organization=organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_PENDING,
+        )
+        factories.OrderFactory(
+            organization=organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_CANCELED,
+        )
+
+        # 3 ignored orders for the second organization (1 draft, 1 assigned, 1 canceled)
+        factories.OrderFactory(
+            organization=expected_organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_DRAFT,
+        )
+        factories.OrderFactory(
+            organization=expected_organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_ASSIGNED,
+        )
+        factories.OrderFactory(
+            organization=expected_organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_CANCELED,
+        )
+
+        # Then create an order without organization
+        data = {
+            "course_code": relation.course.code,
+            "product_id": str(relation.product.id),
+            "has_consent_to_terms": True,
+            "billing_address": BillingAddressDictFactory(),
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        order_id = response.json()["id"]
+        order = models.Order.objects.get(id=order_id)
+        self.assertEqual(order.organization, expected_organization)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
