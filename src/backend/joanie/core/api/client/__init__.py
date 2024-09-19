@@ -11,7 +11,17 @@ from http import HTTPStatus
 from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
-from django.db.models import Count, OuterRef, Prefetch, Q, Subquery
+from django.db.models import (
+    BooleanField,
+    Case,
+    Count,
+    OuterRef,
+    Prefetch,
+    Q,
+    Subquery,
+    Value,
+    When,
+)
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -329,31 +339,36 @@ class OrderViewSet(
         Return the organization with the least not canceled order count
         for a given product and course.
         """
-        if enrollment:
-            clause = Q(order__enrollment=enrollment)
-        else:
-            clause = Q(order__course=course)
-
-        order_count = Count(
-            "order",
-            filter=clause
-            & Q(order__product=product)
-            & ~Q(order__state=enums.ORDER_STATE_CANCELED),
-        )
+        course_id = course.id if course else enrollment.course_run.course_id
 
         try:
-            course_relation = product.course_relations.get(
-                course_id=course.id if course else enrollment.course_run.course_id
-            )
+            course_relation = product.course_relations.get(course_id=course_id)
         except models.CourseProductRelation.DoesNotExist:
             return None
 
+        order_count_filter = Q(order__product=product) & ~Q(
+            order__state__in=[
+                enums.ORDER_STATE_DRAFT,
+                enums.ORDER_STATE_ASSIGNED,
+                enums.ORDER_STATE_CANCELED,
+            ]
+        )
+        if enrollment:
+            order_count_filter &= Q(order__enrollment=enrollment)
+        else:
+            order_count_filter &= Q(order__course=course)
+
         try:
-            return (
-                course_relation.organizations.annotate(order_count=order_count)
-                .order_by("order_count")
-                .first()
+            organizations = course_relation.organizations.annotate(
+                order_count=Count("order", filter=order_count_filter),
+                is_author=Case(
+                    When(Q(courses__id=course_id), then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField(),
+                ),
             )
+
+            return organizations.order_by("order_count", "-is_author", "?").first()
         except models.Organization.DoesNotExist:
             return None
 
