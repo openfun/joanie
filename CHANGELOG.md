@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.7.0] - 2024-09-23
+
 ### Changed
 
 - Update round robin logic to favor author organizations
@@ -405,7 +407,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.6.1...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.7.0...main
+[2.7.0]: https://github.com/openfun/joanie/compare/v2.6.1...v2.7.0
 [2.6.1]: https://github.com/openfun/joanie/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/openfun/joanie/compare/v2.5.1...v2.6.0
 [2.5.0]: https://github.com/openfun/joanie/compare/v2.4.0...v2.5.0

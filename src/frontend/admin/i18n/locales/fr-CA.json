@@ -1,7 +1,7 @@
 {
   "components.modal.alterModal.cancel": {
     "description": "Cancel CTA label for alert modal",
-    "message": "Annuler"
+    "message": "Cancel"
   },
   "components.modal.alterModal.validate": {
     "description": "Validate CTA label for alert modal",

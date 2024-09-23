@@ -877,7 +877,7 @@
   },
   "components.templates.organizations.form.translations.activityCategoryCodeLabel": {
     "description": "Label for the activity category code input",
-    "message": "Code APE"
+    "message": "N° Déclaration d'Activité"
   },
   "components.templates.organizations.form.translations.codeLabel": {
     "description": "Label for the code input",

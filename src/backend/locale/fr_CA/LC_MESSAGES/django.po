@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-13 10:19+0000\n"
-"PO-Revision-Date: 2024-06-18 08:41\n"
+"POT-Creation-Date: 2024-08-19 12:20+0000\n"
+"PO-Revision-Date: 2024-09-23 09:21\n"
 "Last-Translator: \n"
 "Language-Team: French, Canada\n"
 "Language: fr_CA\n"
@@ -188,7 +188,7 @@ msgstr ""
 
 #: joanie/core/apps.py:12
 msgid "Joanie's core application"
-msgstr "L'application principale de Joanie"
+msgstr ""
 
 #: joanie/core/authentication.py:45
 msgid "Token contained no recognizable user identification"
@@ -572,7 +572,7 @@ msgid "Date of issuance"
 msgstr ""
 
 #: joanie/core/models/certifications.py:82 joanie/core/models/contracts.py:80
-#: joanie/core/models/products.py:1141 joanie/payment/models.py:54
+#: joanie/core/models/products.py:1143 joanie/payment/models.py:54
 msgid "order"
 msgstr ""
 
@@ -811,7 +811,7 @@ msgstr ""
 
 #: joanie/core/models/courses.py:705 joanie/core/models/courses.py:777
 #: joanie/core/models/products.py:275 joanie/core/models/products.py:421
-#: joanie/core/models/products.py:1129
+#: joanie/core/models/products.py:1131
 msgid "course"
 msgstr ""
 
@@ -960,7 +960,7 @@ msgstr ""
 msgid "Certificate definition is only allowed for product kinds: "
 msgstr ""
 
-#: joanie/core/models/products.py:290 joanie/core/models/products.py:1135
+#: joanie/core/models/products.py:290 joanie/core/models/products.py:1137
 msgid "course runs"
 msgstr ""
 
@@ -968,11 +968,11 @@ msgstr ""
 msgid "position in product"
 msgstr ""
 
-#: joanie/core/models/products.py:295 joanie/core/models/products.py:1147
+#: joanie/core/models/products.py:295 joanie/core/models/products.py:1149
 msgid "take into account for certification"
 msgstr ""
 
-#: joanie/core/models/products.py:296 joanie/core/models/products.py:1148
+#: joanie/core/models/products.py:296 joanie/core/models/products.py:1150
 msgid "Take into account the course grade for certification."
 msgstr ""
 
@@ -1046,46 +1046,46 @@ msgstr ""
 msgid "Orders can't be placed on enrollments originating from an order."
 msgstr ""
 
-#: joanie/core/models/products.py:631
-msgid "The order cannot be generated on course run that is in archived state."
+#: joanie/core/models/products.py:633
+msgid "The order cannot be created on course run that is in archived state."
 msgstr ""
 
-#: joanie/core/models/products.py:650
+#: joanie/core/models/products.py:652
 #, python-brace-format
 msgid "This order cannot be linked to the product \"{product_title}\", "
 msgstr ""
 
-#: joanie/core/models/products.py:656
+#: joanie/core/models/products.py:658
 #, python-brace-format
 msgid "This order cannot be linked to the product \"{product_title}\" and "
 msgstr ""
 
-#: joanie/core/models/products.py:850
+#: joanie/core/models/products.py:852
 #, python-brace-format
 msgid "Product {self.product.title} does not allow to generate a certificate."
 msgstr ""
 
-#: joanie/core/models/products.py:865
+#: joanie/core/models/products.py:867
 msgid "No graded courses found."
 msgstr ""
 
-#: joanie/core/models/products.py:881
+#: joanie/core/models/products.py:883
 msgid "This order is not ready for gradation."
 msgstr ""
 
-#: joanie/core/models/products.py:891
+#: joanie/core/models/products.py:893
 msgid "Course run "
 msgstr ""
 
-#: joanie/core/models/products.py:1145
+#: joanie/core/models/products.py:1147
 msgid "position in order"
 msgstr ""
 
-#: joanie/core/models/products.py:1156
+#: joanie/core/models/products.py:1158
 msgid "Course relation to an order with a position"
 msgstr ""
 
-#: joanie/core/models/products.py:1157
+#: joanie/core/models/products.py:1159
 msgid "Courses relations to orders with a position"
 msgstr ""
 
@@ -1605,7 +1605,7 @@ msgstr ""
 
 #: joanie/payment/apps.py:11
 msgid "Joanie payment application"
-msgstr "Application de paiement de Joanie"
+msgstr ""
 
 #: joanie/payment/backends/base.py:87 joanie/payment/backends/base.py:103
 msgid "Purchase order confirmed!"
