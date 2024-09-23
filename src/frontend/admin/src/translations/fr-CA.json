@@ -1,5 +1,5 @@
 {
-  "components.modal.alterModal.cancel": "Annuler",
+  "components.modal.alterModal.cancel": "Cancel",
   "components.modal.alterModal.validate": "Validate",
   "components.presentational.button.popover.ButtonPopover.none": "None",
   "components.presentational.dnd.DndList.emptyList": "No line to display, click add to add one",

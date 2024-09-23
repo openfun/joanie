@@ -218,7 +218,7 @@
   "components.templates.organizations.address.form.translations.postCodeLabel": "Code postal",
   "components.templates.organizations.address.form.translations.sectionTitle": "Adresse de l'établissement",
   "components.templates.organizations.address.form.translations.titleLabel": "Titre",
-  "components.templates.organizations.form.translations.activityCategoryCodeLabel": "Code APE",
+  "components.templates.organizations.form.translations.activityCategoryCodeLabel": "N° Déclaration d'Activité",
   "components.templates.organizations.form.translations.codeLabel": "Code",
   "components.templates.organizations.form.translations.contactEmailLabel": "Email de contact",
   "components.templates.organizations.form.translations.contactPhoneLabel": "Contact téléphonique",

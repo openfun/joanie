@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-13 10:19+0000\n"
-"PO-Revision-Date: 2024-06-18 14:19\n"
+"POT-Creation-Date: 2024-08-19 12:20+0000\n"
+"PO-Revision-Date: 2024-09-23 09:24\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -572,7 +572,7 @@ msgid "Date of issuance"
 msgstr "Date de délivrance"
 
 #: joanie/core/models/certifications.py:82 joanie/core/models/contracts.py:80
-#: joanie/core/models/products.py:1141 joanie/payment/models.py:54
+#: joanie/core/models/products.py:1143 joanie/payment/models.py:54
 msgid "order"
 msgstr "commande"
 
@@ -811,7 +811,7 @@ msgstr "Droits d'accès aux cours"
 
 #: joanie/core/models/courses.py:705 joanie/core/models/courses.py:777
 #: joanie/core/models/products.py:275 joanie/core/models/products.py:421
-#: joanie/core/models/products.py:1129
+#: joanie/core/models/products.py:1131
 msgid "course"
 msgstr "cours"
 
@@ -960,7 +960,7 @@ msgstr "Produits"
 msgid "Certificate definition is only allowed for product kinds: "
 msgstr "La définition de certificat n'est autorisée que pour les produits de types : "
 
-#: joanie/core/models/products.py:290 joanie/core/models/products.py:1135
+#: joanie/core/models/products.py:290 joanie/core/models/products.py:1137
 msgid "course runs"
 msgstr "sessions de cours"
 
@@ -968,11 +968,11 @@ msgstr "sessions de cours"
 msgid "position in product"
 msgstr "position dans le produit"
 
-#: joanie/core/models/products.py:295 joanie/core/models/products.py:1147
+#: joanie/core/models/products.py:295 joanie/core/models/products.py:1149
 msgid "take into account for certification"
 msgstr "prendre en compte pour la certification"
 
-#: joanie/core/models/products.py:296 joanie/core/models/products.py:1148
+#: joanie/core/models/products.py:296 joanie/core/models/products.py:1150
 msgid "Take into account the course grade for certification."
 msgstr "Prendre en compte la note du cours pour la certification."
 
@@ -1046,46 +1046,46 @@ msgstr "L'inscription devrait appartenir au propriétaire de cette commande."
 msgid "Orders can't be placed on enrollments originating from an order."
 msgstr "Des commandes ne peuvent pas être passées sur des inscriptions créées à partir d'une commande."
 
-#: joanie/core/models/products.py:631
-msgid "The order cannot be generated on course run that is in archived state."
-msgstr "La commande ne peut pas être générée via une session de cours archivée."
+#: joanie/core/models/products.py:633
+msgid "The order cannot be created on course run that is in archived state."
+msgstr "La commande ne peut pas être créée en lien avec une session archivée."
 
-#: joanie/core/models/products.py:650
+#: joanie/core/models/products.py:652
 #, python-brace-format
 msgid "This order cannot be linked to the product \"{product_title}\", "
 msgstr "Cette commande ne peut pas être liée au produit \"{product_title}\", "
 
-#: joanie/core/models/products.py:656
+#: joanie/core/models/products.py:658
 #, python-brace-format
 msgid "This order cannot be linked to the product \"{product_title}\" and "
 msgstr "Cette commande ne peut pas être liée au produit \"{product_title}\" et "
 
-#: joanie/core/models/products.py:850
+#: joanie/core/models/products.py:852
 #, python-brace-format
 msgid "Product {self.product.title} does not allow to generate a certificate."
 msgstr "Le produit {self.product.title} ne permet pas de générer un certificat."
 
-#: joanie/core/models/products.py:865
+#: joanie/core/models/products.py:867
 msgid "No graded courses found."
 msgstr "Aucun cours noté trouvé."
 
-#: joanie/core/models/products.py:881
+#: joanie/core/models/products.py:883
 msgid "This order is not ready for gradation."
 msgstr "Cette commande n'est pas prête à être évaluée."
 
-#: joanie/core/models/products.py:891
+#: joanie/core/models/products.py:893
 msgid "Course run "
 msgstr "Session de cours "
 
-#: joanie/core/models/products.py:1145
+#: joanie/core/models/products.py:1147
 msgid "position in order"
 msgstr "position dans la commande"
 
-#: joanie/core/models/products.py:1156
+#: joanie/core/models/products.py:1158
 msgid "Course relation to an order with a position"
 msgstr "Relation d'un cours à une commande avec une position"
 
-#: joanie/core/models/products.py:1157
+#: joanie/core/models/products.py:1159
 msgid "Courses relations to orders with a position"
 msgstr "Relations de cours à des commandes avec une position"
 
@@ -1254,7 +1254,7 @@ msgstr "Numéro Siret : "
 
 #: joanie/core/templates/issuers/contract_definition.html:41
 msgid "Activity Declaration N°: "
-msgstr "Code APE : "
+msgstr "N° Déclaration d'Activité : "
 
 #: joanie/core/templates/issuers/contract_definition.html:42
 msgid "Legal Representative: "
@@ -1541,7 +1541,7 @@ msgstr "<NUMERO_SIRET>"
 
 #: joanie/core/utils/contract_definition.py:97
 msgid "<ACTIVITY_CATEGORY_CODE>"
-msgstr "<CODE_APE>"
+msgstr "<NUMERO_DECLARATION_ACTIVITE>"
 
 #: joanie/core/utils/contract_definition.py:98
 msgid "<SIGNATORY_REPRESENTATIVE>"
