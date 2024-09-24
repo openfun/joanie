@@ -33,6 +33,11 @@ from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
 )
+from joanie.core.utils.payment_schedule import (
+    get_transaction_references_to_refund,
+    has_installment_paid,
+)
+from joanie.payment import get_payment_backend
 
 from .enrollment import EnrollmentViewSet
 
@@ -635,6 +640,26 @@ class OrderViewSet(
             return Response(certificate, status=HTTPStatus.OK)
 
         return Response(certificate, status=HTTPStatus.CREATED)
+
+    @action(methods=["POST"], detail=True)
+    def refund(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Refund an order only if the order is in state 'cancel' and at least 1 installment
+        has been paid in the payment schedule.
+        """
+        order = self.get_object()
+
+        order.flow.refunding()
+
+        payment_backend = get_payment_backend()
+        transaction_references_to_refund = get_transaction_references_to_refund(order)
+        for transaction_reference, amount in transaction_references_to_refund.items():
+            payment_backend.cancel_or_refund(
+                amount=amount,
+                reference=transaction_reference,
+            )
+
+        return Response(status=HTTPStatus.ACCEPTED)
 
 
 class OrganizationAddressViewSet(

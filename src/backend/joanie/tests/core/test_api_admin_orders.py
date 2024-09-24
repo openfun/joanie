@@ -1,5 +1,6 @@
 """Test suite for the admin orders API endpoints."""
 
+import json
 import uuid
 from datetime import timedelta
 from decimal import Decimal as D
@@ -8,13 +9,17 @@ from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
+
+from rest_framework.test import APIRequestFactory
 
 from joanie.core import enums, factories
 from joanie.core.models import Order
 from joanie.core.models.certifications import Certificate
 from joanie.core.models.courses import CourseState, Enrollment
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
+from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.factories import InvoiceFactory
 from joanie.payment.models import Invoice
 from joanie.tests import format_date
@@ -1527,3 +1532,222 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertDictEqual(
             response.json(), {"details": "This order is not ready for gradation."}
         )
+
+    def test_api_admin_orders_refund_request_without_authentication(self):
+        """
+        Anonymous users should not be able to request a refund of an order.
+        """
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING_PAYMENT)
+
+        response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
+
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+
+    def test_api_admin_orders_refund_request_with_lambda_user(self):
+        """
+        Lambda users should not be able to request a refund of an order.
+        """
+        admin = factories.UserFactory(is_staff=False, is_superuser=False)
+        self.client.login(username=admin.username, password="password")
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING_PAYMENT)
+
+        response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_api_admin_orders_refund_with_an_invalid_order_id(self):
+        """
+        Authenticated admin user should not to refund an order by passing an invalid order id.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.post("/api/v1.0/admin/orders/invalid_id/refund/")
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_api_admin_orders_refund_with_get_method_is_not_allowed(self):
+        """
+        Authenticated admin users should not be able to use the get method to request to refund
+        an order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING_PAYMENT)
+
+        response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/refund/")
+
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+    def test_api_admin_orders_refund_with_put_method_is_not_allowed(self):
+        """
+        Authenticated admin users should not be able to use the put method to update the request
+        to refund an order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING_PAYMENT)
+
+        response = self.client.put(f"/api/v1.0/admin/orders/{order.id}/refund/")
+
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+    def test_api_admin_orders_refund_with_patch_method_is_not_allowed(self):
+        """
+        Authenticated admin users should not be able to use the patch method to update a request
+        to refund an order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING_PAYMENT)
+
+        response = self.client.patch(f"/api/v1.0/admin/orders/{order.id}/refund/")
+
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+    def test_api_admin_orders_refund_with_delete_method_is_not_allowed(self):
+        """
+        Authenticated admin users should not be able to use the delete method to refund an order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING_PAYMENT)
+
+        response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/refund/")
+
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
+    def test_api_admin_orders_refund_an_order_not_possible_if_state_is_not_canceled(
+        self,
+    ):
+        """
+        Authenticated admin users should not be able to refund an order if the state
+        is other than `canceled`.
+        """
+        order_state_choices = tuple(
+            choice
+            for choice in enums.ORDER_STATE_CHOICES
+            if choice[0]
+            not in [
+                enums.ORDER_STATE_CANCELED,
+                enums.ORDER_STATE_REFUNDING,
+                enums.ORDER_STATE_REFUNDED,
+            ]
+        )
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        for state, _ in order_state_choices:
+            with self.subTest(state=state):
+                order = factories.OrderGeneratorFactory(state=state)
+
+                response = self.client.post(
+                    f"/api/v1.0/admin/orders/{order.id}/refund/"
+                )
+
+                order.refresh_from_db()
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                self.assertEqual(order.state, state)
+
+    def test_api_admin_orders_refund_an_order_not_possible_if_no_installment_is_paid(
+        self,
+    ):
+        """
+        Authenticated admin users should not be able to refund an order if no installment
+        has been paid in the payment schedule. It should return a Bad Request error.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_PENDING)
+        order.flow.cancel()
+
+        response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_api_admin_orders_refund_an_order(self):
+        """
+        Authenticated admin users should be able to refund an order when the state is `canceled`.
+        Once the refund is requested, the order's state goes to `refunding` while the payment
+        backend treats the refund of the transaction. When the notification is treated from
+        the payment backend, we set the installment to refunded when it was successful.
+        At the end of the process, since there will only one installment paid and then refund,
+        the order state will be set to `refunded`.
+        """
+        backend = DummyPaymentBackend()
+        request_factory = APIRequestFactory()
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING, product__price=100
+        )
+        # Create the payment for the 1st installment only.
+        payment_id = backend.create_payment(
+            order=order,
+            installment=order.payment_schedule[0],
+            billing_address=order.main_invoice.recipient_address.to_dict(),
+        )["payment_id"]
+
+        # Notify that payment has been paid
+        request = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "id": payment_id,
+                "type": "payment",
+                "state": "success",
+                "installment_id": order.payment_schedule[0]["id"],
+            },
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+        # Get the notification from the payment backend that the payment of the installment is
+        # successful.
+        backend.handle_notification(request)
+
+        order.refresh_from_db()
+        # The 1st installment's state should be in state 'paid' only.
+        self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_PAID)
+        self.assertEqual(
+            order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PENDING
+        )
+        # Now, let's cancel the order to launch the refund process
+        order.flow.cancel()
+
+        response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
+
+        order.refresh_from_db()
+        self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
+        # The order state should be set to `refunding`
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
+
+        # Prepare the notification that the installment payment  has been refunded
+        request = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "id": payment_id,
+                "type": "refund",
+                "amount": order.payment_schedule[0]["amount"].sub_units,
+                "installment_id": order.payment_schedule[0]["id"],
+            },
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+        # Get the notification from the payment backend that the refund of the installment is
+        # successful.
+        backend.handle_notification(request)
+
+        order.refresh_from_db()
+        # The paid installment should now be set to `refunded`
+        self.assertEqual(
+            order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUNDED
+        )
+        # The second installment should stay in `payment_pending`
+        self.assertEqual(
+            order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PENDING
+        )
+        # The order's state should finally be set to `refunded`
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDED)
