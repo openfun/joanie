@@ -2778,13 +2778,15 @@
                                     "no_payment",
                                     "pending",
                                     "pending_payment",
+                                    "refunded",
+                                    "refunding",
                                     "signing",
                                     "to_save_payment_method",
                                     "to_sign"
                                 ]
                             }
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed",
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded",
                         "explode": true,
                         "style": "form"
                     },
@@ -2804,13 +2806,15 @@
                                     "no_payment",
                                     "pending",
                                     "pending_payment",
+                                    "refunded",
+                                    "refunding",
                                     "signing",
                                     "to_save_payment_method",
                                     "to_sign"
                                 ]
                             }
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed",
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded",
                         "explode": true,
                         "style": "form"
                     }
@@ -4514,10 +4518,11 @@
                 "enum": [
                     "notification",
                     "payment_succeeded",
-                    "payment_failed"
+                    "payment_failed",
+                    "payment_refunded"
                 ],
                 "type": "string",
-                "description": "* `notification` - Notification\n* `payment_succeeded` - Payment succeeded\n* `payment_failed` - Payment failed"
+                "description": "* `notification` - Notification\n* `payment_succeeded` - Payment succeeded\n* `payment_failed` - Payment failed\n* `payment_refunded` - Payment refunded"
             },
             "Address": {
                 "type": "object",
@@ -6280,10 +6285,11 @@
                 "enum": [
                     "pending",
                     "paid",
-                    "refused"
+                    "refused",
+                    "refunded"
                 ],
                 "type": "string",
-                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused"
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused\n* `refunded` - Refunded"
             },
             "OrderRequest": {
                 "type": "object",
@@ -6325,10 +6331,12 @@
                     "pending_payment",
                     "failed_payment",
                     "no_payment",
-                    "completed"
+                    "completed",
+                    "refunding",
+                    "refunded"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded"
             },
             "OrderTargetCourseRelation": {
                 "type": "object",

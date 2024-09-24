@@ -2891,12 +2891,14 @@
                                 "no_payment",
                                 "pending",
                                 "pending_payment",
+                                "refunded",
+                                "refunding",
                                 "signing",
                                 "to_save_payment_method",
                                 "to_sign"
                             ]
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded"
                     }
                 ],
                 "tags": [
@@ -3048,6 +3050,59 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/orders/{id}/refund/": {
+            "post": {
+                "operationId": "orders_refund_create",
+                "description": "Refund an order only if the order is in state 'cancel' and at least 1 installment\nhas been paid in the payment schedule.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOrderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOrderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOrder"
                                 }
                             }
                         },
@@ -5458,6 +5513,23 @@
                     "updated_on"
                 ]
             },
+            "AdminInvoiceRequest": {
+                "type": "object",
+                "description": "Read only serializer for Invoice model.",
+                "properties": {
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": -10000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    }
+                },
+                "required": [
+                    "total"
+                ]
+            },
             "AdminOrder": {
                 "type": "object",
                 "description": "Read only Serializer for Order model.",
@@ -5885,14 +5957,65 @@
                     "state"
                 ]
             },
+            "AdminOrderPaymentRequest": {
+                "type": "object",
+                "description": "Serializer for the order payment",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/AdminOrderPaymentStateEnum"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "due_date",
+                    "id",
+                    "state"
+                ]
+            },
             "AdminOrderPaymentStateEnum": {
                 "enum": [
                     "pending",
                     "paid",
-                    "refused"
+                    "refused",
+                    "refunded"
                 ],
                 "type": "string",
-                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused"
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused\n* `refunded` - Refunded"
+            },
+            "AdminOrderRequest": {
+                "type": "object",
+                "description": "Read only Serializer for Order model.",
+                "properties": {
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
+                    },
+                    "main_invoice": {
+                        "$ref": "#/components/schemas/AdminInvoiceRequest"
+                    }
+                },
+                "required": [
+                    "main_invoice",
+                    "total"
+                ]
             },
             "AdminOrganization": {
                 "type": "object",
@@ -7028,10 +7151,12 @@
                     "pending_payment",
                     "failed_payment",
                     "no_payment",
-                    "completed"
+                    "completed",
+                    "refunding",
+                    "refunded"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded"
             },
             "OrganizationAccessRoleChoiceEnum": {
                 "enum": [
