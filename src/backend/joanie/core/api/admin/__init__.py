@@ -33,6 +33,11 @@ from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
 )
+from joanie.core.utils.payment_schedule import (
+    get_refundable_transactions,
+    has_installment_paid,
+)
+from joanie.payment import get_payment_backend
 
 from .enrollment import EnrollmentViewSet
 
@@ -635,6 +640,50 @@ class OrderViewSet(
             return Response(certificate, status=HTTPStatus.OK)
 
         return Response(certificate, status=HTTPStatus.CREATED)
+
+    @action(methods=["POST"], detail=True)
+    def cancel(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Cancel an order.
+        """
+        order = self.get_object()
+
+        order.flow.cancel()
+
+        return Response(status=HTTPStatus.OK)
+
+    @action(methods=["POST"], detail=True)
+    def refund(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Refund an order only if the order is in state 'cancel' and at least 1 installment
+        has been paid in the payment schedule.
+        """
+        order = self.get_object()
+
+        if order.state != enums.ORDER_STATE_CANCELED:
+            return Response(
+                "Cannot refund an order not canceled.",
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        if not has_installment_paid(order):
+            return Response(
+                "Cannot refund an order without paid installments in payment schedule.",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        # Mark the order to 'refund', only admin users will be able to do it.
+        order.flow.refund()
+
+        payment_backend = get_payment_backend()
+        to_refund_references = get_refundable_transactions(order)
+        for transaction_reference, amount in to_refund_references.items():
+            payment_backend.cancel_or_refund(
+                amount=amount,
+                transaction_reference=transaction_reference,
+            )
+
+        return Response(status=HTTPStatus.ACCEPTED)
 
 
 class OrganizationAddressViewSet(
