@@ -7,7 +7,7 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from joanie.core import enums, factories
@@ -16,6 +16,7 @@ from joanie.core.models.certifications import Certificate
 from joanie.core.models.courses import CourseState, Enrollment
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 from joanie.payment.factories import InvoiceFactory
+from joanie.payment.models import Invoice
 from joanie.tests import format_date
 
 
@@ -512,6 +513,10 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertEqual(content["results"][0]["id"], str(orders[1].id))
         self.assertEqual(content["results"][1]["id"], str(orders[0].id))
 
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={100: (100,)},
+        DEFAULT_CURRENCY="EUR",
+    )
     def test_api_admin_orders_course_retrieve(self):
         """An admin user should be able to retrieve a single course order through its id."""
 
@@ -522,6 +527,7 @@ class OrdersAdminApiTestCase(TestCase):
         # Create a "completed" order linked to a credential product with a certificate
         # definition
         relation = factories.CourseProductRelationFactory(
+            product__price=100,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__certificate_definition=factories.CertificateDefinitionFactory(),
@@ -539,14 +545,19 @@ class OrdersAdminApiTestCase(TestCase):
         factories.OrderCertificateFactory(
             order=order, certificate_definition=order.product.certificate_definition
         )
-
+        # Get the children invoice of the main invoice
+        child_invoice = Invoice.objects.get(
+            parent=order.main_invoice,
+            order=order,
+            transactions__reference__in=[str(order.payment_schedule[0]["id"])],
+        )
         # Create a credit note
         credit_note = InvoiceFactory(
             parent=order.main_invoice,
             total=D("1.00"),
         )
 
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(39):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -635,6 +646,25 @@ class OrdersAdminApiTestCase(TestCase):
                     "state": order.main_invoice.state,
                     "children": [
                         {
+                            "id": str(child_invoice.id),
+                            "balance": float(child_invoice.balance),
+                            "created_on": format_date(child_invoice.created_on),
+                            "invoiced_balance": float(child_invoice.invoiced_balance),
+                            "recipient_address": (
+                                f"{child_invoice.recipient_address.full_name}\n"
+                                f"{child_invoice.recipient_address.full_address}"
+                            ),
+                            "reference": child_invoice.reference,
+                            "state": child_invoice.state,
+                            "transactions_balance": float(
+                                child_invoice.transactions_balance
+                            ),
+                            "total": float(child_invoice.total),
+                            "total_currency": settings.DEFAULT_CURRENCY,
+                            "type": child_invoice.type,
+                            "updated_on": format_date(child_invoice.updated_on),
+                        },
+                        {
                             "id": str(credit_note.id),
                             "balance": float(credit_note.balance),
                             "created_on": format_date(credit_note.created_on),
@@ -652,7 +682,7 @@ class OrdersAdminApiTestCase(TestCase):
                             "total_currency": settings.DEFAULT_CURRENCY,
                             "type": credit_note.type,
                             "updated_on": format_date(credit_note.updated_on),
-                        }
+                        },
                     ],
                     "invoiced_balance": float(order.main_invoice.invoiced_balance),
                     "recipient_address": (
