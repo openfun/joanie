@@ -1017,7 +1017,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice_reference": None,
+                        "main_invoice_reference": order.main_invoice.reference,
                         "order_group_id": None,
                         "organization": {
                             "id": str(order.organization.id),
@@ -1109,7 +1109,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "credit_card_id": None,
                         "enrollment": None,
                         "target_enrollments": [],
-                        "main_invoice_reference": order.main_invoice.reference,
+                        "main_invoice_reference": None,
                         "order_group_id": None,
                         "organization": {
                             "id": str(order.organization.id),

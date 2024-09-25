@@ -22,6 +22,7 @@ from joanie.core.enums import (
 )
 from joanie.core.exceptions import InvalidConversionError
 from joanie.core.factories import OrderFactory, OrderGeneratorFactory
+from joanie.payment.models import Invoice
 
 
 @override_settings(
@@ -254,3 +255,37 @@ class TestOrderFactory(TestCase):
             str(context.exception),
             "Invalid format for amount: Input value cannot be used as monetary amount : 'abc02'.",
         )
+
+    def test_factory_order_create_invoice_if_order_state_is_not_draft(
+        self,
+    ):
+        """
+        Test that the `OrderFactory` does not create an invoice when the state
+        is not `completed` or `to_save_payment_method`.
+        """
+        for state in [
+            ORDER_STATE_ASSIGNED,
+            ORDER_STATE_CANCELED,
+            ORDER_STATE_FAILED_PAYMENT,
+            ORDER_STATE_TO_SIGN,
+            ORDER_STATE_PENDING,
+            ORDER_STATE_PENDING_PAYMENT,
+            ORDER_STATE_SIGNING,
+            ORDER_STATE_NO_PAYMENT,
+            ORDER_STATE_COMPLETED,
+            ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+        ]:
+            with self.subTest(state=state):
+                order = OrderFactory(state=state)
+
+                self.assertEqual(Invoice.objects.filter(order=order).count(), 1)
+
+    def test_factory_order_should_not_create_main_invoice_if_order_is_in_draft(self):
+        """
+        Test that the `OrderFactory` should not create a main invoice when the state of the order
+        is `draft`.
+        """
+        order = OrderFactory(state=ORDER_STATE_DRAFT)
+
+        self.assertIsNotNone(order.invoices.all())
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 0)

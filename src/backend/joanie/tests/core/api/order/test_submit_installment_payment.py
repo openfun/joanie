@@ -23,10 +23,7 @@ from joanie.core.enums import (
 from joanie.core.factories import OrderFactory, ProductFactory, UserFactory
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.exceptions import PaymentProviderAPIException
-from joanie.payment.factories import (
-    CreditCardFactory,
-    InvoiceFactory,
-)
+from joanie.payment.factories import CreditCardFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -341,7 +338,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        InvoiceFactory(order=order)
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
@@ -417,7 +413,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        InvoiceFactory(order=order)
         credit_card = CreditCardFactory(owner=user)
         payload = {"credit_card_id": credit_card.id}
         token = self.generate_token_from_user(user)
@@ -487,7 +482,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        InvoiceFactory(order=order)
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
@@ -547,7 +541,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        InvoiceFactory(order=order)
         payload = {"credit_card_id": credit_card.id}
         token = self.generate_token_from_user(user)
 
@@ -617,7 +610,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        InvoiceFactory(order=order)
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
@@ -685,7 +677,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        InvoiceFactory(order=order)
         token = self.generate_token_from_user(user)
 
         response = self.client.post(
@@ -759,7 +750,6 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        InvoiceFactory(order=order)
         credit_card = CreditCardFactory(owner=user)
         payload = {"credit_card_id": credit_card.id}
         token = self.generate_token_from_user(user)
