@@ -746,14 +746,16 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 extracted.save()
                 return extracted
 
-            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
-                InvoiceFactory,
-            )
+            if self.state != enums.ORDER_STATE_DRAFT:
+                from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                    InvoiceFactory,
+                )
 
-            return InvoiceFactory(
-                order=self,
-                total=self.total,
-            )
+                return InvoiceFactory(
+                    order=self,
+                    total=self.total,
+                )
+
         return None
 
     @factory.post_generation
@@ -922,18 +924,47 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             ]
             and not self.is_free
         ):
+            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                TransactionFactory,
+            )
+
             if target_state == enums.ORDER_STATE_PENDING_PAYMENT:
                 self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
+                # Create related transactions when an installment is paid
+                TransactionFactory(
+                    invoice__order=self,
+                    invoice__parent=self.main_invoice,
+                    invoice__total=0,
+                    invoice__recipient_address__owner=self.owner,
+                    total=str(self.payment_schedule[0]["amount"]),
+                    reference=self.payment_schedule[0]["id"],
+                )
             if target_state == enums.ORDER_STATE_NO_PAYMENT:
                 self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUSED
             if target_state == enums.ORDER_STATE_FAILED_PAYMENT:
                 self.state = target_state
                 self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
                 self.payment_schedule[1]["state"] = enums.PAYMENT_STATE_REFUSED
+                TransactionFactory(
+                    invoice__order=self,
+                    invoice__parent=self.main_invoice,
+                    invoice__total=0,
+                    invoice__recipient_address__owner=self.owner,
+                    total=str(self.payment_schedule[0]["amount"]),
+                    reference=self.payment_schedule[0]["id"],
+                )
             if target_state == enums.ORDER_STATE_COMPLETED:
                 self.flow.update()
                 for payment in self.payment_schedule:
                     payment["state"] = enums.PAYMENT_STATE_PAID
+                    TransactionFactory(
+                        invoice__order=self,
+                        invoice__parent=self.main_invoice,
+                        invoice__total=0,
+                        invoice__recipient_address__owner=self.owner,
+                        total=str(payment["amount"]),
+                        reference=payment["id"],
+                    )
             self.save()
             self.flow.update()
 
