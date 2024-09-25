@@ -22,7 +22,7 @@ from joanie.core.enums import (
 )
 from joanie.core.exceptions import InvalidConversionError
 from joanie.core.factories import OrderFactory, OrderGeneratorFactory
-from joanie.payment.models import Invoice
+from joanie.payment.models import Invoice, Transaction
 
 
 @override_settings(
@@ -201,6 +201,109 @@ class TestOrderGeneratorFactory(TestCase):
         order.refresh_from_db()
 
         self.assertIsInstance(order.payment_schedule[0]["due_date"], date)
+
+    def test_factory_order_generator_should_not_create_transaction_and_invoice_if_state_is_draft(
+        self,
+    ):
+        """
+        Test that the `OrderGeneratoryFactory` does not create an invoice and a transaction
+        when the state of the order is in `draft`.
+        """
+        order = OrderGeneratorFactory(state=ORDER_STATE_DRAFT, product__price=100)
+
+        self.assertEqual(Invoice.objects.filter(order=order).count(), 0)
+        self.assertEqual(Transaction.objects.filter(invoice__order=order).count(), 0)
+
+    def test_factory_order_generator_should_create_main_invoice_and_no_children_and_no_transaction(
+        self,
+    ):
+        """
+        With the `OrderGeneratorFactory`, when the order is not free and the state
+        is in : `assigned`, `to_sign`, `signing`,`to_save_payment_method`, `pending`,
+        `no_payment`, `canceled`. It should create the main invoice attached to the order.
+        We should not be able to find children invoices, nor transactions because no installment
+        were paid in those states.
+        """
+        for state in [
+            ORDER_STATE_ASSIGNED,
+            ORDER_STATE_TO_SIGN,
+            ORDER_STATE_SIGNING,
+            ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            ORDER_STATE_PENDING,
+            ORDER_STATE_NO_PAYMENT,
+            ORDER_STATE_CANCELED,
+        ]:
+            with self.subTest(state=state):
+                order = OrderGeneratorFactory(state=state, product__price=100)
+                invoice = Invoice.objects.get(order=order)
+                self.assertEqual(order.main_invoice, invoice)
+                self.assertIsNone(invoice.parent)
+                self.assertEqual(invoice.total, 100)
+                self.assertEqual(Invoice.objects.filter(parent=invoice).count(), 0)
+                self.assertEqual(
+                    Transaction.objects.filter(
+                        invoice__order=order, invoice=invoice
+                    ).count(),
+                    0,
+                )
+
+    def test_factory_order_generator_create_transaction_state_pending_payment_and_failed_payment(
+        self,
+    ):
+        """
+        Test that the `OrderGeneratoryFactory` creates an invoice, the children invoice and a
+        transaction when the state is either in : `pending_payment`, `failed_payment`.
+        With those state, the `OrderGeneratoryFactory` prepares in the payment schedule
+        1 installment paid already.
+        """
+        for state in [
+            ORDER_STATE_PENDING_PAYMENT,
+            ORDER_STATE_FAILED_PAYMENT,
+        ]:
+            with self.subTest(state=state):
+                order = OrderGeneratorFactory(state=state, product__price=100)
+
+                self.assertEqual(
+                    Transaction.objects.filter(invoice__order=order).count(), 1
+                )
+
+                transaction = Transaction.objects.get(
+                    invoice__order=order,
+                    reference=order.payment_schedule[0]["id"],
+                    total=str(order.payment_schedule[0]["amount"]),
+                )
+
+                self.assertEqual(
+                    Invoice.objects.filter(parent=order.main_invoice).count(), 1
+                )
+                self.assertEqual(transaction.total, 20)
+                self.assertEqual(transaction.invoice.parent, order.main_invoice)
+                self.assertEqual(transaction.invoice.total, 0)
+                self.assertEqual(order.main_invoice.total, 100)
+
+    def test_factory_order_generator_create_transaction_and_children_invoice_when_state_completed(
+        self,
+    ):
+        """
+        Test that the `OrderGeneratoryFactory` creates an invoice, the children invoices and
+        the transactions that reflects the payments done in the payment schedule of the order
+        when the state is `completed`.
+        """
+        order = OrderGeneratorFactory(state=ORDER_STATE_COMPLETED, product__price=100)
+
+        for payment in order.payment_schedule:
+            transaction = Transaction.objects.get(
+                invoice__order=order,
+                reference=payment["id"],
+                total=str(payment["amount"]),
+            )
+
+            self.assertEqual(transaction.total, payment["amount"])
+            self.assertEqual(transaction.invoice.total, 0)
+            self.assertEqual(transaction.invoice.parent, order.main_invoice)
+            self.assertEqual(order.main_invoice.total, 100)
+        self.assertEqual(Transaction.objects.filter(invoice__order=order).count(), 4)
+        self.assertEqual(Invoice.objects.filter(parent=order.main_invoice).count(), 4)
 
 
 class TestOrderFactory(TestCase):
