@@ -18,7 +18,6 @@ from joanie.core.factories import CourseRunFactory, EnrollmentFactory
 from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.lms_handler.backends.openedx import OpenEdXLMSBackend
-from joanie.payment.factories import InvoiceFactory
 from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
@@ -2043,11 +2042,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             ],
         )
         order.flow.complete()
-
-        # - Create an invoice related to the order to mark it as validated and trigger the
-        #   auto enrollment logic on validate transition
-        InvoiceFactory(order=order, total=order.total)
-
+        # OrderFactory creates an invoice related to the order to mark
+        # it as validated and trigger the auto enrollment logic on validate transition
         # The enrollment should have been activated automatically
         enrollment.refresh_from_db()
         self.assertTrue(enrollment.is_active)
