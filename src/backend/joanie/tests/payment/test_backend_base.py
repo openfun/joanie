@@ -20,11 +20,7 @@ from joanie.core.factories import (
 )
 from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.factories import (
-    BillingAddressDictFactory,
-    CreditCardFactory,
-    InvoiceFactory,
-)
+from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.payment.models import Transaction
 from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -836,7 +832,6 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
         billing_address = BillingAddressDictFactory()
-        InvoiceFactory(order=order)
         payment = {
             "id": "pay_0",
             "amount": 30000,
@@ -913,7 +908,6 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
         billing_address = BillingAddressDictFactory()
-        InvoiceFactory(order=order)
         payment = {
             "id": "pay_0",
             "amount": 30000,
@@ -974,7 +968,6 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
         billing_address = BillingAddressDictFactory()
-        InvoiceFactory(order=order)
         payment_0 = {
             "id": "pay_0",
             "amount": 20000,
@@ -1102,7 +1095,6 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
                 },
             ],
         )
-        InvoiceFactory(order=order)
         billing_address = BillingAddressDictFactory()
         payment = {
             "id": "pay_0",

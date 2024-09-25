@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState
-from joanie.payment.factories import CreditCardFactory, InvoiceFactory
+from joanie.payment.factories import CreditCardFactory
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -127,7 +127,6 @@ class OrderPaymentMethodApiTest(BaseAPITestCase):
             state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
             credit_card=None,
         )
-        InvoiceFactory(order=order)
 
         self.assertFalse(order.has_payment_method)
 
