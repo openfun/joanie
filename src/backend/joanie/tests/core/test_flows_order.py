@@ -27,11 +27,7 @@ from joanie.lms_handler.backends.openedx import (
     OPENEDX_MODE_VERIFIED,
 )
 from joanie.payment.backends.dummy import DummyPaymentBackend
-from joanie.payment.factories import (
-    BillingAddressDictFactory,
-    CreditCardFactory,
-    InvoiceFactory,
-)
+from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.tests.base import BaseLogMixinTestCase
 
 
@@ -232,7 +228,6 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
                 }
             ],
         )
-        InvoiceFactory(order=order_invoice)
         self.assertEqual(order_invoice.flow._can_be_state_completed(), True)  # pylint: disable=protected-access
         order_invoice.flow.complete()
         self.assertEqual(order_invoice.state, enums.ORDER_STATE_COMPLETED)

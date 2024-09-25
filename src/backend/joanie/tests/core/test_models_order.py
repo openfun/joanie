@@ -377,9 +377,8 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ],
         )
 
-        # 2 - When an invoice is linked to the order, and the method complete() is
-        # called its state is `completed`
-        InvoiceFactory(order=order, total=order.total)
+        # 2 - OrderFactory creates the invoice linked to the order,
+        # and the method complete() is called, then its state becomes `completed`
         order.flow.complete()
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 

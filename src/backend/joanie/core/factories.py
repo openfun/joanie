@@ -671,9 +671,9 @@ class OrderFactory(factory.django.DjangoModelFactory):
                 extracted.save()
                 return extracted
 
-            if self.state == enums.ORDER_STATE_COMPLETED:
-                # If the order is not fee and its state is validated, create
-                # a main invoice with related transaction.
+            if self.state != enums.ORDER_STATE_DRAFT and not self.is_free:
+                # If the order is not free and its state is not 'draft'
+                # create a main invoice with related transaction.
                 from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
                     TransactionFactory,
                 )
