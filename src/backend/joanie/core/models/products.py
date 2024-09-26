@@ -475,6 +475,12 @@ class Order(BaseModel):
         help_text=_("User has consented to the platform terms and conditions."),
         db_column="has_consent_to_terms",
     )
+    has_waived_withdrawal_right = models.BooleanField(
+        verbose_name=_("has waived their right of withdrawal"),
+        editable=False,
+        default=False,
+        help_text=_("User has waived their withdrawal right."),
+    )
     state = models.CharField(
         default=enums.ORDER_STATE_DRAFT,
         choices=enums.ORDER_STATE_CHOICES,

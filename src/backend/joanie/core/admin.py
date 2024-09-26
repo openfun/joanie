@@ -583,6 +583,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     readonly_fields = (
         "state",
         "total",
+        "has_waived_withdrawal_right",
         "invoice",
         "certificate",
     )
