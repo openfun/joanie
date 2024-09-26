@@ -180,7 +180,7 @@ class Command(BaseCommand):
         order_status=enums.ORDER_STATE_VALIDATED,
         contract_definition=None,
         product=None,
-    ):  # pylint: disable=too-many-arguments
+    ):  # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create a product, it's enrollment and it's order."""
         if not product:
             if product_type == enums.PRODUCT_TYPE_CERTIFICATE:
