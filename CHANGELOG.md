@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Downgrade to django-storages 1.14.3
+
 ## [2.7.0] - 2024-09-23
 
 ### Changed
