@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Add link to back office in Django admin topbar
+- Add boolean field `has_waived_withdrawal_right` to the `Order` model
 
 ## [2.9.2] - 2024-10-24
 
