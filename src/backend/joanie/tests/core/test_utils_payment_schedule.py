@@ -90,7 +90,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
 
     def test_utils_payment_schedule_withdrawal_higher_than_course_start_date(self):
         """
-        If the withdrawal date is after the course start date, the retun date should be the
+        If the withdrawal date is after the course start date, the return date should be the
         signed contract date
         """
         signed_contract_date = date(2024, 1, 1)
@@ -101,6 +101,25 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 signed_contract_date, course_start_date
             ),
             date(2024, 1, 1),
+        )
+
+    def test_utils_payment_schedule_withdrawal_higher_than_course_start_date_even_weekend(
+        self,
+    ):
+        """
+        If the withdrawal date is after the course start date even the weekend,
+        the return date should be the signed contract date
+        """
+        # The contract date is the tuesday 14th dec 2023, as the withdrawal period is
+        # set to 16 days, the withdrawal limit date will be the saturday 30th dec 2023.
+        signed_contract_date = date(2023, 12, 14)
+        course_start_date = date(2023, 11, 21)
+
+        self.assertEqual(
+            payment_schedule._withdrawal_limit_date(
+                signed_contract_date, course_start_date
+            ),
+            date(2023, 12, 14),
         )
 
     def test_utils_payment_schedule_get_installments_percentages(self):
