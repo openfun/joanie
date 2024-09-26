@@ -57,8 +57,12 @@ def _withdrawal_limit_date(signed_contract_date, course_start_date):
     withdrawal_date = signed_contract_date + timedelta(
         days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
     )
+
     if not calendar.is_working_day(withdrawal_date):
-        return calendar.add_working_days(withdrawal_date, 1, keep_datetime=True)
+        withdrawal_date = calendar.add_working_days(
+            withdrawal_date, 1, keep_datetime=True
+        )
+
     return (
         withdrawal_date if withdrawal_date < course_start_date else signed_contract_date
     )
