@@ -19,6 +19,7 @@ and this project adheres to
 - Send an email to the user when an installment is successfully
   paid
 - Support of payment_schedule for certificate products
+- Add boolean field `has_waived_withdrawal_right` to the `Order` model
 
 ### Changed
 
