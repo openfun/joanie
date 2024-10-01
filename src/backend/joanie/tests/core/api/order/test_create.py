@@ -534,7 +534,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
             if order.state not in [
                 enums.ORDER_STATE_CANCELED,
-                enums.ORDER_STATE_PENDING,
+                enums.ORDER_STATE_ASSIGNED,
+                enums.ORDER_STATE_DRAFT,
             ]:
                 counter[str(order.organization.id)] += 1
 
