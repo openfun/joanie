@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add link to back office in Django admin topbar
+
 ## [2.9.2] - 2024-10-24
 
 ### Fixed
