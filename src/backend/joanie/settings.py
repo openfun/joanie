@@ -170,6 +170,7 @@ class Base(Configuration):
                     "django.template.context_processors.media",
                     "django.template.context_processors.request",
                     "django.template.context_processors.tz",
+                    "joanie.core.context_processors.admin.settings_processors",
                 ],
                 "loaders": [
                     "django.template.loaders.filesystem.Loader",

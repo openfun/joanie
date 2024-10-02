@@ -20,6 +20,7 @@ and this project adheres to
   paid
 - Support of payment_schedule for certificate products
 - Add boolean field `has_waived_withdrawal_right` to the `Order` model
+- Add link to back office in Django admin topbar
 
 ### Changed
 
