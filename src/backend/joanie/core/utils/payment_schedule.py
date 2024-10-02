@@ -52,6 +52,10 @@ def _withdrawal_limit_date(signed_contract_date, course_start_date):
 
     The two first rules can be simplified with adding 16 days to the start date.
     So, the withdrawal limit date is the start date + 16 days.
+
+    If the withdrawal limit date is after the course start date, the withdrawal limit
+    date is set to the signed contract date to allow the user to starts the course
+    immediately.
     """
     calendar = get_country_calendar()
     withdrawal_date = signed_contract_date + timedelta(
@@ -137,6 +141,17 @@ def generate(total, beginning_contract_date, course_start_date, course_end_date)
     installments = _calculate_installments(total, due_dates, percentages)
 
     return installments
+
+
+def has_withdrawal_period(signed_contract_date, course_start_date):
+    """
+    If the withdrawal limit date is equal to the signed contract date, that means the
+    payment schedule ignores the withdrawal period (because the course starts before
+    the end of the withdrawal period).
+    """
+
+    limit_date = _withdrawal_limit_date(signed_contract_date, course_start_date)
+    return limit_date != signed_contract_date
 
 
 def is_installment_to_debit(installment):
