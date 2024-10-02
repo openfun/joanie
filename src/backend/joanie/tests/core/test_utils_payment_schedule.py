@@ -622,7 +622,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             ],
         )
 
-    def test_utils_is_installment_to_debit_today(self):
+    def test_utils_payment_schedule_is_installment_to_debit_today(self):
         """
         Check that the installment is to debit if the due date is today.
         """
@@ -637,7 +637,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 payment_schedule.is_installment_to_debit(installment), True
             )
 
-    def test_utils_is_installment_to_debit_past(self):
+    def test_utils_payment_schedule_is_installment_to_debit_past(self):
         """
         Check that the installment is to debit if the due date is reached.
         """
@@ -652,7 +652,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 payment_schedule.is_installment_to_debit(installment), True
             )
 
-    def test_utils_is_installment_to_debit_paid_today(self):
+    def test_utils_payment_schedule_is_installment_to_debit_paid_today(self):
         """
         Check that the installment is not to debit if the due date is today but its
         state is paid
@@ -668,7 +668,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 payment_schedule.is_installment_to_debit(installment), False
             )
 
-    def test_utils_has_installments_to_debit_true(self):
+    def test_utils_payment_schedule_has_installments_to_debit_true(self):
         """
         Check that the order has installments to debit if at least one is to debit.
         """
@@ -695,7 +695,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
             self.assertEqual(payment_schedule.has_installments_to_debit(order), True)
 
-    def test_utils_has_installments_to_debit_false(self):
+    def test_utils_payment_schedule_has_installments_to_debit_false(self):
         """
         Check that the order has not installments to debit if no installment are pending
         or due date is not reached.
@@ -855,7 +855,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             False,
         )
 
-    def test_utils_send_mail_reminder_for_installment_debit(self):
+    def test_utils_payment_schedule_send_mail_reminder_for_installment_debit(self):
         """
         The method `send_mail_reminder_for_installment_debit` should send an email with
         the informations about the upcoming installment. We should find the number of days
@@ -895,7 +895,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIn("30.00", email_content)
         self.assertIn("Product 1", email_content)
 
-    def test_utils_send_mail_reminder_for_installment_debit_in_french_language(self):
+    def test_utils_payment_schedule_send_mail_reminder_for_installment_debit_in_french_language(self):
         """
         The method `send_mail_reminder_for_installment_debit` should send an email with
         the informations about the upcoming installment in the current language of the user
@@ -936,7 +936,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             ("de-de", ("German")),
         )
     )
-    def test_utils_send_mail_reminder_for_installment_debit_should_use_fallback_language(
+    def test_utils_payment_schedule_send_mail_reminder_for_installment_debit_should_use_fallback_language(
         self,
     ):
         """
@@ -971,3 +971,28 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertIn("Product 1", email_content)
         self.assertIn("30.00", email_content)
+
+    def test_utils_payment_schedule_has_withdrawal_period(self):
+        """
+        The method `has_withdrawal_period` should return a boolean whether the provided
+        start date precedes or not the signature date.
+        """
+        cases = [
+            # If the training is on going, the withdrawal period can't be applied
+            ("training on going", date(2024, 2, 1), date(2024, 1, 1), False),
+            # If the training has not yet started, the withdrawal period must be applied
+            ("training not started", date(2024, 1, 1), date(2024, 2, 1), True),
+            # If the training starts today, the withdrawal period is not applied
+            ("training starts today", date(2024, 1, 1), date(2024, 1, 1), True),
+        ]
+        for message, signature_date, start_date, expected_result in cases:
+            with self.subTest(
+                    message,
+                    signature_date=signature_date,
+                    start_date=start_date,
+                    expected_result=expected_result
+            ):
+                self.assertEqual(
+                    payment_schedule.has_withdrawal_period(signature_date, start_date),
+                    expected_result,
+                )
