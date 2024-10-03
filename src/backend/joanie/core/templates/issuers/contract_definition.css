@@ -128,6 +128,68 @@
   page-break-after: always;
 }
 
+/* == Context - Payment schedule appendix */
+.installments-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.installments-table th {
+  padding: 1mm 2mm;
+}
+.installments-table tfoot td:last-child,
+.installments-table tbody td {
+  padding: 3mm 2mm;
+}
+
+.installments-table th:first-child {
+  min-width: 40mm;
+}
+.installments-table th:last-child {
+  min-width: 25mm;
+}
+
+.installments-table tfoot td:first-child {
+  text-align: right;
+}
+
+.installments-table tbody tr td:first-child{
+  border-left: thin solid #BBB;
+}
+
+.installments-table tbody tr td:last-child{
+  border-right: thin solid #BBB;
+}
+
+.installments-table tbody tr:first-child td:first-child{
+  border-left: thin solid #BBB;
+  border-top: thin solid #BBB;
+  border-radius: 4px 0 0 0;
+}
+.installments-table tbody tr:first-child td:last-child{
+  border-right: thin solid #BBB;
+  border-top: thin solid #BBB;
+  border-radius: 0 4px 0 0;
+}
+.installments-table tbody tr:last-child td:first-child{
+  border-left: thin solid #BBB;
+  border-bottom: thin solid #BBB;
+  border-radius: 0 0 0 4px;
+}
+.installments-table tbody tr:last-child td:last-child{
+  border-right: thin solid #BBB;
+  border-bottom: thin solid #BBB;
+  border-radius: 0 0 4px 0;
+}
+
+.installments-table tr:nth-child(even) {
+  background: #ebebeb;
+}
+
+.installments-table tfoot {
+  font-weight: bold;
+}
+
 /* == Content - Syllabus appendix */
 .syllabus--header {
   background: #e67a00;

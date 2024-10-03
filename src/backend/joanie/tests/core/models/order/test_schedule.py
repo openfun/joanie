@@ -66,7 +66,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         )
 
         signed_contract_date, course_start_date, course_end_date = (
-            contract.order._get_schedule_dates()
+            contract.order.get_schedule_dates()
         )
 
         self.assertEqual(signed_contract_date, student_signed_on_date)
@@ -92,7 +92,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         mocked_now = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
             signed_contract_date, course_start_date, course_end_date = (
-                order._get_schedule_dates()
+                order.get_schedule_dates()
             )
 
         self.assertEqual(signed_contract_date, mocked_now)
@@ -112,7 +112,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             self.assertRaises(ValidationError) as context,
             self.assertLogs("joanie") as logger,
         ):
-            contract.order._get_schedule_dates()
+            contract.order.get_schedule_dates()
 
         self.assertEqual(
             str(context.exception), "['Cannot retrieve start or end date for order']"
