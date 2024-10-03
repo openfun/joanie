@@ -125,6 +125,7 @@
   flex-direction: row;
   justify-content: space-between;
   margin-top: 20mm;
+  page-break-after: always;
 }
 
 /* == Content - Syllabus appendix */
