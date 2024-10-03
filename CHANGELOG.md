@@ -32,6 +32,7 @@ and this project adheres to
 - Update the task `debit_pending_installment` to catch up on late
   payments of installments that are in the past
 - Deprecated field `has_consent_to_terms` for `Order` model
+- Move signature fields before appendices in contract definition template
 
 ### Fixed
 

@@ -119,30 +119,30 @@ this template as a base.
                   </dd>
               </dl>
           </section>
-          <section class="content-articles">
+          <article class="content-articles">
               {% if contract %}
                   {{ contract.body|safe }}
               {% endif %}
+              <section class="content-signatures">
+                  <div class="signature_zone">
+                      <p>{% translate "Learner's signature :" %}</p>
+                      <div class="signature-recipient">
+                          [SignatureField#1]
+                      </div>
+                  </div>
+                  <div class="signature_zone">
+                      <p>{% translate "University representative's signature :" %}</p>
+                      <div class="signature-recipient">
+                          [SignatureField#2]
+                      </div>
+                  </div>
+              </section>
               {% if syllabus %}
                 <h2>{% translate "Appendices" %}</h2>
                 <h3>{% translate "Catalog syllabus" %}</h3>
                 {% include "contract_definition/fragment_appendice_syllabus.html" with syllabus=syllabus %}
               {% endif %}
-          </section>
-          <footer class="content-signatures">
-              <div class="signature_zone">
-                  <p>{% translate "Learner's signature :" %}</p>
-                  <div class="signature-recipient">
-                      [SignatureField#1]
-                  </div>
-              </div>
-              <div class="signature_zone">
-                  <p>{% translate "University representative's signature :" %}</p>
-                  <div class="signature-recipient">
-                      [SignatureField#2]
-                  </div>
-              </div>
-          </footer>
+          </article>
       </main>
     </body>
 </html>
