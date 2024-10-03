@@ -1068,7 +1068,7 @@ class Order(BaseModel):
             for key, value in aggregate.items()
         }
 
-    def _get_schedule_dates(self):
+    def get_schedule_dates(self):
         """
         Return the schedule dates for the order.
         The schedules date are based on contract sign date or the time the schedule is generated
@@ -1099,7 +1099,7 @@ class Order(BaseModel):
         Generate payment schedule for the order.
         """
         beginning_contract_date, course_start_date, course_end_date = (
-            self._get_schedule_dates()
+            self.get_schedule_dates()
         )
         installments = generate_payment_schedule(
             self.total, beginning_contract_date, course_start_date, course_end_date

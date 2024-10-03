@@ -137,8 +137,39 @@ this template as a base.
                       </div>
                   </div>
               </section>
-              {% if syllabus %}
+              {% if syllabus or student.payment_schedule %}
                 <h2>{% translate "Appendices" %}</h2>
+              {% endif %}
+              {% if student.payment_schedule %}
+                <h3>{% translate "Payment schedule" %}</h3>
+                <table class="installments-table">
+                    <thead>
+                        <tr>
+                            <th>{% translate "Due date" %}</th>
+                            <th>{% translate "Amount" %}</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <td>
+                                {% translate "Total :" %}
+                            </td>
+                            <td>
+                                {{ course.price|floatformat:2 }}&nbsp;{{ course.currency }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                    <tbody>
+                        {% for payment in student.payment_schedule %}
+                        <tr>
+                            <td>{{ payment.due_date|iso8601_to_date:"SHORT_DATE_FORMAT" }}</td>
+                            <td>{{ payment.amount|floatformat:2 }}&nbsp;{{ course.currency }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+              {% endif %}
+              {% if syllabus %}
                 <h3>{% translate "Catalog syllabus" %}</h3>
                 {% include "contract_definition/fragment_appendice_syllabus.html" with syllabus=syllabus %}
               {% endif %}

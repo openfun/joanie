@@ -4,6 +4,7 @@ from copy import deepcopy
 from datetime import date, timedelta
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.utils.duration import duration_iso_string
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
@@ -12,6 +13,7 @@ from babel.numbers import get_currency_symbol
 
 from joanie.core.models import DocumentImage
 from joanie.core.utils import file_checksum, image_to_base64
+from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 
 # Organization section for generating contract definition
 ORGANIZATION_FALLBACK_ADDRESS = {
@@ -105,6 +107,7 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     user_email = _("<STUDENT_EMAIL>")
     user_phone_number = _("<STUDENT_PHONE_NUMBER>")
     user_address = USER_FALLBACK_ADDRESS
+    payment_schedule = None
 
     contract_body = _("<CONTRACT_BODY>")
     contract_title = _("<CONTRACT_TITLE>")
@@ -166,6 +169,28 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         course_price = str(order.total)
         user_address = order.main_invoice.recipient_address
 
+        # Payment Schedule
+        try:
+            beginning_contract_date, course_start_date, course_end_date = (
+                order.get_schedule_dates()
+            )
+        except ValidationError:
+            pass
+        else:
+            installments = generate_payment_schedule(
+                order.total,
+                beginning_contract_date,
+                course_start_date,
+                course_end_date,
+            )
+            payment_schedule = [
+                {
+                    "due_date": installment["due_date"].isoformat(),
+                    "amount": str(installment["amount"]),
+                }
+                for installment in installments
+            ]
+
     # Transform duration value to ISO 8601 format
     if isinstance(course_effort, timedelta):
         course_effort = duration_iso_string(course_effort)
@@ -202,6 +227,7 @@ def generate_document_context(contract_definition=None, user=None, order=None):
             "name": user_name,
             "email": user_email,
             "phone_number": user_phone_number,
+            "payment_schedule": payment_schedule,
         },
         "organization": {
             "address": organization_address,
