@@ -107,15 +107,12 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 effort=timedelta(hours=10, minutes=30, seconds=12),
             ),
         )
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             owner=user,
             product=relation.product,
             course=relation.course,
             state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(recipient_address=user_address),
-        )
-        factories.OrderTargetCourseRelationFactory(
-            course=relation.course, order=order, position=1
         )
 
         context = contract_definition.generate_document_context(
@@ -157,6 +154,13 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 },
                 "email": user.email,
                 "phone_number": str(user.phone_number),
+                "payment_schedule": [
+                    {
+                        "due_date": installment["due_date"].isoformat(),
+                        "amount": str(installment["amount"]),
+                    }
+                    for installment in order.payment_schedule
+                ],
             },
             "organization": {
                 "address": {
@@ -243,6 +247,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 },
                 "email": str(user.email),
                 "phone_number": str(user.phone_number),
+                "payment_schedule": None,
             },
             "organization": {
                 "address": {
@@ -319,6 +324,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 },
                 "email": "<STUDENT_EMAIL>",
                 "phone_number": "<STUDENT_PHONE_NUMBER>",
+                "payment_schedule": None,
             },
             "organization": {
                 "address": {

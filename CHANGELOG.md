@@ -19,6 +19,7 @@ and this project adheres to
 - Send an email to the user when an installment is successfully
   paid
 - Support of payment_schedule for certificate products
+- Display payment schedule in contract template
 
 ### Changed
 

@@ -113,10 +113,11 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             definition_checksum="1234",
         )
         contract.refresh_from_db()
+        order.generate_schedule()
 
         file_bytes = issuers.generate_document(
-            name=contract.definition.name,
-            context=contract.context,
+            name=order.contract.definition.name,
+            context=order.contract.context,
         )
         document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", " ")
 
@@ -157,8 +158,17 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         self.assertIn("Terms and conditions", document_text)
         self.assertIn("Terms and Conditions Content", document_text)
 
-        # - Appendices should be displayed
-        self.assertNotIn("Appendices", document_text)
+        # - Appendices title should be displayed
+        self.assertIn("Appendices", document_text)
+        # - Payment schedule should be displayed
+        self.assertIn("Payment schedule", document_text)
+        self.assertIn("Due date", document_text)
+        self.assertIn("Amount", document_text)
+        for installment in order.payment_schedule:
+            self.assertIn(installment["due_date"].strftime("%m/%d/%Y"), document_text)
+            self.assertIn(f"{installment['amount']:.2f}\xa0€", document_text)
+        self.assertIn("Total :  999.99\xa0€", document_text)
+        # - Syllabus should not be displayed
         self.assertNotIn("Syllabus", document_text)
 
         # - Signature slots should be displayed
@@ -249,8 +259,9 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         self.assertIn("Terms and conditions", document_text)
         self.assertIn("Terms and Conditions Content", document_text)
 
-        # - Appendices should be displayed
+        # - Appendices should not be displayed
         self.assertNotIn("Appendices", document_text)
+        self.assertNotIn("Payment schedule", document_text)
         self.assertNotIn("Syllabus", document_text)
 
         # - Signature slots should be displayed
