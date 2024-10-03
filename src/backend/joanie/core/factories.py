@@ -851,11 +851,18 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
     # pylint: disable=unused-argument
     def target_courses(self, create, extracted, **kwargs):
         """
-        If the order has a state other than draft, it should have been submitted so
+        If the order has a state other than draft, it should have been init so
         target courses should have been copied from the product target courses.
         """
-        if extracted:
-            self.target_courses.set(extracted)
+        if not extracted or not create:
+            return
+
+        for position, course in enumerate(extracted):
+            OrderTargetCourseRelationFactory(
+                order=self,
+                course=course,
+                position=position,
+            )
 
     @factory.post_generation
     # pylint: disable=unused-argument, too-many-branches
@@ -874,17 +881,18 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
         ]:
             self.state = enums.ORDER_STATE_DRAFT
 
-            CourseRunFactory(
-                course=self.course,
-                is_gradable=True,
-                state=CourseState.ONGOING_OPEN,
-                end=django_timezone.now() + timedelta(days=200),
-            )
-            ProductTargetCourseRelationFactory(
-                product=self.product,
-                course=self.course,
-                is_graded=True,
-            )
+            if not self.product.target_courses.exists():
+                CourseRunFactory(
+                    course=self.course,
+                    is_gradable=True,
+                    state=CourseState.ONGOING_OPEN,
+                    end=django_timezone.now() + timedelta(days=200),
+                )
+                ProductTargetCourseRelationFactory(
+                    product=self.product,
+                    course=self.course,
+                    is_graded=True,
+                )
 
             if extracted:
                 self.init_flow(billing_address=extracted)
@@ -1101,7 +1109,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         """
         Lazily generate the contract context from the related order and contract definition.
         """
-        if self.student_signed_on:
+        if self.student_signed_on or self.submitted_for_signature_on:
             student_address = self.order.owner.addresses.filter(is_main=True).first()
             organization_address = self.order.organization.addresses.filter(
                 is_main=True
@@ -1152,6 +1160,15 @@ class ContractFactory(factory.django.DjangoModelFactory):
                     "address": AddressSerializer(student_address).data,
                     "email": self.order.owner.email,
                     "phone_number": self.order.owner.phone_number,
+                    "payment_schedule": [
+                        {
+                            "due_date": installment["due_date"].isoformat(),
+                            "amount": str(installment["amount"]),
+                        }
+                        for installment in self.order.payment_schedule
+                    ]
+                    if self.order.payment_schedule
+                    else None,
                 },
                 "organization": {
                     "logo_id": organization_logo_id,
@@ -1179,7 +1196,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         """
         Lazily generate the definition_checksum from context.
         """
-        if self.student_signed_on:
+        if self.student_signed_on or self.submitted_for_signature_on:
             return hashlib.sha256(
                 json.dumps(self.context, sort_keys=True).encode("utf-8")
             ).hexdigest()
