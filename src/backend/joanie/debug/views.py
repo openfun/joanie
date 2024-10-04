@@ -15,7 +15,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
 
-from factory import random
 from stockholm import Money
 
 from joanie.core import factories
@@ -38,7 +37,7 @@ from joanie.core.utils import contract_definition, issuers
 from joanie.core.utils.sentry import decrypt_data
 from joanie.payment import get_payment_backend
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
-from joanie.payment.models import CreditCard, Invoice, Transaction
+from joanie.payment.models import CreditCard, Invoice
 
 logger = getLogger(__name__)
 LOGO_FALLBACK = (
@@ -476,7 +475,6 @@ class DebugPaymentTemplateView(TemplateView):
         """
         context = super().get_context_data()
         backend = get_payment_backend()
-        random.reseed_random("reproductible_seed")
 
         owner = UserFactory(username="test_card", email="john.doe@acme.org")
         product = ProductFactory(price=Decimal("123.45"))
