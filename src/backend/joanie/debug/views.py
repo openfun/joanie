@@ -107,19 +107,6 @@ class DebugMailInstallmentPayment(TemplateView):
             state=ORDER_STATE_PENDING_PAYMENT,
             owner=UserFactory(first_name="John", last_name="Doe", language="en-us"),
         )
-        invoice = Invoice.objects.create(
-            order=order,
-            parent=order.main_invoice,
-            total=0,
-            recipient_address=order.main_invoice.recipient_address,
-        )
-        for payment in order.payment_schedule[:2]:
-            payment["state"] = PAYMENT_STATE_PAID
-            Transaction.objects.create(
-                total=Decimal(payment["amount"].amount),
-                invoice=invoice,
-                reference=payment["id"],
-            )
         current_language = translation.get_language()
         with translation.override(current_language):
             product.set_current_language(current_language)
