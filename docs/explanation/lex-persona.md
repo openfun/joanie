@@ -200,7 +200,7 @@ ___
     "hideAttachments" : false,
     "hideWorkflowRecipients" : true
   } ],
-  "notifiedEvents" : [ "recipientRefused", "recipientFinished", "workflowStopped", "workflowFinished" ],
+  "notifiedEvents" : [ "recipientRefused", "recipientFinished" ],
   "watchers" : []
 }
 ```
@@ -221,9 +221,7 @@ ___
     "name": "Aerodynamic Silk Bottle",
     "notifiedEvents": [
         "recipientRefused",
-        "recipientFinished",
-        "workflowStopped",
-        "workflowFinished"
+        "recipientFinished"
     ],
     "progress": 0,
     "steps": [
@@ -523,9 +521,7 @@ ___
     "name": "Aerodynamic Silk Bottle",
     "notifiedEvents": [
         "recipientRefused",
-        "recipientFinished",
-        "workflowStopped",
-        "workflowFinished"
+        "recipientFinished"
     ],
     "progress": 0,
     "started": 1688994896088,
@@ -629,7 +625,7 @@ If you prefer to **send invitation link from your business application**, you ca
     "hideAttachments" : false,
     "hideWorkflowRecipients" : true
   } ],
-  "notifiedEvents" : [ "recipientRefused", "recipientFinished", "workflowStopped", "workflowFinished" ],
+  "notifiedEvents" : [ "recipientRefused", "recipientFinished" ],
   "watchers" : []
 }
 ```
@@ -675,9 +671,7 @@ Once those steps through the user are finished, we can now check our `workflowSt
     "name": "Aerodynamic Silk Bottle",
     "notifiedEvents": [
         "recipientRefused",
-        "recipientFinished",
-        "workflowStopped",
-        "workflowFinished"
+        "recipientFinished"
     ],
     "progress": 100,
     "started": 1689092760018,
@@ -921,8 +915,7 @@ otherwise, you need to update both steps. (**example 2**)
     "name": "Some title of signature procedure",
     "notifiedEvents": [
         "recipientFinished",
-        "workflowStopped",
-        "workflowFinished"
+        "workflowStopped"
     ],
     "progress": 50,
     "started": 1713365343105,
@@ -1108,8 +1101,7 @@ otherwise, you need to update both steps. (**example 2**)
     "name": "Title of the signature procedure",
     "notifiedEvents": [
         "recipientFinished",
-        "workflowStopped",
-        "workflowFinished"
+        "workflowStopped"
     ],
     "progress": 0,
     "started": 1713362011673,

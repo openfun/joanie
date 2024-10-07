@@ -182,9 +182,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         self.assertIn(expected_substring_invite_url, invitation_url)
 
         backend = get_signature_backend()
-        backend.confirm_student_signature(
-            reference=order.contract.signature_backend_reference
-        )
+        backend.confirm_signature(reference=order.contract.signature_backend_reference)
         order.refresh_from_db()
         self.assertIsNotNone(order.contract.student_signed_on)
 

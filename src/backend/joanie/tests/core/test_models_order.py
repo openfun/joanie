@@ -654,9 +654,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertNotIn("logo_id", context_with_images["organization"])
 
         backend = get_signature_backend()
-        backend.confirm_student_signature(
-            reference=order.contract.signature_backend_reference
-        )
+        backend.confirm_signature(reference=order.contract.signature_backend_reference)
         order.refresh_from_db()
         self.assertIsNotNone(order.contract.student_signed_on)
 
@@ -728,9 +726,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIsNone(contract.student_signed_on)
 
         backend = get_signature_backend()
-        backend.confirm_student_signature(
-            reference=order.contract.signature_backend_reference
-        )
+        backend.confirm_signature(reference=order.contract.signature_backend_reference)
         order.refresh_from_db()
         self.assertIsNotNone(order.contract.student_signed_on)
 

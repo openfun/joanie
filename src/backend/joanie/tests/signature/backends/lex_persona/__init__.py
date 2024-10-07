@@ -19,8 +19,6 @@ def get_expected_workflow_payload(workflow_status):
         "notifiedEvents": [
             "recipientRefused",
             "recipientFinished",
-            "workflowStopped",
-            "workflowFinished",
         ],
         "progress": 0,
         "steps": [

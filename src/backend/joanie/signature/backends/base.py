@@ -43,24 +43,11 @@ class BaseSignatureBackend:
 
         return getattr(settings, setting_name, None)
 
-    def confirm_student_signature(self, reference):
+    def _confirm_student_signature(self, contract):
         """
         Update the contract object when the file has been signed with the signature provider.
-        We verify if the contract is still in its validity period to be sign, and if it's True
-        we update the field 'student_signed_on' with a new timestamp.
+        We update the field 'student_signed_on' with a new timestamp.
         """
-        contract = models.Contract.objects.get(signature_backend_reference=reference)
-
-        if not contract.is_eligible_for_signing():
-            logger.error(
-                "When student signed, contract's validity date has passed for contract id : '%s'",
-                contract.id,
-                extra={"context": {"contract": contract.to_dict()}},
-            )
-            raise ValidationError(
-                "The contract validity date of expiration has passed."
-            )
-
         contract.student_signed_on = django_timezone.now()
         contract.save()
 
@@ -68,29 +55,46 @@ class BaseSignatureBackend:
 
         logger.info("Student signed the contract '%s'", contract.id)
 
-    def confirm_organization_signature(self, reference):
+    def _confirm_organization_signature(self, contract):
+        """
+        Update the contract object when the file has been signed with the signature provider.
+        We update the field `organization_signed_on` with a new timestamp and reset the submitted
+        for signature date as the organization signature is the last step to complete the
+        contract signature process.
+        """
+        contract.submitted_for_signature_on = None
+        contract.organization_signed_on = django_timezone.now()
+        contract.save()
+        logger.info("Organization signed the contract '%s'", contract.id)
+
+    def confirm_signature(self, reference):
         """
         Update the contract object when the file has been signed with the signature provider.
         We verify if the contract is still in its validity period to be sign, and if it's True
-        we update the field 'organization_signed_on' with a new timestamp.
+        we update the field `organization_signed_on` or `student_signed_on` with a new timestamp
+        according to the contract state.
         """
         contract = models.Contract.objects.get(signature_backend_reference=reference)
 
         if not contract.is_eligible_for_signing():
+            signatory = (
+                "student" if contract.student_signed_on is None else "organization"
+            )
             logger.error(
-                "When organization signed, "
+                "When %s signed, "
                 "contract's validity date has passed for contract id : '%s'",
+                signatory,
                 contract.id,
-                extra=contract.to_dict(),
+                extra={"context": {"contract": contract.to_dict()}},
             )
             raise ValidationError(
                 "The contract validity date of expiration has passed."
             )
 
-        contract.submitted_for_signature_on = None
-        contract.organization_signed_on = django_timezone.now()
-        contract.save()
-        logger.info("Organization signed the contract '%s'", contract.id)
+        if contract.student_signed_on is None:
+            self._confirm_student_signature(contract)
+        elif contract.organization_signed_on is None:
+            self._confirm_organization_signature(contract)
 
     def reset_contract(self, reference):
         """
