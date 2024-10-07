@@ -94,7 +94,6 @@ class LexPersonaBackendUpdateSignatoriesTestCase(TestCase):
             "notifiedEvents": [
                 "recipientRefused",
                 "recipientFinished",
-                "workflowFinished",
             ],
             "progress": 50,
             "started": 1712739520954,
@@ -316,11 +315,7 @@ class LexPersonaBackendUpdateSignatoriesTestCase(TestCase):
             "lastName": ".",
             "logs": [],
             "name": title,
-            "notifiedEvents": [
-                "recipientRefused",
-                "recipientFinished",
-                "workflowFinished",
-            ],
+            "notifiedEvents": ["recipientRefused", "recipientFinished"],
             "progress": 0,
             "started": 1712739520954,
             "steps": [

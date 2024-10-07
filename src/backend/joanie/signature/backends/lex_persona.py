@@ -150,7 +150,6 @@ class LexPersonaBackend(BaseSignatureBackend):
             "notifiedEvents": [
                 "recipientRefused",
                 "recipientFinished",
-                "workflowFinished",
             ],
             "watchers": [],
         }
@@ -473,10 +472,8 @@ class LexPersonaBackend(BaseSignatureBackend):
         try:
             # ruff : noqa : BLE001
             # pylint: disable=broad-exception-caught
-            if event_type == "workflowFinished":
-                self.confirm_organization_signature(reference_id)
-            elif event_type == "recipientFinished":
-                self.confirm_student_signature(reference_id)
+            if event_type == "recipientFinished":
+                self.confirm_signature(reference_id)
             elif event_type == "recipientRefused":
                 self.reset_contract(reference_id)
             else:

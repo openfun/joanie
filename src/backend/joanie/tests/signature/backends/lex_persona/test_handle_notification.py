@@ -347,7 +347,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         )
 
     @responses.activate
-    def test_backend_lex_persona_handle_notification_workflow_finished_event(self):
+    def test_backend_lex_persona_handle_notification_recipient_finished_event(self):
         """
         When an incoming event type is 'recipientFinished', and the event has been verified,
         then the contract which has the signature backend reference should get updated
@@ -421,7 +421,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
         JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     )
     @responses.activate
-    def test_backend_lex_persona_handle_notification_workflow_finished_event_but_signature_expired(
+    def test_backend_lex_persona_handle_notification_recipent_finished_event_but_signature_expired(
         self,
     ):
         """
@@ -439,7 +439,7 @@ class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase
             definition=order.product.contract_definition,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
-            context="content",
+            context={"body": "content"},
             submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
         )
         request_data = {
