@@ -75,10 +75,8 @@ class DummySignatureBackend(BaseSignatureBackend):
         event_type = request.data.get("event_type")
         reference_id = request.data.get("reference")
 
-        if event_type == "signed":
-            self.confirm_student_signature(reference_id)
-        elif event_type == "finished":
-            self.confirm_organization_signature(reference_id)
+        if event_type in ["signed", "finished"]:
+            self.confirm_signature(reference_id)
         else:
             logger.error("'%s' is not an event type that we handle.")
             raise ValidationError(

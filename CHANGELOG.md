@@ -34,6 +34,7 @@ and this project adheres to
   payments of installments that are in the past
 - Deprecated field `has_consent_to_terms` for `Order` model
 - Move signature fields before appendices in contract definition template
+- Update `handle_notification` signature backend to confirm signature 
 
 ### Fixed
 

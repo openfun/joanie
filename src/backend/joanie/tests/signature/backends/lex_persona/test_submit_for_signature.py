@@ -61,8 +61,6 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             "notifiedEvents": [
                 "recipientRefused",
                 "recipientFinished",
-                "workflowStopped",
-                "workflowFinished",
             ],
             "progress": 0,
             "steps": [
@@ -169,7 +167,6 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                         "notifiedEvents": [
                             "recipientRefused",
                             "recipientFinished",
-                            "workflowFinished",
                         ],
                         "watchers": [],
                     }
@@ -357,8 +354,6 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             "notifiedEvents": [
                 "recipientRefused",
                 "recipientFinished",
-                "workflowStopped",
-                "workflowFinished",
             ],
             "progress": 0,
             "steps": [
@@ -487,8 +482,6 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             "notifiedEvents": [
                 "recipientRefused",
                 "recipientFinished",
-                "workflowStopped",
-                "workflowFinished",
             ],
             "progress": 0,
             "steps": [

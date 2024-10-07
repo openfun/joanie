@@ -58,9 +58,7 @@ class OrderLifecycle(BaseAPITestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_SIGNING)
 
         backend = get_signature_backend()
-        backend.confirm_student_signature(
-            reference=order.contract.signature_backend_reference
-        )
+        backend.confirm_signature(reference=order.contract.signature_backend_reference)
 
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)

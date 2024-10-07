@@ -110,7 +110,7 @@ payload = {
     ],
     "notifiedEvents": [
         "recipientRefused",
-        "workflowFinished",
+        "recipientFinished",
     ],
     "watchers": [],
 }
