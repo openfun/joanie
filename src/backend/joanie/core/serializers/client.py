@@ -17,6 +17,7 @@ from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
 from joanie.payment.models import CreditCard
+from joanie.signature.backends import get_signature_backend
 
 
 class AbilitiesModelSerializer(serializers.ModelSerializer):
@@ -446,10 +447,29 @@ class ContractDefinitionSerializer(serializers.ModelSerializer):
 class ContractLightSerializer(serializers.ModelSerializer):
     """Light serializer for Contract model."""
 
+    student_signed_on = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Contract
         fields = ["id", "organization_signed_on", "student_signed_on"]
         read_only_fields = fields
+
+    def get_student_signed_on(self, contract):
+        """
+        Returns if the student has signed the document.
+        """
+        if (
+            contract.submitted_for_signature_on
+            and not contract.student_signed_on
+            and not contract.organization_signed_on
+        ):
+            signature_backend = get_signature_backend()
+            signature_state = signature_backend.get_signature_state(
+                reference_id=contract.signature_backend_reference
+            )
+            return signature_state.get("student")
+
+        return contract.student_signed_on
 
 
 class ContractSerializer(AbilitiesModelSerializer):

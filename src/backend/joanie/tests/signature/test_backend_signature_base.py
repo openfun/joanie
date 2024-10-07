@@ -167,3 +167,24 @@ class BaseSignatureBackendTestCase(TestCase):
         self.assertIsNone(contract.signature_backend_reference)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
+
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.base.BaseSignatureBackend",
+    )
+    def test_backend_signature_base_raise_not_implemented_error_get_signature_state(
+        self,
+    ):
+        """
+        Base backend signature provider should raise NotImplementedError for the method
+        `get_signature_state`.
+        """
+        backend = get_signature_backend()
+
+        with self.assertRaises(NotImplementedError) as context:
+            backend.get_signature_state(reference_id="123")
+
+        self.assertEqual(
+            str(context.exception),
+            "subclasses of BaseSignatureBackend must provide a "
+            "get_signature_state() method.",
+        )

@@ -4799,10 +4799,7 @@
                     },
                     "student_signed_on": {
                         "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "nullable": true,
-                        "title": "Date and time of issuance"
+                        "readOnly": true
                     }
                 },
                 "required": [

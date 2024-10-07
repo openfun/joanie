@@ -667,3 +667,37 @@ class LexPersonaBackend(BaseSignatureBackend):
             )
 
         return response.json()["id"]
+
+    def get_signature_state(self, reference_id: str) -> dict:
+        """
+        Get the signature progress of a signing procedure. It returns a dictionary
+        indicating whether the student and the organization have signed.
+        """
+        timeout = settings.JOANIE_SIGNATURE_TIMEOUT
+        base_url = self.get_setting("BASE_URL")
+        token = self.get_setting("TOKEN")
+        url = f"{base_url}/api/workflows/{reference_id}/"
+        headers = {"Authorization": f"Bearer {token}"}
+
+        response = requests.get(url, headers=headers, timeout=timeout)
+
+        if not response.ok:
+            logger.error(
+                "Lex Persona: Unable to retrieve the signature procedure"
+                " the reference does not exist %s, reason: %s",
+                reference_id,
+                response.json(),
+                extra={
+                    "url": url,
+                    "response": response.json(),
+                },
+            )
+            raise exceptions.SignatureProcedureNotFound(
+                "Lex Persona: Unable to retrieve the signature procedure"
+                f" the reference does not exist {reference_id}"
+            )
+
+        return {
+            "student": response.json().get("steps")[0].get("isFinished"),
+            "organization": response.json().get("steps")[-1].get("isFinished"),
+        }

@@ -151,3 +151,12 @@ class BaseSignatureBackend:
             "subclasses of BaseSignatureBackend must provide a "
             "update_signatories() method."
         )
+
+    def get_signature_state(self, reference_id: str):
+        """
+        Get the signature status of a contract to see who has signed the document so far.
+        """
+        raise NotImplementedError(
+            "subclasses of BaseSignatureBackend must provide a "
+            "get_signature_state() method."
+        )

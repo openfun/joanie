@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Signature backend can now retrieve the signing progression of a document
 - Debit installment on pending order transition if due date is on current day
 - Display order credit card detail in the back office
 - Send an email reminder to the user when an installment
