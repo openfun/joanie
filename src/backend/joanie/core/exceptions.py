@@ -29,3 +29,10 @@ class CertificateGenerationError(Exception):
     Exception raised when the certificate generation process fails due to the order not meeting
     all specified conditions.
     """
+
+
+class BackendTimeout(Exception):
+    """
+    Exception raised when a backend reaches the timeout set when we are waiting
+    for the response.
+    """

@@ -18,7 +18,7 @@ from parler import models as parler_models
 from urllib3.util import Retry
 
 from joanie.core import enums
-from joanie.core.exceptions import CertificateGenerationError
+from joanie.core.exceptions import BackendTimeout, CertificateGenerationError
 from joanie.core.fields.schedule import OrderPaymentScheduleEncoder
 from joanie.core.flows.order import OrderFlow
 from joanie.core.models.accounts import User
@@ -38,6 +38,7 @@ from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers, webhooks
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.signature.backends import get_signature_backend
+from joanie.signature.exceptions import DeleteSignatureProcedureFailed
 
 logger = logging.getLogger(__name__)
 
@@ -965,9 +966,18 @@ class Order(BaseModel):
         )
 
         if should_be_resubmitted:
-            backend_signature.delete_signing_procedure(
-                contract.signature_backend_reference
-            )
+            # The signature provider may delay confirming deletion. If timeout occurs, reset
+            # submission values, as the signature provider will delete them. In an edge case, the
+            # reference `contract.signature_backend_reference` cannot be used and may already
+            # be deleted causing a 'not found' error from the signature provider.
+            try:
+                backend_signature.delete_signing_procedure(
+                    contract.signature_backend_reference
+                )
+            except (BackendTimeout, DeleteSignatureProcedureFailed):
+                pass
+            contract.reset_submission_for_signature()
+            was_already_submitted = False
 
         # We want to submit or re-submit the contract for signature in three cases:
         # 1- the contract was never submitted for signature before

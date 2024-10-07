@@ -6,9 +6,12 @@ from django.test import TestCase
 from django.test.utils import override_settings
 
 import responses
+from requests.exceptions import ReadTimeout
 
+from joanie.core.exceptions import BackendTimeout
 from joanie.signature import exceptions
 from joanie.signature.backends import get_signature_backend
+from joanie.tests.base import BaseLogMixinTestCase
 
 from . import get_expected_workflow_payload
 
@@ -23,7 +26,7 @@ from . import get_expected_workflow_payload
     JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     JOANIE_SIGNATURE_TIMEOUT=3,
 )
-class LexPersonaBackendTestCase(TestCase):
+class LexPersonaBackendTestCase(TestCase, BaseLogMixinTestCase):
     """Test suite for Lex Persona Signature provider Backend delete_signing_procedure."""
 
     @responses.activate
@@ -92,3 +95,43 @@ class LexPersonaBackendTestCase(TestCase):
             responses.calls[0].request.headers["Authorization"], "Bearer token_id_fake"
         )
         self.assertEqual(responses.calls[0].request.method, "DELETE")
+
+    @responses.activate
+    def test_backend_lex_persona_delete_signing_procedure_reaches_timeout(self):
+        """
+        When deleting a signature procedure requests reaches a `ReadTimeout`, it should raise
+        a `BackendTimeOut` with the error message mentioning that it takes a while for the
+        signature provider to delete the reference on their side. We should also see log messages
+        that mentions the reference being deleted.
+        """
+        backend = get_signature_backend()
+
+        responses.add(
+            responses.DELETE,
+            "https://lex_persona.test01.com/api/workflows/wfl_id_fake",
+            body=ReadTimeout(
+                "Deletion request is taking longer than expected for reference: wfl_id_fake"
+            ),
+        )
+
+        with self.assertRaises(BackendTimeout) as context:
+            with self.assertLogs("joanie") as logger:
+                backend.delete_signing_procedure(reference_id="wfl_id_fake")
+
+        self.assertEqual(
+            str(context.exception),
+            "Deletion request is taking longer than expected for reference: wfl_id_fake",
+        )
+
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "ERROR",
+                    "Deletion request is taking longer than expected for reference: wfl_id_fake",
+                    {
+                        "signature_backend_reference": str,
+                    },
+                )
+            ],
+        )
