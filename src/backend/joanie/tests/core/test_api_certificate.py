@@ -86,7 +86,7 @@ class CertificateApiTest(BaseAPITestCase):
             certificate_definition__template=enums.CERTIFICATE,
         )
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(19):
             response = self.client.get(
                 "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -319,13 +319,15 @@ class CertificateApiTest(BaseAPITestCase):
             enrollment=enrollment_3, certificate_definition__template=enums.CERTIFICATE
         )
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(19):
             response = self.client.get(
                 "/api/v1.0/certificates/?type=order",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        expected_results = [other_certificate, certificate_enrollment_1, certificate]
 
         self.assertDictEqual(
             response.json(),
@@ -335,169 +337,141 @@ class CertificateApiTest(BaseAPITestCase):
                 "previous": None,
                 "results": [
                     {
-                        "id": str(other_certificate.id),
+                        "id": str(cert.id),
                         "certificate_definition": {
-                            "description": other_certificate.certificate_definition.description,
-                            "name": other_certificate.certificate_definition.name,
-                            "title": other_certificate.certificate_definition.title,
+                            "description": cert.certificate_definition.description,
+                            "name": cert.certificate_definition.name,
+                            "title": cert.certificate_definition.title,
                         },
-                        "issued_on": format_date(other_certificate.issued_on),
-                        "enrollment": None,
-                        "order": {
-                            "id": str(other_order.id),
-                            "state": other_order.state,
-                            "course": None,
-                            "enrollment": {
-                                "course_run": {
-                                    "course": {
-                                        "code": other_enrollment.course_run.course.code,
-                                        "cover": "_this_field_is_mocked",
-                                        "id": str(
-                                            other_enrollment.course_run.course.id
-                                        ),
-                                        "title": other_enrollment.course_run.course.title,
-                                    },
-                                    "end": format_date(other_enrollment.course_run.end),
-                                    "enrollment_end": format_date(
-                                        other_enrollment.course_run.enrollment_end
-                                    ),
-                                    "enrollment_start": format_date(
-                                        other_enrollment.course_run.enrollment_start
-                                    ),
-                                    "id": str(other_enrollment.course_run.id),
-                                    "languages": other_enrollment.course_run.languages,
-                                    "resource_link": other_enrollment.course_run.resource_link,
-                                    "start": format_date(
-                                        other_enrollment.course_run.start
-                                    ),
-                                    "state": {
-                                        "call_to_action": other_enrollment.course_run.state.get(
-                                            "call_to_action"
-                                        ),
-                                        "datetime": format_date(
-                                            other_enrollment.course_run.state.get(
-                                                "datetime"
-                                            )
-                                        ),
-                                        "priority": other_enrollment.course_run.state.get(
-                                            "priority"
-                                        ),
-                                        "text": other_enrollment.course_run.state.get(
-                                            "text"
-                                        ),
-                                    },
-                                    "title": other_enrollment.course_run.title,
-                                },
-                                "created_on": format_date(other_enrollment.created_on),
-                                "id": str(other_enrollment.id),
-                                "is_active": other_enrollment.is_active,
-                                "state": other_enrollment.state,
-                                "was_created_by_order": other_enrollment.was_created_by_order,
-                            },
-                            "organization": {
-                                "id": str(other_order.organization.id),
-                                "code": other_order.organization.code,
-                                "logo": "_this_field_is_mocked",
-                                "title": other_order.organization.title,
-                                "address": None,
-                                "enterprise_code": other_order.organization.enterprise_code,
-                                "activity_category_code": (
-                                    other_order.organization.activity_category_code
-                                ),
-                                "contact_email": other_order.organization.contact_email,
-                                "contact_phone": other_order.organization.contact_phone,
-                                "dpo_email": other_order.organization.dpo_email,
-                            },
-                            "owner_name": other_certificate.order.owner.username,
-                            "product_title": other_certificate.order.product.title,
-                        },
-                    },
-                    {
-                        "id": str(certificate_enrollment_1.id),
-                        "certificate_definition": {
-                            "description": "",
-                            "name": certificate_enrollment_1.certificate_definition.name,
-                            "title": certificate_enrollment_1.certificate_definition.title,
-                        },
-                        "issued_on": format_date(certificate_enrollment_1.issued_on),
-                        "order": None,
+                        "issued_on": format_date(cert.issued_on),
                         "enrollment": {
                             "course_run": {
                                 "course": {
-                                    "code": enrollment_1.course_run.course.code,
+                                    "code": cert.enrollment.course_run.course.code,
                                     "cover": "_this_field_is_mocked",
-                                    "id": str(enrollment_1.course_run.course.id),
-                                    "title": enrollment_1.course_run.course.title,
+                                    "id": str(cert.enrollment.course_run.course.id),
+                                    "title": cert.enrollment.course_run.course.title,
                                 },
-                                "end": format_date(enrollment_1.course_run.end),
+                                "end": format_date(cert.enrollment.course_run.end),
                                 "enrollment_end": format_date(
-                                    enrollment_1.course_run.enrollment_end
+                                    cert.enrollment.course_run.enrollment_end
                                 ),
                                 "enrollment_start": format_date(
-                                    enrollment_1.course_run.enrollment_start
+                                    cert.enrollment.course_run.enrollment_start
                                 ),
-                                "id": str(enrollment_1.course_run.id),
-                                "languages": enrollment_1.course_run.languages,
-                                "resource_link": enrollment_1.course_run.resource_link,
-                                "start": format_date(enrollment_1.course_run.start),
+                                "id": str(cert.enrollment.course_run.id),
+                                "languages": cert.enrollment.course_run.languages,
+                                "resource_link": cert.enrollment.course_run.resource_link,
+                                "start": format_date(cert.enrollment.course_run.start),
                                 "state": {
-                                    "call_to_action": enrollment_1.course_run.state.get(
+                                    "call_to_action": cert.enrollment.course_run.state.get(
                                         "call_to_action"
                                     ),
                                     "datetime": format_date(
-                                        enrollment_1.course_run.state.get("datetime")
+                                        cert.enrollment.course_run.state.get("datetime")
                                     ),
-                                    "priority": enrollment_1.course_run.state.get(
+                                    "priority": cert.enrollment.course_run.state.get(
                                         "priority"
                                     ),
-                                    "text": enrollment_1.course_run.state.get("text"),
+                                    "text": cert.enrollment.course_run.state.get(
+                                        "text"
+                                    ),
                                 },
-                                "title": enrollment_1.course_run.title,
+                                "title": cert.enrollment.course_run.title,
                             },
-                            "created_on": format_date(enrollment_1.created_on),
-                            "id": str(enrollment_1.id),
-                            "is_active": enrollment_1.is_active,
-                            "state": enrollment_1.state,
-                            "was_created_by_order": enrollment_1.was_created_by_order,
-                        },
-                    },
-                    {
-                        "id": str(certificate.id),
-                        "certificate_definition": {
-                            "description": certificate.certificate_definition.description,
-                            "name": certificate.certificate_definition.name,
-                            "title": certificate.certificate_definition.title,
-                        },
-                        "issued_on": format_date(certificate.issued_on),
-                        "enrollment": None,
+                            "created_on": format_date(cert.enrollment.created_on),
+                            "id": str(cert.enrollment.id),
+                            "is_active": cert.enrollment.is_active,
+                            "state": cert.enrollment.state,
+                            "was_created_by_order": cert.enrollment.was_created_by_order,
+                        }
+                        if cert.enrollment
+                        else None,
                         "order": {
-                            "id": str(order.id),
-                            "state": order.state,
+                            "id": str(cert.order.id),
+                            "state": cert.order.state,
                             "course": {
-                                "id": str(order.course.id),
-                                "code": order.course.code,
-                                "title": order.course.title,
+                                "id": str(cert.order.course.id),
+                                "code": cert.order.course.code,
+                                "title": cert.order.course.title,
                                 "cover": "_this_field_is_mocked",
-                            },
-                            "enrollment": None,
-                            "organization": {
-                                "id": str(order.organization.id),
-                                "code": order.organization.code,
-                                "logo": "_this_field_is_mocked",
-                                "title": order.organization.title,
-                                "address": None,
-                                "enterprise_code": order.organization.enterprise_code,
-                                "activity_category_code": (
-                                    order.organization.activity_category_code
+                            }
+                            if cert.order.course
+                            else None,
+                            "enrollment": {
+                                "course_run": {
+                                    "course": {
+                                        "code": cert.order.enrollment.course_run.course.code,
+                                        "cover": "_this_field_is_mocked",
+                                        "id": str(
+                                            cert.order.enrollment.course_run.course.id
+                                        ),
+                                        "title": cert.order.enrollment.course_run.course.title,
+                                    },
+                                    "end": format_date(
+                                        cert.order.enrollment.course_run.end
+                                    ),
+                                    "enrollment_end": format_date(
+                                        cert.order.enrollment.course_run.enrollment_end
+                                    ),
+                                    "enrollment_start": format_date(
+                                        cert.order.enrollment.course_run.enrollment_start
+                                    ),
+                                    "id": str(cert.order.enrollment.course_run.id),
+                                    "languages": cert.order.enrollment.course_run.languages,
+                                    "resource_link": cert.order.enrollment.course_run.resource_link,
+                                    "start": format_date(
+                                        cert.order.enrollment.course_run.start
+                                    ),
+                                    "state": {
+                                        "call_to_action": cert.order.enrollment.course_run.state.get(  # pylint: disable=line-too-long
+                                            "call_to_action"
+                                        ),
+                                        "datetime": format_date(
+                                            cert.order.enrollment.course_run.state.get(
+                                                "datetime"
+                                            )
+                                        ),
+                                        "priority": cert.order.enrollment.course_run.state.get(
+                                            "priority"
+                                        ),
+                                        "text": cert.order.enrollment.course_run.state.get(
+                                            "text"
+                                        ),
+                                    },
+                                    "title": cert.order.enrollment.course_run.title,
+                                },
+                                "created_on": format_date(
+                                    cert.order.enrollment.created_on
                                 ),
-                                "contact_email": order.organization.contact_email,
-                                "contact_phone": order.organization.contact_phone,
-                                "dpo_email": order.organization.dpo_email,
+                                "id": str(cert.order.enrollment.id),
+                                "is_active": cert.order.enrollment.is_active,
+                                "state": cert.order.enrollment.state,
+                                "was_created_by_order": cert.order.enrollment.was_created_by_order,
+                            }
+                            if cert.order.enrollment
+                            else None,
+                            "organization": {
+                                "id": str(cert.order.organization.id),
+                                "code": cert.order.organization.code,
+                                "logo": "_this_field_is_mocked",
+                                "title": cert.order.organization.title,
+                                "address": None,
+                                "enterprise_code": cert.order.organization.enterprise_code,
+                                "activity_category_code": (
+                                    cert.order.organization.activity_category_code
+                                ),
+                                "contact_email": cert.order.organization.contact_email,
+                                "contact_phone": cert.order.organization.contact_phone,
+                                "dpo_email": cert.order.organization.dpo_email,
                             },
-                            "owner_name": certificate.order.owner.username,
-                            "product_title": certificate.order.product.title,
-                        },
-                    },
+                            "owner_name": cert.order.owner.username,
+                            "product_title": cert.order.product.title,
+                        }
+                        if cert.order
+                        else None,
+                    }
+                    for cert in expected_results
                 ],
             },
         )
@@ -558,7 +532,7 @@ class CertificateApiTest(BaseAPITestCase):
             certificate_definition__template=enums.CERTIFICATE,
         )
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 "/api/v1.0/certificates/?type=enrollment",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

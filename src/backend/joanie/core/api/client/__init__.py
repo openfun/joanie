@@ -734,14 +734,10 @@ class CertificateViewSet(
     serializer_class = serializers.CertificateSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_class = filters.CertificateViewSetFilter
-    queryset = models.Certificate.objects.all().select_related(
-        "certificate_definition",
-        "order__course",
-        "order__enrollment__course_run__course",
-        "order__organization",
-        "order__owner",
-        "order__product",
-        "enrollment__course_run__course",
+    queryset = (
+        models.Certificate.objects.all()
+        .defer("localized_context", "images")
+        .select_related("certificate_definition")
     )
 
     def get_username(self):
