@@ -353,11 +353,11 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
             first_name="John",
             last_name="Doe",
             email="john.doe@acme.org",
-            language="fr-fr",
+            language="en-us",
         )
         UserAddressFactory(owner=owner_1)
         owner_2 = UserFactory(
-            first_name="Sam", last_name="Doe", email="sam@fun-test.fr", language="fr-fr"
+            first_name="Sam", last_name="Doe", email="sam@fun-test.fr", language="en-us"
         )
         UserAddressFactory(owner=owner_2)
         order_1 = OrderGeneratorFactory(
@@ -431,7 +431,7 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIn(f"Hello {fullname_1}", email_content_1)
         self.assertIn("installment will be withdrawn on 2 days", email_content_1)
         self.assertIn("We will try to debit an amount of", email_content_1)
-        self.assertIn("3,5", email_content_1)
+        self.assertIn("3.5", email_content_1)
         self.assertIn("Product 1", email_content_1)
 
         # Trigger now the task `send_mail_reminder_installment_debit_task` for order_2
@@ -447,5 +447,5 @@ class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
         self.assertIn(f"Hello {fullname_2}", email_content_2)
         self.assertIn("installment will be withdrawn on 2 days", email_content_2)
         self.assertIn("We will try to debit an amount of", email_content_2)
-        self.assertIn("1,5", email_content_2)
+        self.assertIn("1.5", email_content_2)
         self.assertIn("Product 2", email_content_2)

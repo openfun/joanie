@@ -49,16 +49,27 @@ class BasePaymentTestCase(TestCase):
         # Check we send it to the right email
         self.assertEqual(mail.outbox[0].to[0], email)
 
-        self.assertIn("An installment debit has failed", mail.outbox[0].subject)
-
         # Check body
         email_content = " ".join(mail.outbox[0].body.split())
         fullname = order.owner.get_full_name()
-        self.assertIn(f"Hello {fullname}", email_content)
-        self.assertIn("installment debit has failed.", email_content)
-        self.assertIn(
-            "Please correct the failed payment as soon as possible using", email_content
-        )
+
+        if "fr" in order.owner.language:
+            self.assertRegex(
+                mail.outbox[0].subject,
+                "Le prélèvement d'une échéance d'un montant de .* a échoué",
+            )
+            self.assertIn(f"Bonjour {fullname}", email_content)
+            self.assertIn(
+                "Merci de régulariser le paiement en échec dès que possible depuis de",
+                email_content,
+            )
+        else:
+            self.assertIn("An installment debit has failed", mail.outbox[0].subject)
+            self.assertIn(f"Hello {fullname}", email_content)
+            self.assertIn(
+                "Please correct the failed payment as soon as possible using",
+                email_content,
+            )
         # Check the product title is in the correct language
         with switch_language(order.product, order.owner.language):
             self.assertIn(order.product.title, email_content)
