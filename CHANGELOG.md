@@ -22,6 +22,7 @@ and this project adheres to
   paid
 - Support of payment_schedule for certificate products
 - Display payment schedule in contract template
+- Add index on `template` field of the `CertificateDefinition` model
 
 ### Changed
 

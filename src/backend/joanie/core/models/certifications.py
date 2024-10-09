@@ -37,6 +37,7 @@ class CertificateDefinition(parler_models.TranslatableModel, BaseModel):
         _("template to generate pdf"),
         choices=enums.CERTIFICATE_NAME_CHOICES,
         max_length=255,
+        db_index=True,
         blank=True,
         null=True,
     )
