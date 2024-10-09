@@ -53,12 +53,13 @@ class CertificateViewSetFilter(filters.FilterSet):
         if value == enums.CERTIFICATE_ORDER_TYPE:
             # Retrieve all certificates that belong to orders of the user
             # and also legacy degrees linked to an enrollment
+
             return queryset.filter(
-                Q(order__owner__username=username)
-                | (
-                    Q(enrollment__user__username=username)
-                    & Q(certificate_definition__template=enums.DEGREE)
+                Q(
+                    enrollment__user__username=username,
+                    certificate_definition__template=enums.DEGREE,
                 )
+                | Q(order__owner__username=username)
             )
 
         if value == enums.CERTIFICATE_ENROLLMENT_TYPE:

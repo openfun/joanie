@@ -38,6 +38,7 @@ and this project adheres to
 - Deprecated field `has_consent_to_terms` for `Order` model
 - Move signature fields before appendices in contract definition template
 - Update `handle_notification` signature backend to confirm signature 
+- Improve performance of the certificate client API endpoint
 
 ### Fixed
 
