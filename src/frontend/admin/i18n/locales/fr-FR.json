@@ -11,6 +11,14 @@
     "description": "None value label for the BasicSelect",
     "message": "Aucun"
   },
+  "components.presentational.card.CreditCard.expired": {
+    "description": "Expired label",
+    "message": "Expirée"
+  },
+  "components.presentational.card.CreditCard.paymentMethod": {
+    "description": "Payment method label",
+    "message": "Moyen de paiement"
+  },
   "components.presentational.dnd.DndList.emptyList": {
     "description": "Text when the drag n drop list is empty",
     "message": "Aucune ligne à afficher, cliquez sur Ajouter pour en ajouter une"
@@ -683,14 +691,6 @@
     "description": "Enrollment field",
     "message": "{courseRunTitle} ({courseRunState}) inscrit le : {registerOn}"
   },
-  "components.templates.orders.view.hasConsentToTerms": {
-    "description": "Text for the has consent to term label",
-    "message": "L'utilisateur a accepté les conditions générales de vente lors de l'achat"
-  },
-  "components.templates.orders.view.hasNotConsentToTerms": {
-    "description": "Text for the has consent to term label",
-    "message": "L'utilisateur n'a pas accepté les conditions générales de vente lors de l'achat"
-  },
   "components.templates.orders.view.invoiceBalance": {
     "description": "Invoice balance field",
     "message": "Solde"
@@ -723,6 +723,10 @@
     "description": "Invoice updated on field",
     "message": "Modifié le"
   },
+  "components.templates.orders.view.noPaymentMethod": {
+    "description": "Message displayed when order has no payment method",
+    "message": "Aucun moyen de paiement n'a été défini."
+  },
   "components.templates.orders.view.orderDetailsSectionAlert": {
     "description": "Text for the order details alert",
     "message": "Dans cette vue, vous pouvez voir les détails d'une commande, comme son propriétaire, son statut, etc."
@@ -735,25 +739,49 @@
     "description": "Order group field",
     "message": "Groupe de commande"
   },
+  "components.templates.orders.view.orderStatesMessages.assigned": {
+    "description": "Text for assigned order state",
+    "message": "Assignée"
+  },
   "components.templates.orders.view.orderStatesMessages.canceled": {
     "description": "Text for canceled order state",
     "message": "Annulée"
+  },
+  "components.templates.orders.view.orderStatesMessages.completed": {
+    "description": "Text for completed order state",
+    "message": "Complétée"
   },
   "components.templates.orders.view.orderStatesMessages.draft": {
     "description": "Text for draft order state",
     "message": "Brouillon"
   },
+  "components.templates.orders.view.orderStatesMessages.failed_payment": {
+    "description": "Text for failed payment order state",
+    "message": "Paiement échoué"
+  },
+  "components.templates.orders.view.orderStatesMessages.no_payment": {
+    "description": "Text for no payment order state",
+    "message": "Aucun paiement"
+  },
   "components.templates.orders.view.orderStatesMessages.pending": {
     "description": "Text for pending order state",
     "message": "En attente"
   },
-  "components.templates.orders.view.orderStatesMessages.submitted": {
-    "description": "Text for submitted order state",
-    "message": "Soumise"
+  "components.templates.orders.view.orderStatesMessages.pending_payment": {
+    "description": "Text for pending payment order state",
+    "message": "En attente de paiement"
   },
-  "components.templates.orders.view.orderStatesMessages.validated": {
-    "description": "Text for validated order state",
-    "message": "Validée"
+  "components.templates.orders.view.orderStatesMessages.signing": {
+    "description": "Text for signing order state",
+    "message": "En cours de signature"
+  },
+  "components.templates.orders.view.orderStatesMessages.to_save_payment_method": {
+    "description": "Text for to save payment method order state",
+    "message": "Moyen de paiement à définir"
+  },
+  "components.templates.orders.view.orderStatesMessages.to_sign": {
+    "description": "Text for to sign order state",
+    "message": "À signer"
   },
   "components.templates.orders.view.orderStatus.paid": {
     "description": "Text for paid status",
@@ -786,6 +814,10 @@
   "components.templates.orders.view.owner": {
     "description": "Owner field",
     "message": "Propriétaire"
+  },
+  "components.templates.orders.view.paymentSchedule": {
+    "description": "Payment schedule title",
+    "message": "Échéancier"
   },
   "components.templates.orders.view.price": {
     "description": "Price field",

@@ -460,6 +460,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         order = OrderFactory(
+            owner__language="en-us",
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
