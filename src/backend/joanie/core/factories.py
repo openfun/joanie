@@ -29,7 +29,7 @@ from joanie.core.models import (
     ProductTargetCourseRelation,
 )
 from joanie.core.serializers import AddressSerializer
-from joanie.core.utils import contract_definition, file_checksum
+from joanie.core.utils import contract_definition, file_checksum, payment_schedule
 from joanie.core.utils.payment_schedule import (
     convert_amount_str_to_money_object,
     convert_date_str_to_date_object,
@@ -775,6 +775,7 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             enums.ORDER_STATE_FAILED_PAYMENT,
             enums.ORDER_STATE_COMPLETED,
             enums.ORDER_STATE_CANCELED,
+            enums.ORDER_STATE_REFUND,
         ]:
             if not self.product.contract_definition:
                 self.product.contract_definition = ContractDefinitionFactory()
@@ -838,6 +839,7 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             enums.ORDER_STATE_FAILED_PAYMENT,
             enums.ORDER_STATE_COMPLETED,
             enums.ORDER_STATE_CANCELED,
+            enums.ORDER_STATE_REFUND,
         ]:
             from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
                 CreditCardFactory,
@@ -929,6 +931,7 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 enums.ORDER_STATE_NO_PAYMENT,
                 enums.ORDER_STATE_FAILED_PAYMENT,
                 enums.ORDER_STATE_COMPLETED,
+                enums.ORDER_STATE_REFUND,
             ]
             and not self.is_free
         ):
@@ -936,7 +939,10 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 TransactionFactory,
             )
 
-            if target_state == enums.ORDER_STATE_PENDING_PAYMENT:
+            if target_state in [
+                enums.ORDER_STATE_PENDING_PAYMENT,
+                enums.ORDER_STATE_REFUND,
+            ]:
                 self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
                 # Create related transactions when an installment is paid
                 TransactionFactory(
@@ -978,6 +984,14 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
 
         if target_state == enums.ORDER_STATE_CANCELED:
             self.flow.cancel()
+
+        if (
+            self.state == enums.ORDER_STATE_PENDING_PAYMENT
+            and target_state == enums.ORDER_STATE_REFUND
+            and payment_schedule.has_installment_paid(self)
+        ):
+            self.flow.cancel()
+            self.flow.refund()
 
     @factory.post_generation
     # pylint: disable=method-hidden
@@ -1257,6 +1271,7 @@ class ActivityLogFactory(factory.django.DjangoModelFactory):
         if self.type in [
             enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
             enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
+            enums.ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED,
         ]:
             return {"order_id": str(factory.Faker("uuid4"))}
         return {}

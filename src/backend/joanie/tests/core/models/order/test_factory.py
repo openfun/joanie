@@ -13,6 +13,7 @@ from joanie.core.enums import (
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_REFUND,
     ORDER_STATE_SIGNING,
     ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
     ORDER_STATE_TO_SIGN,
@@ -36,7 +37,7 @@ from joanie.payment.models import Invoice, Transaction
 class TestOrderGeneratorFactory(TestCase):
     """Test suite for the OrderGeneratorFactory."""
 
-    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    # pylint: disable=too-many-arguments
     # ruff: noqa: PLR0913
     def check_order(
         self,
@@ -304,6 +305,23 @@ class TestOrderGeneratorFactory(TestCase):
             self.assertEqual(order.main_invoice.total, 100)
         self.assertEqual(Transaction.objects.filter(invoice__order=order).count(), 4)
         self.assertEqual(Invoice.objects.filter(parent=order.main_invoice).count(), 4)
+
+    def test_factory_order_state_refund(self):
+        """
+        When passing the state `refund` to the `OrderGeneratorFactory`, it should
+        create an order with a payment schedule where 1 installment has been paid.
+        """
+        order = self.check_order(
+            ORDER_STATE_REFUND,
+            has_organization=True,
+            has_unsigned_contract=False,
+            is_free=False,
+            has_payment_method=True,
+        )
+
+        self.assertEqual(order.state, "refund")
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
 
 
 class TestOrderFactory(TestCase):
