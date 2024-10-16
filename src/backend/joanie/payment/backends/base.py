@@ -151,8 +151,13 @@ class BasePaymentBackend:
             )
             emails.send(
                 subject=_(
-                    f"{settings.JOANIE_CATALOG_NAME} - {product_title} - An installment debit "
-                    f"has failed {installment_amount} {settings.DEFAULT_CURRENCY}"
+                    "{catalog_name} - {product_title} - An installment debit has failed "
+                    "{installment_amount:.2f} {currency}"
+                ).format(
+                    catalog_name=settings.JOANIE_CATALOG_NAME,
+                    product_title=product_title,
+                    installment_amount=installment_amount,
+                    currency=settings.DEFAULT_CURRENCY,
                 ),
                 template_vars=emails.prepare_context_data(
                     order,
