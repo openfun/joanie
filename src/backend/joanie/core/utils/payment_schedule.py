@@ -5,6 +5,7 @@ Payment schedule utility functions.
 import logging
 import uuid
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.conf import settings
 from django.utils import timezone
@@ -19,6 +20,7 @@ from joanie.core import enums
 from joanie.core.exceptions import InvalidConversionError
 from joanie.core.utils.emails import prepare_context_for_upcoming_installment, send
 from joanie.payment import get_country_calendar
+from joanie.payment.models import Invoice, Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -223,3 +225,87 @@ def send_mail_reminder_for_installment_debit(order, installment):
             template_name="installment_reminder",
             to_user_email=order.owner.email,
         )
+
+
+def has_installment_paid(order):
+    """
+    Check if at least 1 installment is paid in the payment schedule.
+    """
+    return not order.is_free and any(
+        installment.get("state") == enums.PAYMENT_STATE_PAID
+        for installment in order.payment_schedule
+    )
+
+
+def get_paid_transactions(order):
+    """
+    Return a transactions queryset that are made from the order on paid installments.
+    """
+    return (
+        Transaction.objects.filter(
+            invoice__order=order,
+            invoice__parent__isnull=False,
+        )
+        .distinct()
+        .order_by("created_on")
+        .select_related("invoice__order")
+    )
+
+
+def get_installment_matching_transaction_amount(order, transaction):
+    """
+    Return the installment that matches the transaction amount of an order's payment schedule.
+    """
+    return next(
+        (
+            installment
+            for installment in order.payment_schedule
+            if (
+                installment["state"] == enums.PAYMENT_STATE_PAID
+                and installment["amount"] == transaction.total
+            )
+        ),
+        None,
+    )
+
+
+def get_refundable_transactions(order) -> dict:
+    """
+    Returns a dictionary with transaction reference as key and the amount of the installment
+    that is eligible to refund in an order's payment schedule.
+    """
+    refund_items = {}
+    for transaction in get_paid_transactions(order):
+        matching_installment = get_installment_matching_transaction_amount(
+            order, transaction
+        )
+        if matching_installment and transaction.reference not in refund_items:
+            refund_items[transaction.reference] = matching_installment["amount"]
+    return refund_items
+
+
+def handle_refunded_transaction(
+    invoice,
+    amount: Decimal,
+    refund_reference: str,
+    is_transaction_canceled: bool,
+):
+    """
+    Handle the refund of an installment by creating a credit note, a transaction to reflect
+    the cash movement.
+    """
+    # Create the credit note
+    credit_note = Invoice.objects.create(
+        order=invoice.order,
+        parent=invoice.order.main_invoice,
+        total=-amount,
+        recipient_address=invoice.recipient_address,
+    )
+    # Create the transaction of the refund
+    Transaction.objects.create(
+        total=credit_note.total,
+        invoice=credit_note,
+        reference=refund_reference
+        if not is_transaction_canceled
+        else f"cancel_{refund_reference}",
+    )

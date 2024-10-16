@@ -70,6 +70,7 @@ ORDER_STATE_PENDING_PAYMENT = "pending_payment"  # payment is pending
 ORDER_STATE_FAILED_PAYMENT = "failed_payment"  # last payment has failed
 ORDER_STATE_NO_PAYMENT = "no_payment"  # no payment has been made
 ORDER_STATE_COMPLETED = "completed"  # is completed
+ORDER_STATE_REFUND = "refund"  # order payments were refund
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_DRAFT, _("Draft")),  # default
@@ -95,6 +96,7 @@ ORDER_STATE_CHOICES = (
         ORDER_STATE_COMPLETED,
         pgettext_lazy("As in: the order is completed.", "Completed"),
     ),
+    (ORDER_STATE_REFUND, pgettext_lazy("As in: the order is refund", "Refund")),
 )
 ORDER_STATE_ALLOW_ENROLLMENT = (
     ORDER_STATE_COMPLETED,
@@ -176,19 +178,23 @@ ACTIVITY_LOG_LEVEL_CHOICES = (
 ACTIVITY_LOG_TYPE_NOTIFICATION = "notification"
 ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED = "payment_succeeded"
 ACTIVITY_LOG_TYPE_PAYMENT_FAILED = "payment_failed"
+ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED = "payment_refunded"
 
 ACTIVITY_LOG_TYPE_CHOICES = (
     (ACTIVITY_LOG_TYPE_NOTIFICATION, _("Notification")),
     (ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED, _("Payment succeeded")),
     (ACTIVITY_LOG_TYPE_PAYMENT_FAILED, _("Payment failed")),
+    (ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED, _("Payment refunded")),
 )
 
 PAYMENT_STATE_PENDING = "pending"
 PAYMENT_STATE_PAID = "paid"
 PAYMENT_STATE_REFUSED = "refused"
+PAYMENT_STATE_REFUNDED = "refunded"
 
 PAYMENT_STATE_CHOICES = (
     (PAYMENT_STATE_PENDING, _("Pending")),
     (PAYMENT_STATE_PAID, _("Paid")),
     (PAYMENT_STATE_REFUSED, _("Refused")),
+    (PAYMENT_STATE_REFUNDED, _("Refunded")),
 )

@@ -11,6 +11,9 @@ from payplug import notifications
 from payplug.exceptions import BadRequest, Forbidden, NotFound, UnknownAPIResource
 
 from joanie.core.models import Order
+from joanie.core.utils.payment_schedule import (
+    get_installment_matching_transaction_amount,
+)
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.models import CreditCard, Transaction
@@ -135,10 +138,16 @@ class PayplugBackend(BasePaymentBackend):
                 f"Payment {resource.payment_id} does not exist."
             ) from error
 
+        installment = get_installment_matching_transaction_amount(
+            payment.invoice.order, payment
+        )
+
         self._do_on_refund(
             amount=D(f"{resource.amount / 100:.2f}"),
             invoice=payment.invoice,
             refund_reference=resource.id,
+            installment_id=installment["id"],
+            is_transaction_canceled=False,
         )
 
     def create_payment(self, order, installment, billing_address):
@@ -225,7 +234,7 @@ class PayplugBackend(BasePaymentBackend):
                 "Content-Type": "appliation/json",
                 "Payplug-Version": self.configuration.get("api_version"),
             },
-            timeout=10,
+            timeout=settings.JOANIE_PAYMENT_TIMEOUT,
         )
 
         if not response.ok:
@@ -244,3 +253,8 @@ class PayplugBackend(BasePaymentBackend):
             payplug.Payment.abort(payment_id)
         except (Forbidden, NotFound) as error:
             raise exceptions.AbortPaymentFailed(str(error)) from error
+
+    def cancel_or_refund(self, amount, transaction_reference):
+        """
+        Cancel or refund a transaction, nothing to do for Payplug.
+        """

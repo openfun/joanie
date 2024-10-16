@@ -10,8 +10,8 @@ from django.utils.translation import override
 
 from stockholm import Money
 
-from joanie.core.enums import ORDER_STATE_COMPLETED
-from joanie.core.utils import emails
+from joanie.core.enums import ORDER_STATE_COMPLETED, ORDER_STATE_REFUND
+from joanie.core.utils import emails, payment_schedule
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
 
@@ -179,29 +179,27 @@ class BasePaymentBackend:
         cls._send_mail_refused_debit(order, installment_id)
 
     @staticmethod
-    def _do_on_refund(amount, invoice, refund_reference):
+    def _do_on_refund(
+        amount, invoice, refund_reference, installment_id, is_transaction_canceled=False
+    ):
         """
         Generic actions triggered when a refund has been received.
         Create a credit transaction then cancel the related order if sum of
         credit transactions is equal to the invoice amount.
         """
-
-        # - Create a credit note
-        credit_note = Invoice.objects.create(
-            order=invoice.order,
-            parent=invoice,
-            total=-amount,
-            recipient_address=invoice.recipient_address,
+        payment_schedule.handle_refunded_transaction(
+            invoice=invoice,
+            amount=amount,
+            refund_reference=refund_reference,
+            is_transaction_canceled=is_transaction_canceled,
         )
 
-        Transaction.objects.create(
-            total=credit_note.total,
-            invoice=credit_note,
-            reference=refund_reference,
-        )
+        invoice.order.set_installment_refunded(installment_id)
 
-        if invoice.state == INVOICE_STATE_REFUNDED:
-            # order has been fully refunded
+        if (
+            invoice.state == INVOICE_STATE_REFUNDED
+            and invoice.order.state != ORDER_STATE_REFUND
+        ):
             invoice.order.flow.cancel()
 
     @staticmethod
@@ -269,4 +267,12 @@ class BasePaymentBackend:
         """
         raise NotImplementedError(
             "subclasses of BasePaymentBackend must provide a tokenize_card() method."
+        )
+
+    def cancel_or_refund(self, amount: Money, transaction_reference: str):
+        """
+        Method called to cancel or refund installments from an order payment schedule.
+        """
+        raise NotImplementedError(
+            "subclasses of BasePaymentBackend must provide a cancel_or_refund() method."
         )
