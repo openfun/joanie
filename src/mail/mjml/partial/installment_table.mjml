@@ -34,7 +34,7 @@
                 </p>
                 {% elif installment.state == "pending" %}
                 <p style="font-size: 14px; background-color: #B8C7E3; color: #4A5A7B; text-decoration: none; text-align: center; padding: 2px 2px; border-radius: 20px;">
-                  <strong>{% blocktranslate with state=installment.state.capitalize %}{{ state }}</strong>{% endblocktranslate %}
+                  <strong>{% blocktranslate with state=installment.state.capitalize %}{{ state }}{% endblocktranslate %}</strong>
                 </p>
                 {% elif installment.state == "refused" %}
                 <p style="font-size: 14px; background-color: #F3D4AF; color: #7C5D3A; text-decoration: none; text-align: center; padding: 2px 2px; border-radius: 20px;">
