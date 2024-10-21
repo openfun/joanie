@@ -85,6 +85,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     title="CONTRACT DEFINITION 1",
                     description="Contract definition description",
                     body="Articles de la convention",
+                    appendix="Conditions générales de vente",
                     language="en-us",
                 ),
                 title="You will know that you know you don't know",
@@ -126,6 +127,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
+                "appendix": "<p>Conditions générales de vente</p>",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 1",
                 "language": "en-us",
@@ -215,11 +217,13 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             title="CONTRACT DEFINITION 2",
             body="Articles de la convention",
             description="Contract definition description",
+            appendix="Conditions générales de vente",
             language="fr-fr",
         )
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
+                "appendix": "<p>Conditions générales de vente</p>",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 2",
                 "language": "fr-fr",
@@ -292,11 +296,13 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             title="CONTRACT DEFINITION 3",
             description="Contract definition description",
             body="Articles de la convention",
+            appendix="Conditions générales de vente",
             language="fr-fr",
         )
         expected_context = {
             "contract": {
                 "body": "<p>Articles de la convention</p>",
+                "appendix": "<p>Conditions générales de vente</p>",
                 "description": "Contract definition description",
                 "title": "CONTRACT DEFINITION 3",
                 "language": "fr-fr",
