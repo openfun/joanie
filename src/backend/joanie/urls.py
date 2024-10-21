@@ -19,8 +19,9 @@ from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.urls import path, re_path
+from django.urls import include, path, re_path
 
+from debug_toolbar.toolbar import debug_toolbar_urls
 from drf_spectacular.views import (
     SpectacularJSONAPIView,
     SpectacularRedocView,
@@ -106,7 +107,12 @@ if settings.USE_SWAGGER or settings.DEBUG:
                 SpectacularRedocView.as_view(url_name="client-api-schema"),
                 name="redoc-schema",
             ),
+            path(
+                r"^api-auth/",
+                include("rest_framework.urls", namespace="rest_framework"),
+            ),
         ]
         + staticfiles_urlpatterns()
         + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+        + debug_toolbar_urls()
     )

@@ -191,6 +191,11 @@ class Base(Configuration):
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "joanie.core.middleware.JoanieDockerflowMiddleware",
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    ]
+
+    INTERNAL_IPS = [
+        "127.0.0.1",
     ]
 
     AUTHENTICATION_BACKENDS = [
@@ -226,6 +231,7 @@ class Base(Configuration):
         "joanie.edx_imports",
         "joanie.signature",
         "drf_spectacular",
+        "debug_toolbar",
     ]
 
     # Joanie
@@ -315,6 +321,7 @@ class Base(Configuration):
     REST_FRAMEWORK = {
         "DEFAULT_AUTHENTICATION_CLASSES": (
             "joanie.core.authentication.DelegatedJWTAuthentication",
+            "rest_framework.authentication.SessionAuthentication",
         ),
         "DEFAULT_FILTER_BACKENDS": [
             "django_filters.rest_framework.DjangoFilterBackend"
@@ -718,6 +725,23 @@ class Development(Base):
 
     LOGIN_URL = "/admin/login/"
     LOGOUT_URL = "/admin/logout/"
+
+    DEBUG_TOOLBAR_PANELS = [
+        "debug_toolbar.panels.history.HistoryPanel",
+        "debug_toolbar.panels.versions.VersionsPanel",
+        "debug_toolbar.panels.timer.TimerPanel",
+        "debug_toolbar.panels.settings.SettingsPanel",
+        "debug_toolbar.panels.headers.HeadersPanel",
+        "debug_toolbar.panels.request.RequestPanel",
+        "debug_toolbar.panels.sql.SQLPanel",
+        "debug_toolbar.panels.staticfiles.StaticFilesPanel",
+        "debug_toolbar.panels.templates.TemplatesPanel",
+        "debug_toolbar.panels.alerts.AlertsPanel",
+        "debug_toolbar.panels.cache.CachePanel",
+        "debug_toolbar.panels.signals.SignalsPanel",
+        "debug_toolbar.panels.redirects.RedirectsPanel",
+        "debug_toolbar.panels.profiling.ProfilingPanel",
+    ]
 
     USE_SWAGGER = True
 
