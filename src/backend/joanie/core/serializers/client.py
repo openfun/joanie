@@ -1113,11 +1113,11 @@ class OrderSerializer(serializers.ModelSerializer):
     total_currency = serializers.SerializerMethodField(read_only=True)
     organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
     product_id = serializers.SlugRelatedField(
-        queryset=models.Product.objects.all(), slug_field="id", source="product"
+        slug_field="id", source="product", read_only=True
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
     order_group_id = serializers.SlugRelatedField(
-        queryset=models.OrderGroup.objects.all(),
+        read_only=True,
         slug_field="id",
         required=False,
         source="order_group",
