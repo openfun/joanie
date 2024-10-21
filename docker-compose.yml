@@ -1,6 +1,6 @@
 services:
   postgresql:
-    image: postgres:12
+    image: postgres:13
     env_file:
       - env.d/development/postgresql
     ports:
