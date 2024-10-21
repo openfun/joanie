@@ -137,8 +137,11 @@ this template as a base.
                       </div>
                   </div>
               </section>
-              {% if syllabus or student.payment_schedule %}
+              {% if contract.appendix or syllabus or student.payment_schedule %}
                 <h2>{% translate "Appendices" %}</h2>
+              {% endif %}
+              {% if contract.appendix %}
+                {{ contract.appendix|safe }}
               {% endif %}
               {% if student.payment_schedule %}
                 <h3>{% translate "Payment schedule" %}</h3>

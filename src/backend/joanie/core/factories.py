@@ -1128,6 +1128,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
             return {
                 "contract": {
                     "body": self.definition.get_body_in_html(),
+                    "appendix": self.definition.get_appendix_in_html(),
                     "title": self.definition.title,
                 },
                 "course": {

@@ -109,12 +109,14 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     user_address = USER_FALLBACK_ADDRESS
     payment_schedule = None
 
-    contract_body = _("<CONTRACT_BODY>")
+    contract_body = _("&lt;CONTRACT_BODY&gt;")
+    contract_appendix = _("&lt;CONTRACT_APPENDIX&gt;")
     contract_title = _("<CONTRACT_TITLE>")
     contract_description = _("<CONTRACT_DESCRIPTION>")
 
     if contract_definition:
         contract_body = contract_definition.get_body_in_html()
+        contract_appendix = contract_definition.get_appendix_in_html()
         contract_title = contract_definition.title
         contract_description = contract_definition.description
 
@@ -211,6 +213,7 @@ def generate_document_context(contract_definition=None, user=None, order=None):
             "title": contract_title,
             "description": contract_description,
             "body": contract_body,
+            "appendix": contract_appendix,
             "language": contract_language,
         },
         "course": {

@@ -20,6 +20,8 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
     format.
     """
 
+    # ruff : noqa : PLR0915
+    # pylint: disable=too-many-statements
     def test_utils_issuers_contract_definition_generate_document(self):
         """
         Issuer 'generate document' method should generate a contract definition document.
@@ -36,7 +38,10 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             description="Contract Definition Description",
             body="""
             ## Contract Definition Body
-            ## Terms and conditions
+            Lorem ipsum sit body est
+            """,
+            appendix="""
+            ### Terms and conditions
             Terms and Conditions Content
             """,
         )
@@ -155,11 +160,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
 
         # - Contract content should be displayed
         self.assertIn("Contract Definition Body", document_text)
-        self.assertIn("Terms and conditions", document_text)
-        self.assertIn("Terms and Conditions Content", document_text)
+        self.assertIn("Lorem ipsum sit body est", document_text)
 
         # - Appendices title should be displayed
         self.assertIn("Appendices", document_text)
+        self.assertIn("Terms and conditions", document_text)
+        self.assertIn("Terms and Conditions Content", document_text)
         # - Payment schedule should be displayed
         self.assertIn("Payment schedule", document_text)
         self.assertIn("Due date", document_text)
