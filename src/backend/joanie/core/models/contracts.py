@@ -29,6 +29,7 @@ class ContractDefinition(BaseModel):
     title = models.CharField(_("title"), max_length=255)
     description = models.TextField(_("description"), blank=True)
     body = models.TextField(_("body"), blank=True)
+    appendix = models.TextField(_("appendix"), blank=True)
     language = models.CharField(
         max_length=10,
         choices=lazy(lambda: settings.LANGUAGES, tuple)(),
@@ -67,6 +68,12 @@ class ContractDefinition(BaseModel):
         if not self.body:
             return ""
         return markdown.markdown(textwrap.dedent(self.body))
+
+    def get_appendix_in_html(self):
+        """Return the appendix in html format."""
+        if not self.appendix:
+            return ""
+        return markdown.markdown(textwrap.dedent(self.appendix))
 
 
 class Contract(BaseModel):
