@@ -5,6 +5,7 @@ export type ContractDefinition = {
   title: string;
   description?: string;
   body?: string;
+  appendix?: string;
   language: string;
   name: string;
 };
