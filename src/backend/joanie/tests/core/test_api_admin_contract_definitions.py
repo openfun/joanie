@@ -86,6 +86,7 @@ class ContractDefinitionAdminApiTest(TestCase):
                 "results": [
                     {
                         "body": contract_definition_1.body,
+                        "appendix": contract_definition_1.appendix,
                         "description": contract_definition_1.description,
                         "id": str(contract_definition_1.id),
                         "language": contract_definition_1.language,
@@ -200,6 +201,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             content,
             {
                 "body": contract_definition.body,
+                "appendix": contract_definition.appendix,
                 "description": contract_definition.description,
                 "id": str(contract_definition.id),
                 "language": contract_definition.language,

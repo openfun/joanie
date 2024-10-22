@@ -185,6 +185,7 @@ class ProductAdminApiTest(TestCase):
                 "name": contract_definition.name,
                 "language": contract_definition.language,
                 "body": contract_definition.body,
+                "appendix": contract_definition.appendix,
             },
             "target_courses": [
                 {

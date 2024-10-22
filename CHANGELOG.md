@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Add `appendix` field on `ContractDefinition` model
+- Bind `appendix` field to `AdminContractDefinitionSerializer`
 
 ## [2.8.0] - 2024-10-16
 
