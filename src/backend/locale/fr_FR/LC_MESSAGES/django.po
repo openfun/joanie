@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-16 09:22+0000\n"
-"PO-Revision-Date: 2024-10-16 09:46\n"
+"POT-Creation-Date: 2024-10-22 13:22+0000\n"
+"PO-Revision-Date: 2024-10-22 13:29\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -204,7 +204,7 @@ msgid "Enrollment"
 msgstr "Inscription"
 
 #: joanie/core/enums.py:37 joanie/core/enums.py:150
-#: joanie/core/models/certifications.py:116
+#: joanie/core/models/certifications.py:117
 #: joanie/core/templates/issuers/degree.html:27
 msgid "Certificate"
 msgstr "Certificat"
@@ -328,15 +328,15 @@ msgstr "Payée"
 msgid "Refused"
 msgstr "Refusé"
 
-#: joanie/core/factories.py:1141 joanie/core/utils/contract_definition.py:101
+#: joanie/core/factories.py:1142 joanie/core/utils/contract_definition.py:101
 msgid "<COURSE_START_DATE>"
 msgstr "<DATE_DE_DEBUT_DU_COURS>"
 
-#: joanie/core/factories.py:1146 joanie/core/utils/contract_definition.py:102
+#: joanie/core/factories.py:1147 joanie/core/utils/contract_definition.py:102
 msgid "<COURSE_END_DATE>"
 msgstr "<DATE_DE_FIN_DU_COURS>"
 
-#: joanie/core/factories.py:1153
+#: joanie/core/factories.py:1154
 msgid "<EFFORT_DURATION>"
 msgstr "<EFFORT_DU_COURS>"
 
@@ -392,7 +392,7 @@ msgid_plural "%d products to synchronize."
 msgstr[0] "%d produit à synchroniser."
 msgstr[1] "%d produits à synchroniser."
 
-#: joanie/core/models/accounts.py:34 joanie/core/models/contracts.py:35
+#: joanie/core/models/accounts.py:34 joanie/core/models/contracts.py:36
 msgid "language"
 msgstr "langue"
 
@@ -453,7 +453,7 @@ msgstr "nom de famille"
 msgid "owner"
 msgstr "propriétaire"
 
-#: joanie/core/models/accounts.py:171 joanie/core/models/certifications.py:97
+#: joanie/core/models/accounts.py:171 joanie/core/models/certifications.py:98
 #: joanie/core/models/products.py:409
 msgid "organization"
 msgstr "établissement"
@@ -495,7 +495,7 @@ msgid "level"
 msgstr "niveau"
 
 #: joanie/core/models/activity_logs.py:74
-#: joanie/core/models/certifications.py:108 joanie/core/models/contracts.py:96
+#: joanie/core/models/certifications.py:109 joanie/core/models/contracts.py:103
 #: joanie/payment/models.py:74
 msgid "context"
 msgstr "contexte"
@@ -565,37 +565,37 @@ msgstr "description"
 msgid "template to generate pdf"
 msgstr "modèle pour générer le PDF"
 
-#: joanie/core/models/certifications.py:46
-#: joanie/core/models/certifications.py:70
+#: joanie/core/models/certifications.py:47
+#: joanie/core/models/certifications.py:71
 msgid "Certificate definition"
 msgstr "Définition de certificat"
 
-#: joanie/core/models/certifications.py:47
+#: joanie/core/models/certifications.py:48
 msgid "Certificate definitions"
 msgstr "Définitions de certificat"
 
-#: joanie/core/models/certifications.py:65
+#: joanie/core/models/certifications.py:66
 msgid "Date of issuance"
 msgstr "Date de délivrance"
 
-#: joanie/core/models/certifications.py:82 joanie/core/models/contracts.py:86
+#: joanie/core/models/certifications.py:83 joanie/core/models/contracts.py:93
 #: joanie/core/models/products.py:1276 joanie/payment/models.py:54
 msgid "order"
 msgstr "commande"
 
-#: joanie/core/models/certifications.py:91 joanie/core/models/products.py:431
+#: joanie/core/models/certifications.py:92 joanie/core/models/products.py:431
 msgid "enrollment"
 msgstr "inscription"
 
-#: joanie/core/models/certifications.py:102 joanie/core/models/contracts.py:46
+#: joanie/core/models/certifications.py:103 joanie/core/models/contracts.py:47
 msgid "images"
 msgstr "images"
 
-#: joanie/core/models/certifications.py:109
+#: joanie/core/models/certifications.py:110
 msgid "Localized data that needs to be frozen on certificate creation"
 msgstr "Données traduites qui doivent être gelées lors de la création d'un certificat"
 
-#: joanie/core/models/certifications.py:117
+#: joanie/core/models/certifications.py:118
 msgid "Certificates"
 msgstr "Certificats"
 
@@ -603,52 +603,56 @@ msgstr "Certificats"
 msgid "body"
 msgstr "contenu"
 
-#: joanie/core/models/contracts.py:36
+#: joanie/core/models/contracts.py:32
+msgid "appendix"
+msgstr "annexe"
+
+#: joanie/core/models/contracts.py:37
 msgid "Language of the contract definition"
 msgstr "Langue de la définition de contrat"
 
-#: joanie/core/models/contracts.py:39
+#: joanie/core/models/contracts.py:40
 msgid "template name"
 msgstr "nom du modèle"
 
-#: joanie/core/models/contracts.py:54 joanie/core/models/contracts.py:79
+#: joanie/core/models/contracts.py:55 joanie/core/models/contracts.py:86
 #: joanie/core/models/products.py:105
 msgid "Contract definition"
 msgstr "Définition de contrat"
 
-#: joanie/core/models/contracts.py:55
+#: joanie/core/models/contracts.py:56
 msgid "Contract definitions"
 msgstr "Définitions de contrat"
 
-#: joanie/core/models/contracts.py:98
+#: joanie/core/models/contracts.py:105
 msgid "Localized data snapshot on contract signature"
 msgstr "Instantané des données internationalisées à la signature du contrat"
 
-#: joanie/core/models/contracts.py:108
+#: joanie/core/models/contracts.py:115
 msgid "Reference in the external signature backend"
 msgstr "Référence sur la plateforme de signature externe"
 
-#: joanie/core/models/contracts.py:113
+#: joanie/core/models/contracts.py:120
 msgid "Date and time we send the contract to signature provider"
 msgstr "Date et heure d'envoi du contrat sur la plateforme de signature"
 
-#: joanie/core/models/contracts.py:121
+#: joanie/core/models/contracts.py:128
 msgid "Date and time of issuance"
 msgstr "Date et heure de signature du contrat par l'établissement"
 
-#: joanie/core/models/contracts.py:127
+#: joanie/core/models/contracts.py:134
 msgid "organization signatory"
 msgstr "signataire de l'établissement"
 
-#: joanie/core/models/contracts.py:135
+#: joanie/core/models/contracts.py:142
 msgid "Date and time the organization signed the contract"
 msgstr "Date et heure de signature du contrat par l'établissement"
 
-#: joanie/core/models/contracts.py:143
+#: joanie/core/models/contracts.py:150
 msgid "Contract"
 msgstr "Contrat"
 
-#: joanie/core/models/contracts.py:144
+#: joanie/core/models/contracts.py:151
 msgid "Contracts"
 msgstr "Contrats"
 
@@ -1343,7 +1347,7 @@ msgstr "Signature du représentant de l'université :"
 msgid "Appendices"
 msgstr "Annexes"
 
-#: joanie/core/templates/issuers/contract_definition.html:144
+#: joanie/core/templates/issuers/contract_definition.html:147
 #: joanie/core/templates/mail/html/installment_paid.html:259
 #: joanie/core/templates/mail/html/installment_refused.html:235
 #: joanie/core/templates/mail/html/installment_reminder.html:235
@@ -1355,19 +1359,19 @@ msgstr "Annexes"
 msgid "Payment schedule"
 msgstr "Échéancier"
 
-#: joanie/core/templates/issuers/contract_definition.html:148
+#: joanie/core/templates/issuers/contract_definition.html:151
 msgid "Due date"
 msgstr "Date d’échéance"
 
-#: joanie/core/templates/issuers/contract_definition.html:149
+#: joanie/core/templates/issuers/contract_definition.html:152
 msgid "Amount"
 msgstr "Montant"
 
-#: joanie/core/templates/issuers/contract_definition.html:155
+#: joanie/core/templates/issuers/contract_definition.html:158
 msgid "Total :"
 msgstr "Total :"
 
-#: joanie/core/templates/issuers/contract_definition.html:173
+#: joanie/core/templates/issuers/contract_definition.html:176
 msgid "Catalog syllabus"
 msgstr "Syllabus de la formation"
 
@@ -1793,14 +1797,18 @@ msgid "<STUDENT_PHONE_NUMBER>"
 msgstr "<TELEPHONE_APPRENANT>"
 
 #: joanie/core/utils/contract_definition.py:112
-msgid "<CONTRACT_BODY>"
-msgstr "<CONTENU_DU_CONTRAT>"
+msgid "&lt;CONTRACT_BODY&gt;"
+msgstr "&lt;CORPS_DU_CONTRAT&gt;"
 
 #: joanie/core/utils/contract_definition.py:113
+msgid "&lt;CONTRACT_APPENDIX&gt;"
+msgstr "&lt;ANNEXE_DU_CONTRAT&gt;"
+
+#: joanie/core/utils/contract_definition.py:114
 msgid "<CONTRACT_TITLE>"
 msgstr "<TITRE_DU_CONTRAT>"
 
-#: joanie/core/utils/contract_definition.py:114
+#: joanie/core/utils/contract_definition.py:115
 msgid "<CONTRACT_DESCRIPTION>"
 msgstr "<DESCRIPTION_DU_CONTRAT>"
 

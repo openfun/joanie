@@ -38,6 +38,7 @@
   "components.templates.certificatesDefinitions.modals.CreateOrEditCertificationModal.edit": "Modifier le cours \"{name}\"",
   "components.templates.contractDefinition.filters.ContractDefinitionFilters.searchPlaceholder": "Rechercher par titre",
   "components.templates.contractDefinitions.form.RhfContractDefinitionLanguage.languageLabel": "Langue",
+  "components.templates.contractDefinitions.form.appendixLabel": "Annexe",
   "components.templates.contractDefinitions.form.bodyLabel": "Contenu",
   "components.templates.contractDefinitions.form.descriptionLabel": "Description",
   "components.templates.contractDefinitions.form.informationText": "Il s'agit d'un modèle de contrat qui sera utilisé pour émettre des contrats.",

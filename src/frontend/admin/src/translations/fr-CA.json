@@ -38,6 +38,7 @@
   "components.templates.certificatesDefinitions.modals.CreateOrEditCertificationModal.edit": "Edit the \"{name}\" course",
   "components.templates.contractDefinition.filters.ContractDefinitionFilters.searchPlaceholder": "Search by title",
   "components.templates.contractDefinitions.form.RhfContractDefinitionLanguage.languageLabel": "Language",
+  "components.templates.contractDefinitions.form.appendixLabel": "Appendix",
   "components.templates.contractDefinitions.form.bodyLabel": "Body",
   "components.templates.contractDefinitions.form.descriptionLabel": "Description",
   "components.templates.contractDefinitions.form.informationText": "This is a contract template that will be used to issue contracts.",

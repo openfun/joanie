@@ -21,7 +21,7 @@ joanie_nginx_static_cache_expires: "1M"
 
 # -- admin nginx
 joanie_admin_nginx_image_name: "fundocker/joanie-admin"
-joanie_admin_nginx_image_tag: "2.8.0"
+joanie_admin_nginx_image_tag: "2.9.0"
 joanie_admin_nginx_port: 8061
 joanie_admin_nginx_replicas: 1
 joanie_admin_nginx_healthcheck_port: 5000
@@ -41,7 +41,7 @@ joanie_database_secret_name: "joanie-postgresql-{{ joanie_vault_checksum | defau
 
 # -- joanie
 joanie_image_name: "fundocker/joanie"
-joanie_image_tag: "2.8.0"
+joanie_image_tag: "2.9.0"
 # The image pull secret name should match the name of your secret created to
 # login to your private docker registry
 joanie_image_pull_secret_name: ""

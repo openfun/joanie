@@ -8,13 +8,17 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.9.0] - 2024-10-22
+
 ### Added
 
+- Add index on `template` field of the `CertificateDefinition` model
 - Add `appendix` field on `ContractDefinition` model
 - Allow to edit `appendix` `ContractDefinition` field through the back office
 
 ### Changed
 
+- Improve performance of the certificate client API endpoint
 - Make payment backend request timeout configurable
 
 ## [2.8.0] - 2024-10-16
@@ -31,7 +35,6 @@ and this project adheres to
   paid
 - Support of payment_schedule for certificate products
 - Display payment schedule in contract template
-- Add index on `template` field of the `CertificateDefinition` model
 
 ### Changed
 
@@ -46,8 +49,7 @@ and this project adheres to
   payments of installments that are in the past
 - Deprecated field `has_consent_to_terms` for `Order` model
 - Move signature fields before appendices in contract definition template
-- Update `handle_notification` signature backend to confirm signature 
-- Improve performance of the certificate client API endpoint
+- Update `handle_notification` signature backend to confirm signature
 
 ### Fixed
 
@@ -463,7 +465,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.8.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.9.0...main
+[2.9.0]: https://github.com/openfun/joanie/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/openfun/joanie/compare/v2.7.1...v2.8.0
 [2.7.1]: https://github.com/openfun/joanie/compare/v2.7.0...v2.7.1
 [2.7.0]: https://github.com/openfun/joanie/compare/v2.6.1...v2.7.0
