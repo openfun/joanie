@@ -118,7 +118,9 @@ class LyraBackend(BasePaymentBackend):
         logger.info("Calling Lyra API %s", url, extra={"context": context})
 
         try:
-            response = requests.post(url, json=payload, headers=self.headers, timeout=5)
+            response = requests.post(
+                url, json=payload, headers=self.headers, timeout=self.timeout
+            )
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             context = context.copy()

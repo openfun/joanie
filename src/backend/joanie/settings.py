@@ -414,6 +414,9 @@ class Base(Configuration):
             environ_name="JOANIE_PAYMENT_BACKEND",
             environ_prefix=None,
         ),
+        "timeout": values.PositiveIntegerValue(
+            5, environ_name="JOANIE_PAYMENT_TIMEOUT", environ_prefix=None
+        ),
         # Check the docstring of the related payment backend to know
         # which dict to pass here.
         "configuration": values.DictValue(
@@ -745,6 +748,7 @@ class Test(Base):
 
     JOANIE_PAYMENT_BACKEND = {
         "backend": "joanie.payment.backends.dummy.DummyPaymentBackend",
+        "timeout": 5,
     }
 
     JOANIE_SIGNATURE_BACKEND = "joanie.signature.backends.dummy.DummySignatureBackend"
