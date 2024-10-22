@@ -155,6 +155,10 @@
     "description": "Label for the language input",
     "message": "Langue"
   },
+  "components.templates.contractDefinitions.form.appendixLabel": {
+    "description": "Label for the appendix input",
+    "message": "Annexe"
+  },
   "components.templates.contractDefinitions.form.bodyLabel": {
     "description": "Label for the body input",
     "message": "Contenu"
