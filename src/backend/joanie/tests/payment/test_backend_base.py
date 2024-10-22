@@ -88,6 +88,19 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         self.assertEqual(backend.configuration, {"secret": "aDummyPassphraseForTest"})
 
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND={
+            "backend": "joanie.core.payment.backends.dummy.DummyPaymentBackend",
+            "timeout": 42,
+        },
+    )
+    def test_payment_backend_base_request_timeout_is_configurable(self):
+        """
+        The request timeout should be configurable in the settings.
+        """
+        backend = BasePaymentBackend()
+        self.assertEqual(backend.timeout, 42)
+
     def test_payment_backend_base_create_payment_not_implemented(self):
         """Invoke create_payment should raise a Not ImplementedError"""
         backend = BasePaymentBackend()

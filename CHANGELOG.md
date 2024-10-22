@@ -13,6 +13,10 @@ and this project adheres to
 - Add `appendix` field on `ContractDefinition` model
 - Allow to edit `appendix` `ContractDefinition` field through the back office
 
+### Changed
+
+- Make payment backend request timeout configurable
+
 ## [2.8.0] - 2024-10-16
 
 ### Added

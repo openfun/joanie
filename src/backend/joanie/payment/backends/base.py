@@ -27,6 +27,11 @@ class BasePaymentBackend:
 
     name = "base"
 
+    @property
+    def timeout(self):
+        """A class property to get the request timeout value from the settings"""
+        return settings.JOANIE_PAYMENT_BACKEND["timeout"]
+
     def __init__(self, configuration=None):
         self.configuration = configuration
 
