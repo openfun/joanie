@@ -4572,6 +4572,9 @@
                     "body": {
                         "type": "string"
                     },
+                    "appendix": {
+                        "type": "string"
+                    },
                     "description": {
                         "type": "string"
                     },
@@ -4607,6 +4610,9 @@
                 "description": "Serializer for ContractDefinition model.",
                 "properties": {
                     "body": {
+                        "type": "string"
+                    },
+                    "appendix": {
                         "type": "string"
                     },
                     "description": {
@@ -7411,6 +7417,9 @@
                 "description": "Serializer for ContractDefinition model.",
                 "properties": {
                     "body": {
+                        "type": "string"
+                    },
+                    "appendix": {
                         "type": "string"
                     },
                     "description": {

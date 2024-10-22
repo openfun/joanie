@@ -32,7 +32,7 @@ class AdminContractDefinitionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ContractDefinition
-        fields = ("id", "body", "description", "language", "title", "name")
+        fields = ("id", "body", "appendix", "description", "language", "title", "name")
         read_only_fields = ["id"]
 
 
