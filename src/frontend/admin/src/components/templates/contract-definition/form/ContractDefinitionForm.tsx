@@ -56,6 +56,11 @@ const messages = defineMessages({
     defaultMessage: "Body",
     description: "Label for the body input",
   },
+  appendixLabel: {
+    id: "components.templates.contractDefinitions.form.appendixLabel",
+    defaultMessage: "Appendix",
+    description: "Label for the appendix input",
+  },
 });
 
 interface Props {
@@ -81,6 +86,7 @@ export function ContractDefinitionForm({
     title: Yup.string().required(),
     description: Yup.string().required(),
     body: Yup.string().required(),
+    appendix: Yup.string(),
     language: Yup.string().required(),
     name: Yup.string().required(),
   });
@@ -90,6 +96,7 @@ export function ContractDefinitionForm({
       title: defaultContractDefinition?.title ?? "",
       description: removeEOL(defaultContractDefinition?.description),
       body: removeEOL(defaultContractDefinition?.body),
+      appendix: removeEOL(defaultContractDefinition?.appendix),
       name: "contract_definition",
       language: defaultContractDefinition?.language ?? "fr-fr",
     };
@@ -126,6 +133,7 @@ export function ContractDefinitionForm({
   };
 
   const bodyValue = methods.watch("body");
+  const appendixValue = methods.watch("appendix");
 
   return (
     <Box padding={4}>
@@ -169,12 +177,16 @@ export function ContractDefinitionForm({
               />
             </Grid>
             <Grid xs={12}>
-              <Typography variant="subtitle2">
+              <Typography
+                variant="subtitle2"
+                color={methods.formState.errors.body && "error"}
+              >
                 {intl.formatMessage(messages.bodyLabel)}
               </Typography>
             </Grid>
             <Grid xs={12}>
               <MarkdownComponent
+                data-testid="md-editor-body"
                 value={bodyValue ?? ""}
                 onChange={(markdown) => {
                   methods.setValue("body", markdown ?? "", {
@@ -186,6 +198,35 @@ export function ContractDefinitionForm({
               <ErrorMessage
                 errors={methods.formState.errors}
                 name="body"
+                render={(data) => (
+                  <FormHelperText sx={{ marginLeft: "14px" }} error={true}>
+                    {data.message}
+                  </FormHelperText>
+                )}
+              />
+            </Grid>
+            <Grid xs={12}>
+              <Typography
+                variant="subtitle2"
+                color={methods.formState.errors.appendix && "error"}
+              >
+                {intl.formatMessage(messages.appendixLabel)}
+              </Typography>
+            </Grid>
+            <Grid xs={12}>
+              <MarkdownComponent
+                data-testid="md-editor-appendix"
+                value={appendixValue ?? ""}
+                onChange={(markdown) => {
+                  methods.setValue("appendix", markdown ?? "", {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                }}
+              />
+              <ErrorMessage
+                errors={methods.formState.errors}
+                name="appendix"
                 render={(data) => (
                   <FormHelperText sx={{ marginLeft: "14px" }} error={true}>
                     {data.message}

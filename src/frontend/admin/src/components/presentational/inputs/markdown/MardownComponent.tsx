@@ -11,7 +11,7 @@ type Props = {
   onChange: (markdown: Maybe<string>) => void;
 };
 
-export function MarkdownComponent({ value, onChange }: Props) {
+export function MarkdownComponent(props: Props) {
   const [markdownCommands, setMarkdownCommands] =
     useState<typeof import("@uiw/react-md-editor").commands>();
 
@@ -57,7 +57,6 @@ export function MarkdownComponent({ value, onChange }: Props) {
       data-testid="md-editor"
       autoFocus={false}
       height={300}
-      value={value}
       data-color-mode="light"
       commands={[
         bold,
@@ -88,7 +87,7 @@ export function MarkdownComponent({ value, onChange }: Props) {
         orderedListCommand,
         checkedListCommand,
       ]}
-      onChange={onChange}
+      {...props}
     />
   );
 }

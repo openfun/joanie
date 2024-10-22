@@ -198,16 +198,12 @@ test.describe("Product form", () => {
     await page
       .getByLabel("Description", { exact: true })
       .fill("Test contract desc");
-    await page
+    const MdEditorBody = page
       .getByLabel("Add a contract definition")
-      .getByTestId("md-editor")
-      .getByRole("textbox")
-      .click();
-    await page
-      .getByLabel("Add a contract definition")
-      .getByTestId("md-editor")
-      .getByRole("textbox")
-      .fill("> Body");
+      .getByTestId("md-editor-body")
+      .getByRole("textbox");
+    await MdEditorBody.click();
+    await MdEditorBody.fill("> Body");
     await page.getByTestId("submit-button-contract-definition-form").click();
     await expect(
       page.getByRole("heading", { name: "Add a contract" }),

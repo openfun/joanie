@@ -9,6 +9,7 @@ const build = (): ContractDefinition => {
     language: "fr-fr",
     name: "contract_definition",
     body: "### Contract body",
+    appendix: "### Contract appendix",
   };
 };
 

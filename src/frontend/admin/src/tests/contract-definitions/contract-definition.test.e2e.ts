@@ -60,7 +60,11 @@ test.describe("Contract definition form", () => {
     await expect(page.getByLabel("Description")).toHaveCount(1);
     await expect(page.getByRole("heading", { name: "Body" })).toBeVisible();
     await expect(
-      page.getByTestId("md-editor").getByRole("textbox"),
+      page.getByTestId("md-editor-body").getByRole("textbox"),
+    ).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: "Appendix" })).toBeVisible();
+    await expect(
+      page.getByTestId("md-editor-appendix").getByRole("textbox"),
     ).toHaveCount(1);
   });
 
@@ -73,11 +77,16 @@ test.describe("Contract definition form", () => {
     await page.getByRole("option", { name: "English" }).click();
     await page.getByLabel("Description").click();
     await page.getByLabel("Description").fill("Contract description");
-    await page.getByTestId("md-editor").getByRole("textbox").click();
-    await page
-      .getByTestId("md-editor")
-      .getByRole("textbox")
-      .fill("### Body\n\n> Info");
+    const MdEditorBody = page
+      .getByTestId("md-editor-body")
+      .getByRole("textbox");
+    await MdEditorBody.click();
+    await MdEditorBody.fill("### Body\n\n> Info");
+    const MdEditorAppendix = page
+      .getByTestId("md-editor-appendix")
+      .getByRole("textbox");
+    await MdEditorAppendix.click();
+    await MdEditorAppendix.fill("### Appendix\n\n> Info");
     await page.getByRole("button", { name: "Submit" }).click();
 
     await expect(
@@ -176,8 +185,12 @@ test.describe("Contract definition form", () => {
     );
 
     await expect(
-      page.getByTestId("md-editor").getByRole("textbox"),
+      page.getByTestId("md-editor-body").getByRole("textbox"),
     ).toHaveValue(contractDefinition.body ?? "");
+
+    await expect(
+      page.getByTestId("md-editor-appendix").getByRole("textbox"),
+    ).toHaveValue(contractDefinition.appendix ?? "");
   });
 
   test("Use an contract contract definition from the list as a template via its action menu", async ({
@@ -208,7 +221,11 @@ test.describe("Contract definition form", () => {
     );
 
     await expect(
-      page.getByTestId("md-editor").getByRole("textbox"),
-    ).toHaveValue(contractDefinition.body ?? "");
+      page.getByTestId("md-editor-body").getByRole("textbox"),
+    ).toHaveValue(contractDefinition.body!);
+
+    await expect(
+      page.getByTestId("md-editor-appendix").getByRole("textbox"),
+    ).toHaveValue(contractDefinition.appendix!);
   });
 });
