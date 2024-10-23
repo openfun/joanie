@@ -16,9 +16,11 @@ from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
     ORDER_STATE_COMPLETED,
+    ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
+    PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import (
     OrderFactory,
@@ -879,7 +881,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             ).exists()
         )
 
-        # If the installment payment is success, the order state chenges to pending payment
+        # If the installment payment is success, the order state changes to pending payment
         order.refresh_from_db()
         self.assertEqual(order.state, ORDER_STATE_PENDING_PAYMENT)
         # First installment is paid
@@ -1534,6 +1536,115 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             ),
         ]
         self.assertLogsEquals(logger.records, expected_logs)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_lyra_create_zero_click_payment_refused(self):
+        """
+        When a zero click payment is refused, the related order should be updated accordingly.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(
+            email="john.doe@acme.org",
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+        )
+        product = ProductFactory(price=D("10.00"), title="Product 1")
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            owner=owner,
+            product=product,
+        )
+        # Force the installments id to match the stored request
+        first_installment = order.payment_schedule[0]
+        first_installment["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
+        order.save()
+        first_installment_amount = order.payment_schedule[0]["amount"]
+        credit_card = order.credit_card
+
+        with self.open("lyra/responses/create_zero_click_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        json_response["answer"]["transactions"][0]["uuid"] = "first_transaction_id"
+        json_response["answer"]["orderStatus"] = "UNPAID"
+        json_response["answer"]["orderDetails"]["orderTotalAmount"] = int(
+            first_installment_amount.sub_units
+        )
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": int(first_installment_amount * 100),
+                        "currency": "EUR",
+                        "customer": {
+                            "email": "john.doe@acme.org",
+                            "reference": str(owner.id),
+                            "shippingDetails": {
+                                "shippingMethod": "DIGITAL_GOOD",
+                            },
+                        },
+                        "orderId": str(order.id),
+                        "formAction": "SILENT",
+                        "paymentMethodToken": credit_card.token,
+                        "transactionOptions": {
+                            "cardOptions": {
+                                "initialIssuerTransactionIdentifier": credit_card.initial_issuer_transaction_identifier,
+                            }
+                        },
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                        "metadata": {
+                            "installment_id": order.payment_schedule[0]["id"],
+                        },
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.create_zero_click_payment(
+            order, order.payment_schedule[0], credit_card.token
+        )
+
+        self.assertFalse(response)
+
+        # Invoices are not created
+        self.assertEqual(order.invoices.count(), 1)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 0)
+
+        # Transaction is created
+        self.assertFalse(
+            Transaction.objects.filter(
+                invoice__parent__order=order,
+                total=first_installment_amount.as_decimal(),
+                reference="first_transaction_id",
+            ).exists()
+        )
+
+        # If the installment payment is refused, the order state changes to no payment
+        order.refresh_from_db()
+        self.assertEqual(order.state, ORDER_STATE_NO_PAYMENT)
+        # Installment is refused
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUSED)
+
+        # Mail is sent
+        self._check_installment_refused_email_sent(owner.email, order)
+
+        mail.outbox.clear()
 
     @patch.object(BasePaymentBackend, "_send_mail_refused_debit")
     def test_payment_backend_lyra_handle_notification_payment_failure_sends_email(

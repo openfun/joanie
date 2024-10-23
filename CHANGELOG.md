@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Manage zero click refused payment
+
 ## [2.9.0] - 2024-10-22
 
 ### Added

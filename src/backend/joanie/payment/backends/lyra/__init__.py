@@ -288,12 +288,13 @@ class LyraBackend(BasePaymentBackend):
             }
 
         response_json = self._call_api(url, payload)
-        if response_json.get("status") != "SUCCESS":
+        answer = response_json.get("answer")
+
+        if answer["orderStatus"] != "PAID":
+            self._do_on_payment_failure(order, installment["id"])
             return False
 
-        answer = response_json.get("answer")
         billing_details = answer["customer"]["billingDetails"]
-
         payment = {
             "id": answer["transactions"][0]["uuid"],
             "installment_id": installment["id"],
@@ -312,6 +313,7 @@ class LyraBackend(BasePaymentBackend):
             order=order,
             payment=payment,
         )
+
         return True
 
     def _check_hash(self, post_data):
