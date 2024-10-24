@@ -1126,6 +1126,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     order_group = AdminOrderGroupSerializer(read_only=True)
     payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
     credit_card = AdminCreditCardSerializer(read_only=True)
+    has_waived_withdrawal_right = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = models.Order
@@ -1146,6 +1147,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "main_invoice",
             "payment_schedule",
             "credit_card",
+            "has_waived_withdrawal_right",
         )
         read_only_fields = fields
 

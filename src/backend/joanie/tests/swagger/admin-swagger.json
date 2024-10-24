@@ -5565,6 +5565,10 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "has_waived_withdrawal_right": {
+                        "type": "boolean",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5574,6 +5578,7 @@
                     "created_on",
                     "credit_card",
                     "enrollment",
+                    "has_waived_withdrawal_right",
                     "id",
                     "main_invoice",
                     "order_group",
