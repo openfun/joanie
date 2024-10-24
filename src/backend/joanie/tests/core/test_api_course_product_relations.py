@@ -216,6 +216,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     ],
                     "title": relation.product.title,
                     "type": relation.product.type,
+                    "is_withdrawable": relation.product.is_withdrawable,
                 },
                 "organizations": [
                     {
@@ -498,7 +499,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             organizations=factories.OrganizationFactory.create_batch(2),
         )
 
-        with self.assertNumQueries(77):
+        with self.assertNumQueries(78):
             self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
 
         # A second call to the url should benefit from caching on the product serializer
@@ -523,7 +524,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Then cache should be language sensitive
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(19):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
@@ -624,7 +625,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -655,6 +656,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 "product": {
                     "instructions": "",
                     "call_to_action": relation.product.call_to_action,
+                    "is_withdrawable": relation.product.is_withdrawable,
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,
                         "name": relation.product.certificate_definition.name,
@@ -775,7 +777,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 course=course, product=product, order_group=order_group1, state=state
             )
 
-        with self.assertNumQueries(52):
+        with self.assertNumQueries(53):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

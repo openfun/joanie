@@ -37,6 +37,7 @@ class OrderLifecycle(BaseAPITestCase):
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
         }
 
         response = self.client.post(
