@@ -84,6 +84,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "order_group_id": None,
                         "payment_schedule": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -157,6 +158,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "target_enrollments": [],
                         "main_invoice_reference": None,
                         "order_group_id": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -289,6 +291,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "target_enrollments": [],
                         "main_invoice_reference": None,
                         "order_group_id": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -464,6 +467,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "target_enrollments": [],
                         "main_invoice_reference": None,
                         "order_group_id": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -573,6 +577,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "target_enrollments": [],
                         "main_invoice_reference": None,
                         "order_group_id": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -716,6 +721,7 @@ class OrderListApiTest(BaseAPITestCase):
                         },
                         "main_invoice_reference": None,
                         "order_group_id": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -931,6 +937,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "target_enrollments": [],
                         "main_invoice_reference": None,
                         "order_group_id": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -1019,6 +1026,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "target_enrollments": [],
                         "main_invoice_reference": order.main_invoice.reference,
                         "order_group_id": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -1111,6 +1119,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "target_enrollments": [],
                         "main_invoice_reference": None,
                         "order_group_id": None,
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,

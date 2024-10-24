@@ -39,8 +39,14 @@ from joanie.core.models.courses import (
     Enrollment,
     Organization,
 )
-from joanie.core.utils import contract_definition as contract_definition_utility
-from joanie.core.utils import issuers, webhooks
+from joanie.core.utils import (
+    contract_definition as contract_definition_utility,
+)
+from joanie.core.utils import (
+    issuers,
+    payment_schedule,
+    webhooks,
+)
 from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.signature.backends import get_signature_backend
@@ -247,6 +253,23 @@ class Product(parler_models.TranslatableModel, BaseModel):
         """
         dates = self.get_equivalent_course_run_dates()
         return CourseRun.compute_state(**dates)
+
+    @property
+    def has_withdrawal_period(self):
+        """
+        Return True if the product has a withdrawal period.
+
+        Read the docstring of core.utils.payment_schedule.has_withdrawal_period method
+        for furthermore information.
+        """
+        start_date = self.get_equivalent_course_run_dates().get("start")
+
+        if not start_date:
+            return True
+
+        return payment_schedule.has_withdrawal_period(
+            timezone.localdate(), start_date.date()
+        )
 
     def clean(self):
         """
@@ -474,6 +497,12 @@ class Order(BaseModel):
         default=False,
         help_text=_("User has consented to the platform terms and conditions."),
         db_column="has_consent_to_terms",
+    )
+    has_waived_withdrawal_right = models.BooleanField(
+        verbose_name=_("has waived to withdrawal right"),
+        editable=False,
+        default=False,
+        help_text=_("User has waived to its withdrawal right."),
     )
     state = models.CharField(
         default=enums.ORDER_STATE_DRAFT,

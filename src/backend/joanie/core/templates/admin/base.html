@@ -2,6 +2,7 @@
 {% load i18n %}
 
 {% block userlinks %}
+    <a href="{{ ADMIN_BACKOFFICE_URL }}">{% trans "Back office" %}</a> /
     <a href={% url "sentry-decrypt" %}>{% trans "Sentry tools" %}</a> /
   {{block.super}}
 {% endblock %}
