@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Update order flow to allow transition from `no_payment` to `completed`
+
 ## [2.9.1] - 2024-10-23
 
 ### Fixed

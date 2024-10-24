@@ -1370,6 +1370,51 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
 
+    def test_flows_order_update_from_no_payment_to_completed(self):
+        """
+        Test that the order state is set to completed when
+        the single installment is paid and source state is "no payment".
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_NO_PAYMENT,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+            ],
+        )
+
+        order.flow.update()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    def test_flows_order_update_from_no_payment_to_pending_payment(self):
+        """
+        Test that the order state is set to pending_payment when
+        the first installment is paid and source state is "no payment".
+        """
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_NO_PAYMENT,
+            payment_schedule=[
+                {
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "amount": "100.00",
+                    "due_date": "2024-01-18",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        order.flow.update()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+
     def test_flows_order_update_free_no_contract(self):
         """
         Test that the order state is set to `completed` when the order is free and has no contract.
