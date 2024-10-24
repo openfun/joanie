@@ -27,7 +27,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
         return {
             **kwargs,
-            "has_consent_to_terms": True,
+            "has_waived_withdrawal_right": True,
             "product_id": str(product.id),
             "course_code": product.courses.first().code,
             "billing_address": billing_address,
@@ -39,7 +39,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         return {
             **kwargs,
-            "has_consent_to_terms": True,
+            "has_waived_withdrawal_right": True,
             "product_id": str(product.id),
             "course_code": product.courses.first().code,
         }
@@ -56,7 +56,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         return {
             **kwargs,
-            "has_consent_to_terms": True,
+            "has_waived_withdrawal_right": True,
             "enrollment_id": str(enrollment.id),
             "product_id": str(relation.product.id),
             "billing_address": billing_address,
@@ -66,6 +66,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         """Anonymous users should not be able to create an order."""
         product = factories.ProductFactory()
         data = {
+            "has_waived_withdrawal_right": True,
             "course_code": product.courses.first().code,
             "product_id": str(product.id),
         }
@@ -97,6 +98,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -130,6 +132,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "main_invoice_reference": None,
                 "order_group_id": None,
+                "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -240,6 +243,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "enrollment_id": str(enrollment.id),
             "organization_id": str(organization.id),
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(enrollment.user)
 
@@ -273,6 +277,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "payment_schedule": None,
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "credit_card_id": None,
+                "has_waived_withdrawal_right": True,
                 "enrollment": {
                     "course_run": {
                         "course": {
@@ -368,6 +373,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "enrollment_id": uuid.uuid4(),
             "organization_id": str(organization.id),
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(enrollment.user)
 
@@ -410,6 +416,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "enrollment_id": str(enrollment.id),
             "organization_id": str(organization.id),
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -448,6 +455,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": course.code,
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -477,6 +485,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": course.code,
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -542,6 +551,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": course.code,
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -700,8 +710,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": relation.course.code,
             "product_id": str(relation.product.id),
-            "has_consent_to_terms": True,
             "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
         }
 
         response = self.client.post(
@@ -773,8 +783,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": relation.course.code,
             "product_id": str(relation.product.id),
-            "has_consent_to_terms": True,
             "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
         }
 
         response = self.client.post(
@@ -813,6 +823,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "id": uuid.uuid4(),
             "amount": 0.00,
+            "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -856,6 +867,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "main_invoice_reference": None,
                 "order_group_id": None,
+                "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -952,6 +964,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -1000,6 +1013,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
 
@@ -1034,7 +1048,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_missing_product_then_course(self):
         """
-        The payload must contain at least a product uid, term consent and a course code.
+        The payload must contain at least a product uid, withdrawal right and a course code.
         """
         token = self.get_user_token("panoramix")
 
@@ -1049,6 +1063,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
+                "has_waived_withdrawal_right": ["This field is required."],
                 "product_id": ["This field is required."],
             },
         )
@@ -1059,11 +1074,10 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
+                "has_waived_withdrawal_right": True,
                 "product_id": str(product.id),
             },
         )
-
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
@@ -1089,6 +1103,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "course_code": course.code,
             "organization_id": str(organization.id),
+            "has_waived_withdrawal_right": True,
         }
 
         response = self.client.post(
@@ -1131,6 +1146,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "course_code": course.code,
             "organization_id": str(organization.id),
+            "has_waived_withdrawal_right": True,
         }
 
         response = self.client.post(
@@ -1166,9 +1182,10 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
+            "has_waived_withdrawal_right": True,
         }
 
-        with self.assertNumQueries(61):
+        with self.assertNumQueries(62):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1200,6 +1217,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "main_invoice_reference": order.main_invoice.reference,
                 "order_group_id": None,
+                "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -1313,10 +1331,11 @@ class OrderCreateApiTest(BaseAPITestCase):
             "order_group_id": str(order_group.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
+            "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(22):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1362,10 +1381,11 @@ class OrderCreateApiTest(BaseAPITestCase):
             "order_group_id": str(order_group.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
+            "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(112):
+        with self.assertNumQueries(113):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1392,6 +1412,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
+            "has_waived_withdrawal_right": True,
         }
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -1423,6 +1444,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "product_id": str(product.id),
             "billing_address": billing_address,
             "credit_card_id": str(credit_card.id),
+            "has_waived_withdrawal_right": True,
         }
 
         response = self.client.post(
@@ -1457,10 +1479,11 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
+            "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(18):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1500,6 +1523,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(organization.id),
             "product_id": str(relation.product.id),
             "billing_address": billing_address,
+            "has_waived_withdrawal_right": True,
         }
 
         response = self.client.post(
@@ -1550,6 +1574,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
+            "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(user)
 
@@ -1604,6 +1629,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "organization_id": str(relation.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
+            "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(user)
 
@@ -1617,3 +1643,47 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(
             models.Order.objects.filter(course=course, product=product).count(), 1
         )
+
+    @mock.patch("joanie.core.models.Product.is_withdrawable")
+    def test_api_order_create_for_product_without_withdrawal_period(
+        self, mock_is_withdrawable
+    ):
+        """
+        If a product has no withdrawal period, the order should failed until the user
+        has waived to its withdrawal right.
+        """
+        mock_is_withdrawable.__get__ = mock.Mock(return_value=False)
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        billing_address = BillingAddressDictFactory()
+
+        data = {
+            "course_code": relation.course.code,
+            "product_id": str(relation.product.id),
+            "billing_address": billing_address,
+            "has_waived_withdrawal_right": False,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {"has_waived_withdrawal_right": "This field must be set to True."},
+        )
+
+        data.update({"has_waived_withdrawal_right": True})
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)

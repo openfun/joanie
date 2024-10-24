@@ -48,6 +48,9 @@ class OrderUpdateApiTest(BaseAPITestCase):
         )
         other_data = json.loads(other_response.content)
         other_data["id"] = uuid.uuid4()
+        other_data[
+            "has_waived_withdrawal_right"
+        ] = not order.has_waived_withdrawal_right
 
         # Try modifying the order on each field with our alternative data
         self.assertListEqual(
@@ -71,6 +74,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 "total",
                 "total_currency",
                 "payment_schedule",
+                "has_waived_withdrawal_right",
             ],
         )
         headers = (

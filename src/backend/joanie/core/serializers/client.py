@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 import markdown
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import exceptions, serializers
+from rest_framework.fields import BooleanField
 from rest_framework.generics import get_object_or_404
 
 from joanie.core import enums, models
@@ -799,12 +800,14 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True, many=True, source="target_course_relations"
     )
     contract_definition = ContractDefinitionSerializer(read_only=True)
+    is_withdrawable = BooleanField(read_only=True)
 
     class Meta:
         model = models.Product
         fields = [
             "call_to_action",
             "certificate_definition",
+            "is_withdrawable",
             "contract_definition",
             "id",
             "instructions",
@@ -1139,6 +1142,7 @@ class OrderSerializer(serializers.ModelSerializer):
         source="credit_card",
         required=False,
     )
+    has_waived_withdrawal_right = serializers.BooleanField()
 
     class Meta:
         model = models.Order
@@ -1161,6 +1165,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total",
             "total_currency",
             "payment_schedule",
+            "has_waived_withdrawal_right",
         ]
         read_only_fields = fields
 
@@ -1192,14 +1197,15 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """
-        Make the "course", "organization", "order_group" and "product" fields read_only
-        only on update.
+        Make the "course", "organization", "order_group", "product"
+        and "has_waived_withdrawal_right" fields read_only only on update.
         """
         validated_data.pop("course", None)
         validated_data.pop("enrollment", None)
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
         validated_data.pop("order_group", None)
+        validated_data.pop("has_waived_withdrawal_right", None)
         return super().update(instance, validated_data)
 
     def get_total_currency(self, *args, **kwargs) -> str:

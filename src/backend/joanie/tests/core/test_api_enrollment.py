@@ -297,7 +297,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(20):
             self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -345,6 +345,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product2.title,
                         "type": "certificate",
+                        "is_withdrawable": product2.is_withdrawable,
                     },
                 },
                 {
@@ -375,6 +376,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product1.title,
                         "type": "certificate",
+                        "is_withdrawable": product1.is_withdrawable,
                     },
                 },
             ],
@@ -767,7 +769,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         certificate = factories.OrderCertificateFactory(order=order)
         token = self.generate_token_from_user(order.owner)
 
-        with self.assertNumQueries(32):
+        with self.assertNumQueries(33):
             response = self.client.get(
                 f"/api/v1.0/enrollments/{enrollment.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -826,6 +828,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product.title,
                         "type": "certificate",
+                        "is_withdrawable": product.is_withdrawable,
                     },
                 },
             ],

@@ -6069,6 +6069,9 @@
                             "$ref": "#/components/schemas/OrderPayment"
                         },
                         "readOnly": true
+                    },
+                    "has_waived_withdrawal_right": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -6077,6 +6080,7 @@
                     "course",
                     "created_on",
                     "enrollment",
+                    "has_waived_withdrawal_right",
                     "id",
                     "main_invoice_reference",
                     "organization",
@@ -6231,9 +6235,13 @@
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID"
+                    },
+                    "has_waived_withdrawal_right": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
+                    "has_waived_withdrawal_right",
                     "product_id"
                 ]
             },
@@ -6996,6 +7004,10 @@
                         ],
                         "readOnly": true
                     },
+                    "is_withdrawable": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
                     "contract_definition": {
                         "allOf": [
                             {
@@ -7057,6 +7069,7 @@
                     "contract_definition",
                     "id",
                     "instructions",
+                    "is_withdrawable",
                     "price",
                     "price_currency",
                     "state",

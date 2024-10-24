@@ -431,6 +431,15 @@ class OrderViewSet(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+        # - If the product is not withdrawable, user must have waived it
+        if not product.is_withdrawable and not request.data.get(
+            "has_waived_withdrawal_right"
+        ):
+            return Response(
+                {"has_waived_withdrawal_right": "This field must be set to True."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
         # - Validate data then create an order
         try:
             self.perform_create(serializer)
