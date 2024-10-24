@@ -34,7 +34,7 @@ from joanie.core.utils.course_product_relation import (
     get_orders,
 )
 from joanie.core.utils.payment_schedule import (
-    get_refundable_transactions,
+    get_transaction_references_to_refund,
     has_installment_paid,
 )
 from joanie.payment import get_payment_backend
@@ -660,27 +660,14 @@ class OrderViewSet(
         """
         order = self.get_object()
 
-        if order.state != enums.ORDER_STATE_CANCELED:
-            return Response(
-                "Cannot refund an order not canceled.",
-                status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            )
-
-        if not has_installment_paid(order):
-            return Response(
-                "Cannot refund an order without paid installments in payment schedule.",
-                status=HTTPStatus.BAD_REQUEST,
-            )
-
-        # Mark the order to 'refund', only admin users will be able to do it.
-        order.flow.refund()
+        order.flow.refunding()
 
         payment_backend = get_payment_backend()
-        to_refund_references = get_refundable_transactions(order)
-        for transaction_reference, amount in to_refund_references.items():
+        transaction_references_to_refund = get_transaction_references_to_refund(order)
+        for transaction_reference, amount in transaction_references_to_refund.items():
             payment_backend.cancel_or_refund(
                 amount=amount,
-                transaction_reference=transaction_reference,
+                reference=transaction_reference,
             )
 
         return Response(status=HTTPStatus.ACCEPTED)

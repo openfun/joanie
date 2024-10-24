@@ -1632,7 +1632,7 @@ class OrdersAdminApiTestCase(TestCase):
             if choice[0]
             not in [
                 enums.ORDER_STATE_DRAFT,
-                enums.ORDER_STATE_REFUND,
+                enums.ORDER_STATE_REFUNDING,
                 enums.ORDER_STATE_CANCELED,
             ]
         )
@@ -1752,6 +1752,8 @@ class OrdersAdminApiTestCase(TestCase):
             if choice[0]
             not in [
                 enums.ORDER_STATE_CANCELED,
+                enums.ORDER_STATE_REFUNDING,
+                enums.ORDER_STATE_REFUNDED,
             ]
         )
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -1766,7 +1768,7 @@ class OrdersAdminApiTestCase(TestCase):
                 )
 
                 order.refresh_from_db()
-                self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
                 self.assertEqual(order.state, state)
 
     def test_api_admin_orders_refund_an_order_not_possible_if_no_installment_is_paid(
@@ -1788,8 +1790,11 @@ class OrdersAdminApiTestCase(TestCase):
     def test_api_admin_orders_refund_an_order(self):
         """
         Authenticated admin users should be able to refund an order when the state is `canceled`.
-        Once the treatment is done, the order's state should be `refund` and the installment
-        state should be set to `refunded`.
+        Once the refund is requested, the order's state goes to `refunding` while the payment
+        backend treats the refund of the transaction. When the notification is treated from
+        the payment backend, we set the installment to refunded when it was successful.
+        At the end of the process, since there will only one installment paid and then refund,
+        the order state will be set to `refunded`.
         """
         backend = DummyPaymentBackend()
         request_factory = APIRequestFactory()
@@ -1798,7 +1803,7 @@ class OrdersAdminApiTestCase(TestCase):
         order = factories.OrderGeneratorFactory(
             state=enums.ORDER_STATE_PENDING, product__price=100
         )
-        # Create the payment
+        # Create the payment for the 1st installment only.
         payment_id = backend.create_payment(
             order=order,
             installment=order.payment_schedule[0],
@@ -1817,21 +1822,27 @@ class OrdersAdminApiTestCase(TestCase):
             format="json",
         )
         request.data = json.loads(request.body.decode("utf-8"))
+        # Get the notification from the payment backend that the payment of the installment is
+        # successful.
         backend.handle_notification(request)
 
-        # The installment's state should be in state 'paid
         order.refresh_from_db()
+        # The 1st installment's state should be in state 'paid' only.
         self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_PAID)
-
+        self.assertEqual(
+            order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PENDING
+        )
+        # Now, let's cancel the order to launch the refund process
         order.flow.cancel()
 
         response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
         order.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
-        self.assertEqual(order.state, enums.ORDER_STATE_REFUND)
+        # The order state should be set to `refunding`
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
 
-        # Notify that payment has been refunded
+        # Prepare the notification that the installment payment  has been refunded
         request = request_factory.post(
             reverse("payment_webhook"),
             data={
@@ -1843,10 +1854,18 @@ class OrdersAdminApiTestCase(TestCase):
             format="json",
         )
         request.data = json.loads(request.body.decode("utf-8"))
-
+        # Get the notification from the payment backend that the refund of the installment is
+        # successful.
         backend.handle_notification(request)
 
         order.refresh_from_db()
+        # The paid installment should now be set to `refunded`
         self.assertEqual(
             order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUNDED
         )
+        # The second installment should stay in `payment_pending`
+        self.assertEqual(
+            order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PENDING
+        )
+        # The order's state should finally be set to `refunded`
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDED)

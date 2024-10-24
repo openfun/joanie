@@ -2891,13 +2891,14 @@
                                 "no_payment",
                                 "pending",
                                 "pending_payment",
-                                "refund",
+                                "refunded",
+                                "refunding",
                                 "signing",
                                 "to_save_payment_method",
                                 "to_sign"
                             ]
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refund` - Refund"
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded"
                     }
                 ],
                 "tags": [
@@ -7199,10 +7200,11 @@
                     "failed_payment",
                     "no_payment",
                     "completed",
-                    "refund"
+                    "refunding",
+                    "refunded"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refund` - Refund"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded"
             },
             "OrganizationAccessRoleChoiceEnum": {
                 "enum": [
