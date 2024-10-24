@@ -13,6 +13,8 @@ and this project adheres to
 - Add link to back office in Django admin topbar
 - Add boolean field `has_waived_withdrawal_right` to the `Order` model
 - Add `has_withdrawal_period` to `Product` model
+- Prevent to a user to create an order for a product without withdrawal period
+  if the user has not waived his withdrawal right
 
 ## [2.9.2] - 2024-10-24
 

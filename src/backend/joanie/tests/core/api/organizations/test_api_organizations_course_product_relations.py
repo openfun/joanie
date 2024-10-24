@@ -56,7 +56,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                     course=course, product=product, organizations=[organizations[0]]
                 )
             )
-        with self.assertNumQueries(155):
+        with self.assertNumQueries(160):
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/course-product-relations/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -152,7 +152,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                     course=course, product=product, organizations=[organizations[0]]
                 )
             )
-        with self.assertNumQueries(50):
+        with self.assertNumQueries(51):
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{organizations[0].id}/course-product-relations/"
