@@ -1144,6 +1144,12 @@ class Order(BaseModel):
         Set the state of an installment to `refunded` in the payment schedule.
         """
         ActivityLog.create_payment_refunded_activity_log(self)
+
+        if self.state != enums.ORDER_STATE_REFUNDING:
+            raise ValidationError(
+                "Cannot set installment to refunded if order state in not `refunding`"
+            )
+
         for installment in self.payment_schedule:
             if (
                 installment["id"] == installment_id

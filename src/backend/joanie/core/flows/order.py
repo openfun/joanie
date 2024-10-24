@@ -4,6 +4,7 @@ import logging
 from contextlib import suppress
 
 from django.apps import apps
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from sentry_sdk import capture_exception
@@ -246,22 +247,52 @@ class OrderFlow:
         Mark order instance as "failed_payment".
         """
 
-    def _can_be_state_refund_payment(self):
+    def _can_be_state_refunding(self):
         """
-        An order state can be set to refund if the order's state is 'canceled' exclusively.
-        To refund, there should be at least one installment paid in the payment schedule.
+        An order state can be set to `refunding` if the order's state is 'canceled' exclusively.
+        To be in state `refunding`, there should be at least one installment paid in the
+        payment schedule of the order.
         """
-        return has_installment_paid(self.instance)
+        try:
+            if self.instance.state != enums.ORDER_STATE_CANCELED:
+                raise ValidationError("Cannot refund an order not canceled.")
+
+            if not has_installment_paid(self.instance):
+                raise ValidationError(
+                    "Cannot refund an order without paid installments in payment schedule."
+                )
+            return True
+        except ValidationError as error:
+            capture_exception(error)
+            return False
 
     @state.transition(
         source=enums.ORDER_STATE_CANCELED,
-        target=enums.ORDER_STATE_REFUND,
-        conditions=[_can_be_state_refund_payment],
+        target=enums.ORDER_STATE_REFUNDING,
+        conditions=[_can_be_state_refunding],
     )
-    def refund(self):
+    def refunding(self):
         """
-        Mark an order has refund.
+        Mark an order as in "refunding".
         """
+
+    def _can_be_state_refunded(self):
+        """
+        The order's state should be in "refunding" and there is no more installment
+        in the payment schedule marked as "paid".
+        """
+        return (
+            self.instance.state == enums.ORDER_STATE_REFUNDING
+            and not has_installment_paid(self.instance)
+        )
+
+    @state.transition(
+        source=enums.ORDER_STATE_REFUNDING,
+        target=enums.ORDER_STATE_REFUNDED,
+        conditions=[_can_be_state_refunded],
+    )
+    def refunded(self):
+        """Mark an order as "refunded" """
 
     def update(self):
         """
@@ -277,7 +308,6 @@ class OrderFlow:
             self.pending_payment,
             self.no_payment,
             self.failed_payment,
-            self.refund,
         ]:
             with suppress(fsm.TransitionNotAllowed):
                 logger.debug(

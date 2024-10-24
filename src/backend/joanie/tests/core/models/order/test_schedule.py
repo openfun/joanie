@@ -23,6 +23,7 @@ from joanie.core.enums import (
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_REFUNDING,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUNDED,
@@ -1405,7 +1406,8 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
     def test_models_order_set_installment_state_refunded(self):
         """
         Check that the state of an installment can be set to refunded only
-        if the installment was in state `paid`, else it raises an error.
+        if the installment was in state `paid` and the order's state is 'refunding',
+        else it raises an error.
         """
         order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_CANCELED,
@@ -1424,12 +1426,19 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         order.payment_schedule[2]["state"] = PAYMENT_STATE_PENDING
         order.payment_schedule[2]["due_date"] = date(2024, 4, 17)
 
+        with self.assertRaises(ValidationError) as context:
+            order.set_installment_refunded(
+                installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
+            )
+
+        order.flow.refunding()
+
         order.set_installment_refunded(
             installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a",
         )
 
         order.refresh_from_db()
-        self.assertEqual(order.state, ORDER_STATE_CANCELED)
+        self.assertEqual(order.state, ORDER_STATE_REFUNDING)
         self.assertEqual(
             order.payment_schedule,
             [

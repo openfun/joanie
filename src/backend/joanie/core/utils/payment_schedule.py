@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 def _get_installments_percentages(total):
     """
-    Return the payment installments percentages for the order.
+    Return the payment installments percentages for the_ order.
     """
     percentages = None
     for limit, percentages in settings.JOANIE_PAYMENT_SCHEDULE_LIMITS.items():
@@ -252,60 +252,34 @@ def get_paid_transactions(order):
     )
 
 
-def get_installment_matching_transaction_amount(order, transaction):
+def get_transaction_references_to_refund(order) -> dict:
     """
-    Return the installment that matches the transaction amount of an order's payment schedule.
+    Returns a dictionary containing transaction references as key and the amount of the installment
+    that are eligible to refund in an order's payment schedule.
     """
-    return next(
-        (
-            installment
-            for installment in order.payment_schedule
+    to_refund_items = {}
+    for transaction in get_paid_transactions(order):
+        for installment in order.payment_schedule:
             if (
                 installment["state"] == enums.PAYMENT_STATE_PAID
                 and installment["amount"] == transaction.total
-            )
-        ),
-        None,
-    )
+                and transaction.reference not in to_refund_items
+            ):
+                to_refund_items[transaction.reference] = installment["amount"]
+    return to_refund_items
 
 
-def get_refundable_transactions(order) -> dict:
-    """
-    Returns a dictionary with transaction reference as key and the amount of the installment
-    that is eligible to refund in an order's payment schedule.
-    """
-    refund_items = {}
-    for transaction in get_paid_transactions(order):
-        matching_installment = get_installment_matching_transaction_amount(
-            order, transaction
-        )
-        if matching_installment and transaction.reference not in refund_items:
-            refund_items[transaction.reference] = matching_installment["amount"]
-    return refund_items
-
-
-def handle_refunded_transaction(
-    invoice,
-    amount: Decimal,
-    refund_reference: str,
-    is_transaction_canceled: bool,
-):
+def handle_refunded_transaction(invoice, amount: Decimal, refund_reference: str):
     """
     Handle the refund of an installment by creating a credit note, a transaction to reflect
     the cash movement.
     """
-    # Create the credit note
     credit_note = Invoice.objects.create(
         order=invoice.order,
         parent=invoice.order.main_invoice,
         total=-amount,
         recipient_address=invoice.recipient_address,
     )
-    # Create the transaction of the refund
     Transaction.objects.create(
-        total=credit_note.total,
-        invoice=credit_note,
-        reference=refund_reference
-        if not is_transaction_canceled
-        else f"cancel_{refund_reference}",
+        total=credit_note.total, invoice=credit_note, reference=refund_reference
     )

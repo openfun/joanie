@@ -1738,9 +1738,9 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order.flow.cancel()
 
-        order.flow.refund()
+        order.flow.refunding()
 
-        self.assertEqual(order.state, enums.ORDER_STATE_REFUND)
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
 
     @override_settings(
         JOANIE_PAYMENT_SCHEDULE_LIMITS={
@@ -1756,23 +1756,59 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
         )
 
         with self.assertRaises(TransitionNotAllowed):
-            order.flow.refund()
+            order.flow.refunding()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
-    def test_flows_order_refund_failure_when_state_is_not_canceled(self):
+    def test_flows_order_refunding_failure_when_state_is_not_canceled(self):
         """
-        Test that the refund flow transition for an order does not work with states other
+        Test that the refunding flow transition for an order does not work with states other
         than `canceled`.
         """
         order_state_choices = tuple(
             choice
             for choice in enums.ORDER_STATE_CHOICES
-            if choice[0] not in (enums.ORDER_STATE_REFUND, enums.ORDER_STATE_CANCELED)
+            if choice[0]
+            not in (
+                enums.ORDER_STATE_REFUNDING,
+                enums.ORDER_STATE_REFUNDED,
+                enums.ORDER_STATE_CANCELED,
+            )
         )
         for state, _ in order_state_choices:
             with self.subTest(state=state):
                 order = factories.OrderGeneratorFactory(state=state)
                 with self.assertRaises(TransitionNotAllowed):
-                    order.flow.refund()
+                    order.flow.refunding()
                 self.assertEqual(order.state, state)
+
+    def test_flows_order_transition_to_refunded_should_fail_if_source_state_is_not_refunding(
+        self,
+    ):
+        """
+        Test that only the transition to `refunded` state is not possible if the order's state
+        is not `refunding`.
+        """
+        order_state_choices = tuple(
+            choice
+            for choice in enums.ORDER_STATE_CHOICES
+            if choice[0] not in (enums.ORDER_STATE_REFUNDING,)
+        )
+        for state, _ in order_state_choices:
+            with self.subTest(state=state):
+                order = factories.OrderGeneratorFactory(state=state)
+                with self.assertRaises(TransitionNotAllowed):
+                    order.flow.refunding()
+                self.assertEqual(order.state, state)
+
+    def test_flows_order_transition_to_refunded(self):
+        """Test the state `refunding` to transition to `refunded` is successful"""
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_REFUNDING, product__price=10
+        )
+        order.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUNDED
+        order.save()
+
+        order.flow.refunded()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDED)

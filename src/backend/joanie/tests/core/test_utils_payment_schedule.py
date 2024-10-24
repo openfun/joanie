@@ -1069,7 +1069,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         transaction = Transaction.objects.get(invoice__order=order)
         # Cancel the order first and then switch the state to 'refund'
         order.flow.cancel()
-        order.flow.refund()
+        order.flow.refunding()
         order_id_fragment = str(order.id).split("-", maxsplit=1)[0]
 
         # Should create 1 new transaction et 1 credit note Invoice
@@ -1077,7 +1077,6 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             amount=D(transaction.total),
             invoice=child_invoice,
             refund_reference=f"{order_id_fragment}",
-            is_transaction_canceled=False,
         )
 
         # Should have 1 main Invoice and 1 child Invoice
@@ -1096,10 +1095,8 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
 
     def test_utils_payment_schedule_handle_refunded_transaction_when_is_cancelled(self):
         """
-        Should create a credit note invoice and transaction showing amount of the credit
-        when we are in the context of cancelling a transaction in the payment schedule of an
-        order. In that specific case, the cancelled transaction should have the prefix in the
-        reference field `cancel_<order_id>`.
+        When calling handle_refunded_transaction, it should create a credit note and
+        the transaction reflecting the cash mouvement.
         """
         order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING_PAYMENT, product__price=100
@@ -1114,15 +1111,14 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         transaction = Transaction.objects.get(invoice__order=order)
         # Cancel the order first and then switch the state to 'refund'
         order.flow.cancel()
-        order.flow.refund()
+        order.flow.refunding()
         order_id_fragment = str(order.id).split("-", maxsplit=1)[0]
 
         # Should create 1 new transaction et 1 credit note Invoice
         payment_schedule.handle_refunded_transaction(
             amount=D(transaction.total),
             invoice=child_invoice,
-            refund_reference=f"{order_id_fragment}",
-            is_transaction_canceled=True,
+            refund_reference=f"cancel_{order_id_fragment}",
         )
 
         # Should have 1 main Invoice and 1 child Invoice
@@ -1140,24 +1136,24 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             1,
         )
 
-    def test_utils_payment_schedule_get_refundable_transactions_returns_empty_dictionary(
+    def test_utils_payment_schedule_get_transaction_references_to_refund_returns_empty_dictionary(
         self,
     ):
         """
-        The method `get_refundable_transactions` should return an empty dictionary
+        The method `get_transaction_references_to_refund` should return an empty dictionary
         if there is no paid installment on an order payment schedule.
         """
         order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING, product__price=1000
         )
 
-        refund_items = payment_schedule.get_refundable_transactions(order)
+        refund_items = payment_schedule.get_transaction_references_to_refund(order)
 
         self.assertEqual(refund_items, {})
 
-    def test_utils_payment_schedule_get_refundable_transactions(self):
+    def test_utils_payment_schedule_get_transaction_references_to_refund(self):
         """
-        The method `get_refundable_transactions` should return the installments
+        The method `get_transaction_references_to_refund` should return the installments
         that are refundable in the payment schedule of an order.
         """
         order = factories.OrderGeneratorFactory(
@@ -1189,7 +1185,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         second_installment = order.payment_schedule[1]
         third_installment = order.payment_schedule[2]
 
-        refund_items = payment_schedule.get_refundable_transactions(order)
+        refund_items = payment_schedule.get_transaction_references_to_refund(order)
 
         self.assertEqual(
             refund_items,
@@ -1199,42 +1195,3 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 str(transaction_3.reference): third_installment["amount"],
             },
         )
-
-    def test_utils_payment_schedule_get_installment_matching_transaction_amount(self):
-        """
-        When calling `get_installment_matching_transaction_amount` with an order
-        and a transaction, it returns the concerned installment that is in `paid`
-        state
-        """
-        order = factories.OrderGeneratorFactory(
-            state=ORDER_STATE_PENDING_PAYMENT, product__price=1000
-        )
-        transaction_1 = Transaction.objects.get(
-            reference=order.payment_schedule[0]["id"]
-        )
-        # Set the second installment as paid and create the transaction
-        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
-        transaction_2 = TransactionFactory.create(
-            reference=order.payment_schedule[1]["id"],
-            invoice__order=order,
-            invoice__parent=order.main_invoice,
-            invoice__total=0,
-            invoice__recipient_address__owner=order.owner,
-            total=str(order.payment_schedule[1]["amount"]),
-        )
-
-        found_installment_1 = (
-            payment_schedule.get_installment_matching_transaction_amount(
-                order, transaction_1
-            )
-        )
-
-        self.assertEqual(found_installment_1, order.payment_schedule[0])
-
-        found_installment_2 = (
-            payment_schedule.get_installment_matching_transaction_amount(
-                order, transaction_2
-            )
-        )
-
-        self.assertEqual(found_installment_2, order.payment_schedule[1])

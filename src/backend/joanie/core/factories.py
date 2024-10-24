@@ -9,6 +9,7 @@ import json
 import random
 import uuid
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -775,7 +776,8 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             enums.ORDER_STATE_FAILED_PAYMENT,
             enums.ORDER_STATE_COMPLETED,
             enums.ORDER_STATE_CANCELED,
-            enums.ORDER_STATE_REFUND,
+            enums.ORDER_STATE_REFUNDING,
+            enums.ORDER_STATE_REFUNDED,
         ]:
             if not self.product.contract_definition:
                 self.product.contract_definition = ContractDefinitionFactory()
@@ -839,7 +841,8 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             enums.ORDER_STATE_FAILED_PAYMENT,
             enums.ORDER_STATE_COMPLETED,
             enums.ORDER_STATE_CANCELED,
-            enums.ORDER_STATE_REFUND,
+            enums.ORDER_STATE_REFUNDING,
+            enums.ORDER_STATE_REFUNDED,
         ]:
             from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
                 CreditCardFactory,
@@ -867,8 +870,8 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
             )
 
     @factory.post_generation
-    # pylint: disable=unused-argument, too-many-branches
-    # ruff: noqa: PLR0912
+    # pylint: disable=unused-argument, too-many-branches, too-many-statements
+    # ruff: noqa: PLR0912, PLR0915
     def billing_address(self, create, extracted, **kwargs):
         """
         Create a billing address for the order.
@@ -931,7 +934,8 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 enums.ORDER_STATE_NO_PAYMENT,
                 enums.ORDER_STATE_FAILED_PAYMENT,
                 enums.ORDER_STATE_COMPLETED,
-                enums.ORDER_STATE_REFUND,
+                enums.ORDER_STATE_REFUNDING,
+                enums.ORDER_STATE_REFUNDED,
             ]
             and not self.is_free
         ):
@@ -941,7 +945,8 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
 
             if target_state in [
                 enums.ORDER_STATE_PENDING_PAYMENT,
-                enums.ORDER_STATE_REFUND,
+                enums.ORDER_STATE_REFUNDING,
+                enums.ORDER_STATE_REFUNDED,
             ]:
                 self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
                 # Create related transactions when an installment is paid
@@ -979,6 +984,7 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                         total=str(payment["amount"]),
                         reference=payment["id"],
                     )
+
             self.save()
             self.flow.update()
 
@@ -987,11 +993,30 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
 
         if (
             self.state == enums.ORDER_STATE_PENDING_PAYMENT
-            and target_state == enums.ORDER_STATE_REFUND
+            and target_state == enums.ORDER_STATE_REFUNDING
             and payment_schedule.has_installment_paid(self)
         ):
             self.flow.cancel()
-            self.flow.refund()
+            self.flow.refunding()
+
+        if (
+            self.state == enums.ORDER_STATE_PENDING_PAYMENT
+            and target_state == enums.ORDER_STATE_REFUNDED
+        ):
+            self.flow.cancel()
+            self.flow.refunding()
+            self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUNDED
+            installment_id = self.payment_schedule[0]["id"]
+            TransactionFactory(
+                invoice__order=self,
+                invoice__parent=self.main_invoice,
+                invoice__total=0,
+                invoice__recipient_address__owner=self.owner,
+                total=-Decimal(str(self.payment_schedule[0]["amount"])),
+                reference=f"ref_{installment_id}",
+            )
+            self.save()
+            self.flow.refunded()
 
     @factory.post_generation
     # pylint: disable=method-hidden

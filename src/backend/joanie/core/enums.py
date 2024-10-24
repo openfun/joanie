@@ -70,7 +70,8 @@ ORDER_STATE_PENDING_PAYMENT = "pending_payment"  # payment is pending
 ORDER_STATE_FAILED_PAYMENT = "failed_payment"  # last payment has failed
 ORDER_STATE_NO_PAYMENT = "no_payment"  # no payment has been made
 ORDER_STATE_COMPLETED = "completed"  # is completed
-ORDER_STATE_REFUND = "refund"  # order payments were refund
+ORDER_STATE_REFUNDING = "refunding"  # order is being reimbursed
+ORDER_STATE_REFUNDED = "refunded"  # order installment payments are refunded
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_DRAFT, _("Draft")),  # default
@@ -96,7 +97,14 @@ ORDER_STATE_CHOICES = (
         ORDER_STATE_COMPLETED,
         pgettext_lazy("As in: the order is completed.", "Completed"),
     ),
-    (ORDER_STATE_REFUND, pgettext_lazy("As in: the order is refund", "Refund")),
+    (
+        ORDER_STATE_REFUNDING,
+        pgettext_lazy("As in: the order is being reimbursed", "Refunding"),
+    ),
+    (
+        ORDER_STATE_REFUNDED,
+        pgettext_lazy("As in: the order payments are refunded", "Refunded"),
+    ),
 )
 ORDER_STATE_ALLOW_ENROLLMENT = (
     ORDER_STATE_COMPLETED,
