@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.9.2] - 2024-10-24
+
 ### Fixed
 
 - Update order flow to allow transition from `no_payment` to `completed`
@@ -475,7 +477,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.9.1...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.9.2...main
+[2.9.2]: https://github.com/openfun/joanie/compare/v2.9.0...v2.9.2
 [2.9.1]: https://github.com/openfun/joanie/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/openfun/joanie/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/openfun/joanie/compare/v2.7.1...v2.8.0
