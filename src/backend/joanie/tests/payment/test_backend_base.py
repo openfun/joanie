@@ -39,9 +39,20 @@ class TestBasePaymentBackend(BasePaymentBackend):
         """call private method _do_on_payment_failure"""
         self._do_on_payment_failure(order, installment_id=installment_id)
 
-    def call_do_on_refund(self, amount, invoice, refund_reference):
+    def call_do_on_refund(
+        self,
+        amount,
+        invoice,
+        refund_reference,
+        installment_id,
+    ):  # pylint: disable=too-many-arguments, unused-argument
         """call private method _do_on_refund"""
-        self._do_on_refund(amount, invoice, refund_reference)
+        self._do_on_refund(
+            amount,
+            invoice,
+            refund_reference,
+            installment_id,
+        )
 
     def abort_payment(self, payment_id):
         pass
@@ -64,6 +75,9 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
     def tokenize_card(self, order=None, billing_address=None, user=None):
+        pass
+
+    def cancel_or_refund(self, amount, reference):
         pass
 
 
@@ -183,6 +197,18 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(
             str(context.exception),
             "subclasses of BasePaymentBackend must provide a tokenize_card() method.",
+        )
+
+    def test_payment_backend_base_cancel_or_refund(self):
+        """Invoke cancel or refund a transaction should raise a Not ImplementedError"""
+        backend = BasePaymentBackend()
+
+        with self.assertRaises(NotImplementedError) as context:
+            backend.cancel_or_refund(None, None)
+
+        self.assertEqual(
+            str(context.exception),
+            "subclasses of BasePaymentBackend must provide a cancel_or_refund() method.",
         )
 
     def test_payment_backend_base_do_on_payment_success(self):
@@ -550,20 +576,27 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
     def test_payment_backend_base_do_on_refund(self):
         """
-        Base backend contains a method _do_on_refund which aims to be
+        Base backend contains a method `_do_on_refund` which aims to be
         call by subclasses when a refund occurred. It should register the refund
         transaction.
         """
         backend = TestBasePaymentBackend()
         order = OrderFactory(
+            product__price=1000,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
+                    "amount": "300.00",
                     "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
-            ]
+                {
+                    "id": "36981c13-1a1d-4f20-8f8f-e8a9e3ecb6cf",
+                    "amount": "700.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
         )
         billing_address = BillingAddressDictFactory()
         CreditCardFactory(
@@ -574,7 +607,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # Create payment and register it
         payment = {
             "id": "pay_0",
-            "amount": order.total,
+            "amount": Decimal(str(order.payment_schedule[0]["amount"])),
             "billing_address": billing_address,
             "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
         }
@@ -582,25 +615,37 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend.call_do_on_payment_success(order, payment)
         Transaction.objects.get(reference="pay_0")
 
-        # - Order has been completed
-        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
-
-        # - Refund entirely the order
+        # - Order should be in state `pending_payment` since 1 or 2 installment has been paid
+        self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
+        order.flow.cancel()
+        order.flow.refunding()
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
+        # - Refund the paid installment of the order in the payment schedule
         backend.call_do_on_refund(
-            amount=order.total,
+            amount=Decimal(str(order.payment_schedule[0]["amount"])),
             invoice=order.main_invoice,
             refund_reference="ref_0",
+            installment_id=payment["installment_id"],
         )
-
-        # - Credit transaction has been created
+        # - Credit transaction has been created and a credit note
         self.assertEqual(
-            Transaction.objects.filter(reference="ref_0", total=-order.total).count(),
+            Transaction.objects.filter(
+                reference="ref_0",
+                total=-Decimal(str(order.payment_schedule[0]["amount"])),
+            ).count(),
             1,
         )
 
+        transaction = Transaction.objects.get(
+            reference="ref_0",
+            total=-Decimal(str(order.payment_schedule[0]["amount"])),
+        )
+
+        self.assertEqual(transaction.invoice.type, "credit_note")
+
         # - Order has been canceled
         order.refresh_from_db()
-        self.assertEqual(order.state, "canceled")
+        self.assertEqual(order.state, "refunded")
 
     def test_payment_backend_base_get_notification_url(self):
         """

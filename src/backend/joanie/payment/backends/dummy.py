@@ -112,6 +112,7 @@ class DummyPaymentBackend(BasePaymentBackend):
             amount=D(f"{amount / 100:.2f}"),
             invoice=payment.invoice.order.main_invoice,
             refund_reference=f"ref_{timezone.now().timestamp():.0f}",
+            installment_id=resource.get("metadata").get("installment_id"),
         )
 
     @classmethod
@@ -315,4 +316,40 @@ class DummyPaymentBackend(BasePaymentBackend):
             "type": "tokenize_card",
             "customer": str(user.id),
             "card_token": f"card_{user.id}",
+        }
+
+    def cancel_or_refund(self, amount, reference):
+        """
+        Dummy method to refund an installment by taking the transaction reference (`payment_id`
+        in the cache). This method only treats a refund.
+        """
+        resource = cache.get(reference)
+        if not resource:
+            raise exceptions.RegisterPaymentFailed(
+                f"Resource {reference} does not exist, cannot refund."
+            )
+
+        transaction = Transaction.objects.get(reference=reference)
+        if transaction.total != amount:
+            raise exceptions.RefundPaymentFailed(
+                f"Resource {reference} amount does not match the amount to refund"
+            )
+
+        # Trigger post notification for Dummy usage
+        notification_request = APIRequestFactory().post(
+            reverse("payment_webhook"),
+            data={
+                "id": transaction.reference,
+                "type": "refund",
+                "state": "success",
+            },
+            format="json",
+        )
+        notification_request.data = json.loads(
+            notification_request.body.decode("utf-8")
+        )
+        return {
+            "id": transaction.reference,
+            "type": "refund",
+            "state": "success",
         }

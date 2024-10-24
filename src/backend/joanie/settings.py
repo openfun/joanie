@@ -455,6 +455,9 @@ class Base(Configuration):
         environ_name="JOANIE_INSTALLMENT_REMINDER_DAYS_BEFORE",
         environ_prefix=None,
     )
+    JOANIE_PAYMENT_TIMEOUT = values.PositiveIntegerValue(
+        10, environ_name="JOANIE_PAYMENT_TIMEOUT", environ_prefix=None
+    )
 
     # CORS
     CORS_ALLOW_CREDENTIALS = True

@@ -13,11 +13,14 @@ from joanie.core.enums import (
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_REFUNDED,
+    ORDER_STATE_REFUNDING,
     ORDER_STATE_SIGNING,
     ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
     ORDER_STATE_TO_SIGN,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
+    PAYMENT_STATE_REFUNDED,
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.exceptions import InvalidConversionError
@@ -304,6 +307,43 @@ class TestOrderGeneratorFactory(TestCase):
             self.assertEqual(order.main_invoice.total, 100)
         self.assertEqual(Transaction.objects.filter(invoice__order=order).count(), 4)
         self.assertEqual(Invoice.objects.filter(parent=order.main_invoice).count(), 4)
+
+    def test_factory_order_state_refunding(self):
+        """
+        When passing the state to `refunding` with the `OrderGeneratorFactory`, it should
+        create an order with a payment schedule where 1 installment has been paid.
+        """
+        order = self.check_order(
+            ORDER_STATE_REFUNDING,
+            has_organization=True,
+            has_unsigned_contract=False,
+            is_free=False,
+            has_payment_method=True,
+        )
+
+        self.assertEqual(order.state, "refunding")
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[3]["state"], PAYMENT_STATE_PENDING)
+
+    def test_factory_order_state_refunded(self):
+        """
+        When passing the state to `refunded` with the `OrderGeneratorFactory`, it should
+        create an order with a payment schedule where the first  installment is set as 'refunded'.
+        """
+        order = self.check_order(
+            ORDER_STATE_REFUNDED,
+            has_organization=True,
+            has_unsigned_contract=False,
+            is_free=False,
+            has_payment_method=True,
+        )
+        self.assertEqual(order.state, "refunded")
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[3]["state"], PAYMENT_STATE_PENDING)
 
 
 class TestOrderFactory(TestCase):
