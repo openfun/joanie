@@ -228,6 +228,15 @@ test.describe("Order view", () => {
         page.getByLabel("Certificate", { exact: true }),
       ).toBeVisible();
     }
+    if (order.has_waived_withdrawal_right) {
+      await expect(
+        page.getByText("The user has waived its withdrawal right."),
+      ).toBeVisible();
+    } else {
+      await expect(
+        page.getByText("The user has not waived its withdrawal right."),
+      ).toBeVisible();
+    }
   });
   test("Check all contract fields field are in this view", async ({ page }) => {
     const order = store.list[0];

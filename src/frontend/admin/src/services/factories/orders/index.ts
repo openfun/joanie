@@ -78,6 +78,7 @@ const build = (state?: OrderStatesEnum): Order => {
       orderPayment("8/27/2024", totalOrder / 3),
     ],
     credit_card: CreditCardFactory(),
+    has_waived_withdrawal_right: faker.datatype.boolean(),
   };
   if (
     ![

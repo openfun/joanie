@@ -705,6 +705,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "expiration_month": order.credit_card.expiration_month,
                     "expiration_year": order.credit_card.expiration_year,
                 },
+                "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
             },
         )
 
@@ -846,6 +847,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "expiration_month": order.credit_card.expiration_month,
                     "expiration_year": order.credit_card.expiration_year,
                 },
+                "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
             },
         )
 

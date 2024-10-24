@@ -18,6 +18,7 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Chip, { ChipOwnProps } from "@mui/material/Chip";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import { Order, PaymentStatesEnum } from "@/services/api/models/Order";
 import {
   orderStatesMessages,
@@ -209,6 +210,17 @@ export function OrderView({ order }: Props) {
                 disabled={true}
                 label={intl.formatMessage(orderViewMessages.state)}
                 value={intl.formatMessage(orderStatesMessages[order.state])}
+              />
+            </Grid>
+            <Grid xs={12} sm={6}>
+              <FormControlLabel
+                sx={{ ml: 0.1 }}
+                control={getSignedIcon(order.has_waived_withdrawal_right, true)}
+                label={intl.formatMessage(
+                  order.has_waived_withdrawal_right
+                    ? orderViewMessages.hasWaivedWithdrawalRight
+                    : orderViewMessages.hasNotWaivedWithdrawalRight,
+                )}
               />
             </Grid>
           </Grid>
