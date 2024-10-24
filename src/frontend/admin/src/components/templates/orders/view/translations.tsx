@@ -184,6 +184,16 @@ export const orderViewMessages = defineMessages({
     defaultMessage: "No payment method has been defined.",
     description: "Message displayed when order has no payment method",
   },
+  hasWaivedWithdrawalRight: {
+    id: "components.templates.orders.view.hasWaivedWithdrawalRight",
+    defaultMessage: "The user has waived its withdrawal right.",
+    description: "Text for the has waived withdrawal right label",
+  },
+  hasNotWaivedWithdrawalRight: {
+    id: "components.templates.orders.view.hasNotWaivedWithdrawalRight",
+    defaultMessage: "The user has not waived its withdrawal right.",
+    description: "Text for the has waived withdrawal right label",
+  },
 });
 
 export const invoiceTypesMessages = defineMessages<OrderInvoiceTypesEnum>({

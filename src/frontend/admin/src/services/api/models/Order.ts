@@ -58,6 +58,7 @@ export type Order = AbstractOrder & {
   contract: Nullable<OrderContractDetails>;
   payment_schedule: Nullable<OrderPaymentSchedule[]>;
   credit_card: Nullable<OrderCreditCard>;
+  has_waived_withdrawal_right: boolean;
 };
 
 export type OrderContractDetails = {
