@@ -45,7 +45,6 @@ class TestBasePaymentBackend(BasePaymentBackend):
         invoice,
         refund_reference,
         installment_id,
-        is_transaction_canceled=False,
     ):  # pylint: disable=too-many-arguments, unused-argument
         """call private method _do_on_refund"""
         self._do_on_refund(
@@ -53,7 +52,6 @@ class TestBasePaymentBackend(BasePaymentBackend):
             invoice,
             refund_reference,
             installment_id,
-            is_transaction_canceled=False,
         )
 
     def abort_payment(self, payment_id):
@@ -79,7 +77,7 @@ class TestBasePaymentBackend(BasePaymentBackend):
     def tokenize_card(self, order=None, billing_address=None, user=None):
         pass
 
-    def cancel_or_refund(self, amount, transaction_reference):
+    def cancel_or_refund(self, amount, reference):
         pass
 
 
@@ -620,14 +618,14 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # - Order should be in state `pending_payment` since 1 or 2 installment has been paid
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
         order.flow.cancel()
-        self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+        order.flow.refunding()
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
         # - Refund the paid installment of the order in the payment schedule
         backend.call_do_on_refund(
             amount=Decimal(str(order.payment_schedule[0]["amount"])),
             invoice=order.main_invoice,
             refund_reference="ref_0",
             installment_id=payment["installment_id"],
-            is_transaction_canceled=False,
         )
         # - Credit transaction has been created and a credit note
         self.assertEqual(
@@ -647,7 +645,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # - Order has been canceled
         order.refresh_from_db()
-        self.assertEqual(order.state, "canceled")
+        self.assertEqual(order.state, "refunded")
 
     def test_payment_backend_base_get_notification_url(self):
         """

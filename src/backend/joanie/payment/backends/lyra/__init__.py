@@ -416,12 +416,14 @@ class LyraBackend(BasePaymentBackend):
             transaction = Transaction.objects.get(
                 Q(reference=transaction_id) | Q(reference=parent_transaction_id)
             )
+            if not parent_transaction_id:
+                transaction_id = f"cancel_{transaction_id}"
+
             return self._do_on_refund(
                 amount=D(amount),
                 invoice=transaction.invoice.order.main_invoice,
                 refund_reference=transaction_id,
                 installment_id=installment_id,
-                is_transaction_canceled=not parent_transaction_id,
             )
 
         if answer["orderStatus"] == "PAID":
@@ -508,7 +510,7 @@ class LyraBackend(BasePaymentBackend):
         Abort a payment, nothing to do for Lyra
         """
 
-    def cancel_or_refund(self, amount: Money, transaction_reference: str):
+    def cancel_or_refund(self, amount: Money, reference: str):
         """
         Cancels or refunds a transaction made on the order's payment schedule.
         The payment provider determines whether the transaction can be canceled or
@@ -523,7 +525,7 @@ class LyraBackend(BasePaymentBackend):
         payload = {
             "amount": int(amount.sub_units),
             "currency": settings.DEFAULT_CURRENCY,
-            "uuid": str(transaction_reference),
+            "uuid": str(reference),
             "resolutionMode": "AUTO",
         }
 
@@ -531,8 +533,8 @@ class LyraBackend(BasePaymentBackend):
 
         if response_json.get("status") != "SUCCESS":
             raise exceptions.RegisterPaymentFailed(
-                f"The transaction reference {transaction_reference} does not "
+                f"The transaction reference {reference} does not "
                 "exist at the payment provider."
             )
 
-        return True
+        return response_json

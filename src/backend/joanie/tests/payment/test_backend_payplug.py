@@ -859,7 +859,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
                     "due_date": "2024-10-13",
                 },
                 {
-                    "id": "a45f5574-221a-420f-aac0-ebcc89a4c867",
+                    "id": "573bb8ea-bb0c-4a75-a681-64cad70d05df",
                     "state": enums.PAYMENT_STATE_PENDING,
                     "amount": "700.00",
                     "due_date": "2024-11-13",
@@ -887,11 +887,10 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         mock_do_on_refund.assert_called_once()
         args = mock_do_on_refund.call_args.kwargs
-        self.assertEqual(len(args), 5)
+        self.assertEqual(len(args), 4)
         self.assertIsInstance(args["amount"], D)
         self.assertEqual(args["invoice"], payment.invoice)
         self.assertEqual(args["installment_id"], order.payment_schedule[0]["id"])
-        self.assertEqual(args["is_transaction_canceled"], False)
         self.assertIsNotNone(re.fullmatch(r"ref_\d{5}", args["refund_reference"]))
 
     @mock.patch.object(payplug.Payment, "abort")

@@ -13,11 +13,12 @@ from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
-    ORDER_STATE_CANCELED,
     ORDER_STATE_COMPLETED,
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_REFUNDED,
+    ORDER_STATE_REFUNDING,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUNDED,
@@ -796,8 +797,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
     def test_payment_backend_dummy_cancel_or_refund(self):
         """
-        Cancel/Refund a transaction should return True if it finds the created payment
-        in the cache. If it is found, it proceeds to refund the installment.
+        Cancel/Refund a transaction should return a dictionnary containing the refund transaction
+        reference in the response. If it finds the created payment in the cache, the proceeds to
+        refund the installment.
         """
         backend = DummyPaymentBackend()
         request_factory = APIRequestFactory()
@@ -825,23 +827,33 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         # The installment's state should be in state 'paid
         order.refresh_from_db()
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
+
         # Cancel the order to ask for a refund of the paid installment
         order.flow.cancel()
+        order.flow.refunding()
         order.refresh_from_db()
-        self.assertEqual(order.state, ORDER_STATE_CANCELED)
+
+        self.assertEqual(order.state, ORDER_STATE_REFUNDING)
         # Get the transaction of the paid installment
         transaction = Transaction.objects.get(reference=payment_id)
 
         refund_response = backend.cancel_or_refund(
             amount=order.payment_schedule[0]["amount"],
-            transaction_reference=transaction.reference,
+            reference=transaction.reference,
         )
 
         # The installment must remain 'paid' until the handle_notification switches the
         # state of the installment to 'refunded'
         order.refresh_from_db()
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
-        self.assertEqual(refund_response, True)
+        self.assertEqual(
+            refund_response,
+            {
+                "id": refund_response["id"],
+                "type": "refund",
+                "state": "success",
+            },
+        )
 
         # Notify that payment has been refunded
         request = request_factory.post(
@@ -859,6 +871,8 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
         order.refresh_from_db()
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
+        # When the only paid installment is refunded, then, the order's state should be refunded.
+        self.assertEqual(order.state, ORDER_STATE_REFUNDED)
 
     def test_payment_backend_dummy_cancel_or_refund_raise_refund_payment_failed_no_created_payment(
         self,
@@ -873,7 +887,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         with self.assertRaises(RegisterPaymentFailed) as context:
             backend.cancel_or_refund(
                 amount=order.payment_schedule[0]["amount"],
-                transaction_reference="fake_transaction_reference_id",
+                reference="fake_transaction_reference_id",
             )
 
         self.assertEqual(
@@ -916,7 +930,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         with self.assertRaises(RefundPaymentFailed) as context:
             backend.cancel_or_refund(
                 amount=D("20.00"),
-                transaction_reference=transaction.reference,
+                reference=transaction.reference,
             )
 
         self.assertEqual(

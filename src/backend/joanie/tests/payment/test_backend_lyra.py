@@ -15,11 +15,11 @@ from requests import HTTPError, RequestException
 from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
-    ORDER_STATE_CANCELED,
     ORDER_STATE_COMPLETED,
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    ORDER_STATE_REFUNDED,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_REFUSED,
 )
@@ -1890,10 +1890,12 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         response = backend.cancel_or_refund(
             amount=order.payment_schedule[0]["amount"],
-            transaction_reference=transaction.reference,
+            reference=transaction.reference,
         )
 
-        self.assertEqual(response, True)
+        self.assertEqual(
+            response["answer"]["transactionDetails"]["creationContext"], "REFUND"
+        )
 
     @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={100: (30, 35, 35)})
     @responses.activate(assert_all_requests_are_fired=True)
@@ -1953,10 +1955,10 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
 
         response = backend.cancel_or_refund(
             amount=order.payment_schedule[0]["amount"],
-            transaction_reference=transaction.reference,
+            reference=transaction.reference,
         )
 
-        self.assertEqual(response, True)
+        self.assertEqual(response["answer"]["detailedStatus"], "CANCELLED")
 
     @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={100: (30, 35, 35)})
     @responses.activate(assert_all_requests_are_fired=True)
@@ -2009,7 +2011,8 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             self.assertLogs() as logger,
         ):
             backend.cancel_or_refund(
-                order.payment_schedule[0]["amount"], "wrong_transaction_id"
+                amount=order.payment_schedule[0]["amount"],
+                reference="wrong_transaction_id",
             )
 
         self.assertEqual(
@@ -2069,6 +2072,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             total=str(order.payment_schedule[0]["amount"]),
         )
         order.flow.cancel()
+        order.flow.refunding()
 
         with self.open("lyra/requests/refund_accepted_transaction.json") as file:
             json_request = json.loads(file.read())
@@ -2090,7 +2094,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             refund_transaction.invoice.order.main_invoice, order.main_invoice
         )
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
-        self.assertEqual(order.state, ORDER_STATE_CANCELED)
+        self.assertEqual(order.state, ORDER_STATE_REFUNDED)
 
     @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={0: (100,)})
     def test_payment_backend_lyra_handle_notification_cancel_transaction(self):
@@ -2120,6 +2124,7 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             total=str(order.payment_schedule[0]["amount"]),
         )
         order.flow.cancel()
+        order.flow.refunding()
 
         with self.open("lyra/requests/cancel_transaction.json") as file:
             json_request = json.loads(file.read())
@@ -2141,4 +2146,4 @@ class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
             cancel_transaction.invoice.order.main_invoice, order.main_invoice
         )
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
-        self.assertEqual(order.state, ORDER_STATE_CANCELED)
+        self.assertEqual(order.state, ORDER_STATE_REFUNDED)

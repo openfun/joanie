@@ -21,7 +21,7 @@ or is refunded :
 
 - **`_do_on_payment_success(order, payment)`**
 - **`_do_on_payment_failure(order)`**
-- **`_do_on_refund(amount, invoice, refund_reference, installment_id, is_transaction_canceled)`**
+- **`_do_on_refund(amount, invoice, refund_reference, installment_id)`**
 
 On the other hand, your payment backend has to implement 5 methods :
 

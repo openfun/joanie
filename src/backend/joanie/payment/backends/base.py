@@ -10,7 +10,10 @@ from django.utils.translation import override
 
 from stockholm import Money
 
-from joanie.core.enums import ORDER_STATE_COMPLETED, ORDER_STATE_REFUND
+from joanie.core.enums import (
+    ORDER_STATE_COMPLETED,
+    ORDER_STATE_REFUNDING,
+)
 from joanie.core.utils import emails, payment_schedule
 from joanie.payment.enums import INVOICE_STATE_REFUNDED
 from joanie.payment.models import Invoice, Transaction
@@ -184,9 +187,7 @@ class BasePaymentBackend:
         cls._send_mail_refused_debit(order, installment_id)
 
     @staticmethod
-    def _do_on_refund(
-        amount, invoice, refund_reference, installment_id, is_transaction_canceled=False
-    ):
+    def _do_on_refund(amount, invoice, refund_reference, installment_id):
         """
         Generic actions triggered when a refund has been received.
         Create a credit transaction then cancel the related order if sum of
@@ -196,16 +197,15 @@ class BasePaymentBackend:
             invoice=invoice,
             amount=amount,
             refund_reference=refund_reference,
-            is_transaction_canceled=is_transaction_canceled,
         )
 
         invoice.order.set_installment_refunded(installment_id)
 
-        if (
-            invoice.state == INVOICE_STATE_REFUNDED
-            and invoice.order.state != ORDER_STATE_REFUND
+        if invoice.state == INVOICE_STATE_REFUNDED or (
+            invoice.order.state == ORDER_STATE_REFUNDING
+            and not payment_schedule.has_installment_paid(invoice.order)
         ):
-            invoice.order.flow.cancel()
+            invoice.order.flow.refunded()
 
     @staticmethod
     def get_notification_url():
@@ -274,7 +274,7 @@ class BasePaymentBackend:
             "subclasses of BasePaymentBackend must provide a tokenize_card() method."
         )
 
-    def cancel_or_refund(self, amount: Money, transaction_reference: str):
+    def cancel_or_refund(self, amount: Money, reference: str):
         """
         Method called to cancel or refund installments from an order payment schedule.
         """
