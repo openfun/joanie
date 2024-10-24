@@ -1,4 +1,4 @@
-FROM node:18.19-slim as builder
+FROM node:18.20-slim as builder
 
 WORKDIR /app
 
@@ -14,6 +14,3 @@ FROM nginxinc/nginx-unprivileged:1.25 as production
 
 COPY docker/files/admin/etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/out /app/admin
-
-
-
