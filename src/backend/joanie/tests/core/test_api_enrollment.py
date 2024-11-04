@@ -320,6 +320,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 {
                     "id": str(product2.course_relations.last().id),
                     "order_groups": [],
+                    "is_withdrawable": product2.course_relations.last().is_withdrawable,
                     "product": {
                         "instructions": "",
                         "call_to_action": "let's go!",
@@ -345,12 +346,12 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product2.title,
                         "type": "certificate",
-                        "is_withdrawable": product2.is_withdrawable,
                     },
                 },
                 {
                     "id": str(product1.course_relations.last().id),
                     "order_groups": [],
+                    "is_withdrawable": product1.course_relations.last().is_withdrawable,
                     "product": {
                         "instructions": "",
                         "call_to_action": "let's go!",
@@ -376,7 +377,6 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product1.title,
                         "type": "certificate",
-                        "is_withdrawable": product1.is_withdrawable,
                     },
                 },
             ],
@@ -807,6 +807,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 {
                     "id": str(product.course_relations.first().id),
                     "order_groups": [],
+                    "is_withdrawable": product.course_relations.first().is_withdrawable,
                     "product": {
                         "call_to_action": "let's go!",
                         "certificate_definition": {
@@ -828,7 +829,6 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product.title,
                         "type": "certificate",
-                        "is_withdrawable": product.is_withdrawable,
                     },
                 },
             ],
