@@ -6,6 +6,7 @@ Core application factories
 
 import hashlib
 import json
+import logging
 import random
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -36,6 +37,8 @@ from joanie.core.utils.payment_schedule import (
     convert_date_str_to_date_object,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def generate_thumbnails_for_field(field, include_global=False):
     """
@@ -55,7 +58,28 @@ class UniqueFaker(factory.Faker):
         return super()._get_faker(locale=locale).unique
 
 
-class UserFactory(factory.django.DjangoModelFactory):
+class DebugModelFactory:
+    """
+    A factory to create Django models with logging of the created instances.
+    """
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """
+        Create an instance of the model, log it and return it.
+        """
+        instance = super()._create(model_class, *args, **kwargs)  # pylint: disable=no-member
+        logger.debug(
+            "Created %s instance: %s class: %s",
+            model_class.__name__,
+            instance,
+            cls.__name__,
+        )
+        # logger.debug(" with args %s, kwargs %s", args, kwargs)
+        return instance
+
+
+class UserFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """
     A factory to create an authenticated user for joanie side
     (to manage objects on admin interface)
@@ -71,7 +95,9 @@ class UserFactory(factory.django.DjangoModelFactory):
     password = make_password("password")
 
 
-class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
+class CertificateDefinitionFactory(
+    DebugModelFactory, factory.django.DjangoModelFactory
+):
     """A factory to create a certificate definition"""
 
     class Meta:
@@ -85,7 +111,7 @@ class CertificateDefinitionFactory(factory.django.DjangoModelFactory):
     )
 
 
-class ContractDefinitionFactory(factory.django.DjangoModelFactory):
+class ContractDefinitionFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create a contract definition"""
 
     class Meta:
@@ -98,7 +124,7 @@ class ContractDefinitionFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: f"Contract definition {n}")
 
 
-class OrganizationFactory(factory.django.DjangoModelFactory):
+class OrganizationFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create an organization"""
 
     class Meta:
@@ -140,7 +166,9 @@ class OrganizationFactoryWithThumbnails(OrganizationFactory):
             generate_thumbnails_for_field(instance.logo)
 
 
-class UserOrganizationAccessFactory(factory.django.DjangoModelFactory):
+class UserOrganizationAccessFactory(
+    DebugModelFactory, factory.django.DjangoModelFactory
+):
     """Create fake organization user accesses for testing."""
 
     class Meta:
@@ -153,7 +181,7 @@ class UserOrganizationAccessFactory(factory.django.DjangoModelFactory):
     )
 
 
-class CourseFactory(factory.django.DjangoModelFactory):
+class CourseFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create a course"""
 
     class Meta:
@@ -227,7 +255,7 @@ class CourseFactoryWithThumbnails(CourseFactory):
             generate_thumbnails_for_field(instance.cover)
 
 
-class UserCourseAccessFactory(factory.django.DjangoModelFactory):
+class UserCourseAccessFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """Create fake course user accesses for testing."""
 
     class Meta:
@@ -238,7 +266,7 @@ class UserCourseAccessFactory(factory.django.DjangoModelFactory):
     role = factory.fuzzy.FuzzyChoice([r[0] for r in models.CourseAccess.ROLE_CHOICES])
 
 
-class CourseRunFactory(factory.django.DjangoModelFactory):
+class CourseRunFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """
     A factory to easily generate a credible openEdx course run for our tests.
     """
@@ -456,7 +484,7 @@ class CourseRunMoodleFactory(CourseRunFactory):
         return f"http://moodle.test/course/view.php?id={sequence:d}"
 
 
-class EnrollmentFactory(factory.django.DjangoModelFactory):
+class EnrollmentFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create an enrollment"""
 
     class Meta:
@@ -483,7 +511,7 @@ class EnrollmentFactory(factory.django.DjangoModelFactory):
     state = factory.fuzzy.FuzzyChoice([s[0] for s in enums.ENROLLMENT_STATE_CHOICES])
 
 
-class ProductFactory(factory.django.DjangoModelFactory):
+class ProductFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create a product"""
 
     class Meta:
@@ -545,7 +573,9 @@ class ProductFactory(factory.django.DjangoModelFactory):
         return CertificateDefinitionFactory()
 
 
-class CourseProductRelationFactory(factory.django.DjangoModelFactory):
+class CourseProductRelationFactory(
+    DebugModelFactory, factory.django.DjangoModelFactory
+):
     """A factory to create CourseProductRelation object"""
 
     class Meta:
@@ -567,7 +597,9 @@ class CourseProductRelationFactory(factory.django.DjangoModelFactory):
         self.organizations.set(extracted)
 
 
-class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
+class ProductTargetCourseRelationFactory(
+    DebugModelFactory, factory.django.DjangoModelFactory
+):
     """A factory to create ProductTargetCourseRelation object"""
 
     class Meta:
@@ -591,7 +623,7 @@ class ProductTargetCourseRelationFactory(factory.django.DjangoModelFactory):
         self.course_runs.set(extracted)
 
 
-class OrderGroupFactory(factory.django.DjangoModelFactory):
+class OrderGroupFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create order groups."""
 
     class Meta:
@@ -601,7 +633,7 @@ class OrderGroupFactory(factory.django.DjangoModelFactory):
     nb_seats = factory.fuzzy.FuzzyInteger(0, 100)
 
 
-class OrderFactory(factory.django.DjangoModelFactory):
+class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create an Order"""
 
     class Meta:
@@ -705,7 +737,7 @@ class OrderFactory(factory.django.DjangoModelFactory):
         return None
 
 
-class OrderGeneratorFactory(factory.django.DjangoModelFactory):
+class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create an Order"""
 
     class Meta:
@@ -755,6 +787,7 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
                 return InvoiceFactory(
                     order=self,
                     total=self.total,
+                    recipient_address__owner=self.owner,
                 )
 
         return None
@@ -1035,7 +1068,9 @@ class OrderGeneratorFactory(factory.django.DjangoModelFactory):
         return None
 
 
-class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
+class OrderTargetCourseRelationFactory(
+    DebugModelFactory, factory.django.DjangoModelFactory
+):
     """A factory to create OrderTargetCourseRelation object"""
 
     class Meta:
@@ -1046,7 +1081,7 @@ class OrderTargetCourseRelationFactory(factory.django.DjangoModelFactory):
     position = factory.fuzzy.FuzzyInteger(0, 1000)
 
 
-class AddressFactory(factory.django.DjangoModelFactory):
+class AddressFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create an address"""
 
     class Meta:
@@ -1073,7 +1108,7 @@ class OrganizationAddressFactory(AddressFactory):
     organization = factory.SubFactory(OrganizationFactory)
 
 
-class OrderCertificateFactory(factory.django.DjangoModelFactory):
+class OrderCertificateFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create a certificate"""
 
     class Meta:
@@ -1097,7 +1132,9 @@ class OrderCertificateFactory(factory.django.DjangoModelFactory):
         return self.order.organization
 
 
-class EnrollmentCertificateFactory(factory.django.DjangoModelFactory):
+class EnrollmentCertificateFactory(
+    DebugModelFactory, factory.django.DjangoModelFactory
+):
     """
     A factory to create a certificate directly related to an enrollment (not through an order)
     """
@@ -1110,7 +1147,7 @@ class EnrollmentCertificateFactory(factory.django.DjangoModelFactory):
     organization = factory.SubFactory(OrganizationFactory)
 
 
-class CourseWishFactory(factory.django.DjangoModelFactory):
+class CourseWishFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create a course wish for a user."""
 
     class Meta:
@@ -1120,7 +1157,7 @@ class CourseWishFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
 
 
-class ContractFactory(factory.django.DjangoModelFactory):
+class ContractFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create a contract"""
 
     class Meta:
@@ -1253,7 +1290,7 @@ class ContractFactory(factory.django.DjangoModelFactory):
         return None
 
 
-class SiteFactory(factory.django.DjangoModelFactory):
+class SiteFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """Factory for the Site model"""
 
     name = factory.Sequence(lambda n: f"Site {n:03d}")
@@ -1263,7 +1300,7 @@ class SiteFactory(factory.django.DjangoModelFactory):
         model = Site
 
 
-class SiteConfigFactory(factory.django.DjangoModelFactory):
+class SiteConfigFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """Factory for the Site Config model"""
 
     site = factory.SubFactory(SiteFactory)
@@ -1272,7 +1309,7 @@ class SiteConfigFactory(factory.django.DjangoModelFactory):
         model = models.SiteConfig
 
 
-class ActivityLogFactory(factory.django.DjangoModelFactory):
+class ActivityLogFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """Factory for the ActivityLog model"""
 
     class Meta:
