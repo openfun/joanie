@@ -39,7 +39,14 @@ class InvoiceAdmin(admin.ModelAdmin):
     """Admin class for the Invoice model."""
 
     autocomplete_fields = ["order", "parent"]
-    list_display = ("type", "reference", "recipient_full_name", "total", "balance")
+    list_display = (
+        "reference",
+        "created_on",
+        "type",
+        "recipient_full_name",
+        "total",
+        "balance",
+    )
     readonly_fields = (
         "balance",
         "children",
@@ -158,7 +165,7 @@ class TransactionAdmin(admin.ModelAdmin):
     """Admin class for the transaction model."""
 
     autocomplete_fields = ["invoice"]
-    list_display = ("reference", "total", "created_on")
+    list_display = ("reference", "created_on", "total")
     list_filter = [InvoiceFilter]
 
     def get_readonly_fields(self, request, obj=None):
