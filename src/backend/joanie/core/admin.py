@@ -375,11 +375,12 @@ class UserAdmin(auth_admin.UserAdmin):
 
     list_display = (
         "username",
+        "get_full_name",
         "email",
         "language",
     )
     fieldsets = (
-        (None, {"fields": ("username", "password")}),
+        (None, {"fields": ("username", "first_name", "last_name", "password")}),
         (
             _("Personal info"),
             {
@@ -578,7 +579,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     actions = (ACTION_NAME_CANCEL, ACTION_NAME_GENERATE_CERTIFICATES)
     autocomplete_fields = ["course", "enrollment", "organization", "owner", "product"]
     change_actions = (ACTION_NAME_GENERATE_CERTIFICATES,)
-    list_display = ("id", "organization", "owner", "product", "state")
+    list_display = ("id", "created_on", "organization", "owner", "product", "state")
     list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
     readonly_fields = (
         "state",
