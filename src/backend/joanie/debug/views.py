@@ -476,7 +476,12 @@ class DebugPaymentTemplateView(TemplateView):
         context = super().get_context_data()
         backend = get_payment_backend()
 
-        owner = UserFactory(username="test_card", email="john.doe@acme.org")
+        owner = UserFactory(
+            username="test_card",
+            first_name="Test",
+            last_name="Card",
+            email="fun.dev+payment@fun-mooc.fr",
+        )
         product = ProductFactory(price=Decimal("123.45"))
         product.set_current_language("en-us")
         product.title = "Test product"
