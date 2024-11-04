@@ -247,6 +247,7 @@ resetdb: ## flush database and create a superuser "admin"
 	@echo "$(BOLD)Flush database$(RESET)"
 	@$(MANAGE) flush
 	@${MAKE} superuser
+	@$(MANAGE) set_default_site --domain=$(LOCALTUNNEL_DOMAIN) --name=$(LOCALTUNNEL_DOMAIN)
 .PHONY: resetdb
 
 # -- Frontend admin
