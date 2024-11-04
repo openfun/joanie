@@ -688,7 +688,14 @@ class Development(Base):
 
     ALLOWED_HOSTS = ["*"]
     CORS_ALLOW_ALL_ORIGINS = True
-    CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:8072"]
+    JOANIE_URL = values.Value(
+        "http://localhost:8072", environ_name="LOCALTUNNEL_URL", environ_prefix=None
+    )
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:3000",
+        JOANIE_URL,
+        Base.JOANIE_BACKOFFICE_BASE_URL,
+    ]
     DEBUG = True
     DEVELOPER_EMAIL = values.Value(
         "developer@example.com",
