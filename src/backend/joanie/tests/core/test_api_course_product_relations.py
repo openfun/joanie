@@ -118,6 +118,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "title": course.title,
                 },
                 "order_groups": [],
+                "is_withdrawable": True,
                 "product": {
                     "instructions": (
                         "<h1>An h1 header</h1>\n"
@@ -216,7 +217,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     ],
                     "title": relation.product.title,
                     "type": relation.product.type,
-                    "is_withdrawable": relation.product.is_withdrawable,
                 },
                 "organizations": [
                     {
@@ -653,10 +653,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "title": course.title,
                 },
                 "order_groups": [],
+                "is_withdrawable": True,
                 "product": {
                     "instructions": "",
                     "call_to_action": relation.product.call_to_action,
-                    "is_withdrawable": relation.product.is_withdrawable,
                     "certificate_definition": {
                         "description": relation.product.certificate_definition.description,
                         "name": relation.product.certificate_definition.name,

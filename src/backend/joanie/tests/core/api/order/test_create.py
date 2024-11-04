@@ -981,7 +981,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             {
                 "__all__": [
                     'This order cannot be linked to the product "balançoire", '
-                    'the course "mathématiques" and the organization "fun".'
+                    'the course "mathématiques".'
                 ]
             },
         )
@@ -1185,7 +1185,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_waived_withdrawal_right": True,
         }
 
-        with self.assertNumQueries(62):
+        with self.assertNumQueries(64):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1335,7 +1335,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(24):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1385,7 +1385,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(113):
+        with self.assertNumQueries(115):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1483,7 +1483,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(20):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1644,7 +1644,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             models.Order.objects.filter(course=course, product=product).count(), 1
         )
 
-    @mock.patch("joanie.core.models.Product.is_withdrawable")
+    @mock.patch("joanie.core.models.CourseProductRelation.is_withdrawable")
     def test_api_order_create_for_product_without_withdrawal_period(
         self, mock_is_withdrawable
     ):

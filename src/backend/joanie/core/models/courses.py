@@ -32,7 +32,7 @@ from joanie.core.fields.multiselect import MultiSelectField
 from joanie.core.models.accounts import User
 from joanie.core.models.base import BaseModel
 from joanie.core.models.contracts import Contract
-from joanie.core.utils import normalize_phone_number, webhooks
+from joanie.core.utils import normalize_phone_number, payment_schedule, webhooks
 from joanie.lms_handler import LMSHandler
 from joanie.signature.backends import get_signature_backend
 
@@ -781,6 +781,28 @@ class CourseProductRelation(BaseModel):
         return not Order.objects.filter(
             product=self.product, course=self.course
         ).exists()
+
+    @property
+    def is_withdrawable(self):
+        """
+        Return True if the product has a withdrawal period.
+
+        Read the docstring of core.utils.payment_schedule.has_withdrawal_period method
+        for further information.
+        """
+        if self.product.type != enums.PRODUCT_TYPE_CERTIFICATE:  # pylint: disable=no-member
+            instance = self.product
+        else:
+            instance = self.course
+
+        start_date = instance.get_equivalent_course_run_dates()["start"]  # pylint: disable=no-member
+
+        if start_date is None:
+            return True
+
+        return payment_schedule.has_withdrawal_period(
+            timezone.localdate(), start_date.date()
+        )
 
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):

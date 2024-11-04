@@ -11,7 +11,6 @@ from django.utils.translation import gettext_lazy as _
 import markdown
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import exceptions, serializers
-from rest_framework.fields import BooleanField
 from rest_framework.generics import get_object_or_404
 
 from joanie.core import enums, models
@@ -800,14 +799,12 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True, many=True, source="target_course_relations"
     )
     contract_definition = ContractDefinitionSerializer(read_only=True)
-    is_withdrawable = BooleanField(read_only=True)
 
     class Meta:
         model = models.Product
         fields = [
             "call_to_action",
             "certificate_definition",
-            "is_withdrawable",
             "contract_definition",
             "id",
             "instructions",
@@ -867,9 +864,9 @@ class CourseSerializer(AbilitiesModelSerializer):
         read_only_fields = fields
 
 
-class CourseProductRelationSerializer(CachedModelSerializer):
+class CourseProductRelationLightSerializer(CachedModelSerializer):
     """
-    Serialize a course product relation.
+    Serialize a course product relation in its minimal format.
     """
 
     course = CourseLightSerializer(read_only=True, exclude_abilities=True)
@@ -877,7 +874,6 @@ class CourseProductRelationSerializer(CachedModelSerializer):
     organizations = OrganizationSerializer(
         many=True, read_only=True, exclude_abilities=True
     )
-    order_groups = OrderGroupSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.CourseProductRelation
@@ -888,6 +884,23 @@ class CourseProductRelationSerializer(CachedModelSerializer):
             "order_groups",
             "organizations",
             "product",
+            "is_withdrawable",
+        ]
+        read_only_fields = fields
+
+
+class CourseProductRelationSerializer(CourseProductRelationLightSerializer):
+    """
+    Serialize a course product relation.
+    """
+
+    order_groups = OrderGroupSerializer(many=True, read_only=True)
+    is_withdrawable = serializers.BooleanField(read_only=True)
+
+    class Meta(CourseProductRelationLightSerializer.Meta):
+        fields = CourseProductRelationLightSerializer.Meta.fields + [
+            "order_groups",
+            "is_withdrawable",
         ]
         read_only_fields = fields
 
@@ -905,6 +918,7 @@ class ProductRelationSerializer(CachedModelSerializer):
             "id",
             "order_groups",
             "product",
+            "is_withdrawable",
         ]
         read_only_fields = fields
 

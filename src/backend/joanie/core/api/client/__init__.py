@@ -25,6 +25,7 @@ from django.db.models import (
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -39,7 +40,7 @@ from rest_framework.response import Response
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.core.api.base import NestedGenericViewSet
 from joanie.core.exceptions import NoContractToSignError
-from joanie.core.models import Address
+from joanie.core.models import CourseProductRelation
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
@@ -204,6 +205,8 @@ class CourseProductRelationViewSet(
         """Return the serializer class to use."""
         if self.action == "payment_schedule":
             return serializers.OrderPaymentScheduleSerializer
+        if self.action == "list":
+            return serializers.CourseProductRelationLightSerializer
         return self.serializer_class
 
     @action(detail=True, methods=["GET"], url_path="payment-schedule")
@@ -425,14 +428,31 @@ class OrderViewSet(
             if organization:
                 serializer.initial_data["organization_id"] = organization.id
 
+        # - If the product is not withdrawable, user must have waived it
+        try:
+            relation = CourseProductRelation.objects.get(
+                product_id=product.id, course_id=course.id
+            )
+        except CourseProductRelation.DoesNotExist:
+            return Response(
+                {
+                    "__all__": [
+                        _(
+                            f'This order cannot be linked to the product "{product.title}", '
+                            f'the course "{course.title}".'
+                        )
+                    ],
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
         if product.price != 0 and not request.data.get("billing_address"):
             return Response(
                 {"billing_address": "This field is required."},
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        # - If the product is not withdrawable, user must have waived it
-        if not product.is_withdrawable and not request.data.get(
+        if not relation.is_withdrawable and not request.data.get(
             "has_waived_withdrawal_right"
         ):
             return Response(

@@ -8,7 +8,7 @@ from decimal import Decimal as D
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
@@ -375,26 +375,3 @@ class ProductModelsTestCase(TestCase):
         course_run = factories.CourseRunFactory()
         product = factories.ProductFactory(target_courses=[course_run.course])
         self.assertEqual(product.state, course_run.state)
-
-    @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=7)
-    def test_models_product_is_withdrawable(self):
-        """
-        Product should be withdrawable or not according to its start date and
-        the withdrawal period (7 days for this test).
-        """
-        withdrawal_period = timedelta(days=7)
-
-        for priority in range(8):
-            course_run = factories.CourseRunFactory(state=priority)
-            product = factories.ProductFactory(target_courses=[course_run.course])
-            product_dates = product.get_equivalent_course_run_dates()
-            start_date = (
-                product_dates["start"].date() if product_dates["start"] else None
-            )
-
-            with self.subTest(f"CourseState {priority}", start_date=start_date):
-                withdrawal_date = django_timezone.localdate() + withdrawal_period
-                self.assertEqual(
-                    product.is_withdrawable,
-                    withdrawal_date < start_date if start_date else True,
-                )
