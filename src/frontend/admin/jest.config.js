@@ -22,7 +22,7 @@ const customJestConfig = {
   testEnvironmentOptions: {
     customExportConditions: [""],
   },
-  testEnvironment: "jest-environment-jsdom",
+  testEnvironment: "jest-fixed-jsdom",
   transformIgnorePatterns: [
     "/node_modules/(?!(" +
       "jest-next-dynamic|" +
