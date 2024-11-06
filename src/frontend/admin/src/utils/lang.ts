@@ -60,7 +60,7 @@ export const getLocaleFromDjangoLang = (djangoLang?: string): LocalesEnum => {
 };
 
 export const getSavedDjangoLanguage = (): string => {
-  return localStorage.getItem(DJANGO_SAVED_LANGUAGE) + "" ?? "";
+  return localStorage.getItem(DJANGO_SAVED_LANGUAGE) ?? "";
 };
 
 export const setSavedDjangoLanguage = (lang: string): void => {
