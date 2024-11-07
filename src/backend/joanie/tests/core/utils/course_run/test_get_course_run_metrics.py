@@ -1,4 +1,4 @@
-"""Test suite for course run utility methods."""
+"""Test suite for the course run utility `get_course_run_metrics` method."""
 
 from datetime import timedelta
 
@@ -10,10 +10,12 @@ from joanie.core import enums, factories, models
 from joanie.core.utils.course_run import get_course_run_metrics
 
 
-class UtilsCourseRunTestCase(TestCase):
-    """Test suite for course run utility methods."""
+class UtilsCourseRunGetMetricsTestCase(TestCase):
+    """Test suite for the course run utility `get_course_run_metrics` method."""
 
-    def test_utils_course_run_with_non_existing_resource_link_parameter(self):
+    def test_utils_course_run_get_metrics_with_non_existing_resource_link_parameter(
+        self,
+    ):
         """
         Test the scenario when a non existent `resource_link` is parsed as input.
         It should raise a 'ValidationError' mentionning to provide an existing `resource_link`
@@ -27,7 +29,7 @@ class UtilsCourseRunTestCase(TestCase):
             "['Make sure to give an existing resource link from an ended course run.']",
         )
 
-    def test_utils_course_run_where_student_enrolls_and_does_not_make_an_order_to_get_certificate(
+    def test_utils_course_run_get_metrics_where_student_enrolls_and_does_not_make_an_order_to_get_certificate(  # pylint: disable=line-too-long
         self,
     ):
         """
@@ -59,7 +61,7 @@ class UtilsCourseRunTestCase(TestCase):
             },
         )
 
-    def test_utils_course_run_where_student_enrolls_and_makes_an_order_to_access_to_certificate(
+    def test_utils_course_run_get_metrics_where_student_enrolls_and_makes_an_order_to_access_to_certificate(  # pylint: disable=line-too-long
         self,
     ):
         """

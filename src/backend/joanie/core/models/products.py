@@ -44,6 +44,9 @@ from joanie.core.utils import (
 )
 from joanie.core.utils import issuers, webhooks
 from joanie.core.utils.contract_definition import embed_images_in_context
+from joanie.core.utils.course_run.aggregate_course_runs_dates import (
+    aggregate_course_runs_dates,
+)
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.signature.backends import get_signature_backend
 
@@ -187,7 +190,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
         # Go through a set for uniqueness of each language then return an ordered list
         return sorted(set(itertools.chain.from_iterable(languages)))
 
-    def get_equivalent_course_run_dates(self):
+    def get_equivalent_course_run_dates(self, ignore_archived=False):
         """
         Return a dict of dates equivalent to course run dates
         by aggregating dates of all target course runs as follows:
@@ -196,14 +199,10 @@ class Product(parler_models.TranslatableModel, BaseModel):
         - enrollment_start: Pick the latest enrollment start date
         - enrollment_end: Pick the earliest enrollment end date
         """
-        aggregate = self.target_course_runs.aggregate(
-            models.Min("start"),
-            models.Max("end"),
-            models.Max("enrollment_start"),
-            models.Min("enrollment_end"),
+        return aggregate_course_runs_dates(
+            self.target_course_runs,
+            ignore_archived=ignore_archived,
         )
-
-        return {key.split("__")[0]: value for key, value in aggregate.items()}
 
     @staticmethod
     def get_equivalent_serialized_course_runs_for_products(
@@ -1055,7 +1054,7 @@ class Order(BaseModel):
             user.email, [self.contract.signature_backend_reference]
         )
 
-    def get_equivalent_course_run_dates(self):
+    def get_equivalent_course_run_dates(self, ignore_archived=False):
         """
         Return a dict of dates equivalent to course run dates
         by aggregating dates of all target course runs as follows:
@@ -1064,17 +1063,10 @@ class Order(BaseModel):
         - enrollment_start: Pick the latest enrollment start date
         - enrollment_end: Pick the earliest enrollment end date
         """
-        aggregate = self.target_course_runs.aggregate(
-            models.Min("start"),
-            models.Max("end"),
-            models.Max("enrollment_start"),
-            models.Min("enrollment_end"),
+        return aggregate_course_runs_dates(
+            self.target_course_runs,
+            ignore_archived=ignore_archived,
         )
-
-        return {
-            key.split("__")[0]: value if value else None
-            for key, value in aggregate.items()
-        }
 
     def get_schedule_dates(self):
         """
@@ -1083,7 +1075,7 @@ class Order(BaseModel):
         (right now) and the start and the end of the course run.
         """
         error_message = None
-        course_run_dates = self.get_equivalent_course_run_dates()
+        course_run_dates = self.get_equivalent_course_run_dates(ignore_archived=True)
         start_date = course_run_dates["start"]
         end_date = course_run_dates["end"]
 

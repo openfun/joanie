@@ -4,7 +4,7 @@ Test suite for order payment schedule models
 """
 
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from unittest import mock
 from zoneinfo import ZoneInfo
 
@@ -12,6 +12,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.utils import override_settings
+from django.utils import timezone
 
 from stockholm import Money
 
@@ -29,7 +30,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_REFUNDED,
     PAYMENT_STATE_REFUSED,
 )
-from joanie.core.models import Order
+from joanie.core.models import CourseState, Order
 from joanie.core.utils import payment_schedule
 from joanie.tests.base import ActivityLogMixingTestCase, BaseLogMixinTestCase
 
@@ -54,11 +55,10 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         """
         Check that the schedule dates are correctly calculated for order with contract
         """
-        student_signed_on_date = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
-        course_run_start_date = datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC"))
-        course_run_end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
+        student_signed_on_date = timezone.now()
+        course_run_start_date = timezone.now() + timedelta(days=30 * 2)
+        course_run_end_date = timezone.now() + timedelta(days=30 * 5)
         course_run = factories.CourseRunFactory(
-            enrollment_start=datetime(2024, 1, 1, 8, tzinfo=ZoneInfo("UTC")),
             start=course_run_start_date,
             end=course_run_end_date,
         )
@@ -80,10 +80,9 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
         """
         Check that the schedule dates are correctly calculated for order without contract
         """
-        course_run_start_date = datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC"))
-        course_run_end_date = datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC"))
+        course_run_start_date = timezone.now() + timedelta(days=30 * 2)
+        course_run_end_date = timezone.now() + timedelta(days=30 * 5)
         course_run = factories.CourseRunFactory(
-            enrollment_start=datetime(2024, 1, 1, 8, tzinfo=ZoneInfo("UTC")),
             start=course_run_start_date,
             end=course_run_end_date,
         )
@@ -92,7 +91,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             product__target_courses=[course_run.course],
         )
 
-        mocked_now = datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC"))
+        mocked_now = timezone.now()
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
             signed_contract_date, course_start_date, course_end_date = (
                 order.get_schedule_dates()
@@ -111,6 +110,39 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestC
             submitted_for_signature_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
         )
 
+        with (
+            self.assertRaises(ValidationError) as context,
+            self.assertLogs("joanie") as logger,
+        ):
+            contract.order.get_schedule_dates()
+
+        self.assertEqual(
+            str(context.exception), "['Cannot retrieve start or end date for order']"
+        )
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "ERROR",
+                    "Cannot retrieve start or end date for order",
+                    {"order": dict},
+                ),
+            ],
+        )
+
+    def test_models_order_schedule_get_schedule_dates_archived_course_run(self):
+        """
+        Should ignore archived course run when calculating schedule dates
+        """
+        archived_run = factories.CourseRunFactory(state=CourseState.ARCHIVED_CLOSED)
+        contract = factories.ContractFactory(
+            student_signed_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            submitted_for_signature_on=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            order__product__target_courses=[archived_run.course],
+        )
+
+        # As the only available course run is archived,
+        # an error should be raised when trying to get the schedule dates
         with (
             self.assertRaises(ValidationError) as context,
             self.assertLogs("joanie") as logger,

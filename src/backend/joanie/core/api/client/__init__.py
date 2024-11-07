@@ -220,7 +220,9 @@ class CourseProductRelationViewSet(
             instance = course_product_relation.course
         else:
             instance = course_product_relation.product
-        course_run_dates = instance.get_equivalent_course_run_dates()
+        course_run_dates = instance.get_equivalent_course_run_dates(
+            ignore_archived=True
+        )
 
         payment_schedule = generate_payment_schedule(
             course_product_relation.product.price,

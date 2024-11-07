@@ -17,6 +17,10 @@ and this project adheres to
   if the user has not waived his withdrawal right
 - Display `has_waived_withdrawal_right` in back office Order view
 
+### Changed
+
+- Ignore archived course runs to process payment schedule and withdrawable state
+
 ## [2.9.2] - 2024-10-24
 
 ### Fixed

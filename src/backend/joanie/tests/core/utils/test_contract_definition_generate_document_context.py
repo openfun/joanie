@@ -11,7 +11,7 @@ from django.utils import timezone as django_timezone
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories
-from joanie.core.models import DocumentImage
+from joanie.core.models import CourseState, DocumentImage
 from joanie.core.utils import contract_definition, image_to_base64, issuers
 from joanie.core.utils.contract_definition import ORGANIZATION_FALLBACK_LOGO
 from joanie.payment.factories import InvoiceFactory
@@ -78,6 +78,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             is_main=True,
             is_reusable=True,
         )
+        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         relation = factories.CourseProductRelationFactory(
             organizations=[organization],
             product=factories.ProductFactory(
@@ -90,18 +91,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 ),
                 title="You will know that you know you don't know",
                 price="999.99",
-                target_courses=[
-                    factories.CourseFactory(
-                        course_runs=[
-                            factories.CourseRunFactory(
-                                start="2024-01-01T09:00:00+00:00",
-                                end="2024-03-31T18:00:00+00:00",
-                                enrollment_start="2024-01-01T12:00:00+00:00",
-                                enrollment_end="2024-02-01T12:00:00+00:00",
-                            )
-                        ]
-                    )
-                ],
+                target_courses=[run.course],
             ),
             course=factories.CourseFactory(
                 organizations=[organization],
@@ -135,8 +125,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "course": {
                 "name": order.product.title,
                 "code": relation.course.code,
-                "start": "2024-01-01T09:00:00+00:00",
-                "end": "2024-03-31T18:00:00+00:00",
+                "start": run.start.isoformat(),
+                "end": run.end.isoformat(),
                 "effort": "P0DT10H30M12S",
                 "price": "999.99",
                 "currency": "€",
