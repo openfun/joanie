@@ -9,6 +9,7 @@ from django.test import TestCase
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories
+from joanie.core.models import CourseState
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
 from joanie.payment.factories import InvoiceFactory
@@ -69,23 +70,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             is_reusable=True,
             is_main=True,
         )
-
+        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         product = factories.ProductFactory(
             title="You will know that you know you don't know",
             price="999.99",
             contract_definition=definition,
-            target_courses=[
-                factories.CourseFactory(
-                    course_runs=[
-                        factories.CourseRunFactory(
-                            start="2024-01-01T09:00:00+00:00",
-                            end="2024-03-31T18:00:00+00:00",
-                            enrollment_start="2024-01-01T12:00:00+00:00",
-                            enrollment_end="2024-02-01T12:00:00+00:00",
-                        )
-                    ]
-                )
-            ],
+            target_courses=[run.course],
         )
 
         course = factories.CourseFactory(code="UX-00001", effort=timedelta(hours=404))
@@ -153,8 +143,22 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         # - Course information should be displayed
         self.assertIn("UX-00001", document_text)
         self.assertIn("You will know that you know you don't know", document_text)
-        self.assertIn("01/01/2024 9 a.m.", document_text)
-        self.assertIn("03/31/2024 6 p.m.", document_text)
+        self.assertIn(
+            run.start.strftime("%m/%d/%Y %-I:%M %p")
+            .lower()
+            .replace("am", "a.m.")
+            .replace("pm", "p.m."),
+            document_text,
+            document_text,
+        )
+        self.assertIn(
+            run.end.strftime("%m/%d/%Y %-I:%M %p")
+            .lower()
+            .replace("am", "a.m.")
+            .replace("pm", "p.m."),
+            document_text,
+            document_text,
+        )
         self.assertIn("404 hours", document_text)
         self.assertIn("999.99 €", document_text)
 

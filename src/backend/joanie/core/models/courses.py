@@ -33,6 +33,9 @@ from joanie.core.models.accounts import User
 from joanie.core.models.base import BaseModel
 from joanie.core.models.contracts import Contract
 from joanie.core.utils import normalize_phone_number, payment_schedule, webhooks
+from joanie.core.utils.course_run.aggregate_course_runs_dates import (
+    aggregate_course_runs_dates,
+)
 from joanie.lms_handler import LMSHandler
 from joanie.signature.backends import get_signature_backend
 
@@ -535,7 +538,7 @@ class Course(parler_models.TranslatableModel, BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    def get_equivalent_course_run_dates(self):
+    def get_equivalent_course_run_dates(self, ignore_archived=False):
         """
         Return a dict of dates equivalent to course run dates
         by aggregating dates of all target course runs as follows:
@@ -544,14 +547,10 @@ class Course(parler_models.TranslatableModel, BaseModel):
         - enrollment_start: Pick the latest enrollment start date
         - enrollment_end: Pick the earliest enrollment end date
         """
-        aggregate = self.course_runs.aggregate(
-            models.Min("start"),
-            models.Max("end"),
-            models.Max("enrollment_start"),
-            models.Min("enrollment_end"),
+        return aggregate_course_runs_dates(
+            self.course_runs,
+            ignore_archived=ignore_archived,
         )
-
-        return {key.split("__")[0]: value for key, value in aggregate.items()}
 
     def get_selling_organizations(self, product=None):
         """
@@ -795,7 +794,9 @@ class CourseProductRelation(BaseModel):
         else:
             instance = self.course
 
-        start_date = instance.get_equivalent_course_run_dates()["start"]  # pylint: disable=no-member
+        start_date = instance.get_equivalent_course_run_dates(ignore_archived=True)[  # pylint: disable=no-member
+            "start"
+        ]
 
         if start_date is None:
             return True

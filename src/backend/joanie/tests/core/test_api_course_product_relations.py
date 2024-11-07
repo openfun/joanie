@@ -1447,13 +1447,23 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         """
         Anonymous users should be able to retrieve a payment schedule for
         a single course product relation if a product id is provided
-        and the product is a credential.
+        and the product is a credential. If there are archived course runs, they should be ignored.
         """
+        mocked_now = datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
+        course = factories.CourseFactory()
         course_run = factories.CourseRunFactory(
             enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
             start=datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
             end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+            course=course,
         )
+        # Create an archived course_run
+        factories.CourseRunFactory(
+            start=datetime(2023, 12, 15, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2023, 12, 31, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+
         product = factories.ProductFactory(
             price=3,
             type=enums.PRODUCT_TYPE_CREDENTIAL,
@@ -1467,10 +1477,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         with (
             mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
-            mock.patch(
-                "django.utils.timezone.now",
-                return_value=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
-            ),
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
