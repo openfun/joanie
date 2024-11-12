@@ -397,6 +397,34 @@ class TargetCoursesViewSet(
         return Response(status=HTTPStatus.CREATED)
 
 
+class TeacherViewSet(viewsets.ModelViewSet):
+    """
+    Admin Teacher ViewSet
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminTeacherSerializer
+    queryset = models.Teacher.objects.all()
+    filterset_class = filters.TeacherAdminFilterSet
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["last_name", "first_name"]
+
+
+class SkillViewSet(viewsets.ModelViewSet):
+    """
+    Admin Skill ViewSet
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminSkillSerializer
+    queryset = models.Skill.objects.all()
+    filterset_class = filters.SkillAdminFilterSet
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["translations__title"]
+
+
 class ContractDefinitionViewSet(viewsets.ModelViewSet):
     """
     Admin Contract Definition ViewSet

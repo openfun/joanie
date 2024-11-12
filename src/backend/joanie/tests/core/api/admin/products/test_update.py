@@ -46,7 +46,7 @@ class ProductAdminApiUpdateTest(TestCase):
         self.assertEqual(content["price"], 100)
         self.assertEqual(content["instructions"], "This is a test instruction")
 
-    def test_admin_api_product_partially_update(self):
+    def test_admin_api_product_update_partially(self):
         """
         Staff user should be able to partially update a product.
         """
@@ -64,6 +64,132 @@ class ProductAdminApiUpdateTest(TestCase):
         content = response.json()
         self.assertEqual(content["id"], str(product.id))
         self.assertEqual(content["price"], 100.57)
+
+    def test_admin_api_product_update_certification(self):
+        """
+        Staff user should be able to update certification level field.
+        This field should be None or a positive integer between 1 and 9.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        product = factories.ProductFactory()
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"certification_level": "one"},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "certification_level": [
+                    "Certification level must be an integer or null."
+                ]
+            },
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"certification_level": 0},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "certification_level": [
+                    "Ensure this value is greater than or equal to 1."
+                ]
+            },
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"certification_level": 9},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {"certification_level": ["Ensure this value is less than or equal to 8."]},
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"certification_level": 2},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        product.refresh_from_db()
+        self.assertEqual(product.certification_level, 2)
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"certification_level": None},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        product.refresh_from_db()
+        self.assertEqual(product.certification_level, None)
+
+    def test_admin_api_product_update_teachers(self):
+        """
+        Staff user should be able to update teachers of a product.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        product = factories.ProductFactory()
+        teacher = factories.TeacherFactory()
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"teachers": [str(teacher.id)]},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        product.refresh_from_db()
+        self.assertEqual(product.teachers.count(), 1)
+        self.assertEqual(product.teachers.first().id, teacher.id)
+
+        # Then unset teachers
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"teachers": []},
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        product.refresh_from_db()
+        self.assertEqual(product.teachers.count(), 0)
+
+    def test_admin_api_product_update_skills(self):
+        """
+        Staff user should be able to update skills of a product.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        product = factories.ProductFactory()
+        skill = factories.SkillFactory()
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/products/{product.id}/",
+            content_type="application/json",
+            data={"skills": [str(skill.id)]},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        product.refresh_from_db()
+        self.assertEqual(product.skills.count(), 1)
+        self.assertEqual(product.skills.first().id, skill.id)
 
     def test_admin_api_product_update_empty_instructions(self):
         """

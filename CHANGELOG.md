@@ -13,6 +13,12 @@ and this project adheres to
 - Add button in back office for refunding an order
 - Add `teachers`, `skills` and `certification_level` fields
   to `Product`model
+- Add admin api endpoints to CRUD `Teacher` and `Skill` resources.
+
+### Changed
+
+- Update product endpoint to CRUD `teachers`, `skills`
+  and `certification level` fields
 
 ## [2.10.0] - 2024-11-20
 
