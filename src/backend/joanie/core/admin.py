@@ -449,9 +449,19 @@ class ProductAdmin(
                     "instructions",
                     "call_to_action",
                     "price",
-                    "certificate_definition",
                     "contract_definition",
                     "related_courses",
+                )
+            },
+        ),
+        (
+            _("Certifications"),
+            {
+                "fields": (
+                    "certificate_definition",
+                    "certification_level",
+                    "teachers",
+                    "skills",
                 )
             },
         ),
@@ -708,6 +718,22 @@ class CourseWishAdmin(admin.ModelAdmin):
         "course__code",
         "course__translations__title",
     ]
+
+
+@admin.register(models.Teacher)
+class TeacherAdmin(admin.ModelAdmin):
+    """Admin class for the Teacher model"""
+
+    list_display = ("first_name", "last_name")
+    search_fields = ["first_name", "last_name"]
+
+
+@admin.register(models.Skill)
+class SkillAdmin(TranslatableAdmin):
+    """Admin class for the Skill model"""
+
+    list_display = ("title",)
+    search_fields = ["translations__title"]
 
 
 class SiteConfigInline(TranslatableStackedInline):

@@ -561,6 +561,28 @@ class ProductFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 product=self, course=course, position=position
             )
 
+    @factory.post_generation
+    def teachers(self, create, extracted, **kwargs):
+        """
+        Link teachers to the product after its creation:
+        - link the list of teachers passed in "extracted" if any
+        """
+        if not extracted or not create:
+            return
+
+        self.teachers.set(extracted)
+
+    @factory.post_generation
+    def skills(self, create, extracted, **kwargs):
+        """
+        Link skills to the product after its creation:
+        - link the list of skills passed in "extracted" if any
+        """
+        if not extracted or not create:
+            return
+
+        self.skills.set(extracted)
+
     @factory.lazy_attribute
     def certificate_definition(self):
         """
@@ -1339,3 +1361,22 @@ class ActivityLogFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         ]:
             return {"order_id": str(factory.Faker("uuid4"))}
         return {}
+
+
+class SkillFactory(factory.django.DjangoModelFactory):
+    """Factory for the Skill model"""
+
+    class Meta:
+        model = models.Skill
+
+    title = factory.Faker("word")
+
+
+class TeacherFactory(factory.django.DjangoModelFactory):
+    """Factory for the Teacher model"""
+
+    class Meta:
+        model = models.Teacher
+
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")

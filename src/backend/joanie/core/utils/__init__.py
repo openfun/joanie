@@ -14,6 +14,13 @@ from configurations import values
 from PIL import ImageFile as PillowImageFile
 
 
+def remove_extra_whitespaces(text):
+    """
+    Remove extra whitespaces from a string.
+    """
+    return " ".join(text.split())
+
+
 def normalize_code(code):
     """Normalize object codes to avoid duplicates."""
     return slugify(code, allow_unicode=False).upper() if code else None
