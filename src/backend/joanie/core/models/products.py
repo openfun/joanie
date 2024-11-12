@@ -8,10 +8,12 @@ from collections import defaultdict
 
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 import requests
@@ -19,7 +21,7 @@ from parler import models as parler_models
 from stockholm import Money
 from urllib3.util import Retry
 
-from joanie.core import enums
+from joanie.core import enums, utils
 from joanie.core.exceptions import CertificateGenerationError
 from joanie.core.fields.schedule import (
     OrderPaymentScheduleDecoder,
@@ -111,6 +113,29 @@ class Product(parler_models.TranslatableModel, BaseModel):
         on_delete=models.PROTECT,
         blank=True,
         null=True,
+    )
+    certification_level = models.PositiveSmallIntegerField(
+        verbose_name=_("level of certification"),
+        validators=[MinValueValidator(1), MaxValueValidator(8)],
+        help_text=_(
+            "Level of certification as defined by the European Qualifications Framework."
+        ),
+        blank=True,
+        null=True,
+    )
+    teachers = models.ManyToManyField(
+        to="Teacher",
+        related_name="products",
+        verbose_name=_("teachers"),
+        help_text=_("Teachers that will be displayed on the delivered certificate."),
+        blank=True,
+    )
+    skills = models.ManyToManyField(
+        to="Skill",
+        related_name="products",
+        verbose_name=_("skills"),
+        help_text=_("Skills that will be displayed on the delivered certificate."),
+        blank=True,
     )
 
     class Meta:
@@ -1333,3 +1358,61 @@ class OrderTargetCourseRelation(BaseModel):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class Skill(parler_models.TranslatableModel, BaseModel):
+    """
+    Skill model allows to define a skill that can be associated to a product.
+    """
+
+    class Meta:
+        db_table = "joanie_skill"
+        verbose_name = _("Skill")
+        verbose_name_plural = _("Skills")
+        ordering = ["created_on"]
+
+    translations = parler_models.TranslatedFields(
+        title=models.CharField(_("title"), max_length=255),
+    )
+
+    def _check_title_uniqueness(self):
+        """Check that the title being save does not exist in the active language."""
+        language_code = get_language()
+
+        if (
+            Skill.objects.annotate(lower_title=Lower("translations__title"))
+            .filter(
+                lower_title=self.title.lower(),  # pylint: disable=no-member
+                translations__language_code=language_code,
+            )
+            .exists()
+        ):
+            raise ValidationError(_("A skill with this title already exists."))
+
+    def clean(self):
+        """Sanitize title then ensure its uniqueness before saving."""
+        self.title = utils.remove_extra_whitespaces(self.title)  # pylint: disable=attribute-defined-outside-init
+        self._check_title_uniqueness()
+
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class Teacher(BaseModel):
+    """
+    Teacher model allows to define a teacher that can be associated to a product.
+    """
+
+    class Meta:
+        db_table = "joanie_teacher"
+        verbose_name = _("Teacher")
+        verbose_name_plural = _("Teachers")
+        ordering = ["last_name", "first_name"]
+        unique_together = ("first_name", "last_name")
+
+    first_name = models.CharField(_("first name"), max_length=255)
+    last_name = models.CharField(_("last name"), max_length=255)

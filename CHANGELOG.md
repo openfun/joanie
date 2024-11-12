@@ -11,6 +11,8 @@ and this project adheres to
 ### Added
 
 - Add button in back office for refunding an order
+- Add `teachers`, `skills` and `certification_level` fields
+  to `Product`model
 
 ## [2.10.0] - 2024-11-20
 
