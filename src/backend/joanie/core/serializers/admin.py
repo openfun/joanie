@@ -335,6 +335,25 @@ class AdminProductSerializer(serializers.ModelSerializer):
     instructions = serializers.CharField(
         allow_blank=True, trim_whitespace=False, required=False
     )
+    certification_level = serializers.CharField(
+        required=False,
+        allow_blank=models.Product._meta.get_field("certification_level").blank,
+        allow_null=models.Product._meta.get_field("certification_level").null,
+        label=models.Product._meta.get_field("certification_level").verbose_name,
+        help_text=models.Product._meta.get_field("certification_level").help_text,
+    )
+    teachers = serializers.SlugRelatedField(
+        slug_field="id",
+        queryset=models.Teacher.objects.all(),
+        many=True,
+        required=False,
+    )
+    skills = serializers.SlugRelatedField(
+        slug_field="id",
+        queryset=models.Skill.objects.all(),
+        many=True,
+        required=False,
+    )
 
     class Meta:
         model = models.Product
@@ -350,8 +369,25 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "certificate_definition",
             "contract_definition",
             "target_courses",
+            "certification_level",
+            "teachers",
+            "skills",
         ]
         read_only_fields = ["id"]
+
+    def validate_certification_level(self, value):
+        """
+        Validate that the certification level is a positive integer or null
+        """
+        if not value:
+            return None
+
+        try:
+            return int(value)
+        except ValueError as error:
+            raise serializers.ValidationError(
+                "Certification level must be an integer or null."
+            ) from error
 
     def get_price_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
@@ -899,6 +935,26 @@ class AdminProductTargetCourseRelationNestedSerializer(serializers.ModelSerializ
         read_only_fields = ["id", "course", "course_runs", "is_graded", "position"]
 
 
+class AdminTeacherSerializer(serializers.ModelSerializer):
+    """Serializer for Teacher model."""
+
+    class Meta:
+        model = models.Teacher
+        fields = ["id", "first_name", "last_name"]
+        read_only_fields = ["id"]
+
+
+class AdminSkillSerializer(serializers.ModelSerializer):
+    """Serializer for Skill model."""
+
+    title = serializers.CharField()
+
+    class Meta:
+        model = models.Skill
+        fields = ["id", "title"]
+        read_only_fields = ["id"]
+
+
 class AdminProductDetailSerializer(serializers.ModelSerializer):
     """Serializer for Product details"""
 
@@ -910,6 +966,9 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
     )
     course_relations = AdminCourseProductRelationsSerializer(read_only=True, many=True)
     price_currency = serializers.SerializerMethodField(read_only=True)
+    certification_level = serializers.IntegerField(read_only=True)
+    skills = AdminSkillSerializer(many=True, read_only=True)
+    teachers = AdminTeacherSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Product
@@ -925,7 +984,10 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "contract_definition",
             "target_courses",
             "course_relations",
+            "certification_level",
             "instructions",
+            "teachers",
+            "skills",
         ]
         read_only_fields = fields
 

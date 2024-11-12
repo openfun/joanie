@@ -15,6 +15,8 @@ from joanie.core import enums, models
 from joanie.core.filters.base import MultipleValueFilter
 
 from .enrollment import EnrollmentAdminFilterSet
+from .skill import SkillAdminFilterSet
+from .teacher import TeacherAdminFilterSet
 
 
 class OrganizationAdminFilterSet(filters.FilterSet):

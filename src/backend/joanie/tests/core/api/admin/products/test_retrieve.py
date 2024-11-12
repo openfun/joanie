@@ -24,7 +24,14 @@ class ProductAdminApiRetrieveTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         contract_definition = factories.ContractDefinitionFactory()
-        product = factories.ProductFactory(contract_definition=contract_definition)
+        skill = factories.SkillFactory(title="Python")
+        teacher = factories.TeacherFactory(first_name="Joanie", last_name="Cunningham")
+        product = factories.ProductFactory(
+            contract_definition=contract_definition,
+            skills=[skill],
+            teachers=[teacher],
+            certification_level=3,
+        )
         relation = models.CourseProductRelation.objects.get(product=product)
         courses = factories.CourseFactory.create_batch(3)
         relations = []
@@ -60,6 +67,20 @@ class ProductAdminApiRetrieveTest(TestCase):
             "type": product.type,
             "price": float(product.price),
             "price_currency": "EUR",
+            "certification_level": 3,
+            "skills": [
+                {
+                    "id": str(skill.id),
+                    "title": "Python",
+                }
+            ],
+            "teachers": [
+                {
+                    "id": str(teacher.id),
+                    "first_name": "Joanie",
+                    "last_name": "Cunningham",
+                }
+            ],
             "certificate_definition": {
                 "description": "",
                 "id": str(product.certificate_definition.id),
