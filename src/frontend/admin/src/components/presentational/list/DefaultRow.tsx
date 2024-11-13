@@ -8,7 +8,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ModeEditOutlineTwoToneIcon from "@mui/icons-material/ModeEditOutlineTwoTone";
 
 import CircularProgress from "@mui/material/CircularProgress";
-import { SxProps } from "@mui/material/styles";
+import { SxProps, useTheme } from "@mui/material/styles";
 import Tooltip from "@mui/material/Tooltip";
 
 export interface DefaultRowProps {
@@ -36,6 +36,7 @@ export function DefaultRow({
   onDelete,
   ...props
 }: PropsWithChildren<DefaultRowProps>) {
+  const theme = useTheme();
   return (
     <>
       <Box
@@ -54,6 +55,10 @@ export function DefaultRow({
               opacity: 1,
             },
           },
+          ...theme.applyStyles("dark", {
+            backgroundColor: grey[800],
+            border: `2px solid ${grey[800]}`,
+          }),
           ...props.sx,
         }}
       >

@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useMemo } from "react";
 import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
@@ -68,12 +67,6 @@ export function ProductFormTypeSection(props: Props) {
   return (
     <Stack spacing={4} padding={3}>
       <Typography variant="h6">Product type: {props.active}</Typography>
-      <Alert severity="info">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent
-        blandit, purus ac commodo efficitur, leo nunc imperdiet augue, eget
-        varius dolor quam in mi. In tincidunt felis vitae vestibulum vehicula
-      </Alert>
-
       <Stack
         justifyContent="center"
         alignItems="stretch"
@@ -86,21 +79,39 @@ export function ProductFormTypeSection(props: Props) {
               key={type.type}
               sx={{
                 display: "flex",
-                padding: "1px",
+                padding: props.active === type.type ? "2px" : "1px",
                 borderRadius: "6px",
                 boxShadow: "0px 2px 6px 0px rgba(0, 0, 0, 0.25)",
                 background:
-                  "linear-gradient(96.79deg, #6AB8FF 0%, #F0F8FF 100%)",
-                transition: "background, box-shadow 200ms linear",
+                  "linear-gradient(96.79deg, #6AB8FF 0%, #6AB8FF 50%, #F0F8FF 100%)",
+                backgroundSize: "200% 100%",
+                backgroundPosition:
+                  props.active === type.type ? "0% 0" : "100% 0",
+                transition:
+                  "background-position 400ms ease-out, box-shadow 400ms ease-out",
 
                 "&:hover": {
-                  background: "#6AB8FF",
+                  backgroundPosition: "0% 0",
                   boxShadow: "0px 0px 2px 0px rgba(0, 0, 0, 0.25)",
 
                   ".go-button": {
                     transform: "translate(20%, 0%)",
                   },
                 },
+                ...theme.applyStyles("dark", {
+                  background:
+                    "linear-gradient(96.79deg, #6AB8FF 0%, #152327 100%)",
+                  boxShadow: "0px 2px 6px 0px rgba(125, 125, 200, 0.15)",
+
+                  "&:hover": {
+                    backgroundPosition: "0% 0",
+                    boxShadow: "0px 0px 2px 0px rgba(125, 125, 200, 0.1)",
+
+                    ".go-button": {
+                      transform: "translate(20%, 0%)",
+                    },
+                  },
+                }),
               }}
             >
               <Box
@@ -109,10 +120,7 @@ export function ProductFormTypeSection(props: Props) {
                 sx={{
                   borderRadius: "6px",
                   cursor: "pointer",
-                  background:
-                    props.active === type.type
-                      ? theme.palette.action.selected
-                      : "white",
+                  background: theme.palette.background.default,
                 }}
               >
                 <Stack spacing={2}>
@@ -125,6 +133,9 @@ export function ProductFormTypeSection(props: Props) {
                         backgroundColor: "#f1f8ff",
                         color: "info.main",
                         borderRadius: "6px",
+                        ...theme.applyStyles("dark", {
+                          backgroundColor: "#111822",
+                        }),
                       }}
                       label={intl.formatMessage(messages.certifyingBadgeLabel)}
                     />
@@ -142,7 +153,7 @@ export function ProductFormTypeSection(props: Props) {
                         justifyContent: "center",
                         transition: "transform 200ms ease",
                         backgroundColor: "info.light",
-                        color: "white",
+                        color: "background.default",
                         alignSelf: "end",
                         borderRadius: "50%",
                         width: "30px",

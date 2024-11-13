@@ -8,8 +8,8 @@ import { useLocale } from "@/contexts/i18n/TranslationsProvider/TranslationConte
 export function DashboardNavSelectLang() {
   const locale = useLocale();
   return (
-    <StyledItem sx={{ p: 2 }}>
-      <PublicIcon sx={{ mr: 2 }} />
+    <StyledItem sx={{ paddingBlock: 3, paddingInline: 2 }}>
+      <PublicIcon sx={{ mr: 1 }} />
       <BasicSelect
         data-testid="select-language"
         sx={{

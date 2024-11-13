@@ -3,6 +3,8 @@ import { ReactNode } from "react";
 import Drawer from "@mui/material/Drawer";
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import { DashboardNavThemeMenu } from "src/layouts/dashboard/nav/DashboardNavThemeMenu";
 import { DashboardNavHeader } from "@/layouts/dashboard/nav/header/DashboardNavHeader";
 import { DashboardNavContent } from "@/layouts/dashboard/nav/content/DashboardNavContent";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -33,7 +35,10 @@ export function DashboardNav(props: Props) {
             onChangeRoute={mdDown ? props.handleClose : undefined}
           />
         </Box>
-        <DashboardNavSelectLang />
+        <Stack direction="row" spacing="1">
+          <DashboardNavThemeMenu />
+          <DashboardNavSelectLang />
+        </Stack>
       </Box>
     );
   };
@@ -47,8 +52,11 @@ export function DashboardNav(props: Props) {
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: theme.navigation.width,
-            backgroundColor: theme.palette.grey[50],
             boxSizing: "border-box",
+            backgroundColor: theme.palette.grey[50],
+            ...theme.applyStyles("dark", {
+              backgroundColor: theme.palette.background.default,
+            }),
           },
         }}
         variant="temporary"
@@ -68,10 +76,15 @@ export function DashboardNav(props: Props) {
         display: { xs: "none", sm: "none", md: "block" },
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          borderRight: "1px solid rgb(240, 240, 240)",
+          borderRightStyle: "solid",
+          borderRightWidth: 1,
+          borderRightColor: theme.palette.divider,
           backgroundColor: theme.palette.grey[50],
           width: theme.navigation.width,
           boxSizing: "border-box",
+          ...theme.applyStyles("dark", {
+            backgroundColor: theme.palette.grey[900],
+          }),
         },
       }}
       variant="persistent"

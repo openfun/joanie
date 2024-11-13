@@ -25,18 +25,34 @@ test.describe("<TranslatableForm/>", () => {
 
     let states = await page.context().storageState();
     let storage = states.origins[0].localStorage;
-    expect(storage).toEqual([
-      { name: "translateContentLanguage", value: "en-us" },
-      { name: "django_language_saved", value: "en-us" },
-    ]);
+    expect(
+      storage.some(
+        (entry) =>
+          entry.name === "translateContentLanguage" && entry.value === "en-us",
+      ),
+    ).toBe(true);
+    expect(
+      storage.some(
+        (entry) =>
+          entry.name === "django_language_saved" && entry.value === "en-us",
+      ),
+    ).toBe(true);
 
     await component.getByRole("tab", { name: "French" }).click();
     states = await page.context().storageState();
     storage = states.origins[0].localStorage;
-    expect(storage).toEqual([
-      { name: "translateContentLanguage", value: "fr-fr" },
-      { name: "django_language_saved", value: "en-us" },
-    ]);
+    expect(
+      storage.some(
+        (entry) =>
+          entry.name === "translateContentLanguage" && entry.value === "fr-fr",
+      ),
+    ).toBe(true);
+    expect(
+      storage.some(
+        (entry) =>
+          entry.name === "django_language_saved" && entry.value === "en-us",
+      ),
+    ).toBe(true);
   });
 
   test("Check that the loader is displayed", async ({ mount }) => {

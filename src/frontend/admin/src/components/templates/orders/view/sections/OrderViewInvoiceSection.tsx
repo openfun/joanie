@@ -35,7 +35,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
       <Grid size={12} mt={2}>
         <Accordion
           expanded={showInvoice}
-          sx={{ boxShadow: "none" }}
+          sx={{ boxShadow: "none", background: "none" }}
           onChange={(_event, expanded) => setShowInvoice(expanded)}
         >
           <AccordionSummary

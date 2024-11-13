@@ -1,12 +1,14 @@
-// @flow
-import { createTheme, ThemeOptions, ThemeProvider } from "@mui/material/styles";
-import * as React from "react";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
 import { PropsWithChildren, useMemo } from "react";
 
 type Props = {};
 export function JoanieThemeProvider(props: PropsWithChildren<Props>) {
-  const themeOptions: ThemeOptions = useMemo(
+  const themeOptions = useMemo(
     () => ({
+      colorSchemes: {
+        dark: true,
+      },
       width: {
         navigation: 280,
       },
@@ -19,5 +21,10 @@ export function JoanieThemeProvider(props: PropsWithChildren<Props>) {
 
   const theme = createTheme(themeOptions);
 
-  return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>;
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {props.children}
+    </ThemeProvider>
+  );
 }

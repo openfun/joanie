@@ -16,6 +16,7 @@ and this project adheres to
 - Prevent a user to create an order for a product without withdrawal period
   if the user has not waived his withdrawal right
 - Display `has_waived_withdrawal_right` in back office Order view
+- Add dark theme to back office
 
 ### Changed
 

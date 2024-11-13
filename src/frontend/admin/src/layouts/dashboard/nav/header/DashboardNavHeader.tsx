@@ -3,7 +3,8 @@ import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Image from "next/image";
 import { defineMessages, useIntl } from "react-intl";
-import logo from "@/../public/images/logo/logo-fun.svg";
+import logoLight from "@/../public/images/logo/logo-fun-light.svg";
+import logoDark from "@/../public/images/logo/logo-fun-dark.svg";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { PATH_ADMIN } from "@/utils/routes/path";
 
@@ -46,7 +47,7 @@ export function DashboardNavHeader() {
           title={intl.formatMessage(message.goBackToHome)}
         >
           <Image
-            src={logo}
+            src={theme.palette.mode === "light" ? logoLight : logoDark}
             width={150}
             alt="France Université Numérique logo"
           />
