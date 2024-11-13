@@ -1,8 +1,6 @@
 @use "abstracts";
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: white;
   overflow: auto !important;
   margin: 0;
 }

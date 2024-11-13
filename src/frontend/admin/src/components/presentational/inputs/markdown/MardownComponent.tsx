@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useTheme } from "@mui/material/styles";
 import { Maybe } from "@/types/utils";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function MarkdownComponent(props: Props) {
+  const theme = useTheme();
   const [markdownCommands, setMarkdownCommands] =
     useState<typeof import("@uiw/react-md-editor").commands>();
 
@@ -57,7 +59,7 @@ export function MarkdownComponent(props: Props) {
       data-testid="md-editor"
       autoFocus={false}
       height={300}
-      data-color-mode="light"
+      data-color-mode={theme.palette.mode}
       commands={[
         bold,
         italic,

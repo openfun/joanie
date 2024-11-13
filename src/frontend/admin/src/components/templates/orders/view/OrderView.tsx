@@ -19,6 +19,7 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Chip, { ChipOwnProps } from "@mui/material/Chip";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import { useTheme } from "@mui/material/styles";
 import { Order, PaymentStatesEnum } from "@/services/api/models/Order";
 import {
   orderStatesMessages,
@@ -40,6 +41,7 @@ type Props = {
 export function OrderView({ order }: Props) {
   const intl = useIntl();
   const router = useRouter();
+  const theme = useTheme();
   const copyToClipboard = useCopyToClipboard();
 
   const getViewIcon = (url: string): ReactNode => {
@@ -79,7 +81,7 @@ export function OrderView({ order }: Props) {
         padding={8}
         sx={{
           ".MuiOutlinedInput-input.Mui-disabled": {
-            textFillColor: "black",
+            textFillColor: theme.palette.text.primary,
           },
         }}
       >

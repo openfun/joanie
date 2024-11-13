@@ -111,6 +111,9 @@ export function TranslatableForm({
           mb={2}
           sx={{
             backgroundColor: theme.palette.grey[50],
+            ...theme.applyStyles("dark", {
+              backgroundColor: theme.palette.grey[900],
+            }),
           }}
         >
           <Tabs
@@ -132,7 +135,7 @@ export function TranslatableForm({
               data-testid="translatable-content-loader-container"
               sx={{
                 zIndex: 9,
-                backgroundColor: "white",
+                backgroundColor: "background.default",
                 opacity: 0.5,
                 display: "flex",
                 justifyContent: "center",

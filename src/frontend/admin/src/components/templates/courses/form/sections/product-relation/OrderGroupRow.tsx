@@ -70,7 +70,7 @@ export function OrderGroupRow({
     totalSeats: orderGroup.nb_seats,
   });
 
-  const sxProps: SxProps = { backgroundColor: "white" };
+  const sxProps: SxProps = { backgroundColor: "background" };
   const disableMessage = !canEdit
     ? intl.formatMessage(messages.orderGroupDisabledActionsMessage)
     : undefined;

@@ -13,6 +13,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
 import FormHelperText from "@mui/material/FormHelperText";
+import { useTheme } from "@mui/material/styles";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { Enrollment, EnrollmentState } from "@/services/api/models/Enrollment";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
@@ -26,6 +27,7 @@ type Props = {
 export function EnrollmentView({ enrollment }: Props) {
   const intl = useIntl();
   const router = useRouter();
+  const theme = useTheme();
 
   const getViewIcon = (url: string): ReactNode => {
     return (
@@ -44,7 +46,7 @@ export function EnrollmentView({ enrollment }: Props) {
         sx={{
           ".MuiOutlinedInput-input.Mui-disabled, .MuiFormControlLabel-label.Mui-disabled":
             {
-              textFillColor: "black",
+              textFillColor: theme.palette.text.primary,
             },
           ".MuiCheckbox-root.Mui-checked.Mui-disabled": {
             color: "primary.main",

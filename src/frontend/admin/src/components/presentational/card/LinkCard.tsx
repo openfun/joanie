@@ -4,6 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { useTheme } from "@mui/material/styles";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
   badgeLabel?: string;
 };
 export function LinkCard(props: Props) {
+  const theme = useTheme();
   return (
     <CustomLink href={props.href} underline="none">
       <Box
@@ -24,17 +26,35 @@ export function LinkCard(props: Props) {
           borderRadius: "6px",
           height: "100%",
           boxShadow: "0px 2px 6px 0px rgba(0, 0, 0, 0.25)",
-          background: "linear-gradient(96.79deg, #6AB8FF 0%, #F0F8FF 100%)",
-          transition: "background, box-shadow 200ms linear",
+          background:
+            "linear-gradient(96.79deg, #6AB8FF 0%, #6AB8FF 50%, #F0F8FF 100%)",
+          backgroundSize: "200% 100%",
+          backgroundPosition: "100% 0",
+          transition:
+            "background-position 400ms ease-out, box-shadow 400ms ease-out",
 
           "&:hover": {
-            background: "#6AB8FF",
+            backgroundPosition: "0% 0",
             boxShadow: "0px 0px 2px 0px rgba(0, 0, 0, 0.25)",
 
             ".go-button": {
               transform: "translate(20%, 0%)",
             },
           },
+
+          ...theme.applyStyles("dark", {
+            background: "linear-gradient(96.79deg, #6AB8FF 0%, #152327 100%)",
+            boxShadow: "0px 2px 6px 0px rgba(125, 125, 200, 0.15)",
+
+            "&:hover": {
+              backgroundPosition: "0% 0",
+              boxShadow: "0px 0px 2px 0px rgba(125, 125, 200, 0.1)",
+
+              ".go-button": {
+                transform: "translate(20%, 0%)",
+              },
+            },
+          }),
         }}
       >
         <Box
@@ -43,7 +63,7 @@ export function LinkCard(props: Props) {
             borderRadius: "6px",
             cursor: "pointer",
             width: "100%",
-            background: "white",
+            background: theme.palette.background.default,
           }}
         >
           <Stack spacing={2}>
@@ -73,6 +93,9 @@ export function LinkCard(props: Props) {
                     backgroundColor: "#f1f8ff",
                     color: "info.main",
                     borderRadius: "6px",
+                    ...theme.applyStyles("dark", {
+                      backgroundColor: "#111822",
+                    }),
                   }}
                   label={props.badgeLabel}
                 />
@@ -95,9 +118,9 @@ export function LinkCard(props: Props) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transition: "transform 200ms ease",
+            transition: "transform 400ms ease-out",
             backgroundColor: "info.light",
-            color: "white",
+            color: "background.default",
             alignSelf: "end",
             borderRadius: "50%",
             width: "30px",

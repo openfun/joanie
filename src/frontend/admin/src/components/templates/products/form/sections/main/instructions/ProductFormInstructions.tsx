@@ -23,7 +23,7 @@ export function ProductFormInstructions() {
       <Grid size={12}>
         <Accordion
           expanded={showMarkdownEdit}
-          sx={{ boxShadow: "none" }}
+          sx={{ boxShadow: "none", background: "none" }}
           onChange={() => setShowMarkdownEdit(!showMarkdownEdit)}
         >
           <AccordionSummary
