@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as Yup from "yup";
 import { useFieldArray, useForm } from "react-hook-form";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -118,14 +118,14 @@ export function CourseProductRelationForm({
       })}
     >
       <Grid container spacing={2}>
-        <Grid xs={12}>
+        <Grid size={12}>
           <Typography variant="subtitle2">
             <FormattedMessage
               {...(productId ? messages.courseLabel : messages.productLabel)}
             />
           </Typography>
         </Grid>
-        <Grid xs={12}>
+        <Grid size={12}>
           {courseId && (
             <ProductSearch
               name="product"
@@ -139,19 +139,19 @@ export function CourseProductRelationForm({
             />
           )}
         </Grid>
-        <Grid xs={12}>
+        <Grid size={12}>
           <Typography variant="subtitle2">
             <FormattedMessage {...messages.organizationsTitle} />
           </Typography>
         </Grid>
-        <Grid xs={12}>
+        <Grid size={12}>
           <OrganizationControlledSearch
             onSelectItem={(item) => {
               organizationArray.append(item);
             }}
           />
         </Grid>
-        <Grid xs={12}>
+        <Grid size={12}>
           <Stack spacing={1}>
             {organizationArray.fields.map((org, index) => (
               <DndDefaultRow

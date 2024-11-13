@@ -4,7 +4,7 @@ import { defineMessages, useIntl } from "react-intl";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid2 from "@mui/material/Unstable_Grid2";
+import Grid2 from "@mui/material/Grid2";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { OrderGroup } from "@/services/api/models/OrderGroup";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
@@ -70,14 +70,14 @@ export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
       onSubmit={form.handleSubmit((values) => onSubmit?.(values))}
     >
       <Grid2 container spacing={2}>
-        <Grid2 xs={12}>
+        <Grid2 size={12}>
           <RHFTextField
             type="number"
             name="nb_seats"
             label={intl.formatMessage(messages.numberOfSeatInputLabel)}
           />
         </Grid2>
-        <Grid2 xs={12}>
+        <Grid2 size={12}>
           <RHFSwitch
             name="is_active"
             label={intl.formatMessage(messages.isActiveLabel)}

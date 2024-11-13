@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { defineMessages, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -149,26 +149,26 @@ export function ContractDefinitionForm({
           onSubmit={onSubmit}
         >
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={12}>
               <Typography variant="subtitle2">
                 {intl.formatMessage(messages.mainInformationTitle)}
               </Typography>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <Alert severity="info">
                 {intl.formatMessage(messages.informationText)}
               </Alert>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <RHFTextField
                 name="title"
                 label={intl.formatMessage(messages.titleLabel)}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <RHFContractDefinitionLanguage name="language" />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <RHFTextField
                 name="description"
                 multiline
@@ -176,7 +176,7 @@ export function ContractDefinitionForm({
                 label={intl.formatMessage(messages.descriptionLabel)}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <Typography
                 variant="subtitle2"
                 color={methods.formState.errors.body && "error"}
@@ -184,7 +184,7 @@ export function ContractDefinitionForm({
                 {intl.formatMessage(messages.bodyLabel)}
               </Typography>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <MarkdownComponent
                 data-testid="md-editor-body"
                 value={bodyValue ?? ""}
@@ -205,7 +205,7 @@ export function ContractDefinitionForm({
                 )}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <Typography
                 variant="subtitle2"
                 color={methods.formState.errors.appendix && "error"}
@@ -213,7 +213,7 @@ export function ContractDefinitionForm({
                 {intl.formatMessage(messages.appendixLabel)}
               </Typography>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <MarkdownComponent
                 data-testid="md-editor-appendix"
                 value={appendixValue ?? ""}

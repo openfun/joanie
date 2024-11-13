@@ -7,7 +7,6 @@ import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 import Chip from "@mui/material/Chip";
 import { defineMessages, useIntl } from "react-intl";
-// import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { ProductType } from "@/services/api/models/Product";
 

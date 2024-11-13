@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { defineMessages, useIntl } from "react-intl";
 import {
   MandatorySearchFilterProps,
@@ -123,7 +123,7 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
             onSubmit={onSubmit}
           >
             <Grid container mt={2} spacing={2}>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <CourseSearch
                   isFilterContext={true}
                   multiple={true}
@@ -133,7 +133,7 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="courses"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <OrganizationSearch
                   enableAdd={false}
                   multiple={true}
@@ -145,7 +145,7 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFSelectCourseRunState
                   data-testid="select-course-run-state"
                   isFilterContext={true}
@@ -153,7 +153,7 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="state"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFRadioGroup
                   row
                   data-testid="course-run-isListed-filter"
@@ -166,7 +166,7 @@ export function CourseRunFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="is_listed"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFRadioGroup
                   row
                   data-testid="course-run-isGradable-filter"

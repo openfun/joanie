@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import {
   SearchFilterProps,
   SearchFilters,
@@ -32,7 +32,7 @@ export function SearchFiltersWrapperTest(props: Props) {
             onSubmit={() => {}}
           >
             <Grid container mt={2} spacing={2}>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFRadioGroup
                   row
                   isFilterContext={true}
@@ -45,7 +45,7 @@ export function SearchFiltersWrapperTest(props: Props) {
                   ]}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFSelect
                   isFilterContext={true}
                   name="language"
@@ -57,7 +57,7 @@ export function SearchFiltersWrapperTest(props: Props) {
                   ]}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFAutocomplete
                   data-testid="autocomplete-test"
                   findFilterValue={async (values) => values}

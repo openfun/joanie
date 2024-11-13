@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import Typography from "@mui/material/Typography";
 import {
   RHFProvider,
@@ -32,7 +32,7 @@ export function RHFProviderTestWrapper(props: Props) {
         methods={methods}
       >
         <Grid container spacing={2}>
-          <Grid xs={12}>
+          <Grid size={12}>
             <RHFTextField name="name" label="Name" />
           </Grid>
         </Grid>

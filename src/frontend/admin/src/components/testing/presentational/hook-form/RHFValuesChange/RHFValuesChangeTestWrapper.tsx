@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
@@ -47,10 +47,10 @@ export function RHFValuesChangeTestWrapper({
           formValuesToFilterValues={() => valuesToFiltersValues ?? undefined}
         >
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={12}>
               <RHFTextField name="name" label="Name" />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <RHFSelect
                 name="select"
                 label="Select"
@@ -61,7 +61,7 @@ export function RHFValuesChangeTestWrapper({
                 ]}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <RHFRadioGroup
                 row
                 data-testid="radio-input-enable"

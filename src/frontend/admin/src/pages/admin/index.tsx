@@ -1,5 +1,5 @@
 import { defineMessages, useIntl } from "react-intl";
-import Grid2 from "@mui/material/Unstable_Grid2";
+import Grid2 from "@mui/material/Grid2";
 import * as React from "react";
 import { useMemo } from "react";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
@@ -36,7 +36,7 @@ export default function Index() {
     >
       <Grid2 container spacing={2}>
         {cards.map((item) => (
-          <Grid2 xs={12} md={6} lg={6} xl={4} key={item.badgeLabel}>
+          <Grid2 size={{ xs: 12, md: 6, lg: 6, xl: 4 }} key={item.badgeLabel}>
             <LinkCard
               icon={item.icon}
               badgeLabel={item.badgeLabel}

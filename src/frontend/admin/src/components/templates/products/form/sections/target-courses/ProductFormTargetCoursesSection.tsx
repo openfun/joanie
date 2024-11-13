@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 
 import { useFieldArray, useForm } from "react-hook-form";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
 import Alert from "@mui/material/Alert";
@@ -169,20 +169,20 @@ export function ProductFormTargetCoursesSection(props: Props) {
         methods={methods}
       >
         <Grid container spacing={2} padding={2}>
-          <Grid xs={12}>
+          <Grid size={12}>
             <Alert severity="info">
               {intl.formatMessage(
                 productFormMessages.targetCoursesHelperSection,
               )}
             </Alert>
           </Grid>
-          <Grid xs={12}>
+          <Grid size={12}>
             <Typography variant="subtitle2">
               {intl.formatMessage(productFormMessages.targetCoursesTitle)}
             </Typography>
           </Grid>
 
-          <Grid xs={12}>
+          <Grid size={12}>
             <DndList<ProductTargetCourseRelation, ProductTargetCourseDummy>
               creatingRows={creatingList}
               emptyLabel={intl.formatMessage(

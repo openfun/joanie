@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect } from "react";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
 import IconButton from "@mui/material/IconButton";
@@ -141,19 +141,19 @@ export function ProductFormMain({
           onSubmit={onSubmit}
         >
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={12}>
               <Typography variant="subtitle2">
                 {intl.formatMessage(productFormMessages.mainInformationTitle)}
               </Typography>
             </Grid>
-            <Grid xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <RHFTextField
                 required
                 name="title"
                 label={intl.formatMessage(commonTranslations.title)}
               />
             </Grid>
-            <Grid xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <RHFSelect
                 required
                 leftIcons={
@@ -182,7 +182,7 @@ export function ProductFormMain({
               />
             </Grid>
 
-            <Grid xs={12}>
+            <Grid size={12}>
               <RHFTextField
                 name="description"
                 required
@@ -193,7 +193,7 @@ export function ProductFormMain({
             </Grid>
 
             {productType !== ProductType.ENROLLMENT && (
-              <Grid xs={12}>
+              <Grid size={12}>
                 <CertificateSearch
                   placeholder="search"
                   enableAdd={true}
@@ -206,7 +206,7 @@ export function ProductFormMain({
                 />
               </Grid>
             )}
-            <Grid xs={12}>
+            <Grid size={12}>
               <ContractDefinitionSearch
                 placeholder={intl.formatMessage(
                   productFormMessages.contractDefinitionPlaceholder,

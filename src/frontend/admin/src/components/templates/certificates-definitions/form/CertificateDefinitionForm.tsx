@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { defineMessages, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
@@ -129,22 +129,22 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
             onSubmit={onSubmit}
           >
             <Grid container spacing={2}>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFTextField
                   name="title"
                   label={intl.formatMessage(messages.titleLabel)}
                 />
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFTextField
                   name="name"
                   label={intl.formatMessage(messages.nameLabel)}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFCertificateDefinitionTemplates name="template" />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFTextField
                   name="description"
                   multiline

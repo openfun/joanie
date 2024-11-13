@@ -4,7 +4,7 @@ import * as Yup from "yup";
 import { lazy } from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
@@ -130,24 +130,24 @@ export function CourseGeneralForm({ course, ...props }: Props) {
               onSubmit={onSubmit}
             >
               <Grid container spacing={2}>
-                <Grid xs={12}>
+                <Grid size={12}>
                   <Typography variant="subtitle2">
                     {intl.formatMessage(courseFormMessages.generalSubtitle)}
                   </Typography>
                 </Grid>
-                <Grid xs={12}>
+                <Grid size={12}>
                   <RHFTextField
                     name="title"
                     label={intl.formatMessage(commonTranslations.title)}
                   />
                 </Grid>
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     name="code"
                     label={intl.formatMessage(courseFormMessages.codeLabel)}
                   />
                 </Grid>
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     type="number"
                     name="effort"
@@ -158,7 +158,7 @@ export function CourseGeneralForm({ course, ...props }: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12}>
+                <Grid size={12}>
                   <OrganizationSearch
                     enableAdd={true}
                     multiple={true}
@@ -168,7 +168,7 @@ export function CourseGeneralForm({ course, ...props }: Props) {
                     )}
                   />
                 </Grid>
-                <Grid xs={12}>
+                <Grid size={12}>
                   <RHFUploadImage
                     thumbnailFiles={getUploadedCover()}
                     name="cover"

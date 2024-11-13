@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import Stack from "@mui/material/Stack";
 import { FormattedMessage, useIntl } from "react-intl";
 import Alert from "@mui/material/Alert";
@@ -92,14 +92,14 @@ export function ProductTargetCourseRelationForm(props: Props) {
       onSubmit={methods.handleSubmit(onSubmit)}
     >
       <Grid container spacing={2}>
-        <Grid xs={12}>
+        <Grid size={12}>
           <Alert severity="info">
             {intl.formatMessage(
               productFormMessages.productTargetCourseFormInfo,
             )}
           </Alert>
         </Grid>
-        <Grid xs={12} mt={3}>
+        <Grid size={12} mt={3}>
           <Stack spacing={2}>
             <CourseSearch enableAdd enableEdit name="course" />
             <RHFSwitch

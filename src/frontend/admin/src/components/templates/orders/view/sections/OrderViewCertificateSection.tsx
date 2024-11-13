@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ReactNode } from "react";
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import TextField from "@mui/material/TextField";
 import { FormattedMessage, useIntl } from "react-intl";
 import { orderViewMessages } from "@/components/templates/orders/view/translations";
@@ -23,14 +23,14 @@ export function OrderViewCertificateSection({ order, getViewIcon }: Props) {
 
   return (
     <Grid container spacing={2}>
-      <Grid xs={12} mt={2}>
+      <Grid size={12} mt={2}>
         <Typography variant="h6">
           <FormattedMessage
             {...orderViewMessages.certificateDetailsSectionTitle}
           />
         </Typography>
       </Grid>
-      <Grid xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           data-testid="order-view-certificate-name"
           fullWidth={true}
@@ -51,7 +51,7 @@ export function OrderViewCertificateSection({ order, getViewIcon }: Props) {
         />
       </Grid>
 
-      <Grid xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           data-testid="order-view-certificate-date"
           fullWidth={true}

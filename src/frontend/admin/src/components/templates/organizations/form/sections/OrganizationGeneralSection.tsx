@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { FormattedMessage, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -175,7 +175,7 @@ export function OrganizationGeneralSection(props: Props) {
               onSubmit={onSubmit}
             >
               <Grid container spacing={2}>
-                <Grid xs={12}>
+                <Grid size={12}>
                   <Typography variant="subtitle2">
                     <FormattedMessage
                       {...organizationFormMessages.generalSectionTitle}
@@ -183,13 +183,13 @@ export function OrganizationGeneralSection(props: Props) {
                   </Typography>
                 </Grid>
 
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     name="title"
                     label={intl.formatMessage(commonTranslations.title)}
                   />
                 </Grid>
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     name="code"
                     label={intl.formatMessage(
@@ -198,7 +198,7 @@ export function OrganizationGeneralSection(props: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     name="representative"
                     label={intl.formatMessage(
@@ -206,7 +206,7 @@ export function OrganizationGeneralSection(props: Props) {
                     )}
                   />
                 </Grid>
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     name="representative_profession"
                     label={intl.formatMessage(
@@ -215,7 +215,7 @@ export function OrganizationGeneralSection(props: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12}>
+                <Grid size={12}>
                   <RHFSelect
                     disabled={!organizationQuery.countries}
                     name="country"
@@ -226,7 +226,7 @@ export function OrganizationGeneralSection(props: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12}>
+                <Grid size={12}>
                   <RHFUploadImage
                     thumbnailFiles={getUploadedLogo()}
                     buttonLabel={intl.formatMessage(
@@ -240,7 +240,7 @@ export function OrganizationGeneralSection(props: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12}>
+                <Grid size={12}>
                   <Typography variant="subtitle2">
                     <FormattedMessage
                       {...organizationFormMessages.signatoryDetailsSectionTitle}
@@ -248,7 +248,7 @@ export function OrganizationGeneralSection(props: Props) {
                   </Typography>
                 </Grid>
 
-                <Grid xs={12}>
+                <Grid size={12}>
                   <Alert severity="info">
                     <FormattedMessage
                       {...organizationFormMessages.signatoryDetailsSectionInfo}
@@ -256,7 +256,7 @@ export function OrganizationGeneralSection(props: Props) {
                   </Alert>
                 </Grid>
 
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     name="signatory_representative"
                     label={intl.formatMessage(
@@ -265,7 +265,7 @@ export function OrganizationGeneralSection(props: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     name="signatory_representative_profession"
                     helperText={intl.formatMessage(
@@ -276,7 +276,7 @@ export function OrganizationGeneralSection(props: Props) {
                     )}
                   />
                 </Grid>
-                <Grid xs={12}>
+                <Grid size={12}>
                   <RHFUploadImage
                     thumbnailFiles={getUploadedSignature()}
                     name="signature"
@@ -290,14 +290,14 @@ export function OrganizationGeneralSection(props: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12}>
+                <Grid size={12}>
                   <Typography variant="subtitle2">
                     <FormattedMessage
                       {...organizationFormMessages.legalPartSectionTitle}
                     />
                   </Typography>
                 </Grid>
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <RHFTextField
                     name="enterprise_code"
                     label={intl.formatMessage(
@@ -305,7 +305,7 @@ export function OrganizationGeneralSection(props: Props) {
                     )}
                   />
                 </Grid>
-                <Grid xs={12} lg={6}>
+                <Grid size={{ xs: 12, lg: 6 }}>
                   <RHFTextField
                     name="activity_category_code"
                     label={intl.formatMessage(
@@ -314,14 +314,14 @@ export function OrganizationGeneralSection(props: Props) {
                   />
                 </Grid>
 
-                <Grid xs={12}>
+                <Grid size={12}>
                   <Typography variant="subtitle2">
                     <FormattedMessage
                       {...organizationFormMessages.contactSectionTitle}
                     />
                   </Typography>
                 </Grid>
-                <Grid xs={12} md={6} lg={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <RHFTextField
                     name="contact_phone"
                     label={intl.formatMessage(
@@ -329,7 +329,7 @@ export function OrganizationGeneralSection(props: Props) {
                     )}
                   />
                 </Grid>
-                <Grid xs={12} md={6} lg={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <RHFTextField
                     name="contact_email"
                     label={intl.formatMessage(
@@ -337,7 +337,7 @@ export function OrganizationGeneralSection(props: Props) {
                     )}
                   />
                 </Grid>
-                <Grid xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                   <RHFTextField
                     name="dpo_email"
                     label={intl.formatMessage(
