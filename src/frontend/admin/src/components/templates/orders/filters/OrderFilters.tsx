@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { defineMessages, useIntl } from "react-intl";
 import {
   MandatorySearchFilterProps,
@@ -110,7 +110,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
             onSubmit={onSubmit}
           >
             <Grid container mt={2} spacing={2}>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFOrderState
                   data-testid="select-order-state-filter"
                   isFilterContext={true}
@@ -118,7 +118,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="state"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ProductSearch
                   isFilterContext={true}
                   multiple={true}
@@ -128,7 +128,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="products"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <CourseSearch
                   isFilterContext={true}
                   fullWidth={true}
@@ -138,7 +138,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="courses"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <OrganizationSearch
                   isFilterContext={true}
                   fullWidth={true}
@@ -148,7 +148,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="organizations"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <UserSearch
                   isFilterContext={true}
                   fullWidth={true}

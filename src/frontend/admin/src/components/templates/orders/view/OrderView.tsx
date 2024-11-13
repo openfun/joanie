@@ -4,7 +4,7 @@ import { ReactElement, ReactNode } from "react";
 import TextField from "@mui/material/TextField";
 import { FormattedMessage, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Unstable_Grid2"; // Grid version 2
+import Grid from "@mui/material/Grid2";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import { useRouter } from "next/router";
 import IconButton from "@mui/material/IconButton";
@@ -85,14 +85,14 @@ export function OrderView({ order }: Props) {
       >
         <Stack gap={2}>
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={12}>
               <Typography variant="h6">
                 <FormattedMessage
                   {...orderViewMessages.orderDetailsSectionTitle}
                 />
               </Typography>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <Alert severity="info">
                 <FormattedMessage
                   {...orderViewMessages.orderDetailsSectionAlert}
@@ -100,7 +100,7 @@ export function OrderView({ order }: Props) {
               </Alert>
             </Grid>
 
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -117,7 +117,7 @@ export function OrderView({ order }: Props) {
                 value={order.organization?.title ?? ""}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -130,7 +130,7 @@ export function OrderView({ order }: Props) {
                 value={order.product.title}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               {order.course && !order.enrollment && (
                 <TextField
                   fullWidth={true}
@@ -149,7 +149,7 @@ export function OrderView({ order }: Props) {
                 />
               )}
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               {order.enrollment && (
                 <TextField
                   fullWidth={true}
@@ -165,7 +165,7 @@ export function OrderView({ order }: Props) {
               )}
             </Grid>
 
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -183,7 +183,7 @@ export function OrderView({ order }: Props) {
                 value={order.owner.full_name ?? order.owner.username}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -192,7 +192,7 @@ export function OrderView({ order }: Props) {
               />
             </Grid>
 
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -204,7 +204,7 @@ export function OrderView({ order }: Props) {
                 value={order.total}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -212,7 +212,7 @@ export function OrderView({ order }: Props) {
                 value={intl.formatMessage(orderStatesMessages[order.state])}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControlLabel
                 sx={{ ml: 0.1 }}
                 control={getSignedIcon(order.has_waived_withdrawal_right, true)}
@@ -235,7 +235,7 @@ export function OrderView({ order }: Props) {
           />
           <OrderViewInvoiceSection order={order} />
           <Grid container spacing={2}>
-            <Grid xs={12} lg={6} mt={2}>
+            <Grid size={{ xs: 12, lg: 6 }} mt={2}>
               <Typography variant="h6">
                 <FormattedMessage {...orderViewMessages.paymentSchedule} />
               </Typography>

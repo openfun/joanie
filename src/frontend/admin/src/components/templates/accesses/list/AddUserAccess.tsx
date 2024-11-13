@@ -2,7 +2,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid2 from "@mui/material/Unstable_Grid2";
+import Grid2 from "@mui/material/Grid2";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { defineMessages, useIntl } from "react-intl";
@@ -71,14 +71,14 @@ export function AddUserAccess(props: Props) {
       onSubmit={methods.handleSubmit(onSubmit)}
     >
       <Grid2 container spacing={2}>
-        <Grid2 xs={12} md={5}>
+        <Grid2 size={{ xs: 12, md: 5 }}>
           <UserSearch
             name="user"
             label={intl.formatMessage(messages.userLabel)}
             size="small"
           />
         </Grid2>
-        <Grid2 xs={12} md={5}>
+        <Grid2 size={{ xs: 12, md: 5 }}>
           <RHFSelect
             size="small"
             options={props.allAccesses}
@@ -87,7 +87,7 @@ export function AddUserAccess(props: Props) {
             label={intl.formatMessage(messages.roleLabel)}
           />
         </Grid2>
-        <Grid2 xs={12} md={2}>
+        <Grid2 size={{ xs: 12, md: 2 }}>
           <Box display="flex" justifyContent="center" alignItems="center">
             <Button fullWidth type="submit" variant="contained">
               {intl.formatMessage(commonTranslations.add)}

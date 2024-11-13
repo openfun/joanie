@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { defineMessages, useIntl } from "react-intl";
 import {
   MandatorySearchFilterProps,
@@ -61,7 +61,7 @@ export function CertificateDefinitionFilters({
             onSubmit={onFilter}
           >
             <Grid container mt={2} spacing={2}>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFCertificateDefinitionTemplates
                   isFilterContext={true}
                   name="template"

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import {
   RHFProvider,
   RHFProviderProps,
@@ -36,7 +36,7 @@ export function RHFDateTimePickerTestWrapper(props: Props) {
           methods={methods}
         >
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={12}>
               <RHFDateTimePicker name="end" label="End" />
             </Grid>
           </Grid>

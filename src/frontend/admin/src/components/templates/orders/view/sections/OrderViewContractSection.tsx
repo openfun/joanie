@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ReactElement, ReactNode } from "react";
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import TextField from "@mui/material/TextField";
 import { FormattedMessage, useIntl } from "react-intl";
 import { orderViewMessages } from "@/components/templates/orders/view/translations";
@@ -30,14 +30,14 @@ export function OrderViewContractSection({
 
   return (
     <Grid container spacing={2}>
-      <Grid xs={12} mt={2}>
+      <Grid size={12} mt={2}>
         <Typography variant="h6">
           <FormattedMessage
             {...orderViewMessages.contractDetailsSectionTitle}
           />
         </Typography>
       </Grid>
-      <Grid xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           data-testid="order-view-contract-name"
           fullWidth={true}
@@ -52,7 +52,7 @@ export function OrderViewContractSection({
         />
       </Grid>
 
-      <Grid xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           data-testid="order-view-contract-submitted-for-signature"
           fullWidth={true}
@@ -65,7 +65,7 @@ export function OrderViewContractSection({
           }
         />
       </Grid>
-      <Grid xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           data-testid="order-view-contract-student-signed-on"
           fullWidth={true}
@@ -81,7 +81,7 @@ export function OrderViewContractSection({
           }
         />
       </Grid>
-      <Grid xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           fullWidth={true}
           disabled={true}

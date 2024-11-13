@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { defineMessages, useIntl } from "react-intl";
 import {
   MandatorySearchFilterProps,
@@ -116,7 +116,7 @@ export function EnrollmentFilters({ onFilter, ...searchFilterProps }: Props) {
             onSubmit={onSubmit}
           >
             <Grid container mt={2} spacing={2}>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFCourseRunSearch
                   isFilterContext={true}
                   fullWidth={true}
@@ -125,7 +125,7 @@ export function EnrollmentFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="courseRuns"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <UserSearch
                   isFilterContext={true}
                   multiple={true}
@@ -135,7 +135,7 @@ export function EnrollmentFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="users"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFRadioGroup
                   row
                   data-testid="enrollment-isActive-filter"
@@ -147,7 +147,7 @@ export function EnrollmentFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="is_active"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFSelectEnrollmentState
                   data-testid="select-enrollment-state"
                   isFilterContext={true}

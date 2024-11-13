@@ -4,7 +4,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
 import { useRouter } from "next/router";
 import Stack from "@mui/material/Stack";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
@@ -53,14 +53,14 @@ export function EnrollmentView({ enrollment }: Props) {
       >
         <Stack gap={2}>
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={12}>
               <Typography variant="h6">
                 <FormattedMessage
                   {...enrollmentViewMessages.mainSectionTitle}
                 />
               </Typography>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -73,7 +73,7 @@ export function EnrollmentView({ enrollment }: Props) {
                 value={enrollment.course_run.title}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -85,7 +85,7 @@ export function EnrollmentView({ enrollment }: Props) {
                 }
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth={true}
                 disabled={true}
@@ -104,7 +104,7 @@ export function EnrollmentView({ enrollment }: Props) {
                 )}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControlLabel
                 color="primary"
                 control={
@@ -123,7 +123,7 @@ export function EnrollmentView({ enrollment }: Props) {
                 />
               </FormHelperText>
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControlLabel
                 color="primary"
                 control={<Checkbox disabled checked={enrollment.is_active} />}

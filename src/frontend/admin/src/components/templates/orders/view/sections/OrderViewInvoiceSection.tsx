@@ -5,7 +5,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Typography from "@mui/material/Typography";
 import AccordionDetails from "@mui/material/AccordionDetails";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -32,7 +32,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
 
   return (
     <Grid container spacing={2}>
-      <Grid xs={12} mt={2}>
+      <Grid size={12} mt={2}>
         <Accordion
           expanded={showInvoice}
           sx={{ boxShadow: "none" }}
@@ -52,14 +52,14 @@ export function OrderViewInvoiceSection({ order }: Props) {
           </AccordionSummary>
           <AccordionDetails>
             <Grid container spacing={2}>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <Alert severity="info">
                   <FormattedMessage
                     {...orderViewMessages.invoiceDetailsSectionAlert}
                   />
                 </Alert>
               </Grid>
-              <Grid xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <TextField
                   fullWidth={true}
                   disabled={true}
@@ -69,7 +69,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} sm={12} md={4}>
+              <Grid size={{ xs: 12, sm: 12, md: 4 }}>
                 <TextField
                   fullWidth={true}
                   disabled={true}
@@ -80,7 +80,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                   value={order.main_invoice.total}
                 />
               </Grid>
-              <Grid xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <TextField
                   fullWidth={true}
                   disabled={true}
@@ -90,7 +90,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <TextField
                   fullWidth={true}
                   disabled={true}
@@ -98,7 +98,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                   value={order.main_invoice.recipient_address}
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth={true}
                   disabled={true}
@@ -106,7 +106,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                   value={formatShortDate(order.main_invoice.created_on)}
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth={true}
                   disabled={true}
@@ -114,7 +114,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                   value={formatShortDate(order.main_invoice.updated_on)}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <TextField
                   fullWidth={true}
                   disabled={true}
@@ -127,7 +127,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
               </Grid>
 
               {order.certificate && (
-                <Grid xs={12}>
+                <Grid size={12}>
                   <TextField
                     fullWidth={true}
                     disabled={true}
@@ -137,7 +137,7 @@ export function OrderViewInvoiceSection({ order }: Props) {
                 </Grid>
               )}
               {order.main_invoice?.children.length > 0 && (
-                <Grid xs={12}>
+                <Grid size={12}>
                   <Stack gap={2}>
                     <Typography variant="subtitle2">
                       <FormattedMessage {...orderViewMessages.subInvoiceList} />

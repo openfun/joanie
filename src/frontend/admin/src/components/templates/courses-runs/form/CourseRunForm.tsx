@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
@@ -137,12 +137,12 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
             onSubmit={onSubmit}
           >
             <Grid container spacing={2}>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <Typography variant="subtitle2">
                   {intl.formatMessage(courseRunFormMessages.generalSubtitle)}
                 </Typography>
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CourseSearch
                   disabled={disableCourseInput}
                   enableAdd={!disableCourseInput}
@@ -151,13 +151,13 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
                   label={intl.formatMessage(courseRunFormMessages.courseLabel)}
                 />
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFTextField
                   name="title"
                   label={intl.formatMessage(commonTranslations.title)}
                 />
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFTextField
                   name="resource_link"
                   label={intl.formatMessage(
@@ -165,40 +165,40 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFSelectLanguage
                   multiple={true}
                   name="languages"
                   label={intl.formatMessage(courseRunFormMessages.language)}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <Typography variant="subtitle2">
                   {intl.formatMessage(
                     courseRunFormMessages.courseRunDatesSubtitle,
                   )}
                 </Typography>
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFDateTimePicker
                   name="start"
                   label={intl.formatMessage(courseRunFormMessages.startLabel)}
                 />
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFDateTimePicker
                   name="end"
                   label={intl.formatMessage(courseRunFormMessages.endLabel)}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <Typography variant="subtitle2">
                   {intl.formatMessage(
                     courseRunFormMessages.enrollmentDatesSubtitle,
                   )}
                 </Typography>
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFDateTimePicker
                   name="enrollment_start"
                   label={intl.formatMessage(
@@ -206,7 +206,7 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <RHFDateTimePicker
                   name="enrollment_end"
                   label={intl.formatMessage(
@@ -214,7 +214,7 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFCheckbox
                   name="is_gradable"
                   label={intl.formatMessage(
@@ -225,7 +225,7 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFCheckbox
                   name="is_listed"
                   label={intl.formatMessage(

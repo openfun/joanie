@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
 import { useFormContext } from "react-hook-form";
@@ -20,7 +20,7 @@ export function ProductFormInstructions() {
 
   return (
     <Grid container spacing={2}>
-      <Grid xs={12}>
+      <Grid size={12}>
         <Accordion
           expanded={showMarkdownEdit}
           sx={{ boxShadow: "none" }}

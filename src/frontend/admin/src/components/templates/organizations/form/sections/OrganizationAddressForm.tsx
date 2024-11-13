@@ -3,7 +3,7 @@ import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { FormattedMessage, useIntl } from "react-intl";
 import Typography from "@mui/material/Typography";
 import {
@@ -82,14 +82,14 @@ export function OrganizationAddressForm({ organization }: Props) {
         >
           <RHFValuesChange onSubmit={onSubmit}>
             <Grid container spacing={2}>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <Typography variant="subtitle2">
                   <FormattedMessage
                     {...organizationAddressFormMessages.sectionTitle}
                   />
                 </Typography>
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFTextField
                   name="title"
                   label={intl.formatMessage(
@@ -97,7 +97,7 @@ export function OrganizationAddressForm({ organization }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFTextField
                   name="address"
                   label={intl.formatMessage(
@@ -105,7 +105,7 @@ export function OrganizationAddressForm({ organization }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFTextField
                   name="postcode"
                   label={intl.formatMessage(
@@ -113,7 +113,7 @@ export function OrganizationAddressForm({ organization }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFTextField
                   name="city"
                   label={intl.formatMessage(
@@ -121,7 +121,7 @@ export function OrganizationAddressForm({ organization }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid size={12}>
                 <RHFSelect
                   disabled={!organizationQuery.countries}
                   name="country"
@@ -131,7 +131,7 @@ export function OrganizationAddressForm({ organization }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFTextField
                   name="first_name"
                   label={intl.formatMessage(
@@ -139,7 +139,7 @@ export function OrganizationAddressForm({ organization }: Props) {
                   )}
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFTextField
                   name="last_name"
                   label={intl.formatMessage(
