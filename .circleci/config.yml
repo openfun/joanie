@@ -188,9 +188,9 @@ jobs:
           DB_PASSWORD: pass
           DB_PORT: 5432
       # services
-      - image: cimg/postgres:13.16
+      - image: cimg/postgres:16.4
         environment:
-          POSTGRES_DB: test_joanie
+          POSTGRES_DB: joanie
           POSTGRES_USER: fun
           POSTGRES_PASSWORD: pass
     working_directory: ~/joanie/src/backend
