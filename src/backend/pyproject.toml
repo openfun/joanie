@@ -160,6 +160,7 @@ addopts = [
     "--cov-report",
     "term-missing",
     "--pdbcls=IPython.terminal.debugger:Pdb",
+    "--log-level=WARNING",
 ]
 python_files = [
     "test_*.py",
