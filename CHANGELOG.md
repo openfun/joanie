@@ -19,6 +19,7 @@ and this project adheres to
   if the user has not waived his withdrawal right
 - Display `has_waived_withdrawal_right` in back office Order view
 - Add dark theme to back office
+- Send an email to the user when an order has been refunded
 
 ### Changed
 

@@ -12,6 +12,7 @@ from stockholm import Money
 
 from joanie.core.enums import (
     ORDER_STATE_COMPLETED,
+    ORDER_STATE_REFUNDED,
 )
 from joanie.core.utils import emails, payment_schedule
 from joanie.payment.models import Invoice, Transaction
@@ -200,6 +201,48 @@ class BasePaymentBackend:
         invoice.order.set_installment_refunded(installment_id)
 
         invoice.order.flow.update()
+
+        if invoice.order.state != ORDER_STATE_REFUNDED:
+            return
+
+        try:
+            installment_amount = Money(
+                next(
+                    installment["amount"]
+                    for installment in invoice.order.payment_schedule
+                    if installment["id"] == installment_id
+                ),
+                currency=settings.DEFAULT_CURRENCY,
+            )
+        except StopIteration as exception:
+            raise ValueError(
+                f"Payment Base Backend: {installment_id} not found!"
+            ) from exception
+
+        with override(invoice.order.owner.language):
+            product_title = invoice.order.product.safe_translation_getter(
+                "title", language_code=invoice.order.owner.language
+            )
+            template_vars = emails.prepare_context_data(
+                invoice.order,
+                installment_amount,
+                product_title,
+                payment_refused=False,
+            )
+            emails.send(
+                subject=_(
+                    "{catalog_name} - {product_title} - An installment debit has been refunded "
+                    "{installment_amount:.2f} {currency}"
+                ).format(
+                    catalog_name=settings.JOANIE_CATALOG_NAME,
+                    product_title=product_title,
+                    installment_amount=installment_amount,
+                    currency=settings.DEFAULT_CURRENCY,
+                ),
+                template_vars=template_vars,
+                template_name="order_refunded",
+                to_user_email=invoice.order.owner.email,
+            )
 
     @staticmethod
     def get_notification_url():

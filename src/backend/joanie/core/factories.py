@@ -754,7 +754,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         """Retrieve the user from the enrollment when available or create a new one."""
         if self.enrollment:
             return self.enrollment.user
-        return UserFactory()
+        return UserFactory(language="en-us")
 
     @factory.lazy_attribute
     def organization(self):

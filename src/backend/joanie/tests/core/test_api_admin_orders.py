@@ -1,6 +1,7 @@
 """Test suite for the admin orders API endpoints."""
 
 import json
+import time
 import uuid
 from datetime import timedelta
 from decimal import Decimal as D
@@ -8,6 +9,7 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
+from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -1670,6 +1672,15 @@ class OrdersAdminApiTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
+    @override_settings(
+        JOANIE_CATALOG_NAME="Test Catalog",
+        DEFAULT_CURRENCY="EUR",
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            100: (20, 30, 30, 20),
+        },
+    )
+    # ruff : noqa : PLR0915
+    # pylint: disable=too-many-statements
     def test_api_admin_orders_refund_an_order(self):
         """
         Authenticated admin users should be able to refund an order when the state is `canceled`.
@@ -1686,28 +1697,29 @@ class OrdersAdminApiTestCase(TestCase):
         order = factories.OrderGeneratorFactory(
             state=enums.ORDER_STATE_PENDING, product__price=100
         )
-        # Create the payment for the 1st installment only.
-        payment_id = backend.create_payment(
+
+        # Create the payment for the 1st installment.
+        payment_id_1 = backend.create_payment(
             order=order,
             installment=order.payment_schedule[0],
             billing_address=order.main_invoice.recipient_address.to_dict(),
         )["payment_id"]
 
         # Notify that payment has been paid
-        request = request_factory.post(
+        payment_request_1 = request_factory.post(
             reverse("payment_webhook"),
             data={
-                "id": payment_id,
+                "id": payment_id_1,
                 "type": "payment",
                 "state": "success",
                 "installment_id": order.payment_schedule[0]["id"],
             },
             format="json",
         )
-        request.data = json.loads(request.body.decode("utf-8"))
+        payment_request_1.data = json.loads(payment_request_1.body.decode("utf-8"))
         # Get the notification from the payment backend that the payment of the installment is
         # successful.
-        backend.handle_notification(request)
+        backend.handle_notification(payment_request_1)
 
         order.refresh_from_db()
         # The 1st installment's state should be in state 'paid' only.
@@ -1715,6 +1727,63 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertEqual(
             order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PENDING
         )
+        self.assertEqual(
+            order.payment_schedule[2]["state"], enums.PAYMENT_STATE_PENDING
+        )
+        self.assertEqual(
+            order.payment_schedule[3]["state"], enums.PAYMENT_STATE_PENDING
+        )
+
+        # Create the payment for the 2nd installment.
+        payment_id_2 = backend.create_payment(
+            order=order,
+            installment=order.payment_schedule[1],
+            billing_address=order.main_invoice.recipient_address.to_dict(),
+        )["payment_id"]
+
+        # Notify that payment has been paid
+        payment_request_2 = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "id": payment_id_2,
+                "type": "payment",
+                "state": "success",
+                "installment_id": order.payment_schedule[1]["id"],
+            },
+            format="json",
+        )
+        payment_request_2.data = json.loads(payment_request_2.body.decode("utf-8"))
+        # Get the notification from the payment backend that the payment of the installment is
+        # successful.
+        backend.handle_notification(payment_request_2)
+
+        order.refresh_from_db()
+        # The 1st installment's state should be in state 'paid' only.
+        self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_PAID)
+        self.assertEqual(order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PAID)
+        self.assertEqual(
+            order.payment_schedule[2]["state"], enums.PAYMENT_STATE_PENDING
+        )
+        self.assertEqual(
+            order.payment_schedule[3]["state"], enums.PAYMENT_STATE_PENDING
+        )
+
+        # Two emails should have been sent, one for each installment payment
+        self.assertEqual(mail.outbox[0].to[0], order.owner.email)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f"Test Catalog - {order.product.title}"
+            " - An installment has been successfully paid of 20.00 EUR",
+        )
+        self.assertEqual(mail.outbox[1].to[0], order.owner.email)
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f"Test Catalog - {order.product.title}"
+            " - An installment has been successfully paid of 30.00 EUR",
+        )
+        # cleanup the mail outbox
+        mail.outbox = []
+
         # Now, let's cancel the order to launch the refund process
         order.flow.cancel()
 
@@ -1725,30 +1794,111 @@ class OrdersAdminApiTestCase(TestCase):
         # The order state should be set to `refunding`
         self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
 
-        # Prepare the notification that the installment payment  has been refunded
-        request = request_factory.post(
+        # Prepare the notification that the first installment payment has been refunded
+        refund_request_1 = request_factory.post(
             reverse("payment_webhook"),
             data={
-                "id": payment_id,
+                "id": payment_id_1,
                 "type": "refund",
                 "amount": order.payment_schedule[0]["amount"].sub_units,
                 "installment_id": order.payment_schedule[0]["id"],
             },
             format="json",
         )
-        request.data = json.loads(request.body.decode("utf-8"))
-        # Get the notification from the payment backend that the refund of the installment is
-        # successful.
-        backend.handle_notification(request)
+        refund_request_1.data = json.loads(refund_request_1.body.decode("utf-8"))
+        # Get the notification from the payment backend that
+        # the refund of the first installment is successful.
+        backend.handle_notification(refund_request_1)
 
         order.refresh_from_db()
-        # The paid installment should now be set to `refunded`
+        # The first paid installment should now be set to `refunded`
         self.assertEqual(
             order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUNDED
         )
-        # The second installment should stay in `payment_pending`
+        self.assertEqual(order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PAID)
+        # The remaining installments should be set to `canceled`
         self.assertEqual(
-            order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PENDING
+            order.payment_schedule[2]["state"], enums.PAYMENT_STATE_CANCELED
+        )
+        self.assertEqual(
+            order.payment_schedule[3]["state"], enums.PAYMENT_STATE_CANCELED
+        )
+        # The order's state should be set to `refunding`
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
+
+        time.sleep(1)
+        order.refresh_from_db()
+        # Prepare the notification that the second installment payment has been refunded
+        refund_request_2 = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "id": payment_id_2,
+                "type": "refund",
+                "amount": order.payment_schedule[1]["amount"].sub_units,
+                "installment_id": order.payment_schedule[1]["id"],
+            },
+            format="json",
+        )
+        refund_request_2.data = json.loads(refund_request_2.body.decode("utf-8"))
+        # Get the notification from the payment backend that
+        # the refund of the second installment is successful.
+        backend.handle_notification(refund_request_2)
+
+        order.refresh_from_db()
+        # The paid installments should now be set to `refunded`
+        self.assertEqual(
+            order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUNDED
+        )
+        self.assertEqual(
+            order.payment_schedule[1]["state"], enums.PAYMENT_STATE_REFUNDED
+        )
+        # The remaining installments should be set to `canceled`
+        self.assertEqual(
+            order.payment_schedule[2]["state"], enums.PAYMENT_STATE_CANCELED
+        )
+        self.assertEqual(
+            order.payment_schedule[3]["state"], enums.PAYMENT_STATE_CANCELED
         )
         # The order's state should finally be set to `refunded`
         self.assertEqual(order.state, enums.ORDER_STATE_REFUNDED)
+
+        # Only one email should have been sent for the refund of the order
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], order.owner.email)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f"Test Catalog - {order.product.title}"
+            " - An installment debit has been refunded 30.00 EUR",
+        )
+
+        text_lines = [
+            f"Hello {order.owner.username},",
+            f"For the course {order.product.title}, " "the order has been refunded.",
+            "We have refunded the following installments on the credit card "
+            f"•••• •••• •••• {order.credit_card.last_numbers}.",
+            "The remaining installments have been canceled.",
+            "Payment schedule",
+            "1 €20.00",
+            f"Withdrawn on {order.payment_schedule[0]['due_date'].strftime('%m/%d/%Y')}",
+            "Refunded",
+            "2 €30.00",
+            f"Withdrawn on {order.payment_schedule[1]['due_date'].strftime('%m/%d/%Y')}",
+            "Refunded",
+            "3 €30.00",
+            f"Withdrawn on {order.payment_schedule[2]['due_date'].strftime('%m/%d/%Y')}",
+            "Canceled",
+            "4 €20.00",
+            f"Withdrawn on {order.payment_schedule[3]['due_date'].strftime('%m/%d/%Y')}",
+            "Canceled",
+            "Total €100.00",
+            f"This mail has been sent to {order.owner.email} by Test Catalog [None]",
+        ]
+
+        self.assertEqual(
+            text_lines,
+            [
+                line.strip()
+                for line in mail.outbox[0].body.splitlines()
+                if "image/png" not in line and line.strip()
+            ],
+        )

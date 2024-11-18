@@ -831,6 +831,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         # Cancel the order to ask for a refund of the paid installment
         order.flow.cancel()
         order.flow.refunding()
+        order.cancel_remaining_installments()
         order.refresh_from_db()
 
         self.assertEqual(order.state, ORDER_STATE_REFUNDING)
