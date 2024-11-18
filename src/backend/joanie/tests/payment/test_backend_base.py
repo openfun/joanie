@@ -619,6 +619,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
         order.flow.cancel()
         order.flow.refunding()
+        order.cancel_remaining_installments()
         self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
         # - Refund the paid installment of the order in the payment schedule
         backend.call_do_on_refund(

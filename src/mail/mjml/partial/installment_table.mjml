@@ -40,6 +40,14 @@
                 <p style="font-size: 14px; background-color: #F3D4AF; color: #7C5D3A; text-decoration: none; text-align: center; padding: 2px 2px; border-radius: 20px;">
                   <strong>{% blocktranslate with state=installment.state.capitalize %}{{ state }}{% endblocktranslate %}</strong>
                 </p>
+                {% elif installment.state == "refunded" %}
+                <p style="font-size: 14px; background-color: #B9E49E; color: #507838; text-decoration: none; text-align: center; padding: 2px 2px; border-radius: 20px;">
+                  <strong>{% blocktranslate with state=installment.state.capitalize %}{{ state }}{% endblocktranslate %}</strong>
+                </p>
+                {% elif installment.state == "canceled" %}
+                <p style="font-size: 14px; background-color: #cbcbcb; color: #787878; text-decoration: none; text-align: center; padding: 2px 2px; border-radius: 20px;">
+                  <strong>{% blocktranslate with state=installment.state.capitalize %}{{ state }}{% endblocktranslate %}</strong>
+                </p>
                 {% endif %}
               </div>
             </td>

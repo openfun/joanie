@@ -186,9 +186,9 @@ class TestOrderGeneratorFactory(TestCase):
             is_free=False,
             has_payment_method=True,
         )
-        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PENDING)
-        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
-        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_CANCELED)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_CANCELED)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_CANCELED)
 
     def test_factory_order_passed_isoformat_string_due_date_value_to_convert_to_date_object(
         self,
@@ -324,9 +324,9 @@ class TestOrderGeneratorFactory(TestCase):
 
         self.assertEqual(order.state, "refunding")
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
-        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
-        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
-        self.assertEqual(order.payment_schedule[3]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_CANCELED)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_CANCELED)
+        self.assertEqual(order.payment_schedule[3]["state"], PAYMENT_STATE_CANCELED)
 
     def test_factory_order_state_refunded(self):
         """
