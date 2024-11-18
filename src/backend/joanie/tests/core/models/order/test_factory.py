@@ -18,6 +18,7 @@ from joanie.core.enums import (
     ORDER_STATE_SIGNING,
     ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
     ORDER_STATE_TO_SIGN,
+    PAYMENT_STATE_CANCELED,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUNDED,
@@ -341,9 +342,9 @@ class TestOrderGeneratorFactory(TestCase):
         )
         self.assertEqual(order.state, "refunded")
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
-        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
-        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_PENDING)
-        self.assertEqual(order.payment_schedule[3]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_CANCELED)
+        self.assertEqual(order.payment_schedule[2]["state"], PAYMENT_STATE_CANCELED)
+        self.assertEqual(order.payment_schedule[3]["state"], PAYMENT_STATE_CANCELED)
 
 
 class TestOrderFactory(TestCase):

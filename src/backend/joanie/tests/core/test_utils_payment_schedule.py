@@ -6,6 +6,7 @@ Test suite for payment schedule util
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal as D
+from random import choice
 from unittest import mock
 from zoneinfo import ZoneInfo
 
@@ -21,8 +22,11 @@ from joanie.core import factories
 from joanie.core.enums import (
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
+    PAYMENT_STATE_CANCELED,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
+    PAYMENT_STATE_REFUNDED,
+    PAYMENT_STATE_REFUSED,
 )
 from joanie.core.exceptions import InvalidConversionError
 from joanie.core.utils import payment_schedule
@@ -1222,4 +1226,34 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
                 str(transaction_2.reference): second_installment["amount"],
                 str(transaction_3.reference): third_installment["amount"],
             },
+        )
+
+    def test_utils_payment_schedule_has_refunded_or_canceled_installments(self):
+        """
+        The method `has_refunded_or_canceled_installments` should return a boolean
+        whether the order has installments that have been refunded or canceled.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT, product__price=1000
+        )
+        allowed_states = [PAYMENT_STATE_REFUNDED, PAYMENT_STATE_CANCELED]
+        other_states = [
+            PAYMENT_STATE_PENDING,
+            PAYMENT_STATE_PAID,
+            PAYMENT_STATE_REFUSED,
+        ]
+
+        # All installments are refunded or canceled
+        for installment in order.payment_schedule:
+            installment["state"] = choice(allowed_states)
+
+        self.assertTrue(
+            payment_schedule.has_only_refunded_or_canceled_installments(order)
+        )
+
+        # At least one installment is pending, paid or refused
+        choice(order.payment_schedule)["state"] = choice(other_states)
+
+        self.assertFalse(
+            payment_schedule.has_only_refunded_or_canceled_installments(order)
         )

@@ -5992,10 +5992,11 @@
                     "pending",
                     "paid",
                     "refused",
-                    "refunded"
+                    "refunded",
+                    "canceled"
                 ],
                 "type": "string",
-                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused\n* `refunded` - Refunded"
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused\n* `refunded` - Refunded\n* `canceled` - Canceled"
             },
             "AdminOrderRequest": {
                 "type": "object",

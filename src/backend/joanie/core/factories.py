@@ -1048,6 +1048,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
                 total=-Decimal(str(self.payment_schedule[0]["amount"])),
                 reference=f"ref_{installment_id}",
             )
+            self.cancel_remaining_installments()
             self.save()
             self.flow.refunded()
 
