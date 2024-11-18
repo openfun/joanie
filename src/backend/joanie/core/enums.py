@@ -199,10 +199,12 @@ PAYMENT_STATE_PENDING = "pending"
 PAYMENT_STATE_PAID = "paid"
 PAYMENT_STATE_REFUSED = "refused"
 PAYMENT_STATE_REFUNDED = "refunded"
+PAYMENT_STATE_CANCELED = "canceled"
 
 PAYMENT_STATE_CHOICES = (
     (PAYMENT_STATE_PENDING, _("Pending")),
     (PAYMENT_STATE_PAID, _("Paid")),
     (PAYMENT_STATE_REFUSED, _("Refused")),
     (PAYMENT_STATE_REFUNDED, _("Refunded")),
+    (PAYMENT_STATE_CANCELED, _("Canceled")),
 )

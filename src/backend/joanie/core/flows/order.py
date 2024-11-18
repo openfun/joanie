@@ -14,6 +14,7 @@ from joanie.core import enums
 from joanie.core.utils.payment_schedule import (
     has_installment_paid,
     has_installments_to_debit,
+    has_only_refunded_or_canceled_installments,
     is_installment_to_debit,
 )
 from joanie.payment import get_payment_backend
@@ -283,7 +284,7 @@ class OrderFlow:
         """
         return (
             self.instance.state == enums.ORDER_STATE_REFUNDING
-            and not has_installment_paid(self.instance)
+            and has_only_refunded_or_canceled_installments(self.instance)
         )
 
     @state.transition(

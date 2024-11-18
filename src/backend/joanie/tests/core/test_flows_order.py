@@ -1801,12 +1801,51 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
                     order.flow.refunding()
                 self.assertEqual(order.state, state)
 
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={1: (30, 40, 30)})
+    def test_flows_order_transition_to_refunded_should_fail_if_installments_are_not_refunded(
+        self,
+    ):
+        """
+        Test that the transition to `refunded` state is not possible if all installments are not
+        refunded.
+        """
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_REFUNDING)
+        order.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUNDED
+        order.payment_schedule[1]["state"] = enums.PAYMENT_STATE_PAID
+        order.payment_schedule[2]["state"] = enums.PAYMENT_STATE_CANCELED
+        order.save()
+
+        with self.assertRaises(TransitionNotAllowed):
+            order.flow.refunded()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
+
+    @override_settings(JOANIE_PAYMENT_SCHEDULE_LIMITS={1: (30, 40, 30)})
+    def test_flows_order_transition_to_refunded_should_fail_if_installments_are_not_canceled(
+        self,
+    ):
+        """
+        Test that the transition to `refunded` state is not possible if all installments are not
+        canceled.
+        """
+        order = factories.OrderGeneratorFactory(state=enums.ORDER_STATE_REFUNDING)
+        order.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUNDED
+        order.payment_schedule[1]["state"] = enums.PAYMENT_STATE_REFUNDED
+        order.payment_schedule[2]["state"] = enums.PAYMENT_STATE_PENDING
+        order.save()
+
+        with self.assertRaises(TransitionNotAllowed):
+            order.flow.refunded()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
+
     def test_flows_order_transition_to_refunded(self):
         """Test the state `refunding` to transition to `refunded` is successful"""
         order = factories.OrderGeneratorFactory(
             state=enums.ORDER_STATE_REFUNDING, product__price=10
         )
         order.payment_schedule[0]["state"] = enums.PAYMENT_STATE_REFUNDED
+        order.cancel_remaining_installments()
         order.save()
 
         order.flow.refunded()

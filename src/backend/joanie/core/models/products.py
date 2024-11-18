@@ -1155,6 +1155,18 @@ class Order(BaseModel):
                 return
         raise ValueError(f"Installment with id {installment_id} cannot be refund")
 
+    def cancel_remaining_installments(self):
+        """
+        Cancel all remaining installments in the payment schedule.
+        """
+        for installment in self.payment_schedule:
+            if installment["state"] in [
+                enums.PAYMENT_STATE_PENDING,
+                enums.PAYMENT_STATE_REFUSED,
+            ]:
+                installment["state"] = enums.PAYMENT_STATE_CANCELED
+        self.save(update_fields=["payment_schedule"])
+
     def get_first_installment_refused(self):
         """
         Retrieve the first installment that is refused in payment schedule of an order.

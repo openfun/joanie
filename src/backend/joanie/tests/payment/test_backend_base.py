@@ -646,6 +646,12 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # - Order has been canceled
         order.refresh_from_db()
         self.assertEqual(order.state, "refunded")
+        self.assertEqual(
+            order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUNDED
+        )
+        self.assertEqual(
+            order.payment_schedule[1]["state"], enums.PAYMENT_STATE_CANCELED
+        )
 
     def test_payment_backend_base_get_notification_url(self):
         """

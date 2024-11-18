@@ -252,6 +252,17 @@ def has_installment_paid(order):
     )
 
 
+def has_only_refunded_or_canceled_installments(order):
+    """
+    Check if installments are refunded or canceled  in the payment schedule.
+    """
+    return all(
+        installment.get("state")
+        in (enums.PAYMENT_STATE_REFUNDED, enums.PAYMENT_STATE_CANCELED)
+        for installment in order.payment_schedule
+    )
+
+
 def get_paid_transactions(order):
     """
     Return a transactions queryset that are made from the order on paid installments.
