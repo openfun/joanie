@@ -431,10 +431,10 @@ class OrdersAdminApiTestCase(TestCase):
         )
         order = factories.OrderFactory(
             owner=factories.UserFactory(
-                username="jo_cun",
-                first_name="Joanie",
-                last_name="Cunningham",
-                email="jo_cun@example.com",
+                username="pi_mou",
+                first_name="Pimpolette",
+                last_name="Mouchardon",
+                email="pi_mou@example.com",
             ),
             product=product,
             course=course,
@@ -449,14 +449,14 @@ class OrdersAdminApiTestCase(TestCase):
         # Prepare queries to test
         # - Queries related to owner (username, first_name, last_name, email)
         queries = [
-            "jo_cun",
-            "jo_",
-            "Joanie",
-            "oani",
-            "Cunningham",
-            "nning",
-            "jo_cun@example.com",
-            "_cun@examp",
+            "pi_mou",
+            "pi_",
+            "Pimpolette",
+            "impolett",
+            "Mouchardon",
+            "uchard",
+            "pi_mou@example.com",
+            "_mou@examp",
         ]
         # - Queries related to product (title in any language))
         queries += [
@@ -482,11 +482,12 @@ class OrdersAdminApiTestCase(TestCase):
         ]
 
         for query in queries:
-            response = self.client.get(f"/api/v1.0/admin/orders/?query={query}")
-            self.assertEqual(response.status_code, HTTPStatus.OK)
-            content = response.json()
-            self.assertEqual(content["count"], 1)
-            self.assertEqual(content["results"][0]["id"], str(order.id))
+            with self.subTest(query=query):
+                response = self.client.get(f"/api/v1.0/admin/orders/?query={query}")
+                self.assertEqual(response.status_code, HTTPStatus.OK)
+                content = response.json()
+                self.assertEqual(content["count"], 1)
+                self.assertEqual(content["results"][0]["id"], str(order.id))
 
     def test_api_admin_orders_list_filter_by_id(self):
         """
