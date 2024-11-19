@@ -506,7 +506,13 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         """
         product = factories.ProductFactory(
             target_courses=factories.CourseFactory.create_batch(
-                2, course_runs=[CourseRunFactory()]
+                2,
+                course_runs=[
+                    CourseRunFactory(
+                        start=django_timezone.now() + timedelta(days=1),
+                        end=django_timezone.now() + timedelta(days=10),
+                    )
+                ],
             ),
         )
         order = factories.OrderFactory(product=product)
