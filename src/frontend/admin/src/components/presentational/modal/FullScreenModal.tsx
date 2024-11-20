@@ -28,7 +28,13 @@ export function FullScreenModal({
       onClose={handleClose}
       TransitionComponent={Transition}
     >
-      <DialogTitle bgcolor={theme.palette.grey[100]}>
+      <DialogTitle
+        bgcolor={
+          theme.palette.mode === "dark"
+            ? theme.palette.grey[900]
+            : theme.palette.grey[100]
+        }
+      >
         <IconButton
           edge="start"
           color="inherit"
