@@ -1,6 +1,6 @@
 # arnold.yml
 metadata:
   name: joanie
-  version: 2.9.2
+  version: 2.10.0
 source:
   path: src/tray

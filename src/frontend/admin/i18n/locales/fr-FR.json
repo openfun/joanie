@@ -695,6 +695,14 @@
     "description": "Enrollment field",
     "message": "{courseRunTitle} ({courseRunState}) inscrit le : {registerOn}"
   },
+  "components.templates.orders.view.hasNotWaivedWithdrawalRight": {
+    "description": "Text for the has waived withdrawal right label",
+    "message": "L'utilisateur n'a pas renoncé à son droit de rétractation."
+  },
+  "components.templates.orders.view.hasWaivedWithdrawalRight": {
+    "description": "Text for the has waived withdrawal right label",
+    "message": "L'utilisateur a renoncé à son droit de rétractation."
+  },
   "components.templates.orders.view.invoiceBalance": {
     "description": "Invoice balance field",
     "message": "Solde"
@@ -1250,6 +1258,22 @@
   "components.templates.relations.courseProductRelation.CourseProductRelationList.titleProductHeader": {
     "description": "Title for the course relation product list inside the product form",
     "message": "Cours associés"
+  },
+  "dashboard.nav.DashboardNavThemeMenu.buttonAriaLabel": {
+    "description": "Aria label of button to open color scheme menu",
+    "message": "Ouvrir le menu des modes d'apparence"
+  },
+  "dashboard.nav.DashboardNavThemeMenu.dark": {
+    "description": "Label for dark theme button",
+    "message": "Sombre"
+  },
+  "dashboard.nav.DashboardNavThemeMenu.light": {
+    "description": "Label for light theme button",
+    "message": "Clair"
+  },
+  "dashboard.nav.DashboardNavThemeMenu.system": {
+    "description": "Label for system theme button",
+    "message": "Système"
   },
   "hooks.useCertificateDefinitions.errorCreate": {
     "description": "Error message shown to the user when certificate definition creation request fails.",
