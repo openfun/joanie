@@ -1163,6 +1163,9 @@ class Order(BaseModel):
         """
         Cancel all remaining installments in the payment schedule.
         """
+        if not self.payment_schedule:
+            return
+
         for installment in self.payment_schedule:
             if installment["state"] in [
                 enums.PAYMENT_STATE_PENDING,

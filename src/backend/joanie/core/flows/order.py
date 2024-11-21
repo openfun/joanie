@@ -410,8 +410,7 @@ class OrderFlow:
                 capture_exception(error)
 
         if target in [enums.ORDER_STATE_CANCELED, enums.ORDER_STATE_REFUNDED]:
-            if self.instance.payment_schedule:
-                self.instance.cancel_remaining_installments()
+            self.instance.cancel_remaining_installments()
 
         if target == enums.ORDER_STATE_CANCELED:
             self.instance.unenroll_user_from_course_runs()
