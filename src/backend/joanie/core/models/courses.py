@@ -1016,6 +1016,21 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         )
         webhooks.synchronize_course_runs(serialized_course_runs)
 
+    def can_enroll(self, user):
+        """
+        Verify if a user can enroll in a course run that is open, when the user does not yet
+        have any active enrollment for that course in another opened course run.
+        """
+        now = timezone.now()
+        user_enrollment_ids = user.enrollments.values_list("id", flat=True)
+
+        return not (
+            user.enrollments.filter(id__in=user_enrollment_ids, is_active=True).exists()
+            and user.enrollments.filter(
+                is_active=True, course_run__course=self.course, course_run__end__gte=now
+            ).exists()
+        )
+
 
 class Enrollment(BaseModel):
     """
@@ -1126,33 +1141,6 @@ class Enrollment(BaseModel):
         And if the related course run is not linked to any product, the flag
         `was_created_by_order` cannot be set to True.
         """
-
-        # The related course run must be opened to create the enrollment or reactivate it.
-        if (not self.created_on or self.is_active) and self.course_run.state[
-            "priority"
-        ] > CourseState.ARCHIVED_OPEN:
-            message = _(
-                "You are not allowed to enroll to a course run not opened for enrollment."
-            )
-            raise ValidationError({"__all__": [message]})
-
-        # The user should not be enrolled in another opened course run of the same course.
-        if (
-            self.is_active
-            and self.user.enrollments.exclude(id=self.id)
-            .filter(
-                course_run__course=self.course_run.course,
-                course_run__end__gte=timezone.now(),
-                is_active=True,
-            )
-            .exists()
-        ):
-            message = _(
-                "You are already enrolled to an opened course run "
-                f'for the course "{self.course_run.course.title}".'
-            )
-            raise ValidationError({"user": [message]})
-
         # Forbid creating a free enrollment if the related course run is not listed and
         # if the course relies on a product and the owner doesn't purchase it.
         if self.is_active and not self.course_run.is_listed:

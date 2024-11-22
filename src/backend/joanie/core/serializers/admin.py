@@ -1266,3 +1266,51 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
             "user",
             "was_created_by_order",
         ]
+
+    def validate(self, attrs):
+        """
+        Check whether the required data is passed and if the course run and the user
+        both exist. The course run can be opened or closed, and the admin user can
+        create/update the enrollment of a user.
+        """
+        validated_data = super().validate(attrs)
+
+        try:
+            course_run_id = self.initial_data["course_run"]
+        except KeyError as exception:
+            message = "You must provide a course_run_id to create/update an enrollment."
+            raise serializers.ValidationError({"__all__": [message]}) from exception
+
+        try:
+            course_run = models.CourseRun.objects.get(id=course_run_id)
+        except models.CourseRun.DoesNotExist as exception:
+            message = f'A course run with id "{course_run_id}" does not exist.'
+            raise serializers.ValidationError({"__all__": [message]}) from exception
+
+        try:
+            user_id = self.initial_data["user"]
+        except KeyError as exception:
+            message = "You must provide a user_id to create/update an enrollment."
+            raise serializers.ValidationError({"__all__": [message]}) from exception
+
+        try:
+            user = models.User.objects.get(id=user_id)
+        except models.User.DoesNotExist as exception:
+            message = f'A user with the id "{user_id}" does not exist.'
+            raise serializers.ValidationError({"__all__": [message]}) from exception
+
+        validated_data["course_run"] = course_run
+        validated_data["user"] = user
+
+        return validated_data
+
+    def update(self, instance, validated_data):
+        """
+        Only `is_active` field can be updated on an existing enrollment.
+        The `was_created_by_order` field should be updated only if the enrollment
+        was previously inactive only.
+        """
+        if instance.is_active is True:
+            validated_data.pop("was_created_by_order", None)
+
+        return super().update(instance, validated_data)

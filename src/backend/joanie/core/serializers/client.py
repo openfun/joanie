@@ -595,7 +595,6 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         Retrieve the course run resource through the provided id
         then try to create the enrollment resource.
         """
-
         # Retrieve the course run id from the request body through the course run
         # property. This field is a nested serializer for read only purpose, but to
         # create/update an enrollment, we do not want the frontend has to provide the
@@ -613,9 +612,27 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             message = f'A course run with id "{course_run_id}" does not exist.'
             raise serializers.ValidationError({"__all__": [message]}) from exception
 
+        # The related course run must be opened to create the enrollment or reactivate it.
+        if course_run.state["priority"] > models.CourseState.ARCHIVED_OPEN:
+            message = _(
+                "You are not allowed to enroll to a course run not opened for enrollment."
+            )
+            raise serializers.ValidationError({"__all__": [message]})
+
         validated_data["course_run"] = course_run
 
-        return super().create(validated_data=validated_data)
+        # The user should not be enrolled in another opened course run of the same course.
+        user = validated_data.get("user")
+        if not course_run.can_enroll(user):
+            message = _(
+                "You are already enrolled to an opened course run "
+                f'for the course "{course_run.course.title}".'
+            )
+            raise serializers.ValidationError({"user": [message]})
+
+        instance = super().create(validated_data=validated_data)
+
+        return instance
 
     def update(self, instance, validated_data):
         """

@@ -19,6 +19,7 @@ from joanie.core.authentication import SessionAuthenticationWithAuthenticateHead
 class EnrollmentViewSet(
     SerializerPerActionMixin,
     mixins.ListModelMixin,
+    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
