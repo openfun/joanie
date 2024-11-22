@@ -12,6 +12,8 @@ and this project adheres to
 
 ### Added
 
+- Allow staff user to create and update an enrollment for a user
+  on closed course runs and opened course runs
 - Add link to back office in Django admin topbar
 - Add boolean field `has_waived_withdrawal_right` to the `Order` model
 - Add `is_withdrawable` to `CourseProductRelation` model

@@ -13,7 +13,7 @@ from django.utils import timezone as django_timezone
 
 from joanie.core import factories
 from joanie.core.factories import CourseRunFactory
-from joanie.core.models import CourseRun, CourseState
+from joanie.core.models import CourseRun, CourseState, Enrollment
 
 # pylint: disable=too-many-public-methods
 
@@ -525,3 +525,101 @@ class CourseRunModelsTestCase(TestCase):
                     "COURSE_AND_SEARCH, COURSE_ONLY, HIDDEN"
                 ),
             )
+
+    def test_models_course_run_user_can_not_enroll_because_is_already_enrolled_to_the_course(
+        self,
+    ):
+        """
+        Test that the user cannot enroll to the course of that course run because he is
+        already enrolled to that course in another course run.
+        """
+        user = factories.UserFactory()
+        target_course = factories.CourseFactory()
+        course_run_1 = CourseRunFactory(
+            course=target_course,
+            state=CourseState.ONGOING_OPEN,
+        )
+        course_run_2 = CourseRunFactory(
+            course=target_course,
+            state=CourseState.ONGOING_OPEN,
+        )
+        # Make a free product for the order
+        product = factories.ProductFactory(target_courses=[target_course], price="0.00")
+        order = factories.OrderFactory(owner=user, product=product)
+        order.init_flow()
+        factories.EnrollmentFactory(
+            user=user,
+            course_run=course_run_1,
+            is_active=True,
+            was_created_by_order=True,
+        )
+        # User should not be able to enroll to course_run_2 because he is already
+        # enrolled to that same course in course_run_1
+        self.assertFalse(course_run_2.can_enroll(user))
+
+    def test_models_course_run_user_can_enroll_because_old_course_run_is_closed_already(
+        self,
+    ):
+        """
+        Test that the user can enroll in the course of a new course run on a new product,
+        even if the user was previously enrolled to the same course through a different course run
+        from another product that recently closed for enrollments.
+        """
+        user = factories.UserFactory()
+        target_course = factories.CourseFactory()
+        # Course run 1 with target course is opened
+        now = django_timezone.now()
+        end_date = now + timedelta(days=10)
+        course_run_1 = CourseRunFactory(
+            course=target_course,
+            state=CourseState.ONGOING_OPEN,
+            start=now,
+            end=end_date,
+        )
+        product_1 = factories.ProductFactory(
+            target_courses=[target_course], price="0.00"
+        )
+        order_1 = factories.OrderFactory(owner=user, product=product_1)
+        order_1.init_flow()
+        enrollment = factories.EnrollmentFactory(
+            user=user,
+            course_run=course_run_1,
+            is_active=True,
+            was_created_by_order=True,
+        )
+        # Close the course run 1 for enrollments
+        past_end_date = end_date - timedelta(days=5)
+        course_run_1.end = past_end_date
+        course_run_1.save()
+        # Create second course run with same course but opened for enrollments
+        course_run_2 = CourseRunFactory(
+            course=target_course,
+            state=CourseState.ONGOING_OPEN,
+            start=now,
+            end=end_date + timedelta(days=30),
+        )
+        product_2 = factories.ProductFactory(
+            target_courses=[target_course], price="0.00"
+        )
+        order_2 = factories.OrderFactory(owner=user, product=product_2)
+        order_2.init_flow()
+        # Disactivate previous enrollment
+        enrollment.is_active = False
+        enrollment.save()
+
+        # Mocked that timezone.now() returns a date superior to course_run_1 end date.
+        mocked_now = django_timezone.now() + timedelta(days=10)
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            can_enroll_to_opened_course_run = course_run_2.can_enroll(user)
+
+        self.assertTrue(can_enroll_to_opened_course_run)
+
+    def test_models_course_run_user_with_no_enrollment_can_enroll(self):
+        """
+        Test that a user that has no enrollment yet, can enroll to the an opened course run.
+        """
+        user = factories.UserFactory()
+        course_run = factories.CourseRunFactory()
+
+        self.assertTrue(course_run.can_enroll(user))
+        self.assertEqual(Enrollment.objects.count(), 0)

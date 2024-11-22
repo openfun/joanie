@@ -1,5 +1,6 @@
 """Test suite for the admin enrollments API endpoints."""
 
+import random
 import uuid
 from http import HTTPStatus
 from unittest import mock
@@ -8,14 +9,54 @@ from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import enums, factories
-from joanie.core.models import CourseState
+from joanie.core.models import CourseState, Enrollment
 from joanie.tests import format_date
 
 
+# pylint: disable=too-many-public-methods, too-many-lines
 class OrdersAdminApiTestCase(TestCase):
     """Test suite for the admin enrollments API endpoints."""
 
     maxDiff = None
+
+    def create_closed_course_run(self, count=1, **kwargs):
+        """Create course runs closed for enrollment."""
+        closed_states = [
+            CourseState.FUTURE_NOT_YET_OPEN,
+            CourseState.FUTURE_CLOSED,
+            CourseState.ONGOING_CLOSED,
+            CourseState.ARCHIVED_CLOSED,
+        ]
+        if count > 1:
+            return factories.CourseRunFactory.create_batch(
+                count,
+                state=random.choice(closed_states),
+                **kwargs,
+            )
+
+        return factories.CourseRunFactory(
+            state=random.choice(closed_states),
+            **kwargs,
+        )
+
+    def create_opened_course_run(self, count=1, **kwargs):
+        """Create course runs opened for enrollment."""
+        open_states = [
+            CourseState.ONGOING_OPEN,
+            CourseState.FUTURE_OPEN,
+            CourseState.ARCHIVED_OPEN,
+        ]
+        if count > 1:
+            return factories.CourseRunFactory.create_batch(
+                count,
+                state=random.choice(open_states),
+                **kwargs,
+            )
+
+        return factories.CourseRunFactory(
+            state=random.choice(open_states),
+            **kwargs,
+        )
 
     def test_api_admin_enrollments_request_without_authentication(self):
         """
@@ -374,29 +415,363 @@ class OrdersAdminApiTestCase(TestCase):
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(failed_enrollment.id))
 
-    def test_api_admin_enrollments_create(self):
-        """Create an enrollment should be not allowed."""
-        # Create an admin user
-        admin = factories.UserFactory(is_staff=True, is_superuser=True)
-        self.client.login(username=admin.username, password="password")
-
-        response = self.client.post("/api/v1.0/admin/enrollments/")
-
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
-
-    def test_api_admin_enrollments_update(self):
+    def test_api_admin_enrollments_create_for_closed_course_run(self):
         """
-        Update an enrollment should be allowed but only is_active should be writable.
+        Admin user can create an enrollment even if the course run is closed and for
+        an existing user.
         """
-
-        # Create an admin user
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         user = factories.UserFactory()
-        course_run = factories.CourseRunFactory(
-            state=CourseState.ONGOING_OPEN, is_listed=True
+        target_course = factories.CourseFactory()
+        course_run = self.create_closed_course_run(
+            is_listed=True,
+            course=target_course,
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
         )
+        data = {
+            "user": user.id,
+            "course_run": course_run.id,
+            "is_active": True,
+            "was_created_by_order": False,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/admin/enrollments/",
+            data=data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+    def test_api_admin_enrollments_create_for_opened_course_run(self):
+        """
+        Admin user can create an enrollment when the course run is opened and for an existing user.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        course_run = self.create_opened_course_run(is_listed=True)
+
+        data = {
+            "user": user.id,
+            "course_run": course_run.id,
+            "is_active": True,
+            "was_created_by_order": False,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/admin/enrollments/",
+            data=data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+    def test_api_admin_enrollments_create_with_missing_user_id_should_fail(self):
+        """
+        Admin user cannot create an enrollment for a user if it's missing the user id in the
+        payload.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        course_run = self.create_opened_course_run(is_listed=True)
+
+        response = self.client.post(
+            "/api/v1.0/admin/enrollments/",
+            content_type="application/json",
+            data={"course_run": course_run.id, "is_active": True},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {"__all__": ["You must provide a user_id to create/update an enrollment."]},
+        )
+        self.assertFalse(Enrollment.objects.exists())
+
+    def test_api_admin_enrollments_create_with_missing_course_id_should_fail(self):
+        """
+        Admin user cannot create an enrollment for a user if it's missing the course id in the
+        payload.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+
+        response = self.client.post(
+            "/api/v1.0/admin/enrollments/",
+            content_type="application/json",
+            data={"user": user.id, "is_active": True},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "__all__": [
+                    "You must provide a course_run_id to create/update an enrollment."
+                ]
+            },
+        )
+        self.assertFalse(Enrollment.objects.exists())
+
+    def test_api_admin_enrollments_create_with_unexisting_course_id_should_fail(self):
+        """
+        Admin user cannot create an enrollment for a user if it passes a course id that
+        does not exist.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        fake_course_run_id = uuid.uuid4()
+
+        response = self.client.post(
+            "/api/v1.0/admin/enrollments/",
+            content_type="application/json",
+            data={"user": user.id, "course_run": fake_course_run_id, "is_active": True},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "__all__": [
+                    f'A course run with id "{fake_course_run_id}" does not exist.'
+                ]
+            },
+        )
+        self.assertFalse(Enrollment.objects.exists())
+
+    def test_api_admin_enrollments_create_with_unexsting_user_id_should_fail(self):
+        """
+        Admin user cannot create an enrollment for a user if it passes a user id that
+        does not exist.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        course_run = self.create_opened_course_run(is_listed=True)
+        fake_user_id = uuid.uuid4()
+
+        response = self.client.post(
+            "/api/v1.0/admin/enrollments/",
+            content_type="application/json",
+            data={"user": fake_user_id, "course_run": course_run.id, "is_active": True},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {"__all__": [f'A user with the id "{fake_user_id}" does not exist.']},
+        )
+        self.assertFalse(Enrollment.objects.exists())
+
+    def test_api_admin_enrollments_update_missing_course_id_should_fail(self):
+        """
+        Admin user should not be able to update an enrollment if the course run id is missing.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        enrollment = factories.EnrollmentFactory(
+            user=user, is_active=True, was_created_by_order=False
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={
+                "id": enrollment.id,
+                "certificate": uuid.uuid4(),
+                "user": user.id,
+                "is_active": True,
+                "was_created_by_order": True,
+                "state": None,
+                "created_on": format_date(timezone.now()),
+                "updated_on": format_date(timezone.now()),
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "__all__": [
+                    "You must provide a course_run_id to create/update an enrollment."
+                ]
+            },
+        )
+
+    def test_api_admin_enrollments_update_missing_user_id_should_fail(self):
+        """
+        Admin user should not be able to update an enrollment if the user id is missing.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        course_run = self.create_closed_course_run(is_listed=True)
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, is_active=True, was_created_by_order=False
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={
+                "id": enrollment.id,
+                "certificate": uuid.uuid4(),
+                "course_run": course_run.id,
+                "is_active": False,
+                "was_created_by_order": True,
+                "state": None,
+                "created_on": format_date(timezone.now()),
+                "updated_on": format_date(timezone.now()),
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {"__all__": ["You must provide a user_id to create/update an enrollment."]},
+        )
+
+    def test_api_admin_enrollments_update_unexisting_course_id_should_fail(self):
+        """
+        Admin user should not be able to update an enrollment if the course run id is does
+        not exist.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        enrollment = factories.EnrollmentFactory(
+            user=user, is_active=True, was_created_by_order=False
+        )
+        fake_course_run_id = uuid.uuid4()
+
+        response = self.client.put(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={
+                "id": enrollment.id,
+                "certificate": uuid.uuid4(),
+                "user": user.id,
+                "course_run": fake_course_run_id,
+                "is_active": True,
+                "was_created_by_order": True,
+                "state": None,
+                "created_on": format_date(timezone.now()),
+                "updated_on": format_date(timezone.now()),
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "__all__": [
+                    f'A course run with id "{fake_course_run_id}" does not exist.'
+                ]
+            },
+        )
+
+    def test_api_admin_enrollments_update_unexisting_user_id_should_fail(self):
+        """
+        Admin user should not be able to update an enrollment if the user id is does not exist.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        course_run = self.create_closed_course_run(is_listed=True)
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, is_active=True, was_created_by_order=False
+        )
+        fake_user_id = uuid.uuid4()
+
+        response = self.client.put(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={
+                "id": enrollment.id,
+                "certificate": uuid.uuid4(),
+                "user": fake_user_id,
+                "course_run": course_run.id,
+                "is_active": True,
+                "was_created_by_order": True,
+                "state": None,
+                "created_on": format_date(timezone.now()),
+                "updated_on": format_date(timezone.now()),
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {"__all__": [f'A user with the id "{fake_user_id}" does not exist.']},
+        )
+
+    def test_api_admin_enrollments_update_when_course_run_is_closed(self):
+        """
+        Admin user should be able to update an enrollment even if the course run is closed,
+        only `is_active` field should be writable.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        target_course = factories.CourseFactory()
+        course_run = self.create_closed_course_run(
+            is_listed=True,
+            course=target_course,
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
+        )
+        enrollment = factories.EnrollmentFactory(
+            user=user,
+            course_run=course_run,
+            is_active=True,
+        )
+        enrollment_created_on = enrollment.created_on
+
+        response = self.client.put(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            data={
+                "id": enrollment.id,
+                "certificate": uuid.uuid4(),
+                "user": user.id,
+                "course_run": course_run.id,
+                "is_active": False,
+                "was_created_by_order": True,
+                "state": None,
+                "created_on": format_date(timezone.now()),
+                "updated_on": format_date(timezone.now()),
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertFalse(response.json().get("is_active"))
+        self.assertEqual(response.json().get("state"), enums.ENROLLMENT_STATE_SET)
+        self.assertEqual(
+            response.json().get("created_on"), format_date(enrollment_created_on)
+        )
+
+    def test_api_admin_enrollments_update_on_opened_course_run(self):
+        """
+        An admin can update an enrollment on an opened course run but only `is_active`
+        should be writable.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        course_run = self.create_opened_course_run(is_listed=True)
         enrollment = factories.EnrollmentFactory(
             user=user, course_run=course_run, is_active=True, was_created_by_order=False
         )
@@ -409,11 +784,11 @@ class OrdersAdminApiTestCase(TestCase):
             f"/api/v1.0/admin/enrollments/{enrollment.id}/",
             content_type="application/json",
             data={
-                "id": uuid.uuid4(),
+                "id": enrollment.id,
                 "is_active": False,
                 "was_created_by_order": True,
-                "user": uuid.uuid4(),
-                "course_run": uuid.uuid4(),
+                "user": user.id,
+                "course_run": course_run.id,
                 "certificate": uuid.uuid4(),
                 "created_on": format_date(timezone.now()),
                 "updated_on": format_date(timezone.now()),
@@ -465,19 +840,22 @@ class OrdersAdminApiTestCase(TestCase):
 
     def test_api_admin_enrollments_partial_update(self):
         """
-        Update partially an enrollment should be allowed
-        for the field `is_active` exclusively.
+        Admin user can update partially an enrollment for the field `is_active` exclusively.
         """
         # Create an admin user
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        enrollment = factories.EnrollmentFactory(is_active=True)
+        user = factories.UserFactory()
+        course_run = self.create_opened_course_run(is_listed=True)
+        enrollment = factories.EnrollmentFactory(
+            user=user, course_run=course_run, is_active=True, was_created_by_order=False
+        )
 
         response = self.client.patch(
             f"/api/v1.0/admin/enrollments/{enrollment.id}/",
             content_type="application/json",
-            data={"is_active": False},
+            data={"user": user.id, "course_run": course_run.id, "is_active": False},
         )
 
         enrollment.refresh_from_db()
@@ -523,6 +901,165 @@ class OrdersAdminApiTestCase(TestCase):
                     },
                 },
                 "certificate": None,
+            },
+        )
+
+    def test_api_admin_enrollment_partial_update_on_closed_course_run(self):
+        """
+        Admin user can partially update an enrollment even if the course run is
+        closed, only `is_active` field should be writable.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        target_course = factories.CourseFactory()
+        course_run = self.create_closed_course_run(
+            is_listed=True,
+            course=target_course,
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
+        )
+        enrollment = factories.EnrollmentFactory(
+            user=user,
+            course_run=course_run,
+            is_active=False,
+            was_created_by_order=False,
+        )
+        enrollment_created_on = enrollment.created_on
+        enrollment_state = enrollment.state
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            data={
+                "user": user.id,
+                "course_run": course_run.id,
+                "is_active": True,
+                "state": None,
+                "created_on": format_date(timezone.now()),
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(response.json().get("is_active"))
+        self.assertTrue(response.json().get("state"), enrollment_state)
+        self.assertEqual(
+            response.json().get("created_on"), format_date(enrollment_created_on)
+        )
+
+    def test_api_admin_enrollments_partial_update_enrollment_with_unexisting_user_id(
+        self,
+    ):
+        """
+        Admin user should not be able to partially update an enrollment if the user id
+        does not exist.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        course_run = self.create_opened_course_run(is_listed=True)
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, is_active=True, was_created_by_order=False
+        )
+        fake_user_id = uuid.uuid4()
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={"user": fake_user_id, "course_run": course_run.id, "is_active": True},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {"__all__": [f'A user with the id "{fake_user_id}" does not exist.']},
+        )
+
+    def test_api_admin_enrollments_partial_update_enrollment_with_unexisting_course_run_id(
+        self,
+    ):
+        """
+        Admin user should not be able to partially update an enrollment if the course run id
+        does not exist.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        enrollment = factories.EnrollmentFactory(
+            user=user, is_active=True, was_created_by_order=False
+        )
+        fake_course_run_id = uuid.uuid4()
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={"user": user.id, "course_run": fake_course_run_id, "is_active": True},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "__all__": [
+                    f'A course run with id "{fake_course_run_id}" does not exist.'
+                ]
+            },
+        )
+
+    def test_api_admin_enrollments_partial_update_enrollment_with_missing_user_id(self):
+        """
+        Admin user should not be able to partially update an enrollment if the user id
+        is missing in the payload.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        course_run = self.create_opened_course_run(is_listed=True)
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run, is_active=True, was_created_by_order=False
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={"course_run": course_run.id, "is_active": True},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {"__all__": ["You must provide a user_id to create/update an enrollment."]},
+        )
+
+    def test_api_admin_enrollments_partial_update_enrollment_with_missing_course_run_id(
+        self,
+    ):
+        """
+        Admin user should not be able to partially update an enrollment if the course run id
+        is missing in the payload.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        enrollment = factories.EnrollmentFactory(
+            user=user, is_active=True, was_created_by_order=False
+        )
+
+        response = self.client.patch(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={"user": user.id, "is_active": True},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "__all__": [
+                    "You must provide a course_run_id to create/update an enrollment."
+                ]
             },
         )
 

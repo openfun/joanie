@@ -114,54 +114,6 @@ class EnrollmentModelsTestCase(TestCase):
             str(context.exception),
         )
 
-    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
-    def test_models_enrollment_unique_opened_course_run_per_course_and_user(
-        self, _mock_set
-    ):
-        """
-        A user can only have one enrollment for an opened course run for a course.
-        """
-        [cr1, cr2] = factories.CourseRunFactory.create_batch(
-            2,
-            state=CourseState.ONGOING_OPEN,
-            course=factories.CourseFactory(),
-            is_listed=True,
-        )
-        enrollment = factories.EnrollmentFactory(course_run=cr1, is_active=True)
-
-        with self.assertRaises(ValidationError) as context:
-            Enrollment.objects.create(
-                course_run=cr2, user=enrollment.user, is_active=True
-            )
-
-        self.assertEqual(
-            (
-                "{'user': ['You are already enrolled to an opened course run "
-                f'for the course "{cr2.course.title}".\']}}'
-            ),
-            str(context.exception),
-        )
-
-        enrollment.is_active = False
-        enrollment.save()
-
-        # If the first enrollment is not active anymore, user should be able to enroll
-        # to another course run for the same course
-        Enrollment.objects.create(course_run=cr2, user=enrollment.user, is_active=True)
-
-        # And finally it should not be able to re-enroll to the first course run
-        with self.assertRaises(ValidationError) as context:
-            enrollment.is_active = True
-            enrollment.save()
-
-        self.assertEqual(
-            (
-                "{'user': ['You are already enrolled to an opened course run "
-                f'for the course "{cr1.course.title}".\']}}'
-            ),
-            str(context.exception),
-        )
-
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
     def test_models_enrollment_not_unique_course_run_per_course_and_user(
         self, _mock_set
@@ -367,65 +319,6 @@ class EnrollmentModelsTestCase(TestCase):
             course_run=cr1, user=user, was_created_by_order=True
         )
         self.assertEqual(user.enrollments.count(), 1)
-
-    def test_models_enrollment_allow_to_unenroll_from_closed_course_run(self):
-        """
-        If a course run is closed, user should be allowed to unenroll.
-        """
-        course_run = factories.CourseRunFactory(
-            state=CourseState.ONGOING_OPEN,
-            is_listed=True,
-        )
-
-        # - As the course run is opened, enrollment should be allowed
-        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
-
-        # - User should be able to unenroll then re-enroll
-        enrollment.is_active = False
-        enrollment.save()
-
-        enrollment.is_active = True
-        enrollment.save()
-
-        # - Now we close the course run
-        course_run.enrollment_end = timezone.now() - timedelta(days=1)
-        course_run.save()
-
-        # - User should be still able to unenroll
-        enrollment.is_active = False
-        enrollment.save()
-
-        # - But user should not be able anymore to re-enroll
-        enrollment.is_active = True
-        with self.assertRaises(ValidationError) as context:
-            enrollment.save()
-
-        self.assertDictEqual(
-            context.exception.message_dict,
-            {
-                "__all__": [
-                    "You are not allowed to enroll to a course run not opened for enrollment."
-                ]
-            },
-        )
-
-    def test_models_enrollment_forbid_for_closed_course_run(self):
-        """If a course run is closed, user should not be allowed to enroll."""
-        course_run = factories.CourseRunFactory(
-            state=CourseState.ONGOING_CLOSED,
-        )
-
-        with self.assertRaises(ValidationError) as context:
-            factories.EnrollmentFactory(course_run=course_run)
-
-        self.assertEqual(
-            (
-                "{'__all__': ["
-                "'You are not allowed to enroll to a course run not"
-                " opened for enrollment.']}"
-            ),
-            str(context.exception),
-        )
 
     @override_settings(JOANIE_ENROLLMENT_GRADE_CACHE_TTL=600)
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)

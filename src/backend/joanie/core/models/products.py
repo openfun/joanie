@@ -840,21 +840,25 @@ class Order(BaseModel):
                 if course_relation.nb_open_specific_course_runs == 1
                 else course_relation.open_course_run_id
             )
-            try:
-                enrollment = Enrollment.objects.get(
-                    course_run_id=open_course_run_id, user=self.owner
-                )
-            except Enrollment.DoesNotExist:
-                Enrollment.objects.create(
+            # The user should not be enrolled in another opened course run of the same course.
+            course_run = CourseRun.objects.get(id=open_course_run_id)
+            if course_run.can_enroll(self.owner):
+                enrollment, _ = Enrollment.objects.get_or_create(
                     course_run_id=open_course_run_id,
-                    is_active=True,
                     user=self.owner,
-                    was_created_by_order=True,
+                    defaults={"was_created_by_order": True, "is_active": True},
                 )
             else:
-                if enrollment.is_active is False:
-                    enrollment.is_active = True
-                    enrollment.save()
+                raise ValidationError(
+                    _(
+                        f"Cannot automatically enroll the user {self.owner.id} in the course"
+                        f"run for the course '{course_run.course.title}' because there is "
+                        " already an active enrollment on that course on an opened course run."
+                    )
+                )
+            if not enrollment.is_active:
+                enrollment.is_active = True
+                enrollment.save()
 
     def unenroll_user_from_course_runs(self):
         """
