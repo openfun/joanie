@@ -189,7 +189,9 @@ class ContractDefinitionAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        contract_definition = factories.ContractDefinitionFactory()
+        contract_definition = factories.ContractDefinitionFactory(
+            name=enums.CONTRACT_NAME_CHOICES[0][0]
+        )
 
         response = self.client.get(
             f"/api/v1.0/admin/contract-definitions/{contract_definition.id}/"
@@ -205,7 +207,7 @@ class ContractDefinitionAdminApiTest(TestCase):
                 "description": contract_definition.description,
                 "id": str(contract_definition.id),
                 "language": contract_definition.language,
-                "name": "contract_definition",
+                "name": "contract_definition_default",
                 "title": contract_definition.title,
             },
         )
@@ -239,6 +241,7 @@ class ContractDefinitionAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+
         contract_definition = factories.ContractDefinitionFactory(
             title="Contract grade 1", name=enums.CONTRACT_NAME_CHOICES[0][0]
         )
@@ -258,7 +261,7 @@ class ContractDefinitionAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["id"], str(contract_definition.id))
         self.assertEqual(content["title"], "Updated Contract grade 1")
-        self.assertEqual(content["name"], "contract_definition")
+        self.assertEqual(content["name"], "contract_definition_default")
 
     def test_admin_api_contract_definition_partially_update(self):
         """
@@ -267,7 +270,7 @@ class ContractDefinitionAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         contract_definition = factories.ContractDefinitionFactory(
-            name=enums.CONTRACT_DEFINITION
+            name=enums.CONTRACT_DEFINITION_DEFAULT
         )
 
         response = self.client.patch(

@@ -20,7 +20,7 @@ from stockholm import Money
 from joanie.core import factories
 from joanie.core.enums import (
     CERTIFICATE,
-    CONTRACT_DEFINITION,
+    CONTRACT_DEFINITION_DEFAULT,
     DEGREE,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
@@ -351,11 +351,11 @@ class DebugDegreeTemplateView(DebugCertificateTemplateView):
 
 class DebugContractTemplateView(DebugPdfTemplateView):
     """
-    Debug view to check the layout of "contract_definition" template of a Contract.
+    Debug view to check the layout of "contract_definition_default" template of a Contract.
     """
 
     model = Contract
-    issuer_document = CONTRACT_DEFINITION
+    issuer_document = CONTRACT_DEFINITION_DEFAULT
 
     def get_document_context(self, pk=None):
         """

@@ -40,7 +40,7 @@ class ContractDefinition(BaseModel):
         _("template name"),
         max_length=255,
         choices=enums.CONTRACT_NAME_CHOICES,
-        default=enums.CONTRACT_DEFINITION,
+        default=enums.CONTRACT_DEFINITION_DEFAULT,
     )
     images = models.ManyToManyField(
         to=DocumentImage,
