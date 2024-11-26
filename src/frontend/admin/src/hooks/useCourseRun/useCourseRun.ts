@@ -1,13 +1,15 @@
 import { defineMessages } from "react-intl";
 import {
-  ResourcesQuery,
   useResource,
   useResources,
   UseResourcesProps,
 } from "@/hooks/useResources";
+import {
+  ResourcesQuery,
+  ApiResourceInterface,
+} from "@/hooks/useResources/types";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { CoursesRunsRepository } from "@/services/repositories/courses-runs/CoursesRunsRepository";
-import { ApiResourceInterface } from "@/hooks/useResources/types";
 import { CourseRepository } from "@/services/repositories/courses/CoursesRepository";
 import { Nullable } from "@/types/utils";
 

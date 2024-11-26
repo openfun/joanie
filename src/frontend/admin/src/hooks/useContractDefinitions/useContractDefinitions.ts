@@ -1,10 +1,10 @@
 import { defineMessages } from "react-intl";
 import {
-  ResourcesQuery,
   useResource,
   useResources,
   UseResourcesProps,
 } from "@/hooks/useResources";
+import { ResourcesQuery } from "@/hooks/useResources/types";
 import { ContractDefinitionRepository } from "@/services/repositories/contract-definition/ContractDefinitionRepository";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
 

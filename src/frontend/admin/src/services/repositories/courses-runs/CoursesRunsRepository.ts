@@ -1,8 +1,5 @@
 import queryString from "query-string";
-import {
-  AbstractRepository,
-  PaginatedResponse,
-} from "@/services/repositories/AbstractRepository";
+import { AbstractRepository } from "@/services/repositories/AbstractRepository";
 import { ResourcesQuery } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
 import {
@@ -13,6 +10,7 @@ import {
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
 import { JoanieLanguage } from "@/components/presentational/hook-form/RHFSelectLanguage";
 import { BaseEntityRoutesPaths } from "@/types/routes";
+import { PaginatedResponse } from "@/types/api";
 
 export const coursesRunsRoute: BaseEntityRoutesPaths = {
   get: (id: string, params: string = "") => `/course-runs/${id}/${params}`,

@@ -12,7 +12,7 @@ import {
 } from "@/services/api/models/Relations";
 import { DTOOrderGroup, OrderGroup } from "@/services/api/models/OrderGroup";
 import { exportToFormData } from "@/utils/forms";
-import { PaginatedResponse } from "@/services/repositories/AbstractRepository";
+import { PaginatedResponse } from "@/types/api";
 
 export const courseProductRelationsRoutes = {
   getAll: (params: string = "") => `/course-product-relations/${params}`,

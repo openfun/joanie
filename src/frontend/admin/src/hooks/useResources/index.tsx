@@ -1,26 +1,16 @@
-import type { QueryKey, UseQueryOptions } from "@tanstack/react-query";
+import type { QueryKey } from "@tanstack/react-query";
 import { QueryClient } from "@tanstack/react-query";
 import { MessageDescriptor } from "react-intl";
 import { useResourcesOmniscient } from "./useResourcesOmniscient";
 import { useResourcesRoot } from "./useResourcesRoot";
-import { ApiResourceInterface } from "@/hooks/useResources/types";
-import { HttpError } from "@/services/http/HttpError";
+import {
+  ApiResourceInterface,
+  QueryOptions,
+  Resource,
+  ResourcesQuery,
+} from "./types";
 
-export interface ResourcesQuery {
-  ids?: string[];
-  id?: string;
-  query?: string;
-  page?: number;
-}
-
-export interface Resource {
-  id?: string;
-}
-
-export type QueryOptions<TData extends Resource> = Omit<
-  UseQueryOptions<unknown, HttpError, TData[]>,
-  "queryKey" | "queryFn"
->;
+export type { Resource, ResourcesQuery, QueryOptions } from "./types";
 
 export interface UseResourcesProps<
   TData extends Resource,

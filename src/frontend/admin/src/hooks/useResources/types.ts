@@ -1,12 +1,21 @@
-import { QueryKey } from "@tanstack/react-query";
+import { QueryKey, UseQueryOptions } from "@tanstack/react-query";
+import { HttpError } from "@/services/http/HttpError";
 
 export interface Resource {
   id?: string;
 }
 
 export interface ResourcesQuery {
+  ids?: string[];
   id?: string;
+  query?: string;
+  page?: number;
 }
+
+export type QueryOptions<TData extends Resource> = Omit<
+  UseQueryOptions<unknown, HttpError, TData[]>,
+  "queryKey" | "queryFn"
+>;
 
 export interface ApiResourceInterface<
   TData extends Resource,
@@ -16,13 +25,6 @@ export interface ApiResourceInterface<
   create?: (payload: any) => Promise<TData>;
   update?: (payload: any) => Promise<TData>;
   delete?: (id: TData["id"]) => Promise<void>;
-}
-
-export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  prev: string | null;
-  results: Array<T>;
 }
 
 export const useLocalizedQueryKey = (queryKey: QueryKey) => queryKey;

@@ -1,10 +1,9 @@
 import queryString from "query-string";
 import { BaseEntityRoutesPaths } from "@/types/routes";
-import {
-  AbstractRepository,
-  PaginatedResponse,
-} from "@/services/repositories/AbstractRepository";
-import { ResourcesQuery } from "@/hooks/useResources";
+import { AbstractRepository } from "@/services/repositories/AbstractRepository";
+
+import { ResourcesQuery } from "@/hooks/useResources/types";
+import { PaginatedResponse } from "@/types/api";
 import { Maybe } from "@/types/utils";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
 import { DTOProduct, Product } from "@/services/api/models/Product";

@@ -1,9 +1,6 @@
 import queryString from "query-string";
 import { BaseEntityRoutesPaths } from "@/types/routes";
-import {
-  AbstractRepository,
-  PaginatedResponse,
-} from "@/services/repositories/AbstractRepository";
+import { AbstractRepository } from "@/services/repositories/AbstractRepository";
 
 import { Maybe } from "@/types/utils";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
@@ -13,6 +10,7 @@ import {
   DTOContractDefinition,
 } from "@/services/api/models/ContractDefinition";
 import { ResourcesQuery } from "@/hooks/useResources/types";
+import { PaginatedResponse } from "@/types/api";
 import { SelectOption } from "@/components/presentational/hook-form/RHFSelect";
 
 export const contractDefinitionRoutes: BaseEntityRoutesPaths = {
