@@ -8,6 +8,7 @@ from django.urls import path
 from joanie.debug.views import (
     DebugCertificateTemplateView,
     DebugContractTemplateView,
+    DebugContractUnicampTemplateView,
     DebugDegreeTemplateView,
     DebugInvoiceTemplateView,
     DebugMailAllInstallmentPaidViewHtml,
@@ -43,6 +44,11 @@ urlpatterns = [
         "__debug__/pdf-templates/degree",
         DebugDegreeTemplateView.as_view(),
         name="debug.certificate_definition.degree",
+    ),
+    path(
+        "__debug__/pdf-templates/contract-unicamp",
+        DebugContractUnicampTemplateView.as_view(),
+        name="debug.contract_unicamp.definition",
     ),
     path(
         "__debug__/pdf-templates/contract",

@@ -21,6 +21,7 @@ from joanie.core import factories
 from joanie.core.enums import (
     CERTIFICATE,
     CONTRACT_DEFINITION_DEFAULT,
+    CONTRACT_DEFINITION_UNICAMP,
     DEGREE,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
@@ -347,6 +348,30 @@ class DebugDegreeTemplateView(DebugCertificateTemplateView):
             }
         )
         return context
+
+
+class DebugContractUnicampTemplateView(DebugPdfTemplateView):
+    """
+    Debug view to check the layout of "contract_definition_unicamp" template of a Contract.
+    """
+
+    model = Contract
+    issuer_document = CONTRACT_DEFINITION_UNICAMP
+
+    def get_document_context(self, pk=None):
+        """
+        Build a realistic context to have data similar to a real document generated.
+        If a primary key (pk) is provided, retrieve the corresponding Contract and its definition's
+        context. If the Contract does not exist, we will use a basic fallback for the document
+        context. Otherwise, if no primary key is provided, we return the basic fallback document
+        context.
+        """
+        if not pk:
+            return contract_definition.generate_document_context()
+
+        contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
+
+        return contract.context
 
 
 class DebugContractTemplateView(DebugPdfTemplateView):
