@@ -134,9 +134,13 @@ ENROLLMENT_STATE_CHOICES = (
 )
 
 # For contract names choices
-CONTRACT_DEFINITION = "contract_definition"
+CONTRACT_DEFINITION_DEFAULT = "contract_definition_default"
+CONTRACT_DEFINITION_UNICAMP = "contract_definition_unicamp"
 
-CONTRACT_NAME_CHOICES = ((CONTRACT_DEFINITION, _("Contract Definition")),)  # default
+CONTRACT_NAME_CHOICES = (
+    (CONTRACT_DEFINITION_DEFAULT, _("Contract Definition Default")),
+    (CONTRACT_DEFINITION_UNICAMP, _("Contract Definition Unicamp")),
+)
 
 # For contract signature state choices
 CONTRACT_SIGNATURE_STATE_UNSIGNED = "unsigned"
