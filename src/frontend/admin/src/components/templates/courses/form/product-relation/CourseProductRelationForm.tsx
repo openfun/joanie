@@ -12,7 +12,7 @@ import { Organization } from "@/services/api/models/Organization";
 import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
 import { ProductSearch } from "@/components/templates/products/inputs/search/ProductSearch";
 import { OrganizationControlledSearch } from "@/components/templates/organizations/inputs/search/OrganizationControlledSearch";
-import { Product } from "@/services/api/models/Product";
+import { BaseProduct, Product } from "@/services/api/models/Product";
 import { Course } from "@/services/api/models/Course";
 import { CourseSearch } from "@/components/templates/courses/inputs/search/CourseSearch";
 
@@ -55,7 +55,7 @@ interface BaseProps {
     payload: DTOCourseProductRelation,
     formValues: CourseProductRelationFormValues,
   ) => void;
-  defaultProduct?: Product;
+  defaultProduct?: BaseProduct;
   defaultCourse?: Course;
   organizations?: Organization[];
   courseId?: string;

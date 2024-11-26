@@ -7,7 +7,7 @@ import {
   Organization,
 } from "@/services/api/models/Organization";
 import { User } from "@/services/api/models/User";
-import { Product } from "@/services/api/models/Product";
+import { BaseProduct } from "@/services/api/models/Product";
 import { mockResource } from "@/tests/mockResource";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { catchAllIdRegex } from "@/tests/useResourceHandler";
@@ -23,7 +23,7 @@ export const getCourseScenarioStore = () => {
   const list = CourseFactory(5);
   const organizationList: Organization[] = [];
   const userList: User[] = [];
-  const products: Product[] = [];
+  const products: BaseProduct[] = [];
   const productRelations: CourseProductRelation[] = [];
   const courseRuns: CourseRun[] = [];
   let orderGroups: OrderGroup[] = [];
@@ -46,7 +46,7 @@ export const getCourseScenarioStore = () => {
     });
   });
 
-  const productResource = mockResource<Product, DTOCourse>({
+  const productResource = mockResource<BaseProduct, DTOCourse>({
     data: products,
   });
 

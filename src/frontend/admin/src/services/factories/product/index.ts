@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import {
+  BaseProduct,
   Product,
   ProductSimple,
   ProductType,
@@ -33,7 +34,7 @@ export function ProductFactory(count?: number): Product | Product[] {
   return build();
 }
 
-const buildLight = (): Product => {
+const buildLight = (): BaseProduct => {
   return {
     id: faker.string.uuid(),
     title: faker.company.name(),
@@ -45,9 +46,11 @@ const buildLight = (): Product => {
   };
 };
 
-export function ProductFactoryLight(): Product;
-export function ProductFactoryLight(count: number): Product[];
-export function ProductFactoryLight(count?: number): Product | Product[] {
+export function ProductFactoryLight(): BaseProduct;
+export function ProductFactoryLight(count: number): BaseProduct[];
+export function ProductFactoryLight(
+  count?: number,
+): BaseProduct | BaseProduct[] {
   if (count) return [...Array(count)].map(buildLight);
   return buildLight();
 }
