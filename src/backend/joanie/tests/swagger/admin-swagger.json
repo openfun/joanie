@@ -5269,7 +5269,7 @@
                                 "$ref": "#/components/schemas/NameEnum"
                             }
                         ],
-                        "default": "contract_definition",
+                        "default": "contract_definition_default",
                         "title": "template name"
                     }
                 },
@@ -5310,7 +5310,7 @@
                                 "$ref": "#/components/schemas/NameEnum"
                             }
                         ],
-                        "default": "contract_definition",
+                        "default": "contract_definition_default",
                         "title": "template name"
                     }
                 },
@@ -7870,10 +7870,11 @@
             },
             "NameEnum": {
                 "enum": [
-                    "contract_definition"
+                    "contract_definition_default",
+                    "contract_definition_unicamp"
                 ],
                 "type": "string",
-                "description": "* `contract_definition` - Contract Definition"
+                "description": "* `contract_definition_default` - Contract Definition Default\n* `contract_definition_unicamp` - Contract Definition Unicamp"
             },
             "NullEnum": {
                 "enum": [
@@ -8376,7 +8377,7 @@
                                 "$ref": "#/components/schemas/NameEnum"
                             }
                         ],
-                        "default": "contract_definition",
+                        "default": "contract_definition_default",
                         "title": "template name"
                     }
                 }
