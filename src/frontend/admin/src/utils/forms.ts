@@ -11,7 +11,7 @@ export const appendToFormData = (
   // TODO: Manage FileList
   if (Array.isArray(value)) {
     if (value.length === 0) {
-      appendToFormData(key, "", formData);
+      appendToFormData(`${key}[]`, null, formData);
     } else {
       value.forEach((entity, index) => {
         if (typeof entity === "object" && !(entity instanceof File)) {
