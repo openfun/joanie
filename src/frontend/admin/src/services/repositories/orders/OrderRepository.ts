@@ -10,6 +10,7 @@ export const orderRoutes = {
   getAll: (params: string = "") => `/orders/${params}`,
   delete: (id: string) => `/orders/${id}/`,
   generateCertificate: (id: string) => `/orders/${id}/generate_certificate/`,
+  refund: (id: string) => `/orders/${id}/refund/`,
 };
 
 export class OrderRepository {
@@ -37,6 +38,11 @@ export class OrderRepository {
 
   static generateCertificate(id: string): Promise<void> {
     const url = orderRoutes.generateCertificate(id);
+    return fetchApi(url, { method: "POST" }).then(checkStatus);
+  }
+
+  static refund(id: string): Promise<void> {
+    const url = orderRoutes.refund(id);
     return fetchApi(url, { method: "POST" }).then(checkStatus);
   }
 }

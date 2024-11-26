@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add button in back office for refunding an order
+
 ## [2.10.0] - 2024-11-20
 
 ### Added

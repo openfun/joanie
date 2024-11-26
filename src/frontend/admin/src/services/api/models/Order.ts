@@ -123,6 +123,8 @@ export enum OrderStatesEnum {
   ORDER_STATE_FAILED_PAYMENT = "failed_payment", // last payment has failed
   ORDER_STATE_NO_PAYMENT = "no_payment", // no payment has been made
   ORDER_STATE_COMPLETED = "completed", // is completed
+  ORDER_STATE_REFUNDING = "refunding", // is being refunded
+  ORDER_STATE_REFUNDED = "refunded", // has been refunded
 }
 
 export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
