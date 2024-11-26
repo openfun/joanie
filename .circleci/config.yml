@@ -11,8 +11,12 @@ generate-version-file: &generate-version-file
         "$CIRCLE_PROJECT_USERNAME" \
         "$CIRCLE_PROJECT_REPONAME" \
         "$CIRCLE_BUILD_URL" > src/backend/joanie/version.json
-
 version: 2.1
+aliases:
+  - &count_cpus
+    run:
+      name: Count the number of available cpu cores
+      command: echo "export NB_CPUS=$(cat /proc/cpuinfo | grep processor | wc -l)" >> $BASH_ENV
 jobs:
   # Git jobs
   # Check that the git history is clean and complies with our expectations
@@ -152,6 +156,7 @@ jobs:
       - restore_cache:
           keys:
             - v1-back-dependencies-{{ .Revision }}
+      - *count_cpus
       - run:
           name: Check code formatting with ruff
           command: ~/.local/bin/ruff format joanie --diff
@@ -165,14 +170,14 @@ jobs:
           steps:
             - run:
                 name: Lint code with pylint
-                command: ~/.local/bin/pylint joanie
+                command: ~/.local/bin/pylint -j "${NB_CPUS}" joanie
       - when:
           condition:
             matches: { pattern: "^dev_/.+$", value: << pipeline.git.branch >> }
           steps:
             - run:
                 name: Lint code with pylint, ignoring TODOs
-                command: ~/.local/bin/pylint joanie --disable=fixme
+                command: ~/.local/bin/pylint -j "${NB_CPUS}" joanie --disable=fixme
 
   test-back:
     docker:
@@ -356,9 +361,10 @@ jobs:
           keys:
             - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
             - v6-frontend-admin-dependencies-
+      - *count_cpus
       - run:
           name: Run test command
-          command: yarn test -w 5 --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
+          command: yarn test -w "${NB_CPUS}" --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
 
   test-e2e-front-admin:
     docker:
