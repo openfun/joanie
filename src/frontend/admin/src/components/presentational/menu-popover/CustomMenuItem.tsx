@@ -15,6 +15,7 @@ export function CustomMenuItem({ handleClose, menuOption }: Props) {
       key={menuOption.mainLabel}
       enableTooltip={!!menuOption?.isDisable}
       title={menuOption.disableMessage ?? ""}
+      placement="left-end"
     >
       <span data-testid={menuOption.mainLabel}>
         <MenuItem

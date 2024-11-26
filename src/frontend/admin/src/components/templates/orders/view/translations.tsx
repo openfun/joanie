@@ -283,4 +283,14 @@ export const orderStatesMessages = defineMessages<OrderStatesEnum>({
     defaultMessage: "Completed",
     description: "Text for completed order state",
   },
+  refunding: {
+    id: "components.templates.orders.view.orderStatesMessages.refunding",
+    defaultMessage: "Refunding",
+    description: "Text for refunding order state",
+  },
+  refunded: {
+    id: "components.templates.orders.view.orderStatesMessages.refunded",
+    defaultMessage: "Refunded",
+    description: "Text for refunded order state",
+  },
 });

@@ -354,6 +354,62 @@ test.describe("Order view", () => {
     );
   });
 
+  test("Refund order", async ({ page }) => {
+    const order = store.list[0];
+    order.state = OrderStatesEnum.ORDER_STATE_CANCELED;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: order });
+      }
+    });
+    await page.goto(PATH_ADMIN.orders.list);
+    await page.getByRole("heading", { name: "Orders" }).click();
+    await page.getByRole("link", { name: order.product.title }).click();
+    await expect(
+      page.getByRole("heading", { name: "Order informations" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "Canceled",
+    );
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Refund order
+    await page.route(
+      `http://localhost:8071/api/v1.0/admin/orders/${order.id}/refund/`,
+      async (route, request) => {
+        const methods = request.method();
+        if (methods === "POST") {
+          order.state = OrderStatesEnum.ORDER_STATE_REFUNDING;
+          await route.fulfill();
+        }
+      },
+    );
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: order });
+      }
+    });
+
+    await expect(
+      page.getByRole("menuitem", { name: "Refund this order" }),
+    ).toBeVisible();
+    await page.getByRole("menuitem", { name: "Refund this order" }).click();
+
+    // Check after operation
+    await expect(page.getByText("Refunding order.")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "Refunding",
+    );
+  });
+
   test("Generate certificate", async ({ page }) => {
     const order = store.list[0];
     order.certificate = null;

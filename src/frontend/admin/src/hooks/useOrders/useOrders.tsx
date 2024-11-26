@@ -25,6 +25,12 @@ export const useOrdersMessages = defineMessages({
       "Success message shown to the user when the certificate has been generated.",
     defaultMessage: "Certificate successfully generated.",
   },
+  successRefund: {
+    id: "hooks.useOrders.successRefund",
+    description:
+      "Success message shown to the user when the order is being refunded.",
+    defaultMessage: "Refunding order.",
+  },
   errorGet: {
     id: "hooks.useOrders.errorGet",
     description:
@@ -88,6 +94,9 @@ const orderProps: UseResourcesProps<Order, OrderQuery> = {
     delete: async (id: string) => {
       return OrderRepository.delete(id);
     },
+    refund: async (id: string) => {
+      return OrderRepository.refund(id);
+    },
   }),
   session: true,
   messages: useOrdersMessages,
@@ -113,6 +122,23 @@ export const useOrders = (
           custom.methods.invalidate();
           custom.methods.showSuccessMessage(
             intl.formatMessage(useOrdersMessages.successCertificateGenerate),
+          );
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(useOrdersMessages.errorUpdate),
+          );
+        },
+      }).mutate,
+      refund: mutation({
+        mutationFn: async (data: { orderId: string }) => {
+          return OrderRepository.refund(data.orderId);
+        },
+        onSuccess: () => {
+          custom.methods.invalidate();
+          custom.methods.showSuccessMessage(
+            intl.formatMessage(useOrdersMessages.successRefund),
           );
         },
         onError: (error: HttpError) => {
