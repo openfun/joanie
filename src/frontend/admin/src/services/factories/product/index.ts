@@ -1,4 +1,6 @@
 import { faker } from "@faker-js/faker";
+import { TeacherFactory } from "../teacher";
+import { SkillFactory } from "../skill";
 import {
   BaseProduct,
   Product,
@@ -24,6 +26,9 @@ const build = (): Product => {
     target_courses: ProductTargetCourseRelationFactory(randomNumber(2)),
     course_relations: CourseProductRelationFactory(2),
     contract_definition: ContractDefinitionFactory(),
+    certification_level: faker.number.int({ min: 1, max: 8 }),
+    teachers: TeacherFactory(faker.number.int({ min: 1, max: 5 })),
+    skills: SkillFactory(faker.number.int({ min: 1, max: 5 })),
   };
 };
 
