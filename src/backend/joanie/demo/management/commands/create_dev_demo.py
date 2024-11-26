@@ -4,6 +4,7 @@
 import random
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 from django.utils import timezone as django_timezone
 from django.utils import translation
@@ -624,3 +625,31 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(self.style.SUCCESS("Successfully fake data creation"))
+
+        for order in models.Order.objects.all():
+            try:
+                order.generate_schedule()
+            except ValidationError:
+                continue
+
+            if order.state == enums.ORDER_STATE_COMPLETED:
+                for installment in order.payment_schedule:
+                    order.set_installment_paid(installment["id"])
+
+            if order.state == enums.ORDER_STATE_PENDING_PAYMENT:
+                order.set_installment_paid(order.payment_schedule[0]["id"])
+
+            if order.state == enums.ORDER_STATE_FAILED_PAYMENT:
+                order.set_installment_refused(order.payment_schedule[0]["id"])
+
+            if order.state == enums.ORDER_STATE_CANCELED:
+                order.cancel_remaining_installments()
+
+            if order.state == enums.ORDER_STATE_REFUNDING:
+                order.set_installment_paid(order.payment_schedule[0]["id"])
+                order.cancel_remaining_installments()
+
+            if order.state == enums.ORDER_STATE_REFUNDED:
+                order.set_installment_paid(order.payment_schedule[0]["id"])
+                order.set_installment_refunded(order.payment_schedule[0]["id"])
+                order.cancel_remaining_installments()
