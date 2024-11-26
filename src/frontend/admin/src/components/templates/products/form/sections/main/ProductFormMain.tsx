@@ -14,17 +14,16 @@ import { commonTranslations } from "@/translations/common/commonTranslations";
 import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
 import {
   Product,
+  ProductFormDefaultValues,
   ProductFormValues,
   ProductType,
   transformProductToDTO,
 } from "@/services/api/models/Product";
-import { CertificateSearch } from "@/components/templates/certificates-definitions/inputs/search/CertificateSearch";
 import { ProductFormFinancial } from "@/components/templates/products/form/sections/main/financial/ProductFormFinancial";
 import {
   useWizardContext,
   WizardStepProps,
 } from "@/components/presentational/wizard/Wizard";
-import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
 import { useProducts } from "@/hooks/useProducts/useProducts";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { ProductFormInstructions } from "@/components/templates/products/form/sections/main/instructions/ProductFormInstructions";
@@ -48,16 +47,16 @@ const Schema = Yup.object().shape({
   type: Yup.string<ProductType>().required(),
   description: Yup.string().required(),
   price: Yup.number().min(0.0).required(),
-  price_currency: Yup.string().optional(),
-  instructions: Yup.string().optional(),
+  price_currency: Yup.string().required(),
+  instructions: Yup.string().defined(),
   call_to_action: Yup.string().required(),
-  certificate_definition: Yup.mixed<CertificateDefinition>()
-    .nullable()
-    .optional(),
-  contract_definition: Yup.mixed<ContractDefinition>().nullable().optional(),
+  contract_definition: Yup.mixed<ContractDefinition>().nullable().defined(),
 });
 
-export type ProductFormMainValues = Omit<ProductFormValues, "target_courses">;
+export type ProductFormMainValues = Omit<
+  ProductFormValues,
+  "certificate_definition" | "target_courses"
+>;
 
 export function ProductFormMain({
   productType = ProductType.CREDENTIAL,
@@ -71,23 +70,20 @@ export function ProductFormMain({
   const wizardContext = useWizardContext();
   const productRepository = useProducts({}, { enabled: false });
   const defaultProduct = product ?? fromProduct;
-  const getDefaultValues = (): ProductFormMainValues => {
-    return {
-      title: defaultProduct?.title ?? "",
-      type: defaultProduct?.type ?? ProductType.CERTIFICATE,
-      description: removeEOL(defaultProduct?.description),
-      price: defaultProduct?.price ?? 0,
-      price_currency: defaultProduct?.price_currency ?? "EUR",
-      call_to_action: defaultProduct?.call_to_action ?? "",
-      certificate_definition: defaultProduct?.certificate_definition ?? null,
-      instructions: removeEOL(defaultProduct?.instructions),
-      contract_definition: defaultProduct?.contract_definition ?? null,
-    };
-  };
+  const getDefaultValues = (): ProductFormDefaultValues => ({
+    title: defaultProduct?.title ?? "",
+    type: defaultProduct?.type ?? productType,
+    description: removeEOL(defaultProduct?.description),
+    price: defaultProduct?.price,
+    price_currency: defaultProduct?.price_currency ?? "EUR",
+    call_to_action: defaultProduct?.call_to_action ?? "",
+    instructions: removeEOL(defaultProduct?.instructions),
+    contract_definition: defaultProduct?.contract_definition ?? null,
+  });
 
-  const methods = useForm({
+  const methods = useForm<ProductFormMainValues>({
     resolver: yupResolver(Schema),
-    defaultValues: getDefaultValues() as any,
+    defaultValues: getDefaultValues(),
   });
 
   const onSubmit = (values: ProductFormMainValues): void => {
@@ -191,21 +187,6 @@ export function ProductFormMain({
                 label={intl.formatMessage(commonTranslations.description)}
               />
             </Grid>
-
-            {productType !== ProductType.ENROLLMENT && (
-              <Grid size={12}>
-                <CertificateSearch
-                  placeholder="search"
-                  enableAdd={true}
-                  helperText={intl.formatMessage(
-                    productFormMessages.definitionHelper,
-                  )}
-                  enableEdit={true}
-                  name="certificate_definition"
-                  label={intl.formatMessage(productFormMessages.definition)}
-                />
-              </Grid>
-            )}
             <Grid size={12}>
               <ContractDefinitionSearch
                 placeholder={intl.formatMessage(

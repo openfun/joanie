@@ -7,6 +7,7 @@ import { ProductFormMain } from "@/components/templates/products/form/sections/m
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { ProductFormTypeSection } from "@/components/templates/products/form/sections/ProductFormTypeSection";
 import { ProductFormTargetCoursesSection } from "@/components/templates/products/form/sections/target-courses/ProductFormTargetCoursesSection";
+import ProductFormCertification from "@/components/templates/products/form/sections/certification/ProductFormCertification";
 import { productFormMessages } from "@/components/templates/products/form/translations";
 import { Wizard, WizardStep } from "@/components/presentational/wizard/Wizard";
 import {
@@ -82,6 +83,15 @@ export function ProductForm({ product, fromProduct, afterSubmit }: Props) {
             target_courses={product?.target_courses ?? []}
           />
         ),
+      });
+    }
+
+    if (productType !== ProductType.ENROLLMENT && product) {
+      result.push({
+        label: intl.formatMessage(
+          productFormMessages.certificationSectionWizardTitle,
+        ),
+        component: <ProductFormCertification product={product} />,
       });
     }
 

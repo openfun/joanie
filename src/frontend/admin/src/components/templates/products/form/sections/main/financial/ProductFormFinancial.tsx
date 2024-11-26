@@ -24,8 +24,9 @@ export function ProductFormFinancial() {
       </Grid>
       <Grid size={{ xs: 12, md: 8, lg: 5 }}>
         <RHFTextField
+          required
           type="number"
-          inputProps={{ min: 0, step: "0.01" }}
+          slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
           name="price"
           label={intl.formatMessage(productFormMessages.price)}
         />

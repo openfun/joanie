@@ -5,7 +5,11 @@ import { ProductFactory } from "@/services/factories/product";
 import { Course, DTOCourse } from "@/services/api/models/Course";
 import { Organization } from "@/services/api/models/Organization";
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
-import { DTOProduct, Product } from "@/services/api/models/Product";
+import {
+  DTOProduct,
+  DTOProductCertification,
+  Product,
+} from "@/services/api/models/Product";
 import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
 import { catchAllIdRegex } from "@/tests/useResourceHandler";
 import { mockResource } from "@/tests/mockResource";
@@ -14,16 +18,22 @@ import {
   ProductTargetCourseRelation,
 } from "@/services/api/models/ProductTargetCourseRelation";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
+import { DTOTeacher, Teacher } from "@/services/api/models/Teacher";
+import { DTOSkill, Skill } from "@/services/api/models/Skill";
 
 type ProductStore = {
   products: Product[];
   certificateDefinitions: CertificateDefinition[];
   contractsDefinitions: ContractDefinition[];
   courses: Course[];
+  skills: Skill[];
+  teachers: Teacher[];
   targetCourses: ProductTargetCourseRelation[];
   organizations: Organization[];
   courseRuns: CourseRun[];
   postUpdate: (payload: DTOProduct, item?: Product) => Product;
+  updateOrCreateTeacher: (payload: DTOTeacher, item?: Teacher) => Teacher;
+  updateOrCreateSkill: (payload: DTOSkill, item?: Skill) => Skill;
 };
 
 export const getProductScenarioStore = (): ProductStore => {
@@ -35,6 +45,8 @@ export const getProductScenarioStore = (): ProductStore => {
   const contractsDefinitions = products.map((product) => {
     return product.contract_definition!;
   });
+  const skills = products.map((product) => product.skills).flat();
+  const teachers = products.map((product) => product.teachers).flat();
 
   const courses: Course[] = [];
   const organizations: Organization[] = [];
@@ -54,17 +66,12 @@ export const getProductScenarioStore = (): ProductStore => {
     });
   });
 
-  const postUpdate = (payload: DTOProduct, item?: Product) => {
-    const {
-      certificate_definition: newCertificateDefinition,
-      contract_definition: newContractDefinition,
-      ...restPayload
-    } = payload;
-
-    const certificateDef = certificateDefinitions.find(
-      (certificateDefinition) =>
-        certificateDefinition.id === newCertificateDefinition,
-    );
+  function postUpdateMainInformation(
+    payload: DTOProduct,
+    item?: Product,
+  ): Product {
+    const { contract_definition: newContractDefinition, ...restPayload } =
+      payload;
 
     const contractDef = contractsDefinitions.find(
       (contractDefinition) => contractDefinition.id === newContractDefinition,
@@ -75,30 +82,97 @@ export const getProductScenarioStore = (): ProductStore => {
       newProduct = {
         ...item,
         ...restPayload,
-        certificate_definition: certificateDef ?? item.certificate_definition,
         contract_definition: contractDef ?? item.contract_definition,
       };
     } else {
       newProduct = {
         id: faker.string.uuid(),
         ...restPayload,
-        ...(certificateDef && { certificate_definition: certificateDef }),
-        ...(contractDef && { contract_definition: contractDef }),
+        contract_definition: contractDef ?? null,
+        certificate_definition: null,
+        certification_level: null,
+        teachers: [],
+        skills: [],
       };
+    }
+
+    return newProduct;
+  }
+
+  function postUpdateCertificateInformation(
+    payload: DTOProductCertification,
+    item: Product,
+  ): Product {
+    const newCertificateDefinition =
+      certificateDefinitions.find(
+        (definition) => definition.id === payload.certificate_definition,
+      ) ?? null;
+
+    const newSkills = skills.filter(({ id }) => payload.skills.includes(id));
+    const newTeachers = teachers.filter(({ id }) =>
+      payload.teachers.includes(id),
+    );
+
+    return {
+      ...item,
+      ...payload,
+      certificate_definition: newCertificateDefinition,
+      skills: newSkills,
+      teachers: newTeachers,
+    };
+  }
+
+  function isDTOProduct(
+    payload: DTOProduct | DTOProductCertification,
+  ): payload is DTOProduct {
+    return payload.hasOwnProperty("title");
+  }
+
+  function postUpdate(payload: DTOProduct, item?: Product): Product;
+  function postUpdate(payload: DTOProductCertification, item: Product): Product;
+  function postUpdate(
+    payload: DTOProduct | DTOProductCertification,
+    item?: Product,
+  ) {
+    let newProduct;
+    if (isDTOProduct(payload)) {
+      newProduct = postUpdateMainInformation(payload, item);
+    } else {
+      newProduct = postUpdateCertificateInformation(payload, item!);
     }
     products.push(newProduct);
     return newProduct;
-  };
+  }
+
+  function updateOrCreateTeacher(payload: DTOTeacher, item?: Teacher): Teacher {
+    return {
+      id: item?.id ?? faker.string.uuid(),
+      ...item,
+      ...payload,
+    };
+  }
+
+  function updateOrCreateSkill(payload: DTOSkill, item?: Skill): Skill {
+    return {
+      id: item?.id ?? faker.string.uuid(),
+      ...item,
+      ...payload,
+    };
+  }
 
   return {
     products,
     certificateDefinitions,
     contractsDefinitions,
+    skills,
+    teachers,
     courses,
     organizations,
     courseRuns,
     targetCourses,
     postUpdate,
+    updateOrCreateTeacher,
+    updateOrCreateSkill,
   };
 };
 

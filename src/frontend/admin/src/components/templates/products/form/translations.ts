@@ -16,10 +16,15 @@ export const productFormMessages = defineMessages({
     defaultMessage: "Target courses",
     description: "Title for the wizard target courses section",
   },
-  relatedCourseSectionWizardTitle: {
-    id: "components.templates.products.form.translations.relatedCourseSectionWizardTitle",
-    defaultMessage: "Related courses",
-    description: "Title for the wizard related courses section",
+  certificationSectionWizardTitle: {
+    id: "components.templates.products.form.translations.certificationSectionWizardTitle",
+    defaultMessage: "Certification",
+    description: "Title for the wizard certification section",
+  },
+  certificationDetailTitle: {
+    id: "components.templates.products.form.translations.certificationDetailTitle",
+    defaultMessage: "Certification details",
+    description: "Subtitle for the certification details section",
   },
   mainInformationTitle: {
     id: "components.templates.products.form.translations.mainInformationTitle",
@@ -147,7 +152,13 @@ export const productFormMessages = defineMessages({
     defaultMessage:
       "In this form, you can choose a course to integrate into the product as well as the associated course paths. " +
       "If you do not select any race runs, they will all be selected by default.",
-    description: "Text for the alert info",
+    description: "Text for the alert info of the target courses form",
+  },
+  productCertificationFormInfo: {
+    id: "components.templates.products.form.translations.productCertificationFormInfo",
+    defaultMessage:
+      "In this form, you can first select a certificate template then edit all informations related to the certification (skills, teachers, certification level, etc.).",
+    description: "Text for the alert info of the certification form",
   },
   productRelatedCoursesFormInfo: {
     id: "components.templates.products.form.translations.productRelatedCoursesFormInfo",
@@ -186,5 +197,16 @@ export const productFormMessages = defineMessages({
     id: "components.templates.products.form.translations.targetCourseIsGradedLabel",
     defaultMessage: "Taken into account for certification",
     description: "Label for the is graded switch",
+  },
+  certificationLevelLabel: {
+    id: "components.templates.products.form.translations.certificationLevelLabel",
+    defaultMessage: "Certification level",
+    description: "Label for the certification level input",
+  },
+  certificationLevelHelper: {
+    id: "components.templates.products.form.translations.certificationLevelHelper",
+    defaultMessage:
+      "Level of certification as defined by the European Qualifications Framework. The value must be between 1 and 8.",
+    description: "Text helper for the certification level input",
   },
 });

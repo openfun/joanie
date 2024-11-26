@@ -22,6 +22,8 @@ import {
 } from "@/services/api/models/ContractDefinition";
 import { ProductTargetCourseRelationFactory } from "@/services/api/models/ProductTargetCourseRelation";
 import { delay } from "@/components/testing/utils";
+import { DTOSkill, Skill } from "@/services/api/models/Skill";
+import { DTOTeacher, Teacher } from "@/services/api/models/Teacher";
 
 const searchPlaceholder = "Search by title";
 
@@ -107,11 +109,30 @@ test.describe("Product form", () => {
       searchResult: store.certificateDefinitions[1],
     });
 
+    await mockPlaywrightCrud<Skill, DTOSkill>({
+      data: store.skills,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/skills/",
+      page,
+      searchResult: store.skills[1],
+      createCallback: store.updateOrCreateSkill,
+      updateCallback: store.updateOrCreateSkill,
+    });
+
+    await mockPlaywrightCrud<Teacher, DTOTeacher>({
+      data: store.teachers,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/teachers/",
+      page,
+      searchResult: store.teachers[1],
+      createCallback: store.updateOrCreateTeacher,
+      updateCallback: store.updateOrCreateTeacher,
+    });
+
     await mockPlaywrightCrud<Product, DTOProduct>({
       data: store.products,
       routeUrl: "http://localhost:8071/api/v1.0/admin/products/",
       page,
       createCallback: store.postUpdate,
+      updateCallback: store.postUpdate,
     });
   });
 
@@ -129,11 +150,6 @@ test.describe("Product form", () => {
     await description.click();
     await description.fill("Description");
 
-    await page.getByLabel("Certificate definition").click();
-    await page
-      .getByRole("option", { name: store.certificateDefinitions[1].title })
-      .click();
-
     await page.getByPlaceholder("Search a contract definition").click();
     await page
       .getByRole("option", { name: store.contractsDefinitions[0].title })
@@ -147,6 +163,9 @@ test.describe("Product form", () => {
     const cta = page.getByLabel("Call to action *");
     await cta.click();
     await cta.fill("Test product");
+
+    const price = page.getByLabel("Price *");
+    await price.fill("200");
 
     await page.getByRole("button", { name: "Submit" }).click();
     await expect(
@@ -188,7 +207,7 @@ test.describe("Product form", () => {
     await page.goto(PATH_ADMIN.products.list);
     await page.getByRole("button", { name: "Add" }).click();
     await page.getByText("Microcredential", { exact: true }).click();
-    await page.getByTestId("search-add-button").nth(1).click();
+    await page.getByTestId("search-add-button").nth(0).click();
     await expect(
       page.getByRole("heading", { name: "close Add a contract" }),
     ).toBeVisible();
@@ -233,7 +252,6 @@ test.describe("Product form", () => {
       page.getByRole("heading", { name: "Product target courses" }),
     ).toBeVisible();
     await expect(page.getByText("No target course has been")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
     await page.getByRole("button", { name: "Add target course" }).click();
     const addTargetCourseModal = page.getByTestId("add-target-course-modal");
     await expect(
@@ -471,6 +489,371 @@ test.describe("Product form", () => {
     );
     const clipboardContent = await handle.jsonValue();
     expect(clipboardContent).toEqual(relations[0].uri);
+  });
+
+  test("Edit certification information", async ({ page }) => {
+    const product = store.products[0];
+    // Simulate that certification information are empties
+    product.certificate_definition = null;
+    product.certification_level = null;
+    product.teachers = [];
+    product.skills = [];
+
+    // Go to the product page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("link", { name: product.title }).click();
+    expect(
+      await page.getByRole("heading", { name: product.title, level: 4 }),
+    ).toBeVisible();
+
+    // Then go to the certification step
+    await page.getByRole("button", { name: "Certification" }).click();
+
+    const certificateDefinition = await page.getByLabel(
+      "Certificate definition",
+    );
+    expect(certificateDefinition).toBeVisible();
+    expect(certificateDefinition).toHaveValue("");
+
+    // As no certificate definition has been set, other fields should be hidden
+    let certificationLevel = await page.getByLabel("Certification level");
+    let teachers = await page.getByLabel("Teachers");
+    let skills = await page.getByLabel("Skills");
+
+    expect(certificationLevel).not.toBeVisible();
+    expect(teachers).not.toBeVisible();
+    expect(skills).not.toBeVisible();
+
+    // Set a certificate definition
+    await certificateDefinition.click();
+    await page
+      .getByRole("option", { name: store.certificateDefinitions[1].title })
+      .click();
+
+    await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
+
+    certificationLevel = await page.getByLabel("Certification level");
+    teachers = await page.getByLabel("Teachers");
+    skills = await page.getByLabel("Skills");
+    expect(certificationLevel).toBeVisible();
+    expect(teachers).toBeVisible();
+    expect(skills).toBeVisible();
+
+    // Now set a certification level
+    certificationLevel.fill("0");
+
+    // Then set teachers
+    await teachers.click();
+    await page
+      .getByRole("option", {
+        name: `${store.teachers[1].first_name} ${store.teachers[1].last_name}`,
+      })
+      .click();
+
+    // And finally skills
+    await skills.click();
+    await page.getByRole("option", { name: store.skills[1].title }).click();
+
+    await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        "An error occurred while updating the product. Please retry later.",
+      ),
+    ).not.toBeVisible();
+  });
+
+  test("Edit certification information - 1 <= Certification level <= 8", async ({
+    page,
+  }) => {
+    const product = store.products[0];
+
+    // Go to the product page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("link", { name: product.title }).click();
+    expect(
+      await page.getByRole("heading", { name: product.title, level: 4 }),
+    ).toBeVisible();
+
+    // Then go to the certification step
+    await page.getByRole("button", { name: "Certification" }).click();
+
+    const certificationLevel = await page.getByLabel("Certification level");
+    expect(certificationLevel).toBeVisible();
+
+    await certificationLevel.fill("9");
+    await expect(
+      page.getByText("certification_level must be less than or equal to 8"),
+    ).toBeVisible();
+
+    await certificationLevel.fill("-1");
+    await expect(
+      page.getByText("certification_level must be greater than or equal to 1"),
+    ).toBeVisible();
+
+    // if user types 0, null value should be used
+    await certificationLevel.fill("0");
+    const request = await page.waitForRequest(
+      (req) =>
+        req.method() === "PATCH" &&
+        req.url().endsWith(`/api/v1.0/admin/products/${product.id}/`),
+    );
+
+    const body = request.postDataJSON();
+    expect(body.certification_level).toBeNull();
+    await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
+  });
+
+  test("Edit certification information - Create teacher", async ({ page }) => {
+    const product = store.products[0];
+
+    // Go to the product page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("link", { name: product.title }).click();
+    expect(
+      await page.getByRole("heading", { name: product.title, level: 4 }),
+    ).toBeVisible();
+
+    // Then go to the certification step
+    await page.getByRole("button", { name: "Certification" }).click();
+
+    // Then create a new teacher
+    const createTeacherButton = await page
+      .getByRole("button", {
+        name: "Create a resource",
+      })
+      .first();
+    expect(createTeacherButton).toBeVisible();
+    await createTeacherButton.click();
+
+    const createModal = await page.getByRole("dialog", { name: "Create" });
+    expect(createModal).toBeVisible();
+    const firstNameField = await createModal.getByRole("textbox", {
+      name: "First name",
+    });
+    const lastNameField = await createModal.getByRole("textbox", {
+      name: "Last name",
+    });
+
+    await firstNameField.fill("John");
+    await lastNameField.fill("Doe");
+
+    const response = page.waitForResponse(
+      (res) => res.request().method() === "POST",
+    );
+    await createModal.getByRole("button", { name: "Submit" }).click();
+    const body = await response.then((res) => res.json());
+    expect(body.first_name).toBe("John");
+    expect(body.last_name).toBe("Doe");
+
+    await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
+
+    await expect(page.locator(`[data-id='${body.id}']`)).toBeVisible();
+  });
+
+  test("Edit certification information - Edit teacher", async ({ page }) => {
+    const product = store.products[0];
+
+    // Go to the product page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("link", { name: product.title }).click();
+    expect(
+      await page.getByRole("heading", { name: product.title, level: 4 }),
+    ).toBeVisible();
+
+    // Then go to the certification step
+    await page.getByRole("button", { name: "Certification" }).click();
+
+    // Then edit a current teacher
+    const teacher = product.teachers[0];
+    const teacherChip = page.locator(`[data-id='${teacher.id}']`);
+    await teacherChip.click();
+
+    const createModal = await page.getByRole("dialog", { name: "Edit" });
+    expect(createModal).toBeVisible();
+    const firstNameField = await createModal.getByRole("textbox", {
+      name: "First name",
+    });
+    const lastNameField = await createModal.getByRole("textbox", {
+      name: "Last name",
+    });
+
+    expect(await firstNameField.inputValue()).toBe(teacher.first_name);
+    expect(await lastNameField.inputValue()).toBe(teacher.last_name);
+    await firstNameField.fill("John");
+    await lastNameField.fill("Doe");
+
+    const response = page.waitForResponse(
+      (res) => res.request().method() === "PATCH",
+    );
+    await createModal.getByRole("button", { name: "Submit" }).click();
+    const body = await response.then((res) => res.json());
+    expect(body.first_name).toBe("John");
+    expect(body.last_name).toBe("Doe");
+
+    await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
+
+    await expect(teacherChip).toBeVisible();
+    expect(await teacherChip.textContent()).toBe("John Doe");
+  });
+
+  test("Edit certification information - Unlink teacher to product", async ({
+    page,
+  }) => {
+    const product = store.products[0];
+
+    // Go to the product page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("link", { name: product.title }).click();
+    expect(
+      await page.getByRole("heading", { name: product.title, level: 4 }),
+    ).toBeVisible();
+
+    // Then go to the certification step
+    await page.getByRole("button", { name: "Certification" }).click();
+
+    // Then unlink a teacher
+    const [unlinkedTeacher, ...teachers] = product.teachers;
+    const teacherChip = page.locator(`[data-id='${unlinkedTeacher.id}']`);
+    const deleteTeacherChip = await teacherChip.getByTestId("CancelIcon");
+    await deleteTeacherChip.click();
+
+    const request = await page.waitForRequest(
+      (req) =>
+        req.method() === "PATCH" &&
+        req.url().endsWith(`/api/v1.0/admin/products/${product.id}/`),
+    );
+    const body = request.postDataJSON();
+    expect(body.teachers).toEqual(teachers.map(({ id }) => id));
+
+    expect(teacherChip).not.toBeVisible();
+  });
+
+  test("Edit certification information - Create skill", async ({ page }) => {
+    const product = store.products[0];
+
+    // Go to the product page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("link", { name: product.title }).click();
+    expect(
+      await page.getByRole("heading", { name: product.title, level: 4 }),
+    ).toBeVisible();
+
+    // Then go to the certification step
+    await page.getByRole("button", { name: "Certification" }).click();
+
+    // Then create a new skill
+    const createSkillButton = await page
+      .getByRole("button", {
+        name: "Create a resource",
+      })
+      .nth(1);
+    expect(createSkillButton).toBeVisible();
+    await createSkillButton.click();
+
+    const createModal = await page.getByRole("dialog", { name: "Create" });
+    expect(createModal).toBeVisible();
+    const titleField = await createModal.getByRole("textbox", {
+      name: "Title",
+    });
+
+    await titleField.fill("Javascript");
+
+    const response = page.waitForResponse(
+      (res) => res.request().method() === "POST",
+    );
+    await createModal.getByRole("button", { name: "Submit" }).click();
+    const body = await response.then((res) => res.json());
+    expect(body.title).toBe("Javascript");
+
+    await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
+
+    await expect(page.locator(`[data-id='${body.id}']`)).toBeVisible();
+  });
+
+  test("Edit certification information - Edit skill", async ({ page }) => {
+    const product = store.products[0];
+
+    // Go to the product page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("link", { name: product.title }).click();
+    expect(
+      await page.getByRole("heading", { name: product.title, level: 4 }),
+    ).toBeVisible();
+
+    // Then go to the certification step
+    await page.getByRole("button", { name: "Certification" }).click();
+
+    // Then edit a current skill
+    const skill = product.skills[0];
+    const skillChip = page.locator(`[data-id='${skill.id}']`);
+    await skillChip.click();
+
+    const createModal = await page.getByRole("dialog", { name: "Edit" });
+    expect(createModal).toBeVisible();
+    const titleField = await createModal.getByRole("textbox", {
+      name: "Title",
+    });
+
+    expect(await titleField.inputValue()).toBe(skill.title);
+    await titleField.fill("Python");
+
+    const response = page.waitForResponse(
+      (res) => res.request().method() === "PATCH",
+    );
+    await createModal.getByRole("button", { name: "Submit" }).click();
+    const body = await response.then((res) => res.json());
+    expect(body.title).toBe("Python");
+
+    await expect(
+      page.getByText("Operation completed successfully."),
+    ).toBeVisible();
+
+    await expect(skillChip).toBeVisible();
+    expect(await skillChip.textContent()).toBe("Python");
+  });
+
+  test("Edit certification information - Unlink skill to product", async ({
+    page,
+  }) => {
+    const product = store.products[0];
+
+    // Go to the product page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("link", { name: product.title }).click();
+    expect(
+      await page.getByRole("heading", { name: product.title, level: 4 }),
+    ).toBeVisible();
+
+    // Then go to the certification step
+    await page.getByRole("button", { name: "Certification" }).click();
+
+    // Then unlink a skill
+    const [unlinkedSkill, ...skills] = product.skills;
+    const skillChip = page.locator(`[data-id='${unlinkedSkill.id}']`);
+    const deleteSkillChip = await skillChip.getByTestId("CancelIcon");
+    await deleteSkillChip.click();
+
+    const request = await page.waitForRequest(
+      (req) =>
+        req.method() === "PATCH" &&
+        req.url().endsWith(`/api/v1.0/admin/products/${product.id}/`),
+    );
+    const body = request.postDataJSON();
+    expect(body.skills).toEqual(skills.map(({ id }) => id));
+
+    expect(skillChip).not.toBeVisible();
   });
 });
 

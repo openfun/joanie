@@ -14,6 +14,7 @@ and this project adheres to
 - Add `teachers`, `skills` and `certification_level` fields
   to `Product`model
 - Add admin api endpoints to CRUD `Teacher` and `Skill` resources.
+- Add certification section in back office product detail view
 
 ### Changed
 

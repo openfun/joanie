@@ -26,6 +26,11 @@ export const commonTranslations = defineMessages({
     defaultMessage: "Edit",
     description: "Common edit label",
   },
+  create: {
+    id: "translations.common.commonTranslations.create",
+    defaultMessage: "Create",
+    description: "Common create label",
+  },
   view: {
     id: "translations.common.commonTranslations.view",
     defaultMessage: "View",
