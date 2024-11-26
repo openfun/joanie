@@ -151,10 +151,9 @@ test.describe("Course product relation", () => {
     await page.getByLabel("Choose your product").click();
     await page.getByLabel("Choose your product").fill(store.products[0].title);
     await page.getByRole("option", { name: store.products[0].title }).click();
-    await page.getByLabel("Search organization").click();
-    await page
-      .getByLabel("Search organization")
-      .fill(store.organizations[0].title);
+    const input = await page.getByLabel("Search organization");
+    await input.fill(store.organizations[0].title);
+
     await page
       .getByRole("option", { name: store.organizations[0].title })
       .click();

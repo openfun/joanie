@@ -12,14 +12,14 @@ export function OrganizationControlledSearch(
   props: Omit<ControlledSelectProps<Organization>, "options">,
 ) {
   const [query, setQuery] = useState("");
-  const organizations = useOrganizations({ query }, { enabled: query !== "" });
+  const organizations = useOrganizations({ query });
 
   const debouncedSetQuery = useDebouncedCallback(setQuery, 300);
 
   return (
     <ControlledSelect
       {...props}
-      options={query === "" ? [] : organizations.items}
+      options={organizations.items}
       loading={organizations.states.fetching}
       onFilter={debouncedSetQuery}
       label="Search organization"
