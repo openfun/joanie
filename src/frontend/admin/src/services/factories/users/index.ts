@@ -4,7 +4,7 @@ import { User } from "@/services/api/models/User";
 const build = (): User => {
   return {
     id: faker.string.uuid(),
-    username: faker.internet.userName(),
+    username: faker.internet.username(),
     full_name: faker.person.fullName(),
     email: faker.internet.email(),
   };
