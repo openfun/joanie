@@ -11,17 +11,16 @@ this template as a base.
   {% if debug %}
   <head>
     <style>
-      {{ css }}
+      {{ css|safe }}
     </style>
   </head>
   {% endif %}
   <body class="document">
-      <header class="document--header">
-            <!-- University logo here -->
-            <img src="{{ organization.logo }}" />
-            <!-- Unicamp logo here -->
-            <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
-      </header>
+    <header class="document--header">
+        {% block header %}
+            {% include 'contract_definition/fragment_logo.html' with organization=organization %}
+        {% endblock %}
+    </header>
       <main class="document-content">
           <header class="content--header">
               <h1>{{ contract.title }}</h1>
