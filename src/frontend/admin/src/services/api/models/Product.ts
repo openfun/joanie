@@ -21,16 +21,16 @@ export type BaseProduct = {
 
 export type Product = BaseProduct & {
   target_courses?: ProductTargetCourseRelation[];
-  certificate_definition?: CertificateDefinition;
   course_relations?: CourseProductRelation[];
-  contract_definition?: ContractDefinition;
+  contract_definition: Nullable<ContractDefinition>;
+  certificate_definition: Nullable<CertificateDefinition>;
 };
 
 export type ProductSimple = BaseProduct & {
   target_courses?: string[];
-  certificate_definition?: string;
+  certificate_definition: Nullable<string>;
   course_relations?: string[];
-  contract_definition?: string;
+  contract_definition: Nullable<string>;
 };
 
 export enum ProductType {

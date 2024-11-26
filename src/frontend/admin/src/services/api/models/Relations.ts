@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { Organization } from "./Organization";
 import { Course } from "./Course";
-import { Product } from "@/services/api/models/Product";
+import { BaseProduct, Product } from "@/services/api/models/Product";
 import { CourseFactoryLight } from "@/services/factories/courses";
 import { OrganizationFactory } from "@/services/factories/organizations";
 import { randomNumber } from "@/utils/numbers";
@@ -16,7 +16,7 @@ export type CourseProductRelation = {
   organizations: Organization[];
   order_groups: OrderGroup[];
   uri?: string;
-  product: Product;
+  product: BaseProduct;
   course: Course;
 };
 
