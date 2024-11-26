@@ -2,11 +2,11 @@ import { defineMessages, useIntl } from "react-intl";
 import { useMutation } from "@tanstack/react-query";
 import {
   QueryOptions,
-  ResourcesQuery,
   useResource,
   useResourcesCustom,
   UseResourcesProps,
 } from "@/hooks/useResources";
+import { ResourcesQuery } from "@/hooks/useResources/types";
 import { Order, OrderListItem, OrderQuery } from "@/services/api/models/Order";
 import { OrderRepository } from "@/services/repositories/orders/OrderRepository";
 import { HttpError } from "@/services/http/HttpError";

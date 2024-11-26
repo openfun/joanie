@@ -1,8 +1,11 @@
 import { useIntl } from "react-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { messages, useResourcesRoot } from "./useResourcesRoot";
-import { Resource, ResourcesQuery, UseResourcesProps } from "./index";
-import { ApiResourceInterface } from "@/hooks/useResources/types";
+import { Resource, UseResourcesProps } from "./index";
+import {
+  ApiResourceInterface,
+  ResourcesQuery,
+} from "@/hooks/useResources/types";
 
 /**
  * This hook internally wraps `useResourcesRoot` but will bulk-fetch all the whole set of resources

@@ -8,15 +8,12 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import { useSnackbar } from "notistack";
-import {
-  ApiResourceInterface,
-  PaginatedResponse,
-  useLocalizedQueryKey,
-} from "./types";
+import { ApiResourceInterface, useLocalizedQueryKey } from "./types";
 import { Resource, ResourcesQuery, UseResourcesProps } from "./index";
 import usePrevious from "@/hooks/usePrevious";
 import { REACT_QUERY_SETTINGS } from "@/utils/settings";
 import { AddParameters, Maybe } from "@/types/utils";
+import { PaginatedResponse } from "@/types/api";
 import { noop } from "@/utils";
 import { HttpError } from "@/services/http/HttpError";
 
@@ -245,7 +242,7 @@ export const useResourcesRoot = <
           pagination: {
             count: readHandler.data.count,
             next: readHandler.data.next,
-            prev: readHandler.data.previous,
+            previous: readHandler.data.previous,
           },
         },
       };

@@ -2,11 +2,11 @@ import { defineMessages, useIntl } from "react-intl";
 import { useMutation } from "@tanstack/react-query";
 import {
   QueryOptions,
-  ResourcesQuery,
   useResource,
   useResourcesCustom,
   UseResourcesProps,
 } from "@/hooks/useResources";
+import { ResourcesQuery } from "@/hooks/useResources/types";
 import { Product } from "@/services/api/models/Product";
 import { ProductRepository } from "@/services/repositories/products/ProductRepository";
 import { DTOProductTargetCourseRelation } from "@/services/api/models/ProductTargetCourseRelation";

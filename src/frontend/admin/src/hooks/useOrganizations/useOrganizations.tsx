@@ -2,11 +2,11 @@ import { defineMessages, useIntl } from "react-intl";
 import { useQuery } from "@tanstack/react-query";
 import {
   QueryOptions,
-  ResourcesQuery,
   useResource,
   useResourcesCustom,
   UseResourcesProps,
 } from "@/hooks/useResources";
+import { ResourcesQuery } from "@/hooks/useResources/types";
 import {
   DTOOrganizationAddress,
   Organization,

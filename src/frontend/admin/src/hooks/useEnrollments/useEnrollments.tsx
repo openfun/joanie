@@ -1,10 +1,10 @@
 import { defineMessages } from "react-intl";
 import {
-  ResourcesQuery,
   useResource,
   useResources,
   UseResourcesProps,
 } from "@/hooks/useResources";
+import { ResourcesQuery } from "@/hooks/useResources/types";
 import { EnrollmentRepository } from "@/services/repositories/enrollments/EnrollmentRepository";
 import {
   Enrollment,

@@ -3,7 +3,7 @@ import { OrderQuery } from "@/services/api/models/Order";
 import { Maybe } from "@/types/utils";
 import { ResourcesQuery } from "@/hooks/useResources/types";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
-import { PaginatedResponse } from "@/services/repositories/AbstractRepository";
+import { PaginatedResponse } from "@/types/api";
 import {
   DTOEnrollment,
   Enrollment,

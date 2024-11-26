@@ -1,10 +1,10 @@
 import { defineMessages } from "react-intl";
 import {
-  ResourcesQuery,
   useResource,
   useResources,
   UseResourcesProps,
 } from "@/hooks/useResources";
+import { ResourcesQuery } from "@/hooks/useResources/types";
 import { CertificateDefinition } from "@/services/api/models/CertificateDefinition";
 import { CertificateDefinitionRepository } from "@/services/repositories/certificate-definition/CertificateDefinitionRepository";
 

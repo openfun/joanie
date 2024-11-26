@@ -1,8 +1,6 @@
 import queryString from "query-string";
-import {
-  AbstractRepository,
-  PaginatedResponse,
-} from "@/services/repositories/AbstractRepository";
+import { AbstractRepository } from "@/services/repositories/AbstractRepository";
+import { PaginatedResponse } from "@/types/api";
 import { ResourcesQuery } from "@/hooks/useResources";
 import { Maybe } from "@/types/utils";
 import { checkStatus, fetchApi } from "@/services/http/HttpService";
