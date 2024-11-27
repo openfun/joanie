@@ -1,6 +1,6 @@
 """Test suite for utility method to generate document of Contract Definition in PDF bytes format"""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from io import BytesIO
 
 from django.contrib.sites.models import Site
@@ -15,11 +15,36 @@ from joanie.core.utils import issuers
 from joanie.payment.factories import InvoiceFactory
 
 
+def format_datetime(datetime_value):
+    """
+    Format a datetime value to a string with a specific format, including minutes if present.
+    """
+    string_format = f"%m/%d/%Y %-I{':%M' if datetime_value.minute else ''} %p"
+
+    return (
+        datetime_value.strftime(string_format)
+        .lower()
+        .replace("am", "a.m.")
+        .replace("pm", "p.m.")
+    )
+
+
 class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
     """
     Test suite for issuer utility method to generate document of contract definition in PDF bytes
     format.
     """
+
+    def test_format_datetime(self):
+        """
+        Test the format_datetime utility function.
+        """
+        self.assertEqual(
+            format_datetime(datetime(2022, 1, 1, 12, 30)), "01/01/2022 12:30 p.m."
+        )
+        self.assertEqual(
+            format_datetime(datetime(2022, 1, 1, 12, 0)), "01/01/2022 12 p.m."
+        )
 
     # ruff : noqa : PLR0915
     # pylint: disable=too-many-statements
@@ -143,22 +168,8 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         # - Course information should be displayed
         self.assertIn("UX-00001", document_text)
         self.assertIn("You will know that you know you don't know", document_text)
-        self.assertIn(
-            run.start.strftime("%m/%d/%Y %-I:%M %p")
-            .lower()
-            .replace("am", "a.m.")
-            .replace("pm", "p.m."),
-            document_text,
-            document_text,
-        )
-        self.assertIn(
-            run.end.strftime("%m/%d/%Y %-I:%M %p")
-            .lower()
-            .replace("am", "a.m.")
-            .replace("pm", "p.m."),
-            document_text,
-            document_text,
-        )
+        self.assertIn(format_datetime(run.start), document_text, document_text)
+        self.assertIn(format_datetime(run.end), document_text, document_text)
         self.assertIn("404 hours", document_text)
         self.assertIn("999.99 €", document_text)
 
