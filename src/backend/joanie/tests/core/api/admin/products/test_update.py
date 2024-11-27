@@ -672,3 +672,4 @@ class ProductAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["instructions"], "Test newline\n\n")
+ 
