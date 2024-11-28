@@ -1501,12 +1501,12 @@ class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
             product=product,
         )
 
-        self.assertIsNone(order.payment_schedule)
+        self.assertEqual(order.payment_schedule, [])
 
         order.flow.update()
 
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
-        self.assertIsNotNone(order.payment_schedule)
+        self.assertNotEqual(order.payment_schedule, [])
 
     @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
     @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")

@@ -120,7 +120,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "id": str(order.id),
                 "certificate_id": None,
                 "contract": None,
-                "payment_schedule": None,
+                "payment_schedule": [],
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -274,7 +274,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "certificate_id": None,
                 "contract": None,
                 "course": None,
-                "payment_schedule": None,
+                "payment_schedule": [],
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "credit_card_id": None,
                 "has_waived_withdrawal_right": True,
@@ -855,7 +855,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "id": str(order.id),
                 "certificate_id": None,
                 "contract": None,
-                "payment_schedule": None,
+                "payment_schedule": [],
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -1205,7 +1205,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "id": str(order.id),
                 "certificate_id": None,
                 "contract": None,
-                "payment_schedule": None,
+                "payment_schedule": [],
                 "course": {
                     "code": course.code,
                     "id": str(course.id),

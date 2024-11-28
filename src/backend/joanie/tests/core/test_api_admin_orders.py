@@ -827,7 +827,7 @@ class OrdersAdminApiTestCase(TestCase):
                     "definition_title": order.certificate.certificate_definition.title,
                     "issued_on": format_date(order.certificate.issued_on),
                 },
-                "payment_schedule": None,
+                "payment_schedule": [],
                 "main_invoice": {
                     "id": str(order.main_invoice.id),
                     "balance": float(order.main_invoice.balance),
