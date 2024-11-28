@@ -21,6 +21,11 @@ const messages = defineMessages({
     description: "Text when the order has already been canceled",
     defaultMessage: "The order has already been canceled",
   },
+  noGenerateForUncompletedOrder: {
+    id: "components.templates.orders.buttons.orderActionsButton.noGenerateForUncompletedOrder",
+    description: "Text for generateCertificate when the order is not completed",
+    defaultMessage: "Cannot generate certificate for uncompleted order",
+  },
   isNotCanceled: {
     id: "components.templates.orders.buttons.orderActionsButton.isNotCanceled",
     description: "Text when the order is not canceled",
@@ -80,6 +85,14 @@ export default function OrderActionsButton({ order }: Props) {
 
       return intl.formatMessage(message);
     };
+
+    const generateCertificateDisableMessage = () => {
+      let message = messages.alreadyGenerateCertificateTooltip;
+      if (order.state !== OrderStatesEnum.ORDER_STATE_COMPLETED) {
+        message = messages.noGenerateForUncompletedOrder;
+      }
+      return intl.formatMessage(message);
+    };
     const allOptions: MenuOption[] = [
       {
         icon: <CancelIcon />,
@@ -99,9 +112,7 @@ export default function OrderActionsButton({ order }: Props) {
       {
         icon: <CurrencyExchangeIcon />,
         mainLabel: intl.formatMessage(messages.refundOrder),
-        isDisable: ![OrderStatesEnum.ORDER_STATE_CANCELED].includes(
-          order.state,
-        ),
+        isDisable: order.state !== OrderStatesEnum.ORDER_STATE_CANCELED,
         disableMessage: refundDisableMessage(),
         onClick: async () => {
           ordersQuery.methods.refund(
@@ -115,10 +126,10 @@ export default function OrderActionsButton({ order }: Props) {
       {
         icon: <ArticleIcon />,
         mainLabel: intl.formatMessage(messages.generateCertificate),
-        isDisable: !!order.certificate,
-        disableMessage: intl.formatMessage(
-          messages.alreadyGenerateCertificateTooltip,
-        ),
+        isDisable:
+          !!order.certificate ||
+          order.state !== OrderStatesEnum.ORDER_STATE_COMPLETED,
+        disableMessage: generateCertificateDisableMessage(),
         onClick: async () => {
           ordersQuery.methods.generateCertificate(
             { orderId: order.id },

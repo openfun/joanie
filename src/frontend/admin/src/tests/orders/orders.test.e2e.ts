@@ -413,6 +413,7 @@ test.describe("Order view", () => {
   test("Generate certificate", async ({ page }) => {
     const order = store.list[0];
     order.certificate = null;
+    order.state = OrderStatesEnum.ORDER_STATE_COMPLETED;
 
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
