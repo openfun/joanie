@@ -729,9 +729,15 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         )
         order.refresh_from_db()
 
+        order_empty_schedule = factories.OrderFactory()
+        self.assertEqual(order_empty_schedule.payment_schedule, [])
+
         mocked_now = date(2024, 1, 17)
         with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
-            self.assertEqual(payment_schedule.has_installments_to_debit(order), False)
+            self.assertFalse(payment_schedule.has_installments_to_debit(order))
+            self.assertFalse(
+                payment_schedule.has_installments_to_debit(order_empty_schedule)
+            )
 
     def test_utils_payment_schedule_convert_date_str_to_date_object(self):
         """
@@ -1031,6 +1037,10 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
 
         self.assertFalse(payment_schedule.has_installment_paid(order_2))
 
+        order_empty_schedule = factories.OrderFactory()
+        self.assertEqual(order_empty_schedule.payment_schedule, [])
+        self.assertFalse(payment_schedule.has_installment_paid(order_empty_schedule))
+
     def test_utils_payment_schedule_get_paid_transactionst(self):
         """
         The method `get_paid_transactions` should return every transactions
@@ -1183,6 +1193,14 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
 
         self.assertEqual(refund_items, {})
 
+        order_empty_schedule = factories.OrderFactory()
+        self.assertEqual(order_empty_schedule.payment_schedule, [])
+        refund_items = payment_schedule.get_transaction_references_to_refund(
+            order_empty_schedule
+        )
+
+        self.assertEqual(refund_items, {})
+
     def test_utils_payment_schedule_get_transaction_references_to_refund(self):
         """
         The method `get_transaction_references_to_refund` should return the installments
@@ -1256,4 +1274,12 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
 
         self.assertFalse(
             payment_schedule.has_only_refunded_or_canceled_installments(order)
+        )
+
+        order_empty_schedule = factories.OrderFactory()
+        self.assertEqual(order_empty_schedule.payment_schedule, [])
+        self.assertFalse(
+            payment_schedule.has_only_refunded_or_canceled_installments(
+                order_empty_schedule
+            )
         )

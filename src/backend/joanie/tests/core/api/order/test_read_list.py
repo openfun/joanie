@@ -83,7 +83,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "main_invoice_reference": None,
                         "order_group_id": None,
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
@@ -189,7 +189,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "product_id": str(other_order.product.id),
                         "state": other_order.state,
                         "target_courses": [],
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                     }
                 ],
             },
@@ -276,7 +276,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "certificate_id": None,
                         "contract": None,
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -402,7 +402,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "credit_card_id": str(order.credit_card.id),
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                         "enrollment": {
                             "course_run": {
                                 "course": {
@@ -572,7 +572,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
                         "credit_card_id": str(order.credit_card.id),
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
@@ -663,7 +663,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "certificate_id": None,
                         "contract": None,
                         "course": None,
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                         "created_on": order.created_on.strftime(
                             "%Y-%m-%dT%H:%M:%S.%fZ"
                         ),
@@ -922,7 +922,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "certificate_id": None,
                         "contract": None,
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -1011,7 +1011,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "certificate_id": None,
                         "contract": None,
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),
@@ -1104,7 +1104,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "id": str(order.id),
                         "certificate_id": None,
                         "contract": None,
-                        "payment_schedule": None,
+                        "payment_schedule": [],
                         "course": {
                             "code": order.course.code,
                             "id": str(order.course.id),

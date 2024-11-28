@@ -495,6 +495,7 @@ class Order(BaseModel):
         null=True,
         encoder=OrderPaymentScheduleEncoder,
         decoder=OrderPaymentScheduleDecoder,
+        default=list,
     )
     credit_card = models.ForeignKey(
         to="payment.CreditCard",
