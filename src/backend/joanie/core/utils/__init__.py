@@ -116,3 +116,14 @@ class JSONValue(values.Value):
         Return the python representation of the JSON string.
         """
         return json.loads(value)
+
+
+class Echo:
+    """An object that implements just the write method of the file-like
+    interface.
+    Used for data streaming.
+    """
+
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value

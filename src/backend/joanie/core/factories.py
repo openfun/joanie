@@ -89,6 +89,8 @@ class UserFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         model = settings.AUTH_USER_MODEL
         django_get_or_create = ("username",)
 
+    # In our database, first_name is set by authtoken with the user's full name
+    first_name = factory.Faker("name")
     username = factory.Sequence(lambda n: f"user{n!s}")
     email = factory.Faker("email")
     language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])

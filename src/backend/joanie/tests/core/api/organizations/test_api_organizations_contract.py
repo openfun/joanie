@@ -187,7 +187,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
                             "contact_phone": contract.order.organization.contact_phone,
                             "dpo_email": contract.order.organization.dpo_email,
                         },
-                        "owner_name": contract.order.owner.username,
+                        "owner_name": contract.order.owner.get_full_name(),
                         "product_title": contract.order.product.title,
                     },
                 }
@@ -574,7 +574,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
                     "contact_phone": contract.order.organization.contact_phone,
                     "dpo_email": contract.order.organization.dpo_email,
                 },
-                "owner_name": contract.order.owner.username,
+                "owner_name": contract.order.owner.get_full_name(),
                 "product_title": contract.order.product.title,
             },
         }
