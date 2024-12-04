@@ -101,7 +101,7 @@ class OrdersAdminApiListTestCase(TestCase):
                     else None,
                     "id": str(order.id),
                     "organization_title": order.organization.title,
-                    "owner_name": order.owner.username,
+                    "owner_name": order.owner.get_full_name(),
                     "product_title": order.product.title,
                     "state": order.state,
                     "total": float(order.total),

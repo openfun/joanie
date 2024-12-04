@@ -6,7 +6,8 @@ from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
+from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
@@ -614,7 +615,9 @@ class OrderViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_classes = {
         "list": serializers.AdminOrderLightSerializer,
+        "export": serializers.AdminOrderExportSerializer,
     }
+    serializer_class = serializers.AdminOrderSerializer
     default_serializer_class = serializers.AdminOrderSerializer
     filterset_class = filters.OrderAdminFilterSet
     queryset = models.Order.objects.all().select_related(
@@ -632,7 +635,6 @@ class OrderViewSet(
         "credit_card",
     )
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
 
     def destroy(self, request, *args, **kwargs):
         """Cancels an order."""
@@ -688,6 +690,29 @@ class OrderViewSet(
             )
 
         return Response(status=HTTPStatus.ACCEPTED)
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "text/csv"): OpenApiTypes.OBJECT,
+            404: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["GET"], detail=False)
+    def export(self, request):
+        """
+        Export orders to a CSV file.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = serializers.AdminOrderListExportSerializer(
+            queryset.iterator(), child=self.get_serializer()
+        )
+        now = timezone.now().strftime("%d-%m-%Y_%H-%M-%S")
+        return StreamingHttpResponse(
+            serializer.csv_stream(),
+            content_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="orders_{now}.csv"'},
+        )
 
 
 class OrganizationAddressViewSet(
