@@ -1902,3 +1902,4 @@ class OrdersAdminApiTestCase(TestCase):
                 if "image/png" not in line and line.strip()
             ],
         )
+ 
