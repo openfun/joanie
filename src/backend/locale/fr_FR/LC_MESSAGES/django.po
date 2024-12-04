@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-12 10:41+0000\n"
-"PO-Revision-Date: 2024-11-20 14:36\n"
+"POT-Creation-Date: 2024-12-02 17:33+0000\n"
+"PO-Revision-Date: 2024-12-04 10:28\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -204,7 +204,7 @@ msgid "Credential"
 msgstr "Diplôme"
 
 #: joanie/core/enums.py:34 joanie/core/enums.py:169
-#: joanie/core/models/courses.py:1056
+#: joanie/core/models/courses.py:1071
 msgid "Enrollment"
 msgstr "Inscription"
 
@@ -234,7 +234,7 @@ msgstr "À signer"
 msgid "Signing"
 msgstr "En cours de signature"
 
-#: joanie/core/enums.py:82 joanie/core/enums.py:204
+#: joanie/core/enums.py:82 joanie/core/enums.py:205
 msgid "Pending"
 msgstr "En attente"
 
@@ -303,7 +303,7 @@ msgstr "Signé"
 msgid "Degree"
 msgstr "Diplôme"
 
-#: joanie/core/enums.py:168 joanie/core/models/products.py:538
+#: joanie/core/enums.py:168 joanie/core/models/products.py:539
 msgid "Order"
 msgstr "Commande"
 
@@ -339,27 +339,31 @@ msgstr "Échec du paiement"
 msgid "Payment refunded"
 msgstr "Paiement remboursé"
 
-#: joanie/core/enums.py:205 joanie/payment/enums.py:28
+#: joanie/core/enums.py:206 joanie/payment/enums.py:28
 msgid "Paid"
 msgstr "Payée"
 
-#: joanie/core/enums.py:206
+#: joanie/core/enums.py:207
 msgid "Refused"
 msgstr "Refusé"
 
-#: joanie/core/enums.py:207 joanie/payment/enums.py:30
+#: joanie/core/enums.py:208 joanie/payment/enums.py:30
 msgid "Refunded"
 msgstr "Remboursée"
 
-#: joanie/core/factories.py:1218 joanie/core/utils/contract_definition.py:101
+#: joanie/core/enums.py:209
+msgid "Canceled"
+msgstr "Annulée"
+
+#: joanie/core/factories.py:1219 joanie/core/utils/contract_definition.py:101
 msgid "<COURSE_START_DATE>"
 msgstr "<DATE_DE_DEBUT_DU_COURS>"
 
-#: joanie/core/factories.py:1223 joanie/core/utils/contract_definition.py:102
+#: joanie/core/factories.py:1224 joanie/core/utils/contract_definition.py:102
 msgid "<COURSE_END_DATE>"
 msgstr "<DATE_DE_FIN_DU_COURS>"
 
-#: joanie/core/factories.py:1230
+#: joanie/core/factories.py:1231
 msgid "<EFFORT_DURATION>"
 msgstr "<EFFORT_DU_COURS>"
 
@@ -509,7 +513,7 @@ msgstr "L'adresse principale doit être réutilisable."
 msgid "Demote a main address is forbidden"
 msgstr "Rétrograder une adresse principale est interdit"
 
-#: joanie/core/models/activity_logs.py:64 joanie/core/models/courses.py:1034
+#: joanie/core/models/activity_logs.py:64 joanie/core/models/courses.py:1049
 msgid "user"
 msgstr "utilisateur"
 
@@ -602,7 +606,7 @@ msgid "Date of issuance"
 msgstr "Date de délivrance"
 
 #: joanie/core/models/certifications.py:83 joanie/core/models/contracts.py:93
-#: joanie/core/models/products.py:1291 joanie/payment/models.py:54
+#: joanie/core/models/products.py:1311 joanie/payment/models.py:54
 msgid "order"
 msgstr "commande"
 
@@ -845,7 +849,7 @@ msgstr "Droits d'accès aux cours"
 
 #: joanie/core/models/courses.py:723 joanie/core/models/courses.py:819
 #: joanie/core/models/products.py:282 joanie/core/models/products.py:425
-#: joanie/core/models/products.py:1279
+#: joanie/core/models/products.py:1299
 msgid "course"
 msgstr "cours"
 
@@ -910,55 +914,47 @@ msgstr "Sessions de cours"
 msgid "This course run relies on a product relation. So you cannot modify its course."
 msgstr "Cette session de cours est liée à une relation produit. Vous ne pouvez donc pas modifier son cours."
 
-#: joanie/core/models/courses.py:1028
+#: joanie/core/models/courses.py:1043
 msgid "course run"
 msgstr "session de cours"
 
-#: joanie/core/models/courses.py:1039
+#: joanie/core/models/courses.py:1054
 msgid "Ticked if the user is enrolled to the course run."
 msgstr "Coché si l'utilisateur est inscrit à la session de cours."
 
-#: joanie/core/models/courses.py:1043
+#: joanie/core/models/courses.py:1058
 msgid "state"
 msgstr "état"
 
-#: joanie/core/models/courses.py:1047
+#: joanie/core/models/courses.py:1062
 msgid "Ticked if the enrollment has been initially created in the scope of an order."
 msgstr "Coché si l'inscription a été initialement créée dans le cadre d'une commande."
 
-#: joanie/core/models/courses.py:1049
+#: joanie/core/models/courses.py:1064
 msgid "was created by order"
 msgstr "a été créé pour une commande"
 
-#: joanie/core/models/courses.py:1057
+#: joanie/core/models/courses.py:1072
 msgid "Enrollments"
 msgstr "Inscriptions"
 
-#: joanie/core/models/courses.py:1065
+#: joanie/core/models/courses.py:1080
 msgid "active"
 msgstr "active"
 
-#: joanie/core/models/courses.py:1065
+#: joanie/core/models/courses.py:1080
 msgid "inactive"
 msgstr "inactive"
 
-#: joanie/core/models/courses.py:1135
-msgid "You are not allowed to enroll to a course run not opened for enrollment."
-msgstr "Vous n'êtes pas autorisé à vous inscrire à une session de cours qui n'est pas ouverte à l'inscription."
-
-#: joanie/core/models/courses.py:1151
-msgid "You are already enrolled to an opened course run "
-msgstr "Vous êtes déjà inscrit à une session de cours ouverte "
-
-#: joanie/core/models/courses.py:1162
+#: joanie/core/models/courses.py:1150
 msgid "You cannot enroll to a non-listed course run out of the scope of an order."
 msgstr "Vous ne pouvez pas vous inscrire à un cours non listé en dehors d'une commande."
 
-#: joanie/core/models/courses.py:1187
+#: joanie/core/models/courses.py:1175
 msgid "Course run \"{self.course_run.id!s}\" requires a valid order to enroll."
 msgstr "La session de cours \"{self.course_run.resource_link:s}\" nécessite une commande valide pour s'inscrire."
 
-#: joanie/core/models/courses.py:1192
+#: joanie/core/models/courses.py:1180
 msgid "You are not allowed to enroll to a course run not listed."
 msgstr "Vous n'êtes pas autorisé à vous inscrire à une session de cours non répertoriée."
 
@@ -994,7 +990,7 @@ msgstr "Produits"
 msgid "Certificate definition is only allowed for product kinds: "
 msgstr "La définition de certificat n'est autorisée que pour les produits de types : "
 
-#: joanie/core/models/products.py:297 joanie/core/models/products.py:1285
+#: joanie/core/models/products.py:297 joanie/core/models/products.py:1305
 msgid "course runs"
 msgstr "sessions de cours"
 
@@ -1002,11 +998,11 @@ msgstr "sessions de cours"
 msgid "position in product"
 msgstr "position dans le produit"
 
-#: joanie/core/models/products.py:302 joanie/core/models/products.py:1297
+#: joanie/core/models/products.py:302 joanie/core/models/products.py:1317
 msgid "take into account for certification"
 msgstr "prendre en compte pour la certification"
 
-#: joanie/core/models/products.py:303 joanie/core/models/products.py:1298
+#: joanie/core/models/products.py:303 joanie/core/models/products.py:1318
 msgid "Take into account the course grade for certification."
 msgstr "Prendre en compte la note du cours pour la certification."
 
@@ -1066,72 +1062,77 @@ msgstr "échéancier"
 msgid "Payment schedule for the order."
 msgstr "Échéancier pour la commande."
 
-#: joanie/core/models/products.py:501
+#: joanie/core/models/products.py:502
 msgid "credit card"
 msgstr "carte de crédit"
 
-#: joanie/core/models/products.py:539
+#: joanie/core/models/products.py:540
 msgid "Orders"
 msgstr "Commandes"
 
-#: joanie/core/models/products.py:650
+#: joanie/core/models/products.py:651
 #, python-brace-format
 msgid "{required_field} field should be set for {self.product.type} products."
 msgstr "Le champ {required_field} doit être défini pour les produits {self.product.type}."
 
-#: joanie/core/models/products.py:656
+#: joanie/core/models/products.py:657
 #, python-brace-format
 msgid "{empty_field} field should be left empty for {self.product.type} products."
 msgstr "Le champ {empty_field} devrait être laissé vide pour les produits {self.product.type}."
 
-#: joanie/core/models/products.py:663
+#: joanie/core/models/products.py:664
 msgid "The enrollment should belong to the owner of this order."
 msgstr "L'inscription devrait appartenir au propriétaire de cette commande."
 
-#: joanie/core/models/products.py:668
+#: joanie/core/models/products.py:669
 msgid "Orders can't be placed on enrollments originating from an order."
 msgstr "Des commandes ne peuvent pas être passées sur des inscriptions créées à partir d'une commande."
 
-#: joanie/core/models/products.py:679
+#: joanie/core/models/products.py:680
 msgid "The order cannot be created on course run that is in archived state."
 msgstr "La commande ne peut pas être créée en lien avec une session archivée."
 
-#: joanie/core/models/products.py:698
+#: joanie/core/models/products.py:699
 #, python-brace-format
 msgid "This order cannot be linked to the product \"{product_title}\", "
 msgstr "Cette commande ne peut pas être liée au produit \"{product_title}\", "
 
-#: joanie/core/models/products.py:704
+#: joanie/core/models/products.py:705
 #, python-brace-format
 msgid "This order cannot be linked to the product \"{product_title}\" and "
 msgstr "Cette commande ne peut pas être liée au produit \"{product_title}\" et "
 
-#: joanie/core/models/products.py:916
+#: joanie/core/models/products.py:855
+#, python-brace-format
+msgid "Cannot automatically enroll the user {self.owner.id} in the course"
+msgstr "Impossible d'inscrire automatiquement l'utilisateur {self.owner.id} à ce cours"
+
+#: joanie/core/models/products.py:921
 #, python-brace-format
 msgid "Product {self.product.title} does not allow to generate a certificate."
 msgstr "Le produit {self.product.title} ne permet pas de générer un certificat."
 
-#: joanie/core/models/products.py:931
+#: joanie/core/models/products.py:936
 msgid "No graded courses found."
 msgstr "Aucun cours noté trouvé."
 
-#: joanie/core/models/products.py:947
+#: joanie/core/models/products.py:952
 msgid "This order is not ready for gradation."
 msgstr "Cette commande n'est pas prête à être évaluée."
 
-#: joanie/core/models/products.py:957
+#: joanie/core/models/products.py:962
 msgid "Course run "
 msgstr "Session de cours "
 
-#: joanie/core/models/products.py:1295
+#: joanie/core/models/products.py:1315
 msgid "position in order"
 msgstr "position dans la commande"
 
-#: joanie/core/models/products.py:1306
+#: joanie/core/models/products.py:1326
 msgid "Course relation to an order with a position"
 msgstr "Relation d'un cours à une commande avec une position"
 
-#: joanie/core/models/products.py:1307
+#: joanie/core/models/products.py:1327
 msgid "Courses relations to orders with a position"
 msgstr "Relations de cours à des commandes avec une position"
 
@@ -1179,6 +1180,14 @@ msgstr "Vous devez définir un ID d'établissement dans le contexte pour créer 
 msgid "You are not allowed to manage accesses for this organization."
 msgstr "Vous n'êtes pas autorisé à gérer les droits d'accès à cet établissement."
 
+#: joanie/core/serializers/client.py:618
+msgid "You are not allowed to enroll to a course run not opened for enrollment."
+msgstr "Vous n'êtes pas autorisé à vous inscrire à une session de cours qui n'est pas ouverte à l'inscription."
+
+#: joanie/core/serializers/client.py:628
+msgid "You are already enrolled to an opened course run "
+msgstr "Vous êtes déjà inscrit à une session de cours ouverte "
+
 #: joanie/core/templates/admin/base.html:5
 msgid "Back office"
 msgstr "Back office"
@@ -1192,11 +1201,13 @@ msgstr "Sentry"
 #: joanie/core/templates/mail/html/installment_refused.html:159
 #: joanie/core/templates/mail/html/installment_reminder.html:159
 #: joanie/core/templates/mail/html/installments_fully_paid.html:159
+#: joanie/core/templates/mail/html/order_refunded.html:159
 #: joanie/core/templates/mail/html/order_validated.html:159
 #: joanie/core/templates/mail/text/installment_paid.txt:3
 #: joanie/core/templates/mail/text/installment_refused.txt:3
 #: joanie/core/templates/mail/text/installment_reminder.txt:3
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:3
+#: joanie/core/templates/mail/text/order_refunded.txt:3
 #: joanie/core/templates/mail/text/order_validated.txt:3
 msgid "Company logo"
 msgstr "Logo de l'établissement"
@@ -1387,10 +1398,12 @@ msgstr "Annexes"
 #: joanie/core/templates/mail/html/installment_refused.html:235
 #: joanie/core/templates/mail/html/installment_reminder.html:235
 #: joanie/core/templates/mail/html/installments_fully_paid.html:259
+#: joanie/core/templates/mail/html/order_refunded.html:235
 #: joanie/core/templates/mail/text/installment_paid.txt:18
 #: joanie/core/templates/mail/text/installment_refused.txt:15
 #: joanie/core/templates/mail/text/installment_reminder.txt:15
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:17
+#: joanie/core/templates/mail/text/order_refunded.txt:16
 msgid "Payment schedule"
 msgstr "Échéancier"
 
@@ -1499,10 +1512,12 @@ msgstr "TVA"
 #: joanie/core/templates/mail/html/installment_refused.html:187
 #: joanie/core/templates/mail/html/installment_reminder.html:187
 #: joanie/core/templates/mail/html/installments_fully_paid.html:187
+#: joanie/core/templates/mail/html/order_refunded.html:187
 #: joanie/core/templates/mail/text/installment_paid.txt:7
 #: joanie/core/templates/mail/text/installment_refused.txt:7
 #: joanie/core/templates/mail/text/installment_reminder.txt:7
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:7
+#: joanie/core/templates/mail/text/order_refunded.txt:7
 #, python-format
 msgid " Hello %(name)s, "
 msgstr " Bonjour %(name)s, "
@@ -1511,10 +1526,12 @@ msgstr " Bonjour %(name)s, "
 #: joanie/core/templates/mail/html/installment_refused.html:187
 #: joanie/core/templates/mail/html/installment_reminder.html:187
 #: joanie/core/templates/mail/html/installments_fully_paid.html:187
+#: joanie/core/templates/mail/html/order_refunded.html:187
 #: joanie/core/templates/mail/text/installment_paid.txt:9
 #: joanie/core/templates/mail/text/installment_refused.txt:9
 #: joanie/core/templates/mail/text/installment_reminder.txt:9
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:9
+#: joanie/core/templates/mail/text/order_refunded.txt:9
 msgid "Hello,"
 msgstr "Bonjour,"
 
@@ -1532,10 +1549,12 @@ msgstr " Un montant de <strong>%(installment_amount)s</strong> a été débité 
 #: joanie/core/templates/mail/html/installment_refused.html:269
 #: joanie/core/templates/mail/html/installment_reminder.html:269
 #: joanie/core/templates/mail/html/installments_fully_paid.html:293
+#: joanie/core/templates/mail/html/order_refunded.html:269
 #: joanie/core/templates/mail/text/installment_paid.txt:22
 #: joanie/core/templates/mail/text/installment_refused.txt:19
 #: joanie/core/templates/mail/text/installment_reminder.txt:19
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:21
+#: joanie/core/templates/mail/text/order_refunded.txt:20
 #, python-format
 msgid " Withdrawn on %(installment_date)s "
 msgstr " Prélevée le %(installment_date)s "
@@ -1543,41 +1562,68 @@ msgstr " Prélevée le %(installment_date)s "
 #: joanie/core/templates/mail/html/installment_paid.html:297
 #: joanie/core/templates/mail/html/installment_paid.html:299
 #: joanie/core/templates/mail/html/installment_paid.html:301
+#: joanie/core/templates/mail/html/installment_paid.html:303
+#: joanie/core/templates/mail/html/installment_paid.html:305
 #: joanie/core/templates/mail/html/installment_refused.html:273
 #: joanie/core/templates/mail/html/installment_refused.html:275
 #: joanie/core/templates/mail/html/installment_refused.html:277
+#: joanie/core/templates/mail/html/installment_refused.html:279
+#: joanie/core/templates/mail/html/installment_refused.html:281
 #: joanie/core/templates/mail/html/installment_reminder.html:273
 #: joanie/core/templates/mail/html/installment_reminder.html:275
 #: joanie/core/templates/mail/html/installment_reminder.html:277
+#: joanie/core/templates/mail/html/installment_reminder.html:279
+#: joanie/core/templates/mail/html/installment_reminder.html:281
 #: joanie/core/templates/mail/html/installments_fully_paid.html:297
 #: joanie/core/templates/mail/html/installments_fully_paid.html:299
 #: joanie/core/templates/mail/html/installments_fully_paid.html:301
+#: joanie/core/templates/mail/html/installments_fully_paid.html:303
+#: joanie/core/templates/mail/html/installments_fully_paid.html:305
+#: joanie/core/templates/mail/html/order_refunded.html:273
+#: joanie/core/templates/mail/html/order_refunded.html:275
+#: joanie/core/templates/mail/html/order_refunded.html:277
+#: joanie/core/templates/mail/html/order_refunded.html:279
+#: joanie/core/templates/mail/html/order_refunded.html:281
 #: joanie/core/templates/mail/text/installment_paid.txt:26
 #: joanie/core/templates/mail/text/installment_paid.txt:30
 #: joanie/core/templates/mail/text/installment_paid.txt:34
+#: joanie/core/templates/mail/text/installment_paid.txt:38
+#: joanie/core/templates/mail/text/installment_paid.txt:42
 #: joanie/core/templates/mail/text/installment_refused.txt:23
 #: joanie/core/templates/mail/text/installment_refused.txt:27
 #: joanie/core/templates/mail/text/installment_refused.txt:31
+#: joanie/core/templates/mail/text/installment_refused.txt:35
+#: joanie/core/templates/mail/text/installment_refused.txt:39
 #: joanie/core/templates/mail/text/installment_reminder.txt:23
 #: joanie/core/templates/mail/text/installment_reminder.txt:27
 #: joanie/core/templates/mail/text/installment_reminder.txt:31
+#: joanie/core/templates/mail/text/installment_reminder.txt:35
+#: joanie/core/templates/mail/text/installment_reminder.txt:39
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:25
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:29
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:33
+#: joanie/core/templates/mail/text/installments_fully_paid.txt:37
+#: joanie/core/templates/mail/text/installments_fully_paid.txt:41
+#: joanie/core/templates/mail/text/order_refunded.txt:24
+#: joanie/core/templates/mail/text/order_refunded.txt:28
+#: joanie/core/templates/mail/text/order_refunded.txt:32
+#: joanie/core/templates/mail/text/order_refunded.txt:36
+#: joanie/core/templates/mail/text/order_refunded.txt:40
 #, python-format
 msgid "%(state)s"
 msgstr "%(state)s"
 
-#: joanie/core/templates/mail/html/installment_paid.html:344
-#: joanie/core/templates/mail/html/installments_fully_paid.html:344
+#: joanie/core/templates/mail/html/installment_paid.html:348
+#: joanie/core/templates/mail/html/installments_fully_paid.html:348
 #, python-format
 msgid " See order details on your <a href=\"%(dashboard_order_link)s\">dashboard</a> "
 msgstr " Voir les détails de la commande sur votre <a href=\"%(dashboard_order_link)s\">tableau de bord</a> "
 
-#: joanie/core/templates/mail/html/installment_paid.html:374
-#: joanie/core/templates/mail/html/installment_refused.html:350
-#: joanie/core/templates/mail/html/installment_reminder.html:350
-#: joanie/core/templates/mail/html/installments_fully_paid.html:374
+#: joanie/core/templates/mail/html/installment_paid.html:378
+#: joanie/core/templates/mail/html/installment_refused.html:354
+#: joanie/core/templates/mail/html/installment_reminder.html:354
+#: joanie/core/templates/mail/html/installments_fully_paid.html:378
+#: joanie/core/templates/mail/html/order_refunded.html:330
 #: joanie/core/templates/mail/html/order_validated.html:278
 #, python-format
 msgid "This mail has been sent to %(email)s by <a href=\"%(href)s\">%(name)s</a>"
@@ -1588,7 +1634,7 @@ msgstr "Ce courriel a été envoyé à %(email)s par <a href=\"%(href)s\">%(name
 msgid " For the course <strong>%(title)s</strong>, the %(targeted_installment_index)s installment debit has failed. <br /> We have tried to debit an amount of <strong>%(installment_amount)s</strong> on the credit card •••• •••• •••• %(credit_card_last_numbers)s. "
 msgstr " Pour le cours <strong>%(title)s</strong>, le prélèvement de la %(targeted_installment_index)s échéance a échoué. <br /> Nous avons essayé de prélever un montant de <strong>%(installment_amount)s</strong> avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s. "
 
-#: joanie/core/templates/mail/html/installment_refused.html:320
+#: joanie/core/templates/mail/html/installment_refused.html:324
 #, python-format
 msgid " Please correct the failed payment as soon as possible using <a href=\"%(dashboard_order_link)s\">your dashboard</a>. "
 msgstr " Merci de régulariser le paiement en échec dès que possible depuis de <a href=\"%(dashboard_order_link)s\">votre tableau de bord</a>. "
@@ -1598,7 +1644,7 @@ msgstr " Merci de régulariser le paiement en échec dès que possible depuis de
 msgid " For the course <strong>%(title)s</strong>, the %(targeted_installment_index)s installment will be withdrawn on %(days_until_debit)s days. <br /> We will try to debit an amount of <strong>%(installment_amount)s</strong> on the credit card •••• •••• •••• %(credit_card_last_numbers)s. "
 msgstr " Pour le cours <strong>%(title)s</strong>, la %(targeted_installment_index)s échéance sera prélevée dans %(days_until_debit)s jours. <br /> Nous tenterons de prélevée un montant de <strong>%(installment_amount)s</strong> avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s. "
 
-#: joanie/core/templates/mail/html/installment_reminder.html:320
+#: joanie/core/templates/mail/html/installment_reminder.html:324
 #, python-format
 msgid " See order details on your dashboard : <a href=\"%(dashboard_order_link)s\">dashboard</a> "
 msgstr " Voir les détails de la commande sur votre <a href=\"%(dashboard_order_link)s\">tableau de bord</a> "
@@ -1612,6 +1658,11 @@ msgstr " Pour le cours <strong>%(title)s</strong>, nous venons de prélever la d
 #, python-format
 msgid " An amount of <strong>%(installment_amount)s</strong> has been debited on the credit card •••• •••• •••• %(credit_card_last_numbers)s. <br /> "
 msgstr " Un montant de <strong>%(installment_amount)s</strong> a été prélevé avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s. <br /> "
+
+#: joanie/core/templates/mail/html/order_refunded.html:211
+#, python-format
+msgid " For the course <strong>%(title)s</strong>, the order has been refunded. <br /> We have refunded the following installments on the credit card •••• •••• •••• %(credit_card_last_numbers)s. <br /> The remaining installments have been canceled. "
+msgstr " Pour le cours <strong>%(title)s</strong>, la commande a été remboursée. <br /> Nous avons remboursé les échéances suivantes sur la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s. <br /> Les échéances non échues ont été annulées. "
 
 #: joanie/core/templates/mail/html/order_validated.html:188
 #: joanie/core/templates/mail/text/order_validated.txt:5
@@ -1655,16 +1706,17 @@ msgid " An amount of %(installment_amount)s has been debited on the credit card 
 "Currently, it remains %(remaining_balance_to_pay)s to be paid. The next installment will be debited on %(date_next_installment_to_pay)s. "
 msgstr " Un montant de %(installment_amount)s a été prélevé avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s. Actuellement, il reste %(remaining_balance_to_pay)s à payer. La prochaine échéance sera prélevée le %(date_next_installment_to_pay)s. "
 
-#: joanie/core/templates/mail/text/installment_paid.txt:41
-#: joanie/core/templates/mail/text/installments_fully_paid.txt:40
+#: joanie/core/templates/mail/text/installment_paid.txt:49
+#: joanie/core/templates/mail/text/installments_fully_paid.txt:48
 #, python-format
 msgid " See order details on your dashboard [%(dashboard_order_link)s] "
 msgstr " Voir les détails de la commande sur votre tableau de bord [%(dashboard_order_link)s] "
 
-#: joanie/core/templates/mail/text/installment_paid.txt:43
-#: joanie/core/templates/mail/text/installment_refused.txt:40
-#: joanie/core/templates/mail/text/installment_reminder.txt:40
-#: joanie/core/templates/mail/text/installments_fully_paid.txt:42
+#: joanie/core/templates/mail/text/installment_paid.txt:51
+#: joanie/core/templates/mail/text/installment_refused.txt:48
+#: joanie/core/templates/mail/text/installment_reminder.txt:48
+#: joanie/core/templates/mail/text/installments_fully_paid.txt:50
+#: joanie/core/templates/mail/text/order_refunded.txt:47
 #: joanie/core/templates/mail/text/order_validated.txt:16
 #, python-format
 msgid "This mail has been sent to %(email)s by %(name)s [%(href)s]"
@@ -1676,7 +1728,7 @@ msgid " For the course %(title)s, the %(targeted_installment_index)s installment
 "We have tried to debit an amount of %(installment_amount)s on the credit card •••• •••• •••• %(credit_card_last_numbers)s. "
 msgstr " Pour le cours %(title)s, le prélèvement de la %(targeted_installment_index)s échéance a échoué. Nous avons essayé de prélever un montant de %(installment_amount)s avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s. "
 
-#: joanie/core/templates/mail/text/installment_refused.txt:38
+#: joanie/core/templates/mail/text/installment_refused.txt:46
 #, python-format
 msgid " Please correct the failed payment as soon as possible using your dashboard [%(dashboard_order_link)s]. "
 msgstr " Merci de régulariser le paiement en échec dès que possible depuis de votre tableau de bord [%(dashboard_order_link)s]. "
@@ -1687,7 +1739,7 @@ msgid " For the course %(title)s, the %(targeted_installment_index)s installment
 "We will try to debit an amount of %(installment_amount)s on the credit card •••• •••• •••• %(credit_card_last_numbers)s. "
 msgstr " Pour le cours %(title)s, la %(targeted_installment_index)s échéance sera prélevée dans %(days_until_debit)s jours. Nous tenterons de prélever un montant de %(installment_amount)s avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s. "
 
-#: joanie/core/templates/mail/text/installment_reminder.txt:38
+#: joanie/core/templates/mail/text/installment_reminder.txt:46
 #, python-format
 msgid " See order details on your dashboard : dashboard [%(dashboard_order_link)s] "
 msgstr " Voir les détails de la commande dans votre tableau de bord [%(dashboard_order_link)s] "
@@ -1701,6 +1753,15 @@ msgstr " Pour le cours %(title)s, nous venons de prélever la dernière échéan
 #, python-format
 msgid " An amount of %(installment_amount)s has been debited on the credit card •••• •••• •••• %(credit_card_last_numbers)s.\n"
 msgstr " Un montant de %(installment_amount)s a été prélevé avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s.\n"
+
+#: joanie/core/templates/mail/text/order_refunded.txt:12
+#, python-format
+msgid " For the course %(title)s, the order has been refunded.\n"
+"We have refunded the following installments on the credit card •••• •••• •••• %(credit_card_last_numbers)s.\n"
+"The remaining installments have been canceled. "
+msgstr " Pour le cours %(title)s, la commande a été remboursée.\n"
+"Nous avons remboursé les échéances suivantes sur la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s.\n"
+"Les échéances non échues ont été annulées. "
 
 #: joanie/core/templates/mail/text/order_validated.txt:11
 #, python-format
@@ -1848,7 +1909,7 @@ msgid "<CONTRACT_DESCRIPTION>"
 msgstr "<DESCRIPTION_DU_CONTRAT>"
 
 #: joanie/core/utils/payment_schedule.py:230
-#: joanie/payment/backends/base.py:108
+#: joanie/payment/backends/base.py:109
 #, python-brace-format
 msgid "{settings.JOANIE_CATALOG_NAME} - {product_title} - "
 msgstr "{settings.JOANIE_CATALOG_NAME} - {product_title} - "
@@ -1861,24 +1922,29 @@ msgstr "Pour obtenir des résultats, choisissez un propriétaire sur la droite"
 msgid "Joanie payment application"
 msgstr "Application de paiement de Joanie"
 
-#: joanie/payment/backends/base.py:81 joanie/payment/backends/base.py:83
+#: joanie/payment/backends/base.py:82 joanie/payment/backends/base.py:84
 msgid "Subscription confirmed!"
 msgstr "Souscription confirmée !"
 
-#: joanie/payment/backends/base.py:113
+#: joanie/payment/backends/base.py:114
 #, python-brace-format
 msgid "An installment has been successfully paid of {installment_amount} {currency}"
 msgstr "Une échéance d'un montant de {installment_amount} {currency} a été payée avec succès"
 
-#: joanie/payment/backends/base.py:117
+#: joanie/payment/backends/base.py:118
 #, python-brace-format
 msgid "Order completed ! The last installment of {installment_amount} {currency} has been debited"
 msgstr "Commande complétée ! La dernière échéance d'un montant de {installment_amount} {currency} a été prélevée"
 
-#: joanie/payment/backends/base.py:160
+#: joanie/payment/backends/base.py:161
 #, python-brace-format
 msgid "{catalog_name} - {product_title} - An installment debit has failed {installment_amount:.2f} {currency}"
 msgstr "{catalog_name} - {product_title} - Le prélèvement d'une échéance d'un montant de {installment_amount:.2f} {currency} a échoué"
+
+#: joanie/payment/backends/base.py:234
+#, python-brace-format
+msgid "{catalog_name} - {product_title} - An installment debit has been refunded {installment_amount:.2f} {currency}"
+msgstr "{catalog_name} - {product_title} - Une échéance a été remboursée {installment_amount:.2f} {currency}"
 
 #: joanie/payment/enums.py:26
 msgid "Unpaid"
