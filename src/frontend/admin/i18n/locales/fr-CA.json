@@ -611,6 +611,14 @@
     "description": "Text when the certificate has already been generated",
     "message": "The certificate has already been generated"
   },
+  "components.templates.orders.buttons.orderActionsButton.alreadyRefundedLabel": {
+    "description": "Text when the order has already been refunded",
+    "message": "The order has already been refunded"
+  },
+  "components.templates.orders.buttons.orderActionsButton.alreadyRefundingLabel": {
+    "description": "Text when the order is already being refunded",
+    "message": "The order is already being refunded"
+  },
   "components.templates.orders.buttons.orderActionsButton.cancelOrder": {
     "description": "Label for the cancel order action",
     "message": "Cancel this order"
@@ -619,9 +627,21 @@
     "description": "Label for the generate certificate order action",
     "message": "Generate certificate"
   },
+  "components.templates.orders.buttons.orderActionsButton.isNotCanceled": {
+    "description": "Text when the order is not canceled",
+    "message": "You must cancel the order before refunding it."
+  },
+  "components.templates.orders.buttons.orderActionsButton.noGenerateForUncompletedOrder": {
+    "description": "Text for generateCertificate when the order is not completed",
+    "message": "Cannot generate certificate for uncompleted order"
+  },
   "components.templates.orders.buttons.orderActionsButton.orderActionsLabel": {
     "description": "Label for the actions button",
     "message": "Actions"
+  },
+  "components.templates.orders.buttons.orderActionsButton.refundOrder": {
+    "description": "Label for the refund order action",
+    "message": "Refund this order"
   },
   "components.templates.orders.filters.OrderFilters.searchPlaceholder": {
     "description": "Text for the search input placeholder",
@@ -782,6 +802,14 @@
   "components.templates.orders.view.orderStatesMessages.pending_payment": {
     "description": "Text for pending payment order state",
     "message": "Pending payment"
+  },
+  "components.templates.orders.view.orderStatesMessages.refunded": {
+    "description": "Text for refunded order state",
+    "message": "Refunded"
+  },
+  "components.templates.orders.view.orderStatesMessages.refunding": {
+    "description": "Text for refunding order state",
+    "message": "Refunding"
   },
   "components.templates.orders.view.orderStatesMessages.signing": {
     "description": "Text for signing order state",
@@ -1430,6 +1458,10 @@
   "hooks.useOrders.successCertificateGenerate": {
     "description": "Success message shown to the user when the certificate has been generated.",
     "message": "Certificate successfully generated."
+  },
+  "hooks.useOrders.successRefund": {
+    "description": "Success message shown to the user when the order is being refunded.",
+    "message": "Refunding order."
   },
   "hooks.useOrganizations.errorCreate": {
     "description": "Error message shown to the user when organization creation request fails.",
