@@ -1269,6 +1269,31 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         return instance.owner.get_full_name() or instance.owner.username
 
 
+class AdminOrderExportSerializer(serializers.ModelSerializer):
+    """
+    Read only light serializer for Order export.
+    """
+
+    owner = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Order
+        fields = (
+            "id",
+            "created_on",
+            "owner",
+            "total",
+        )
+        read_only_fields = fields
+
+    def get_owner(self, instance) -> str:
+        """
+        Return the full name of the order's owner if available,
+        otherwise fallback to the username
+        """
+        return instance.owner.get_full_name() or instance.owner.username
+
+
 class AdminEnrollmentLightSerializer(serializers.ModelSerializer):
     """
     Light Serializer for Enrollment model
