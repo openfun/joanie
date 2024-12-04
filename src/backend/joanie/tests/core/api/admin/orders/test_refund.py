@@ -355,7 +355,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
         )
 
         text_lines = [
-            f"Hello {order.owner.username},",
+            f"Hello {order.owner.get_full_name()},",
             f"For the course {order.product.title}, " "the order has been refunded.",
             "We have refunded the following installments on the credit card "
             f"•••• •••• •••• {order.credit_card.last_numbers}.",

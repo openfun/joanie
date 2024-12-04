@@ -2,6 +2,7 @@
 # pylint: disable=too-many-lines
 """Admin serializers for Joanie Core app."""
 
+import csv
 from decimal import Decimal as D
 
 from django.conf import settings
@@ -16,6 +17,7 @@ from joanie.core.serializers.fields import (
     ISO8601DurationField,
     ThumbnailDetailField,
 )
+from joanie.core.utils import Echo
 from joanie.payment import models as payment_models
 
 
@@ -1267,6 +1269,60 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         otherwise fallback to the username
         """
         return instance.owner.get_full_name() or instance.owner.username
+
+
+class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods
+    """
+    Read only light serializer for Order export.
+    """
+
+    class Meta:
+        model = models.Order
+        fields_labels = (
+            ("id", "Référence de commande"),
+            ("created_on", "Date de création"),
+            ("owner_name", "Propriétaire"),
+            ("total", "Prix"),
+        )
+        fields = [field for field, label in fields_labels]
+        read_only_fields = fields
+
+    @property
+    def headers(self):
+        """
+        Return the headers of the CSV file.
+        """
+        return [label for field, label in self.Meta.fields_labels]
+
+    owner_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_owner_name(self, instance) -> str:
+        """
+        Return the full name of the order's owner if available,
+        otherwise fallback to the username
+        """
+        return instance.owner.get_full_name() or instance.owner.username
+
+
+class AdminOrderListExportSerializer(serializers.ListSerializer):
+    """
+    Serializer for exporting a list of orders to a CSV stream.
+    """
+
+    def update(self, instance, validated_data):
+        """
+        Only there to avoid a NotImplementedError.
+        """
+
+    def csv_stream(self):
+        """
+        Return a CSV stream of the serialized data.
+        """
+        pseudo_buffer = Echo()
+        writer = csv.writer(pseudo_buffer)
+        yield writer.writerow(self.child.headers)
+        for row in self.data:
+            yield writer.writerow(row.values())
 
 
 class AdminEnrollmentLightSerializer(serializers.ModelSerializer):
