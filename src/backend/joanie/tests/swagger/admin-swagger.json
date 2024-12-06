@@ -2833,6 +2833,30 @@
                     },
                     {
                         "in": "query",
+                        "name": "created_on",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_on_date_range_after",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_on_date_range_before",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "ids",
                         "schema": {
                             "type": "string",
