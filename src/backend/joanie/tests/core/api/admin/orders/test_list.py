@@ -1,20 +1,35 @@
 """Test suite for the admin orders API list endpoint."""
 
 import uuid
+from datetime import date
 from http import HTTPStatus
+from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase
+from django.utils import timezone
+from django.utils.datetime_safe import datetime as django_datetime
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, Order
 from joanie.tests import format_date
 
 
+# pylint: disable=too-many-public-methods
 class OrdersAdminApiListTestCase(TestCase):
     """Test suite for the admin orders API list endpoint."""
 
     maxDiff = None
+
+    @staticmethod
+    def generate_orders_created_on(number: int, created_on=None):
+        """Generate a batch of orders with a specific creation date."""
+        if created_on:
+            created_on = timezone.make_aware(created_on)
+        with mock.patch(
+            "django.utils.timezone.now", return_value=created_on or timezone.now()
+        ):
+            return factories.OrderGeneratorFactory.create_batch(number)
 
     def test_api_admin_orders_request_without_authentication(self):
         """
@@ -687,3 +702,191 @@ class OrdersAdminApiListTestCase(TestCase):
                 ]
             },
         )
+
+    def test_api_admin_orders_list_filter_by_created_on_no_result(self):
+        """
+        Authenticated admin user should find no result when no orders are found.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        self.generate_orders_created_on(3, django_datetime(2024, 11, 30))
+
+        isoformat_searched_date = date(2024, 12, 1).isoformat()  # YYYY-MM-DD
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/?created_on={isoformat_searched_date}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+    def test_api_admin_orders_list_filter_by_created_on(self):
+        """
+        Authenticated admin user should be able to get a list of orders by filtering
+        on the `created_on` field.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create orders that are on runtime of this test
+        factories.OrderGeneratorFactory.create_batch(10)
+        # Create orders with a date in the past
+        self.generate_orders_created_on(4, django_datetime(2024, 2, 17))
+        # Create orders with the date we will query with
+        orders = self.generate_orders_created_on(3, django_datetime(2024, 11, 30))
+
+        isoformat_searched_date = date(2024, 11, 30).isoformat()  # YYYY-MM-DD
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/?created_on={isoformat_searched_date}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        self.assertEqual(content["results"][0]["id"], str(orders[0].id))
+        self.assertEqual(content["results"][1]["id"], str(orders[1].id))
+        self.assertEqual(content["results"][2]["id"], str(orders[2].id))
+
+    def test_api_admin_order_list_filter_by_created_on_before_and_after_date_no_result(
+        self,
+    ):
+        """
+        Authenticated admin user should not find any orders when the given date range
+        does not match the creation dates of any existing orders.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create orders with a date in the past
+        self.generate_orders_created_on(3, django_datetime(2024, 11, 20))
+        # Create orders with a date not inside the date range
+        self.generate_orders_created_on(2, django_datetime(2024, 12, 8))
+
+        isoformat_after_date = date(2024, 12, 1).isoformat()
+        isoformat_before_date = date(2024, 12, 7).isoformat()
+
+        response = self.client.get(
+            "/api/v1.0/admin/orders/?"
+            f"created_on_date_range_after={isoformat_after_date}"
+            f"&created_on_date_range_before={isoformat_before_date}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        self.assertEqual(content["count"], 0)
+
+    def test_api_admin_order_list_filter_by_created_on_before_and_after(self):  # pylint: disable=too-many-locals
+        """
+        An authenticated admin user should be able to find orders when the given date range
+        matches the creation dates of existing orders.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create orders within the given range dates
+        orders_1 = self.generate_orders_created_on(3, django_datetime(2024, 11, 20))
+        # Create another batch within the given range dates
+        orders_2 = self.generate_orders_created_on(3, django_datetime(2024, 11, 30))
+        # Create orders that will be outside the range of the given dates
+        self.generate_orders_created_on(20, django_datetime(2024, 11, 9))
+        self.generate_orders_created_on(20, django_datetime(2024, 12, 2))
+
+        isoformat_after_date = date(2024, 11, 10).isoformat()
+        isoformat_before_date = date(2024, 12, 1).isoformat()
+
+        response = self.client.get(
+            "/api/v1.0/admin/orders/?"
+            f"created_on_date_range_after={isoformat_after_date}"
+            f"&created_on_date_range_before={isoformat_before_date}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        expected_ids_1 = [str(order.id) for order in orders_1]
+        expected_ids_2 = [str(order.id) for order in orders_2]
+        expected_ids = expected_ids_1 + expected_ids_2
+        response_ids = [order["id"] for order in content["results"]]
+
+        self.assertEqual(content["count"], 6)
+        self.assertListEqual(sorted(response_ids), sorted(expected_ids))
+
+    def test_api_admin_order_list_filter_by_created_on_date_range_only_with_after_date(
+        self,
+    ):
+        """
+        An authenticated admin user should be able to retrieve a list of orders created on or
+        after a specified date using the `created_on_date_range_after` filter.
+        This filter includes orders where the `created_on` field is equal to or greater than
+        the given date and excludes any orders created before it.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create orders that will be outside the range of the given dates
+        self.generate_orders_created_on(10, django_datetime(2024, 11, 30))
+        # Create orders that are on the exact date and after the creation passed date in filter
+        orders_1 = self.generate_orders_created_on(2, django_datetime(2024, 12, 2))
+        orders_2 = self.generate_orders_created_on(2, django_datetime(2024, 12, 10))
+
+        isoformat_after_date = date(2024, 12, 2).isoformat()
+
+        response = self.client.get(
+            "/api/v1.0/admin/orders/?"
+            f"created_on_date_range_after={isoformat_after_date}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        response_ids = [order["id"] for order in content["results"]]
+        expected_ids_1 = [str(order.id) for order in orders_1]
+        expected_ids_2 = [str(order.id) for order in orders_2]
+        expected_ids = expected_ids_1 + expected_ids_2
+        response_ids = [order["id"] for order in content["results"]]
+
+        self.assertEqual(content["count"], 4)
+        self.assertListEqual(sorted(response_ids), sorted(expected_ids))
+
+    def test_api_admin_order_list_filter_by_created_on_date_range_only_with_before_date(
+        self,
+    ):
+        """
+        An authenticated admin user should be able to retrieve a list of orders created on or
+        before a specified date using the `created_on_date_range_before` filter.
+        This filter includes orders where the `created_on` field is equal to or earlier than
+        the given date and excludes any orders created after it.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Create orders that will match the filter before date in the query
+        orders_1 = self.generate_orders_created_on(2, django_datetime(2024, 11, 30))
+        orders_2 = self.generate_orders_created_on(3, django_datetime(2024, 11, 1))
+        # Create orders that are later than the passed before date
+        self.generate_orders_created_on(7, django_datetime(2024, 12, 2))
+
+        isoformat_before_date = date(2024, 11, 30).isoformat()
+
+        response = self.client.get(
+            "/api/v1.0/admin/orders/?"
+            f"created_on_date_range_before={isoformat_before_date}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        response_ids = [order["id"] for order in content["results"]]
+        expected_ids_1 = [str(order.id) for order in orders_1]
+        expected_ids_2 = [str(order.id) for order in orders_2]
+        expected_ids = expected_ids_1 + expected_ids_2
+        response_ids = [order["id"] for order in content["results"]]
+
+        self.assertEqual(content["count"], 5)
+        self.assertListEqual(sorted(response_ids), sorted(expected_ids))

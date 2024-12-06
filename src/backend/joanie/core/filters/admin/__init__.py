@@ -280,6 +280,8 @@ class OrderAdminFilterSet(filters.FilterSet):
         field_name="product__type",
         choices=enums.PRODUCT_TYPE_CHOICES,
     )
+    created_on = filters.DateFilter(field_name="created_on", lookup_expr="exact")
+    created_on_date_range = filters.DateFromToRangeFilter(field_name="created_on")
 
     def filter_by_query(self, queryset, _name, value):
         """
