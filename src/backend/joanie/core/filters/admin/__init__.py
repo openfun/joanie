@@ -276,6 +276,10 @@ class OrderAdminFilterSet(filters.FilterSet):
     )
     state = filters.ChoiceFilter(choices=enums.ORDER_STATE_CHOICES)
     ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
+    created_on = filters.DateFilter(field_name="created_on", lookup_expr="exact")
+    created_on_after = filters.DateFilter(field_name="created_on", lookup_expr="gte")
+    created_on_before = filters.DateFilter(field_name="created_on", lookup_expr="lte")
+    created_on_date_range = filters.DateFromToRangeFilter(field_name="created_on")
 
     def filter_by_query(self, queryset, _name, value):
         """

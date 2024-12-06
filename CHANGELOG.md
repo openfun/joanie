@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add filter through `created_on` for the admin order viewset
 - Add button in back office for refunding an order
 - Add `teachers`, `skills` and `certification_level` fields
   to `Product`model
