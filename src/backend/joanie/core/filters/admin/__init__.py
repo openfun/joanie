@@ -276,6 +276,10 @@ class OrderAdminFilterSet(filters.FilterSet):
     )
     state = filters.ChoiceFilter(choices=enums.ORDER_STATE_CHOICES)
     ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
+    product_type = filters.MultipleChoiceFilter(
+        field_name="product__type",
+        choices=enums.PRODUCT_TYPE_CHOICES,
+    )
 
     def filter_by_query(self, queryset, _name, value):
         """
