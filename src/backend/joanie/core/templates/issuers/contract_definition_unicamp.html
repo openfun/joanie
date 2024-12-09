@@ -1,0 +1,9 @@
+{% extends "issuers/contract_definition_default.html" %}
+
+{% load extra_tags %}
+
+{% block header %}
+    {% include 'contract_definition/fragment_logo.html' with organization=organization %}
+    <!-- Unicamp logo here -->
+    <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
+{% endblock %}

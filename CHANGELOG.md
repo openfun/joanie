@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add a default contract definition template without a branded logo
 - Add button in back office for refunding an order
 - Add `teachers`, `skills` and `certification_level` fields
   to `Product`model
