@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Add filters for the admin viewset through the field `created_on`
+  to search orders on exact date, before date, after date and range of dates.
 - Add button in back office for refunding an order
 - Add `teachers`, `skills` and `certification_level` fields
   to `Product`model
