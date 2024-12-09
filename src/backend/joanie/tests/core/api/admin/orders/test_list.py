@@ -7,7 +7,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories
-from joanie.core.models import Order
+from joanie.core.models import CourseState, Order
 from joanie.tests import format_date
 
 
@@ -503,3 +503,187 @@ class OrdersAdminApiListTestCase(TestCase):
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(orders[1].id))
         self.assertEqual(content["results"][1]["id"], str(orders[0].id))
+
+    def test_api_admin_orders_list_filter_product_type_certificate(self):
+        """
+        Authenticated admin user should be able to filter the orders
+        by product type certificate.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+        )
+        product_certificate = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
+        )
+        # Prepare order for certificate product
+        order_certificate = factories.OrderFactory(
+            product=product_certificate, course=None, enrollment=enrollment
+        )
+        # Prepare order for credential product
+        factories.OrderFactory(
+            product=factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(order_certificate.id))
+
+    def test_api_admin_orders_list_filter_product_type_credential(self):
+        """
+        Authenticated admin user should be able to filter the orders
+        by product type credential.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Prepare order for credential product
+        order_credential = factories.OrderFactory(
+            product=factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        )
+        # Prepare order for enrollment product
+        factories.OrderFactory(
+            product=factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_ENROLLMENT,
+            )
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/?product_type={enums.PRODUCT_TYPE_CREDENTIAL}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(order_credential.id))
+
+    def test_api_admin_orders_list_filter_product_type_enrollment(self):
+        """
+        Authenticated admin user should be able to filter the orders
+        by product type enrollment.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # Prepare order for enrollment product
+        order_enrollment = factories.OrderFactory(
+            product=factories.ProductFactory(type=enums.PRODUCT_TYPE_ENROLLMENT)
+        )
+        # Prepare order for credential product
+        factories.OrderFactory(
+            product=factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/?product_type={enums.PRODUCT_TYPE_ENROLLMENT}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(order_enrollment.id))
+
+    def test_api_admin_orders_list_filter_product_type_multiple(self):
+        """
+        Authenticated admin user should be able to filter the orders by limiting to certain
+        product types.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        enrollment = factories.EnrollmentFactory(
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+        )
+        product_certificate = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
+        )
+        product_credential = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL
+        )
+        product_enrollment = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_ENROLLMENT
+        )
+
+        # Prepare order for certificate product
+        order_certificate = factories.OrderFactory(
+            product=product_certificate, course=None, enrollment=enrollment
+        )
+        # Prepare order for credential product
+        [order_credential_1, order_credential_2] = factories.OrderFactory.create_batch(
+            2, product=product_credential
+        )
+        # Prepare order for enrollment product
+        [order_enrollment_1, order_enrollment_2] = factories.OrderFactory.create_batch(
+            2, product=product_enrollment
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/?product_type={enums.PRODUCT_TYPE_ENROLLMENT}"
+            f"&product_type={enums.PRODUCT_TYPE_CREDENTIAL}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 4)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [
+                str(order_credential_1.id),
+                str(order_credential_2.id),
+                str(order_enrollment_1.id),
+                str(order_enrollment_2.id),
+            ],
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}"
+            f"&product_type={enums.PRODUCT_TYPE_CREDENTIAL}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertCountEqual(
+            [result["id"] for result in content["results"]],
+            [
+                str(order_certificate.id),
+                str(order_credential_1.id),
+                str(order_credential_2.id),
+            ],
+        )
+
+    def test_api_admin_orders_list_filter_with_invalid_product_type(self):
+        """
+        Authenticated admin user should not be able to get the list of orders
+        if an invalid product type is passed in the filter.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get(
+            "/api/v1.0/admin/orders/?product_type=invalid_product_type"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "product_type": [
+                    (
+                        "Select a valid choice. "
+                        "invalid_product_type is not one of the available choices."
+                    )
+                ]
+            },
+        )
