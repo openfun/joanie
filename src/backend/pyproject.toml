@@ -26,7 +26,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "arrow==1.3.0",
-    "boto3==1.35.72",
+    "boto3==1.35.76",
     "Brotli==1.1.0",
     "celery[redis]==5.4.0",
     "cryptography==44.0.0",
@@ -62,7 +62,7 @@ dependencies = [
     "pyRdfa3==3.6.4",
     "python-dateutil==2.9.0.post0",
     "requests==2.32.3",
-    "sentry-sdk==2.19.0",
+    "sentry-sdk==2.19.2",
     "stockholm==0.5.7",
     "timedelta-isoformat==0.6.2.12",
     "url-normalize==1.4.3",
@@ -99,10 +99,10 @@ dev = [
     "pytest-django==4.9.0",
     "pytest==8.3.4",
     "pytest-icdiff==0.9",
-    "pytest-subtests==0.13.1",
+    "pytest-subtests==0.14.0",
     "pytest-xdist==3.6.1",
     "responses==0.25.3",
-    "ruff==0.8.1",
+    "ruff==0.8.2",
     "types-requests==2.32.0.20241016",
     # edx_imports
     "sqlacodegen==3.0.0rc5",
