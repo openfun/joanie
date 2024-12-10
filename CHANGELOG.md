@@ -38,6 +38,7 @@ and this project adheres to
   to `Product`model
 - Add admin api endpoints to CRUD `Teacher` and `Skill` resources.
 - Add certification section in back office product detail view
+- Add order export to CSV in back office
 
 ### Changed
 
