@@ -31,6 +31,19 @@ test.describe("Order filters", () => {
       }
     });
 
+    const context = page.context();
+    const exportUrl = "http://localhost:8071/api/v1.0/admin/orders/export/";
+    const exportQueryParamsRegex = getUrlCatchSearchParamsRegex(exportUrl);
+    await context.unroute(exportQueryParamsRegex);
+    await context.route(exportQueryParamsRegex, async (route, request) => {
+      if (request.method() === "GET") {
+        await route.fulfill({
+          contentType: "application/csv",
+          body: "data",
+        });
+      }
+    });
+
     await mockPlaywrightCrud<ProductSimple, DTOProduct>({
       data: store.products,
       routeUrl: "http://localhost:8071/api/v1.0/admin/products/",
@@ -123,5 +136,26 @@ test.describe("Order filters", () => {
     await expect(
       page.getByRole("button", { name: `Owner: ${store.users[0].username}` }),
     ).toBeVisible();
+  });
+
+  test("Test export with filters", async ({ page }) => {
+    await page.goto(PATH_ADMIN.orders.list);
+
+    await page.getByRole("button", { name: "Filters" }).click();
+    await page
+      .getByTestId("select-order-state-filter")
+      .getByLabel("State")
+      .click();
+    await page.getByRole("option", { name: "Completed" }).click();
+    await page.getByLabel("close").click();
+
+    await page.getByRole("button", { name: "Export" }).click();
+
+    page.on("popup", async (popup) => {
+      await popup.waitForLoadState();
+      expect(popup.url()).toBe(
+        "http://localhost:8071/api/v1.0/admin/orders/export/?state=completed",
+      );
+    });
   });
 });
