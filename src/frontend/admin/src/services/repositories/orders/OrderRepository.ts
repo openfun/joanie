@@ -2,7 +2,11 @@ import queryString from "query-string";
 import { Order, OrderQuery } from "@/services/api/models/Order";
 import { Maybe } from "@/types/utils";
 import { ResourcesQuery } from "@/hooks/useResources/types";
-import { checkStatus, fetchApi } from "@/services/http/HttpService";
+import {
+  buildApiUrl,
+  checkStatus,
+  fetchApi,
+} from "@/services/http/HttpService";
 import { PaginatedResponse } from "@/types/api";
 
 export const orderRoutes = {
@@ -11,6 +15,7 @@ export const orderRoutes = {
   delete: (id: string) => `/orders/${id}/`,
   generateCertificate: (id: string) => `/orders/${id}/generate_certificate/`,
   refund: (id: string) => `/orders/${id}/refund/`,
+  export: (params: string = "") => `/orders/export/${params}`,
 };
 
 export class OrderRepository {
@@ -44,5 +49,12 @@ export class OrderRepository {
   static refund(id: string): Promise<void> {
     const url = orderRoutes.refund(id);
     return fetchApi(url, { method: "POST" }).then(checkStatus);
+  }
+
+  static export(filters: Maybe<ResourcesQuery>): void {
+    const url = orderRoutes.export(
+      filters ? `?${queryString.stringify(filters)}` : "",
+    );
+    window.open(buildApiUrl(url));
   }
 }
