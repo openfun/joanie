@@ -28,6 +28,8 @@ and this project adheres to
 
 ### Changed
 
+- Update the model `Certificate` ordering to descending order
+  on the field `issued_on`
 - Update product endpoint to CRUD `teachers`, `skills`
   and `certification level` fields
 
