@@ -25,6 +25,7 @@ export interface ApiResourceInterface<
   create?: (payload: any) => Promise<TData>;
   update?: (payload: any) => Promise<TData>;
   delete?: (id: TData["id"]) => Promise<void>;
+  export?: (filters?: TResourceQuery) => Promise<void>;
 }
 
 export const useLocalizedQueryKey = (queryKey: QueryKey) => queryKey;
