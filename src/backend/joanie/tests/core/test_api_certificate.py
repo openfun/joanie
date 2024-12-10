@@ -5,10 +5,14 @@ from http import HTTPStatus
 from io import BytesIO
 from unittest import mock
 
+from django.utils import timezone
+from django.utils.datetime_safe import datetime as django_datetime
+
 from pdfminer.high_level import extract_text as pdf_extract_text
 from rest_framework.pagination import PageNumberPagination
 
 from joanie.core import enums, factories
+from joanie.core.models import Certificate
 from joanie.core.serializers import fields
 from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
@@ -21,6 +25,35 @@ class CertificateApiTest(BaseAPITestCase):
 
     maxDiff = None
 
+    @staticmethod
+    def generate_certificate_created_on_and_issued_on(
+        user, created_on=None, issued_on=None
+    ):
+        """
+        Generate a certificate for a user with a specific `created_on` date and `issued_on` date
+        """
+        if created_on:
+            created_on = timezone.make_aware(created_on)
+
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=created_on or timezone.now(),
+        ):
+            certificate = factories.OrderCertificateFactory(
+                order=factories.OrderFactory(
+                    owner=user, product=factories.ProductFactory()
+                )
+            )
+
+        if issued_on:
+            issued_on = timezone.make_aware(issued_on)
+            # Using the update method to by pass the auto_now and editable is False parameters
+            # on the field set on the model.
+            Certificate.objects.filter(pk=certificate.id).update(issued_on=issued_on)
+            certificate.refresh_from_db()
+
+        return certificate
+
     def test_api_certificate_read_list_anonymous(self):
         """It should not be possible to retrieve the list of certificates for anonymous user"""
         factories.OrderCertificateFactory.create_batch(2)
@@ -31,6 +64,46 @@ class CertificateApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
+
+    def test_api_certificate_read_list_should_be_in_the_order_of_issued_on_field_value(
+        self,
+    ):
+        """
+        Authenticated user should get the list certificates owned in the following order : from
+        the most recent to the oldest depending on the `issued_on` date value.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        # Create random other certificates not attached to the user
+        factories.OrderCertificateFactory.create_batch(5)
+        # Create the certificates of the user
+        certificate_0 = self.generate_certificate_created_on_and_issued_on(
+            user, django_datetime(2024, 11, 12), django_datetime(2024, 11, 28)
+        )
+        certificate_1 = self.generate_certificate_created_on_and_issued_on(
+            user, django_datetime(2024, 11, 13), django_datetime(2024, 11, 22)
+        )
+        certificate_2 = self.generate_certificate_created_on_and_issued_on(
+            user, django_datetime(2024, 11, 15), django_datetime(2024, 11, 24)
+        )
+        certificate_3 = self.generate_certificate_created_on_and_issued_on(
+            user, django_datetime(2024, 11, 15), django_datetime(2024, 11, 26)
+        )
+
+        response = self.client.get(
+            "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json().get("count"), 4)
+
+        content = response.json().get("results")
+
+        self.assertEqual(content[0]["id"], str(certificate_0.id))
+        self.assertEqual(content[1]["id"], str(certificate_3.id))
+        self.assertEqual(content[2]["id"], str(certificate_2.id))
+        self.assertEqual(content[3]["id"], str(certificate_1.id))
 
     @mock.patch.object(
         fields.ThumbnailDetailField,

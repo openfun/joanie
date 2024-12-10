@@ -24,6 +24,8 @@ and this project adheres to
 
 ### Changed
 
+- Update certificate endpoint to return list by `issued_on` field
+  ordered in descending order (most recent first)
 - Update product endpoint to CRUD `teachers`, `skills`
   and `certification level` fields
 
