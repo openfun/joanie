@@ -769,7 +769,7 @@ class CertificateViewSet(
         models.Certificate.objects.all()
         .defer("localized_context", "images")
         .select_related("certificate_definition")
-    ).order_by("-issued_on")
+    )
 
     def get_username(self):
         """Get the authenticated username from the request."""
