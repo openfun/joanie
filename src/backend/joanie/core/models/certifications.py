@@ -116,7 +116,7 @@ class Certificate(BaseModel):
         db_table = "joanie_certificate"
         verbose_name = _("Certificate")
         verbose_name_plural = _("Certificates")
-        ordering = ["-created_on"]
+        ordering = ["-issued_on"]
         constraints = [
             models.CheckConstraint(
                 check=(
