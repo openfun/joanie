@@ -3192,6 +3192,43 @@
                 }
             }
         },
+        "/api/v1.0/admin/orders/export/": {
+            "get": {
+                "operationId": "orders_export_retrieve",
+                "description": "Export orders to a CSV file.",
+                "tags": [
+                    "orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/organizations/": {
             "get": {
                 "operationId": "organizations_list",

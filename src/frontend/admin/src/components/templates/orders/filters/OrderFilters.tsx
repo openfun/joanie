@@ -20,7 +20,7 @@ import { OrganizationSearch } from "@/components/templates/organizations/inputs/
 import { UserSearch } from "@/components/templates/users/inputs/search/UserSearch";
 import { RHFOrderState } from "@/components/templates/orders/inputs/RHFOrderState";
 import { entitiesInputLabel } from "@/translations/common/entitiesInputLabel";
-import { OrderListQuery } from "@/hooks/useOrders/useOrders";
+import { OrderListQuery, useOrders } from "@/hooks/useOrders/useOrders";
 
 const messages = defineMessages({
   searchPlaceholder: {
@@ -49,6 +49,7 @@ type Props = MandatorySearchFilterProps & {
 
 export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
   const intl = useIntl();
+  const ordersQuery = useOrders({}, { enabled: false });
 
   const getDefaultValues = () => {
     return {
@@ -162,6 +163,11 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
           </RHFValuesChange>
         </RHFProvider>
       )}
+      export={() => {
+        ordersQuery.methods.export({
+          currentFilters: formValuesToFilterValues(methods.getValues()),
+        });
+      }}
     />
   );
 }

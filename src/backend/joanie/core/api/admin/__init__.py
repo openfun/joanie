@@ -2,11 +2,12 @@
 Admin API Endpoints
 """
 
+import csv
 from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
@@ -614,6 +615,7 @@ class OrderViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_classes = {
         "list": serializers.AdminOrderLightSerializer,
+        "export": serializers.AdminOrderExportSerializer,
     }
     default_serializer_class = serializers.AdminOrderSerializer
     filterset_class = filters.OrderAdminFilterSet
@@ -688,6 +690,31 @@ class OrderViewSet(
             )
 
         return Response(status=HTTPStatus.ACCEPTED)
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "text/csv"): OpenApiTypes.OBJECT,
+            404: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["GET"], detail=False)
+    def export(self, request):
+        """
+        Export orders to a CSV file.
+        """
+        queryset = self.filter_queryset(self.get_queryset()).order_by("created_on")
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="orders.csv"'
+        writer = csv.writer(response)
+
+        writer.writerow(data[0].keys())
+        writer.writerows([row.values() for row in data])
+
+        return response
 
 
 class OrganizationAddressViewSet(
