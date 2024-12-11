@@ -25,6 +25,10 @@ and this project adheres to
 - Update product endpoint to CRUD `teachers`, `skills`
   and `certification level` fields
 
+### Fixed
+
+- Fix order update on archived course run
+
 ## [2.10.0] - 2024-11-20
 
 ### Added

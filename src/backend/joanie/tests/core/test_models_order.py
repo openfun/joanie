@@ -15,6 +15,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
+from joanie.core.enums import PAYMENT_STATE_PENDING
 from joanie.core.factories import CourseRunFactory
 from joanie.core.models import Contract, CourseState
 from joanie.core.utils import contract_definition
@@ -1223,7 +1224,7 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
             ),
         )
 
-    def test_api_order_allow_to_cancel_with_archived_course_run(self):
+    def test_models_order_allow_to_cancel_with_archived_course_run(self):
         """
         An order should be cancelable even if the related course run is archived.
         """
@@ -1249,3 +1250,40 @@ class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
         order.flow.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+
+    def test_models_order_update_order_with_archived_course_run(self):
+        """
+        It should be possible to update a non canceled order with an archived course run.
+        """
+        course_run = factories.CourseRunFactory(
+            is_listed=True, state=CourseState.ONGOING_OPEN
+        )
+        enrollment = factories.EnrollmentFactory(course_run=course_run, is_active=True)
+        order = factories.OrderFactory(
+            owner=enrollment.user,
+            enrollment=enrollment,
+            course=None,
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+            product__courses=[enrollment.course_run.course],
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        # Update the course run to archived it
+        closing_date = django_timezone.now() - timedelta(days=1)
+        course_run.enrollment_end = closing_date
+        course_run.end = closing_date
+        course_run.save()
+
+        order.set_installment_paid("1932fbc5-d971-48aa-8fee-6d637c3154a5")
+        order.flow.update()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+        self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_PAID)
