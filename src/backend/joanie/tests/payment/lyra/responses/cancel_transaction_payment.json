@@ -282,7 +282,10 @@
         "_type": "V4/OrderDetails"
       },
       "operationType": "DEBIT",
-      "metadata": null,
+      "metadata": {
+        "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+        "orderInfo": ""
+      },
       "_type": "V4/Transaction"
     },
     "ticket": "753889b9cc784f84b5339da9be5ede6f",
