@@ -683,10 +683,11 @@ class OrderViewSet(
 
         payment_backend = get_payment_backend()
         transaction_references_to_refund = get_transaction_references_to_refund(order)
-        for transaction_reference, amount in transaction_references_to_refund.items():
+        for reference, installment in transaction_references_to_refund.items():
             payment_backend.cancel_or_refund(
-                amount=amount,
-                reference=transaction_reference,
+                amount=installment["amount"],
+                reference=reference,
+                installment_reference=installment["id"],
             )
 
         return Response(status=HTTPStatus.ACCEPTED)

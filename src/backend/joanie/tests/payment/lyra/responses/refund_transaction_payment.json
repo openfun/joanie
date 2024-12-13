@@ -10,7 +10,7 @@
       "paymentMethodToken": "d662d15e7ebf4682a22b8858b4f2dac0",
       "detailedStatus": "AUTHORISED",
       "status": "PAID",
-      "amount": 10000,
+      "amount": 3000,
       "currency": "EUR",
       "creationDate": "2024-09-30T16:09:00+00:00",
       "errorCode": null,
@@ -79,7 +79,7 @@
       },
       "transactionDetails": {
         "liabilityShift": null,
-        "effectiveAmount": 10000,
+        "effectiveAmount": 3000,
         "effectiveCurrency": "EUR",
         "creationContext": "REFUND",
         "cardDetails": {
@@ -240,9 +240,7 @@
         "_type": "V4/OrderDetails"
       },
       "operationType": "CREDIT",
-      "metadata": {
-        "installment_id": "d9356dd7-19a6-4695-b18e-ad93af41424a"
-        },
+      "metadata": null,
         "_type": "V4/Transaction"
     },
     "ticket": "ffd839c87d5947c9a84262ddda3e2055",

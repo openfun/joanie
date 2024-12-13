@@ -1312,6 +1312,14 @@ class Order(BaseModel):
             if installment["state"] == enums.PAYMENT_STATE_PENDING
         )
 
+    def get_amount_installments_refunded(self):
+        """Get the amount of installments that were refunded in the payment schedule."""
+        return Money.sum(
+            installment["amount"]
+            for installment in self.payment_schedule
+            if installment["state"] == enums.PAYMENT_STATE_REFUNDED
+        )
+
 
 class OrderTargetCourseRelation(BaseModel):
     """

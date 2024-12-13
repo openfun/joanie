@@ -17,6 +17,11 @@ and this project adheres to
 
 - Fix order filtering by creation date
 
+### Changed
+
+- Changed behavior of `cancel_or_refund` method in payment backends
+  to update objects after call
+
 ## [2.12.0] - 2024-12-18
 
 ### Added

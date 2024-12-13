@@ -318,7 +318,7 @@ class DummyPaymentBackend(BasePaymentBackend):
             "card_token": f"card_{user.id}",
         }
 
-    def cancel_or_refund(self, amount, reference):
+    def cancel_or_refund(self, amount, reference, installment_reference=None):
         """
         Dummy method to refund an installment by taking the transaction reference (`payment_id`
         in the cache). This method only treats a refund.
