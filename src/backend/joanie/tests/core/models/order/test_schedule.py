@@ -1511,3 +1511,31 @@ class OrderModelsTestCase(LoggingTestCase, ActivityLogMixingTestCase):
             str(context.exception),
             "Installment with id fake_installment_id cannot be refund",
         )
+
+    def test_models_order_get_amount_installments_refunded_should_be_zero(self):
+        """
+        Should return the total amount to was refunded from the payment schedule of an order.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=100,
+        )
+
+        amount_refunded = order.get_amount_installments_refunded()
+
+        self.assertEqual(amount_refunded, Money("0.00"))
+
+    def test_models_order_get_amount_installments_refunded(self):
+        """
+        Should return the total amount to was refunded from the payment schedule of an order.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING_PAYMENT,
+            product__price=100,
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_REFUNDED
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_REFUNDED
+
+        amount_refunded = order.get_amount_installments_refunded()
+
+        self.assertEqual(amount_refunded, Money("50.00"))

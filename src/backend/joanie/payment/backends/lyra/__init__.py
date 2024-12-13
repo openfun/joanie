@@ -377,10 +377,7 @@ class LyraBackend(BasePaymentBackend):
         initial_issuer_transaction_identifier = card_details[
             "initialIssuerTransactionIdentifier"
         ]
-        operation_category = answer["transactions"][0]["detailedStatus"]
-        parent_transaction_id = answer["transactions"][0]["transactionDetails"].get(
-            "parentTransactionUuid", None
-        )
+
         installment_id = None
         if (
             answer["transactions"][0]["metadata"]
@@ -408,28 +405,6 @@ class LyraBackend(BasePaymentBackend):
             )
 
         amount = f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"
-        # Refund a transaction operation
-        if creation_context != "VERIFICATION" and (
-            (operation_category == "CANCELLED" and answer["orderStatus"] == "UNPAID")
-            or (creation_context == "REFUND" and answer["orderStatus"] == "PAID")
-        ):
-            transaction = Transaction.objects.get(
-                Q(reference=transaction_id) | Q(reference=parent_transaction_id)
-            )
-            if not parent_transaction_id:
-                # If `parent_transaction_id` is absent, Lyra will cancel the capture of the
-                # initiated transaction amount.
-                # If `parent_transaction_id` is present, it indicates that the amount
-                # has already been captured, and  Lyra will initiate a new transaction
-                # to refund the amount.
-                transaction_id = f"cancel_{transaction_id}"
-
-            return self._do_on_refund(
-                amount=D(amount),
-                invoice=transaction.invoice.order.main_invoice,
-                refund_reference=transaction_id,
-                installment_id=installment_id,
-            )
 
         if answer["orderStatus"] == "PAID":
             billing_details = answer["customer"]["billingDetails"]
@@ -515,7 +490,9 @@ class LyraBackend(BasePaymentBackend):
         Abort a payment, nothing to do for Lyra
         """
 
-    def cancel_or_refund(self, amount: Money, reference: str):
+    def cancel_or_refund(
+        self, amount: Money, reference: str, installment_reference: str
+    ):
         """
         Cancels or refunds a transaction made on the order's payment schedule.
         The payment provider determines whether the transaction can be canceled or
@@ -542,4 +519,33 @@ class LyraBackend(BasePaymentBackend):
                 "exist at the payment provider."
             )
 
-        return response_json
+        answer = response_json.get("answer", {})
+        amount = f"{answer['amount'] / 100:.2f}"
+        operation_category = answer.get("detailedStatus", None)
+        transaction_id = answer.get("uuid", None)
+        # If `parent_transaction_id` is absent, Lyra cancelled the capture of the
+        # initiated transaction amount.
+        # If `parent_transaction_id` is present, it indicates that the amount
+        # has already been captured by Lyra on the initial transaction, and now the
+        # payment provider will create a new transaction to refund the captured amount.
+        parent_transaction_id = answer.get("transactionDetails", {}).get(
+            "parentTransactionUuid", None
+        )
+        transaction = Transaction.objects.get(
+            Q(reference=transaction_id) | Q(reference=parent_transaction_id)
+        )
+
+        refund_reference = (
+            f"cancel_{transaction_id}"
+            if operation_category == "CANCELLED"
+            else transaction_id
+        )
+
+        self._do_on_refund(
+            amount=D(amount),
+            invoice=transaction.invoice.order.main_invoice,
+            refund_reference=refund_reference,
+            installment_id=installment_reference,
+        )
+
+        return True

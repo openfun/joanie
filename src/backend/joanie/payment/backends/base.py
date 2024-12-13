@@ -205,38 +205,26 @@ class BasePaymentBackend:
         if invoice.order.state != ORDER_STATE_REFUNDED:
             return
 
-        try:
-            installment_amount = Money(
-                next(
-                    installment["amount"]
-                    for installment in invoice.order.payment_schedule
-                    if installment["id"] == installment_id
-                ),
-                currency=settings.DEFAULT_CURRENCY,
-            )
-        except StopIteration as exception:
-            raise ValueError(
-                f"Payment Base Backend: {installment_id} not found!"
-            ) from exception
-
+        # Prepare email to send
+        installments_amount = invoice.order.get_amount_installments_refunded()
         with override(invoice.order.owner.language):
             product_title = invoice.order.product.safe_translation_getter(
                 "title", language_code=invoice.order.owner.language
             )
             template_vars = emails.prepare_context_data(
                 invoice.order,
-                installment_amount,
+                installments_amount,
                 product_title,
                 payment_refused=False,
             )
             emails.send(
                 subject=_(
-                    "{catalog_name} - {product_title} - An installment debit has been refunded "
-                    "{installment_amount:.2f} {currency}"
+                    "{catalog_name} - {product_title} - Your order has been refunded "
+                    "for an amount of {installments_amount:.2f} {currency}"
                 ).format(
                     catalog_name=settings.JOANIE_CATALOG_NAME,
                     product_title=product_title,
-                    installment_amount=installment_amount,
+                    installments_amount=installments_amount,
                     currency=settings.DEFAULT_CURRENCY,
                 ),
                 template_vars=template_vars,
@@ -311,7 +299,9 @@ class BasePaymentBackend:
             "subclasses of BasePaymentBackend must provide a tokenize_card() method."
         )
 
-    def cancel_or_refund(self, amount: Money, reference: str):
+    def cancel_or_refund(
+        self, amount: Money, reference: str, installment_reference: str
+    ):
         """
         Method called to cancel or refund installments from an order payment schedule.
         """
