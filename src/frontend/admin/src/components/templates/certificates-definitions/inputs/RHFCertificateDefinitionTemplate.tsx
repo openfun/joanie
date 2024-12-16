@@ -22,7 +22,7 @@ type Props = RHFSelectProps & {
 
 export function RHFCertificateDefinitionTemplates({ name }: Props) {
   const intl = useIntl();
-  const languages = useQuery({
+  const templates = useQuery({
     queryKey: ["certificateDefinitionTemplates"],
     staleTime: Infinity,
     gcTime: Infinity,
@@ -34,9 +34,9 @@ export function RHFCertificateDefinitionTemplates({ name }: Props) {
   return (
     <RHFSelect
       data-testid="template-select"
-      disabled={languages.isLoading}
+      disabled={templates.isLoading}
       name={name}
-      options={languages.data ?? []}
+      options={templates.data ?? []}
       label={intl.formatMessage(messages.templateLabel)}
     />
   );

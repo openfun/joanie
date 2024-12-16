@@ -13,6 +13,18 @@ export const CONTRACT_DEFINITION_OPTIONS_REQUEST_RESULT = {
           },
         ],
       },
+      name: {
+        choices: [
+          {
+            value: "contract_definition_default",
+            display_name: "Contract Definition Default",
+          },
+          {
+            value: "contract_definition_unicamp",
+            display_name: "Contract Definition Unicamp",
+          },
+        ],
+      },
     },
   },
 };
