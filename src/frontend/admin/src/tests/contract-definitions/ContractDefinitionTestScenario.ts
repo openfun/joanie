@@ -16,16 +16,16 @@ export const getContractDefinitionScenarioStore = () => {
       (item) => item.id === contractDefinitionToUpdate?.id,
     );
 
-    let newCertificationDef: ContractDefinition;
+    let newContractDef: ContractDefinition;
     if (index >= 0) {
-      newCertificationDef = { ...list[index], ...payload };
-      list[index] = newCertificationDef;
+      newContractDef = { ...list[index], ...payload };
+      list[index] = newContractDef;
     } else {
-      newCertificationDef = { id: faker.string.uuid(), ...payload };
-      list.push(newCertificationDef);
+      newContractDef = { id: faker.string.uuid(), ...payload };
+      list.push(newContractDef);
     }
 
-    return newCertificationDef;
+    return newContractDef;
   };
   return {
     list,

@@ -1,5 +1,8 @@
 import { faker } from "@faker-js/faker";
-import { ContractDefinition } from "@/services/api/models/ContractDefinition";
+import {
+  ContractDefinition,
+  ContractDefinitionTemplate,
+} from "@/services/api/models/ContractDefinition";
 
 const build = (): ContractDefinition => {
   return {
@@ -7,7 +10,7 @@ const build = (): ContractDefinition => {
     title: faker.company.name(),
     description: faker.lorem.lines(2),
     language: "fr-fr",
-    name: "contract_definition",
+    name: ContractDefinitionTemplate.DEFAULT,
     body: "### Contract body",
     appendix: "### Contract appendix",
   };

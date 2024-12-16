@@ -8,9 +8,16 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add template name field into ContractDefinition edit view
+  in the Back office application
+
 ### Changed
 
 - Prevent to index certificate verification page
+- Update the model `Certificate` ordering to descending order
+  on the field `issued_on`
 
 ## [2.11.0] - 2024-12-11
 
@@ -28,8 +35,6 @@ and this project adheres to
 
 ### Changed
 
-- Update the model `Certificate` ordering to descending order
-  on the field `issued_on`
 - Update product endpoint to CRUD `teachers`, `skills`
   and `certification level` fields
 

@@ -16,11 +16,14 @@ import { genericUpdateFormError } from "@/utils/forms";
 import { useContractDefinitions } from "@/hooks/useContractDefinitions/useContractDefinitions";
 import {
   ContractDefinition,
+  ContractDefinitionFormValues,
+  ContractDefinitionTemplate,
   DTOContractDefinition,
 } from "@/services/api/models/ContractDefinition";
 import { MarkdownComponent } from "@/components/presentational/inputs/markdown/MardownComponent";
 import { removeEOL } from "@/utils/string";
 import { RHFContractDefinitionLanguage } from "@/components/templates/contract-definition/inputs/RHFContractDefinitionLanguage";
+import RHFContractDefinitionName from "@/components/templates/contract-definition/inputs/RHFContractDefinitionName";
 import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 import { useFormSubmit } from "@/hooks/form/useFormSubmit";
 
@@ -63,6 +66,17 @@ const messages = defineMessages({
   },
 });
 
+const FORM_VALIDATION_SCHEMA = Yup.object().shape({
+  title: Yup.string().required(),
+  description: Yup.string().required(),
+  body: Yup.string().required(),
+  appendix: Yup.string().defined(),
+  language: Yup.string().required(),
+  name: Yup.string()
+    .oneOf([...Object.values(ContractDefinitionTemplate), ""])
+    .required(),
+});
+
 interface Props {
   afterSubmit?: (contractDefinition: ContractDefinition) => void;
   contractDefinition?: ContractDefinition;
@@ -82,29 +96,18 @@ export function ContractDefinitionForm({
   const defaultContractDefinition =
     contractDefinition ?? props.fromContractDefinition;
 
-  const RegisterSchema = Yup.object().shape({
-    title: Yup.string().required(),
-    description: Yup.string().required(),
-    body: Yup.string().required(),
-    appendix: Yup.string(),
-    language: Yup.string().required(),
-    name: Yup.string().required(),
-  });
-
-  const getDefaultValues = () => {
-    return {
-      title: defaultContractDefinition?.title ?? "",
-      description: removeEOL(defaultContractDefinition?.description),
-      body: removeEOL(defaultContractDefinition?.body),
-      appendix: removeEOL(defaultContractDefinition?.appendix),
-      name: "contract_definition",
-      language: defaultContractDefinition?.language ?? "fr-fr",
-    };
+  const defaultValues: ContractDefinitionFormValues = {
+    title: defaultContractDefinition?.title ?? "",
+    description: removeEOL(defaultContractDefinition?.description) ?? "",
+    body: removeEOL(defaultContractDefinition?.body) ?? "",
+    appendix: removeEOL(defaultContractDefinition?.appendix) ?? "",
+    name: defaultContractDefinition?.name ?? "",
+    language: defaultContractDefinition?.language ?? "fr-fr",
   };
 
   const methods = useForm({
-    resolver: yupResolver(RegisterSchema),
-    defaultValues: getDefaultValues(),
+    resolver: yupResolver(FORM_VALIDATION_SCHEMA),
+    defaultValues,
   });
 
   const updateFormError = (
@@ -113,7 +116,7 @@ export function ContractDefinitionForm({
     genericUpdateFormError(errors, methods.setError);
   };
 
-  const onSubmit = (values: DTOContractDefinition) => {
+  const onSubmit = (values: ContractDefinitionFormValues) => {
     if (contractDefinition) {
       contractDefinitionQuery.methods.update(
         { id: contractDefinition.id, ...values },
@@ -167,6 +170,9 @@ export function ContractDefinitionForm({
             </Grid>
             <Grid size={12}>
               <RHFContractDefinitionLanguage name="language" />
+            </Grid>
+            <Grid size={12}>
+              <RHFContractDefinitionName name="name" />
             </Grid>
             <Grid size={12}>
               <RHFTextField

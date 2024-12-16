@@ -57,6 +57,16 @@ test.describe("Contract definition form", () => {
     await expect(page.getByRole("option", { name: "English" })).toHaveCount(1);
     await expect(page.getByRole("option", { name: "French" })).toHaveCount(1);
     await page.getByRole("option", { name: "French" }).click();
+    await page.getByTestId("contract-definition-template-name-input").click();
+    await expect(
+      page.getByRole("option", { name: "Contract Definition Default" }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("option", { name: "Contract Definition Unicamp" }),
+    ).toHaveCount(1);
+    await page
+      .getByRole("option", { name: "Contract Definition Default" })
+      .click();
     await expect(page.getByLabel("Description")).toHaveCount(1);
     await expect(page.getByRole("heading", { name: "Body" })).toBeVisible();
     await expect(
@@ -75,6 +85,10 @@ test.describe("Contract definition form", () => {
     await page.getByLabel("Title", { exact: true }).fill("Contract title");
     await page.getByLabel("Language").click();
     await page.getByRole("option", { name: "English" }).click();
+    await page.getByLabel("Template name").click();
+    await page
+      .getByRole("option", { name: "Contract Definition Default" })
+      .click();
     await page.getByLabel("Description").click();
     await page.getByLabel("Description").fill("Contract description");
     const MdEditorBody = page
@@ -115,6 +129,10 @@ test.describe("Contract definition form", () => {
     );
     await expectHaveClasses(
       page.getByText("description is a required field"),
+      "Mui-error",
+    );
+    await expectHaveClasses(
+      page.getByText("name is a required field"),
       "Mui-error",
     );
     await expectHaveClasses(
@@ -181,7 +199,10 @@ test.describe("Contract definition form", () => {
       contractDefinition.language,
     );
     await expect(page.getByLabel("Description", { exact: true })).toHaveValue(
-      contractDefinition.description ?? "",
+      contractDefinition.description,
+    );
+    await expect(page.locator("[name='name']")).toHaveValue(
+      contractDefinition.name,
     );
 
     await expect(

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { mockPlaywrightCrud } from "../useResourceHandler";
+import { CONTRACT_DEFINITION_OPTIONS_REQUEST_RESULT } from "../mocks/contract-definitions/contract-definition-mocks";
 import {
   getProductScenarioStore,
   mockTargetCourses,
@@ -193,6 +194,7 @@ test.describe("Product form", () => {
       data: store.contractsDefinitions,
       routeUrl: "http://localhost:8071/api/v1.0/admin/contract-definitions/",
       page,
+      optionsResult: CONTRACT_DEFINITION_OPTIONS_REQUEST_RESULT,
       createCallback: (payload) => {
         const contract: ContractDefinition = {
           ...payload,
@@ -217,6 +219,10 @@ test.describe("Product form", () => {
     await page
       .getByLabel("Description", { exact: true })
       .fill("Test contract desc");
+    await page.getByLabel("Template name", { exact: true }).click();
+    await page
+      .getByRole("option", { name: "Contract Definition Default" })
+      .click();
     const MdEditorBody = page
       .getByLabel("Add a contract definition")
       .getByTestId("md-editor-body")

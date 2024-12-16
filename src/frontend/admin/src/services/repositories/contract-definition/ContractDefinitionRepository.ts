@@ -29,6 +29,7 @@ interface Repository
     DTOContractDefinition
   > {
   getAllLanguages: () => Promise<SelectOption[]>;
+  getAllTemplates: () => Promise<SelectOption[]>;
 }
 
 export const ContractDefinitionRepository: Repository = class ContractDefinitionRepository {
@@ -82,6 +83,20 @@ export const ContractDefinitionRepository: Repository = class ContractDefinition
       const checkedResponse = await checkStatus(response);
       const result: { value: string; display_name: string }[] =
         checkedResponse.actions.POST.language.choices;
+      return result.map(({ value, display_name: label }) => ({
+        value,
+        label,
+      }));
+    });
+  }
+
+  static getAllTemplates(): Promise<SelectOption[]> {
+    return fetchApi(contractDefinitionRoutes.getAll(), {
+      method: "OPTIONS",
+    }).then(async (response) => {
+      const checkedResponse = await checkStatus(response);
+      const result: { value: string; display_name: string }[] =
+        checkedResponse.actions.POST.name.choices;
       return result.map(({ value, display_name: label }) => ({
         value,
         label,
