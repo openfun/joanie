@@ -8,8 +8,9 @@ from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import factories
-from joanie.core.enums import ORDER_STATE_COMPLETED
+from joanie.core.models import Order
 from joanie.tests import format_date_export
+from joanie.tests.testing_utils import Demo
 
 
 def yes_no(value):
@@ -119,10 +120,10 @@ class OrdersAdminApiExportTestCase(TestCase):
         """
         Admin users should be able to export orders as CSV.
         """
-        orders = factories.OrderGeneratorFactory.create_batch(
-            3, state=ORDER_STATE_COMPLETED
-        )
-        orders.reverse()
+        Demo().generate()
+
+        orders = Order.objects.all()
+
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
