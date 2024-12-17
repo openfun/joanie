@@ -279,8 +279,8 @@ def get_paid_transactions(order):
 
 def get_transaction_references_to_refund(order) -> dict:
     """
-    Returns a dictionary containing transaction references as key and the amount of the installment
-    that are eligible to refund in an order's payment schedule.
+    Returns a dictionary containing transaction references as key that are eligible to be refunded
+    and the concerned installment as value.
     """
     to_refund_items = {}
     for transaction in get_paid_transactions(order):
@@ -288,8 +288,13 @@ def get_transaction_references_to_refund(order) -> dict:
             if (
                 installment["state"] == enums.PAYMENT_STATE_PAID
                 and installment["amount"] == transaction.total
+                and transaction.reference not in to_refund_items
+                and not any(
+                    item.get("id") == installment.get("id")
+                    for item in to_refund_items.values()
+                )
             ):
-                to_refund_items[transaction.reference] = installment["amount"]
+                to_refund_items[transaction.reference] = installment
     return to_refund_items
 
 

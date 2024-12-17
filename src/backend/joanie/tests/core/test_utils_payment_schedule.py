@@ -1209,10 +1209,21 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         order = factories.OrderGeneratorFactory(
             state=ORDER_STATE_PENDING_PAYMENT, product__price=1000
         )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[0]["due_date"] = "2024-10-17"
         order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["due_date"] = "2024-11-17"
         order.payment_schedule[2]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[2]["due_date"] = "2024-12-16"
+        order.save()
+
         transaction_1 = Transaction.objects.get(
-            reference=order.payment_schedule[0]["id"]
+            reference=order.payment_schedule[0]["id"],
+            invoice__order=order,
+            invoice__parent=order.main_invoice,
+            invoice__total=0,
+            invoice__recipient_address__owner=order.owner,
+            total=str(order.payment_schedule[0]["amount"]),
         )
         # Create transaction and invoice for the second and third paid' installments
         transaction_2 = TransactionFactory.create(
@@ -1231,6 +1242,7 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
             invoice__recipient_address__owner=order.owner,
             total=str(order.payment_schedule[2]["amount"]),
         )
+
         first_installment = order.payment_schedule[0]
         second_installment = order.payment_schedule[1]
         third_installment = order.payment_schedule[2]
@@ -1240,9 +1252,9 @@ class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
         self.assertEqual(
             refund_items,
             {
-                str(transaction_1.reference): first_installment["amount"],
-                str(transaction_2.reference): second_installment["amount"],
-                str(transaction_3.reference): third_installment["amount"],
+                str(transaction_1.reference): first_installment,
+                str(transaction_2.reference): second_installment,
+                str(transaction_3.reference): third_installment,
             },
         )
 
