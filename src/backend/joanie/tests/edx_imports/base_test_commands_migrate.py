@@ -1,9 +1,9 @@
 """Base test case for the migrate command."""
 
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from joanie.edx_imports.edx_factories import session
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 
 @override_settings(
@@ -28,7 +28,7 @@ from joanie.tests.base import BaseLogMixinTestCase
     EDX_TIME_ZONE="UTC",
     TIME_ZONE="UTC",
 )
-class MigrateOpenEdxBaseTestCase(TestCase, BaseLogMixinTestCase):
+class MigrateOpenEdxBaseTestCase(LoggingTestCase):
     """Base test case for the migrate command."""
 
     maxDiff = None

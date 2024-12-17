@@ -1,14 +1,14 @@
 """Test suite for Certificate Model"""
 
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from joanie.core import enums, factories
 from joanie.core.models import Certificate, DocumentImage
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 
-class CertificateModelTestCase(TestCase, BaseLogMixinTestCase):
+class CertificateModelTestCase(LoggingTestCase):
     """Certificate model test case."""
 
     maxDiff = None

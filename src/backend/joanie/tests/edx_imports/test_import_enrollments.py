@@ -4,7 +4,7 @@
 from os.path import dirname, join, realpath
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from joanie.core import factories, models
 from joanie.core.enums import ENROLLMENT_STATE_SET
@@ -12,7 +12,7 @@ from joanie.edx_imports import edx_factories
 from joanie.edx_imports.tasks.enrollments import import_enrollments
 from joanie.edx_imports.utils import extract_course_number, make_date_aware
 from joanie.lms_handler.api import detect_lms_from_resource_link
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 LOGO_NAME = "creative_common.jpeg"
 with open(join(dirname(realpath(__file__)), f"images/{LOGO_NAME}"), "rb") as logo:
@@ -40,7 +40,7 @@ with open(join(dirname(realpath(__file__)), f"images/{LOGO_NAME}"), "rb") as log
     EDX_TIME_ZONE="UTC",
     TIME_ZONE="UTC",
 )
-class EdxImportEnrollmentsTestCase(TestCase, BaseLogMixinTestCase):
+class EdxImportEnrollmentsTestCase(LoggingTestCase):
     """Tests for the import_enrollments task."""
 
     maxDiff = None
