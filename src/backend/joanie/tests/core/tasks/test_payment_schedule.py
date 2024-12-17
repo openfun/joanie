@@ -11,7 +11,6 @@ from zoneinfo import ZoneInfo
 
 from django.core import mail
 from django.core.management import call_command
-from django.test import TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 
@@ -39,10 +38,10 @@ from joanie.core.tasks.payment_schedule import (
 from joanie.payment import get_payment_backend
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.factories import InvoiceFactory
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 
-class PaymentScheduleTasksTestCase(TestCase, BaseLogMixinTestCase):
+class PaymentScheduleTasksTestCase(LoggingTestCase):
     """
     Test suite for payment schedule tasks
     """

@@ -3,12 +3,11 @@
 from unittest.mock import patch
 
 from django.core.management import call_command
-from django.test import TestCase
 
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 
-class SynchronizeBrevoSubscriptionsCommandTestCase(TestCase, BaseLogMixinTestCase):
+class SynchronizeBrevoSubscriptionsCommandTestCase(LoggingTestCase):
     """
     Test case for the synchronize_brevo_subscriptions command.
     """
