@@ -1,7 +1,6 @@
 """Test suite of the Dummy Payment backend"""
 
 import json
-import re
 from decimal import Decimal as D
 from logging import Logger
 from unittest import mock
@@ -376,7 +375,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
 
         self.assertEqual(
             str(context.exception),
-            "Field `state` only accept failed, refund, success as value.",
+            "Field `state` only accept failed, success as value.",
         )
 
     @mock.patch.object(BasePaymentBackend, "_do_on_payment_failure")
@@ -516,169 +515,6 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         }
 
         mock_payment_success.assert_called_once_with(order, payment)
-
-    def test_payment_backend_dummy_handle_notification_refund_with_missing_amount(
-        self,
-    ):
-        """
-        When backend receives a refund notification, if amount property is
-        missing from payload, a RefundPaymentFailed exception should be raised.
-        """
-        backend = DummyPaymentBackend()
-
-        # Create a payment
-        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
-        billing_address = order.main_invoice.recipient_address.to_dict()
-        first_installment = order.payment_schedule[0]
-        payment_id = backend.create_payment(order, first_installment, billing_address)[
-            "payment_id"
-        ]
-
-        # Notify that payment succeeded
-        # Notify that payment has been refund
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"),
-            data={"id": payment_id, "type": "refund"},
-            format="json",
-        )
-        request.data = json.loads(request.body.decode("utf-8"))
-
-        with self.assertRaises(RefundPaymentFailed) as context:
-            backend.handle_notification(request)
-
-        self.assertEqual(str(context.exception), "Refund amount is missing.")
-
-    def test_payment_backend_dummy_handle_notification_refund_with_invalid_amount(
-        self,
-    ):
-        """
-        When backend receives a refund notification, if amount property is
-        higher than the related payment transaction amount a
-        RefundPaymentFailed exception should be raised.
-        """
-        backend = DummyPaymentBackend()
-
-        # Create a payment
-        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
-        billing_address = order.main_invoice.recipient_address.to_dict()
-        first_installment = order.payment_schedule[0]
-        first_installment_amount = first_installment.get("amount")
-        payment_id = backend.create_payment(order, first_installment, billing_address)[
-            "payment_id"
-        ]
-        # Notify that payment has been refunded with an amount higher than
-        # product price
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"),
-            data={
-                "id": payment_id,
-                "type": "refund",
-                "amount": int(first_installment_amount * 100) + 1,
-            },
-            format="json",
-        )
-        request.data = json.loads(request.body.decode("utf-8"))
-
-        with self.assertRaises(RefundPaymentFailed) as context:
-            backend.handle_notification(request)
-
-        payment_amount = D(f"{first_installment_amount:.2f}")
-        self.assertEqual(
-            str(context.exception),
-            f"Refund amount is greater than payment amount ({payment_amount})",
-        )
-
-    def test_payment_backend_dummy_handle_notification_refund_unknown_payment(self):
-        """
-        When backend receives a refund notification related to an unknown
-        payment, a RefundPaymentFailed should be raised.
-        """
-        backend = DummyPaymentBackend()
-        request_factory = APIRequestFactory()
-
-        # Create a payment
-        order = OrderGeneratorFactory(state=ORDER_STATE_PENDING)
-        billing_address = order.main_invoice.recipient_address.to_dict()
-        first_installment = order.payment_schedule[0]
-        payment_id = backend.create_payment(order, first_installment, billing_address)[
-            "payment_id"
-        ]
-
-        # Notify that payment has been refunded
-        request = request_factory.post(
-            reverse("payment_webhook"),
-            data={
-                "id": payment_id,
-                "type": "refund",
-                "amount": int(first_installment.get("amount") * 100),
-            },
-            format="json",
-        )
-        request.data = json.loads(request.body.decode("utf-8"))
-
-        with self.assertRaises(RefundPaymentFailed) as context:
-            backend.handle_notification(request)
-
-        self.assertEqual(
-            str(context.exception), f"Payment {payment_id} does not exist."
-        )
-
-    @mock.patch.object(BasePaymentBackend, "_do_on_refund")
-    def test_payment_backend_dummy_handle_notification_refund(self, mock_refund):
-        """
-        When backend receives a refund notification, it should trigger the
-        generic method _do_on_refund.
-        """
-        backend = DummyPaymentBackend()
-        request_factory = APIRequestFactory()
-
-        # Create a payment
-        order = OrderGeneratorFactory(
-            state=ORDER_STATE_PENDING,
-            # This price causes rounding issues if Money is not used
-            product__price=D("902.80"),
-        )
-        first_installment = order.payment_schedule[0]
-        payment_id = backend.create_payment(
-            order, first_installment, order.main_invoice.recipient_address
-        )["payment_id"]
-
-        # Notify that payment has been paid
-        request = request_factory.post(
-            reverse("payment_webhook"),
-            data={
-                "id": payment_id,
-                "type": "payment",
-                "state": "success",
-                "installment_id": first_installment["id"],
-            },
-            format="json",
-        )
-        request.data = json.loads(request.body.decode("utf-8"))
-        backend.handle_notification(request)
-
-        # Notify that payment has been refunded
-        request = request_factory.post(
-            reverse("payment_webhook"),
-            data={
-                "id": payment_id,
-                "type": "refund",
-                "amount": first_installment["amount"].sub_units,
-                "installment_id": first_installment["id"],
-            },
-            format="json",
-        )
-        request.data = json.loads(request.body.decode("utf-8"))
-        backend.handle_notification(request)
-
-        mock_refund.assert_called_once()
-        args = mock_refund.call_args.kwargs
-
-        self.assertEqual(len(args), 4)
-        self.assertEqual(float(args["amount"]), float(first_installment["amount"]))
-        self.assertEqual(args["invoice"], order.main_invoice)
-        self.assertEqual(args["installment_id"], str(first_installment["id"]))
-        self.assertIsNotNone(re.fullmatch(r"ref_\d{10}", args["refund_reference"]))
 
     def test_payment_backend_dummy_abort_payment_with_unknown_payment_id(self):
         """
@@ -841,36 +677,13 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         refund_response = backend.cancel_or_refund(
             amount=order.payment_schedule[0]["amount"],
             reference=transaction.reference,
+            installment_reference=str(order.payment_schedule[0]["id"]),
         )
 
         # The installment must remain 'paid' until the handle_notification switches the
         # state of the installment to 'refunded'
         order.refresh_from_db()
-        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
-        self.assertEqual(
-            refund_response,
-            {
-                "id": refund_response["id"],
-                "type": "refund",
-                "state": "success",
-            },
-        )
-
-        # Notify that payment has been refunded
-        request = request_factory.post(
-            reverse("payment_webhook"),
-            data={
-                "id": payment_id,
-                "type": "refund",
-                "amount": order.payment_schedule[0]["amount"].sub_units,
-                "installment_id": order.payment_schedule[0]["id"],
-            },
-            format="json",
-        )
-        request.data = json.loads(request.body.decode("utf-8"))
-        backend.handle_notification(request)
-
-        order.refresh_from_db()
+        self.assertEqual(refund_response, True)
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
         # When the only paid installment is refunded, then, the order's state should be refunded.
         self.assertEqual(order.state, ORDER_STATE_REFUNDED)
@@ -889,6 +702,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             backend.cancel_or_refund(
                 amount=order.payment_schedule[0]["amount"],
                 reference="fake_transaction_reference_id",
+                installment_reference=order.payment_schedule[0]["id"],
             )
 
         self.assertEqual(
@@ -932,6 +746,7 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             backend.cancel_or_refund(
                 amount=D("20.00"),
                 reference=transaction.reference,
+                installment_reference=str(order.payment_schedule[0]["id"]),
             )
 
         self.assertEqual(
