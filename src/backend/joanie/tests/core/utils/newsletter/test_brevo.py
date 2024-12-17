@@ -6,13 +6,13 @@ Brevo API client test module.
 from urllib.parse import quote_plus
 
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 import responses
 
 from joanie.core.factories import UserFactory
 from joanie.core.utils.newsletter.brevo import Brevo
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 BREVO_CONTACTS_LIST = {
     "contacts": [
@@ -68,7 +68,7 @@ BREVO_CONTACTS_LIST = {
 @override_settings(
     BREVO_API_KEY="api-key", BREVO_COMMERCIAL_NEWSLETTER_LIST_ID="list-id"
 )
-class BrevoTestCase(TestCase, BaseLogMixinTestCase):
+class BrevoTestCase(LoggingTestCase):
     """
     Brevo API client test case.
     """

@@ -11,7 +11,7 @@ from unittest import mock
 from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
@@ -25,10 +25,10 @@ from joanie.payment.factories import (
     InvoiceFactory,
 )
 from joanie.signature.backends import get_signature_backend
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 
-class OrderModelsTestCase(TestCase, BaseLogMixinTestCase):
+class OrderModelsTestCase(LoggingTestCase):
     """Test suite for the Order model."""
 
     maxDiff = None

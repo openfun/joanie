@@ -45,7 +45,7 @@ from joanie.payment.factories import (
     TransactionFactory,
 )
 from joanie.payment.models import CreditCard, Transaction
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
@@ -53,7 +53,7 @@ from joanie.tests.payment.base_payment import BasePaymentTestCase
     JOANIE_CATALOG_NAME="Test Catalog",
     JOANIE_CATALOG_BASE_URL="https://richie.education",
 )
-class LyraBackendTestCase(BasePaymentTestCase, BaseLogMixinTestCase):
+class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
     """Test case of the Lyra backend"""
 
     def setUp(self):
