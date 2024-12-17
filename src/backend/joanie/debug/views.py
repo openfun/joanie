@@ -10,7 +10,7 @@ from logging import getLogger
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
-from django.utils import translation
+from django.utils import timezone, translation
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
@@ -30,16 +30,25 @@ from joanie.core.enums import (
     UNICAMP_DEGREE,
 )
 from joanie.core.factories import (
+    ContractDefinitionFactory,
+    ContractFactory,
+    CourseRunFactory,
+    OrderFactory,
     OrderGeneratorFactory,
     ProductFactory,
+    ProductTargetCourseRelationFactory,
     UserFactory,
 )
-from joanie.core.models import Certificate, Contract
+from joanie.core.models import Certificate, Contract, CourseState
 from joanie.core.utils import contract_definition, issuers
 from joanie.core.utils.sentry import decrypt_data
 from joanie.payment import get_payment_backend
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
-from joanie.payment.models import CreditCard, Invoice
+from joanie.payment.factories import (
+    BillingAddressDictFactory,
+    CreditCardFactory,
+)
+from joanie.payment.models import Invoice
 
 logger = getLogger(__name__)
 LOGO_FALLBACK = (
@@ -517,11 +526,28 @@ class DebugPaymentTemplateView(TemplateView):
         product.set_current_language("fr-fr")
         product.title = "Test produit"
         product.save()
-        order = OrderGeneratorFactory(
-            owner=owner, product=product, state=ORDER_STATE_PENDING_PAYMENT
+        order = OrderFactory(owner=owner, product=product)
+        ContractFactory(
+            order=order,
+            definition=ContractDefinitionFactory(),
+            organization_signed_on=timezone.now(),
+            student_signed_on=timezone.now(),
+            signature_backend_reference="wfl_demo_dev_experience",
         )
+        CourseRunFactory(
+            course=order.course,
+            is_gradable=True,
+            state=CourseState.ONGOING_OPEN,
+            end=timezone.now() + datetime.timedelta(days=200),
+        )
+        ProductTargetCourseRelationFactory(
+            product=order.product,
+            course=order.course,
+            is_graded=True,
+        )
+        credit_card = CreditCardFactory(owner=owner)
+        order.init_flow(billing_address=BillingAddressDictFactory())
         billing_address = order.main_invoice.recipient_address
-        credit_card = CreditCard.objects.filter(owner=owner, is_main=True).first()
         one_click = "one-click" in self.request.GET
         tokenize_card = "tokenize-card" in self.request.GET
         zero_click = "zero-click" in self.request.GET
