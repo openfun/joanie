@@ -19,11 +19,9 @@ DUMMY_PAYMENT_BACKEND_EVENT_TYPE_PAYMENT = "payment"
 DUMMY_PAYMENT_BACKEND_EVENT_TYPE_REFUND = "refund"
 
 DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_FAILED = "failed"
-DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_REFUND = "refund"
 DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_SUCCESS = "success"
 DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_CHOICES = (
     DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_FAILED,
-    DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_REFUND,
     DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_SUCCESS,
 )
 
@@ -108,11 +106,12 @@ class DummyPaymentBackend(BasePaymentBackend):
                 f"Payment {resource['id']} does not exist."
             ) from error
 
+        installment_id = resource.get("metadata").get("installment_id")
         self._do_on_refund(
-            amount=D(f"{amount / 100:.2f}"),
+            amount=D(f"{amount:.2f}"),
             invoice=payment.invoice.order.main_invoice,
-            refund_reference=f"ref_{timezone.now().timestamp():.0f}",
-            installment_id=resource.get("metadata").get("installment_id"),
+            refund_reference=f"ref_{installment_id[:4]}_{timezone.now().timestamp():.0f}",
+            installment_id=installment_id,
         )
 
     @classmethod
@@ -248,13 +247,6 @@ class DummyPaymentBackend(BasePaymentBackend):
                 "type": "payment",
                 "state": "success" | "failed" # Allow to test both use cases
             }
-
-        > Request body for a refund notification:
-            {
-                "id": <PAYMENT_ID> returned by create_payment method
-                "type": "refund",
-                "amount": 2000 - Refund amount is an integer (e.g: 2000 = 20.00)
-            }
         """
         event_type = request.data.get("type")
         payment_id = request.data.get("id")
@@ -286,8 +278,6 @@ class DummyPaymentBackend(BasePaymentBackend):
 
         if event_type == DUMMY_PAYMENT_BACKEND_EVENT_TYPE_PAYMENT:
             self._treat_payment(resource, request.data)
-        elif event_type == DUMMY_PAYMENT_BACKEND_EVENT_TYPE_REFUND:
-            self._treat_refund(resource, request.data.get("amount"))
 
     def delete_credit_card(self, credit_card):
         """
@@ -318,7 +308,7 @@ class DummyPaymentBackend(BasePaymentBackend):
             "card_token": f"card_{user.id}",
         }
 
-    def cancel_or_refund(self, amount, reference, installment_reference=None):
+    def cancel_or_refund(self, amount, reference: str, installment_reference: str):
         """
         Dummy method to refund an installment by taking the transaction reference (`payment_id`
         in the cache). This method only treats a refund.
@@ -335,21 +325,6 @@ class DummyPaymentBackend(BasePaymentBackend):
                 f"Resource {reference} amount does not match the amount to refund"
             )
 
-        # Trigger post notification for Dummy usage
-        notification_request = APIRequestFactory().post(
-            reverse("payment_webhook"),
-            data={
-                "id": transaction.reference,
-                "type": "refund",
-                "state": "success",
-            },
-            format="json",
-        )
-        notification_request.data = json.loads(
-            notification_request.body.decode("utf-8")
-        )
-        return {
-            "id": transaction.reference,
-            "type": "refund",
-            "state": "success",
-        }
+        self._treat_refund(resource, amount)
+
+        return True

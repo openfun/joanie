@@ -1,7 +1,6 @@
 """Test suite for the admin orders API refund endpoint."""
 
 import json
-import time
 from http import HTTPStatus
 
 from django.core import mail
@@ -166,12 +165,14 @@ class OrdersAdminApiRefundTestCase(TestCase):
     # pylint: disable=too-many-statements
     def test_api_admin_orders_refund_an_order(self):
         """
-        Authenticated admin users should be able to refund an order when the state is `canceled`.
-        Once the refund is requested, the order's state goes to `refunding` while the payment
-        backend treats the refund of the transaction. When the notification is treated from
-        the payment backend, we set the installment to refunded when it was successful.
-        At the end of the process, since there will only one installment paid and then refund,
-        the order state will be set to `refunded`.
+        Authenticated admin users should be able to refund an order when its state is canceled.
+        Once a refund is requested, the order's state transitions to refunding while the payment
+        backend processes the refund of the transaction. If the refund is successful,
+        the corresponding installment is marked as refunded. At the end of the process,
+        since both paid installments have been refunded, the order state will be updated
+        to refunded. Additionally, an email should be sent to notify the user that their
+        order has been refunded, including the refunded amount, and that the remaining
+        installments in the payment schedule have been canceled.
         """
         backend = DummyPaymentBackend()
         request_factory = APIRequestFactory()
@@ -274,61 +275,8 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         order.refresh_from_db()
         self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
-        # The order state should be set to `refunding`
-        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
 
-        # Prepare the notification that the first installment payment has been refunded
-        refund_request_1 = request_factory.post(
-            reverse("payment_webhook"),
-            data={
-                "id": payment_id_1,
-                "type": "refund",
-                "amount": order.payment_schedule[0]["amount"].sub_units,
-                "installment_id": order.payment_schedule[0]["id"],
-            },
-            format="json",
-        )
-        refund_request_1.data = json.loads(refund_request_1.body.decode("utf-8"))
-        # Get the notification from the payment backend that
-        # the refund of the first installment is successful.
-        backend.handle_notification(refund_request_1)
-
-        order.refresh_from_db()
-        # The first paid installment should now be set to `refunded`
-        self.assertEqual(
-            order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUNDED
-        )
-        self.assertEqual(order.payment_schedule[1]["state"], enums.PAYMENT_STATE_PAID)
-        # The remaining installments should be set to `canceled`
-        self.assertEqual(
-            order.payment_schedule[2]["state"], enums.PAYMENT_STATE_CANCELED
-        )
-        self.assertEqual(
-            order.payment_schedule[3]["state"], enums.PAYMENT_STATE_CANCELED
-        )
-        # The order's state should be set to `refunding`
-        self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
-
-        time.sleep(1)
-        order.refresh_from_db()
-        # Prepare the notification that the second installment payment has been refunded
-        refund_request_2 = request_factory.post(
-            reverse("payment_webhook"),
-            data={
-                "id": payment_id_2,
-                "type": "refund",
-                "amount": order.payment_schedule[1]["amount"].sub_units,
-                "installment_id": order.payment_schedule[1]["id"],
-            },
-            format="json",
-        )
-        refund_request_2.data = json.loads(refund_request_2.body.decode("utf-8"))
-        # Get the notification from the payment backend that
-        # the refund of the second installment is successful.
-        backend.handle_notification(refund_request_2)
-
-        order.refresh_from_db()
-        # The paid installments should now be set to `refunded`
+        # The first and second paid installments should now be set to `refunded`
         self.assertEqual(
             order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUNDED
         )
@@ -342,7 +290,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
         self.assertEqual(
             order.payment_schedule[3]["state"], enums.PAYMENT_STATE_CANCELED
         )
-        # The order's state should finally be set to `refunded`
+        # The order's state should be set to `refunded`
         self.assertEqual(order.state, enums.ORDER_STATE_REFUNDED)
 
         # Only one email should have been sent for the refund of the order
@@ -351,7 +299,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
         self.assertEqual(
             mail.outbox[0].subject,
             f"Test Catalog - {order.product.title}"
-            " - An installment debit has been refunded 30.00 EUR",
+            " - Your order has been refunded for an amount of 50.00 EUR",
         )
 
         text_lines = [
