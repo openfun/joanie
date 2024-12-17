@@ -405,28 +405,6 @@ class LyraBackend(BasePaymentBackend):
             )
 
         amount = f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"
-        # Refund a transaction operation
-        #         if creation_context != "VERIFICATION" and (
-        #             (operation_category == "CANCELLED" and answer["orderStatus"] == "UNPAID")
-        #             or (creation_context == "REFUND" and answer["orderStatus"] == "PAID")
-        #         ):
-        #             transaction = Transaction.objects.get(
-        #                 Q(reference=transaction_id) | Q(reference=parent_transaction_id)
-        #             )
-        #             if not parent_transaction_id:
-        #                 # If `parent_transaction_id` is absent, Lyra will cancel the capture of the
-        #                 # initiated transaction amount.
-        #                 # If `parent_transaction_id` is present, it indicates that the amount
-        #                 # has already been captured, and  Lyra will initiate a new transaction
-        #                 # to refund the amount.
-        #                 transaction_id = f"cancel_{transaction_id}"
-        #
-        #             return self._do_on_refund(
-        #                 amount=D(amount),
-        #                 invoice=transaction.invoice.order.main_invoice,
-        #                 refund_reference=transaction_id,
-        #                 installment_id=installment_id,
-        #             )
 
         if answer["orderStatus"] == "PAID":
             billing_details = answer["customer"]["billingDetails"]
@@ -512,7 +490,9 @@ class LyraBackend(BasePaymentBackend):
         Abort a payment, nothing to do for Lyra
         """
 
-    def cancel_or_refund(self, amount: Money, reference: str):
+    def cancel_or_refund(
+        self, amount: Money, reference: str, installment_reference: str
+    ):
         """
         Cancels or refunds a transaction made on the order's payment schedule.
         The payment provider determines whether the transaction can be canceled or
@@ -539,51 +519,29 @@ class LyraBackend(BasePaymentBackend):
                 "exist at the payment provider."
             )
 
-        # Note : Since Lyra doesn't set the `ipnTargetUrl` into the transaction
-        # he creates during a refund situation, we are forced to handle the refund
-        # response after the call of the api to update our objects. It does not seem possible
-        # to set the notification URL into that specific action
-        raw_amount = response_json.get("answer").get("amount", None)
-        amount = f"{raw_amount / 100:.2f}"
-        parent_transaction_id = (
-            response_json.get("answer", {})
-            .get("transactionDetails", {})
-            .get("parentTransactionUuid", None)
+        # Gather useful data from response
+        answer = response_json.get("answer", {})
+        amount = f"{answer['amount'] / 100:.2f}"
+        operation_category = answer.get("detailedStatus", None)
+        parent_transaction_id = answer.get("transactionDetails", {}).get(
+            "parentTransactionUuid", None
         )
-        transaction_id = response_json.get("answer", {}).get("uuid", {})
+        transaction_id = answer.get("uuid", None)
 
-        # Possible values `operation_detail`: 'AUTHORISED' | `CANCELLED`
-        operation_detail = response_json.get("answer", {}).get("detailedStatus")
-        # Possible values `previous_transaction_status` :  'PAID' | 'UNPAID
-        previous_transaction_status = response_json.get("status")
+        if operation_category == "AUTHORISED" and parent_transaction_id:
+            refund_reference = answer.get("uuid", None)
+        else:  # Cancel operation
+            refund_reference = f"cancel_{transaction_id}"
 
-        installment_id = (
-            response_json.get("answer", {}).get("metadata", {}).get("installment_id")
-        )
-
-        # If it's canceled, it can use the transaction_id because it exists in our database,
-        # else we should use the `parent_transaction_id` because it's a new transaction created
-        # by the payment provider for the value of the variable `transaction_id`
         transaction = Transaction.objects.get(
             Q(reference=transaction_id) | Q(reference=parent_transaction_id)
         )
 
-        if not parent_transaction_id:
-            # If `parent_transaction_id` is absent, Lyra will cancel the capture of the
-            # initiated transaction amount.
-            # If `parent_transaction_id` is present, it indicates that the amount
-            # has already been captured, and  Lyra will initiate a new transaction
-            # to refund the amount.
-            transaction_id = f"cancel_{transaction_id}"
-
         self._do_on_refund(
             amount=D(amount),
             invoice=transaction.invoice.order.main_invoice,
-            refund_reference=transaction_id,
-            installment_id=installment_id,
+            refund_reference=refund_reference,
+            installment_id=installment_reference,
         )
 
-        # Note : It could be nice to not update with the response, and implement the
-        # GetStatus endpoint to update our objects. We could make a task that runs every
-        # night just after the task that debits the accounts.
-        return response_json
+        return True

@@ -77,7 +77,7 @@ class TestBasePaymentBackend(BasePaymentBackend):
     def tokenize_card(self, order=None, billing_address=None, user=None):
         pass
 
-    def cancel_or_refund(self, amount, reference):
+    def cancel_or_refund(self, amount, reference, installment_reference):
         pass
 
 
@@ -204,7 +204,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend = BasePaymentBackend()
 
         with self.assertRaises(NotImplementedError) as context:
-            backend.cancel_or_refund(None, None)
+            backend.cancel_or_refund(None, None, None)
 
         self.assertEqual(
             str(context.exception),

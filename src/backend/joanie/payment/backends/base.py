@@ -311,7 +311,9 @@ class BasePaymentBackend:
             "subclasses of BasePaymentBackend must provide a tokenize_card() method."
         )
 
-    def cancel_or_refund(self, amount: Money, reference: str):
+    def cancel_or_refund(
+        self, amount: Money, reference: str, installment_reference: str
+    ):
         """
         Method called to cancel or refund installments from an order payment schedule.
         """
