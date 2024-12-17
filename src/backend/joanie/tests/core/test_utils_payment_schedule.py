@@ -12,7 +12,6 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core import mail
-from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -32,7 +31,7 @@ from joanie.core.exceptions import InvalidConversionError
 from joanie.core.utils import payment_schedule
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
 from joanie.payment.models import Invoice, Transaction
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 # pylint: disable=protected-access, too-many-public-methods, too-many-lines
 
@@ -47,7 +46,7 @@ from joanie.tests.base import BaseLogMixinTestCase
     DEFAULT_CURRENCY="EUR",
     JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS=2,
 )
-class PaymentScheduleUtilsTestCase(TestCase, BaseLogMixinTestCase):
+class PaymentScheduleUtilsTestCase(LoggingTestCase):
     """
     Test suite for payment schedule util
     """
