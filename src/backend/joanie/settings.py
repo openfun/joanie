@@ -715,11 +715,11 @@ class Development(Base):
             "loggers": {
                 "joanie": {
                     "handlers": ["console"],
-                    "level": "DEBUG",
+                    "level": "WARNING",
                 },
                 "request.summary": {
                     "handlers": ["console"],
-                    "level": "DEBUG",
+                    "level": "WARNING",
                 },
             },
         }
@@ -786,11 +786,11 @@ class Test(Base):
             "loggers": {
                 "joanie": {
                     "handlers": ["console"],
-                    "level": "DEBUG",
+                    "level": "WARNING",
                 },
                 "request.summary": {
                     "handlers": ["console"],
-                    "level": "DEBUG",
+                    "level": "WARNING",
                 },
             },
         }

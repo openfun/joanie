@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import TestCase
 
 from joanie.core.factories import UserFactory
 from joanie.core.models import User
@@ -12,10 +11,10 @@ from joanie.core.utils.newsletter.subscription import (
     set_commercial_newsletter_subscription,
     synchronize_brevo_subscriptions,
 )
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 
-class UtilsNewsletterSubscriptionTestCase(TestCase, BaseLogMixinTestCase):
+class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
     """
     Test suite for newsletter subscription utilities.
     """

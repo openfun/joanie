@@ -10,7 +10,6 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -32,7 +31,7 @@ from joanie.core.enums import (
 )
 from joanie.core.models import CourseState, Order
 from joanie.core.utils import payment_schedule
-from joanie.tests.base import ActivityLogMixingTestCase, BaseLogMixinTestCase
+from joanie.tests.base import ActivityLogMixingTestCase, LoggingTestCase
 
 
 # pylint: disable=too-many-public-methods
@@ -44,7 +43,7 @@ from joanie.tests.base import ActivityLogMixingTestCase, BaseLogMixinTestCase
     },
     DEFAULT_CURRENCY="EUR",
 )
-class OrderModelsTestCase(TestCase, BaseLogMixinTestCase, ActivityLogMixingTestCase):
+class OrderModelsTestCase(LoggingTestCase, ActivityLogMixingTestCase):
     """
     Test suite for order payment schedule
     """

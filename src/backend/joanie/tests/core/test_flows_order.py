@@ -10,7 +10,6 @@ from unittest import mock
 
 from django.core import mail
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 from django.test.utils import override_settings
 
 import responses
@@ -28,10 +27,10 @@ from joanie.lms_handler.backends.openedx import (
 )
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 
-class OrderFlowsTestCase(TestCase, BaseLogMixinTestCase):
+class OrderFlowsTestCase(LoggingTestCase):
     """Test suite for the Order flow."""
 
     maxDiff = None
