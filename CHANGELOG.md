@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Prevent to index certificate verification page
+
 ## [2.11.0] - 2024-12-11
 
 ### Added
