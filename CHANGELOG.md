@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.12.0] - 2024-12-18
+
 ### Added
 
 - Add template name field into ContractDefinition edit view
@@ -532,7 +534,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.11.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.12.0...main
+[2.12.0]: https://github.com/openfun/joanie/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/openfun/joanie/compare/v2.10.0...v2.11.0
 [2.10.0]: https://github.com/openfun/joanie/compare/v2.9.2...v2.10.0
 [2.9.2]: https://github.com/openfun/joanie/compare/v2.9.0...v2.9.2

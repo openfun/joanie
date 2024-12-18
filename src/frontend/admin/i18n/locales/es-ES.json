@@ -43,6 +43,10 @@
     "description": "Label for the search input",
     "message": "Search..."
   },
+  "components.presentational.hookForm.RHFChipsField.createResource": {
+    "description": "Button label to create a resource",
+    "message": "Create a resource"
+  },
   "components.presentational.hookForm.RHFDateTimePicker.invalidDate": {
     "description": "Message displayed when a date entered is not a date",
     "message": "Invalid date"
@@ -182,6 +186,10 @@
   "components.templates.contractDefinitions.form.titleLabel": {
     "description": "Label for the title input",
     "message": "Title"
+  },
+  "components.templates.contractDefinitions.inputs.RHFContractDefinitionName.inputLabel": {
+    "description": "Label for the \"name\" input",
+    "message": "Template name"
   },
   "components.templates.contractDefinitions.modals.CreateOrEditContractDefinitionModal.add": {
     "description": "Title for add definition modal",
@@ -1071,6 +1079,34 @@
     "description": "Title for the credential product type",
     "message": "Microcredential"
   },
+  "components.templates.products.form.sections.certification.SkillForm.titleInputLabel": {
+    "description": "Label of the title input",
+    "message": "Title"
+  },
+  "components.templates.products.form.sections.certification.SkillsField.fieldHelperText": {
+    "description": "Helper text for the skills field",
+    "message": "Skills that will appear on the certificate."
+  },
+  "components.templates.products.form.sections.certification.SkillsField.fieldLabel": {
+    "description": "Label of the skills field",
+    "message": "Skills"
+  },
+  "components.templates.products.form.sections.certification.TeacherForm.firstNameInputLabel": {
+    "description": "Label of the first_name input",
+    "message": "First name"
+  },
+  "components.templates.products.form.sections.certification.TeacherForm.lastNameInputLabel": {
+    "description": "Label of the last_name input",
+    "message": "Last name"
+  },
+  "components.templates.products.form.sections.certification.TeachersField.fieldHelperText": {
+    "description": "Helper text for the teachers field",
+    "message": "Teachers that will appear on the certificate."
+  },
+  "components.templates.products.form.sections.certification.TeachersField.fieldLabel": {
+    "description": "Label of the teachers field",
+    "message": "Teachers"
+  },
   "components.templates.products.form.sections.targetCourses.ProductFormTargetCourseRow.isGradedTooltip": {
     "description": "Label for the is graded tooltip",
     "message": "Taken into account for certification"
@@ -1094,6 +1130,22 @@
   "components.templates.products.form.translations.callToAction": {
     "description": "Label for the call to action input",
     "message": "Call to action"
+  },
+  "components.templates.products.form.translations.certificationDetailTitle": {
+    "description": "Subtitle for the certification details section",
+    "message": "Certification details"
+  },
+  "components.templates.products.form.translations.certificationLevelHelper": {
+    "description": "Text helper for the certification level input",
+    "message": "Level of certification as defined by the European Qualifications Framework. The value must be between 1 and 8."
+  },
+  "components.templates.products.form.translations.certificationLevelLabel": {
+    "description": "Label for the certification level input",
+    "message": "Certification level"
+  },
+  "components.templates.products.form.translations.certificationSectionWizardTitle": {
+    "description": "Title for the wizard certification section",
+    "message": "Certification"
   },
   "components.templates.products.form.translations.choiceTargetCourseCourseRunModalAlertContent": {
     "description": "Content for the select course runs selection alert",
@@ -1171,21 +1223,21 @@
     "description": "Label for the price currency input",
     "message": "Price currency"
   },
+  "components.templates.products.form.translations.productCertificationFormInfo": {
+    "description": "Text for the alert info of the certification form",
+    "message": "In this form, you can first select a certificate template then edit all informations related to the certification (skills, teachers, certification level, etc.)."
+  },
   "components.templates.products.form.translations.productRelatedCoursesFormInfo": {
     "description": "Text for the alert info",
     "message": "In this form, you can choose a course for which the product will be accessible, then select all the organizations that have the right to sell this course."
   },
   "components.templates.products.form.translations.productTargetCourseFormInfo": {
-    "description": "Text for the alert info",
+    "description": "Text for the alert info of the target courses form",
     "message": "In this form, you can choose a course to integrate into the product as well as the associated course paths. If you do not select any race runs, they will all be selected by default."
   },
   "components.templates.products.form.translations.productTypeLabel": {
     "description": "Label for the product type input",
     "message": "Type"
-  },
-  "components.templates.products.form.translations.relatedCourseSectionWizardTitle": {
-    "description": "Title for the wizard related courses section",
-    "message": "Related courses"
   },
   "components.templates.products.form.translations.relatedCoursesHelper": {
     "description": "Helper text for the related courses section",
@@ -1906,6 +1958,10 @@
   "translations.common.commonTranslations.copyUrl": {
     "description": "Text for the common copy url label",
     "message": "Copy url"
+  },
+  "translations.common.commonTranslations.create": {
+    "description": "Common create label",
+    "message": "Create"
   },
   "translations.common.commonTranslations.delete": {
     "description": "Common delete label",
