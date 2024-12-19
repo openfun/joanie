@@ -6,7 +6,6 @@ from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest
-from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
@@ -14,7 +13,7 @@ import responses
 
 from joanie.core import factories
 from joanie.signature.backends import get_signature_backend
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 
 @override_settings(
@@ -27,7 +26,7 @@ from joanie.tests.base import BaseLogMixinTestCase
     JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     JOANIE_SIGNATURE_TIMEOUT=3,
 )
-class LexPersonaBackendHandleNotificationTestCase(TestCase, BaseLogMixinTestCase):
+class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
     """Test suite for Lex Persona Signature provider Backend handle_notification."""
 
     @responses.activate

@@ -347,7 +347,6 @@ clean: ## restore repository state as it was freshly cloned
 .PHONY: clean
 
 tunnel: ## Run a proxy through localtunnel
-	@$(MAKE) run
 	@echo
 	npx localtunnel -s $(LOCALTUNNEL_SUBDOMAIN) -h $(LOCALTUNNEL_HOST) --port $(LOCALTUNNEL_PORT) --print-requests
 .PHONY: tunnel

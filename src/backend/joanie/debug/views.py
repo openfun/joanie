@@ -60,7 +60,7 @@ class DebugMailSuccessPayment(TemplateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "👨‍💻Development email preview"
         context["email"] = order.owner.email
-        context["fullname"] = order.owner.get_full_name() or order.owner.username
+        context["fullname"] = order.owner.name
         context["product"] = order.product
         context["site"] = {
             "name": settings.JOANIE_CATALOG_NAME,
@@ -122,7 +122,7 @@ class DebugMailInstallmentPayment(TemplateView):
                 targeted_installment_index=order.get_installment_index(
                     state=PAYMENT_STATE_PAID
                 ),
-                fullname=order.owner.get_full_name() or order.owner.username,
+                fullname=order.owner.name,
                 email=order.owner.email,
                 dashboard_order_link=settings.JOANIE_DASHBOARD_ORDER_LINK,
                 site={

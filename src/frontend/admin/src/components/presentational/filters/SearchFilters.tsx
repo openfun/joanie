@@ -12,7 +12,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 import TextField from "@mui/material/TextField";
 import { useDebouncedCallback } from "use-debounce";
-import { FilterList } from "@mui/icons-material";
+import { FileDownload, FilterList } from "@mui/icons-material";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
@@ -31,6 +31,11 @@ const messages = defineMessages({
     id: "components.presentational.filters.searchFilters.filtersLabelButton",
     defaultMessage: "Filters",
     description: "Label for the filters button",
+  },
+  exportLabelButton: {
+    id: "components.presentational.filters.searchFilters.exportLabelButton",
+    defaultMessage: "Export",
+    description: "Label for the export button",
   },
   clear: {
     id: "components.presentational.filters.searchFilters.clear",
@@ -74,6 +79,7 @@ export type SearchFilterProps = MandatorySearchFilterProps & {
     addChip: (chip: FilterChip) => void,
     removeChip: (chipName: string) => void,
   ) => ReactNode;
+  export?: () => void;
 };
 
 export function SearchFilters(props: PropsWithChildren<SearchFilterProps>) {
@@ -179,6 +185,19 @@ export function SearchFilters(props: PropsWithChildren<SearchFilterProps>) {
               onClick={modal.handleOpen}
             >
               <FormattedMessage {...messages.filtersLabelButton} />
+            </Button>
+          )}
+          {props.export && (
+            <Button
+              sx={{ ml: 2 }}
+              startIcon={<FileDownload />}
+              onClick={() => {
+                if (props.export) {
+                  props.export();
+                }
+              }}
+            >
+              <FormattedMessage {...messages.exportLabelButton} />
             </Button>
           )}
         </Box>

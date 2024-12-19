@@ -57,6 +57,13 @@ export const useOrdersMessages = defineMessages({
     description: "Error message shown to the user when no order matches.",
     defaultMessage: "Cannot find the order",
   },
+  errorExport: {
+    id: "hooks.useOrders.errorExport",
+    description:
+      "Error message shown to the user when order export request fails.",
+    defaultMessage:
+      "An error occurred while exporting orders. Please retry later.",
+  },
 });
 
 export type OrderListQuery = ResourcesQuery & {
@@ -96,6 +103,9 @@ const orderProps: UseResourcesProps<Order, OrderQuery> = {
     },
     refund: async (id: string) => {
       return OrderRepository.refund(id);
+    },
+    export: async (filters) => {
+      return OrderRepository.export(filters);
     },
   }),
   session: true,
@@ -145,6 +155,17 @@ export const useOrders = (
           custom.methods.setError(
             error.data?.details ??
               intl.formatMessage(useOrdersMessages.errorUpdate),
+          );
+        },
+      }).mutate,
+      export: mutation({
+        mutationFn: async (data: { currentFilters: OrderListQuery }) => {
+          return OrderRepository.export(data.currentFilters);
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(useOrdersMessages.errorExport),
           );
         },
       }).mutate,
