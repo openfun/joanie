@@ -2,9 +2,11 @@
 # pylint: disable=too-many-lines
 """Admin serializers for Joanie Core app."""
 
+import csv
 from decimal import Decimal as D
 
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
@@ -16,6 +18,7 @@ from joanie.core.serializers.fields import (
     ISO8601DurationField,
     ThumbnailDetailField,
 )
+from joanie.core.utils import Echo
 from joanie.payment import models as payment_models
 
 
@@ -1266,7 +1269,320 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         Return the full name of the order's owner if available,
         otherwise fallback to the username
         """
-        return instance.owner.get_full_name() or instance.owner.username
+        return instance.owner.name
+
+
+class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods
+    """
+    Read only light serializer for Order export.
+    """
+
+    class Meta:
+        model = models.Order
+        fields_labels = [
+            ("id", _("Order reference")),
+            ("product", _("Product")),
+            ("owner_name", _("Owner")),
+            ("owner_email", _("Email")),
+            ("organization", _("Organization")),
+            ("state", _("Order state")),
+            ("created_on", _("Creation date")),
+            ("updated_on", _("Last modification date")),
+            ("product_type", _("Product type")),
+            ("enrollment_course_run_title", _("Enrollment session")),
+            ("enrollment_course_run_state", _("Session status")),
+            ("enrollment_created_on", _("Enrolled on")),
+            ("total", _("Price")),
+            ("total_currency", _("Currency")),
+            ("has_waived_withdrawal_right", _("Waived withdrawal right")),
+            ("certificate", _("Certificate generated for this order")),
+            ("contract", _("Contract")),
+            ("contract_submitted_for_signature_on", _("Submitted for signature")),
+            ("contract_student_signed_on", _("Student signature date")),
+            ("contract_organization_signed_on", _("Organization signature date")),
+            ("main_invoice_type", _("Type")),
+            ("main_invoice_total", _("Total (on invoice)")),
+            ("main_invoice_balance", _("Balance (on invoice)")),
+            ("main_invoice_state", _("Billing state")),
+            ("credit_card_brand", _("Card type")),
+            ("credit_card_last_numbers", _("Last card digits")),
+            ("credit_card_expiration_date", _("Card expiration date")),
+        ]
+        for i in range(1, 5):
+            fields_labels.append(
+                (f"installment_due_date_{i}", _("Installment date %d") % i)
+            )
+            fields_labels.append(
+                (f"installment_amount_{i}", _("Installment amount %d") % i)
+            )
+            fields_labels.append(
+                (f"installment_state_{i}", _("Installment state %d") % i)
+            )
+        fields = [field for field, label in fields_labels]
+        read_only_fields = fields
+
+    @property
+    def headers(self):
+        """
+        Return the headers of the CSV file.
+        """
+        return [label for field, label in self.Meta.fields_labels]
+
+    product = serializers.SlugRelatedField(read_only=True, slug_field="title")
+    owner_name = serializers.SerializerMethodField(read_only=True)
+    owner_email = serializers.SlugRelatedField(
+        read_only=True, slug_field="email", source="owner"
+    )
+    organization = serializers.SlugRelatedField(read_only=True, slug_field="title")
+    created_on = serializers.DateTimeField(format="%d/%m/%Y %H:%M:%S")
+    updated_on = serializers.DateTimeField(format="%d/%m/%Y %H:%M:%S")
+    product_type = serializers.SlugRelatedField(
+        read_only=True, slug_field="type", source="product"
+    )
+    enrollment_course_run_title = serializers.SlugRelatedField(
+        read_only=True, slug_field="course_run__title", source="enrollment"
+    )
+    enrollment_course_run_state = serializers.SlugRelatedField(
+        read_only=True, slug_field="course_run__state", source="enrollment"
+    )
+    enrollment_created_on = serializers.SerializerMethodField(read_only=True)
+    total_currency = serializers.SerializerMethodField(read_only=True)
+    has_waived_withdrawal_right = serializers.SerializerMethodField(read_only=True)
+    certificate = serializers.SerializerMethodField(read_only=True)
+
+    contract = serializers.SlugRelatedField(
+        read_only=True, slug_field="definition__title"
+    )
+    contract_submitted_for_signature_on = serializers.SerializerMethodField(
+        read_only=True
+    )
+    contract_student_signed_on = serializers.SerializerMethodField(read_only=True)
+    contract_organization_signed_on = serializers.SerializerMethodField(read_only=True)
+    main_invoice_type = serializers.SlugRelatedField(
+        read_only=True, slug_field="type", source="main_invoice"
+    )
+    main_invoice_total = serializers.SlugRelatedField(
+        read_only=True, slug_field="total", source="main_invoice"
+    )
+    main_invoice_balance = serializers.SlugRelatedField(
+        read_only=True, slug_field="balance", source="main_invoice"
+    )
+    main_invoice_state = serializers.SlugRelatedField(
+        read_only=True, slug_field="state", source="main_invoice"
+    )
+    credit_card_brand = serializers.SlugRelatedField(
+        read_only=True, slug_field="brand", source="credit_card"
+    )
+    credit_card_last_numbers = serializers.SlugRelatedField(
+        read_only=True, slug_field="last_numbers", source="credit_card"
+    )
+    credit_card_expiration_date = serializers.SerializerMethodField(read_only=True)
+
+    installment_due_date_1 = serializers.SerializerMethodField(read_only=True)
+    installment_amount_1 = serializers.SerializerMethodField(read_only=True)
+    installment_state_1 = serializers.SerializerMethodField(read_only=True)
+    installment_due_date_2 = serializers.SerializerMethodField(read_only=True)
+    installment_amount_2 = serializers.SerializerMethodField(read_only=True)
+    installment_state_2 = serializers.SerializerMethodField(read_only=True)
+    installment_due_date_3 = serializers.SerializerMethodField(read_only=True)
+    installment_amount_3 = serializers.SerializerMethodField(read_only=True)
+    installment_state_3 = serializers.SerializerMethodField(read_only=True)
+    installment_due_date_4 = serializers.SerializerMethodField(read_only=True)
+    installment_amount_4 = serializers.SerializerMethodField(read_only=True)
+    installment_state_4 = serializers.SerializerMethodField(read_only=True)
+
+    def get_owner_name(self, instance) -> str:
+        """
+        Return the full name of the order's owner if available,
+        otherwise fallback to the username
+        """
+        return instance.owner.name
+
+    def get_enrollment_created_on(self, instance) -> str:
+        """
+        Return the creation date of the enrollment if available,
+        otherwise an empty string.
+        """
+        if not instance.enrollment:
+            return ""
+        return instance.enrollment.created_on.strftime("%d/%m/%Y %H:%M:%S")
+
+    def get_total_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
+
+    def get_has_waived_withdrawal_right(self, instance) -> str:
+        """
+        Return "Yes" if the order has waived the withdrawal right, otherwise "No".
+        """
+        return "Yes" if instance.has_waived_withdrawal_right else "No"
+
+    def get_certificate(self, instance) -> str:
+        """
+        Return "Yes" if a certificate has been generated for the order, otherwise "No".
+        """
+        return "Yes" if hasattr(instance, "certificate") else "No"
+
+    def get_contract_date(self, instance, date_field: str) -> str:
+        """
+        Return the date of the specified contract field if available,
+        otherwise an empty string.
+        """
+        try:
+            return getattr(instance.contract, date_field).strftime("%d/%m/%Y %H:%M:%S")
+        except (models.Contract.DoesNotExist, AttributeError):
+            return ""
+
+    def get_contract_submitted_for_signature_on(self, instance) -> str:
+        """
+        Return the date the contract was submitted for signature if available,
+        otherwise an empty string.
+        """
+        return self.get_contract_date(instance, "submitted_for_signature_on")
+
+    def get_contract_student_signed_on(self, instance) -> str:
+        """
+        Return the date the student signed the contract if available,
+        otherwise an empty string.
+        """
+        return self.get_contract_date(instance, "student_signed_on")
+
+    def get_contract_organization_signed_on(self, instance) -> str:
+        """
+        Return the date the organization signed the contract if available,
+        otherwise an empty string.
+        """
+        return self.get_contract_date(instance, "organization_signed_on")
+
+    def get_credit_card_expiration_date(self, instance) -> str:
+        """
+        Return the expiration date of the credit card if available,
+        otherwise an empty string.
+        """
+        if not instance.credit_card:
+            return ""
+        month = instance.credit_card.expiration_month
+        year = instance.credit_card.expiration_year
+        return f"{month}/{year}"
+
+    def get_installment_value(self, instance, index, field) -> str:
+        """
+        Return the value of the specified field for the specified installment if available,
+        otherwise an empty string.
+        """
+        index -= 1
+        try:
+            value = instance.payment_schedule[index][field]
+            if field == "due_date":
+                return value.strftime("%d/%m/%Y %H:%M:%S")
+            return value
+        except (IndexError, KeyError, TypeError):
+            return ""
+
+    def get_installment_due_date_1(self, instance) -> str:
+        """
+        Return the due date of the first installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 1, "due_date")
+
+    def get_installment_amount_1(self, instance) -> str:
+        """
+        Return the amount of the first installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 1, "amount")
+
+    def get_installment_state_1(self, instance) -> str:
+        """
+        Return the state of the first installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 1, "state")
+
+    def get_installment_due_date_2(self, instance) -> str:
+        """
+        Return the due date of the second installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 2, "due_date")
+
+    def get_installment_amount_2(self, instance) -> str:
+        """
+        Return the amount of the second installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 2, "amount")
+
+    def get_installment_state_2(self, instance) -> str:
+        """
+        Return the state of the second installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 2, "state")
+
+    def get_installment_due_date_3(self, instance) -> str:
+        """
+        Return the due date of the third installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 3, "due_date")
+
+    def get_installment_amount_3(self, instance) -> str:
+        """
+        Return the amount of the third installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 3, "amount")
+
+    def get_installment_state_3(self, instance) -> str:
+        """
+        Return the state of the third installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 3, "state")
+
+    def get_installment_due_date_4(self, instance) -> str:
+        """
+        Return the due date of the fourth installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 4, "due_date")
+
+    def get_installment_amount_4(self, instance) -> str:
+        """
+        Return the amount of the fourth installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 4, "amount")
+
+    def get_installment_state_4(self, instance) -> str:
+        """
+        Return the state of the fourth installment if available,
+        otherwise an empty string.
+        """
+        return self.get_installment_value(instance, 4, "state")
+
+
+class AdminOrderListExportSerializer(serializers.ListSerializer):
+    """
+    Serializer for exporting a list of orders to a CSV stream.
+    """
+
+    def update(self, instance, validated_data):
+        """
+        Only there to avoid a NotImplementedError.
+        """
+
+    def csv_stream(self):
+        """
+        Return a CSV stream of the serialized data.
+        """
+        pseudo_buffer = Echo()
+        writer = csv.writer(pseudo_buffer)
+        yield writer.writerow(self.child.headers)
+        for row in self.data:
+            yield writer.writerow(row.values())
 
 
 class AdminEnrollmentLightSerializer(serializers.ModelSerializer):
@@ -1293,7 +1609,7 @@ class AdminEnrollmentLightSerializer(serializers.ModelSerializer):
         Return the full name of the enrollment's user if available,
         otherwise fallback to the username
         """
-        return instance.user.get_full_name() or instance.user.username
+        return instance.user.name
 
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):

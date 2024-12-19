@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.core.files.base import ContentFile
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 import responses
 
@@ -16,7 +16,7 @@ from joanie.core import factories
 from joanie.core.utils import file_checksum
 from joanie.edx_imports import edx_factories
 from joanie.edx_imports.tasks import populate_signatory_certificates_task
-from joanie.tests.base import BaseLogMixinTestCase
+from joanie.tests.base import LoggingTestCase
 
 SIGNATURE_NAME = "creative_common.jpeg"
 SIGNATURE_PATH = join(dirname(realpath(__file__)), f"images/{SIGNATURE_NAME}")
@@ -40,7 +40,7 @@ with open(SIGNATURE_PATH, "rb") as signature_image:
         }
     },
 )
-class PopulateSignatoryCertificatesTestCase(TestCase, BaseLogMixinTestCase):
+class PopulateSignatoryCertificatesTestCase(LoggingTestCase):
     """Test case for the populate_signatory_certificates task"""
 
     def test_populate_signatory_certificates_task_empty_queryset(self):

@@ -125,7 +125,7 @@ class OrdersAdminApiTestCase(TestCase):
                             "text": enrollment.course_run.state.get("text"),
                         },
                     },
-                    "user_name": enrollment.user.username,
+                    "user_name": enrollment.user.get_full_name(),
                     "id": str(enrollment.id),
                     "state": enrollment.state,
                     "is_active": enrollment.is_active,

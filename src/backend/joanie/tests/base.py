@@ -5,8 +5,9 @@ Common base test cases
 from datetime import datetime, timedelta
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import translation
+from django.utils.log import configure_logging
 
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -69,10 +70,26 @@ class BaseAPITestCase(TestCase):
         return generate_jwt_token_from_user(user, expires_at)
 
 
-class BaseLogMixinTestCase:
-    """Mixin for logging testing"""
+class LoggingTestCase(TestCase):
+    """Base test case for logging tests"""
 
     maxDiff = None
+
+    @classmethod
+    def setUpClass(cls):
+        logging_settings = settings.LOGGING
+        logging_settings["loggers"]["joanie"]["level"] = "DEBUG"
+        with override_settings(LOGGING=logging_settings):
+            configure_logging(
+                settings.LOGGING_CONFIG,
+                logging_settings,
+            )
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        configure_logging(settings.LOGGING_CONFIG, settings.LOGGING)
+        super().tearDownClass()
 
     def assertLogsEquals(self, records, expected_records):
         """Check that the logs are as expected
