@@ -7,8 +7,8 @@ from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
-from joanie.core import factories
-from joanie.core.models import Order
+from joanie.core import enums, factories
+from joanie.core.models import Course, Order
 from joanie.tests import format_date_export
 from joanie.tests.testing_utils import Demo
 
@@ -140,6 +140,34 @@ class OrdersAdminApiExportTestCase(TestCase):
         expected_headers = expected_csv_content(orders[0]).keys()
         self.assertEqual(csv_header.split(","), list(expected_headers))
 
+        for order, csv_line in zip(orders, csv_content, strict=False):
+            self.assertEqual(
+                csv_line.split(","), list(expected_csv_content(order).values())
+            )
+
+    def test_api_admin_orders_export_csv_filter(self):
+        """
+        State filter should be applied when exporting orders as CSV.
+        """
+        Demo().generate()
+        course_ids = Course.objects.filter(
+            order__state=enums.ORDER_STATE_COMPLETED
+        ).values_list("id", flat=True)[:2]
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get(
+            f"/api/v1.0/admin/orders/export/?state={enums.ORDER_STATE_TO_SIGN}"
+            f"&course_ids={course_ids[0]},{course_ids[1]}"
+        )
+
+        csv_content = response.getvalue().decode().splitlines()
+        csv_content.pop(0)
+
+        orders = Order.objects.filter(
+            state=enums.ORDER_STATE_COMPLETED, course_id__in=course_ids
+        )
         for order, csv_line in zip(orders, csv_content, strict=False):
             self.assertEqual(
                 csv_line.split(","), list(expected_csv_content(order).values())
