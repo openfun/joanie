@@ -26,7 +26,7 @@ def prepare_context_data(
     or refused.
     """
     context_data = {
-        "fullname": order.owner.get_full_name() or order.owner.username,
+        "fullname": order.owner.name,
         "email": order.owner.email,
         "product_title": product_title,
         "installment_amount": Money(installment_amount),
