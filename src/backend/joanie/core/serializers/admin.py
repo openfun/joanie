@@ -1269,7 +1269,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         Return the full name of the order's owner if available,
         otherwise fallback to the username
         """
-        return instance.owner.get_full_name() or instance.owner.username
+        return instance.owner.name
 
 
 class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods
@@ -1396,7 +1396,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         Return the full name of the order's owner if available,
         otherwise fallback to the username
         """
-        return instance.owner.get_full_name() or instance.owner.username
+        return instance.owner.name
 
     def get_enrollment_created_on(self, instance) -> str:
         """
@@ -1609,7 +1609,7 @@ class AdminEnrollmentLightSerializer(serializers.ModelSerializer):
         Return the full name of the enrollment's user if available,
         otherwise fallback to the username
         """
-        return instance.user.get_full_name() or instance.user.username
+        return instance.user.name
 
 
 class AdminEnrollmentSerializer(serializers.ModelSerializer):
