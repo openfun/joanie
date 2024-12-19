@@ -709,7 +709,7 @@ class OrderViewSet(
         )
         now = timezone.now().strftime("%d-%m-%Y_%H-%M-%S")
         return StreamingHttpResponse(
-            serializer.csv_stream,
+            serializer.csv_stream(),
             content_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="orders_{now}.csv"'},
         )

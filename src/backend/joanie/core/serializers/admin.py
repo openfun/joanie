@@ -1574,7 +1574,6 @@ class AdminOrderListExportSerializer(serializers.ListSerializer):
         Only there to avoid a NotImplementedError.
         """
 
-    @property
     def csv_stream(self):
         """
         Return a CSV stream of the serialized data.
