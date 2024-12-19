@@ -83,7 +83,7 @@ class BasePaymentBackend:
                 template_vars={
                     "title": _("Subscription confirmed!"),
                     "email": order.owner.email,
-                    "fullname": order.owner.get_full_name() or order.owner.username,
+                    "fullname": order.owner.name,
                     "product": order.product,
                     "site": {
                         "name": settings.JOANIE_CATALOG_NAME,

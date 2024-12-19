@@ -67,6 +67,13 @@ class User(BaseModel, auth_models.AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def name(self):
+        """
+        Return the full name of the user if available, otherwise the username.
+        """
+        return self.get_full_name() or self.username
+
     def clean(self):
         """
         Normalize the `phone_number` value for consistency in database.

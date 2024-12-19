@@ -121,7 +121,7 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         contract_description = contract_definition.description
 
     if user:
-        user_name = user.get_full_name() or user.username
+        user_name = user.name
         user_email = user.email
         user_phone_number = user.phone_number
 

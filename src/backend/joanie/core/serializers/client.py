@@ -389,7 +389,7 @@ class NestedOrderSerializer(serializers.ModelSerializer):
         """
         Return the name full name of the order's owner or fallback to username
         """
-        return instance.owner.get_full_name() or instance.owner.username
+        return instance.owner.name
 
 
 class CertificationDefinitionSerializer(serializers.ModelSerializer):
