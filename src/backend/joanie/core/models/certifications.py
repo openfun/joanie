@@ -246,7 +246,7 @@ class Certificate(BaseModel):
             "delivery_stamp": timezone.now(),
             "verification_link": self.verification_uri,
             "student": {
-                "name": self.owner.get_full_name() or self.owner.username,
+                "name": self.owner.name,
             },
             "site": {
                 "name": settings.JOANIE_CATALOG_NAME,
