@@ -14,80 +14,78 @@ from joanie.tests.testing_utils import Demo
 
 
 def yes_no(value):
-    """Return "Oui" if value is True, "Non" otherwise."""
-    return "Oui" if value else "Non"
+    """Return "Yes" if value is True, "No" otherwise."""
+    return "Yes" if value else "No"
 
 
 def expected_csv_content(order):
     """Return the expected CSV content for an order."""
     content = {
-        "Référence de commande": str(order.id),
-        "Produit": order.product.title,
-        "Propriétaire": order.owner.get_full_name(),
+        "Order reference": str(order.id),
+        "Product": order.product.title,
+        "Owner": order.owner.get_full_name(),
         "Email": order.owner.email,
-        "Établissement": order.organization.title,
-        "État de la commande": order.state,
-        "Date de création": format_date_export(order.created_on),
-        "Date de dernière modification": format_date_export(order.updated_on),
-        "Type de produit": order.product.type,
-        "Session d'inscription": "",
-        "Statut de la session": "",
-        "Inscrit le": "",
-        "Prix": str(order.total),
-        "Devise": settings.DEFAULT_CURRENCY,
-        "Renoncement au délai de rétractation": yes_no(
-            order.has_waived_withdrawal_right
-        ),
-        "Certificat généré pour cette commande": yes_no(hasattr(order, "certificate")),
-        "Contrat": "",
-        "Soumis pour signature": "",
-        "Date de signature de l'apprenant": "",
-        "Date de signature de l'établissement": "",
+        "Organization": order.organization.title,
+        "Order state": order.state,
+        "Creation date": format_date_export(order.created_on),
+        "Last modification date": format_date_export(order.updated_on),
+        "Product type": order.product.type,
+        "Enrollment session": "",
+        "Session status": "",
+        "Enrolled on": "",
+        "Price": str(order.total),
+        "Currency": settings.DEFAULT_CURRENCY,
+        "Waived withdrawal right": yes_no(order.has_waived_withdrawal_right),
+        "Certificate generated for this order": yes_no(hasattr(order, "certificate")),
+        "Contract": "",
+        "Submitted for signature": "",
+        "Student signature date": "",
+        "Organization signature date": "",
         "Type": "",
-        "Total (sur la facture)": "",
-        "Solde (sur la facture)": "",
-        "État de facturation": "",
-        "Type de carte": order.credit_card.brand,
-        "Derniers chiffres de la carte bancaire": order.credit_card.last_numbers,
-        "Date d'expiration de la carte bancaire": (
+        "Total (on invoice)": "",
+        "Balance (on invoice)": "",
+        "Billing state": "",
+        "Card type": order.credit_card.brand,
+        "Last card digits": order.credit_card.last_numbers,
+        "Card expiration date": (
             f"{order.credit_card.expiration_month}/{order.credit_card.expiration_year}"
         ),
     }
 
     for i in range(1, 5):
-        content[f"Date de paiement {i}"] = ""
-        content[f"Montant du paiement {i}"] = ""
-        content[f"État du paiement {i}"] = ""
+        content[f"Installment date {i}"] = ""
+        content[f"Installment amount {i}"] = ""
+        content[f"Installment state {i}"] = ""
 
     if order.enrollment:
-        content["Session d'inscription"] = order.enrollment.course_run.title
-        content["Statut de la session"] = str(order.enrollment.course_run.state)
-        content["Inscrit le"] = format_date_export(order.enrollment.created_on)
+        content["Enrollment session"] = order.enrollment.course_run.title
+        content["Session status"] = str(order.enrollment.course_run.state)
+        content["Enrolled on"] = format_date_export(order.enrollment.created_on)
 
     if hasattr(order, "contract"):
-        content["Contrat"] = order.contract.definition.title
-        content["Soumis pour signature"] = format_date_export(
+        content["Contract"] = order.contract.definition.title
+        content["Submitted for signature"] = format_date_export(
             order.contract.submitted_for_signature_on
         )
-        content["Date de signature de l'apprenant"] = format_date_export(
+        content["Student signature date"] = format_date_export(
             order.contract.student_signed_on
         )
-        content["Date de signature de l'établissement"] = format_date_export(
+        content["Organization signature date"] = format_date_export(
             order.contract.organization_signed_on
         )
 
     if order.main_invoice:
         content["Type"] = order.main_invoice.type
-        content["Total (sur la facture)"] = str(order.main_invoice.total)
-        content["Solde (sur la facture)"] = str(order.main_invoice.balance)
-        content["État de facturation"] = order.main_invoice.state
+        content["Total (on invoice)"] = str(order.main_invoice.total)
+        content["Balance (on invoice)"] = str(order.main_invoice.balance)
+        content["Billing state"] = order.main_invoice.state
 
     for i, installment in enumerate(order.payment_schedule, start=1):
-        content[f"Date de paiement {i}"] = format_date_export(
+        content[f"Installment date {i}"] = format_date_export(
             installment.get("due_date")
         )
-        content[f"Montant du paiement {i}"] = str(installment.get("amount"))
-        content[f"État du paiement {i}"] = installment.get("state")
+        content[f"Installment amount {i}"] = str(installment.get("amount"))
+        content[f"Installment state {i}"] = installment.get("state")
 
     return content
 
