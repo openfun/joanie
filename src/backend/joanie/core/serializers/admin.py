@@ -6,6 +6,7 @@ import csv
 from decimal import Decimal as D
 
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
@@ -1279,40 +1280,44 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     class Meta:
         model = models.Order
         fields_labels = [
-            ("id", "Référence de commande"),
-            ("product", "Produit"),
-            ("owner_name", "Propriétaire"),
-            ("owner_email", "Email"),
-            ("organization", "Établissement"),
-            ("state", "État de la commande"),
-            ("created_on", "Date de création"),
-            ("updated_on", "Date de dernière modification"),
-            ("product_type", "Type de produit"),
-            ("enrollment_course_run_title", "Session d'inscription"),
-            ("enrollment_course_run_state", "Statut de la session"),
-            ("enrollment_created_on", "Inscrit le"),
-            ("total", "Prix"),
-            ("total_currency", "Devise"),
-            ("has_waived_withdrawal_right", "Renoncement au délai de rétractation"),
-            ("certificate", "Certificat généré pour cette commande"),
-            ("contract", "Contrat"),
-            ("contract_submitted_for_signature_on", "Soumis pour signature"),
-            ("contract_student_signed_on", "Date de signature de l'apprenant"),
-            ("contract_organization_signed_on", "Date de signature de l'établissement"),
-            ("main_invoice_type", "Type"),
-            ("main_invoice_total", "Total (sur la facture)"),
-            ("main_invoice_balance", "Solde (sur la facture)"),
-            ("main_invoice_state", "État de facturation"),
-            ("credit_card_brand", "Type de carte"),
-            ("credit_card_last_numbers", "Derniers chiffres de la carte bancaire"),
-            ("credit_card_expiration_date", "Date d'expiration de la carte bancaire"),
+            ("id", _("Order reference")),
+            ("product", _("Product")),
+            ("owner_name", _("Owner")),
+            ("owner_email", _("Email")),
+            ("organization", _("Organization")),
+            ("state", _("Order state")),
+            ("created_on", _("Creation date")),
+            ("updated_on", _("Last modification date")),
+            ("product_type", _("Product type")),
+            ("enrollment_course_run_title", _("Enrollment session")),
+            ("enrollment_course_run_state", _("Session status")),
+            ("enrollment_created_on", _("Enrolled on")),
+            ("total", _("Price")),
+            ("total_currency", _("Currency")),
+            ("has_waived_withdrawal_right", _("Waived withdrawal right")),
+            ("certificate", _("Certificate generated for this order")),
+            ("contract", _("Contract")),
+            ("contract_submitted_for_signature_on", _("Submitted for signature")),
+            ("contract_student_signed_on", _("Student signature date")),
+            ("contract_organization_signed_on", _("Organization signature date")),
+            ("main_invoice_type", _("Type")),
+            ("main_invoice_total", _("Total (on invoice)")),
+            ("main_invoice_balance", _("Balance (on invoice)")),
+            ("main_invoice_state", _("Billing state")),
+            ("credit_card_brand", _("Card type")),
+            ("credit_card_last_numbers", _("Last card digits")),
+            ("credit_card_expiration_date", _("Card expiration date")),
         ]
         for i in range(1, 5):
-            fields_labels.append((f"installment_due_date_{i}", f"Date de paiement {i}"))
             fields_labels.append(
-                (f"installment_amount_{i}", f"Montant du paiement {i}")
+                (f"installment_due_date_{i}", _("Installment date %d") % i)
             )
-            fields_labels.append((f"installment_state_{i}", f"État du paiement {i}"))
+            fields_labels.append(
+                (f"installment_amount_{i}", _("Installment amount %d") % i)
+            )
+            fields_labels.append(
+                (f"installment_state_{i}", _("Installment state %d") % i)
+            )
         fields = [field for field, label in fields_labels]
         read_only_fields = fields
 
@@ -1408,15 +1413,15 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
 
     def get_has_waived_withdrawal_right(self, instance) -> str:
         """
-        Return "Oui" if the order has waived the withdrawal right, otherwise "Non".
+        Return "Yes" if the order has waived the withdrawal right, otherwise "No".
         """
-        return "Oui" if instance.has_waived_withdrawal_right else "Non"
+        return "Yes" if instance.has_waived_withdrawal_right else "No"
 
     def get_certificate(self, instance) -> str:
         """
-        Return "Oui" if a certificate has been generated for the order, otherwise "Non".
+        Return "Yes" if a certificate has been generated for the order, otherwise "No".
         """
-        return "Oui" if hasattr(instance, "certificate") else "Non"
+        return "Yes" if hasattr(instance, "certificate") else "No"
 
     def get_contract_date(self, instance, date_field: str) -> str:
         """
