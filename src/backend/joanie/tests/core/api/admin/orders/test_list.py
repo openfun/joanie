@@ -1,14 +1,12 @@
 """Test suite for the admin orders API list endpoint."""
 
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
 from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase
-from django.utils import timezone
-from django.utils.datetime_safe import datetime as django_datetime
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, Order
@@ -25,9 +23,9 @@ class OrdersAdminApiListTestCase(TestCase):
     def generate_orders_created_on(number: int, created_on=None):
         """Generate a batch of orders with a specific creation date."""
         if created_on:
-            created_on = timezone.make_aware(created_on)
+            created_on = datetime.combine(created_on, datetime.min.time(), tzinfo=timezone.utc)
         with mock.patch(
-            "django.utils.timezone.now", return_value=created_on or timezone.now()
+            "django.utils.timezone.now", return_value=created_on or datetime.now()
         ):
             return factories.OrderGeneratorFactory.create_batch(number)
 
@@ -709,7 +707,7 @@ class OrdersAdminApiListTestCase(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        self.generate_orders_created_on(3, django_datetime(2024, 11, 30))
+        self.generate_orders_created_on(3, date(2024, 11, 30))
 
         isoformat_searched_date = date(2024, 12, 1).isoformat()  # YYYY-MM-DD
 
@@ -733,9 +731,9 @@ class OrdersAdminApiListTestCase(TestCase):
         # Create orders that are on runtime of this test
         factories.OrderGeneratorFactory.create_batch(10)
         # Create orders with a date in the past
-        self.generate_orders_created_on(4, django_datetime(2024, 2, 17))
+        self.generate_orders_created_on(4, date(2024, 2, 17))
         # Create orders with the date we will query with
-        orders = self.generate_orders_created_on(3, django_datetime(2024, 11, 30))
+        orders = self.generate_orders_created_on(3, date(2024, 11, 30))
 
         isoformat_searched_date = date(2024, 11, 30).isoformat()  # YYYY-MM-DD
 
@@ -763,9 +761,9 @@ class OrdersAdminApiListTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         # Create orders with a date in the past
-        self.generate_orders_created_on(3, django_datetime(2024, 11, 20))
+        self.generate_orders_created_on(3, date(2024, 11, 20))
         # Create orders with a date not inside the date range
-        self.generate_orders_created_on(2, django_datetime(2024, 12, 8))
+        self.generate_orders_created_on(2, date(2024, 12, 8))
 
         isoformat_after_date = date(2024, 12, 1).isoformat()
         isoformat_before_date = date(2024, 12, 7).isoformat()
@@ -790,12 +788,12 @@ class OrdersAdminApiListTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         # Create orders within the given range dates
-        orders_1 = self.generate_orders_created_on(3, django_datetime(2024, 11, 20))
+        orders_1 = self.generate_orders_created_on(3, date(2024, 11, 20))
         # Create another batch within the given range dates
-        orders_2 = self.generate_orders_created_on(3, django_datetime(2024, 11, 30))
+        orders_2 = self.generate_orders_created_on(3, date(2024, 11, 30))
         # Create orders that will be outside the range of the given dates
-        self.generate_orders_created_on(20, django_datetime(2024, 11, 9))
-        self.generate_orders_created_on(20, django_datetime(2024, 12, 2))
+        self.generate_orders_created_on(20, date(2024, 11, 9))
+        self.generate_orders_created_on(20, date(2024, 12, 2))
 
         isoformat_after_date = date(2024, 11, 10).isoformat()
         isoformat_before_date = date(2024, 12, 1).isoformat()
@@ -830,10 +828,10 @@ class OrdersAdminApiListTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         # Create orders that will be outside the range of the given dates
-        self.generate_orders_created_on(10, django_datetime(2024, 11, 30))
+        self.generate_orders_created_on(10, date(2024, 11, 30))
         # Create orders that are on the exact date and after the creation passed date in filter
-        orders_1 = self.generate_orders_created_on(2, django_datetime(2024, 12, 2))
-        orders_2 = self.generate_orders_created_on(2, django_datetime(2024, 12, 10))
+        orders_1 = self.generate_orders_created_on(2, date(2024, 12, 2))
+        orders_2 = self.generate_orders_created_on(2, date(2024, 12, 10))
 
         isoformat_after_date = date(2024, 12, 2).isoformat()
 
@@ -867,10 +865,10 @@ class OrdersAdminApiListTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         # Create orders that will match the filter before date in the query
-        orders_1 = self.generate_orders_created_on(2, django_datetime(2024, 11, 30))
-        orders_2 = self.generate_orders_created_on(3, django_datetime(2024, 11, 1))
+        orders_1 = self.generate_orders_created_on(2, date(2024, 11, 30))
+        orders_2 = self.generate_orders_created_on(3, date(2024, 11, 1))
         # Create orders that are later than the passed before date
-        self.generate_orders_created_on(7, django_datetime(2024, 12, 2))
+        self.generate_orders_created_on(7, date(2024, 12, 2))
 
         isoformat_before_date = date(2024, 11, 30).isoformat()
 

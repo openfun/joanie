@@ -1,12 +1,10 @@
 """Tests for the Certificate API"""
 
 import uuid
+from datetime import date, datetime, timezone
 from http import HTTPStatus
 from io import BytesIO
 from unittest import mock
-
-from django.utils import timezone
-from django.utils.datetime_safe import datetime as django_datetime
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 from rest_framework.pagination import PageNumberPagination
@@ -33,11 +31,13 @@ class CertificateApiTest(BaseAPITestCase):
         Generate a certificate for a user with a specific `created_on` date and `issued_on` date
         """
         if created_on:
-            created_on = timezone.make_aware(created_on)
+            created_on = datetime.combine(
+                created_on, datetime.now().time(), tzinfo=timezone.utc
+            )
 
         with mock.patch(
             "django.utils.timezone.now",
-            return_value=created_on or timezone.now(),
+            return_value=created_on or datetime.now(),
         ):
             certificate = factories.OrderCertificateFactory(
                 order=factories.OrderFactory(
@@ -46,7 +46,9 @@ class CertificateApiTest(BaseAPITestCase):
             )
 
         if issued_on:
-            issued_on = timezone.make_aware(issued_on)
+            issued_on = datetime.combine(
+                issued_on, datetime.now().time(), tzinfo=timezone.utc
+            )
             # Using the update method to by pass the auto_now and editable is False parameters
             # on the field set on the model.
             Certificate.objects.filter(pk=certificate.id).update(issued_on=issued_on)
@@ -79,16 +81,16 @@ class CertificateApiTest(BaseAPITestCase):
         factories.OrderCertificateFactory.create_batch(5)
         # Create the certificates of the user
         certificate_0 = self.generate_certificate_created_on_and_issued_on(
-            user, django_datetime(2024, 11, 12), django_datetime(2024, 11, 28)
+            user, date(2024, 11, 12), date(2024, 11, 28)
         )
         certificate_1 = self.generate_certificate_created_on_and_issued_on(
-            user, django_datetime(2024, 11, 13), django_datetime(2024, 11, 22)
+            user, date(2024, 11, 13), date(2024, 11, 22)
         )
         certificate_2 = self.generate_certificate_created_on_and_issued_on(
-            user, django_datetime(2024, 11, 15), django_datetime(2024, 11, 24)
+            user, date(2024, 11, 15), date(2024, 11, 24)
         )
         certificate_3 = self.generate_certificate_created_on_and_issued_on(
-            user, django_datetime(2024, 11, 15), django_datetime(2024, 11, 26)
+            user, date(2024, 11, 15), date(2024, 11, 26)
         )
 
         response = self.client.get(
