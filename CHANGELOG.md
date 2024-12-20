@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix order filtering by creation date
+
 ## [2.12.0] - 2024-12-18
 
 ### Added

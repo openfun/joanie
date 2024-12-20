@@ -22,12 +22,20 @@ class OrdersAdminApiListTestCase(TestCase):
     @staticmethod
     def generate_orders_created_on(number: int, created_on=None):
         """Generate a batch of orders with a specific creation date."""
-        if created_on:
-            created_on = datetime.combine(created_on, datetime.min.time(), tzinfo=timezone.utc)
-        with mock.patch(
-            "django.utils.timezone.now", return_value=created_on or datetime.now()
-        ):
-            return factories.OrderGeneratorFactory.create_batch(number)
+        orders = []
+        for _ in range(number):
+            if created_on:
+                created_on = datetime.combine(
+                    created_on, datetime.now().time(), tzinfo=timezone.utc
+                )
+            with mock.patch(
+                "django.utils.timezone.now",
+                return_value=created_on or datetime.now(),
+            ):
+                orders.append(factories.OrderFactory())
+        # orders default orderings are by creation date
+        orders.sort(key=lambda x: x.created_on, reverse=True)
+        return orders
 
     def test_api_admin_orders_request_without_authentication(self):
         """
