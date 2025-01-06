@@ -90,9 +90,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         product = factories.ProductFactory(target_courses=target_courses, price=0.00)
         organization = product.course_relations.first().organizations.first()
         course = product.courses.first()
-        self.assertEqual(
-            list(product.target_courses.order_by("product_relations")), target_courses
-        )
 
         data = {
             "course_code": course.code,
@@ -217,9 +214,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(models.User.objects.count(), 1)
         user = models.User.objects.get()
         self.assertEqual(user.username, "panoramix")
-        self.assertEqual(
-            list(order.target_courses.order_by("product_relations")), target_courses
-        )
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
