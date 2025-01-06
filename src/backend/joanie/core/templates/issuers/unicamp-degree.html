@@ -1,0 +1,118 @@
+{% load i18n %}
+{% load static %}
+{% load extra_tags %}
+
+{% comment %}
+This template is used for FUN use case. It assumes that there is only one organization
+which is the course provider. So the organization is accessed with organizations.0.
+{% endcomment %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+<html>
+<head>
+    {% if debug %}
+    <style>
+      {{ css|safe }}
+    </style>
+    {% endif %}
+</head>
+<body>
+<header class="header">
+    <h1 class="header-title">{% translate "Micro-credential" %}</h1>
+    <div class="header-logos">
+        <img class="logo-unicamp" src="{% static "joanie/images/logo_unicamp.png" %}" />
+        {% if organizations.0.logo %}
+        <img class="logo-organization" src="{{ organizations.0.logo }}"/>
+        {% endif %}
+    </div>
+</header>
+<section class="content page-break">
+    <h2 class="content-object">
+        {% blocktranslate trimmed with student=student.name course=course.name %}
+            <span class="student-name">{{student}}</span><br/>
+            acquired the skills from the professional training<br/>
+            <span class="course-name">{{course}}</span>
+        {% endblocktranslate %}
+    </h2>
+    <p class="content-issueDate fs-italic">
+        {% blocktranslate trimmed with creation_date=creation_date|date:"j F Y" %}
+        Issued on {{ creation_date }} in France.
+        {% endblocktranslate %}
+    </p>
+    <div class="course-details">
+        <h2 class="course-details__organization">{{ organizations.0.name }}</h2>
+        <div class="course-details__persons flex-row">
+            <div class="course-details__teachers flex-column">
+                {% for teacher in teachers %}
+                <div class="teacher">
+                    <p class="fw-600">{{ teacher }}</p>
+                    <p class="fs-italic">{% translate "Educational coordinator " %}</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="course-details__signatory-wrapper">
+                <section class="course-details__signatory">
+                <p class="text-spaced">Issued by</p>
+                <img class="signatory__signature" src="{{ organizations.0.signature }}" />
+                <p class="signatory__identity">
+                    <strong class="signatory__name fw-600">{{ organizations.0.representative|default:"" }}</strong>
+                    <em class="signatory__role fs-italic">{{ organizations.0.representative_profession|default:"" }}</em>
+                    <em class="signatory__organization fs-italic">{{ organizations.0.name }}</em>
+                </p>
+                </section>
+            </div>
+        </div>
+        <div class="course-details__rest flex-row">
+            <div>
+                <div class="certification-level__wrapper">
+                    <div class="certification-level">
+                        <p>{% translate "Certification level" %}</p>
+                        <strong>{{ certification_level }}</strong>
+                    </div>
+                </div>
+                <div class="european-credits">
+                    <img src="{% static "joanie/images/flag_europe.svg" %}"/>
+                    <p>
+                        {% blocktranslate %}
+                        This micro-certification is issued in compliance with the common framework for micro-certifications:
+                        <br /><a href="{{ microcertification_terms_url }}">{{microcertification_terms_url}}</a>
+                        {% endblocktranslate %}
+                    </p>
+                </div>
+            </div>
+            <div class="platform-credits">
+                <p><strong>This training<br/>is hosted by FUN</strong></p>
+                {% if LANGUAGE_CODE == "fr-fr" %}
+                <img src="{% static "joanie/images/logo-fr.svg" %}" />
+                {% else %}
+                <img src="{% static "joanie/images/logo-en.svg" %}" />
+                {% endif %}
+                <p>
+                    {% blocktranslate with link=verification_link %}
+                    To verify the authenticity<br />of this certificate, visit <br /><a href="{{link}}">{{link}}</a>
+                    {% endblocktranslate %}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% if skills %}
+<section class="skills">
+    <header>
+        <h2>
+        {% blocktranslate trimmed %}
+        <strong>Assessed skills</strong> of the professional training:
+        {% endblocktranslate %}
+        </h2>
+        <h3>{{ course.name }}</h3>
+    </header>
+    <ul class="skills-list">
+        {% for skill in skills %}
+        <li>{{ skill }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+</body>
+</html>

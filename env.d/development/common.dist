@@ -62,6 +62,9 @@ JOANIE_CONTRACT_CONTEXT_PROCESSORS =
 # Backoffice
 JOANIE_BACKOFFICE_BASE_URL="http://localhost:8072"
 
+# Certificate
+JOANIE_DEGREE_MICROCERTIFICATION_TERMS_URL=""https://example.com/terms"
+
 # Signature backend
 # JOANIE_SIGNATURE_BACKEND = "joanie.signature.backends.lex_persona.LexPersonaBackend"
 # JOANIE_SIGNATURE_LEXPERSONA_BASE_URL = "https://fake-base-url.test"

@@ -169,6 +169,9 @@ class Certificate(BaseModel):
                     ),
                 },
                 "organizations": [],
+                "skills": [],
+                "teachers": [],
+                "certification_level": None,
             }
 
             for organization in self.course.organizations.all():
@@ -207,6 +210,18 @@ class Certificate(BaseModel):
                     }
                 )
 
+            if self.order:
+                product = self.order.product
+                for skill in product.skills.all():
+                    context[language]["skills"].append(
+                        skill.safe_translation_getter("title", language_code=language)
+                    )
+                for teacher in product.teachers.all():
+                    context[language]["teachers"].append(
+                        f"{teacher.first_name} {teacher.last_name}"
+                    )
+                context[language]["certification_level"] = product.certification_level
+
         self.localized_context = context
 
         if created is False:
@@ -220,7 +235,10 @@ class Certificate(BaseModel):
         Return the verification uri for the certificate if
         this one is a degree certificate.
         """
-        if self.certificate_definition.template != enums.DEGREE:
+        if self.certificate_definition.template not in [
+            enums.DEGREE,
+            enums.UNICAMP_DEGREE,
+        ]:
             return None
 
         # - Retrieve the current language code or a fallback if the language is not available
@@ -245,6 +263,7 @@ class Certificate(BaseModel):
             "creation_date": self.issued_on,
             "delivery_stamp": timezone.now(),
             "verification_link": self.verification_uri,
+            "microcertification_terms_url": settings.JOANIE_DEGREE_MICROCERTIFICATION_TERMS_URL,
             "student": {
                 "name": self.owner.name,
             },

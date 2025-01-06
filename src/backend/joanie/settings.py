@@ -456,6 +456,13 @@ class Base(Configuration):
         environ_name="JOANIE_INSTALLMENT_REMINDER_DAYS_BEFORE",
         environ_prefix=None,
     )
+    # Link to the microcertification terms of service which is used
+    # at a first place in the Unicamp certificate template
+    JOANIE_DEGREE_MICROCERTIFICATION_TERMS_URL = values.Value(
+        None,
+        environ_name="JOANIE_DEGREE_MICROCERTIFICATION_TERMS_URL",
+        environ_prefix=None,
+    )
 
     # CORS
     CORS_ALLOW_CREDENTIALS = True
@@ -773,6 +780,8 @@ class Test(Base):
     JOANIE_DASHBOARD_ORDER_LINK = (
         "http://localhost:8070/dashboard/courses/orders/:orderId/"
     )
+
+    JOANIE_DEGREE_MICROCERTIFICATION_TERMS_URL = "https://example.com/terms"
 
     LOGGING = values.DictValue(
         {

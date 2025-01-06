@@ -22,6 +22,7 @@ from joanie.debug.views import (
     DebugMailSuccessPaymentViewHtml,
     DebugMailSuccessPaymentViewTxt,
     DebugPaymentTemplateView,
+    DebugUnicampDegreeTemplateView,
 )
 
 urlpatterns = [
@@ -49,6 +50,11 @@ urlpatterns = [
         "__debug__/pdf-templates/contract-unicamp",
         DebugContractUnicampTemplateView.as_view(),
         name="debug.contract_unicamp.definition",
+    ),
+    path(
+        "__debug__/pdf-templates/unicamp-degree",
+        DebugUnicampDegreeTemplateView.as_view(),
+        name="debug.certificate_definition.unicamp_degree",
     ),
     path(
         "__debug__/pdf-templates/contract",

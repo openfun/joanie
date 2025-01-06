@@ -63,10 +63,11 @@
                             "title": "Template to generate pdf",
                             "enum": [
                                 "certificate",
-                                "degree"
+                                "degree",
+                                "unicamp-degree"
                             ]
                         },
-                        "description": "* `certificate` - Certificate\n* `degree` - Degree"
+                        "description": "* `certificate` - Certificate\n* `degree` - Degree\n* `unicamp-degree` - Unicamp degree"
                     }
                 ],
                 "tags": [
@@ -8811,10 +8812,11 @@
             "TemplateEnum": {
                 "enum": [
                     "certificate",
-                    "degree"
+                    "degree",
+                    "unicamp-degree"
                 ],
                 "type": "string",
-                "description": "* `certificate` - Certificate\n* `degree` - Degree"
+                "description": "* `certificate` - Certificate\n* `degree` - Degree\n* `unicamp-degree` - Unicamp degree"
             },
             "TypeEnum": {
                 "enum": [
