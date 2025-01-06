@@ -74,6 +74,9 @@ class CertificateModelTestCase(LoggingTestCase):
                             "logo_id": image_id,
                         }
                     ],
+                    "certification_level": None,
+                    "skills": [],
+                    "teachers": [],
                 }
                 for (language_code, _) in languages
             },
@@ -181,7 +184,7 @@ class CertificateModelTestCase(LoggingTestCase):
             certificate = factories.EnrollmentCertificateFactory(
                 certificate_definition__template=template_name
             )
-            if template_name == enums.DEGREE:
+            if template_name in [enums.DEGREE, enums.UNICAMP_DEGREE]:
                 self.assertEqual(
                     certificate.verification_uri,
                     f"https://example.com/en-us/certificates/{certificate.id}",

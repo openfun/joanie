@@ -27,6 +27,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
+    UNICAMP_DEGREE,
 )
 from joanie.core.factories import (
     OrderGeneratorFactory,
@@ -308,9 +309,9 @@ class DebugCertificateTemplateView(DebugPdfTemplateView):
 
     def get_basic_document_context(self):
         """Returns a basic document context to preview the template of a `certificate`."""
-
+        cert_id = "b4e8afcf-077f-4bb3-b0d4-8caad4c7b5c1"
         return {
-            "id": "b4e8afcf-077f-4bb3-b0d4-8caad4c7b5c1",
+            "id": cert_id,
             "creation_date": datetime.datetime(
                 2024, 1, 5, 13, 57, 53, 274266, tzinfo=datetime.timezone.utc
             ),
@@ -320,15 +321,20 @@ class DebugCertificateTemplateView(DebugPdfTemplateView):
             "student": {"name": "John Doe"},
             "organizations": [
                 {
-                    "representative": "Joanie Cunningham",
-                    "signature": SIGNATURE_FALLBACK,
                     "logo": LOGO_FALLBACK,
                     "name": "Organization 0",
+                    "representative": "Joanie Cunningham",
+                    "representative_profession": "Head of Organization 0",
+                    "signature": SIGNATURE_FALLBACK,
                 }
             ],
             "site": {"name": "example.com", "hostname": "https://example.com"},
-            "verification_link": None,
+            "verification_link": f"http://localhost:8071/en-us/certificates/{cert_id}",
+            "microcertification_terms_url": "https://example.com/terms",
             "course": {"name": "Full Stack Pancake, Full Stack Developer"},
+            "teachers": ["Jane Doe", "Jun Doe"],
+            "skills": ["Python", "Django", "JavaScript", "React"],
+            "certification_level": 3,
         }
 
 
@@ -339,15 +345,13 @@ class DebugDegreeTemplateView(DebugCertificateTemplateView):
 
     issuer_document = DEGREE
 
-    def get_basic_document_context(self):
-        """Returns a basic document context to preview the template of a `degree`."""
-        context = super().get_basic_document_context()
-        context.update(
-            {
-                "verification_link": f"http://localhost:8071/en-us/certificates/{context['id']}",
-            }
-        )
-        return context
+
+class DebugUnicampDegreeTemplateView(DebugCertificateTemplateView):
+    """
+    Debug view to check the layout of "degree" template.
+    """
+
+    issuer_document = UNICAMP_DEGREE
 
 
 class DebugContractUnicampTemplateView(DebugPdfTemplateView):

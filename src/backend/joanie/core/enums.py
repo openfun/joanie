@@ -159,10 +159,12 @@ CONTRACT_SIGNATURE_STATE_FILTER_CHOICES = (
 # For certification names choices
 CERTIFICATE = "certificate"
 DEGREE = "degree"
+UNICAMP_DEGREE = "unicamp-degree"
 
 CERTIFICATE_NAME_CHOICES = (
     (CERTIFICATE, _("Certificate")),
     (DEGREE, _("Degree")),
+    (UNICAMP_DEGREE, _("Unicamp degree")),
 )
 
 # For filtering certificates by type
