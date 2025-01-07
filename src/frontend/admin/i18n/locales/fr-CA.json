@@ -27,6 +27,10 @@
     "description": "Label for the clear filters button",
     "message": "Clear"
   },
+  "components.presentational.filters.searchFilters.exportLabelButton": {
+    "description": "Label for the export button",
+    "message": "Export"
+  },
   "components.presentational.filters.searchFilters.filtersLabelButton": {
     "description": "Label for the filters button",
     "message": "Filters"
@@ -1494,6 +1498,10 @@
   "hooks.useOrders.errorDelete": {
     "description": "Error message shown to the user when order deletion request fails.",
     "message": "An error occurred while deleting the order. Please retry later."
+  },
+  "hooks.useOrders.errorExport": {
+    "description": "Error message shown to the user when order export request fails.",
+    "message": "An error occurred while exporting orders. Please retry later."
   },
   "hooks.useOrders.errorGet": {
     "description": "Error message shown to the user when orders fetch request fails.",
