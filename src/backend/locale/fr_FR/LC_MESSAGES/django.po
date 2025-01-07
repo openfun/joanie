@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-18 09:25+0000\n"
-"PO-Revision-Date: 2024-12-18 14:49\n"
+"POT-Creation-Date: 2025-01-07 09:53+0000\n"
+"PO-Revision-Date: 2025-01-07 12:48\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -115,17 +115,18 @@ msgid "Course"
 msgstr "Cours"
 
 #: joanie/core/admin.py:71 joanie/core/models/products.py:143
+#: joanie/core/serializers/admin.py:1284
 #: joanie/core/templates/issuers/invoice.html:78
 msgid "Product"
 msgstr "Produit"
 
 #: joanie/core/admin.py:78 joanie/core/admin.py:85
-#: joanie/core/models/courses.py:241
+#: joanie/core/models/courses.py:241 joanie/core/serializers/admin.py:1287
 msgid "Organization"
 msgstr "Établissement"
 
 #: joanie/core/admin.py:92 joanie/core/models/course_wishes.py:18
-#: joanie/payment/admin.py:26
+#: joanie/core/serializers/admin.py:1285 joanie/payment/admin.py:26
 msgid "Owner"
 msgstr "Propriétaire"
 
@@ -207,12 +208,12 @@ msgstr "Le token ne contient aucun identifiant utilisateur reconnaissable"
 msgid "Credential"
 msgstr "Diplôme"
 
-#: joanie/core/enums.py:34 joanie/core/enums.py:173
+#: joanie/core/enums.py:34 joanie/core/enums.py:175
 #: joanie/core/models/courses.py:1071
 msgid "Enrollment"
 msgstr "Inscription"
 
-#: joanie/core/enums.py:37 joanie/core/enums.py:164
+#: joanie/core/enums.py:37 joanie/core/enums.py:165
 #: joanie/core/models/certifications.py:117
 #: joanie/core/templates/issuers/degree.html:27
 msgid "Certificate"
@@ -238,7 +239,7 @@ msgstr "À signer"
 msgid "Signing"
 msgstr "En cours de signature"
 
-#: joanie/core/enums.py:82 joanie/core/enums.py:209
+#: joanie/core/enums.py:82 joanie/core/enums.py:211
 msgid "Pending"
 msgstr "En attente"
 
@@ -307,71 +308,75 @@ msgstr "Partiellement signé"
 msgid "Signed"
 msgstr "Signé"
 
-#: joanie/core/enums.py:165
+#: joanie/core/enums.py:166
 msgid "Degree"
 msgstr "Diplôme"
 
-#: joanie/core/enums.py:172 joanie/core/models/products.py:564
+#: joanie/core/enums.py:167
+msgid "Unicamp degree"
+msgstr "Diplôme Unicamp"
+
+#: joanie/core/enums.py:174 joanie/core/models/products.py:564
 msgid "Order"
 msgstr "Commande"
 
-#: joanie/core/enums.py:183
+#: joanie/core/enums.py:185
 msgid "Info"
 msgstr "Info"
 
-#: joanie/core/enums.py:184
+#: joanie/core/enums.py:186
 msgid "Success"
 msgstr "Succès"
 
-#: joanie/core/enums.py:185
+#: joanie/core/enums.py:187
 msgid "Warning"
 msgstr "Avertissement"
 
-#: joanie/core/enums.py:186
+#: joanie/core/enums.py:188
 msgid "Error"
 msgstr "Erreur"
 
-#: joanie/core/enums.py:196
+#: joanie/core/enums.py:198
 msgid "Notification"
 msgstr "Notification"
 
-#: joanie/core/enums.py:197
+#: joanie/core/enums.py:199
 msgid "Payment succeeded"
 msgstr "Paiement réussi"
 
-#: joanie/core/enums.py:198
+#: joanie/core/enums.py:200
 msgid "Payment failed"
 msgstr "Échec du paiement"
 
-#: joanie/core/enums.py:199
+#: joanie/core/enums.py:201
 msgid "Payment refunded"
 msgstr "Paiement remboursé"
 
-#: joanie/core/enums.py:210 joanie/payment/enums.py:28
+#: joanie/core/enums.py:212 joanie/payment/enums.py:28
 msgid "Paid"
 msgstr "Payée"
 
-#: joanie/core/enums.py:211
+#: joanie/core/enums.py:213
 msgid "Refused"
 msgstr "Refusé"
 
-#: joanie/core/enums.py:212 joanie/payment/enums.py:30
+#: joanie/core/enums.py:214 joanie/payment/enums.py:30
 msgid "Refunded"
 msgstr "Remboursée"
 
-#: joanie/core/enums.py:213
+#: joanie/core/enums.py:215
 msgid "Canceled"
 msgstr "Annulée"
 
-#: joanie/core/factories.py:1241 joanie/core/utils/contract_definition.py:101
+#: joanie/core/factories.py:1243 joanie/core/utils/contract_definition.py:101
 msgid "<COURSE_START_DATE>"
 msgstr "<DATE_DE_DEBUT_DU_COURS>"
 
-#: joanie/core/factories.py:1246 joanie/core/utils/contract_definition.py:102
+#: joanie/core/factories.py:1248 joanie/core/utils/contract_definition.py:102
 msgid "<COURSE_END_DATE>"
 msgstr "<DATE_DE_FIN_DU_COURS>"
 
-#: joanie/core/factories.py:1253
+#: joanie/core/factories.py:1255
 msgid "<EFFORT_DURATION>"
 msgstr "<EFFORT_DU_COURS>"
 
@@ -451,7 +456,7 @@ msgstr "s'est abonné à la newsletter commerciale"
 msgid "Users"
 msgstr "Utilisateurs"
 
-#: joanie/core/models/accounts.py:154 joanie/core/models/certifications.py:33
+#: joanie/core/models/accounts.py:161 joanie/core/models/certifications.py:33
 #: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:173
 #: joanie/core/models/courses.py:474 joanie/core/models/courses.py:825
 #: joanie/core/models/products.py:81 joanie/core/models/products.py:1375
@@ -459,66 +464,66 @@ msgstr "Utilisateurs"
 msgid "title"
 msgstr "titre"
 
-#: joanie/core/models/accounts.py:155
+#: joanie/core/models/accounts.py:162
 msgid "address"
 msgstr "adresse"
 
-#: joanie/core/models/accounts.py:156
+#: joanie/core/models/accounts.py:163
 msgid "postcode"
 msgstr "code postal"
 
-#: joanie/core/models/accounts.py:157
+#: joanie/core/models/accounts.py:164
 msgid "city"
 msgstr "ville"
 
-#: joanie/core/models/accounts.py:158 joanie/core/models/courses.py:184
+#: joanie/core/models/accounts.py:165 joanie/core/models/courses.py:184
 msgid "country"
 msgstr "pays"
 
-#: joanie/core/models/accounts.py:159 joanie/core/models/products.py:1417
+#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:1417
 msgid "first name"
 msgstr "prénom"
 
-#: joanie/core/models/accounts.py:160 joanie/core/models/products.py:1418
+#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:1418
 msgid "last name"
 msgstr "nom de famille"
 
-#: joanie/core/models/accounts.py:163 joanie/core/models/courses.py:361
+#: joanie/core/models/accounts.py:170 joanie/core/models/courses.py:361
 #: joanie/core/models/courses.py:605 joanie/core/models/products.py:492
 #: joanie/payment/models.py:403
 msgid "owner"
 msgstr "propriétaire"
 
-#: joanie/core/models/accounts.py:171 joanie/core/models/certifications.py:98
+#: joanie/core/models/accounts.py:178 joanie/core/models/certifications.py:98
 #: joanie/core/models/products.py:435
 msgid "organization"
 msgstr "établissement"
 
-#: joanie/core/models/accounts.py:177 joanie/payment/models.py:407
+#: joanie/core/models/accounts.py:184 joanie/payment/models.py:407
 msgid "main"
 msgstr "principal"
 
-#: joanie/core/models/accounts.py:178
+#: joanie/core/models/accounts.py:185
 msgid "reusable"
 msgstr "réutilisable"
 
-#: joanie/core/models/accounts.py:182
+#: joanie/core/models/accounts.py:189
 msgid "Address"
 msgstr "Adresse"
 
-#: joanie/core/models/accounts.py:183
+#: joanie/core/models/accounts.py:190
 msgid "Addresses"
 msgstr "Adresses"
 
-#: joanie/core/models/accounts.py:202
+#: joanie/core/models/accounts.py:209
 msgid "Either owner or organization must be set."
 msgstr "Le propriétaire ou l'établissement doit être défini."
 
-#: joanie/core/models/accounts.py:207
+#: joanie/core/models/accounts.py:214
 msgid "Main address must be reusable."
 msgstr "L'adresse principale doit être réutilisable."
 
-#: joanie/core/models/accounts.py:255
+#: joanie/core/models/accounts.py:262
 msgid "Demote a main address is forbidden"
 msgstr "Rétrograder une adresse principale est interdit"
 
@@ -684,7 +689,7 @@ msgstr "signataire de l'établissement"
 msgid "Date and time the organization signed the contract"
 msgstr "Date et heure de signature du contrat par l'établissement"
 
-#: joanie/core/models/contracts.py:150
+#: joanie/core/models/contracts.py:150 joanie/core/serializers/admin.py:1299
 msgid "Contract"
 msgstr "Contrat"
 
@@ -1209,6 +1214,114 @@ msgstr "Paramètre du site"
 msgid "Site configs"
 msgstr "Paramètres du site"
 
+#: joanie/core/serializers/admin.py:1283
+msgid "Order reference"
+msgstr "Référence de commande"
+
+#: joanie/core/serializers/admin.py:1286
+msgid "Email"
+msgstr "Courriel"
+
+#: joanie/core/serializers/admin.py:1288
+msgid "Order state"
+msgstr "Statut de la commande"
+
+#: joanie/core/serializers/admin.py:1289
+msgid "Creation date"
+msgstr "Date de création"
+
+#: joanie/core/serializers/admin.py:1290
+msgid "Last modification date"
+msgstr "Date de dernière modification"
+
+#: joanie/core/serializers/admin.py:1291
+msgid "Product type"
+msgstr "Type de produit"
+
+#: joanie/core/serializers/admin.py:1292
+msgid "Enrollment session"
+msgstr "Session"
+
+#: joanie/core/serializers/admin.py:1293
+msgid "Session status"
+msgstr "Statut de la session"
+
+#: joanie/core/serializers/admin.py:1294
+msgid "Enrolled on"
+msgstr "Inscrit le"
+
+#: joanie/core/serializers/admin.py:1295
+#: joanie/core/templates/issuers/invoice.html:87
+msgid "Price"
+msgstr "Prix"
+
+#: joanie/core/serializers/admin.py:1296
+msgid "Currency"
+msgstr "Devise"
+
+#: joanie/core/serializers/admin.py:1297
+msgid "Waived withdrawal right"
+msgstr "Droit de rétractation renoncé"
+
+#: joanie/core/serializers/admin.py:1298
+msgid "Certificate generated for this order"
+msgstr "Certificat généré pour cette commande"
+
+#: joanie/core/serializers/admin.py:1300
+msgid "Submitted for signature"
+msgstr "Soumis à signature"
+
+#: joanie/core/serializers/admin.py:1301
+msgid "Student signature date"
+msgstr "Date de signature de l'apprenant"
+
+#: joanie/core/serializers/admin.py:1302
+msgid "Organization signature date"
+msgstr "Date de signature de l'établissement"
+
+#: joanie/core/serializers/admin.py:1303
+msgid "Type"
+msgstr "Type"
+
+#: joanie/core/serializers/admin.py:1304
+msgid "Total (on invoice)"
+msgstr "Total (sur facture)"
+
+#: joanie/core/serializers/admin.py:1305
+msgid "Balance (on invoice)"
+msgstr "Solde (sur facture)"
+
+#: joanie/core/serializers/admin.py:1306
+msgid "Billing state"
+msgstr "État de facturation"
+
+#: joanie/core/serializers/admin.py:1307
+msgid "Card type"
+msgstr "Type de CB"
+
+#: joanie/core/serializers/admin.py:1308
+msgid "Last card digits"
+msgstr "Derniers chiffres de CB"
+
+#: joanie/core/serializers/admin.py:1309
+msgid "Card expiration date"
+msgstr "Date d’expiration de la CB"
+
+#: joanie/core/serializers/admin.py:1313
+#, python-format
+msgid "Installment date %d"
+msgstr "Date d'échéance %d"
+
+#: joanie/core/serializers/admin.py:1316
+#, python-format
+msgid "Installment amount %d"
+msgstr "Montant de l'échéance %d"
+
+#: joanie/core/serializers/admin.py:1319
+#, python-format
+msgid "Installment state %d"
+msgstr "Statut de l'échéance %d"
+
 #: joanie/core/serializers/client.py:156 joanie/core/serializers/client.py:271
 msgid "You are only allowed to set role to {', '.join(can_set_role_to)}"
 msgstr "Vous n'êtes autorisé qu'à définir le rôle à {', '.join(can_set_role_to)}"
@@ -1540,10 +1653,6 @@ msgstr "Référence"
 msgid "Issue date"
 msgstr "Date d'émission"
 
-#: joanie/core/templates/issuers/invoice.html:87
-msgid "Price"
-msgstr "Prix"
-
 #: joanie/core/templates/issuers/invoice.html:96
 msgid "VAT"
 msgstr "TVA"
@@ -1560,6 +1669,52 @@ msgstr "Sous-total"
 #: joanie/core/templates/issuers/invoice.html:134
 msgid "Sales Tax VAT"
 msgstr "TVA"
+
+#: joanie/core/templates/issuers/unicamp-degree.html:22
+msgid "Micro-credential"
+msgstr "Micro-certification"
+
+#: joanie/core/templates/issuers/unicamp-degree.html:32
+#, python-format
+msgid "<span class=\"student-name\">%(student)s</span><br/> acquired the skills from the professional training<br/> <span class=\"course-name\">%(course)s</span>"
+msgstr "<span class=\"student-name\">%(student)s</span><br/> a acquis les compétences de la formation professionnelle<br/> <span class=\"course-name\">%(course)s</span>"
+
+#: joanie/core/templates/issuers/unicamp-degree.html:39
+#, python-format
+msgid "Issued on %(creation_date)s in France."
+msgstr "Délivré le %(creation_date)s en France."
+
+#: joanie/core/templates/issuers/unicamp-degree.html:50
+msgid "Educational coordinator "
+msgstr "Responsable pédagogique "
+
+#: joanie/core/templates/issuers/unicamp-degree.html:70
+msgid "Certification level"
+msgstr "Niveau de certification"
+
+#: joanie/core/templates/issuers/unicamp-degree.html:77
+#, python-format
+msgid "\n"
+"                        This micro-certification is issued in compliance with the common framework for micro-certifications:\n"
+"                        <br /><a href=\"%(microcertification_terms_url)s\">%(microcertification_terms_url)s</a>\n"
+"                        "
+msgstr "\n"
+"                        Cette micro-certiﬁcation est délivrée en conformité avec le cadre commun des micro-certiﬁcations :\n"
+"                        <br /><a href=\"%(microcertification_terms_url)s\">%(microcertification_terms_url)s</a>\n"
+"                        "
+
+#: joanie/core/templates/issuers/unicamp-degree.html:92
+#, python-format
+msgid "\n"
+"                    To verify the authenticity<br />of this certificate, visit <br /><a href=\"%(link)s\">%(link)s</a>\n"
+"                    "
+msgstr "\n"
+"                    Pour vérifier l'authenticité<br />de ce certificat, rendez-vous sur <br /><a href=\"%(link)s\">%(link)s</a>\n"
+"                    "
+
+#: joanie/core/templates/issuers/unicamp-degree.html:104
+msgid "<strong>Assessed skills</strong> of the professional training:"
+msgstr "<strong>Compétences évaluées</strong> de la formation professionnelle :"
 
 #: joanie/core/templates/mail/html/installment_paid.html:187
 #: joanie/core/templates/mail/html/installment_refused.html:187

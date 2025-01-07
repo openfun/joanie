@@ -27,6 +27,10 @@
     "description": "Label for the clear filters button",
     "message": "Supprimer"
   },
+  "components.presentational.filters.searchFilters.exportLabelButton": {
+    "description": "Label for the export button",
+    "message": "Exporter"
+  },
   "components.presentational.filters.searchFilters.filtersLabelButton": {
     "description": "Label for the filters button",
     "message": "Filtres"
@@ -1494,6 +1498,10 @@
   "hooks.useOrders.errorDelete": {
     "description": "Error message shown to the user when order deletion request fails.",
     "message": "Une erreur s'est produite lors de la suppression de la commande. Veuillez réessayer plus tard."
+  },
+  "hooks.useOrders.errorExport": {
+    "description": "Error message shown to the user when order export request fails.",
+    "message": "Une erreur s'est produite durant l'exportation des commandes. Veuillez réessayer plus tard."
   },
   "hooks.useOrders.errorGet": {
     "description": "Error message shown to the user when orders fetch request fails.",
