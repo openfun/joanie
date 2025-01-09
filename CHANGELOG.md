@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `owner` and `is_main` fields on `CreditCard` model are deprecated
+  and been replaced with many-to-many `owners` field instead
+
 ## [2.15.0] - 2025-02-05
 
 ### Changed

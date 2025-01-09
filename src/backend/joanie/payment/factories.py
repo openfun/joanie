@@ -24,11 +24,36 @@ class CreditCardFactory(factory.django.DjangoModelFactory):
     expiration_month = factory.Faker("credit_card_expire", date_format="%m")
     expiration_year = factory.Faker("credit_card_expire", date_format="%Y")
     last_numbers = factory.fuzzy.FuzzyText(length=4, chars=string.digits)
-    owner = factory.SubFactory(UserFactory)
     title = factory.Faker("name")
     token = factory.Sequence(lambda k: f"card_{k:022d}")
     payment_provider = "dummy"
     initial_issuer_transaction_identifier = factory.Faker("uuid4")
+
+    @factory.post_generation
+    def owners(self, create, extracted, **kwargs):
+        """
+        Link owners to the credit card after its creation:
+        - link the list of owners passed in "extracted" if any
+        """
+        if not create or not extracted:
+            return
+
+        if extracted:
+            for owner in extracted:
+                self.add_owner(owner)
+
+
+class CreditCardOwnershipFactory(factory.django.DjangoModelFactory):
+    """A factory to create credit card ownership"""
+
+    class Meta:
+        """Meta"""
+
+        model = models.CreditCardOwnership
+
+    owner = factory.SubFactory(UserFactory)
+    credit_card = factory.SubFactory(CreditCardFactory)
+    is_main = False
 
 
 class InvoiceFactory(factory.django.DjangoModelFactory):
