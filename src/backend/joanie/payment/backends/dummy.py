@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from rest_framework.test import APIRequestFactory
 
-from joanie.core.models import Order
+from joanie.core.models import Order, User
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.models import CreditCard, Transaction
@@ -254,14 +254,15 @@ class DummyPaymentBackend(BasePaymentBackend):
         if event_type == "tokenize_card":
             card_token = request.data["card_token"]
             user_id = request.data["customer"]
-            CreditCard.objects.create(
-                owner_id=user_id,
+            user = User.objects.get(pk=user_id)
+            credit_card, _ = CreditCard.objects.get_or_create(
                 token=card_token,
                 expiration_month=2,
                 expiration_year=30,
                 last_numbers="1234",
                 payment_provider=self.name,
             )
+            credit_card.add_owner(user)
             return
 
         if event_type is None:

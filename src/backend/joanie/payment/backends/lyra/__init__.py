@@ -19,7 +19,7 @@ from joanie.core.enums import PAYMENT_STATE_PAID, PAYMENT_STATE_REFUSED
 from joanie.core.models import Order, User
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.models import CreditCard, Transaction
+from joanie.payment.models import CreditCard, CreditCardOwnership, Invoice, Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -439,16 +439,16 @@ class LyraBackend(BasePaymentBackend):
             # its card, we check if card.id is set paymentMethodSource has another value
             # than TOKEN (e.g: NEW).
             # - User asks to store its card
-            CreditCard.objects.create(
+            credit_card, _ = CreditCard.objects.get_or_create(
                 brand=card_details["effectiveBrand"],
                 expiration_month=card_details["expiryMonth"],
                 expiration_year=card_details["expiryYear"],
                 last_numbers=card_pan[-4:],  # last 4 digits
-                owner=order.owner,
                 token=card_token,
                 initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
                 payment_provider=self.name,
             )
+            credit_card.add_owner(order.owner)
 
         amount = f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"
 
@@ -506,16 +506,16 @@ class LyraBackend(BasePaymentBackend):
             "initialIssuerTransactionIdentifier"
         ]
 
-        CreditCard.objects.create(
+        credit_card, _ = CreditCard.objects.get_or_create(
             brand=card_details["effectiveBrand"],
             expiration_month=card_details["expiryMonth"],
             expiration_year=card_details["expiryYear"],
             last_numbers=card_pan[-4:],  # last 4 digits
-            owner=user,
             token=card_token,
             initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
             payment_provider=self.name,
         )
+        credit_card.add_owner(user)
 
     def delete_credit_card(self, credit_card):
         """Delete a credit card from Lyra"""
