@@ -355,7 +355,7 @@ class CreditCardManager(models.Manager):
         payment_provider = get_payment_backend()
 
         return self.get(
-            pk=pk, owner__username=username, payment_provider=payment_provider.name
+            pk=pk, owners__username=username, payment_provider=payment_provider.name
         )
 
     def get_cards_for_owner(self, username):
@@ -366,7 +366,7 @@ class CreditCardManager(models.Manager):
         payment_provider = get_payment_backend()
 
         return self.filter(
-            owner__username=username, payment_provider=payment_provider.name
+            owners__username=username, payment_provider=payment_provider.name
         )
 
 
@@ -398,11 +398,19 @@ class CreditCard(BaseModel):
     )
     expiration_year = models.PositiveSmallIntegerField(_("expiration year"))
     last_numbers = models.CharField(_("last 4 numbers"), max_length=4)
+    # Deprecated `owner` field and it has been replaced with `owners` field
     owner = models.ForeignKey(
         to=User,
         verbose_name=_("owner"),
         related_name="credit_cards",
         on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    owners = models.ManyToManyField(
+        to=User,
+        verbose_name=_("owners"),
+        related_name="payment_cards",
     )
     is_main = models.BooleanField(_("main"), default=False)
     payment_provider = models.CharField(
@@ -414,32 +422,40 @@ class CreditCard(BaseModel):
         verbose_name = "credit card"
         verbose_name_plural = "credit cards"
         ordering = ["-created_on"]
-        constraints = [
-            models.UniqueConstraint(
-                condition=models.Q(is_main=True),
-                fields=["owner"],
-                name="unique_main_credit_card_per_user",
-            )
-        ]
+
+    @staticmethod
+    def user_has_single_credit_card(owner):
+        """
+        Check if an owner has only one credit card.
+        """
+        return owner.payment_cards.count() == 1
 
     def clean(self):
         """
-        First if this is the user's first credit card, we enforce is_main to True.
+        It's required to have a `payment_provider` value, because we add credit card through a
+        payment provider only.
+        First if this is the user's first credit card, we enforce `is_main` to True.
         Else if we are promoting an credit card as main, we demote the existing main credit card
         Finally prevent to demote the main credit card directly.
         """
+
         if not self.payment_provider:
             raise ValidationError(_("Payment provider field cannot be None."))
-        if not self.owner.credit_cards.exists():
-            self.is_main = True
-        elif self.is_main is True:
-            self.owner.credit_cards.filter(is_main=True).update(is_main=False)
-        elif (
-            self.created_on
-            and self.is_main is False
-            and self.owner.credit_cards.filter(is_main=True, pk=self.pk).exists()
-        ):
-            raise ValidationError(_("Demote a main credit card is forbidden"))
+
+        for owner in self.owners.all():
+            if (
+                self.created_on
+                and self.is_main is False
+                and owner.payment_cards.filter(is_main=True, pk=self.pk).exists()
+            ):
+                raise ValidationError(_("Demote a main credit card is forbidden"))
+
+            if CreditCard.user_has_single_credit_card(owner):
+                self.is_main = True
+            elif self.is_main is True:
+                owner.payment_cards.filter(is_main=True).exclude(pk=self.pk).update(
+                    is_main=False
+                )
 
         return super().clean()
 

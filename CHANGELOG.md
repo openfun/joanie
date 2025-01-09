@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+# Added
+
+- `owner` field on the CreditCard model has been deprecated
+  and replaced with a many-to-many `owners` field
+
 ## [2.13.0] - 2025-01-15
 
 ### Added
