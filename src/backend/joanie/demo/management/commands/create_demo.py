@@ -315,18 +315,25 @@ def create_demo(stdout):
                         owner_id=user_id,
                     )
                 )
+            credit_cards = []
             for i in range(random.randint(1, 3)):
-                queue.push(
-                    payment_models.CreditCard(
-                        title=f"Title {user_sequence:d}-{i:d}",
-                        token=f"Token {user_sequence:d}-{i:d}",
-                        brand=f"Brand {i:d}",
-                        expiration_month=f"{random.randint(1, 12):02d}",
-                        expiration_year="2024",
-                        last_numbers="1234",
-                        owner_id=user_id,
-                    )
+                credit_card = payment_models.CreditCard(
+                    title=f"Title {user_sequence:d}-{i:d}",
+                    token=f"Token {user_sequence:d}-{i:d}",
+                    brand=f"Brand {i:d}",
+                    expiration_month=f"{random.randint(1, 12):02d}",
+                    expiration_year="2024",
+                    last_numbers="1234",
+                    payment_provider="demo_data",
                 )
+                credit_card.save()
+                user = models.User.objects.get(pk=user_id)
+                credit_card.add_owner(user)
+                credit_cards.append(credit_card)
+
+            for credit_card in credit_cards:
+                queue.push(credit_card)
+
         queue.flush()
 
 

@@ -1193,9 +1193,10 @@ class OrderModelsTestCase(LoggingTestCase):
         card has an initial issuer transaction identifier.
         """
         credit_card = CreditCardFactory(
-            initial_issuer_transaction_identifier="4575676657929351"
+            initial_issuer_transaction_identifier="4575676657929351",
+            owners=[factories.UserFactory()],
         )
-        order = factories.OrderFactory(owner=credit_card.owner)
+        order = factories.OrderFactory(owner=credit_card.owners.first())
         self.assertTrue(order.has_payment_method)
 
     def test_models_order_has_payment_method_no_transaction_identifier(self):
