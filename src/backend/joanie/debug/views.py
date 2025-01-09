@@ -543,7 +543,7 @@ class DebugPaymentTemplateView(TemplateView):
             course=order.course,
             is_graded=True,
         )
-        credit_card = CreditCardFactory(owner=owner)
+        credit_card = CreditCardFactory(owners=[owner])
         order.init_flow(billing_address=BillingAddressDictFactory())
         billing_address = order.main_invoice.recipient_address
         one_click = "one-click" in self.request.GET
