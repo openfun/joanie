@@ -711,7 +711,7 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             CreditCardFactory,
         )
 
-        return CreditCardFactory(owner=self.owner)
+        return CreditCardFactory(owners=[self.owner])
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -939,7 +939,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
                 CreditCardFactory,
             )
 
-            return CreditCardFactory(owner=self.owner)
+            return CreditCardFactory(owners=[self.owner])
 
         return None
 

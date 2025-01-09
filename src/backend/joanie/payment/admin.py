@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from admin_auto_filters.filters import AutocompleteFilter
 
+from joanie.core.models import User
 from joanie.payment import enums, models
 
 
@@ -28,6 +29,23 @@ class RequiredOwnerFilter(AutocompleteFilter):
 
     def queryset(self, request, queryset):
         """Don't return any results until a value is selected in the filter."""
+        if self.value():
+            return super().queryset(request, queryset)
+
+        return super().queryset(request, queryset).none()
+
+
+class RequiredOwnersFilter(AutocompleteFilter):
+    """Filter on "owners" ManyToMany field."""
+
+    title = _("Owner")
+    field_name = "owners"
+
+    def queryset(self, request, queryset):
+        """
+        Filter the queryset to include only credit cards where the selected owner
+        is in the ManyToMany 'owners' relationship.
+        """
         if self.value():
             return super().queryset(request, queryset)
 
@@ -176,24 +194,59 @@ class TransactionAdmin(admin.ModelAdmin):
         return ()
 
 
+class CreditCardOwnersInline(admin.TabularInline):
+    """
+    Facilitate to add owners on creation of a credit card
+    """
+
+    model = models.CreditCard.owners.through
+    extra = 0
+
+
 @admin.register(models.CreditCard)
 class CreditCardAdmin(admin.ModelAdmin):
     """Admin class for the credit card model."""
 
-    autocomplete_fields = ["owner"]
-    list_display = (
+    autocomplete_fields = ["owners"]
+    exclude = [
         "owner",
+        "is_main",
+    ]  # Hide all deprecated fields on CreditCard Model
+    list_display = (
+        "get_owner_ownership",
         "title",
         "numbers",
         "expiration_date",
-        "is_main",
+        "get_is_main_ownership",
         "has_token",
         "has_initial_issuer_transaction_identifier",
         "payment_provider",
     )
-    list_filter = [RequiredOwnerFilter, "is_main"]
-    list_select_related = ["owner"]
+    list_filter = [RequiredOwnersFilter]
     readonly_fields = ("has_token", "has_initial_issuer_transaction_identifier")
+    inlines = [CreditCardOwnersInline]
+
+    def get_queryset(self, request):
+        """
+        The admin user needs to set an owner in the required filter first. We
+        retrieve the owner's pk to use for the ownership filtering for the methods
+        `get_is_main_ownership` and `get_owner_ownership`.
+        """
+        queryset = super().get_queryset(request)
+        self.owner_pk = request.GET.get("owners__pk__exact")  # pylint:disable=attribute-defined-outside-init
+        return queryset
+
+    @admin.display(boolean=True, description=_("Main"))
+    def get_is_main_ownership(self, obj):
+        """Return whether the credit card ownership is main for the owner"""
+        return obj.ownerships.get(owner__pk=self.owner_pk).is_main
+
+    @admin.display(description=_("Owner"))
+    def get_owner_ownership(self, obj):  # pylint:disable=unused-argument
+        """
+        Returns the list of usernames allowed to use the credit card.
+        """
+        return User.objects.get(pk=self.owner_pk).username
 
     @staticmethod
     def numbers(credit_card):
@@ -230,7 +283,7 @@ class CreditCardAdmin(admin.ModelAdmin):
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
         """
-        Add instruction to explain that, due to the RequiredOwnerFilter, no results will be
+        Add instruction to explain that, due to the RequiredOwnersFilter, no results will be
         shown until the view is filtered for a specific owner.
         """
         extra_context = extra_context or {}
