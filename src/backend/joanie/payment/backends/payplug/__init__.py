@@ -96,15 +96,15 @@ class PayplugBackend(BasePaymentBackend):
             # attributes are empty. So to know if a user wants to save its card,
             # we check if card.id and one other card attribute are not None.
             # - User asks to store its card
-            CreditCard.objects.create(
+            credit_card = CreditCard.objects.create(
                 brand=resource.card.brand,
                 expiration_month=resource.card.exp_month,
                 expiration_year=resource.card.exp_year,
                 last_numbers=resource.card.last4,
-                owner=order.owner,
                 token=resource.card.id,
                 payment_provider=self.name,
             )
+            credit_card.add_owner(order.owner)
         installment_id = resource.metadata.get("installment_id")
         if resource.failure is not None:
             self._do_on_payment_failure(order, installment_id=installment_id)
