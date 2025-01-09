@@ -393,16 +393,20 @@ class LyraBackend(BasePaymentBackend):
             # its card, we check if card.id is set paymentMethodSource has another value
             # than TOKEN (e.g: NEW).
             # - User asks to store its card
-            CreditCard.objects.create(
+            credit_card, created = CreditCard.objects.get_or_create(
                 brand=card_details["effectiveBrand"],
                 expiration_month=card_details["expiryMonth"],
                 expiration_year=card_details["expiryYear"],
                 last_numbers=card_pan[-4:],  # last 4 digits
-                owner=order.owner,
                 token=card_token,
                 initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
                 payment_provider=self.name,
             )
+            if created:
+                credit_card.owners.set([order.owner])
+            else:
+                credit_card.owners.add(order.owner)
+            credit_card.save()
 
         amount = f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"
 
@@ -460,16 +464,20 @@ class LyraBackend(BasePaymentBackend):
             "initialIssuerTransactionIdentifier"
         ]
 
-        CreditCard.objects.create(
+        credit_card, created = CreditCard.objects.get_or_create(
             brand=card_details["effectiveBrand"],
             expiration_month=card_details["expiryMonth"],
             expiration_year=card_details["expiryYear"],
             last_numbers=card_pan[-4:],  # last 4 digits
-            owner=user,
             token=card_token,
             initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
             payment_provider=self.name,
         )
+        if created:
+            credit_card.owners.set([user])
+        else:
+            credit_card.owners.add(user)
+        credit_card.save()
 
     def delete_credit_card(self, credit_card):
         """Delete a credit card from Lyra"""
