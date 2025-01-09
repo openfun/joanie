@@ -12,6 +12,8 @@ and this project adheres to
 
 ### Added
 
+- `owner` field on the CreditCard model has been deprecated
+  and replaced with a many-to-many `owners` field
 - Add order export to CSV in back office
 - Branded Unicamp degrees
 
