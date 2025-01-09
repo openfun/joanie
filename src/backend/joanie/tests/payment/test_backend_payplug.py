@@ -726,7 +726,6 @@ class PayplugBackendTestCase(BasePaymentTestCase):
             state=ORDER_STATE_PENDING,
             id="514070fe-c12c-48b8-97cf-5262708673a3",
             owner=owner,
-            credit_card__is_main=True,
             credit_card__initial_issuer_transaction_identifier="1",
             product__price=D("123.45"),
         )

@@ -625,7 +625,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         billing_address = order.main_invoice.recipient_address
         first_installment = order.payment_schedule[0]
         credit_card = CreditCardFactory(
-            owner=owner, token="854d630f17f54ee7bce03fb4fcf764e9"
+            owners=[owner], token="854d630f17f54ee7bce03fb4fcf764e9"
         )
 
         with self.open("lyra/responses/create_one_click_payment.json") as file:
@@ -707,7 +707,6 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             id="514070fe-c12c-48b8-97cf-5262708673a3",
             owner=owner,
             product__price=D("123.45"),
-            credit_card__is_main=True,
             credit_card__initial_issuer_transaction_identifier="1",
         )
         # Force the first installment id to match the stored request
@@ -1066,7 +1065,6 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             id="514070fe-c12c-48b8-97cf-5262708673a3",
             owner__email="john.doe@acme.org",
             product__price=D("123.45"),
-            credit_card__is_main=True,
             credit_card__initial_issuer_transaction_identifier="1",
         )
         # Force the first installment id to match the stored request
@@ -1120,7 +1118,6 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             id="514070fe-c12c-48b8-97cf-5262708673a3",
             owner=owner,
             product__price=D("123.45"),
-            credit_card__is_main=True,
             credit_card__initial_issuer_transaction_identifier="1",
         )
         # Force the first installment id to match the stored request
@@ -1251,6 +1248,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         # No credit card should have been created
         self.assertEqual(CreditCard.objects.count(), 0)
 
+    # here !!!
     @patch.object(BasePaymentBackend, "_do_on_payment_success")
     def test_payment_backend_lyra_handle_notification_tokenize_card(
         self, mock_do_on_payment_success
@@ -1303,7 +1301,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             "transactionDetails"
         ]["cardDetails"]["initialIssuerTransactionIdentifier"]
         card = CreditCard.objects.get(token=card_id)
-        self.assertEqual(card.owner, owner)
+        self.assertIn(owner, card.owners.all())
         self.assertEqual(card.payment_provider, backend.name)
         self.assertEqual(
             card.initial_issuer_transaction_identifier,
@@ -1326,7 +1324,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         with self.open("lyra/requests/tokenize_card_for_user_answer.json") as file:
             json_answer = json.loads(file.read())
 
-        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+        self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
         request = APIRequestFactory().post(
             reverse("payment_webhook"), data=json_request, format="multipart"
@@ -1339,12 +1337,82 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             "transactionDetails"
         ]["cardDetails"]["initialIssuerTransactionIdentifier"]
         card = CreditCard.objects.get(token=card_id)
-        self.assertEqual(card.owner, user)
+        self.assertIn(user, card.owners.all())
         self.assertEqual(card.payment_provider, backend.name)
         self.assertEqual(
             card.initial_issuer_transaction_identifier,
             initial_issuer_transaction_identifier,
         )
+
+    def test_payment_backend_lyra_handle_notification_tokenize_shared_card_for_users(
+        self,
+    ):
+        """
+        When the backend receives a credit card tokenization notification for a user,
+        and this card has already been tokenized by another user, it should add the
+        the latest user to the relation to the card.
+        """
+        backend = LyraBackend(self.configuration)
+        user_1 = UserFactory(
+            email="john.doe@acme.org", id="0a920c52-7ecc-47b3-83f5-127b846ac79c"
+        )
+        user_2 = UserFactory(
+            email="jane.doe@acme.org", id="bb00d187-6c91-44b9-bc0f-23f6ef8563d9"
+        )
+
+        with self.open("lyra/requests/tokenize_card_for_user.json") as file:
+            json_request = json.loads(file.read())
+
+        with self.open("lyra/requests/tokenize_card_for_user_answer.json") as file:
+            json_answer = json.loads(file.read())
+
+        self.assertFalse(CreditCard.objects.filter(owners=user_1).exists())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        card_id = json_answer["transactions"][0]["paymentMethodToken"]
+        initial_issuer_transaction_identifier = json_answer["transactions"][0][
+            "transactionDetails"
+        ]["cardDetails"]["initialIssuerTransactionIdentifier"]
+        card = CreditCard.objects.get(token=card_id)
+        self.assertEqual(card.owners.count(), 1)
+        self.assertIn(user_1, card.owners.all())
+        self.assertEqual(card.ownerships.filter(owner=user_1).count(), 1)
+        self.assertEqual(card.payment_provider, backend.name)
+        self.assertEqual(
+            card.initial_issuer_transaction_identifier,
+            initial_issuer_transaction_identifier,
+        )
+
+        # Now the second user will tokenize the same card
+        with self.open("lyra/requests/tokenize_card_shared_card_for_user.json") as file:
+            json_request_2 = json.loads(file.read())
+
+        with self.open(
+            "lyra/requests/tokenize_card_shared_card_for_user_answer.json"
+        ) as file:
+            json_answer_2 = json.loads(file.read())
+
+        self.assertFalse(CreditCard.objects.filter(owners=user_2).exists())
+
+        request_2 = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request_2, format="multipart"
+        )
+
+        backend.handle_notification(request_2)
+
+        shared_card_token_id = json_answer_2["transactions"][0]["paymentMethodToken"]
+        card.refresh_from_db()
+
+        self.assertEqual(card.token, shared_card_token_id)
+        self.assertEqual(CreditCard.objects.count(), 1)
+        self.assertEqual(card.owners.count(), 2)
+        self.assertEqual(card.ownerships.filter(owner=user_2).count(), 1)
+        self.assertIn(user_2, card.owners.all())
 
     def test_payment_backend_lyra_handle_notification_tokenize_card_for_user_not_found(
         self,
@@ -1359,7 +1427,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         with self.open("lyra/requests/tokenize_card_for_user.json") as file:
             json_request = json.loads(file.read())
 
-        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+        self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
         request = APIRequestFactory().post(
             reverse("payment_webhook"), data=json_request, format="multipart"
@@ -1367,7 +1435,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         with self.assertRaises(TokenizationCardFailed):
             backend.handle_notification(request)
 
-        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+        self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
     def test_payment_backend_lyra_handle_notification_tokenize_card_for_user_failure(
         self,
@@ -1384,7 +1452,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         with self.open("lyra/requests/tokenize_card_for_user_unpaid.json") as file:
             json_request = json.loads(file.read())
 
-        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+        self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
         request = APIRequestFactory().post(
             reverse("payment_webhook"), data=json_request, format="multipart"
@@ -1392,7 +1460,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
 
         backend.handle_notification(request)
 
-        self.assertFalse(CreditCard.objects.filter(owner=user).exists())
+        self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_delete_credit_card(self):

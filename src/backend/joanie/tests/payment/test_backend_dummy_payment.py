@@ -1,5 +1,6 @@
 """Test suite of the Dummy Payment backend"""
 
+import hashlib
 import json
 from decimal import Decimal as D
 from logging import Logger
@@ -586,10 +587,68 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
         request.data = json.loads(request.body.decode("utf-8"))
         backend.handle_notification(request)
 
-        credit_card = CreditCard.objects.get(owner=user)
+        credit_card = CreditCard.objects.get(owners=user)
 
         self.assertEqual(credit_card.token, f"card_{user.id}")
+        self.assertEqual(credit_card.ownerships.filter(owner=user).count(), 1)
         self.assertEqual(credit_card.payment_provider, backend.name)
+
+    def test_payment_backend_dummy_tokenize_same_credit_card_with_new_user_adds_new_owner_entry(
+        self,
+    ):
+        """
+        Test when a second user wants to tokenize a credit card that already exists in the
+        database, when we receive the notification, the second user will be added to the
+        relation into the `owners` field of that card.
+        """
+        backend = DummyPaymentBackend()
+        request_factory = APIRequestFactory()
+        [user_1, user_2] = UserFactory.create_batch(2)
+
+        last_four_number = "1234"
+        hashed_last_four_number = hashlib.sha256(last_four_number.encode()).hexdigest()[
+            :45
+        ]
+        # Notify that a card has been tokenized for a user
+        request = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "provider": "dummy",
+                "type": "tokenize_card",
+                "customer": str(user_1.id),
+                "card_token": f"card_{hashed_last_four_number}",
+            },
+            format="json",
+        )
+
+        request.data = json.loads(request.body.decode("utf-8"))
+        backend.handle_notification(request)
+
+        self.assertEqual(user_1.payment_cards.count(), 1)
+
+        # Notify that a card has been tokenized for there should be 2 owners on that same card now
+        request = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "provider": "dummy",
+                "type": "tokenize_card",
+                "customer": str(user_2.id),
+                "card_token": f"card_{hashed_last_four_number}",
+            },
+            format="json",
+        )
+
+        request.data = json.loads(request.body.decode("utf-8"))
+        backend.handle_notification(request)
+
+        credit_card = CreditCard.objects.get(token=f"card_{hashed_last_four_number}")
+
+        self.assertEqual(CreditCard.objects.count(), 1)
+        self.assertEqual(credit_card.owners.count(), 2)
+        self.assertIn(user_1, credit_card.owners.all())
+        self.assertIn(user_2, credit_card.owners.all())
+        self.assertEqual(credit_card.ownerships.filter(owner=user_1).count(), 1)
+        self.assertEqual(credit_card.ownerships.filter(owner=user_2).count(), 1)
 
     @mock.patch.object(Logger, "info")
     @mock.patch.object(BasePaymentBackend, "_send_mail_refused_debit")

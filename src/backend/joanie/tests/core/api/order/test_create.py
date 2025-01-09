@@ -1527,7 +1527,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
         organization = product.course_relations.first().organizations.first()
         billing_address = BillingAddressDictFactory()
-        credit_card = CreditCardFactory(owner=user)
+        credit_card = CreditCardFactory(owners=[user])
 
         data = {
             "course_code": course.code,
