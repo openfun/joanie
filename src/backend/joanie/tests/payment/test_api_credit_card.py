@@ -2,17 +2,22 @@
 Test suite for the Credit Card API
 """
 
+import json
 from http import HTTPStatus
 from unittest import mock
 
 from django.test.utils import override_settings
+from django.urls import reverse
 
 import arrow
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.test import APIRequestFactory
 
 from joanie.core.factories import UserFactory
 from joanie.core.models import User
+from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.factories import CreditCardFactory
+from joanie.payment.models import CreditCard
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -72,9 +77,9 @@ class CreditCardAPITestCase(BaseAPITestCase):
         user = UserFactory()
         token = self.generate_token_from_user(user)
         # Create 2 cards for the user with the active payment_provider name
-        cards = CreditCardFactory.create_batch(2, owner=user)
+        cards = CreditCardFactory.create_batch(2, owners=[user])
         # Create 1 card for the user with another payment_provider name
-        CreditCardFactory(owner=user, payment_provider="lyra")
+        CreditCardFactory(owners=[user], payment_provider="lyra")
 
         response = self.client.get(
             "/api/v1.0/credit-cards/", HTTP_AUTHORIZATION=f"Bearer {token}"
@@ -103,7 +108,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """Pagination should work as expected."""
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        cards = CreditCardFactory.create_batch(3, owner=user)
+        cards = CreditCardFactory.create_batch(3, owners=[user])
         card_ids = [str(card.id) for card in cards]
 
         response = self.client.get(
@@ -150,7 +155,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        cards = CreditCardFactory.create_batch(3, owner=user)
+        cards = CreditCardFactory.create_batch(3, owners=[user])
         cards.sort(key=lambda card: card.created_on, reverse=True)
         cards.sort(key=lambda card: card.is_main, reverse=True)
         sorted_card_ids = [str(card.id) for card in cards]
@@ -182,7 +187,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """Retrieve authenticated user's credit card by its id is allowed."""
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        card = CreditCardFactory(owner=user)
+        card = CreditCardFactory(owners=[user])
 
         response = self.client.get(
             f"/api/v1.0/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
@@ -207,7 +212,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """Retrieve a non-existing credit card should return a 404."""
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        card = CreditCardFactory.build(owner=user)
+        card = CreditCardFactory.build(owners=[user])
 
         response = self.client.get(
             f"/api/v1.0/credit-cards/{card.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
@@ -254,7 +259,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             user,
             expires_at=arrow.utcnow().shift(days=-1).datetime,
         )
-        card = CreditCardFactory(owner=user)
+        card = CreditCardFactory(owners=[user])
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -270,7 +275,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        card = CreditCardFactory(owner=user)
+        card = CreditCardFactory(owners=[user])
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -306,7 +311,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """Demote a main credit card is forbidden"""
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        card = CreditCardFactory(owner=user)
+        card = CreditCardFactory(owners=[user])
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -325,7 +330,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        main_card, card = CreditCardFactory.create_batch(2, owner=user)
+        main_card, card = CreditCardFactory.create_batch(2, owners=[user])
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -346,6 +351,42 @@ class CreditCardAPITestCase(BaseAPITestCase):
         self.assertFalse(main_card.is_main)
         self.assertTrue(card.is_main)
 
+    def test_api_credit_card_promote_to_is_main_when_multiple_owners(self):
+        """
+        Promote credit card is allowed and existing credit card should be demoted.
+        When there are multiple owners, every owner will see the same card be the
+        main one if one user decides to promote it.
+        """
+        [user_1, user_2, user_3] = UserFactory.create_batch(3)
+        token = self.generate_token_from_user(user_1)
+        main_card, card = CreditCardFactory.create_batch(
+            2, owners=[user_1, user_2, user_3]
+        )
+
+        # - Before update state
+        self.assertTrue(main_card.is_main)
+        self.assertFalse(card.is_main)
+
+        response = self.client.put(
+            f"/api/v1.0/credit-cards/{card.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data={"is_main": True},
+        )
+
+        main_card.refresh_from_db()
+        card.refresh_from_db()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        # - After update state
+        self.assertFalse(main_card.is_main)
+        self.assertTrue(card.is_main)
+
+        # They all own that same card, all have the same main one
+        self.assertTrue(user_1.payment_cards.get(is_main=True), card)
+        self.assertTrue(user_2.payment_cards.get(is_main=True), card)
+        self.assertTrue(user_3.payment_cards.get(is_main=True), card)
+
     def test_api_credit_card_update(self):
         """
         Update an authenticated user's credit card is allowed with a valid token.
@@ -353,7 +394,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        card = CreditCardFactory(owner=user)
+        card = CreditCardFactory(owners=[user])
         response = self.client.put(
             f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -430,13 +471,100 @@ class CreditCardAPITestCase(BaseAPITestCase):
         """Delete a authenticated user's credit card is allowed with a valid token."""
         user = UserFactory()
         token = self.generate_token_from_user(user)
-        card = CreditCardFactory(owner=user)
+        card = CreditCardFactory(owners=[user])
         response = self.client.delete(
             f"/api/v1.0/credit-cards/{card.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+
+    def test_api_credit_card_delete_but_credit_card_is_shared_by_3_users(self):
+        """
+        When an authenticated user decides to delete a shared credit card, it will remove
+        his relation to the credit card if he does not have any pending payment on his orders.
+        This action will not delete the credit card for the 2 other owners.
+        For example, if user_2 attempts to delete the credit card on his side and he still
+        has pending payment on an order, he will be blocked.
+        """
+        [user_1, user_2, user_3] = UserFactory.create_batch(3)
+        card = CreditCardFactory(owners=[user_1, user_2, user_3])
+
+        self.assertEqual(user_1.payment_cards.count(), 1)
+        self.assertEqual(card.ownerships.filter(owner=user_1).count(), 1)
+        self.assertEqual(user_2.payment_cards.count(), 1)
+        self.assertEqual(card.ownerships.filter(owner=user_2).count(), 1)
+        self.assertEqual(user_3.payment_cards.count(), 1)
+        self.assertEqual(card.ownerships.filter(owner=user_3).count(), 1)
+
+        token = self.generate_token_from_user(user_1)
+
+        response = self.client.delete(
+            f"/api/v1.0/credit-cards/{card.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertNotIn(user_1, card.owners.all())
+        self.assertEqual(user_1.payment_cards.count(), 0)
+        self.assertEqual(card.ownerships.filter(owner=user_1).count(), 0)
+        self.assertEqual(user_2.payment_cards.count(), 1)
+        self.assertEqual(card.ownerships.filter(owner=user_2).count(), 1)
+        self.assertEqual(user_3.payment_cards.count(), 1)
+        self.assertEqual(card.ownerships.filter(owner=user_3).count(), 1)
+
+        # Create order with ongoing payments for user_2
+        OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            owner=user_2,
+            product__price=D("123.45"),
+            credit_card=card,
+        )
+        token_2 = self.generate_token_from_user(user_2)
+
+        response = self.client.delete(
+            f"/api/v1.0/credit-cards/{card.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token_2}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CONFLICT)
+        self.assertEqual(
+            response.json(),
+            {
+                "details": "Cannot delete the credit card, there are still ongoing pending "
+                f"payments for this credit card {card.id}"
+            },
+        )
+        self.assertIn(user_2, card.owners.all())
+
+    def test_api_credit_card_delete_when_pending_payment_on_order_is_forbidden(self):
+        """
+        When an authenticated user decides to delete a credit card and he still has pending
+        payments on orders, it should not let him delete it.
+        """
+        owner = UserFactory()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            owner=owner,
+            product__price=D("123.45"),
+            credit_card__initial_issuer_transaction_identifier="1",
+        )
+        card = order.credit_card
+        token = self.generate_token_from_user(owner)
+
+        response = self.client.delete(
+            f"/api/v1.0/credit-cards/{card.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CONFLICT)
+        self.assertEqual(
+            response.json(),
+            {
+                "details": "Cannot delete the credit card, there are still ongoing pending "
+                f"payments for this credit card {card.id}"
+            },
+        )
 
     def test_api_credit_card_tokenize_card_anonymous(self):
         """
@@ -531,3 +659,77 @@ class CreditCardAPITestCase(BaseAPITestCase):
                 "card_token": f"card_{user.id}",
             },
         )
+
+    @override_settings(
+        JOANIE_PAYMENT_BACKEND={
+            "backend": "joanie.payment.backends.dummy.DummyPaymentBackend",
+            "configuration": None,
+        }
+    )
+    def test_api_credit_card_tokenize_same_credit_card_with_another_user_adds_new_entry_of_owners(
+        self,
+    ):
+        """
+        Test when a second user wants to tokenize a credit card that already exists in the
+        database, he will be added to the relation into the `owners` field of that card.
+        """
+        backend = DummyPaymentBackend()
+        request_factory = APIRequestFactory()
+        [user_1, user_2] = UserFactory.create_batch(2)
+        token = self.get_user_token(user_1.username)
+
+        response = self.client.post(
+            "/api/v1.0/credit-cards/tokenize-card/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        # Notify that a card has been tokenized for a user
+        request = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "provider": "dummy",
+                "type": "tokenize_card",
+                "customer": str(user_1.id),
+                "card_token": "card_dummy_test_token",
+            },
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+
+        backend.handle_notification(request)
+
+        self.assertEqual(user_1.payment_cards.count(), 1)
+        credit_card = CreditCard.objects.get(token="card_dummy_test_token")
+        self.assertEqual(credit_card.ownerships.filter(owner=user_1).count(), 1)
+        # Now the second user wants to add that same card,
+        # only 1 card should exists, and both users are owners on that one.
+        token = self.get_user_token(user_2.username)
+
+        response = self.client.post(
+            "/api/v1.0/credit-cards/tokenize-card/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        # Notify that a card has been tokenized for a user
+        request = request_factory.post(
+            reverse("payment_webhook"),
+            data={
+                "provider": "dummy",
+                "type": "tokenize_card",
+                "customer": str(user_2.id),
+                "card_token": "card_dummy_test_token",
+            },
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+        backend.handle_notification(request)
+
+        self.assertEqual(CreditCard.objects.count(), 1)
+        self.assertEqual(credit_card.owners.count(), 2)
+        self.assertEqual(credit_card.ownerships.filter(owner=user_2).count(), 1)
+        self.assertIn(user_1, credit_card.owners.all())
+        self.assertIn(user_2, credit_card.owners.all())

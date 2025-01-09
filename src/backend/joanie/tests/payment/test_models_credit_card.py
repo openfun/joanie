@@ -21,15 +21,15 @@ class CreditCardModelTestCase(TestCase):
         CreditCard.DoesNotExist.
         """
         user = UserFactory()
-        credit_card = CreditCardFactory(owner=user)
+        credit_card = CreditCardFactory(owners=[user])
         another_user = UserFactory()
-        another_credit_card = CreditCardFactory(owner=another_user)
+        another_credit_card = CreditCardFactory(owners=[another_user])
 
         credit_card = CreditCard.objects.get_card_for_owner(
             pk=credit_card.pk, username=user.username
         )
 
-        self.assertEqual(credit_card.owner, user)
+        self.assertIn(user, credit_card.owners.all())
 
         with self.assertRaises(CreditCard.DoesNotExist) as context:
             CreditCard.objects.get_card_for_owner(
@@ -70,17 +70,99 @@ class CreditCardModelTestCase(TestCase):
         Only the cards with the active payment backend should be retrieved.
         """
         owner = UserFactory()
-        CreditCardFactory.create_batch(3, owner=owner)
-        CreditCardFactory(owner=owner, payment_provider="lyra")
+        CreditCardFactory.create_batch(3, owners=[owner])
+        CreditCardFactory(owners=[owner], payment_provider="lyra")
         another_owner = UserFactory()
-        CreditCardFactory(owner=another_owner)
+        CreditCardFactory(owners=[another_owner])
 
         results = CreditCard.objects.get_cards_for_owner(username=owner.username)
 
         # There should be 4 existing cards for the owner overall
-        self.assertEqual(CreditCard.objects.filter(owner=owner).count(), 4)
+        self.assertEqual(CreditCard.objects.filter(owners=owner).count(), 4)
         # But only 3 cards should be retrieve because of the active payment backend
         self.assertEqual(results.count(), 3)
         for card in results:
             self.assertEqual(card.payment_provider, "dummy")
-            self.assertEqual(card.owner.id, owner.id)
+            self.assertIn(owner, card.owners.all())
+
+    def test_models_credit_card_get_cards_when_credit_card_has_many_owners(self):
+        """
+        When the credit card is shared among users, the manager method `get_cards_for_owner`
+        should retrieve the available credit cards of a given user by passing their username
+        to the method parameter. Plus, only the cards with the active payment
+        backend should be retrieved.
+        """
+        # Those users will share some credit cards
+        owner_1 = UserFactory()
+        owner_2 = UserFactory()
+        owner_3 = UserFactory()
+        # We create 4 cards with the active payment backend
+        CreditCardFactory.create_batch(4, owners=[owner_1, owner_2])
+        # Create another share credit card with owner_1 and owner_3
+        CreditCardFactory(owners=[owner_1, owner_3])
+        # We create another card from another payment backend that should not be in results
+        CreditCardFactory(owners=[owner_1, owner_2], payment_provider="lyra")
+
+        # Create another credit card for another user
+        another_user = UserFactory()
+        CreditCardFactory(owners=[another_user])
+
+        results = CreditCard.objects.get_cards_for_owner(username=owner_1.username)
+
+        # There should be 6 cards overall with the active payment provider ('dummy')
+        self.assertEqual(CreditCard.objects.filter(owners=owner_1).count(), 6)
+        # There should be 5 existing cards for the owner_1
+        self.assertEqual(results.count(), 5)
+        for card in results:
+            self.assertEqual(card.payment_provider, "dummy")
+            self.assertIn(owner_1, card.owners.all())
+
+        results = CreditCard.objects.get_cards_for_owner(username=owner_2.username)
+
+        # There should be 5 existing cards for the owner_2 overall
+        self.assertEqual(CreditCard.objects.filter(owners=owner_2).count(), 5)
+        # There should be only 4 cards with the active payment provider ('dummy')
+        # because the last one was provided by another payment provider ('lyra')
+        self.assertEqual(results.count(), 4)
+        for card in results:
+            self.assertEqual(card.payment_provider, "dummy")
+            self.assertIn(owner_2, card.owners.all())
+            self.assertIn(owner_1, card.owners.all())
+
+        results = CreditCard.objects.get_cards_for_owner(username=owner_3.username)
+
+        self.assertEqual(CreditCard.objects.filter(owners=owner_3).count(), 1)
+        self.assertEqual(results.count(), 1)
+        for card in results:
+            self.assertEqual(card.payment_provider, "dummy")
+            self.assertIn(owner_3, card.owners.all())
+            self.assertIn(owner_1, card.owners.all())
+
+    def test_models_credit_card_get_card_for_owner_when_credit_card_has_multiple_owner(
+        self,
+    ):
+        """
+        If the `pk` and the `owner.username` matches an existing credit card even if it is
+        shared between users, the manager method `get_card_for_owner` of the `CreditCard`
+        model should return the object.
+        """
+        owner_1 = UserFactory()
+        owner_2 = UserFactory()
+        credit_card = CreditCardFactory(owners=[owner_1, owner_2])
+        another_user = UserFactory()
+        # Another credit card
+        CreditCardFactory(owners=[another_user])
+
+        card_1 = CreditCard.objects.get_card_for_owner(
+            pk=credit_card.pk, username=owner_1.username
+        )
+
+        self.assertEqual(credit_card.id, card_1.id)
+        self.assertIn(owner_1, credit_card.owners.all())
+
+        card_2 = CreditCard.objects.get_card_for_owner(
+            pk=credit_card.pk, username=owner_1.username
+        )
+
+        self.assertEqual(credit_card.id, card_2.id)
+        self.assertIn(owner_2, credit_card.owners.all())

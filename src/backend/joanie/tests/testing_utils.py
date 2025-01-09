@@ -313,7 +313,7 @@ class Demo:
             email=email_user + "+student_user@" + email_domain,
             first_name="Étudiant",
         )
-        payment_factories.CreditCardFactory(owner=student_user)
+        payment_factories.CreditCardFactory(owners=[student_user])
         factories.UserAddressFactory(owner=student_user)
 
         second_student_user = factories.UserFactory(
@@ -321,7 +321,7 @@ class Demo:
             email=email_user + "+second_student_user@" + email_domain,
             first_name="Étudiant 002",
         )
-        payment_factories.CreditCardFactory(owner=second_student_user)
+        payment_factories.CreditCardFactory(owners=[second_student_user])
         factories.UserAddressFactory(owner=second_student_user)
 
         # First create a course product to learn how to become a botanist

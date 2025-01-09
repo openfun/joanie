@@ -1339,12 +1339,13 @@ class OrderFlowsTestCase(LoggingTestCase):
         owner has a card and the order has no contract.
         """
         credit_card = CreditCardFactory(
-            initial_issuer_transaction_identifier="4575676657929351"
+            initial_issuer_transaction_identifier="4575676657929351",
+            owners=[factories.UserFactory()],
         )
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_ASSIGNED,
-            owner=credit_card.owner,
+            owner=credit_card.owners.first(),
             product__target_courses=[run.course],
         )
 
@@ -1657,7 +1658,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         order.payment_schedule[0]["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
         order.payment_schedule[0]["due_date"] = date(2024, 3, 17)
         order.save()
-        order.credit_card = CreditCardFactory(owner=order.owner)
+        order.credit_card = CreditCardFactory(owners=[order.owner])
 
         with mock.patch(
             "django.utils.timezone.localdate", return_value=date(2024, 3, 17)
@@ -1708,7 +1709,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         order.payment_schedule[0]["id"] = "d9356dd7-19a6-4695-b18e-ad93af41424a"
         order.payment_schedule[0]["due_date"] = date(2024, 3, 18)
         order.save()
-        order.credit_card = CreditCardFactory(owner=order.owner)
+        order.credit_card = CreditCardFactory(owners=[order.owner])
 
         with mock.patch(
             "django.utils.timezone.localdate", return_value=date(2024, 3, 17)
