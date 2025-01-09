@@ -242,8 +242,8 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         """
         user = UserFactory(email="john.doe@acme.org")
         another_user = UserFactory(email="richie@example.fr")
-        CreditCardFactory(owner=user)
-        credit_card = CreditCardFactory(owner=another_user)
+        CreditCardFactory(owners=[user])
+        credit_card = CreditCardFactory(owners=[another_user])
         order_with_failed_payment = OrderFactory(
             owner=user,
             state=ORDER_STATE_FAILED_PAYMENT,
@@ -413,7 +413,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        credit_card = CreditCardFactory(owner=user)
+        credit_card = CreditCardFactory(owners=[user])
         payload = {"credit_card_id": credit_card.id}
         token = self.generate_token_from_user(user)
 
@@ -510,7 +510,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
         of the request. It will call the `create_one_click_payment` method of the payment backend.
         """
         user = UserFactory()
-        credit_card = CreditCardFactory(owner=user)
+        credit_card = CreditCardFactory(owners=[user])
         order = OrderFactory(
             owner=user,
             state=ORDER_STATE_NO_PAYMENT,
@@ -750,7 +750,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
                 },
             ],
         )
-        credit_card = CreditCardFactory(owner=user)
+        credit_card = CreditCardFactory(owners=[user])
         payload = {"credit_card_id": credit_card.id}
         token = self.generate_token_from_user(user)
 
