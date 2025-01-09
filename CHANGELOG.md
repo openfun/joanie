@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `owner` and `is_main` fields on `CreditCard` model are deprecated
+  and been replaced with many-to-many `owners` field instead
+
 ### Changed
 
 - Catch `PaymentProviderAPIException` on CreditCard `post_delete` signal
