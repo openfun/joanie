@@ -199,7 +199,10 @@ class MoodleLMSBackend(BaseLMSBackend):
             completion = self.moodle.core.completion.get_course_completion_status(
                 course_id, user_id
             )
-            return {"passed": completion.completionstatus.completed}
+            # moodlepy cast boolean values returned by Moodle web services as int so we have
+            # to recast `completed` as a boolean value...
+            # (Until moodlepy there is a fix in moddlepy)
+            return {"passed": bool(completion.completionstatus.completed)}
 
         except (MoodleException, EmptyResponseException, NetworkMoodleException) as e:
             logger.error(

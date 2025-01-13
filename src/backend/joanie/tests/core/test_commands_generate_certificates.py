@@ -1,11 +1,17 @@
+# pylint: disable=unexpected-keyword-arg,no-value-for-parameter
 """Test suite for the management command 'generate_certificates'"""
 
 import uuid
+from http import HTTPStatus
+from unittest import mock
 
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
+
+import responses
 
 from joanie.core import enums, factories, models
+from joanie.lms_handler import LMSHandler
 
 
 class CreateCertificatesTestCase(TestCase):
@@ -90,6 +96,225 @@ class CreateCertificatesTestCase(TestCase):
         # Calling command should generate one certificate
         call_command("generate_certificates")
         self.assertEqual(certificate_qs.count(), 1)
+
+        # But call it again, should not create a new certificate
+        call_command("generate_certificates")
+        self.assertEqual(certificate_qs.count(), 1)
+
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+                "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+                "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+                "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+            },
+        ]
+    )
+    @mock.patch("joanie.core.models.courses.Enrollment.set")
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_commands_generate_certificates_for_certificate_product_with_moodle_enrollment(
+        self, _
+    ):
+        """
+        The management command should generate certificates for the certificate
+        type of product relying on moodle enrollment.
+        """
+        passed_resource_link = "http://moodle.test/course/view.php?id=1"
+        failed_resource_link = "http://moodle.test/course/view.php?id=2"
+        lms_backend = LMSHandler.select_lms(passed_resource_link)
+
+        responses.add(
+            responses.POST,
+            lms_backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={
+                "users": [
+                    {
+                        "id": 5,
+                        "username": "student",
+                        "firstname": "Student",
+                        "lastname": "User",
+                        "fullname": "Student User",
+                        "email": "student@example.com",
+                        "department": "",
+                        "firstaccess": 1704716076,
+                        "lastaccess": 1704716076,
+                        "auth": "manual",
+                        "suspended": False,
+                        "confirmed": True,
+                        "lang": "en",
+                        "theme": "",
+                        "timezone": "99",
+                        "mailformat": 1,
+                        "description": "",
+                        "descriptionformat": 1,
+                        "profileimageurlsmall": (
+                            "https://moodle.test/theme/image.php/boost/core/1704714971/u/f2"
+                        ),
+                        "profileimageurl": (
+                            "https://moodle.test/theme/image.php/boost/core/1704714971/u/f1"
+                        ),
+                    }
+                ],
+                "warnings": [],
+            },
+        )
+
+        # Response for the passed run
+        responses.add(
+            responses.POST,
+            lms_backend.build_url("core_completion_get_course_completion_status"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "courseid": "1",
+                        "userid": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={
+                "completionstatus": {
+                    "completed": True,
+                    "aggregation": 1,
+                    "completions": [
+                        {
+                            "type": 4,
+                            "title": "Activity completion",
+                            "status": "Yes",
+                            "complete": True,
+                            "timecompleted": 1705067787,
+                            "details": {
+                                "type": "Activity completion",
+                                "criteria": (
+                                    '<a href="https://moodle.test/mod/quiz/view.php?id=3">'
+                                    "Quizz 1"
+                                    "</a>"
+                                ),
+                                "requirement": "Marking yourself complete",
+                                "status": "",
+                            },
+                        },
+                        {
+                            "type": 4,
+                            "title": "Activity completion",
+                            "status": "Yes",
+                            "complete": True,
+                            "timecompleted": 1705067739,
+                            "details": {
+                                "type": "Activity completion",
+                                "criteria": (
+                                    '<a href="https://moodle.test/mod/quiz/view.php?id=4">'
+                                    "Quizz 2"
+                                    "</a>"
+                                ),
+                                "requirement": "Marking yourself complete",
+                                "status": "",
+                            },
+                        },
+                    ],
+                },
+                "warnings": [],
+            },
+        )
+
+        # Response for the failed run
+        responses.add(
+            responses.POST,
+            lms_backend.build_url("core_completion_get_course_completion_status"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "courseid": "2",
+                        "userid": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={
+                "completionstatus": {
+                    "completed": False,
+                    "aggregation": 0,
+                    "completions": [
+                        {
+                            "type": 4,
+                            "title": "Activity completion",
+                            "status": "No",
+                            "complete": False,
+                            "timecompleted": 1705067787,
+                            "details": {
+                                "type": "Activity completion",
+                                "criteria": (
+                                    '<a href="https://moodle.test/mod/quiz/view.php?id=3">'
+                                    "Quizz 1"
+                                    "</a>"
+                                ),
+                                "requirement": "Marking yourself complete",
+                                "status": "",
+                            },
+                        },
+                    ],
+                },
+                "warnings": [],
+            },
+        )
+        organization = factories.OrganizationFactory()
+        passed_course_run = factories.CourseRunFactory(
+            course__organizations=[organization],
+            resource_link=passed_resource_link,
+            state=models.CourseState.ONGOING_OPEN,
+            is_gradable=True,
+            is_listed=True,
+        )
+        failed_course_run = factories.CourseRunFactory(
+            course__organizations=[organization],
+            resource_link=failed_resource_link,
+            state=models.CourseState.ONGOING_OPEN,
+            is_gradable=True,
+            is_listed=True,
+        )
+        product = factories.ProductFactory(
+            price="0.00",
+            type="certificate",
+            certificate_definition=factories.CertificateDefinitionFactory(),
+            courses=[failed_course_run.course, passed_course_run.course],
+        )
+        user = factories.UserFactory(username="student")
+        # Passed certificate
+        enrollment = factories.EnrollmentFactory(
+            course_run=passed_course_run, is_active=True, user=user
+        )
+        passed_order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment, owner=user
+        )
+        passed_order.init_flow()
+        # Failed certificate
+        enrollment = factories.EnrollmentFactory(
+            course_run=failed_course_run, is_active=True, user=user
+        )
+        failed_order = factories.OrderFactory(
+            product=product, course=None, enrollment=enrollment, owner=user
+        )
+        failed_order.init_flow()
+
+        certificate_qs = models.Certificate.objects.all()
+        self.assertEqual(certificate_qs.count(), 0)
+
+        # Calling command should generate only one certificate for the passed course run
+        call_command("generate_certificates")
+        self.assertEqual(certificate_qs.count(), 1)
+        passed_order.refresh_from_db()
+        self.assertEqual(passed_order.certificate.id, certificate_qs.first().id)
 
         # But call it again, should not create a new certificate
         call_command("generate_certificates")
