@@ -235,10 +235,7 @@ class Certificate(BaseModel):
         Return the verification uri for the certificate if
         this one is a degree certificate.
         """
-        if self.certificate_definition.template not in [
-            enums.DEGREE,
-            enums.UNICAMP_DEGREE,
-        ]:
+        if self.certificate_definition.template not in enums.VERIFIABLE_CERTIFICATES:
             return None
 
         # - Retrieve the current language code or a fallback if the language is not available
