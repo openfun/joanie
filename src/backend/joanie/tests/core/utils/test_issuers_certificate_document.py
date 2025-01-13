@@ -178,7 +178,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         organization = factories.OrganizationFactory(
             title="University X",
             representative="Joanie Cunningham",
-            representative_profession="Head of the Life long learning department",
+            representative_profession="Head of the department",
         )
         course = factories.CourseFactory(organizations=[organization])
         certificate_definition = factories.CertificateDefinitionFactory(
@@ -220,18 +220,21 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         self.assertRegex(
             document_text,
             (
-                r"Richie Cunningham.*"
-                r"acquired the skills from the professional training.*"
+                r"Richie Cunningham"
+                r"acquired the skills from the professional training"
                 r"Graded product"
             ),
         )
         self.assertRegex(
             document_text,
-            r"Joanie Cunningham.*Head of the Life long learning department.*University X",
+            r"Joanie Cunningham.*Head of the department.*University X",
         )
         self.assertRegex(
             document_text,
-            r"Teacher 1.*Educational coordinator.*Teacher 2.*Educational coordinator",
+            (
+                r"Teacher 1.*Educational coordinator.*"
+                r"Teacher 2.*Educational coordinator"
+            ),
         )
         self.assertRegex(
             document_text,
@@ -258,7 +261,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             )
             self.assertRegex(
                 document_text,
-                r"Joanie Cunningham.*Head of the Life long learning department.*Université X",
+                r"Joanie Cunningham.*Head of the department.*Université X",
             )
             self.assertRegex(
                 document_text,
@@ -278,9 +281,56 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(
                 document_text,
-                r"Joanie Cunningham.*Head of the Life long learning department.*University X",
+                r"Joanie Cunningham.*Head of the department.*University X",
             )
             self.assertRegex(
                 document_text,
                 rf"https://example.com/en-us/certificates/{certificate.id}",
             )
+
+    def test_utils_issuers_generate_document_certificate_unicamp_degree_document_without_certification_level(  # pylint: disable=line-too-long
+        self,
+    ):
+        """
+        In the Unicamp degree template if the certification level is None, this information should
+        not be displayed in the document.
+        """
+        organization = factories.OrganizationFactory(
+            title="University X",
+            representative="Joanie Cunningham",
+            representative_profession="Head of the Life long learning department",
+        )
+        course = factories.CourseFactory(organizations=[organization])
+        certificate_definition = factories.CertificateDefinitionFactory(
+            template=enums.UNICAMP_DEGREE
+        )
+
+        product = factories.ProductFactory(
+            courses=[course],
+            title="Graded product",
+            certificate_definition=certificate_definition,
+            certification_level=None,
+        )
+
+        owner = factories.UserFactory(first_name="Richie Cunningham")
+        order = factories.OrderFactory(product=product, owner=owner)
+        certificate = factories.OrderCertificateFactory(order=order)
+
+        document = issuers.generate_document(
+            name=certificate.certificate_definition.template,
+            context=certificate.get_document_context(),
+        )
+
+        document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+        self.assertRegex(
+            document_text,
+            (
+                r"Richie Cunningham.*"
+                r"acquired the skills from the professional training.*"
+                r"Graded product"
+            ),
+        )
+        self.assertNotRegex(
+            document_text,
+            r"Certification.*level",
+        )

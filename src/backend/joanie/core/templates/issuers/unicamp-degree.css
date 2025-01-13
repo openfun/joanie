@@ -44,7 +44,7 @@
 :root {
   --padding-top: 50mm;
   --padding-left: 90mm;
-  --padding-right: 17mm;
+  --padding-right: 7mm;
   --padding-bottom: 5mm;
   --color-neutral-100: #FFF;
   --color-neutral-500: #6D6E70;
@@ -201,7 +201,8 @@ body {
 .content {
   display: flex;
   flex-direction: column;
-  height: 150mm;
+  height: 162mm;
+  margin-top: -7mm;
 }
 
 .content-object {
@@ -219,6 +220,7 @@ body {
   color: var(--color-accent);
   font-size: 26pt;
   font-weight: 700;
+  line-height: 1;
 }
 
 .content-issueDate {
@@ -234,11 +236,18 @@ body {
 }
 
 /* == Course details */
-.course-details {
-  margin-top: 8.7mm;
+.course-details__wrapper {
+  display: flex;
+  flex-direction: row;
   flex: 1;
+  margin-top: 8.7mm;
+}
+
+.course-details {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  height: 100%;
 }
 
 .course-details__teachers {
@@ -261,13 +270,16 @@ body {
   color: var(--color-neutral-800);
   font-size: 13pt;
   justify-content: space-between;
+  padding-right: 3mm;
+}
+
+.course-details__teachers + .course-details__signatory-wrapper {
+  justify-content: flex-end;
 }
 
 .course-details__signatory-wrapper {
-  flex: 1;
   display: flex;
-  justify-content: flex-start;
-  padding-left: 3mm;
+  flex: 1;
 }
 
 .course-details__signatory {
@@ -275,11 +287,11 @@ body {
 }
 
 .signatory__signature {
+  height: 15mm;
+  margin-top: 2mm;
   object-fit: contain;
   object-position: center;
   width: 35mm;
-  height: 12mm;
-  margin-top: 2mm;
 }
 
 .signatory__identity > em {
@@ -344,8 +356,16 @@ body {
 }
 
 /* Platform credits */
+.platform-credits__wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: flex-end;
+}
+
 .platform-credits {
   font-size: 7pt;
+  padding-left: 15mm;
   width: 52.3mm;
 }
 .platform-credits > p > strong {
@@ -356,10 +376,11 @@ body {
 }
 
 .platform-credits > img {
-  width: 39.7mm;
-  margin-top: 2.5mm;
-  margin-bottom: 0mm;
+  align-self: flex-end;
+  margin-bottom: 0;
   margin-left: -4mm; /* Avoid the margin of the image */
+  margin-top: 2.5mm;
+  width: 39.7mm;
 }
 
 /* == Skills */
