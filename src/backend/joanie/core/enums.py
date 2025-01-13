@@ -161,6 +161,8 @@ CERTIFICATE = "certificate"
 DEGREE = "degree"
 UNICAMP_DEGREE = "unicamp-degree"
 
+VERIFIABLE_CERTIFICATES = (DEGREE, UNICAMP_DEGREE)
+
 CERTIFICATE_NAME_CHOICES = (
     (CERTIFICATE, _("Certificate")),
     (DEGREE, _("Degree")),

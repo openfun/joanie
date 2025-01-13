@@ -1,5 +1,7 @@
+# pylint: disable=too-many-locals
 """CertificateVerificationView test suite."""
 
+import random
 import uuid
 from http import HTTPStatus
 
@@ -28,34 +30,47 @@ class CertificateVerificationViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_views_certificate_verification_view_with_non_degree_certificate(self):
+    def test_views_certificate_verification_view_allow_only_verifiable_certificates(
+        self,
+    ):
         """
-        Only degree certificates should be verified otherwise a 404 should be returned.
+        Only verifiable certificates should be allowed to be verified.
+        Otherwise, a 404 should be returned.
         """
-        certificate = factories.EnrollmentCertificateFactory(
-            certificate_definition__template=enums.CERTIFICATE
-        )
+        templates = [name for name, _ in enums.CERTIFICATE_NAME_CHOICES]
+        for template in templates:
+            with self.subTest(f"Test {template} certificate", template=template):
+                cert_definition = factories.CertificateDefinitionFactory(
+                    template=template
+                )
+                certificate = factories.OrderCertificateFactory(
+                    order__product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+                    order__product__certificate_definition=cert_definition,
+                )
 
-        url = reverse(
-            "certificate-verification", kwargs={"certificate_id": certificate.id}
-        )
+                url = reverse(
+                    "certificate-verification",
+                    kwargs={"certificate_id": certificate.id},
+                )
 
-        response = self.client.get(url)
+                response = self.client.get(url)
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+                if template in enums.VERIFIABLE_CERTIFICATES:
+                    self.assertEqual(response.status_code, HTTPStatus.OK)
+                else:
+                    self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
     @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
     def test_views_certificate_verification_view(self):
         """
-        CertificateVerificationView should return a 200 if the certificate id is known
-        and the certificate is a degree certificate.
+        CertificateVerificationView should render a web page proving
+        the certificate is genuine.
         """
+        template = random.choice(enums.VERIFIABLE_CERTIFICATES)
         owner = factories.UserFactory(first_name="John Doe")
         organization = factories.OrganizationFactory(title="Test Organization")
-        degree_definition = factories.CertificateDefinitionFactory(
-            template=enums.DEGREE
-        )
+        degree_definition = factories.CertificateDefinitionFactory(template=template)
         relation = factories.CourseProductRelationFactory(
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__certificate_definition=degree_definition,
@@ -65,7 +80,7 @@ class CertificateVerificationViewTestCase(TestCase):
             product=relation.product, course=relation.course, owner=owner
         )
         certificate = factories.OrderCertificateFactory(order=order)
-        self.assertEqual(certificate.certificate_definition.template, enums.DEGREE)
+        self.assertEqual(certificate.certificate_definition.template, template)
 
         url = reverse(
             "certificate-verification", kwargs={"certificate_id": certificate.id}

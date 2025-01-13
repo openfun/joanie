@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 
 from joanie.core import models
-from joanie.core.enums import DEGREE
+from joanie.core.enums import VERIFIABLE_CERTIFICATES
 from joanie.core.utils import issuers
 
 
@@ -27,7 +27,7 @@ class CertificateVerificationView(TemplateView):
         certificate = get_object_or_404(
             models.Certificate,
             id=certificate_id,
-            certificate_definition__template=DEGREE,
+            certificate_definition__template__in=VERIFIABLE_CERTIFICATES,
         )
 
         certificate_context = certificate.get_document_context()
