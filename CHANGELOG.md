@@ -15,6 +15,7 @@ and this project adheres to
 
 ### Fixed
 
+- Fix moodle `get_grades` method
 - Fix order filtering by creation date
 
 ### Changed
