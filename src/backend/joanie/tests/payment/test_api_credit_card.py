@@ -3,6 +3,7 @@ Test suite for the Credit Card API
 """
 
 import json
+from decimal import Decimal as D
 from http import HTTPStatus
 from unittest import mock
 
@@ -13,7 +14,8 @@ import arrow
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.test import APIRequestFactory
 
-from joanie.core.factories import UserFactory
+from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.core.factories import OrderGeneratorFactory, UserFactory
 from joanie.core.models import User
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.factories import CreditCardFactory
@@ -478,6 +480,95 @@ class CreditCardAPITestCase(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+
+    def test_api_credit_card_delete_but_credit_card_is_shared_by_3_users(self):
+        """
+        When an authenticated user decides to delete a shared credit card, it will remove
+        his relation to the credit card if he does not have any pending payment on his orders.
+        This action will not delete the credit card for the 2 other owners.
+        For example, if user_2 attempts to delete the credit card on his side and he still
+        has pending payment on an order, he will be blocked.
+        """
+        [user_1, user_2, user_3] = UserFactory.create_batch(3)
+        card = CreditCardFactory(owners=[user_1, user_2, user_3])
+
+        self.assertEqual(user_1.payment_cards.count(), 1)
+        self.assertEqual(user_2.payment_cards.count(), 1)
+        self.assertEqual(user_3.payment_cards.count(), 1)
+
+        token = self.generate_token_from_user(user_1)
+
+        response = self.client.delete(
+            f"/api/v1.0/credit-cards/{card.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "details": "Owner removed successfully.",
+                "remaining_owners": [str(user_2.id), str(user_3.id)],
+            },
+        )
+        self.assertNotIn(user_1, card.owners.all())
+        self.assertEqual(user_1.payment_cards.count(), 0)
+        self.assertEqual(user_2.payment_cards.count(), 1)
+        self.assertEqual(user_3.payment_cards.count(), 1)
+
+        # Create order with ongoing payments for user_2
+        OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            owner=user_2,
+            product__price=D("123.45"),
+            credit_card=card,
+        )
+        token_2 = self.generate_token_from_user(user_2)
+
+        response = self.client.delete(
+            f"/api/v1.0/credit-cards/{card.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token_2}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CONFLICT)
+        self.assertEqual(
+            response.json(),
+            {
+                "details": "Cannot delete the credit card, there are still ongoing pending "
+                f"payments for this credit card {card.id}"
+            },
+        )
+        self.assertIn(user_2, card.owners.all())
+
+    def test_api_credit_card_delete_when_pending_payment_on_order_is_forbidden(self):
+        """
+        When an authenticated user decides to delete a credit card and he still has pending
+        payments on orders, it should not let him delete it.
+        """
+        owner = UserFactory()
+        order = OrderGeneratorFactory(
+            state=ORDER_STATE_PENDING,
+            owner=owner,
+            product__price=D("123.45"),
+            credit_card__is_main=True,
+            credit_card__initial_issuer_transaction_identifier="1",
+        )
+        card = order.credit_card
+        token = self.generate_token_from_user(owner)
+
+        response = self.client.delete(
+            f"/api/v1.0/credit-cards/{card.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CONFLICT)
+        self.assertEqual(
+            response.json(),
+            {
+                "details": "Cannot delete the credit card, there are still ongoing pending "
+                f"payments for this credit card {card.id}"
+            },
+        )
 
     def test_api_credit_card_tokenize_card_anonymous(self):
         """
