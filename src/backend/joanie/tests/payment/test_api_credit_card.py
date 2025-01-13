@@ -3,6 +3,7 @@ Test suite for the Credit Card API
 """
 
 import json
+from decimal import Decimal as D
 from http import HTTPStatus
 from unittest import mock
 
@@ -13,7 +14,8 @@ import arrow
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.test import APIRequestFactory
 
-from joanie.core.factories import UserFactory
+from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.core.factories import OrderGeneratorFactory, UserFactory
 from joanie.core.models import User
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.payment.factories import CreditCardFactory
@@ -531,7 +533,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "details": "Cannot delete the credit card, there are still ongoing pending "
+                "details": "Cannot delete the credit card, there are still pending "
                 f"payments for this credit card {card.id}"
             },
         )
@@ -561,7 +563,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "details": "Cannot delete the credit card, there are still ongoing pending "
+                "details": "Cannot delete the credit card, there are still pending "
                 f"payments for this credit card {card.id}"
             },
         )

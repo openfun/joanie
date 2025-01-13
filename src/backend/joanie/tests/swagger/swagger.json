@@ -2252,7 +2252,7 @@
             },
             "put": {
                 "operationId": "credit_cards_update",
-                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+                "description": "Update the card ownership of a user when he wants to promote/demote it",
                 "parameters": [
                     {
                         "in": "path",
@@ -2352,7 +2352,7 @@
             },
             "delete": {
                 "operationId": "credit_cards_destroy",
-                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+                "description": "Delete the relation between the card and the owner when there are many\nowners on a shared card only if there are no pending payment on the owner's orders.\nIf there is only one owner on the card and there are no pending payments we can delete\nthe credit card.",
                 "parameters": [
                     {
                         "in": "path",
@@ -5529,8 +5529,8 @@
                         "title": "Last 4 numbers"
                     },
                     "is_main": {
-                        "type": "boolean",
-                        "title": "main"
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5538,6 +5538,7 @@
                     "expiration_month",
                     "expiration_year",
                     "id",
+                    "is_main",
                     "last_numbers"
                 ]
             },
@@ -5549,10 +5550,6 @@
                         "type": "string",
                         "nullable": true,
                         "maxLength": 100
-                    },
-                    "is_main": {
-                        "type": "boolean",
-                        "title": "main"
                     }
                 }
             },
@@ -7027,10 +7024,6 @@
                         "type": "string",
                         "nullable": true,
                         "maxLength": 100
-                    },
-                    "is_main": {
-                        "type": "boolean",
-                        "title": "main"
                     }
                 }
             },
