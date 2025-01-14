@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Allow a user to create a new order when the previous order already
+  exists with the triplet owner-course-product or owner-enrollment-product
+
 ## [2.13.0] - 2025-01-15
 
 ### Added
