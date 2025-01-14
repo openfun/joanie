@@ -1681,3 +1681,117 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+    def test_api_order_create_authenticated_product_course_unicity_when_not_in_inactive_state(
+        self,
+    ):
+        """
+        Allow authenticated user to create a new order when a triplet product-course-owner
+        of a previous order already exists and the state of that one is in an inactive
+        state (`cancelled`, `refunded`, or `refunding`). Otherwise, it should not let him create
+        a new order.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                course = factories.CourseFactory()
+                product = factories.ProductFactory(courses=[course], price=10.00)
+                organization = product.course_relations.first().organizations.first()
+                billing_address = BillingAddressDictFactory()
+                factories.OrderGeneratorFactory(
+                    owner=user,
+                    course=course,
+                    product=product,
+                    organization=organization,
+                    state=state,
+                )
+
+                data = {
+                    "product_id": str(product.id),
+                    "course_code": course.code,
+                    "organization_id": str(organization.id),
+                    "billing_address": billing_address,
+                    "has_waived_withdrawal_right": True,
+                }
+
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                if state in enums.ORDER_INACTIVE_STATES:
+                    self.assertEqual(response.status_code, HTTPStatus.CREATED)
+                else:
+                    self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                    self.assertEqual(
+                        response.json(),
+                        {
+                            "__all__": [
+                                "An order for this product and course already exists."
+                            ]
+                        },
+                    )
+
+    def test_api_order_create_authenticated_product_enrollment_unicity_when_not_in_inactive_state(
+        self,
+    ):
+        """
+        Allow authenticated user to create a new order when a triplet product-enrollment-owner
+        of a previous order already exists and the state of that one is in an inactive
+        state (`cancelled`, `refunded`, or `refunding`). Otherwise, it should not let him create
+        a new order.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                enrollment = factories.EnrollmentFactory(user=user)
+                product = factories.ProductFactory(
+                    courses=[enrollment.course_run.course],
+                    price=10.00,
+                    type=enums.PRODUCT_TYPE_CERTIFICATE,
+                )
+                organization = product.course_relations.first().organizations.first()
+                billing_address = BillingAddressDictFactory()
+
+                factories.OrderFactory(
+                    owner=user,
+                    course=None,
+                    enrollment=enrollment,
+                    product=product,
+                    organization=organization,
+                    state=state,
+                )
+
+                data = {
+                    "enrollment_id": str(enrollment.id),
+                    "organization_id": str(organization.id),
+                    "product_id": str(product.id),
+                    "has_waived_withdrawal_right": True,
+                    "billing_address": billing_address,
+                }
+
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                if state in enums.ORDER_INACTIVE_STATES:
+                    self.assertEqual(response.status_code, HTTPStatus.CREATED)
+                else:
+                    self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                    self.assertEqual(
+                        response.json(),
+                        {
+                            "__all__": [
+                                "An order for this product and enrollment already exists."
+                            ]
+                        },
+                    )

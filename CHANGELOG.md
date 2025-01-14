@@ -13,6 +13,11 @@ and this project adheres to
 - BO: Set properly the `is_graded` property on target course creation
 - BO: Allow to use nested TranslatableForms
 
+### Fixed
+
+- Allow a user to create a new order when the previous order already
+  exists but it is in `refunding` or `refunded` state
+
 ## [2.13.0] - 2025-01-15
 
 ### Added
