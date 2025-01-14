@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-07 09:53+0000\n"
-"PO-Revision-Date: 2025-01-07 12:48\n"
+"POT-Creation-Date: 2025-01-14 09:48+0000\n"
+"PO-Revision-Date: 2025-01-14 10:44\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -208,12 +208,12 @@ msgstr ""
 msgid "Credential"
 msgstr ""
 
-#: joanie/core/enums.py:34 joanie/core/enums.py:175
+#: joanie/core/enums.py:34 joanie/core/enums.py:177
 #: joanie/core/models/courses.py:1071
 msgid "Enrollment"
 msgstr ""
 
-#: joanie/core/enums.py:37 joanie/core/enums.py:165
+#: joanie/core/enums.py:37 joanie/core/enums.py:167
 #: joanie/core/models/certifications.py:117
 #: joanie/core/templates/issuers/degree.html:27
 msgid "Certificate"
@@ -239,7 +239,7 @@ msgstr ""
 msgid "Signing"
 msgstr ""
 
-#: joanie/core/enums.py:82 joanie/core/enums.py:211
+#: joanie/core/enums.py:82 joanie/core/enums.py:213
 msgid "Pending"
 msgstr ""
 
@@ -308,63 +308,63 @@ msgstr ""
 msgid "Signed"
 msgstr ""
 
-#: joanie/core/enums.py:166
+#: joanie/core/enums.py:168
 msgid "Degree"
 msgstr ""
 
-#: joanie/core/enums.py:167
+#: joanie/core/enums.py:169
 msgid "Unicamp degree"
 msgstr ""
 
-#: joanie/core/enums.py:174 joanie/core/models/products.py:564
+#: joanie/core/enums.py:176 joanie/core/models/products.py:564
 msgid "Order"
 msgstr ""
 
-#: joanie/core/enums.py:185
+#: joanie/core/enums.py:187
 msgid "Info"
 msgstr ""
 
-#: joanie/core/enums.py:186
+#: joanie/core/enums.py:188
 msgid "Success"
 msgstr ""
 
-#: joanie/core/enums.py:187
+#: joanie/core/enums.py:189
 msgid "Warning"
 msgstr ""
 
-#: joanie/core/enums.py:188
+#: joanie/core/enums.py:190
 msgid "Error"
 msgstr ""
 
-#: joanie/core/enums.py:198
+#: joanie/core/enums.py:200
 msgid "Notification"
 msgstr ""
 
-#: joanie/core/enums.py:199
+#: joanie/core/enums.py:201
 msgid "Payment succeeded"
 msgstr ""
 
-#: joanie/core/enums.py:200
+#: joanie/core/enums.py:202
 msgid "Payment failed"
 msgstr ""
 
-#: joanie/core/enums.py:201
+#: joanie/core/enums.py:203
 msgid "Payment refunded"
 msgstr ""
 
-#: joanie/core/enums.py:212 joanie/payment/enums.py:28
+#: joanie/core/enums.py:214 joanie/payment/enums.py:28
 msgid "Paid"
 msgstr ""
 
-#: joanie/core/enums.py:213
+#: joanie/core/enums.py:215
 msgid "Refused"
 msgstr ""
 
-#: joanie/core/enums.py:214 joanie/payment/enums.py:30
+#: joanie/core/enums.py:216 joanie/payment/enums.py:30
 msgid "Refunded"
 msgstr ""
 
-#: joanie/core/enums.py:215
+#: joanie/core/enums.py:217
 msgid "Canceled"
 msgstr ""
 
@@ -459,7 +459,7 @@ msgstr ""
 #: joanie/core/models/accounts.py:161 joanie/core/models/certifications.py:33
 #: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:173
 #: joanie/core/models/courses.py:474 joanie/core/models/courses.py:825
-#: joanie/core/models/products.py:81 joanie/core/models/products.py:1375
+#: joanie/core/models/products.py:81 joanie/core/models/products.py:1383
 #: joanie/payment/models.py:394
 msgid "title"
 msgstr ""
@@ -480,11 +480,11 @@ msgstr ""
 msgid "country"
 msgstr ""
 
-#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:1417
+#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:1425
 msgid "first name"
 msgstr ""
 
-#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:1418
+#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:1426
 msgid "last name"
 msgstr ""
 
@@ -620,7 +620,7 @@ msgid "Date of issuance"
 msgstr ""
 
 #: joanie/core/models/certifications.py:83 joanie/core/models/contracts.py:93
-#: joanie/core/models/products.py:1336 joanie/payment/models.py:54
+#: joanie/core/models/products.py:1344 joanie/payment/models.py:54
 msgid "order"
 msgstr ""
 
@@ -863,7 +863,7 @@ msgstr ""
 
 #: joanie/core/models/courses.py:723 joanie/core/models/courses.py:819
 #: joanie/core/models/products.py:307 joanie/core/models/products.py:450
-#: joanie/core/models/products.py:1324
+#: joanie/core/models/products.py:1332
 msgid "course"
 msgstr ""
 
@@ -1028,7 +1028,7 @@ msgstr ""
 msgid "Certificate definition is only allowed for product kinds: "
 msgstr ""
 
-#: joanie/core/models/products.py:322 joanie/core/models/products.py:1330
+#: joanie/core/models/products.py:322 joanie/core/models/products.py:1338
 msgid "course runs"
 msgstr ""
 
@@ -1036,11 +1036,11 @@ msgstr ""
 msgid "position in product"
 msgstr ""
 
-#: joanie/core/models/products.py:327 joanie/core/models/products.py:1342
+#: joanie/core/models/products.py:327 joanie/core/models/products.py:1350
 msgid "take into account for certification"
 msgstr ""
 
-#: joanie/core/models/products.py:328 joanie/core/models/products.py:1343
+#: joanie/core/models/products.py:328 joanie/core/models/products.py:1351
 msgid "Take into account the course grade for certification."
 msgstr ""
 
@@ -1162,35 +1162,35 @@ msgstr ""
 msgid "Course run "
 msgstr ""
 
-#: joanie/core/models/products.py:1340
+#: joanie/core/models/products.py:1348
 msgid "position in order"
 msgstr ""
 
-#: joanie/core/models/products.py:1351
+#: joanie/core/models/products.py:1359
 msgid "Course relation to an order with a position"
 msgstr ""
 
-#: joanie/core/models/products.py:1352
+#: joanie/core/models/products.py:1360
 msgid "Courses relations to orders with a position"
 msgstr ""
 
-#: joanie/core/models/products.py:1370
+#: joanie/core/models/products.py:1378
 msgid "Skill"
 msgstr ""
 
-#: joanie/core/models/products.py:1371
+#: joanie/core/models/products.py:1379
 msgid "Skills"
 msgstr ""
 
-#: joanie/core/models/products.py:1390
+#: joanie/core/models/products.py:1398
 msgid "A skill with this title already exists."
 msgstr ""
 
-#: joanie/core/models/products.py:1412
+#: joanie/core/models/products.py:1420
 msgid "Teacher"
 msgstr ""
 
-#: joanie/core/models/products.py:1413
+#: joanie/core/models/products.py:1421
 msgid "Teachers"
 msgstr ""
 
@@ -1680,30 +1680,38 @@ msgstr ""
 msgid "Issued on %(creation_date)s in France."
 msgstr ""
 
-#: joanie/core/templates/issuers/unicamp-degree.html:50
+#: joanie/core/templates/issuers/unicamp-degree.html:52
 msgid "Educational coordinator "
 msgstr ""
 
-#: joanie/core/templates/issuers/unicamp-degree.html:70
+#: joanie/core/templates/issuers/unicamp-degree.html:60
+msgid "Issued by"
+msgstr ""
+
+#: joanie/core/templates/issuers/unicamp-degree.html:76
 msgid "Certification level"
 msgstr ""
 
-#: joanie/core/templates/issuers/unicamp-degree.html:77
+#: joanie/core/templates/issuers/unicamp-degree.html:84
 #, python-format
 msgid "\n"
-"                        This micro-certification is issued in compliance with the common framework for micro-certifications:\n"
-"                        <br /><a href=\"%(microcertification_terms_url)s\">%(microcertification_terms_url)s</a>\n"
-"                        "
+"                            This micro-certification is issued in compliance with the common framework for micro-certifications:\n"
+"                            <br /><a href=\"%(microcertification_terms_url)s\">%(microcertification_terms_url)s</a>\n"
+"                            "
 msgstr ""
 
-#: joanie/core/templates/issuers/unicamp-degree.html:92
+#: joanie/core/templates/issuers/unicamp-degree.html:97
+msgid "This training<br/>is hosted by FUN"
+msgstr ""
+
+#: joanie/core/templates/issuers/unicamp-degree.html:108
 #, python-format
 msgid "\n"
 "                    To verify the authenticity<br />of this certificate, visit <br /><a href=\"%(link)s\">%(link)s</a>\n"
 "                    "
 msgstr ""
 
-#: joanie/core/templates/issuers/unicamp-degree.html:104
+#: joanie/core/templates/issuers/unicamp-degree.html:120
 msgid "<strong>Assessed skills</strong> of the professional training:"
 msgstr ""
 
@@ -2138,9 +2146,9 @@ msgstr ""
 msgid "{catalog_name} - {product_title} - An installment debit has failed {installment_amount:.2f} {currency}"
 msgstr ""
 
-#: joanie/payment/backends/base.py:234
+#: joanie/payment/backends/base.py:222
 #, python-brace-format
-msgid "{catalog_name} - {product_title} - An installment debit has been refunded {installment_amount:.2f} {currency}"
+msgid "{catalog_name} - {product_title} - Your order has been refunded for an amount of {installments_amount:.2f} {currency}"
 msgstr ""
 
 #: joanie/payment/enums.py:26
