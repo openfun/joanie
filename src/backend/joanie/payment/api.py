@@ -127,21 +127,10 @@ class CreditCardViewSet(
                 status=HTTPStatus.CONFLICT,
             )
 
-        owner = User.objects.get(username=username)
         if credit_card.owners.count() > 1:
+            owner = User.objects.get(username=username)
             credit_card.owners.remove(owner)
-            remaining_owners = credit_card.owners.values_list("id", flat=True).order_by(
-                "created_on"
-            )
-            return JsonResponse(
-                {
-                    "details": "Owner removed successfully.",
-                    "remaining_owners": [
-                        str(owner_id) for owner_id in remaining_owners
-                    ],
-                },
-                status=HTTPStatus.OK,
-            )
+            return Response(status=HTTPStatus.NO_CONTENT)
 
         # If this is the last owner, delete the credit card
         super().destroy(request, *args, **kwargs)

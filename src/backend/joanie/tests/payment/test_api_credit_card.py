@@ -503,14 +503,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(
-            response.json(),
-            {
-                "details": "Owner removed successfully.",
-                "remaining_owners": [str(user_2.id), str(user_3.id)],
-            },
-        )
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertNotIn(user_1, card.owners.all())
         self.assertEqual(user_1.payment_cards.count(), 0)
         self.assertEqual(user_2.payment_cards.count(), 1)
