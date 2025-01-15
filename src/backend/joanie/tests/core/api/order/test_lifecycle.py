@@ -64,7 +64,7 @@ class OrderLifecycle(BaseAPITestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
 
-        credit_card = CreditCardFactory(owner=user)
+        credit_card = CreditCardFactory(owners=[user])
         self.client.post(
             f"/api/v1.0/orders/{order.id}/payment-method/",
             data={"credit_card_id": str(credit_card.id)},

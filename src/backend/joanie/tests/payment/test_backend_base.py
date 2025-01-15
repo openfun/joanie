@@ -234,7 +234,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
         CreditCardFactory(
-            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+            owners=[owner], is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = BillingAddressDictFactory()
         order.init_flow(billing_address=billing_address)
@@ -288,7 +288,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="sam@fun-test.fr", language="en-us")
         CreditCardFactory(
-            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+            owners=[owner], is_main=True, initial_issuer_transaction_identifier="1"
         )
         order = OrderFactory(
             owner=owner,
@@ -413,7 +413,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
         CreditCardFactory(
-            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+            owners=[owner], is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = UserAddressFactory(owner=owner, is_reusable=True)
         payment = {
@@ -528,7 +528,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
         CreditCardFactory(
-            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+            owners=[order.owner],
+            is_main=True,
+            initial_issuer_transaction_identifier="1",
         )
         order.init_flow(billing_address=BillingAddressDictFactory())
 
@@ -600,7 +602,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
         billing_address = BillingAddressDictFactory()
         CreditCardFactory(
-            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+            owners=[order.owner],
+            is_main=True,
+            initial_issuer_transaction_identifier="1",
         )
         order.init_flow(billing_address=billing_address)
 
@@ -689,7 +693,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         )
         billing_address = BillingAddressDictFactory()
         CreditCardFactory(
-            owner=order.owner, is_main=True, initial_issuer_transaction_identifier="1"
+            owners=[order.owner],
+            is_main=True,
+            initial_issuer_transaction_identifier="1",
         )
         order.init_flow(billing_address=billing_address)
         payment = {
@@ -752,7 +758,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             ],
         )
         CreditCardFactory(
-            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+            owners=[owner], is_main=True, initial_issuer_transaction_identifier="1"
         )
         billing_address = BillingAddressDictFactory()
         order.init_flow(billing_address=billing_address)
@@ -795,7 +801,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             last_name="Bowman",
         )
         CreditCardFactory(
-            owner=owner, is_main=True, initial_issuer_transaction_identifier="1"
+            owners=[owner], is_main=True, initial_issuer_transaction_identifier="1"
         )
         product = ProductFactory(title="Product 1", price=Decimal("200.00"))
         product.translations.create(

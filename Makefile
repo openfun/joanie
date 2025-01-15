@@ -237,6 +237,11 @@ shell: ## connect to database shell
 	@$(MANAGE) shell_plus
 .PHONY: dbshell
 
+check: ## run django system check framework
+	@echo "$(BOLD)System Check Framework"
+	@$(MANAGE) check
+.PHONY: check
+
 # -- Database
 
 dbshell: ## connect to database shell

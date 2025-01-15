@@ -130,7 +130,7 @@ class OrderPaymentMethodApiTest(BaseAPITestCase):
 
         self.assertFalse(order.has_payment_method)
 
-        credit_card = CreditCardFactory(owner=order.owner)
+        credit_card = CreditCardFactory(owners=[order.owner])
         token = self.generate_token_from_user(order.owner)
         response = self.client.post(
             f"/api/v1.0/orders/{order.id}/payment-method/",

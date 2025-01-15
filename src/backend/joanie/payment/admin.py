@@ -34,6 +34,23 @@ class RequiredOwnerFilter(AutocompleteFilter):
         return super().queryset(request, queryset).none()
 
 
+class RequiredOwnersFilter(AutocompleteFilter):
+    """Filter on "owners" ManyToMany field."""
+
+    title = _("Owner")
+    field_name = "owners"
+
+    def queryset(self, request, queryset):
+        """
+        Filter the queryset to include only credit cards where the selected owner
+        is in the ManyToMany 'owners' relationship.
+        """
+        if self.value():
+            return super().queryset(request, queryset)
+
+        return super().queryset(request, queryset).none()
+
+
 @admin.register(models.Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     """Admin class for the Invoice model."""
@@ -180,9 +197,9 @@ class TransactionAdmin(admin.ModelAdmin):
 class CreditCardAdmin(admin.ModelAdmin):
     """Admin class for the credit card model."""
 
-    autocomplete_fields = ["owner"]
+    autocomplete_fields = ["owners"]
     list_display = (
-        "owner",
+        "get_owners",
         "title",
         "numbers",
         "expiration_date",
@@ -191,9 +208,15 @@ class CreditCardAdmin(admin.ModelAdmin):
         "has_initial_issuer_transaction_identifier",
         "payment_provider",
     )
-    list_filter = [RequiredOwnerFilter, "is_main"]
-    list_select_related = ["owner"]
+    list_filter = [RequiredOwnersFilter, "is_main"]
     readonly_fields = ("has_token", "has_initial_issuer_transaction_identifier")
+
+    @admin.display(description=_("Owners"))
+    def get_owners(self, obj):
+        """
+        Returns the list of usernames allowed to use the credit card.
+        """
+        return ", ".join([owner.username for owner in obj.owners.all()])
 
     @staticmethod
     def numbers(credit_card):
