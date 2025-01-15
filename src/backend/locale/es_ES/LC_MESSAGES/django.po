@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-14 09:48+0000\n"
-"PO-Revision-Date: 2025-01-14 10:44\n"
+"POT-Creation-Date: 2025-01-15 10:07+0000\n"
+"PO-Revision-Date: 2025-01-15 10:20\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -1672,7 +1672,7 @@ msgstr ""
 
 #: joanie/core/templates/issuers/unicamp-degree.html:32
 #, python-format
-msgid "<span class=\"student-name\">%(student)s</span><br/> acquired the skills from the professional training<br/> <span class=\"course-name\">%(course)s</span>"
+msgid "<span class=\"student-name\">%(student)s</span><br/> acquired the skills from the professional training:<br/> <span class=\"course-name\">%(course)s</span>"
 msgstr ""
 
 #: joanie/core/templates/issuers/unicamp-degree.html:39

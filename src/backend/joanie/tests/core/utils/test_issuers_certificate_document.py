@@ -221,7 +221,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             document_text,
             (
                 r"Richie Cunningham"
-                r"acquired the skills from the professional training"
+                r"acquired the skills from the professional training:"
                 r"Graded product"
             ),
         )
