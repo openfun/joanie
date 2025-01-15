@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-14 09:48+0000\n"
-"PO-Revision-Date: 2025-01-14 10:44\n"
+"POT-Creation-Date: 2025-01-15 10:07+0000\n"
+"PO-Revision-Date: 2025-01-15 10:23\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -1676,13 +1676,13 @@ msgstr "Micro-certification"
 
 #: joanie/core/templates/issuers/unicamp-degree.html:32
 #, python-format
-msgid "<span class=\"student-name\">%(student)s</span><br/> acquired the skills from the professional training<br/> <span class=\"course-name\">%(course)s</span>"
-msgstr "<span class=\"student-name\">%(student)s</span><br/> a acquis les compétences de la formation professionnelle<br/> <span class=\"course-name\">%(course)s</span>"
+msgid "<span class=\"student-name\">%(student)s</span><br/> acquired the skills from the professional training:<br/> <span class=\"course-name\">%(course)s</span>"
+msgstr "<span class=\"student-name\">%(student)s</span><br/> a acquis les compétences de la formation professionnelle : <br/> <span class=\"course-name\">%(course)s</span>"
 
 #: joanie/core/templates/issuers/unicamp-degree.html:39
 #, python-format
 msgid "Issued on %(creation_date)s in France."
-msgstr "Délivré le %(creation_date)s en France."
+msgstr "Délivrée le %(creation_date)s en France."
 
 #: joanie/core/templates/issuers/unicamp-degree.html:52
 msgid "Educational coordinator "
@@ -1690,7 +1690,7 @@ msgstr "Responsable pédagogique "
 
 #: joanie/core/templates/issuers/unicamp-degree.html:60
 msgid "Issued by"
-msgstr ""
+msgstr "Délivrée par"
 
 #: joanie/core/templates/issuers/unicamp-degree.html:76
 msgid "Certification level"
@@ -1702,7 +1702,10 @@ msgid "\n"
 "                            This micro-certification is issued in compliance with the common framework for micro-certifications:\n"
 "                            <br /><a href=\"%(microcertification_terms_url)s\">%(microcertification_terms_url)s</a>\n"
 "                            "
-msgstr ""
+msgstr "\n"
+"                            Cette micro-certification est délivrée en conformité avec le cadre commun des micro-certifications : \n"
+"                            <br /><a href=\"%(microcertification_terms_url)s\">%(microcertification_terms_url)s</a>\n"
+"                            "
 
 #: joanie/core/templates/issuers/unicamp-degree.html:97
 msgid "This training<br/>is hosted by FUN"
@@ -2157,7 +2160,7 @@ msgstr "{catalog_name} - {product_title} - Le prélèvement d'une échéance d'u
 #: joanie/payment/backends/base.py:222
 #, python-brace-format
 msgid "{catalog_name} - {product_title} - Your order has been refunded for an amount of {installments_amount:.2f} {currency}"
-msgstr ""
+msgstr "{catalog_name} - {product_title} - Votre commande a été remboursée pour montant de {installments_amount:.2f} {currency}"
 
 #: joanie/payment/enums.py:26
 msgid "Unpaid"

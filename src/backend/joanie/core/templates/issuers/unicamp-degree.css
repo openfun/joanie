@@ -95,6 +95,10 @@ body {
   color: var(--color-neutral-800);
 }
 
+a {
+  color: var(--color-accent)
+}
+
 /* Debug */
 .debug:before,
 .debug:after {
@@ -264,6 +268,7 @@ body {
   font-size: 17pt;
   font-weight: 700;
   margin-bottom: 7mm;
+  text-transform: uppercase;
 }
 
 .course-details__teachers {
@@ -414,12 +419,12 @@ body {
 }
 
 .skills-list li {
-  font-size: 12px;
+  font-size: 12pt;
   margin-bottom: 3mm;
   position: relative;
 }
 
 .skills-list li::marker {
   font-size: 20pt;
-  line-height: 7pt;
+  line-height: 9pt;
 }
