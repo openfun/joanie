@@ -263,10 +263,7 @@ class DummyPaymentBackend(BasePaymentBackend):
                 last_numbers="1234",
                 payment_provider=provider,
             )
-            if created:
-                credit_card.owners.set([user])
-            else:
-                credit_card.owners.add(user)
+            credit_card.owners.add(user)
             credit_card.save()
             return
 

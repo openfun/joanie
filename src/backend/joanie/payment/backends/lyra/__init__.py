@@ -402,10 +402,7 @@ class LyraBackend(BasePaymentBackend):
                 initial_issuer_transaction_identifier=initial_issuer_transaction_identifier,
                 payment_provider=self.name,
             )
-            if created:
-                credit_card.owners.set([order.owner])
-            else:
-                credit_card.owners.add(order.owner)
+            credit_card.owners.add(order.owner)
             credit_card.save()
 
         amount = f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"
