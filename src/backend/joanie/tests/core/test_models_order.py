@@ -17,7 +17,7 @@ from django.utils import timezone as django_timezone
 from joanie.core import enums, factories
 from joanie.core.enums import PAYMENT_STATE_PENDING
 from joanie.core.factories import CourseRunFactory
-from joanie.core.models import Contract, CourseState
+from joanie.core.models import Contract, CourseState, Order
 from joanie.core.utils import contract_definition
 from joanie.payment.factories import (
     BillingAddressDictFactory,
@@ -286,8 +286,7 @@ class OrderModelsTestCase(LoggingTestCase):
             ),
         )
 
-    @staticmethod
-    def test_models_order_course_owner_product_unique_canceled():
+    def test_models_order_course_owner_product_unique_canceled(self):
         """
         Canceled orders are not taken into account for uniqueness on the course, product and
         owner triplet.
@@ -299,6 +298,136 @@ class OrderModelsTestCase(LoggingTestCase):
         )
 
         factories.OrderFactory(owner=order.owner, product=product, course=order.course)
+
+        self.assertEqual(
+            Order.objects.filter(
+                owner=order.owner, product=order.product, course=order.course
+            ).count(),
+            2,
+        )
+
+    def test_models_order_course_owner_product_unique_refunding(self):
+        """
+        Refunding orders are not taken into account for uniqueness on the course, product and
+        owner triplet.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], price=10.00)
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_REFUNDING
+        )
+
+        factories.OrderFactory(owner=order.owner, product=product, course=order.course)
+
+        self.assertEqual(
+            Order.objects.filter(
+                owner=order.owner, product=order.product, course=order.course
+            ).count(),
+            2,
+        )
+
+    def test_models_order_course_owner_product_unique_refunded(self):
+        """
+        Refunded orders are not taken into account for uniqueness on the course, product and
+        owner triplet.
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], price=10.00)
+        order = factories.OrderFactory(
+            product=product, state=enums.ORDER_STATE_REFUNDED
+        )
+
+        factories.OrderFactory(owner=order.owner, product=product, course=order.course)
+
+        self.assertEqual(
+            Order.objects.filter(
+                owner=order.owner, product=order.product, course=order.course
+            ).count(),
+            2,
+        )
+
+    def test_models_order_enrollment_owner_product_unique_canceled(self):
+        """
+        Canceled orders are not taken in account for uniqueness on the enrollment, course
+        and owner triplet.
+        """
+        enrollment = factories.EnrollmentFactory()
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
+            price=10.00,
+        )
+        order = factories.OrderFactory(
+            product=product,
+            enrollment=enrollment,
+            course=None,
+            state=enums.ORDER_STATE_CANCELED,
+        )
+
+        factories.OrderFactory(
+            owner=order.owner, product=product, enrollment=enrollment, course=None
+        )
+
+        self.assertEqual(
+            Order.objects.filter(
+                owner=order.owner, product=order.product, enrollment=enrollment
+            ).count(),
+            2,
+        )
+
+    def test_models_order_enrollment_owner_product_unique_refunding(self):
+        """
+        Refunding orders are not taken in account for uniqueness on the enrollment, course
+        and owner triplet.
+        """
+        enrollment = factories.EnrollmentFactory()
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
+            price=10.00,
+        )
+        order = factories.OrderFactory(
+            product=product,
+            enrollment=enrollment,
+            course=None,
+            state=enums.ORDER_STATE_REFUNDING,
+        )
+
+        factories.OrderFactory(product=product, enrollment=enrollment, course=None)
+
+        self.assertEqual(
+            Order.objects.filter(
+                owner=order.owner, product=order.product, enrollment=enrollment
+            ).count(),
+            2,
+        )
+
+    def test_models_order_enrollment_owner_product_unique_refunded(self):
+        """
+        Refunded orders are not taken in account for uniqueness on the enrollment, course
+        and owner triplet.
+        """
+        enrollment = factories.EnrollmentFactory()
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[enrollment.course_run.course],
+            price=10.00,
+        )
+        order = factories.OrderFactory(
+            product=product,
+            enrollment=enrollment,
+            course=None,
+            state=enums.ORDER_STATE_REFUNDED,
+        )
+
+        factories.OrderFactory(product=product, enrollment=enrollment, course=None)
+
+        self.assertEqual(
+            Order.objects.filter(
+                owner=order.owner, product=order.product, enrollment=enrollment
+            ).count(),
+            2,
+        )
 
     def test_models_order_freeze_target_courses_course_runs_relation_sorted_by_position(
         self,
@@ -1068,9 +1197,10 @@ class OrderModelsTestCase(LoggingTestCase):
         card has an initial issuer transaction identifier.
         """
         credit_card = CreditCardFactory(
-            initial_issuer_transaction_identifier="4575676657929351"
+            initial_issuer_transaction_identifier="4575676657929351",
+            owners=[factories.UserFactory()],
         )
-        order = factories.OrderFactory(owner=credit_card.owner)
+        order = factories.OrderFactory(owner=credit_card.owners.first())
         self.assertTrue(order.has_payment_method)
 
     def test_models_order_has_payment_method_no_transaction_identifier(self):

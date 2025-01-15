@@ -6,11 +6,18 @@ import logging
 from http import HTTPStatus
 
 from django.db import transaction
+from django.http import JsonResponse
 
 from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
+from joanie.core.enums import (
+    ORDER_STATE_PENDING,
+    ORDER_STATE_PENDING_PAYMENT,
+    PAYMENT_STATE_PENDING,
+)
+from joanie.core.models import Order, User
 from joanie.payment import exceptions, get_payment_backend, models, serializers
 
 logger = logging.getLogger(__name__)
@@ -86,3 +93,56 @@ class CreditCardViewSet(
         payment_infos = payment_backend.tokenize_card(user=self.request.user)
 
         return Response(payment_infos, status=HTTPStatus.OK)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete the relation between the card and the owner when there are many
+        owners on a shared card only if there are no pending payment on the owner's orders.
+        If there is only one owner on the card and there are no pending payments we can delete
+        the credit card.
+        """
+        credit_card = self.get_object()
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        # Check for pending payments for this user
+        has_pending_payments = Order.objects.filter(
+            owner__username=username,
+            state__in=[
+                ORDER_STATE_PENDING,
+                ORDER_STATE_PENDING_PAYMENT,
+            ],
+            payment_schedule__contains=[{"state": PAYMENT_STATE_PENDING}],
+        ).exists()
+
+        if has_pending_payments:
+            return JsonResponse(
+                {
+                    "details": "Cannot delete the credit card, there are still ongoing pending "
+                    f"payments for this credit card {credit_card.id}"
+                },
+                status=HTTPStatus.CONFLICT,
+            )
+
+        owner = User.objects.get(username=username)
+        if credit_card.owners.count() > 1:
+            credit_card.owners.remove(owner)
+            remaining_owners = credit_card.owners.values_list("id", flat=True).order_by(
+                "created_on"
+            )
+            return JsonResponse(
+                {
+                    "details": "Owner removed successfully.",
+                    "remaining_owners": [
+                        str(owner_id) for owner_id in remaining_owners
+                    ],
+                },
+                status=HTTPStatus.OK,
+            )
+
+        # If this is the last owner, delete the credit card
+        super().destroy(request, *args, **kwargs)
+        return Response(status=HTTPStatus.NO_CONTENT)
