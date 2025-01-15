@@ -283,6 +283,13 @@ test.describe("Product form", () => {
     await page.getByLabel("Course search").fill(course.title);
     await page.getByRole("option", { name: course.title }).click();
 
+    // By default the course is marked as graded
+    await expect(
+      page.getByRole("checkbox", {
+        name: "Taken into account for certification",
+      }),
+    ).toBeChecked();
+
     await expect(
       addTargetCourseModal
         .getByTestId("product-target-course-runs-selection-alert")
@@ -303,6 +310,7 @@ test.describe("Product form", () => {
       .getByLabel("Select row")
       .check();
     await page.getByTestId("submit-button-product-target-course-form").click();
+
     await expect(
       page.getByText("Operation completed successfully."),
     ).toBeVisible();

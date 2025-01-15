@@ -110,6 +110,7 @@ export function ProductFormTargetCoursesSection(props: Props) {
       course: values.course,
       course_runs: values.course_runs ?? [],
       position: targetCourses.fields.length,
+      is_graded: values.is_graded,
     };
     const payload = transformProductTargetCourseRelationToDTO(newValue);
 

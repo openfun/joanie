@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- BO: Set properly the `is_graded` property on target course creation
+
 ## [2.13.0] - 2025-01-15
 
 ### Added
