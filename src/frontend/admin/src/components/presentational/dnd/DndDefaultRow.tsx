@@ -3,9 +3,9 @@ import { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import { grey } from "@mui/material/colors";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ModeEditOutlineTwoToneIcon from "@mui/icons-material/ModeEditOutlineTwoTone";
+import { useTheme } from "@mui/material/styles";
 
 export interface DndDefaultRowProps {
   mainTitle: string | ReactNode;
@@ -23,6 +23,7 @@ export function DndDefaultRow({
   enableEdit = false,
   ...props
 }: DndDefaultRowProps) {
+  const theme = useTheme();
   return (
     <Box
       display="flex"
@@ -32,12 +33,15 @@ export function DndDefaultRow({
         px: 2,
         py: 1,
         borderRadius: 1,
-        backgroundColor: grey[100],
         "&:hover": {
           ".right-actions": {
             opacity: 1,
           },
         },
+        backgroundColor: theme.palette.grey[100],
+        ...theme.applyStyles("dark", {
+          backgroundColor: theme.palette.grey[700],
+        }),
       }}
     >
       <Box>
