@@ -11,6 +11,7 @@ and this project adheres to
 ### Fixed
 
 - BO: Set properly the `is_graded` property on target course creation
+- BO: Allow to use nested TranslatableForms
 
 ## [2.13.0] - 2025-01-15
 
