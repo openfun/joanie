@@ -9,13 +9,8 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { getAcceptLanguage } from "@/services/http/HttpService";
-import {
-  deleteDjangoLang,
-  getLocaleFromDjangoLang,
-  getSavedDjangoLanguage,
-  setDjangoLang,
-} from "@/utils/lang";
 import { Maybe } from "@/types/utils";
+import { useTranslatableForm } from "@/contexts/i18n/TranslatableFormProvider";
 
 interface Props {
   onSelectLang: (lang?: string) => void;
@@ -34,6 +29,7 @@ export function TranslatableForm({
   const formHasBeenReset = useRef<boolean>(false);
   const [value, setValue] = useState(getAcceptLanguage());
   const theme = useTheme();
+  const { register, unregister, registeredForms } = useTranslatableForm();
 
   const a11yProps = (index: number) => {
     return {
@@ -42,7 +38,7 @@ export function TranslatableForm({
     };
   };
 
-  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handleChange = (newValue: string) => {
     if (value === newValue) {
       return;
     }
@@ -69,30 +65,15 @@ export function TranslatableForm({
   }, entitiesDeps);
 
   useEffect(() => {
-    const old = deleteDjangoLang();
-    localStorage.setItem(TRANSLATE_CONTENT_LANGUAGE, old);
-    /*
-      The translation of content and the retrieval of an object according to a given language are done via the same
-      header on a GET / POST request. We play on the priorities in the "getAcceptLanguage" method of HttpService.
-      We add this event because if we are on a page with translatable content, we need to reset the
-      TRANSLATE_CONTENT_LANGUAGE key in localStorage when we leave or refresh the page so that the object is retrieved
-      in the current language and not in the current language forced. by the TranslatableContent component
-     */
-    window.addEventListener(
-      "beforeunload",
-      () => {
-        const oldDjangoLanguage = getSavedDjangoLanguage();
-        localStorage.removeItem(TRANSLATE_CONTENT_LANGUAGE);
-        setDjangoLang(oldDjangoLanguage);
-      },
-      { once: true },
-    );
-    return () => {
-      const oldDjangoLanguage = getSavedDjangoLanguage();
-      localStorage.removeItem(TRANSLATE_CONTENT_LANGUAGE);
-      setDjangoLang(oldDjangoLanguage);
-      props.onSelectLang(getLocaleFromDjangoLang());
-    };
+    const currentValue = localStorage.getItem(TRANSLATE_CONTENT_LANGUAGE);
+    if (currentValue) {
+      handleChange(currentValue);
+    }
+  }, [registeredForms]);
+
+  useEffect(() => {
+    register();
+    return unregister;
   }, []);
 
   const contextValue: TranslatableFormContextInterface = useMemo(
@@ -118,7 +99,7 @@ export function TranslatableForm({
         >
           <Tabs
             value={value}
-            onChange={handleChange}
+            onChange={(_, newValue) => handleChange(newValue)}
             aria-label="basic tabs example"
           >
             <Tab

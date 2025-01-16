@@ -16,6 +16,7 @@ import {
 import { useAllLanguages } from "@/hooks/useAllLanguages/useAllLanguages";
 import { getLocaleFromDjangoLang, setDjangoLangFromLocale } from "@/utils/lang";
 import { FORCE_TRANSLATE_CONTENT_LANGUAGE } from "@/utils/constants";
+import TranslatableFormProvider from "@/contexts/i18n/TranslatableFormProvider";
 
 export function TranslationsProvider({ children }: PropsWithChildren<{}>) {
   const queryClient = useQueryClient();
@@ -73,7 +74,9 @@ export function TranslationsProvider({ children }: PropsWithChildren<{}>) {
           messages={translations}
           defaultLocale={LocalesEnum.ENGLISH}
         >
-          {allLanguages && <div>{children}</div>}
+          {allLanguages && (
+            <TranslatableFormProvider>{children}</TranslatableFormProvider>
+          )}
         </IntlProvider>
       </LocalizationProvider>
     </LocaleContext.Provider>
