@@ -2170,7 +2170,7 @@
         "/api/v1.0/credit-cards/": {
             "get": {
                 "operationId": "credit_cards_list",
-                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card\n\nPATCH /api/credit-cards/<credit_card_id>/promote/\n    To promote a credit card ownernship to main for the authenticated user",
                 "parameters": [
                     {
                         "name": "page",
@@ -2216,7 +2216,7 @@
         "/api/v1.0/credit-cards/{id}/": {
             "get": {
                 "operationId": "credit_cards_retrieve",
-                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card\n\nPATCH /api/credit-cards/<credit_card_id>/promote/\n    To promote a credit card ownernship to main for the authenticated user",
                 "parameters": [
                     {
                         "in": "path",
@@ -2252,7 +2252,7 @@
             },
             "put": {
                 "operationId": "credit_cards_update",
-                "description": "Update the card ownership of a user when he wants to promote/demote it",
+                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card\n\nPATCH /api/credit-cards/<credit_card_id>/promote/\n    To promote a credit card ownernship to main for the authenticated user",
                 "parameters": [
                     {
                         "in": "path",
@@ -2302,7 +2302,7 @@
             },
             "patch": {
                 "operationId": "credit_cards_partial_update",
-                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n    - is_main?: bool\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card",
+                "description": "API views allows to get all credit cards, update or delete one\nfor the authenticated user.\n\nGET /api/credit-cards/\n    Return the list of all credit cards owned by the authenticated user\n\nPUT /api/credit-cards/<credit_card_id> with expected data:\n    - title: str\n\nDELETE /api/credit-cards/<credit_card_id>\n    Delete the selected credit card\n\nPATCH /api/credit-cards/<credit_card_id>/promote/\n    To promote a credit card ownernship to main for the authenticated user",
                 "parameters": [
                     {
                         "in": "path",
@@ -2376,6 +2376,58 @@
                 "responses": {
                     "204": {
                         "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1.0/credit-cards/{id}/promote/": {
+            "patch": {
+                "operationId": "credit_cards_promote_partial_update",
+                "description": "Promote the credit card ownership of a user to main card.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "credit-cards"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCreditCardRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCreditCardRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditCard"
+                                }
+                            }
+                        },
+                        "description": ""
                     }
                 }
             }
