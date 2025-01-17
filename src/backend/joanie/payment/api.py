@@ -6,6 +6,7 @@ import logging
 from http import HTTPStatus
 
 from django.db import transaction
+from django.db.models import BooleanField, Case, Value, When
 from django.http import JsonResponse
 
 from rest_framework import mixins, permissions, viewsets
@@ -52,13 +53,15 @@ class CreditCardViewSet(
 
     PUT /api/credit-cards/<credit_card_id> with expected data:
         - title: str
-        - is_main?: bool
 
     DELETE /api/credit-cards/<credit_card_id>
         Delete the selected credit card
+
+    PATCH /api/credit-cards/<credit_card_id>/promote/
+        To promote a credit card ownernship to main for the authenticated user
     """
 
-    lookup_field = "id"
+    lookup_field = "pk"
     serializer_class = serializers.CreditCardSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -70,9 +73,21 @@ class CreditCardViewSet(
             else self.request.user.username
         )
 
-        return models.CreditCard.objects.get_cards_for_owner(
-            username=username
-        ).order_by("-is_main", "-created_on")
+        return (
+            models.CreditCard.objects.get_cards_for_owner(username=username)
+            .annotate(
+                is_main_card=Case(
+                    When(
+                        ownerships__is_main=True,
+                        ownerships__owner__username=username,
+                        then=Value(True),
+                    ),
+                    default=Value(False),
+                    output_field=BooleanField(),
+                )
+            )
+            .order_by("-is_main_card", "-created_on")
+        )
 
     @action(
         methods=["POST"],
@@ -88,6 +103,26 @@ class CreditCardViewSet(
         payment_infos = payment_backend.tokenize_card(user=self.request.user)
 
         return Response(payment_infos, status=HTTPStatus.OK)
+
+    @action(
+        methods=["patch"],
+        detail=True,
+    )
+    def promote(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Promote the credit card ownership of a user to main card.
+        """
+        credit_card = self.get_object()
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+        card_ownership = credit_card.ownerships.get(owner__username=username)
+        card_ownership.is_main = True
+        card_ownership.save()
+
+        return Response(HTTPStatus.OK)
 
     def destroy(self, request, *args, **kwargs):
         """

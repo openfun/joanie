@@ -12,10 +12,7 @@ class CreditCardSerializer(serializers.ModelSerializer):
     """
 
     id = serializers.CharField(read_only=True, required=False)
-    is_main = serializers.BooleanField(
-        required=False,
-        label=models.CreditCard._meta.get_field("is_main").verbose_name,
-    )
+    is_main = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.CreditCard
@@ -34,4 +31,12 @@ class CreditCardSerializer(serializers.ModelSerializer):
             "expiration_month",
             "expiration_year",
             "last_numbers",
+            "is_main",
         ]
+
+    def get_is_main(self, instance):
+        """
+        Get the value `is_main` through the ownership of the card
+        """
+        user = self.context.get("request").user
+        return instance.ownerships.get(owner=user).is_main
