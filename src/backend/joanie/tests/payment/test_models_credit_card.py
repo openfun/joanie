@@ -213,3 +213,21 @@ class CreditCardModelTestCase(LoggingTestCase):
 
         self.assertEqual(credit_card.id, card_2.id)
         self.assertIn(owner_2, credit_card.owners.all())
+
+    def test_models_credit_card_demote_a_credit_card_from_main_is_forbidden(self):
+        """Demote a main credit card is forbidden"""
+        user = UserFactory()
+        card = CreditCardFactory(owners=[user])
+
+        ownership = card.ownerships.get(owner=user)
+
+        self.assertTrue(ownership.is_main)
+
+        with self.assertRaises(ValidationError) as context:
+            ownership.is_main = False
+            ownership.save()
+
+        self.assertEqual(
+            str(context.exception),
+            "{'__all__': ['Demote a main credit card is forbidden']}",
+        )
