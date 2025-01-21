@@ -104,8 +104,7 @@ class CertificateVerificationViewTestCase(TestCase):
         )
         self.assertEqual(
             paragraphs[1].text,
-            "Please compare information displayed "
-            "on the certificate below with yours.",
+            "Please compare information displayed on the certificate below with yours.",
         )
 
         footer = html.cssselect(".footer__content")

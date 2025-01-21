@@ -489,8 +489,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(30):
             response = self.client.get(
-                f"/api/v1.0/courses/{courses[0].id}/orders/"
-                f"?product_id={product.id}",
+                f"/api/v1.0/courses/{courses[0].id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -513,8 +512,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(5):
             response = self.client.get(
-                f"/api/v1.0/courses/{courses[1].id}/orders/"
-                f"?product_id={product.id}",
+                f"/api/v1.0/courses/{courses[1].id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -849,7 +847,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(2):
             response = self.client.get(
-                f"/api/v1.0/courses/{course.id}/orders/" f"?product_id={product.id}",
+                f"/api/v1.0/courses/{course.id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -882,7 +880,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(5):
             response = self.client.get(
-                f"/api/v1.0/courses/{course.id}/orders/" f"?product_id={product.id}",
+                f"/api/v1.0/courses/{course.id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -929,8 +927,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 token = self.get_user_token(user.username)
 
                 response = self.client.get(
-                    f"/api/v1.0/courses/{course.id}/orders/"
-                    f"?product_id={product.id}",
+                    f"/api/v1.0/courses/{course.id}/orders/?product_id={product.id}",
                     HTTP_AUTHORIZATION=f"Bearer {token}",
                 )
 

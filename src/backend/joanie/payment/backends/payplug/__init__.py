@@ -229,7 +229,7 @@ class PayplugBackend(BasePaymentBackend):
         response = requests.delete(
             f"https://api.payplug.com/v1/cards/{credit_card.token}",
             headers={
-                "Authorization": f'Bearer {self.configuration.get("secret_key")}',
+                "Authorization": f"Bearer {self.configuration.get('secret_key')}",
                 "Content-Type": "appliation/json",
                 "Payplug-Version": self.configuration.get("api_version"),
             },

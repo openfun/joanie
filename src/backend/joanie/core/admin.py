@@ -570,7 +570,7 @@ class ProductAdmin(
 
                     raw_html += (
                         f'<a style="margin-left: 1rem" class="button" href="{generate_certificates_url}">'  # pylint: disable=line-too-long
-                        f'{_("Generate certificates")}'
+                        f"{_('Generate certificates')}"
                         "</a>"
                     )
 

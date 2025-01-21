@@ -241,77 +241,74 @@ class OrganizationAdminApiTest(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        assert (
-            response.json()
-            == {
-                "id": str(organization.id),
-                "code": organization.code,
-                "country": organization.country,
-                "title": organization.title,
-                "representative": organization.representative,
-                "signature": {
-                    "src": f"http://testserver{organization.signature.url}",
-                    "height": organization.signature.height,
-                    "size": 69,
-                    "width": organization.signature.width,
-                    "filename": organization.signature.name,
-                },
-                "logo": {
-                    "src": f"http://testserver{organization.logo.url}.1x1_q85.webp",
-                    "height": 1,
-                    "width": 1,
-                    "size": organization.logo.size,
-                    "srcset": (
-                        f"http://testserver{organization.logo.url}.1024x1024_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
-                        "1024w, "
-                        f"http://testserver{organization.logo.url}.512x512_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
-                        "512w, "
-                        f"http://testserver{organization.logo.url}.256x256_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
-                        "256w, "
-                        f"http://testserver{organization.logo.url}.128x128_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
-                        "128w"
-                    ),
-                    "filename": organization.logo.name,
-                },
-                "enterprise_code": organization.enterprise_code,
-                "activity_category_code": organization.activity_category_code,
-                "representative_profession": organization.representative_profession,
-                "signatory_representative": organization.signatory_representative,
-                "signatory_representative_profession": (
-                    organization.signatory_representative_profession
+        assert response.json() == {
+            "id": str(organization.id),
+            "code": organization.code,
+            "country": organization.country,
+            "title": organization.title,
+            "representative": organization.representative,
+            "signature": {
+                "src": f"http://testserver{organization.signature.url}",
+                "height": organization.signature.height,
+                "size": 69,
+                "width": organization.signature.width,
+                "filename": organization.signature.name,
+            },
+            "logo": {
+                "src": f"http://testserver{organization.logo.url}.1x1_q85.webp",
+                "height": 1,
+                "width": 1,
+                "size": organization.logo.size,
+                "srcset": (
+                    f"http://testserver{organization.logo.url}.1024x1024_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
+                    "1024w, "
+                    f"http://testserver{organization.logo.url}.512x512_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
+                    "512w, "
+                    f"http://testserver{organization.logo.url}.256x256_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
+                    "256w, "
+                    f"http://testserver{organization.logo.url}.128x128_q85_crop-scale_upscale.webp "  # pylint: disable=line-too-long
+                    "128w"
                 ),
-                "contact_phone": organization.contact_phone,
-                "contact_email": organization.contact_email,
-                "dpo_email": organization.dpo_email,
-                "addresses": [
-                    {
-                        "id": str(address.id),
-                        "title": address.title,
-                        "address": address.address,
-                        "city": address.city,
-                        "country": address.country,
-                        "first_name": address.first_name,
-                        "last_name": address.last_name,
-                        "is_main": address.is_main,
-                        "is_reusable": address.is_reusable,
-                        "postcode": address.postcode,
-                    }
-                ],
-                "accesses": [
-                    {
-                        "id": str(access.id),
-                        "user": {
-                            "id": str(access.user.id),
-                            "username": access.user.username,
-                            "full_name": access.user.get_full_name(),
-                            "email": access.user.email,
-                        },
-                        "role": access.role,
-                    }
-                    for access in organization.accesses.all()
-                ],
-            }
-        )
+                "filename": organization.logo.name,
+            },
+            "enterprise_code": organization.enterprise_code,
+            "activity_category_code": organization.activity_category_code,
+            "representative_profession": organization.representative_profession,
+            "signatory_representative": organization.signatory_representative,
+            "signatory_representative_profession": (
+                organization.signatory_representative_profession
+            ),
+            "contact_phone": organization.contact_phone,
+            "contact_email": organization.contact_email,
+            "dpo_email": organization.dpo_email,
+            "addresses": [
+                {
+                    "id": str(address.id),
+                    "title": address.title,
+                    "address": address.address,
+                    "city": address.city,
+                    "country": address.country,
+                    "first_name": address.first_name,
+                    "last_name": address.last_name,
+                    "is_main": address.is_main,
+                    "is_reusable": address.is_reusable,
+                    "postcode": address.postcode,
+                }
+            ],
+            "accesses": [
+                {
+                    "id": str(access.id),
+                    "user": {
+                        "id": str(access.user.id),
+                        "username": access.user.username,
+                        "full_name": access.user.get_full_name(),
+                        "email": access.user.email,
+                    },
+                    "role": access.role,
+                }
+                for access in organization.accesses.all()
+            ],
+        }
 
     def test_admin_api_organization_create(self):
         """

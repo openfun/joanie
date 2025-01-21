@@ -247,11 +247,7 @@ class OrderModelsTestCase(LoggingTestCase):
 
         self.assertEqual(
             str(context.exception),
-            (
-                "{'__all__': ['"
-                "An order for this product and course already exists."
-                "']}"
-            ),
+            ("{'__all__': ['An order for this product and course already exists.']}"),
         )
 
     def test_models_order_enrollment_owner_product_unique_not_canceled(self):
