@@ -1074,7 +1074,7 @@ class Order(BaseModel):
                 else self.enrollment.course_run.course.code
             )
             reference, checksum = backend_signature.submit_for_signature(
-                title=f'{now.strftime("%Y-%m-%d")}_{course_code}_{self.pk}',
+                title=f"{now.strftime('%Y-%m-%d')}_{course_code}_{self.pk}",
                 file_bytes=file_bytes,
                 order=self,
             )

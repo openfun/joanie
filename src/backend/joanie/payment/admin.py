@@ -131,7 +131,7 @@ class InvoiceAdmin(admin.ModelAdmin):
                 (
                     "<li>"
                     "<a href='"
-                    f"{reverse('admin:payment_invoice_change', args=(invoice.id,),)}"
+                    f"{reverse('admin:payment_invoice_change', args=(invoice.id,))}"
                     "'>"
                     f"{str(invoice)} ({invoice.total})"
                     "</a>"
@@ -149,7 +149,7 @@ class InvoiceAdmin(admin.ModelAdmin):
             items = [
                 (
                     "<li>"
-                    f"<a href='{reverse('admin:payment_transaction_change', args=(transaction.id,),)}'>"  # pylint: disable=line-too-long
+                    f"<a href='{reverse('admin:payment_transaction_change', args=(transaction.id,))}'>"  # pylint: disable=line-too-long
                     f"{str(transaction)}"
                     "</a>"
                     "</li>"

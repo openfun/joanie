@@ -385,8 +385,7 @@ class TargetCoursesViewSet(
             return Response(
                 {
                     "target_courses": (
-                        "target_courses do not match "
-                        f"those on product id {product_id}"
+                        f"target_courses do not match those on product id {product_id}"
                     )
                 },
                 status=HTTPStatus.BAD_REQUEST,

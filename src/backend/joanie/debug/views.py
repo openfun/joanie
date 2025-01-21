@@ -465,9 +465,7 @@ class DebugInvoiceTemplateView(DebugPdfTemplateView):
                 },
                 "seller": {
                     "address": (
-                        "France Université Numérique\n"
-                        "10 Rue Stine,\n"
-                        "75001 Paris, FR"
+                        "France Université Numérique\n10 Rue Stine,\n75001 Paris, FR"
                     ),
                 },
                 "product": {"name": "deploy turn-key partnerships", "description": ""},

@@ -1482,11 +1482,7 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertDictEqual(
             response.json(),
-            {
-                "__all__": [
-                    ("A course run with id " f'"{course_run.id}" does not exist.')
-                ]
-            },
+            {"__all__": [(f'A course run with id "{course_run.id}" does not exist.')]},
         )
 
     def test_api_enrollment_create_with_wrong_course_run_payload(self):

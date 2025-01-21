@@ -68,7 +68,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
-            (f"/api/v1.0/orders/{order.id}/invoice/" f"?reference={invoice.reference}"),
+            (f"/api/v1.0/orders/{order.id}/invoice/?reference={invoice.reference}"),
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 

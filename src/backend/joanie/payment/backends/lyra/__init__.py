@@ -153,7 +153,7 @@ class LyraBackend(BasePaymentBackend):
                 extra={"context": context},
             )
             raise exceptions.PaymentProviderAPIException(
-                "Error when calling Lyra API - " f"{error_code} : {error_msg}."
+                f"Error when calling Lyra API - {error_code} : {error_msg}."
             )
 
         return response_json

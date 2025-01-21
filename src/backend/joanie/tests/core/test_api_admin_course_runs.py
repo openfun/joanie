@@ -601,10 +601,7 @@ class CourseRunAdminApiTest(TestCase):
 
         for state_id in models.CourseState.STATE_TEXTS:
             response = self.client.get(
-                (
-                    f"/api/v1.0/admin/courses/{course.id}/course-runs/"
-                    f"?state={state_id}"
-                ),
+                (f"/api/v1.0/admin/courses/{course.id}/course-runs/?state={state_id}"),
             )
             self.assertEqual(response.status_code, HTTPStatus.OK)
             content = response.json()
