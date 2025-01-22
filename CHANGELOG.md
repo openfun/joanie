@@ -22,6 +22,8 @@ and this project adheres to
 
 ### Added
 
+- Add management command to delete orders stuck in signing states and orders
+  stuck in `to_save_payment_method` to purchase a product of type certificate
 - Add order export to CSV in back office
 - Branded Unicamp degrees
 
