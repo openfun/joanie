@@ -14,7 +14,7 @@
     "build": "yarn build-mjml-to-html; yarn build-html-to-plain-text;"
   },
   "volta": {
-    "node": "18.20.4"
+    "node": "20.18.2"
   },
   "repository": "https://github.com/openfun/joanie",
   "author": "France Université Numérique",

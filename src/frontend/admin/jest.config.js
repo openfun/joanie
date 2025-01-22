@@ -5,7 +5,7 @@ const customJestConfig = {
   resetMocks: true,
   setupFiles: ["<rootDir>/jest.env.js"],
   setupFilesAfterEnv: [
-    "./jest.polyfills.js",
+    "<rootDir>/jest.polyfills.js",
     "@testing-library/jest-dom",
     "<rootDir>/jest.setup.js",
   ],
