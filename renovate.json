@@ -34,8 +34,7 @@
         "npm"
       ],
       "matchPackageNames": [
-        "node",
-        "date-fns"
+        "node"
       ]
     }
   ]

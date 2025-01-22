@@ -2,10 +2,10 @@ import * as React from "react";
 import { PropsWithChildren, useMemo, useState } from "react";
 import { IntlProvider } from "react-intl";
 import { LocalizationProvider } from "@mui/x-date-pickers";
-
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import fr from "date-fns/locale/fr";
-import enUS from "date-fns/locale/en-US";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import type { Locale } from "date-fns";
+import { fr } from "date-fns/locale/fr";
+import { enUS } from "date-fns/locale/en-US";
 import { useQueryClient } from "@tanstack/react-query";
 import French from "@/translations/fr-FR.json";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
