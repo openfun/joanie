@@ -173,7 +173,6 @@ export const useOrganizations = (
 };
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
-// eslint-disable-next-line react-hooks/rules-of-hooks
 export const useOrganization = useResource(props);
 
 export const useAllOrganizationAccesses = (): SelectOption[] | undefined => {

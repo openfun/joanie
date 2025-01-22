@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Page } from "@playwright/test";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { catchAllIdRegex } from "@/tests/useResourceHandler";

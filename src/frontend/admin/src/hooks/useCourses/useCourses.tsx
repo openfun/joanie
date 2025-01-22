@@ -81,7 +81,6 @@ const props: UseResourcesProps<Course> = {
   session: true,
   messages: useCoursesMessages,
 };
-// eslint-disable-next-line react-hooks/rules-of-hooks
 
 export const useCourses = (
   filters?: CourseResourceQuery,
