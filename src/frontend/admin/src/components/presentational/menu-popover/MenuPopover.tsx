@@ -76,14 +76,13 @@ export function MenuPopover({
         {...other}
       >
         <MenuList>
-          {menuItems.map((menuOption) => {
-            return (
-              <CustomMenuItem
-                handleClose={handleClose}
-                menuOption={menuOption}
-              />
-            );
-          })}
+          {menuItems.map((menuOption) => (
+            <CustomMenuItem
+              key={`CustomMenuItem-${menuOption.mainLabel}`}
+              handleClose={handleClose}
+              menuOption={menuOption}
+            />
+          ))}
         </MenuList>
       </Popover>
     </>

@@ -4,7 +4,7 @@ import { FormProvider, UseFormReturn } from "react-hook-form";
 import { FieldValues } from "react-hook-form/dist/types/fields";
 import Box from "@mui/material/Box";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
-import LoadingButton from "@mui/lab/LoadingButton";
+import Button from "@mui/material/Button";
 import { useRouter } from "next/router";
 import { AlertModal } from "@/components/presentational/modal/AlertModal";
 import { useModal } from "@/components/presentational/modal/useModal";
@@ -123,14 +123,14 @@ export function RHFProvider<T extends FieldValues>({
           >
             {actionButtons}
             {showSubmit && (
-              <LoadingButton
+              <Button
                 data-testid={id ? `submit-button-${id}` : "submit-button"}
                 loading={isSubmitting}
                 variant="contained"
                 type="submit"
               >
                 <FormattedMessage {...messages.submit} />
-              </LoadingButton>
+              </Button>
             )}
           </Box>
         )}
