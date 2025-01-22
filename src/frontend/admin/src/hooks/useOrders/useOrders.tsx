@@ -112,7 +112,6 @@ const orderProps: UseResourcesProps<Order, OrderQuery> = {
   messages: useOrdersMessages,
 };
 
-// eslint-disable-next-line react-hooks/rules-of-hooks
 export const useOrders = (
   filters?: OrderQuery,
   queryOptions?: QueryOptions<OrderListItem>,

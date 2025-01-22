@@ -100,7 +100,6 @@ const props: UseResourcesProps<Product> = {
   session: true,
   messages,
 };
-// eslint-disable-next-line react-hooks/rules-of-hooks
 
 export const useProducts = (
   filters?: ProductResourceQuery,

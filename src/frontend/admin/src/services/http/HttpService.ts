@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import Cookies from "js-cookie";
 import { LocalesEnum } from "@/types/i18n/LocalesEnum";
 import { HttpStatus } from "@/types/utils";

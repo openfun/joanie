@@ -1,4 +1,4 @@
-import { faker } from "@faker-js/faker"; // eslint-disable-next-line import/no-extraneous-dependencies
+import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 import { Course, DTOCourse } from "@/services/api/models/Course";
 import { CourseFactory } from "@/services/factories/courses";
