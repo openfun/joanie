@@ -729,12 +729,27 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 return extracted
 
             if self.state != enums.ORDER_STATE_DRAFT and not self.is_free:
-                # If the order is not free and its state is not 'draft'
-                # create a main invoice with related transaction.
                 from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                    InvoiceFactory,
                     TransactionFactory,
                 )
 
+                if (
+                    self.product.type in enums.PRODUCT_TYPE_CERTIFICATE
+                    and self.state
+                    in [
+                        enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+                        enums.ORDER_STATE_PENDING_PAYMENT,
+                    ]
+                ):
+                    return InvoiceFactory(
+                        order=self,
+                        recipient_address__owner=self.owner,
+                        total=self.total,
+                    )
+
+                # If the order is not free and its state is not 'draft'
+                # and the product has a contract create a main invoice with related transaction.
                 transaction = TransactionFactory(
                     invoice__order=self,
                     invoice__recipient_address__owner=self.owner,

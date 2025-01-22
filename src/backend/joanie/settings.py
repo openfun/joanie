@@ -464,6 +464,15 @@ class Base(Configuration):
         environ_prefix=None,
     )
 
+    # Minimum time authorized for order latest updates when the order are
+    # in the state `to_sign` or `signing`. It's also applied for order's of
+    # product type certificate that are in state `to_save_payment_method`
+    JOANIE_ORDER_UPDATE_DELAY_LIMIT_IN_SECONDS = values.Value(
+        60 * 60,  # 1 hour
+        environ_name="JOANIE_ORDER_UPDATE_DELAY_LIMIT_IN_SECONDS",
+        environ_prefix=None,
+    )
+
     # CORS
     CORS_ALLOW_CREDENTIALS = True
     CORS_ALLOW_ALL_ORIGINS = values.BooleanValue(False)

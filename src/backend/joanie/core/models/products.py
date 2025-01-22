@@ -5,8 +5,10 @@ Declare and configure the models for the product / order part
 import itertools
 import logging
 from collections import defaultdict
+from datetime import timedelta
 
 from django.apps import apps
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -418,6 +420,45 @@ class OrderManager(models.Manager):
                     enums.ORDER_STATE_PENDING_PAYMENT,
                 ],
                 payment_schedule__contains=[{"state": enums.PAYMENT_STATE_PENDING}],
+            )
+        )
+
+    def get_stuck_signing_orders(self):
+        """
+        Retrieve orders stuck in the `to_sign` or `signing` states that are
+        beyond the tolerated time limit of last update.
+        """
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                state__in=[
+                    enums.ORDER_STATE_TO_SIGN,
+                    enums.ORDER_STATE_SIGNING,
+                ],
+                updated_on__lte=timezone.now()
+                - timedelta(
+                    seconds=settings.JOANIE_ORDER_UPDATE_DELAY_LIMIT_IN_SECONDS
+                ),
+            )
+        )
+
+    def get_stuck_certificate_payment_orders(self):
+        """
+        Retrieve orders stuck in the `to_save_payment_method` state for
+        products of type certificate that are beyond the tolerated
+        time limit of last update.
+        """
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+                state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+                updated_on__lte=timezone.now()
+                - timedelta(
+                    seconds=settings.JOANIE_ORDER_UPDATE_DELAY_LIMIT_IN_SECONDS
+                ),
             )
         )
 
