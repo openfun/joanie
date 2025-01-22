@@ -9,7 +9,7 @@ import {
 } from "react";
 
 type Props = {
-  button: ReactElement;
+  button: ReactElement<any>;
 };
 
 export default function ButtonPopover(props: PropsWithChildren<Props>) {
