@@ -249,7 +249,7 @@ jobs:
   # ---- mail jobs ----
   build-mails:
     docker:
-      - image: cimg/node:18.20
+      - image: cimg/node:20.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -280,7 +280,7 @@ jobs:
   # ---- frontend admin jobs ----
   build-test-front-admin:
     docker:
-      - image: cimg/node:18.20
+      - image: cimg/node:20.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -328,7 +328,7 @@ jobs:
 
   lint-front-admin:
     docker:
-      - image: cimg/node:18.20
+      - image: cimg/node:20.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -346,7 +346,7 @@ jobs:
 
   test-front-admin:
     docker:
-      - image: cimg/node:18.20
+      - image: cimg/node:20.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -368,7 +368,7 @@ jobs:
 
   test-e2e-front-admin:
     docker:
-      - image: cimg/node:18.20
+      - image: cimg/node:20.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -396,7 +396,7 @@ jobs:
 
   test-playwright-ct-front-admin:
     docker:
-      - image: cimg/node:18.20
+      - image: cimg/node:20.18
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
