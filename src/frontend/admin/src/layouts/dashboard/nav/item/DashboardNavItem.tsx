@@ -7,7 +7,7 @@ import styles from "./DashboardNavItem.module.scss";
 import { StyledItem } from "@/layouts/dashboard/nav/item/StyledItem";
 
 interface Props {
-  icon: ReactElement;
+  icon: ReactElement<any>;
   title: string;
   isActive?: boolean;
   onClick?: () => void;

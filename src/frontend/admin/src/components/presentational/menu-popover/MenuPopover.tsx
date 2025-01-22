@@ -16,7 +16,7 @@ export interface ActionMenuPopoverItem {
 }
 
 interface Props extends Omit<PopoverProps, "open"> {
-  button?: ReactElement;
+  button?: ReactElement<any>;
   menuItems: MenuOption[];
   arrow?: MenuPopoverArrowValue;
   disabledArrow?: boolean;

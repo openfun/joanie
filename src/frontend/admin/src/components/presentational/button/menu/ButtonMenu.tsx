@@ -6,7 +6,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { CustomMenuItem } from "@/components/presentational/menu-popover/CustomMenuItem";
 
 export type MenuOption = {
-  icon?: ReactElement;
+  icon?: ReactElement<any>;
   mainLabel: string;
   rightLabel?: string | ReactElement;
   isDisable?: boolean;

@@ -27,6 +27,7 @@ test.describe("<TranslatableForm/>", () => {
         <TranslatableForm onSelectLang={() => {}}>John Doe</TranslatableForm>
       </TranslatableFormProvider>,
     );
+    await component.waitFor({ state: "attached" });
 
     let states = await page.context().storageState();
     let storage = states.origins[0].localStorage;
@@ -80,6 +81,8 @@ test.describe("<TranslatableForm/>", () => {
         )}
       </TranslatableFormProvider>,
     );
+    await component.waitFor({ state: "attached" });
+
     let states = await page.context().storageState();
     let storage = states.origins[0].localStorage;
     expect(

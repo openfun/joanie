@@ -45,7 +45,7 @@ export interface WizardStepProps {
 
 export type WizardStep = {
   label: string;
-  component: ReactElement;
+  component: ReactElement<any>;
 };
 
 export type WizardHandle = {
