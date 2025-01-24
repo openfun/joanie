@@ -37,6 +37,7 @@ const build = (state?: OrderStatesEnum): Order => {
   const order: Order = {
     id: faker.string.uuid(),
     created_on: faker.date.anytime().toString(),
+    updated_on: faker.date.anytime().toString(),
     state,
     owner: UsersFactory(),
     product: ProductSimpleFactory(),
@@ -122,6 +123,7 @@ const buildOrderListItem = (): OrderListItem => {
     id: faker.string.uuid(),
     course_code: CourseFactory().code,
     created_on: faker.date.anytime().toString(),
+    updated_on: faker.date.anytime().toString(),
     enrollment_id: faker.string.uuid(),
     organization_title: OrganizationFactory().title,
     owner_name: UsersFactory().full_name,
