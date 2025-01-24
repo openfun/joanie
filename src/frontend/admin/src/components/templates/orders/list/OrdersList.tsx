@@ -47,6 +47,11 @@ const messages = defineMessages({
     defaultMessage: "Created on",
     description: "Label for the created on header inside the table",
   },
+  updatedOn: {
+    id: "components.templates.orders.list.updatedOn",
+    defaultMessage: "Updated on",
+    description: "Label for the updated on header inside the table",
+  },
 });
 
 type Props = DefaultTableProps<OrderListItem>;
@@ -99,6 +104,12 @@ export function OrdersList(props: Props) {
       headerName: intl.formatMessage(messages.createdOn),
       flex: 1,
       valueGetter: (value, row) => formatShortDate(row.created_on),
+    },
+    {
+      field: "updated_on",
+      headerName: intl.formatMessage(messages.updatedOn),
+      flex: 1,
+      valueGetter: (value, row) => formatShortDate(row.updated_on),
     },
   ];
 

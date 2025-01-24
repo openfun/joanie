@@ -560,6 +560,9 @@ test.describe("Order list", () => {
     await expect(
       page.getByRole("columnheader", { name: "Created on" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Updated on" }),
+    ).toBeVisible();
   });
 
   test("Check all the orders are presents", async ({ page }) => {
@@ -586,6 +589,11 @@ test.describe("Order list", () => {
         await expect(
           rowLocator.getByRole("gridcell", {
             name: await formatShortDateTest(page, order.created_on),
+          }),
+        ).toBeVisible();
+        await expect(
+          rowLocator.getByRole("gridcell", {
+            name: await formatShortDateTest(page, order.updated_on),
           }),
         ).toBeVisible();
       }),

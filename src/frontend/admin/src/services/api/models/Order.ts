@@ -11,6 +11,7 @@ import { GeneratedCertificate } from "@/services/api/models/GeneratedCertificate
 export type AbstractOrder = {
   id: string;
   created_on: string;
+  updated_on: string;
   state: OrderStatesEnum;
   total: number;
   total_currency: string;
@@ -132,6 +133,7 @@ export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
     id: order.id,
     course_code: order.course?.code ?? null,
     created_on: order.created_on,
+    updated_on: order.updated_on,
     enrollment_id: order.enrollment?.id ?? null,
     organization_title: order.organization?.title ?? "",
     owner_name: order.owner.full_name ?? order.owner.username,
