@@ -423,6 +423,18 @@ class OrderManager(models.Manager):
             )
         )
 
+    def find_installments_to_pay(self):
+        """Retrieve orders with at least one installment to pay."""
+        return self.find_pending_installments().union(
+            self.filter(
+                state__in=[
+                    enums.ORDER_STATE_PENDING,
+                    enums.ORDER_STATE_PENDING_PAYMENT,
+                ],
+                payment_schedule__contains=[{"state": enums.PAYMENT_STATE_ERROR}],
+            )
+        )
+
     def get_stuck_signing_orders(self):
         """
         Retrieve orders stuck in the `to_sign` or `signing` states that are
@@ -1225,6 +1237,12 @@ class Order(BaseModel):
                 self.save(update_fields=["payment_schedule"])
                 return
         raise ValueError(f"Installment with id {installment_id} cannot be refund")
+
+    def set_installment_error(self, installment_id):
+        """
+        Set the state of an installment to `error` in the payment schedule.
+        """
+        self._set_installment_state(installment_id, enums.PAYMENT_STATE_ERROR)
 
     def cancel_remaining_installments(self):
         """

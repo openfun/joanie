@@ -53,7 +53,7 @@ class PaymentScheduleTasksTestCase(LoggingTestCase):
         "create_zero_click_payment",
         side_effect=DummyPaymentBackend().create_zero_click_payment,
     )
-    def test_utils_payment_schedule_debit_pending_installment_succeeded(
+    def test_tasks_payment_schedule_debit_pending_installment_succeeded(
         self, mock_create_zero_click_payment
     ):
         """Check today's installment is processed"""
@@ -112,7 +112,7 @@ class PaymentScheduleTasksTestCase(LoggingTestCase):
             },
         )
 
-    def test_utils_payment_schedule_debit_pending_installment_no_card(self):
+    def test_tasks_payment_schedule_debit_pending_installment_no_card(self):
         """Check today's installment is processed"""
         order = OrderFactory(
             state=ORDER_STATE_PENDING,
@@ -192,7 +192,7 @@ class PaymentScheduleTasksTestCase(LoggingTestCase):
         "create_zero_click_payment",
         side_effect=DummyPaymentBackend().create_zero_click_payment,
     )
-    def test_utils_payment_schedule_should_catch_up_late_payments_for_installments_still_unpaid(
+    def test_tasks_payment_schedule_catch_up_payments_unpaid(
         self, mock_create_zero_click_payment, mock_handle_notification, mock_logger
     ):
         """
@@ -333,6 +333,67 @@ class PaymentScheduleTasksTestCase(LoggingTestCase):
             ],
         )
 
+    @mock.patch.object(Logger, "info")
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "handle_notification",
+        side_effect=DummyPaymentBackend().handle_notification,
+    )
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_zero_click_payment",
+        side_effect=DummyPaymentBackend().create_zero_click_payment,
+    )
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "is_already_paid",
+    )
+    def test_tasks_payment_schedule_catch_up_payments_paid(
+        self,
+        mock_is_already_paid,
+        mock_create_zero_click_payment,
+        mock_handle_notification,
+        mock_logger,
+    ):
+        """
+        If a payment has already been made for the current installment, we should not
+        trigger the payment again.
+        """
+        owner = UserFactory(email="john.doe@acme.org")
+        UserAddressFactory(owner=owner)
+        order = OrderFactory(
+            state=ORDER_STATE_PENDING,
+            owner=owner,
+            main_invoice=InvoiceFactory(),
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        mock_is_already_paid.return_value = True
+
+        mocked_now = datetime(2024, 2, 18, 0, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            debit_pending_installment.run(order.id)
+
+        mock_create_zero_click_payment.assert_not_called()
+        mock_handle_notification.assert_not_called()
+        mock_logger.assert_called_with(
+            "Installment %s for order %s already paid.",
+            order.payment_schedule[1]["id"],
+            order.id,
+        )
+
     @override_settings(
         JOANIE_PAYMENT_SCHEDULE_LIMITS={
             5: (30, 70),
@@ -414,7 +475,7 @@ class PaymentScheduleTasksTestCase(LoggingTestCase):
             call_command("send_mail_upcoming_debit")
 
         mock_send_mail_reminder_installment_debit_task.assert_has_calls(
-            expected_calls, any_order=False
+            expected_calls, any_order=True
         )
 
         # Trigger now the task `send_mail_reminder_installment_debit_task` for order_1

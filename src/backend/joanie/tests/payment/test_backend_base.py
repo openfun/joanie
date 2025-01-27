@@ -68,6 +68,9 @@ class TestBasePaymentBackend(BasePaymentBackend):
     def create_zero_click_payment(self, order, installment, credit_card_token):
         pass
 
+    def is_already_paid(self, order, installment):
+        pass
+
     def delete_credit_card(self, credit_card):
         pass
 
@@ -149,6 +152,18 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(
             str(context.exception),
             "subclasses of BasePaymentBackend must provide a create_zero_click_payment() method.",
+        )
+
+    def test_payment_backend_base_is_already_paid_not_implemented(self):
+        """Invoke is_already_paid should raise a Not ImplementedError"""
+        backend = BasePaymentBackend()
+
+        with self.assertRaises(NotImplementedError) as context:
+            backend.is_already_paid(None, None)
+
+        self.assertEqual(
+            str(context.exception),
+            "subclasses of BasePaymentBackend must provide a is_already_paid() method.",
         )
 
     def test_payment_backend_base_handle_notification_not_implemented(self):
