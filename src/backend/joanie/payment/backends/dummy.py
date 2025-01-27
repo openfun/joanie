@@ -328,3 +328,9 @@ class DummyPaymentBackend(BasePaymentBackend):
         self._treat_refund(resource, amount)
 
         return True
+
+    def is_already_paid(self, order, installment):  # pylint: disable=unused-argument
+        """
+        Dummy method to check if an installment has already been paid.
+        """
+        return False

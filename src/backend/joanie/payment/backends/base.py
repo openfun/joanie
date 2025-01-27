@@ -267,6 +267,14 @@ class BasePaymentBackend:
             "subclasses of BasePaymentBackend must provide a create_zero_click_payment() method."
         )
 
+    def is_already_paid(self, order, installment):
+        """
+        Method used to check if the installment has already been paid.
+        """
+        raise NotImplementedError(
+            "subclasses of BasePaymentBackend must provide a is_already_paid() method."
+        )
+
     def handle_notification(self, request):
         """
         Method triggered when a notification is send by the payment provider.

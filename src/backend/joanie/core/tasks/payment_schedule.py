@@ -9,6 +9,7 @@ from joanie.core.utils.payment_schedule import (
     send_mail_reminder_for_installment_debit,
 )
 from joanie.payment import get_payment_backend
+from joanie.payment.exceptions import PaymentProviderAPIException
 
 logger = getLogger(__name__)
 
@@ -28,11 +29,28 @@ def debit_pending_installment(order_id):
                 order.set_installment_refused(installment["id"])
                 continue
 
-            payment_backend.create_zero_click_payment(
-                order=order,
-                credit_card_token=order.credit_card.token,
-                installment=installment,
-            )
+            if payment_backend.is_already_paid(order, installment):
+                logger.info(
+                    "Installment %s for order %s already paid.",
+                    installment["id"],
+                    order.id,
+                )
+                continue
+
+            try:
+                payment_backend.create_zero_click_payment(
+                    order=order,
+                    credit_card_token=order.credit_card.token,
+                    installment=installment,
+                )
+            except PaymentProviderAPIException:
+                logger.exception(
+                    "Error processing installment %s for order %s.",
+                    installment["id"],
+                    order.id,
+                )
+                order.set_installment_error(installment)
+                continue
 
 
 @app.task

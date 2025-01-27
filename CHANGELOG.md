@@ -14,6 +14,7 @@ and this project adheres to
 - BO: Allow to use nested TranslatableForms
 - Allow a user to create a new order when the previous order already
   exists but it is in `refunding` or `refunded` state
+- Prevent multiple payments if the provider server has a problem
 
 ### Added
 

@@ -6287,10 +6287,11 @@
                     "paid",
                     "refused",
                     "refunded",
-                    "canceled"
+                    "canceled",
+                    "error"
                 ],
                 "type": "string",
-                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused\n* `refunded` - Refunded\n* `canceled` - Canceled"
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `refused` - Refused\n* `refunded` - Refunded\n* `canceled` - Canceled\n* `error` - Error"
             },
             "OrderRequest": {
                 "type": "object",

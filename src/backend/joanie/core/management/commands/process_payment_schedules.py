@@ -25,7 +25,7 @@ class Command(BaseCommand):
         logger.info("Starting processing of all pending payment schedules.")
         found_orders_count = 0
 
-        for order in Order.objects.find_pending_installments().iterator():
+        for order in Order.objects.find_installments_to_pay().iterator():
             if has_installments_to_debit(order):
                 logger.info("Processing payment schedule for order %s.", order.id)
                 debit_pending_installment.delay(order.id)

@@ -15,11 +15,11 @@ import requests
 from rest_framework.parsers import FormParser, JSONParser
 from stockholm import Money
 
-from joanie.core.models import ActivityLog, Address, Order, User
-from joanie.core.utils import payment_schedule
+from joanie.core.enums import PAYMENT_STATE_PAID, PAYMENT_STATE_REFUSED
+from joanie.core.models import Order, User
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.models import CreditCard, Invoice, Transaction
+from joanie.payment.models import CreditCard, Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -318,6 +318,39 @@ class LyraBackend(BasePaymentBackend):
         )
 
         return True
+
+    def is_already_paid(self, order, installment):
+        """
+        Check if the installment has already been processed
+        and set the state of the installment accordingly.
+        """
+        if installment["state"] == PAYMENT_STATE_PAID:
+            return True
+
+        url = f"{self.api_url}Order/Get"
+        payload = {
+            "orderId": str(order.id),
+        }
+        response_json = self._call_api(url, payload)
+        answer = response_json.get("answer")
+
+        if not answer:
+            return False
+
+        for transaction in answer.get("transactions", []):
+            metadata = transaction.get("metadata", {})
+            if metadata.get("installment_id") == str(installment["id"]):
+                status = transaction["status"]
+                if status == "PAID":
+                    installment["state"] = PAYMENT_STATE_PAID
+                elif status == "UNPAID":
+                    installment["state"] = PAYMENT_STATE_REFUSED
+
+                order.save()
+                order.flow.update()
+                return installment["state"] == PAYMENT_STATE_PAID
+
+        return False
 
     def _check_hash(self, post_data):
         """Verify IPN authenticity"""

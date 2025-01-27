@@ -1,0 +1,22 @@
+{
+  "webService": "Order/Get",
+  "version": "V4",
+  "applicationVersion": "6.25.0",
+  "status": "ERROR",
+  "answer": {
+    "errorCode": "PSP_010",
+    "errorMessage": "transaction not found",
+    "detailedErrorCode": null,
+    "detailedErrorMessage": null,
+    "ticket": "null",
+    "shopId": "69876357",
+    "_type": "V4/WebService/WebServiceError"
+  },
+  "ticket": "c90bdfb76f444a4bafa3082e289cdded",
+  "serverDate": "2025-01-28T11:06:52+00:00",
+  "applicationProvider": "LYRA",
+  "metadata": null,
+  "mode": "TEST",
+  "serverUrl": "https://api.lyra.com",
+  "_type": "V4/WebService/Response"
+}
