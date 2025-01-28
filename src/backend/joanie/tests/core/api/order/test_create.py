@@ -719,6 +719,103 @@ class OrderCreateApiTest(BaseAPITestCase):
         order = models.Order.objects.get(id=order_id)
         self.assertEqual(order.organization, expected_organization)
 
+    def test_api_order_create_organization_with_least_orders_is_consistent(self):
+        """
+        Ensure that the organization auto assignation is consistent no matter
+        if organizations are implied in other course product relations. In some case, it
+        appears that the organization with the least orders count is not the one assigned.
+        This test aims to reproduce the issue and ensure it is fixed.
+
+        We set up a test case with 2 organizations. The organizations[0] should be the one
+        with the least orders, but by creating several other course product relations where
+        the organizations are implied and are sometimes authors, we get the wrong behavior.
+
+        Useful resource : https://stackoverflow.com/a/69969582
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory()
+        organizations = factories.OrganizationFactory.create_batch(2)
+
+        # Create noisy data to reproduce the issue
+        # We create more relations with organizations[0] as author
+        for r in factories.CourseProductRelationFactory.create_batch(
+            3, organizations=organizations
+        ):
+            r.course.organizations.add(organizations[0])
+            factories.OrderFactory.create(
+                product=r.product,
+                course=r.course,
+                organization=organizations[0],
+                state=enums.ORDER_STATE_COMPLETED,
+            )
+            factories.OrderFactory.create(
+                product=r.product,
+                course=r.course,
+                organization=organizations[1],
+                state=enums.ORDER_STATE_COMPLETED,
+            )
+        for r in factories.CourseProductRelationFactory.create_batch(
+            1, organizations=organizations
+        ):
+            r.course.organizations.add(organizations[1])
+            factories.OrderFactory.create(
+                product=r.product,
+                course=r.course,
+                organization=organizations[0],
+                state=enums.ORDER_STATE_COMPLETED,
+            )
+            factories.OrderFactory.create(
+                product=r.product,
+                course=r.course,
+                organization=organizations[1],
+                state=enums.ORDER_STATE_COMPLETED,
+            )
+
+        # Now we create a course product relation
+        course_relation = factories.CourseProductRelationFactory(
+            course=course, product=product, organizations=organizations
+        )
+        # Then create 1 active order for the organizations[0]
+        factories.OrderFactory.create(
+            product=product,
+            course=course,
+            organization=organizations[0],
+            state=enums.ORDER_STATE_COMPLETED,
+        )
+        # And 2 active orders for the organizations[1]
+        factories.OrderFactory.create_batch(
+            2,
+            product=product,
+            course=course,
+            organization=organizations[1],
+            state=enums.ORDER_STATE_COMPLETED,
+        )
+
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        # Then create an order without organization
+        # It should be assigned to the organizations[0] as it has the least active orders
+        data = {
+            "course_code": course_relation.course.code,
+            "product_id": str(course_relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        order_id = response.json()["id"]
+        order = models.Order.objects.get(id=order_id)
+        self.assertEqual(order.organization, organizations[0])
+        self.assertEqual(organizations[0].order_set.count(), 6)
+        self.assertEqual(organizations[1].order_set.count(), 6)
+
     def test_api_order_create_get_organization_with_least_active_orders_prefer_author(
         self,
     ):
