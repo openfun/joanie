@@ -15,6 +15,8 @@ and this project adheres to
 - Allow a user to create a new order when the previous order already
   exists but it is in `refunding` or `refunded` state
 - Prevent multiple payments if the provider server has a problem
+- Fix the logic to get the organization with the least active orders
+  to assign which could have duplicated orders in its sum.
 
 ### Added
 

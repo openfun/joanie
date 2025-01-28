@@ -12,21 +12,19 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
 from django.db.models import (
-    BooleanField,
-    Case,
     Count,
+    Exists,
     OuterRef,
     Prefetch,
     Q,
     Subquery,
-    Value,
-    When,
 )
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from babel.util import distinct
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, viewsets
@@ -365,11 +363,11 @@ class OrderViewSet(
 
         try:
             organizations = course_relation.organizations.annotate(
-                order_count=Count("order", filter=order_count_filter),
-                is_author=Case(
-                    When(Q(courses__id=course_id), then=Value(True)),
-                    default=Value(False),
-                    output_field=BooleanField(),
+                order_count=Count("order", filter=order_count_filter, distinct=True),
+                is_author=Exists(
+                    models.Organization.objects.filter(
+                        pk=OuterRef("pk"), courses__id=course_id
+                    )
                 ),
             )
 
