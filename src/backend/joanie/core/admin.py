@@ -202,15 +202,22 @@ class OrderGroupAdmin(admin.ModelAdmin):
     list_display = (
         "course_product_relation",
         "is_active",
+        "is_enabled",
         "nb_available_seats",
+        "start",
+        "end",
     )
-    search_fields = ("course_product_relation",)
-    fields = ("course_product_relation", "is_active", "nb_seats", "nb_available_seats")
-    readonly_fields = ("nb_available_seats",)
-    readonly_update_fields = (
+    search_fields = ("course_product_relation", "start", "end")
+    fields = (
         "course_product_relation",
+        "is_enabled",
+        "is_active",
         "nb_seats",
+        "start",
+        "end",
     )
+    readonly_fields = ("nb_available_seats", "is_enabled")
+    readonly_update_fields = ("course_product_relation", "nb_seats")
 
     def get_readonly_fields(self, request, obj=None):
         """
@@ -223,7 +230,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
 
     def nb_available_seats(self, obj):  # pylint: disable=no-self-use
         """Return the number of available seats for this order group."""
-        return obj.nb_seats - obj.get_nb_binding_orders()
+        return obj.available_seats
 
 
 class CourseProductRelationInline(admin.StackedInline):

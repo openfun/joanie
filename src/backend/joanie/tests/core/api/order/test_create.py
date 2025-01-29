@@ -3,10 +3,12 @@
 # pylint: disable=too-many-lines
 import random
 import uuid
+from datetime import timedelta
 from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
+from django.utils import timezone
 
 from joanie.core import enums, factories, models
 from joanie.core.api.client import OrderViewSet
@@ -1395,7 +1397,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_nb_seats(self):
         """
-        The number of validated/pending orders on a product should not be above the limit
+        The number of completed/pending orders on a product should not be above the limit
         set by the number of seats
         """
         user = factories.UserFactory()
@@ -1448,8 +1450,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_no_seats(self):
         """
-        If nb_seats is set to 0 on an active order group, there should be no limit
-        to the number of orders
+        If the number of seats is set to 0 on an active order group, we should not be able
+        to create a new order on this group.
         """
         user = factories.UserFactory()
         course = factories.CourseFactory()
@@ -1460,12 +1462,9 @@ class OrderCreateApiTest(BaseAPITestCase):
             organizations=factories.OrganizationFactory.create_batch(2),
         )
         order_group = models.OrderGroup.objects.create(
-            course_product_relation=relation, nb_seats=0
+            course_product_relation=relation, is_active=True, nb_seats=0
         )
         billing_address = BillingAddressDictFactory()
-        factories.OrderFactory.create_batch(
-            size=100, product=product, course=course, order_group=order_group
-        )
         data = {
             "course_code": course.code,
             "organization_id": str(relation.organizations.first().id),
@@ -1476,17 +1475,70 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(115):
+        with self.assertNumQueries(24):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(
-            models.Order.objects.filter(product=product, course=course).count(), 101
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"Maximum number of orders reached for product {relation.product.title}"
+                ]
+            },
         )
+        self.assertEqual(
+            models.Order.objects.filter(product=product, course=course).count(), 0
+        )
+
+    def test_api_order_create_authenticated_nb_seat_is_none_on_active_order_group(self):
+        """
+        If `nb_seats` is set to `None` on an active order group, there should be no limit
+        to the number of orders.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        relation = factories.CourseProductRelationFactory(
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation, nb_seats=None, is_active=True
+        )
+        factories.OrderFactory.create_batch(
+            10,
+            product=relation.product,
+            course=relation.course,
+            order_group=order_group,
+        )
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "order_group_id": str(order_group.id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(
+            models.Order.objects.filter(
+                product=relation.product, course=relation.course
+            ).count(),
+            11,
+        )
 
     def test_api_order_create_authenticated_free_product_no_billing_address(self):
         """
@@ -1586,7 +1638,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             response.json(),
             {
                 "order_group": [
-                    f"An active order group is required for product {product.title}."
+                    f"An enabled order group is required for product {product.title}."
                 ]
             },
         )
@@ -1699,6 +1751,9 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
             models.Order.objects.filter(course=course, product=product).count(), 2
+        )
+        self.assertEqual(
+            models.Order.objects.filter(order_group=order_group2).count(), 1
         )
 
     def test_api_order_create_inactive_order_groups(self):
@@ -1892,3 +1947,181 @@ class OrderCreateApiTest(BaseAPITestCase):
                             ]
                         },
                     )
+
+    def test_api_order_create_when_order_group_is_active_and_nb_seats_is_none(self):
+        """
+        When create an order and the order group is active and has a number of seat
+        set to None, it should let us create unlimited number of orders. Although,
+        when the order group is not active, it should not create the order on the order group.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            is_active=True,
+            nb_seats=None,
+        )
+        factories.OrderFactory.create_batch(
+            2,
+            course=relation.course,
+            product=relation.product,
+            order_group=order_group,
+            state=enums.ORDER_STATE_PENDING,
+        )
+
+        order_group.is_active = False
+        order_group.save()
+        order_group.refresh_from_db()
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "order_group_id": str(order_group.id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"This order group is not enabled for product {relation.product.title} "
+                    "and does not accept any orders at the moment."
+                ]
+            },
+        )
+        self.assertEqual(
+            models.Order.objects.filter(order_group=order_group).count(), 2
+        )
+
+        order_group.is_active = True
+        order_group.save()
+        order_group.refresh_from_db()
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(
+            models.Order.objects.filter(order_group=order_group).count(), 3
+        )
+
+    def test_api_order_create_when_order_group_is_not_active_and_nb_seats_is_0(self):
+        """
+        When we want to create an order and the order group is not active and
+        has a number of seat to 0, an error should be raised and the order cannot be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            is_active=False,
+            nb_seats=0,
+        )
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "order_group_id": str(order_group.id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"This order group is not enabled for product {relation.product.title} "
+                    "and does not accept any orders at the moment."
+                ]
+            },
+        )
+
+    def test_api_order_create_when_order_group_is_active_but_not_enabled_yet(self):
+        """
+        When an authenticated user passes in the payload an order group that is not yet enabled
+        to create his order, the order should not be created. When the user passes an order
+        group that is enabled, the order is created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        relation = factories.CourseProductRelationFactory()
+        # This order group will be enabled tomorrow
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            is_active=True,
+            start=timezone.now() + timedelta(days=1),
+        )
+        # This order group has expired in time
+        factories.OrderGroupFactory(
+            course_product_relation=relation,
+            is_active=False,
+            end=timezone.now() - timedelta(days=1),
+        )
+        # This order group should have been chosen in the payload
+        order_group_enabled = factories.OrderGroupFactory(
+            course_product_relation=relation, is_active=True, start=timezone.now()
+        )
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "order_group_id": str(order_group.id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"An enabled order group is required for product {relation.product.title}."
+                ]
+            },
+        )
+
+        data.update(order_group_id=str(order_group_enabled.id))
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)

@@ -6233,20 +6233,45 @@
                     "nb_seats": {
                         "type": "integer",
                         "readOnly": true,
+                        "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "nb_available_seats": {
                         "type": "integer",
+                        "nullable": true,
                         "description": "Return the number of available seats for this order group.",
                         "readOnly": true
+                    },
+                    "is_enabled": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Order group start datetime",
+                        "description": "Date at which the order group activation begins"
+                    },
+                    "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Order group end datetime",
+                        "description": "Date at which the order group activation ends"
                     }
                 },
                 "required": [
+                    "end",
                     "id",
                     "is_active",
+                    "is_enabled",
                     "nb_available_seats",
-                    "nb_seats"
+                    "nb_seats",
+                    "start"
                 ]
             },
             "OrderPayment": {

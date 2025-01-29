@@ -112,10 +112,13 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                     "id": str(order_group.id),
                     "nb_seats": order_group.nb_seats,
                     "is_active": order_group.is_active,
+                    "is_enabled": order_group.is_enabled,
                     "nb_available_seats": order_group.nb_seats
                     - order_group.get_nb_binding_orders(),
                     "created_on": format_date(order_group.created_on),
                     "can_edit": order_group.can_edit,
+                    "start": None,
+                    "end": None,
                 },
                 "total": float(order.total),
                 "total_currency": settings.DEFAULT_CURRENCY,
