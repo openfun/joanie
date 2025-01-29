@@ -366,11 +366,13 @@ class OrderGroup(BaseModel):
     """Order group to enforce a maximum number of seats for a product."""
 
     nb_seats = models.PositiveSmallIntegerField(
-        default=0,
+        default=None,
         verbose_name=_("Number of seats"),
         help_text=_(
             "The maximum number of orders that can be validated for a given order group"
         ),
+        null=True,
+        blank=True,
     )
     course_product_relation = models.ForeignKey(
         to=CourseProductRelation,
@@ -379,6 +381,27 @@ class OrderGroup(BaseModel):
         on_delete=models.CASCADE,
     )
     is_active = models.BooleanField(_("is active"), default=True)
+    start = models.DateTimeField(
+        help_text=_("Date at which the order group activation begins"),
+        verbose_name=_("order group start datetime"),
+        blank=True,
+        null=True,
+    )
+    end = models.DateTimeField(
+        help_text=_("Date at which the order group activation ends"),
+        verbose_name=_("order group end datetime"),
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(start__lte=models.F("end")),
+                name="check_start_before_end",
+                violation_error_message=_("Start date cannot be greater than end date"),
+            ),
+        ]
 
     def get_nb_binding_orders(self):
         """Query the number of binding orders related to this order group."""
@@ -396,6 +419,28 @@ class OrderGroup(BaseModel):
     def can_edit(self):
         """Return True if the order group can be edited."""
         return not self.orders.exists()
+
+    @property
+    def available_seats(self) -> int | None:
+        """Return the number of available seats on the order group."""
+        if self.nb_seats is None:
+            return None
+        return self.nb_seats - self.get_nb_binding_orders()
+
+    @property
+    def is_enabled(self):
+        """
+        Returns boolean whether the order group is enabled based on its activation status
+        and time constraints.
+        """
+        if not self.is_active:
+            return False
+
+        now = timezone.now()
+        start = self.start or now
+        end = self.end or now
+
+        return start <= now <= end
 
 
 class OrderManager(models.Manager):
@@ -796,20 +841,31 @@ class Order(BaseModel):
                     f"and the course {course_title}."
                 )
 
-            if (
-                course_product_relation
-                and course_product_relation.order_groups.filter(is_active=True).exists()
+            if course_product_relation and any(
+                order_group.is_enabled
+                for order_group in course_product_relation.order_groups.all()
             ):
-                if not self.order_group_id or not self.order_group.is_active:
+                if not self.order_group_id or not self.order_group.is_enabled:
                     error_dict["order_group"].append(
-                        f"An active order group is required for product {product_title:s}."
+                        f"An enabled order group is required for product {product_title:s}."
                     )
-                else:
-                    nb_seats = self.order_group.nb_seats
-                    if 0 < nb_seats <= self.order_group.get_nb_binding_orders():
+                elif (
+                    self.order_group.is_enabled
+                    and self.order_group.nb_seats is not None
+                ):
+                    if self.order_group.available_seats == 0:
                         error_dict["order_group"].append(
                             f"Maximum number of orders reached for product {product_title:s}"
                         )
+            elif (
+                course_product_relation
+                and self.order_group
+                and not self.order_group.is_enabled
+            ):
+                error_dict["order_group"].append(
+                    f"This order group is not enabled for product {product_title:s} "
+                    "and does not accept any orders at the moment."
+                )
 
         if error_dict:
             raise ValidationError(error_dict)

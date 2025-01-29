@@ -441,6 +441,7 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
 
     nb_seats = serializers.IntegerField(
         required=False,
+        allow_null=True,
         label=models.OrderGroup._meta.get_field("nb_seats").verbose_name,
         help_text=models.OrderGroup._meta.get_field("nb_seats").help_text,
         default=models.OrderGroup._meta.get_field("nb_seats").default,
@@ -466,12 +467,15 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
             "nb_available_seats",
             "created_on",
             "can_edit",
+            "is_enabled",
+            "start",
+            "end",
         ]
-        read_only_fields = ["id", "can_edit", "created_on"]
+        read_only_fields = ["id", "can_edit", "created_on", "is_enabled"]
 
-    def get_nb_available_seats(self, order_group) -> int:
+    def get_nb_available_seats(self, order_group) -> int | None:
         """Return the number of available seats for this order group."""
-        return order_group.nb_seats - order_group.get_nb_binding_orders()
+        return order_group.available_seats
 
 
 @extend_schema_serializer(exclude_fields=("course_product_relation",))

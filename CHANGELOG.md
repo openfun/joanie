@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add `start` and `end` datetime fields on order group model
+
 ## [2.16.0] - 2025-02-13
 
 ### Added

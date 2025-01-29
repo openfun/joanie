@@ -6393,7 +6393,7 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
-                        "default": 0,
+                        "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
@@ -6403,6 +6403,7 @@
                     },
                     "nb_available_seats": {
                         "type": "integer",
+                        "nullable": true,
                         "description": "Return the number of available seats for this order group.",
                         "readOnly": true
                     },
@@ -6415,12 +6416,31 @@
                     "can_edit": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "is_enabled": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group start datetime",
+                        "description": "Date at which the order group activation begins"
+                    },
+                    "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group end datetime",
+                        "description": "Date at which the order group activation ends"
                     }
                 },
                 "required": [
                     "can_edit",
                     "created_on",
                     "id",
+                    "is_enabled",
                     "nb_available_seats"
                 ]
             },
@@ -6438,7 +6458,7 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
-                        "default": 0,
+                        "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
@@ -6448,6 +6468,7 @@
                     },
                     "nb_available_seats": {
                         "type": "integer",
+                        "nullable": true,
                         "description": "Return the number of available seats for this order group.",
                         "readOnly": true
                     },
@@ -6460,12 +6481,31 @@
                     "can_edit": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "is_enabled": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group start datetime",
+                        "description": "Date at which the order group activation begins"
+                    },
+                    "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group end datetime",
+                        "description": "Date at which the order group activation ends"
                     }
                 },
                 "required": [
                     "can_edit",
                     "created_on",
                     "id",
+                    "is_enabled",
                     "nb_available_seats"
                 ]
             },
@@ -6477,13 +6517,27 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
-                        "default": 0,
+                        "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group start datetime",
+                        "description": "Date at which the order group activation begins"
+                    },
+                    "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group end datetime",
+                        "description": "Date at which the order group activation ends"
                     }
                 }
             },
@@ -6495,13 +6549,27 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
-                        "default": 0,
+                        "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group start datetime",
+                        "description": "Date at which the order group activation begins"
+                    },
+                    "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group end datetime",
+                        "description": "Date at which the order group activation ends"
                     }
                 }
             },
@@ -8537,13 +8605,27 @@
                         "type": "integer",
                         "maximum": 32767,
                         "minimum": 0,
-                        "default": 0,
+                        "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
                         "type": "boolean",
                         "default": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group start datetime",
+                        "description": "Date at which the order group activation begins"
+                    },
+                    "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "title": "Order group end datetime",
+                        "description": "Date at which the order group activation ends"
                     }
                 }
             },
