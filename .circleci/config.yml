@@ -244,7 +244,9 @@ jobs:
             dockerize \
               -wait tcp://localhost:5432 \
               -timeout 60s \
-                ~/.local/bin/pytest -n 2
+                ~/.local/bin/pytest -n 2 --junitxml=./reports/pytest/junit.xml
+      - store_test_results:
+          path: ./reports/pytest/
 
   # ---- mail jobs ----
   build-mails:
@@ -361,10 +363,17 @@ jobs:
           keys:
             - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
             - v6-frontend-admin-dependencies-
+      - run:
+          name: Prepare test reporting
+          command: |
+            yarn add --dev jest-junit
+            mkdir -p ./reports/jest
       - *count_cpus
       - run:
           name: Run test command
-          command: yarn test -w "${NB_CPUS}" --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
+          command: JEST_JUNIT_OUTPUT_DIR=./reports/jest yarn test -w "${NB_CPUS}" --shard "$(($CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL" --reporters=default --reporters=jest-junit
+      - store_test_results:
+          path: ./reports/jest/
 
   test-e2e-front-admin:
     docker:
@@ -392,7 +401,9 @@ jobs:
           command: yarn playwright install --with-deps chromium
       - run:
           name: Run test command
-          command: SHARD="$((${CIRCLE_NODE_INDEX}+1))"; yarn test:e2e --shard=${SHARD}/${CIRCLE_NODE_TOTAL}
+          command: PLAYWRIGHT_JUNIT_OUTPUT_FILE=./reports/playwright/results.xml yarn test:e2e --shard=$(($CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL} --reporter=junit,list
+      - store_test_results:
+          path: ./reports/playwright/
 
   test-playwright-ct-front-admin:
     docker:
@@ -417,7 +428,9 @@ jobs:
           command: yarn playwright install --with-deps chromium
       - run:
           name: Run test command
-          command: SHARD="$((${CIRCLE_NODE_INDEX}+1))"; yarn test-ct --shard=${SHARD}/${CIRCLE_NODE_TOTAL}
+          command: PLAYWRIGHT_JUNIT_OUTPUT_FILE=./reports/playwright-ct/results.xml yarn test-ct --shard=$(($CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL} --reporter=junit,list
+      - store_test_results:
+          path: ./reports/playwright-ct/
 
   # ---- Internationalization jobs ----
   build-back-i18n:
