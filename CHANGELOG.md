@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Add missing field `updated_on` to `AdminOrderLightSerializer`
+
 ## [2.14.0] - 2025-01-29
 
 ### Added

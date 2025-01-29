@@ -6519,6 +6519,12 @@
                         "readOnly": true,
                         "description": "date and time at which a record was created"
                     },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
                     "enrollment_id": {
                         "type": "string",
                         "format": "uuid",
@@ -6575,7 +6581,8 @@
                     "product_title",
                     "state",
                     "total",
-                    "total_currency"
+                    "total_currency",
+                    "updated_on"
                 ]
             },
             "AdminOrderPayment": {
