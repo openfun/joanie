@@ -683,6 +683,10 @@
     "description": "Label for the state header inside the table",
     "message": "État"
   },
+  "components.templates.orders.list.updatedOn": {
+    "description": "Label for the updated on header inside the table",
+    "message": "Mise à jour le"
+  },
   "components.templates.orders.view.billingAddress": {
     "description": "Billing address field",
     "message": "Adresse de facturation"

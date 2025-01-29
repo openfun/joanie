@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.14.0] - 2025-01-29
+
+### Added
+
+- Add management command to delete orders stuck in signing states and orders
+  stuck in `to_save_payment_method` to purchase a product of type certificate
+- BD: Add `updated_on` date field to the order list view
+
 ### Fixed
 
 - BO: Set properly the `is_graded` property on target course creation
@@ -18,16 +26,11 @@ and this project adheres to
 - Fix the logic to get the organization with the least active orders
   to assign which could have duplicated orders in its sum.
 
-### Added
-
-- BD: Add `updated_on` date field to the order list view
 
 ## [2.13.0] - 2025-01-15
 
 ### Added
 
-- Add management command to delete orders stuck in signing states and orders
-  stuck in `to_save_payment_method` to purchase a product of type certificate
 - Add order export to CSV in back office
 - Branded Unicamp degrees
 
@@ -567,7 +570,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.13.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.14.0...main
+[2.14.0]: https://github.com/openfun/joanie/compare/v2.13.0...v2.14.0
 [2.13.0]: https://github.com/openfun/joanie/compare/v2.12.0...v2.13.0
 [2.12.0]: https://github.com/openfun/joanie/compare/v2.11.0...v2.12.0
 [2.11.0]: https://github.com/openfun/joanie/compare/v2.10.0...v2.11.0
