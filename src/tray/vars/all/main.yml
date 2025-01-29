@@ -85,6 +85,7 @@ joanie_celery_readynessprobe:
 # Joanie cronjobs
 joanie_process_payment_schedules_cronjob_schedule: "0 3 * * *"
 joanie_send_mail_upcoming_debit_cronjob_schedule: "0 3 * * *"
+joanie_delete_stuck_orders_cronjob_schedule: "0 * * * *"
 
 # -- resources
 {% set app_resources = {
@@ -98,6 +99,7 @@ joanie_app_resources: "{{ app_resources }}"
 joanie_app_job_db_migrate_resources: "{{ app_resources }}"
 joanie_process_payment_schedules_cronjob_resources: "{{ app_resources }}"
 joanie_send_mail_upcoming_debit_cronjob_resources: "{{ app_resources }}"
+joanie_delete_stuck_orders_cronjob_resources: "{{ app_resources }}"
 
 joanie_nginx_resources:
   requests:
