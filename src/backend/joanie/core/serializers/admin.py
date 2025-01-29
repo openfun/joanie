@@ -1249,6 +1249,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         fields = (
             "course_code",
             "created_on",
+            "updated_on",
             "enrollment_id",
             "id",
             "organization_title",

@@ -96,6 +96,7 @@ class OrdersAdminApiListTestCase(TestCase):
                 {
                     "course_code": order.course.code if order.course else None,
                     "created_on": format_date(order.created_on),
+                    "updated_on": format_date(order.updated_on),
                     "enrollment_id": str(order.enrollment.id)
                     if order.enrollment
                     else None,
