@@ -26,6 +26,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUNDED,
     PAYMENT_STATE_REFUSED,
+    PAYMENT_STATES_TO_DEBIT,
 )
 from joanie.core.exceptions import InvalidConversionError
 from joanie.core.utils import payment_schedule
@@ -635,16 +636,20 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
         """
         Check that the installment is to debit if the due date is today.
         """
-        installment = {
-            "state": PAYMENT_STATE_PENDING,
-            "due_date": date(2024, 1, 17),
-        }
+        for state in PAYMENT_STATES_TO_DEBIT:
+            with self.subTest(f"Next installment state to debit {state}", state=state):
+                installment = {
+                    "state": state,
+                    "due_date": date(2024, 1, 17),
+                }
 
-        mocked_now = date(2024, 1, 17)
-        with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
-            self.assertEqual(
-                payment_schedule.is_installment_to_debit(installment), True
-            )
+                mocked_now = date(2024, 1, 17)
+                with mock.patch(
+                    "django.utils.timezone.localdate", return_value=mocked_now
+                ):
+                    self.assertEqual(
+                        payment_schedule.is_installment_to_debit(installment), True
+                    )
 
     def test_utils_payment_schedule_is_installment_to_debit_past(self):
         """
@@ -681,28 +686,34 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
         """
         Check that the order has installments to debit if at least one is to debit.
         """
-        order = factories.OrderFactory(
-            state=ORDER_STATE_PENDING_PAYMENT,
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2023-01-17",
-                    "state": PAYMENT_STATE_PAID,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.50",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ],
-        )
-        order.refresh_from_db()
+        for state in PAYMENT_STATES_TO_DEBIT:
+            with self.subTest(f"Next installment state to debit {state}", state=state):
+                order = factories.OrderFactory(
+                    state=ORDER_STATE_PENDING_PAYMENT,
+                    payment_schedule=[
+                        {
+                            "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                            "amount": "200.00",
+                            "due_date": "2023-01-17",
+                            "state": PAYMENT_STATE_PAID,
+                        },
+                        {
+                            "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                            "amount": "300.50",
+                            "due_date": "2024-01-17",
+                            "state": state,
+                        },
+                    ],
+                )
+                order.refresh_from_db()
 
-        mocked_now = date(2024, 1, 17)
-        with mock.patch("django.utils.timezone.localdate", return_value=mocked_now):
-            self.assertEqual(payment_schedule.has_installments_to_debit(order), True)
+                mocked_now = date(2024, 1, 17)
+                with mock.patch(
+                    "django.utils.timezone.localdate", return_value=mocked_now
+                ):
+                    self.assertEqual(
+                        payment_schedule.has_installments_to_debit(order), True
+                    )
 
     def test_utils_payment_schedule_has_installments_to_debit_false(self):
         """
@@ -824,51 +835,55 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
             state=ORDER_STATE_PENDING_PAYMENT,
             product__price=D("100"),
         )
-        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
-        order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
-        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
-        order.payment_schedule[2]["due_date"] = date(2024, 3, 17)
-        order.payment_schedule[3]["due_date"] = date(2024, 4, 17)
-        order.save()
 
-        with mock.patch(
-            "django.utils.timezone.localdate", return_value=date(2024, 2, 15)
-        ):
-            due_date = timezone.localdate() + timedelta(
-                days=settings.JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS
-            )
-        # Should return False for the 1st installment
-        self.assertEqual(
-            payment_schedule.is_next_installment_to_debit(
-                installment=order.payment_schedule[0],
-                due_date=due_date,
-            ),
-            False,
-        )
-        # Should return True for the 2nd installment
-        self.assertEqual(
-            payment_schedule.is_next_installment_to_debit(
-                installment=order.payment_schedule[1],
-                due_date=due_date,
-            ),
-            True,
-        )
-        # Should return False for the 3rd installment
-        self.assertEqual(
-            payment_schedule.is_next_installment_to_debit(
-                installment=order.payment_schedule[2],
-                due_date=due_date,
-            ),
-            False,
-        )
-        # Should return False for the 4th installment
-        self.assertEqual(
-            payment_schedule.is_next_installment_to_debit(
-                installment=order.payment_schedule[3],
-                due_date=due_date,
-            ),
-            False,
-        )
+        for state in PAYMENT_STATES_TO_DEBIT:
+            with self.subTest(f"Next installment state to debit {state}", state=state):
+                order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+                order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
+                order.payment_schedule[1]["state"] = state
+                order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+                order.payment_schedule[2]["due_date"] = date(2024, 3, 17)
+                order.payment_schedule[3]["due_date"] = date(2024, 4, 17)
+                order.save()
+
+                with mock.patch(
+                    "django.utils.timezone.localdate", return_value=date(2024, 2, 15)
+                ):
+                    due_date = timezone.localdate() + timedelta(
+                        days=settings.JOANIE_INSTALLMENT_REMINDER_PERIOD_DAYS
+                    )
+                # Should return False for the 1st installment
+                self.assertEqual(
+                    payment_schedule.is_next_installment_to_debit(
+                        installment=order.payment_schedule[0],
+                        due_date=due_date,
+                    ),
+                    False,
+                )
+                # Should return True for the 2nd installment
+                self.assertEqual(
+                    payment_schedule.is_next_installment_to_debit(
+                        installment=order.payment_schedule[1],
+                        due_date=due_date,
+                    ),
+                    True,
+                )
+                # Should return False for the 3rd installment
+                self.assertEqual(
+                    payment_schedule.is_next_installment_to_debit(
+                        installment=order.payment_schedule[2],
+                        due_date=due_date,
+                    ),
+                    False,
+                )
+                # Should return False for the 4th installment
+                self.assertEqual(
+                    payment_schedule.is_next_installment_to_debit(
+                        installment=order.payment_schedule[3],
+                        due_date=due_date,
+                    ),
+                    False,
+                )
 
     def test_utils_payment_schedule_send_mail_reminder_for_installment_debit(self):
         """
@@ -888,27 +903,30 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
             product__price=D("100"),
             product__title="Product 1",
         )
-        order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
-        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
-        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
-        order.payment_schedule[1]["due_date"] = PAYMENT_STATE_PENDING
-        order.save()
 
-        payment_schedule.send_mail_reminder_for_installment_debit(
-            order, order.payment_schedule[1]
-        )
+        for state in PAYMENT_STATES_TO_DEBIT:
+            with self.subTest(f"Next installment state to debit {state}", state=state):
+                order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
+                order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+                order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+                order.payment_schedule[1]["due_date"] = state
+                order.save()
 
-        self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.fr")
-        self.assertIn("will be debited in", mail.outbox[0].subject)
+                payment_schedule.send_mail_reminder_for_installment_debit(
+                    order, order.payment_schedule[1]
+                )
 
-        # Check body
-        email_content = " ".join(mail.outbox[0].body.split())
-        fullname = order.owner.get_full_name()
-        self.assertIn(f"Hello {fullname}", email_content)
-        self.assertIn("installment will be withdrawn on 2 days", email_content)
-        self.assertIn("We will try to debit an amount of", email_content)
-        self.assertIn("30.00", email_content)
-        self.assertIn("Product 1", email_content)
+                self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.fr")
+                self.assertIn("will be debited in", mail.outbox[0].subject)
+
+                # Check body
+                email_content = " ".join(mail.outbox[0].body.split())
+                fullname = order.owner.get_full_name()
+                self.assertIn(f"Hello {fullname}", email_content)
+                self.assertIn("installment will be withdrawn on 2 days", email_content)
+                self.assertIn("We will try to debit an amount of", email_content)
+                self.assertIn("30.00", email_content)
+                self.assertIn("Product 1", email_content)
 
     def test_utils_payment_schedule_send_mail_reminder_for_installment_debit_in_french_language(
         self,
@@ -931,20 +949,23 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
             owner=owner,
             state=ORDER_STATE_PENDING_PAYMENT,
         )
-        order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
-        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
-        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
-        order.payment_schedule[1]["due_date"] = PAYMENT_STATE_PENDING
-        order.save()
 
-        payment_schedule.send_mail_reminder_for_installment_debit(
-            order, order.payment_schedule[1]
-        )
+        for state in PAYMENT_STATES_TO_DEBIT:
+            with self.subTest(f"Next installment state to debit {state}", state=state):
+                order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
+                order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+                order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+                order.payment_schedule[1]["due_date"] = state
+                order.save()
 
-        self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.fr")
-        email_content = " ".join(mail.outbox[0].body.split())
-        self.assertIn("Produit 1", email_content)
-        self.assertIn("30,00", email_content)
+                payment_schedule.send_mail_reminder_for_installment_debit(
+                    order, order.payment_schedule[1]
+                )
+
+                self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.fr")
+                email_content = " ".join(mail.outbox[0].body.split())
+                self.assertIn("Produit 1", email_content)
+                self.assertIn("30,00", email_content)
 
     @override_settings(
         LANGUAGES=(
@@ -974,20 +995,23 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
             owner=owner,
             state=ORDER_STATE_PENDING_PAYMENT,
         )
-        order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
-        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
-        order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
-        order.payment_schedule[1]["due_date"] = PAYMENT_STATE_PENDING
-        order.save()
 
-        payment_schedule.send_mail_reminder_for_installment_debit(
-            order, order.payment_schedule[1]
-        )
+        for state in PAYMENT_STATES_TO_DEBIT:
+            with self.subTest(f"Next installment state to debit {state}", state=state):
+                order.payment_schedule[0]["due_date"] = date(2024, 1, 17)
+                order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+                order.payment_schedule[1]["due_date"] = date(2024, 2, 17)
+                order.payment_schedule[1]["due_date"] = PAYMENT_STATE_PENDING
+                order.save()
 
-        self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.de")
-        email_content = " ".join(mail.outbox[0].body.split())
-        self.assertIn("Product 1", email_content)
-        self.assertIn("30.00", email_content)
+                payment_schedule.send_mail_reminder_for_installment_debit(
+                    order, order.payment_schedule[1]
+                )
+
+                self.assertEqual(mail.outbox[0].to[0], "sam@fun-test.de")
+                email_content = " ".join(mail.outbox[0].body.split())
+                self.assertIn("Product 1", email_content)
+                self.assertIn("30.00", email_content)
 
     def test_utils_payment_schedule_has_withdrawal_period(self):
         """

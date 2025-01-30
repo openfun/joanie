@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Fixed
 
+- Take in account `error` installment in debit logic
 - Add missing field `updated_on` to `AdminOrderLightSerializer`
 - Fix payment check before retrying
 

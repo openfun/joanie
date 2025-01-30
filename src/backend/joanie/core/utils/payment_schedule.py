@@ -158,24 +158,24 @@ def has_withdrawal_period(signed_contract_date, course_start_date):
 
 def is_installment_to_debit(installment):
     """
-    Check if the installment is pending and has reached due date.
+    Check if the installment is in a state to debit and has reached due date.
     """
     due_date = timezone.localdate()
 
     return (
-        installment["state"] == enums.PAYMENT_STATE_PENDING
+        installment["state"] in enums.PAYMENT_STATES_TO_DEBIT
         and installment["due_date"] <= due_date
     )
 
 
 def is_next_installment_to_debit(installment, due_date):
     """
-    Check if the installment is pending and also if its due date will be equal to the parameter
-    `due_date` passed.
+    Check if the installment is in a state to debit and also
+    if its due date will be equal to the parameter `due_date` passed.
     """
 
     return (
-        installment["state"] == enums.PAYMENT_STATE_PENDING
+        installment["state"] in enums.PAYMENT_STATES_TO_DEBIT
         and installment["due_date"] == due_date
     )
 
