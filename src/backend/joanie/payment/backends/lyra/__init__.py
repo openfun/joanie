@@ -342,13 +342,28 @@ class LyraBackend(BasePaymentBackend):
             if metadata.get("installment_id") == str(installment["id"]):
                 status = transaction["status"]
                 if status == "PAID":
-                    installment["state"] = PAYMENT_STATE_PAID
-                elif status == "UNPAID":
-                    installment["state"] = PAYMENT_STATE_REFUSED
+                    billing_details = transaction["customer"]["billingDetails"]
+                    payment = {
+                        "id": transaction["uuid"],
+                        "installment_id": installment["id"],
+                        "amount": D(
+                            f"{transaction['orderDetails']['orderTotalAmount'] / 100:.2f}"
+                        ),
+                        "billing_address": {
+                            "address": billing_details["address"],
+                            "city": billing_details["city"],
+                            "country": billing_details["country"],
+                            "first_name": billing_details["firstName"],
+                            "last_name": billing_details["lastName"],
+                            "postcode": billing_details["zipCode"],
+                        },
+                    }
+                    self._do_on_payment_success(order, payment)
+                    return True
 
-                order.save()
-                order.flow.update()
-                return installment["state"] == PAYMENT_STATE_PAID
+                if status == "UNPAID":
+                    self._do_on_payment_failure(order, installment["id"])
+                    return False
 
         return False
 
