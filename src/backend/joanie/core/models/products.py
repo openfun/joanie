@@ -1252,10 +1252,7 @@ class Order(BaseModel):
             return
 
         for installment in self.payment_schedule:
-            if installment["state"] in [
-                enums.PAYMENT_STATE_PENDING,
-                enums.PAYMENT_STATE_REFUSED,
-            ]:
+            if installment["state"] in enums.PAYMENT_STATES_TO_PAY:
                 installment["state"] = enums.PAYMENT_STATE_CANCELED
         self.save(update_fields=["payment_schedule"])
 
@@ -1345,7 +1342,7 @@ class Order(BaseModel):
             (
                 installment["due_date"]
                 for installment in self.payment_schedule
-                if installment["state"] == enums.PAYMENT_STATE_PENDING
+                if installment["state"] in enums.PAYMENT_STATES_TO_DEBIT
             ),
             None,
         )
@@ -1368,7 +1365,7 @@ class Order(BaseModel):
         return Money.sum(
             installment["amount"]
             for installment in self.payment_schedule
-            if installment["state"] == enums.PAYMENT_STATE_PENDING
+            if installment["state"] in enums.PAYMENT_STATES_TO_PAY
         )
 
     def get_amount_installments_refunded(self):

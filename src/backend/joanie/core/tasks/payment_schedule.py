@@ -17,8 +17,8 @@ logger = getLogger(__name__)
 @app.task
 def debit_pending_installment(order_id):
     """
-    Process the payment schedule for the order. We debit all pending installments
-    with a due date less than or equal to today.
+    Process the payment schedule for the order. We debit all installments in a state
+    to be debited with a due date less than or equal to today.
     """
     order = Order.objects.get(id=order_id)
 
