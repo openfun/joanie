@@ -11,6 +11,7 @@ and this project adheres to
 ### Fixed
 
 - Add missing field `updated_on` to `AdminOrderLightSerializer`
+- Fix payment check before retrying
 
 ## [2.14.0] - 2025-01-29
 

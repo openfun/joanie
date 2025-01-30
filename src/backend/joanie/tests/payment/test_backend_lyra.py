@@ -2100,7 +2100,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
                 },
                 {
                     "id": "fa17d7b8-3b86-4755-ac78-bc039018d696",
-                    "amount": "300.00",
+                    "amount": "120.00",
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
@@ -2109,6 +2109,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
 
         with self.open("lyra/responses/is_already_paid.json") as file:
             json_response = json.loads(file.read())
+        json_response["answer"]["transactions"][0]["uuid"] = "transaction_id"
 
         responses.add(
             responses.POST,
@@ -2135,6 +2136,23 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         order.refresh_from_db()
         self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PAID)
         self.assertEqual(order.state, ORDER_STATE_COMPLETED)
+
+        # Children invoice is created
+        self.assertEqual(order.invoices.count(), 2)
+        self.assertEqual(order.main_invoice.children.count(), 1)
+
+        # Transaction is created
+        self.assertTrue(
+            Transaction.objects.filter(
+                invoice__parent__order=order,
+                total=order.payment_schedule[1]["amount"].as_decimal(),
+                reference="transaction_id",
+            ).exists()
+        )
+
+        # Mail is sent
+        email_content = " ".join(mail.outbox[0].body.split())
+        self.assertIn(order.product.title, email_content)
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_is_already_paid_unpaid(self):
@@ -2195,6 +2213,25 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         # installment is marked as refused
         order.refresh_from_db()
         self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_REFUSED)
+
+        # Invoices are not created
+        self.assertEqual(order.invoices.count(), 1)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 0)
+
+        # Transaction is created
+        self.assertFalse(
+            Transaction.objects.filter(
+                invoice__parent__order=order,
+                total=order.payment_schedule[1]["amount"].as_decimal(),
+                reference="first_transaction_id",
+            ).exists()
+        )
+
+        # Mail is sent
+        self._check_installment_refused_email_sent(owner.email, order)
+
+        mail.outbox.clear()
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_is_already_paid_error(self):
