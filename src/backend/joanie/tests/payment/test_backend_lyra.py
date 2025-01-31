@@ -2078,10 +2078,11 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         self.assertLogsEquals(logger.records, expected_logs)
 
     @responses.activate(assert_all_requests_are_fired=True)
-    def test_payment_backend_lyra_is_already_paid(self):
+    def test_payment_backend_lyra_is_already_paid_first(self):
         """
         When backend checks if an installment has already been paid, it should return True
         if the payment has been made and should update the installment state to paid.
+        First transaction is paid.
         """
         backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org")
@@ -2153,6 +2154,143 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         # Mail is sent
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertIn(order.product.title, email_content)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_is_already_paid_last(self):
+        """
+        When backend checks if an installment has already been paid, it should return True
+        if the payment has been made and should update the installment state to paid.
+        Last transaction is paid.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        UserAddressFactory(owner=owner)
+        order = OrderFactory(
+            id="2f3f527a-9f47-4a45-94d5-ad3ef0dbd437",
+            state=ORDER_STATE_PENDING,
+            owner=owner,
+            main_invoice=InvoiceFactory(),
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "fa17d7b8-3b86-4755-ac78-bc039018d696",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        with self.open("lyra/responses/is_already_paid.json") as file:
+            json_response = json.loads(file.read())
+
+        json_response["answer"]["transactions"].append(
+            json_response["answer"]["transactions"][0]
+        )
+        json_response["answer"]["transactions"][0]["status"] = "UNPAID"
+        json_response["answer"]["transactions"][1]["uuid"] = "first_transaction_id"
+        json_response["answer"]["transactions"][1]["status"] = "PAID"
+        json_response["answer"]["transactions"][1]["uuid"] = "second_transaction_id"
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Order/Get",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher({"orderId": str(order.id)}),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        self.assertTrue(backend.is_already_paid(order, order.payment_schedule[1]))
+
+        # installment is marked as paid
+        order.refresh_from_db()
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PAID)
+        self.assertEqual(order.state, ORDER_STATE_COMPLETED)
+        self.assertFalse(
+            Transaction.objects.filter(reference="first_transaction_id").exists()
+        )
+        self.assertTrue(
+            Transaction.objects.filter(reference="second_transaction_id").exists()
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_is_already_paid_no_transaction(self):
+        """
+        When backend checks if an installment has already been paid, it should return False
+        if the no payment has been made and should not update the installment state.
+        No transaction paid.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        UserAddressFactory(owner=owner)
+        order = OrderFactory(
+            id="2f3f527a-9f47-4a45-94d5-ad3ef0dbd437",
+            state=ORDER_STATE_PENDING,
+            owner=owner,
+            main_invoice=InvoiceFactory(),
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "fa17d7b8-3b86-4755-ac78-bc039018d696",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        with self.open("lyra/responses/is_already_paid.json") as file:
+            json_response = json.loads(file.read())
+
+        json_response["answer"]["transactions"] = []
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Order/Get",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher({"orderId": str(order.id)}),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        self.assertFalse(backend.is_already_paid(order, order.payment_schedule[1]))
+
+        # installment is left as pending
+        order.refresh_from_db()
+        self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PENDING)
+        self.assertEqual(order.state, ORDER_STATE_PENDING)
+        self.assertFalse(Transaction.objects.exists())
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_is_already_paid_unpaid(self):
@@ -2228,10 +2366,8 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             ).exists()
         )
 
-        # Mail is sent
-        self._check_installment_refused_email_sent(owner.email, order)
-
-        mail.outbox.clear()
+        # No mail is sent
+        self.assertEqual(mail.outbox, [])
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_payment_backend_lyra_is_already_paid_error(self):
