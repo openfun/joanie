@@ -362,9 +362,7 @@ class LyraBackend(BasePaymentBackend):
                     return True
 
                 if status == "UNPAID":
-                    self._do_on_payment_failure(order, installment["id"])
-                    return False
-
+                    order.set_installment_refused(installment["id"])
         return False
 
     def _check_hash(self, post_data):
