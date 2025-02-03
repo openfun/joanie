@@ -16,6 +16,7 @@ and this project adheres to
 ### Changed
 
 - Catch `PaymentProviderAPIException` on CreditCard `post_delete` signal
+- Delete credit card once all orders installments are paid
 
 ## [2.15.0] - 2025-02-05
 

@@ -59,16 +59,21 @@ class BasePaymentBackend:
             reference=payment["id"],
         )
 
+        # Store last credit card numbers as it may be deleted by the flow update
+        credit_card_last_numbers = order.credit_card.last_numbers
+        # Will trigger flow update
         order.set_installment_paid(payment["installment_id"])
 
-        upcoming_installment = order.state == ORDER_STATE_COMPLETED
+        order_completed = order.state == ORDER_STATE_COMPLETED
+
         # Because with Lyra Payment Provider, we get the value in cents
         cls._send_mail_payment_installment_success(
             order=order,
             amount=payment["amount"]
             if "." in str(payment["amount"])
             else payment["amount"] / 100,
-            upcoming_installment=not upcoming_installment,
+            credit_card_last_numbers=credit_card_last_numbers,
+            upcoming_installment=not order_completed,
         )
 
     @classmethod
@@ -96,7 +101,7 @@ class BasePaymentBackend:
 
     @classmethod
     def _send_mail_payment_installment_success(
-        cls, order, amount, upcoming_installment
+        cls, order, amount, credit_card_last_numbers, upcoming_installment
     ):
         """
         Send mail using the current language of the user when an installment is successfully paid
@@ -123,6 +128,7 @@ class BasePaymentBackend:
                 template_vars=emails.prepare_context_data(
                     order,
                     amount,
+                    credit_card_last_numbers,
                     product_title,
                     payment_refused=False,
                 ),
@@ -169,6 +175,7 @@ class BasePaymentBackend:
                 template_vars=emails.prepare_context_data(
                     order,
                     installment_amount,
+                    order.credit_card.last_numbers,
                     product_title,
                     payment_refused=True,
                 ),
@@ -214,6 +221,7 @@ class BasePaymentBackend:
             template_vars = emails.prepare_context_data(
                 invoice.order,
                 installments_amount,
+                None,
                 product_title,
                 payment_refused=False,
             )

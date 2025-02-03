@@ -415,6 +415,17 @@ class OrderFlow:
         if target == enums.ORDER_STATE_CANCELED:
             self.instance.unenroll_user_from_course_runs()
 
+        if self.instance.credit_card and target in [
+            enums.ORDER_STATE_COMPLETED,
+            enums.ORDER_STATE_CANCELED,
+        ]:
+            # delete card
+            credit_card = self.instance.credit_card
+            self.instance.credit_card = None
+            self.instance.save()
+            if not credit_card.orders.exists():
+                credit_card.delete()
+
         # Reset course product relation cache if its representation is impacted by changes
         # on related orders
         # e.g. number of remaining seats when an order group is used

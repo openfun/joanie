@@ -21,7 +21,7 @@ from joanie.core.factories import (
 from joanie.core.models import Address
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
-from joanie.payment.models import Transaction
+from joanie.payment.models import CreditCard, Transaction
 from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
@@ -248,7 +248,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
                 },
             ],
         )
-        CreditCardFactory(owners=[owner], initial_issuer_transaction_identifier="1")
+        credit_card = order.credit_card
+
         billing_address = BillingAddressDictFactory()
         order.init_flow(billing_address=billing_address)
         payment = {
@@ -289,6 +290,14 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # - An event has been created
         self.assertPaymentSuccessActivityLog(order)
+
+        # - Credit card has been deleted
+        self.assertIsNone(order.credit_card)
+        self.assertEqual(owner.credit_cards.count(), 0)
+        with self.assertRaises(CreditCard.DoesNotExist):
+            CreditCard.objects.get(id=credit_card.id)
+            credit_card.refresh_from_db()
+        self.assertFalse(CreditCard.objects.exists())
 
     def test_payment_backend_base_do_on_payment_success_with_installment(self):
         """
