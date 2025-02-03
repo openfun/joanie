@@ -19,7 +19,11 @@ logger = getLogger(__name__)
 
 
 def prepare_context_data(
-    order, installment_amount, product_title, payment_refused: bool
+    order,
+    installment_amount,
+    credit_card_last_numbers,
+    product_title,
+    payment_refused: bool,
 ):
     """
     Prepare the context variables for the email when an installment has been paid
@@ -31,7 +35,7 @@ def prepare_context_data(
         "product_title": product_title,
         "installment_amount": Money(installment_amount),
         "product_price": Money(order.product.price),
-        "credit_card_last_numbers": order.credit_card.last_numbers,
+        "credit_card_last_numbers": credit_card_last_numbers,
         "order_payment_schedule": order.payment_schedule,
         "dashboard_order_link": (
             settings.JOANIE_DASHBOARD_ORDER_LINK.replace(":orderId", str(order.id))
@@ -65,7 +69,11 @@ def prepare_context_for_upcoming_installment(
     will be soon debited for a user.
     """
     context_data = prepare_context_data(
-        order, installment_amount, product_title, payment_refused=False
+        order,
+        installment_amount,
+        order.credit_card.last_numbers,
+        product_title,
+        payment_refused=False,
     )
     context_data["targeted_installment_index"] = order.get_installment_index(
         state=PAYMENT_STATE_PENDING, find_first=True

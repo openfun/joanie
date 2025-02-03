@@ -9,7 +9,7 @@
             {% blocktranslate with product_title=product_title installment_amount=installment_amount|format_currency_with_symbol targeted_installment_index=targeted_installment_index|add:1|ordinal title=product_title %}
               For the course <strong>{{ title }}</strong>, the order has been refunded.
               <br />
-              We have refunded the following installments on the credit card •••• •••• •••• {{ credit_card_last_numbers }}.
+              We have refunded the following installments on the credit card used for the payment.
               <br />
               The remaining installments have been canceled.
             {% endblocktranslate %}

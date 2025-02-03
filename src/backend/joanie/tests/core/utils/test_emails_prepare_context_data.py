@@ -65,6 +65,7 @@ class UtilsEmailPrepareContextDataInstallmentPaymentTestCase(TestCase):
         context_data = prepare_context_data(
             order,
             order.payment_schedule[2]["amount"],
+            order.credit_card.last_numbers,
             product.title,
             payment_refused=False,
         )
@@ -118,6 +119,7 @@ class UtilsEmailPrepareContextDataInstallmentPaymentTestCase(TestCase):
         context_data = prepare_context_data(
             order,
             order.payment_schedule[2]["amount"],
+            order.credit_card.last_numbers,
             product.title,
             payment_refused=True,
         )
