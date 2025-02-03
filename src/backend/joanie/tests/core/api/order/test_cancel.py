@@ -70,6 +70,8 @@ class OrderCancelApiTest(BaseAPITestCase):
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
                 order = factories.OrderFactory(owner=user, state=state)
+                # A credit card should be created
+                self.assertIsNotNone(order.credit_card)
                 response = self.client.post(
                     f"/api/v1.0/orders/{order.id}/cancel/",
                     HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -85,24 +87,26 @@ class OrderCancelApiTest(BaseAPITestCase):
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
                     self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+                    # The credit card should be deleted
+                    self.assertIsNone(order.credit_card)
 
-    def test_api_order_cancel_authenticated_validated(self):
+    def test_api_order_cancel_authenticated_completed(self):
         """
         User should not able to cancel already completed order
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        order_validated = factories.OrderFactory(
+        order_completed = factories.OrderFactory(
             owner=user, state=enums.ORDER_STATE_COMPLETED
         )
         response = self.client.post(
-            f"/api/v1.0/orders/{order_validated.id}/cancel/",
+            f"/api/v1.0/orders/{order_completed.id}/cancel/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        order_validated.refresh_from_db()
+        order_completed.refresh_from_db()
         self.assertContains(
             response,
             "Cannot cancel a completed order",
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         )
-        self.assertEqual(order_validated.state, enums.ORDER_STATE_COMPLETED)
+        self.assertEqual(order_completed.state, enums.ORDER_STATE_COMPLETED)

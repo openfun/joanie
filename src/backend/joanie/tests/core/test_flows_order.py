@@ -743,8 +743,12 @@ class OrderFlowsTestCase(LoggingTestCase):
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
                 order = factories.OrderFactory(state=state)
+                # A credit card should be created
+                self.assertIsNotNone(order.credit_card)
                 order.flow.cancel()
                 self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+                # The credit card should be deleted
+                self.assertIsNone(order.credit_card)
 
     @responses.activate
     def test_flows_order_cancel_certificate_product_openedx_enrollment_mode(self):
@@ -1736,11 +1740,16 @@ class OrderFlowsTestCase(LoggingTestCase):
             state=enums.ORDER_STATE_PENDING_PAYMENT,
             product__price=5,
         )
+        # A credit card should be created
+        self.assertIsNotNone(order.credit_card)
+
         order.flow.cancel()
 
         order.flow.refunding()
 
         self.assertEqual(order.state, enums.ORDER_STATE_REFUNDING)
+        # The credit card should be deleted
+        self.assertIsNone(order.credit_card)
 
     @override_settings(
         JOANIE_PAYMENT_SCHEDULE_LIMITS={

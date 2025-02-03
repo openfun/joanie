@@ -181,6 +181,8 @@ class OrdersAdminApiRefundTestCase(TestCase):
         order = factories.OrderGeneratorFactory(
             state=enums.ORDER_STATE_PENDING, product__price=100
         )
+        # A credit card should be created
+        self.assertIsNotNone(order.credit_card)
 
         # Create the payment for the 1st installment.
         payment_id_1 = backend.create_payment(
@@ -293,6 +295,9 @@ class OrdersAdminApiRefundTestCase(TestCase):
         # The order's state should be set to `refunded`
         self.assertEqual(order.state, enums.ORDER_STATE_REFUNDED)
 
+        # The credit card should be deleted
+        self.assertIsNone(order.credit_card)
+
         # Only one email should have been sent for the refund of the order
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to[0], order.owner.email)
@@ -306,7 +311,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
             f"Hello {order.owner.get_full_name()},",
             f"For the course {order.product.title}, the order has been refunded.",
             "We have refunded the following installments on the credit card "
-            f"•••• •••• •••• {order.credit_card.last_numbers}.",
+            "used for the payment.",
             "The remaining installments have been canceled.",
             "Payment schedule",
             "1 €20.00",

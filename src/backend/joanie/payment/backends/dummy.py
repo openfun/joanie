@@ -121,11 +121,14 @@ class DummyPaymentBackend(BasePaymentBackend):
 
     @classmethod
     def _send_mail_payment_installment_success(
-        cls, order, amount, upcoming_installment
+        cls, order, amount, credit_card_last_numbers, upcoming_installment
     ):
         logger.info("Mail is sent to %s from dummy payment", order.owner.email)
         super()._send_mail_payment_installment_success(
-            order=order, amount=amount, upcoming_installment=upcoming_installment
+            order=order,
+            amount=amount,
+            credit_card_last_numbers=credit_card_last_numbers,
+            upcoming_installment=upcoming_installment,
         )
 
     @classmethod

@@ -171,7 +171,7 @@ class TestOrderGeneratorFactory(TestCase):
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
-            has_payment_method=True,
+            has_payment_method=False,
         )
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PAID)
         self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_PAID)
@@ -184,7 +184,7 @@ class TestOrderGeneratorFactory(TestCase):
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
-            has_payment_method=True,
+            has_payment_method=False,
         )
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_CANCELED)
         self.assertEqual(order.payment_schedule[1]["state"], PAYMENT_STATE_CANCELED)
@@ -319,7 +319,7 @@ class TestOrderGeneratorFactory(TestCase):
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
-            has_payment_method=True,
+            has_payment_method=False,
         )
 
         self.assertEqual(order.state, "refunding")
@@ -338,7 +338,7 @@ class TestOrderGeneratorFactory(TestCase):
             has_organization=True,
             has_unsigned_contract=False,
             is_free=False,
-            has_payment_method=True,
+            has_payment_method=False,
         )
         self.assertEqual(order.state, "refunded")
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_REFUNDED)
