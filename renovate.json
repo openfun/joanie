@@ -17,17 +17,6 @@
       ]
     },
     {
-      "groupName": "allowed django versions",
-      "matchManagers": [
-        "setup-cfg",
-        "pep621"
-      ],
-      "matchPackageNames": [
-        "Django"
-      ],
-      "allowedVersions": "<5"
-    },
-    {
       "enabled": false,
       "groupName": "ignored js dependencies",
       "matchManagers": [

@@ -91,6 +91,7 @@ class Contract(BaseModel):
     order = models.OneToOneField(
         "core.order",
         verbose_name=_("order"),
+        related_name="contract",
         on_delete=models.PROTECT,
         editable=False,
     )

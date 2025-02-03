@@ -910,7 +910,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         """
         products = self.course.products.model.objects.filter(
             models.Q(target_course_relations__course_runs__isnull=True)
-            | models.Q(target_course_relations__course_runs=self),
+            | models.Q(target_course_relations__course_runs__id=self.id),
             target_course_relations__course=self.course,
         )
 
