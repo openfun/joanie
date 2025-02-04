@@ -4,7 +4,9 @@ from unittest import mock
 
 from django.core.exceptions import ValidationError
 
-from joanie.core.factories import UserFactory
+from joanie.core import enums
+from joanie.core.factories import OrderFactory, UserFactory
+from joanie.core.models import Order
 from joanie.payment.exceptions import PaymentProviderAPIException
 from joanie.payment.factories import CreditCardFactory
 from joanie.payment.models import CreditCard
@@ -230,4 +232,34 @@ class CreditCardModelTestCase(LoggingTestCase):
         self.assertEqual(
             str(context.exception),
             "{'__all__': ['Demote a main credit card is forbidden']}",
+        )
+
+    def test_models_credit_card_delete_unused(self):
+        """
+        The manager method `delete_unused` should
+        unlink cards that are linked to orders that won't need payment anymore,
+        and delete all the credit cards that are not linked to any order.
+        """
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            OrderFactory(state=state, product__price=10)
+
+        # With this order factory, we create a credit card for all states
+        self.assertEqual(CreditCard.objects.count(), len(enums.ORDER_STATE_CHOICES))
+
+        unlinked_credit_cards, deleted_credit_cards = CreditCard.objects.delete_unused()
+
+        # Order states that should not have a credit card linked
+        no_card_order_states = enums.ORDER_INACTIVE_STATES + (
+            enums.ORDER_STATE_COMPLETED,
+        )
+        self.assertEqual(len(unlinked_credit_cards), len(no_card_order_states))
+        self.assertEqual(len(deleted_credit_cards), len(no_card_order_states))
+
+        self.assertFalse(
+            Order.objects.filter(
+                state__in=no_card_order_states, credit_card__isnull=False
+            ).exists()
+        )
+        self.assertFalse(
+            CreditCard.objects.filter(orders__state__in=no_card_order_states).exists()
         )
