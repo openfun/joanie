@@ -19,7 +19,7 @@ import sentry_sdk
 from configurations import Configuration, values
 from sentry_sdk.integrations.django import DjangoIntegration
 
-from joanie.core.utils import JSONValue
+from joanie.core.utils import JSONValue, LMSBackendsValue
 from joanie.core.utils.sentry import before_send
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -230,38 +230,7 @@ class Base(Configuration):
     ]
 
     # Joanie
-    JOANIE_LMS_BACKENDS = [
-        {
-            "API_TOKEN": values.Value(
-                environ_name="EDX_API_TOKEN", environ_prefix=None
-            ),
-            "BACKEND": values.Value(environ_name="EDX_BACKEND", environ_prefix=None),
-            "BASE_URL": values.Value(environ_name="EDX_BASE_URL", environ_prefix=None),
-            "SELECTOR_REGEX": values.Value(
-                r".*", environ_name="EDX_SELECTOR_REGEX", environ_prefix=None
-            ),
-            "COURSE_REGEX": values.Value(
-                r".*", environ_name="EDX_COURSE_REGEX", environ_prefix=None
-            ),
-            "COURSE_RUN_SYNC_NO_UPDATE_FIELDS": ["languages"],
-        },
-        {
-            "API_TOKEN": values.Value(
-                environ_name="MOODLE_API_TOKEN", environ_prefix=None
-            ),
-            "BACKEND": values.Value(environ_name="MOODLE_BACKEND", environ_prefix=None),
-            "BASE_URL": values.Value(
-                environ_name="MOODLE_BASE_URL", environ_prefix=None
-            ),
-            "SELECTOR_REGEX": values.Value(
-                r"^disabled$", environ_name="MOODLE_SELECTOR_REGEX", environ_prefix=None
-            ),
-            "COURSE_REGEX": values.Value(
-                r"^disabled$", environ_name="MOODLE_COURSE_REGEX", environ_prefix=None
-            ),
-            "COURSE_RUN_SYNC_NO_UPDATE_FIELDS": [],
-        },
-    ]
+    JOANIE_LMS_BACKENDS = LMSBackendsValue([], environ_prefix=None)
     JOANIE_COURSE_RUN_SYNC_SECRETS = values.ListValue([], environ_prefix=None)
     MOODLE_AUTH_METHOD = values.Value(
         "oauth2", environ_name="MOODLE_AUTH_METHOD", environ_prefix=None

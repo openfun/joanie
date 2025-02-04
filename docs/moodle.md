@@ -93,7 +93,7 @@ we need to set up a Moodle webservice, and a Moodle webservice client.
 
 ## Setup Moodle settings in Joanie
 
-### Set Moodle backend environment variables
+### Declare a Moodle backend in JOANIE_LMS_BACKENDS environment variable
 
 - MOODLE_API_TOKEN: the token of the Joanie user in Moodle
 - MOODLE_BACKEND: use to override the Moodle backend module in Joanie
@@ -101,5 +101,15 @@ we need to set up a Moodle webservice, and a Moodle webservice client.
 - MOODLE_SELECTOR_REGEX: a regex to match the Moodle backend (e.g. `r"^.*/course/view.php\?id=.*$"`)
 - MOODLE_COURSE_REGEX: a regex to match the Moodle course id (e.g. `r"^.*/course/view.php\?id=(.*)$"`)
 
-
-
+```shell
+JOANIE_LMS_BACKENDS = '[
+    # ...
+    {
+       "API_TOKEN": "FakeApiKeyForExample",
+       "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+       "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+       "SELECTOR_REGEX": "^.*/course/view.php\\?id=.*$",
+       "COURSE_REGEX": "^.*/courses/(?P<course_id>.*)/course/?$"
+    }
+]'
+```

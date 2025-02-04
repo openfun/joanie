@@ -6,11 +6,12 @@ import base64
 import collections.abc
 import hashlib
 import json
-import math
+import re
 
 from django.utils.text import slugify
 
 from configurations import values
+from configurations.values import ValidationMixin
 from PIL import ImageFile as PillowImageFile
 
 
@@ -116,6 +117,96 @@ class JSONValue(values.Value):
         Return the python representation of the JSON string.
         """
         return json.loads(value)
+
+
+class LMSBackendValidator:
+    """
+    Validator for the LMS Backends configuration. Take a look at settings
+    `JOANIE_LMS_BACKENDS` for more information.
+    """
+
+    BACKEND_REQUIRED_KEYS = ["BACKEND", "BASE_URL", "COURSE_REGEX", "SELECTOR_REGEX"]
+
+    def __init__(self, value):
+        self.__call__(value)
+
+    def _validate_required_keys(self, backend):
+        """
+        Validate that the backend dictionary contains all the required keys.
+        """
+        for key in self.BACKEND_REQUIRED_KEYS:
+            if key not in backend:
+                raise ValueError(f"Missing key {key} in LMS Backend.")
+
+    def _validate_regex_properties(self, backend):
+        """
+        Validate that the values of the COURSE_REGEX and SELECTOR_REGEX properties
+        are valid regex strings.
+        """
+        course_regex = backend["COURSE_REGEX"]
+        selector_regex = backend["SELECTOR_REGEX"]
+
+        for regex in [course_regex, selector_regex]:
+            try:
+                re.compile(regex)
+            except re.error as error:
+                raise ValueError(f"Invalid regex {regex} in LMS Backend.") from error
+
+    def _validate_backend_path_string(self, path):
+        """
+        Validate that the value of the BACKEND property
+        is a valid python module path string.
+        """
+        path_regex = r"^([a-zA-Z_]+\.)*[a-zA-Z_]+$"
+        if not isinstance(path, str):
+            raise ValueError(f"{path} must be a string.")
+
+        if not re.match(path_regex, path):
+            raise ValueError(f"{path} must be a valid python module path string.")
+
+    def _validate_no_update_fields_value(self, value):
+        """
+        Validate that the value of
+        the COURSE_RUN_SYNC_NO_UPDATE_FIELDS property is a list.
+        """
+        if value is not None and not isinstance(value, list):
+            raise ValueError("COURSE_RUN_SYNC_NO_UPDATE_FIELDS must be a list.")
+
+    def _validate_backend(self, backend):
+        self._validate_required_keys(backend)
+        self._validate_regex_properties(backend)
+        self._validate_backend_path_string(backend["BACKEND"])
+        self._validate_no_update_fields_value(
+            backend.get("COURSE_RUN_SYNC_NO_UPDATE_FIELDS")
+        )
+
+    def __call__(self, value):
+        """
+        Validate that the value is a list of dictionaries which describe an LMS Backends.
+        And that each backend has the correct properties.
+        """
+        if not isinstance(value, list):
+            raise ValueError("LMS Backends must be a list of dictionaries.")
+
+        for backend in value:
+            self._validate_backend(backend)
+
+
+class LMSBackendsValue(ValidationMixin, values.Value):
+    """
+    A custom value class based on the JSONValue class that allows to load
+    a JSON string and use it as a value. It also validates that the JSON
+    object is a list of dictionaries which describe an LMS Backends.
+    """
+
+    validator = LMSBackendValidator
+
+    def to_python(self, value):
+        """
+        Return the python representation of the JSON string.
+        """
+        backends = json.loads(value)
+        return super().to_python(backends)
 
 
 class Echo:
