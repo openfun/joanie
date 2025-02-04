@@ -6,18 +6,19 @@ with your LMS.
 ## Settings
 
 You can link Joanie to several LMSs. You have to define your LMSs through the `JOANIE_LMS_BACKENDS`
-settings which is a list of LMS configuration.
+environment variable which is a JSON array string of LMS configuration.
 
 e.g: A basic configuration
 
-```python
-JOANIE_LMS_BACKENDS = [
+```shell
+JOANIE_LMS_BACKENDS = '[
         {
-            "BACKEND": values.Value(environ_name="MY_LMS_BACKEND", environ_prefix=None),
-            "BASE_URL": values.Value(environ_name="MY_LMS_BASE_URL", environ_prefix=None),
-            "SELECTOR_REGEX" : values.Value(environ_name="MY_LMS_SELECTOR_REGEX", environ_prefix=None)
+            "BACKEND": "MY_LMS_BACKEND",
+            "BASE_URL": "MY_LMS_BASE_URL",
+            "SELECTOR_REGEX" : "ˆMY_LMS_SELECTOR_REGEX$"
+            "COURSE_REGEX" : "ˆMY_LMS_COURSE_REGEX_REGEX$"
         }
-    ]
+    ]'
 ```
 
 `BACKEND`, `BASE_URL`, `SELECTOR_REGEX` are the three settings required by `LMSHandler`. In fact,

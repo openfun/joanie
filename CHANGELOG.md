@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- JOANIE_LMS_BACKENDS is now configurable through env vars
+  as a JSON string array of LMS Backends
+
 ## [2.14.1] - 2025-02-03
 
 ### Fixed
