@@ -21,6 +21,7 @@ from babel.numbers import get_currency_symbol
 from parler.utils import get_language_settings
 from parler.utils.context import switch_language
 
+from joanie.core import enums
 from joanie.core.models.base import BaseModel
 from joanie.core.utils import merge_dict
 from joanie.payment import enums as payment_enums
@@ -368,6 +369,32 @@ class CreditCardManager(models.Manager):
         return self.filter(
             owners__username=username, payment_provider=payment_provider.name
         )
+
+    def delete_unused(self):
+        """
+        Unlink cards that are linked to orders that wont need payment anymore,
+        then delete all the credit cards that are not linked to any order.
+        """
+        unlinked_credit_cards = []
+        deleted_credit_cards = []
+
+        no_card_order_states = enums.ORDER_INACTIVE_STATES + (
+            enums.ORDER_STATE_COMPLETED,
+        )
+
+        for credit_card in self.iterator():
+            for order in credit_card.orders.filter(state__in=no_card_order_states):
+                unlinked_credit_cards.append(
+                    {"order_id": order.id, "card_id": credit_card.id}
+                )
+                order.credit_card = None
+                order.save()
+
+            if not credit_card.orders.exists():
+                deleted_credit_cards.append({"card_id": credit_card.id})
+                credit_card.delete()
+
+        return unlinked_credit_cards, deleted_credit_cards
 
 
 class CreditCardOwnership(BaseModel):

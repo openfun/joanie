@@ -12,6 +12,7 @@ and this project adheres to
 
 - `owner` and `is_main` fields on `CreditCard` model are deprecated
   and been replaced with many-to-many `owners` field instead
+- Add a management command to delete unused credit cards
 
 ### Changed
 
