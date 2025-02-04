@@ -95,11 +95,11 @@ we need to set up a Moodle webservice, and a Moodle webservice client.
 
 ### Declare a Moodle backend in JOANIE_LMS_BACKENDS environment variable
 
-- MOODLE_API_TOKEN: the token of the Joanie user in Moodle
-- MOODLE_BACKEND: use to override the Moodle backend module in Joanie
-- MOODLE_BASE_URL: the URL of the Moodle webservice (e.g. `"http://moodle.test/webservice/rest/server.php"`)
-- MOODLE_SELECTOR_REGEX: a regex to match the Moodle backend (e.g. `r"^.*/course/view.php\?id=.*$"`)
-- MOODLE_COURSE_REGEX: a regex to match the Moodle course id (e.g. `r"^.*/course/view.php\?id=(.*)$"`)
+- API_TOKEN: the token of the Joanie user in Moodle
+- BACKEND: use to override the Moodle backend module in Joanie
+- BASE_URL: the URL of the Moodle webservice (e.g. `"http://moodle.test/webservice/rest/server.php"`)
+- SELECTOR_REGEX: a regex to match the Moodle backend (e.g. `r"^.*/course/view.php\?id=.*$"`)
+- COURSE_REGEX: a regex to match the Moodle course id (e.g. `r"^.*/course/view.php\?id=(.*)$"`)
 
 ```shell
 JOANIE_LMS_BACKENDS = '[
