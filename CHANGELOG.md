@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.15.0] - 2025-02-05
+
 ### Changed
 
 - JOANIE_LMS_BACKENDS is now configurable through env vars
@@ -583,7 +585,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.14.1...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.15.0...main
+[2.15.0]: https://github.com/openfun/joanie/compare/v2.14.1...v2.15.0
 [2.14.1]: https://github.com/openfun/joanie/compare/v2.14.0...v2.14.1
 [2.14.0]: https://github.com/openfun/joanie/compare/v2.13.0...v2.14.0
 [2.13.0]: https://github.com/openfun/joanie/compare/v2.12.0...v2.13.0
