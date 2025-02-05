@@ -13,7 +13,7 @@ from joanie.core.models import CourseState, Order
 from joanie.tests import format_date
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-lines
 class OrdersAdminApiListTestCase(TestCase):
     """Test suite for the admin orders API list endpoint."""
 
@@ -897,3 +897,153 @@ class OrdersAdminApiListTestCase(TestCase):
 
         self.assertEqual(content["count"], 5)
         self.assertListEqual(sorted(response_ids), sorted(expected_ids))
+
+    def test_api_admin_orders_list_pagination(self):
+        """Pagination should work as expected."""
+        orders = factories.OrderFactory.create_batch(3)
+
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/?page_size=2")
+        order_ids = [str(order.id) for order in orders]
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertEqual(
+            content["next"],
+            "http://testserver/api/v1.0/admin/orders/?page=2&page_size=2",
+        )
+        self.assertIsNone(content["previous"])
+
+        self.assertEqual(len(content["results"]), 2)
+        for item in content["results"]:
+            order_ids.remove(item["id"])
+
+        # Get page 2
+        response = self.client.get("/api/v1.0/admin/orders/?page_size=2&page=2")
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        self.assertIsNone(content["next"])
+        self.assertEqual(
+            content["previous"], "http://testserver/api/v1.0/admin/orders/?page_size=2"
+        )
+
+        self.assertEqual(len(content["results"]), 1)
+        order_ids.remove(content["results"][0]["id"])
+        self.assertEqual(order_ids, [])
+
+    def test_api_admin_orders_list_pagination_ordered(self):
+        """Pagination should work as expected with ordered query."""
+        orders = []
+        for updated_on in [
+            datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 2, 0, 0, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 3, 0, 0, 0, tzinfo=timezone.utc),
+        ]:
+            with mock.patch("django.utils.timezone.now", return_value=updated_on):
+                orders.append(factories.OrderFactory())
+
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get(
+            "/api/v1.0/admin/orders/?page_size=2&ordering=-updated_on"
+        )
+        order_ids = [str(order.id) for order in orders]
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 3)
+        self.assertEqual(
+            content["next"],
+            "http://testserver/api/v1.0/admin/orders/?ordering=-updated_on&page=2&page_size=2",
+        )
+        self.assertIsNone(content["previous"])
+        self.assertEqual(content["results"][0]["updated_on"], "2024-01-03T00:00:00Z")
+
+        self.assertEqual(len(content["results"]), 2)
+        for item in content["results"]:
+            order_ids.remove(item["id"])
+
+        # Get page 2
+        response = self.client.get(
+            "/api/v1.0/admin/orders/?ordering=-updated_on&page_size=2&page=2"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+
+        self.assertEqual(content["count"], 3)
+        self.assertIsNone(content["next"])
+        self.assertEqual(
+            content["previous"],
+            "http://testserver/api/v1.0/admin/orders/?ordering=-updated_on&page_size=2",
+        )
+        self.assertEqual(content["results"][0]["updated_on"], "2024-01-01T00:00:00Z")
+
+        self.assertEqual(len(content["results"]), 1)
+        order_ids.remove(content["results"][0]["id"])
+        self.assertEqual(order_ids, [])
+
+    def assert_response_is_ordered(self, parameter, expected):
+        """
+        Assert that the response is ordered by the given parameter.
+        """
+        response = self.client.get(f"/api/v1.0/admin/orders/?ordering={parameter}")
+
+        attribute = parameter
+        if parameter.startswith("-"):
+            attribute = parameter[1:]
+
+        current = [str(order[attribute]) for order in response.json()["results"]]
+        self.assertListEqual(current, expected)
+
+    def test_api_admin_orders_list_ordered(self):
+        """Ordering should work as expected."""
+        orders = factories.OrderFactory.create_batch(4)
+
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        self.assert_response_is_ordered(
+            "state",
+            sorted([str(order.state) for order in orders]),
+        )
+
+        self.assert_response_is_ordered(
+            "owner_name",
+            sorted([order.owner.get_full_name() for order in orders]),
+        )
+
+        self.assert_response_is_ordered(
+            "-owner_name",
+            sorted([order.owner.get_full_name() for order in orders], reverse=True),
+        )
+
+        self.assert_response_is_ordered(
+            "product_title",
+            sorted([order.product.title for order in orders]),
+        )
+
+        self.assert_response_is_ordered(
+            "-product_title",
+            sorted([order.product.title for order in orders], reverse=True),
+        )
+
+        self.assert_response_is_ordered(
+            "organization_title",
+            sorted([order.organization.title for order in orders]),
+        )
+
+        self.assert_response_is_ordered(
+            "-organization_title",
+            sorted([order.organization.title for order in orders], reverse=True),
+        )
