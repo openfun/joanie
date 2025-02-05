@@ -3,6 +3,7 @@
 
 from django.core.management.base import BaseCommand
 
+from joanie.core.factories import fake_now
 from joanie.tests.testing_utils import Demo
 
 
@@ -16,4 +17,5 @@ class Command(BaseCommand):
             """Log message"""
             self.stdout.write(self.style.SUCCESS(message))
 
-        Demo(log=log).generate()
+        with fake_now():
+            Demo(log=log).generate()
