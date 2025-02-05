@@ -597,6 +597,25 @@ class ProductFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         return CertificateDefinitionFactory()
 
 
+class DiscountFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create a discount"""
+
+    class Meta:
+        model = models.Discount
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Create an instance of the model, and save it to the database."""
+        if "rate" not in kwargs and "amount" not in kwargs:
+            if random.choice([True, False]):
+                kwargs["rate"] = Faker().pyfloat(
+                    left_digits=1, right_digits=4, positive=True, max_value=1
+                )
+            else:
+                kwargs["amount"] = Faker().pyint(min_value=0, max_value=100, step=5)
+        return super()._create(model_class, *args, **kwargs)
+
+
 class CourseProductRelationFactory(
     DebugModelFactory, factory.django.DjangoModelFactory
 ):
