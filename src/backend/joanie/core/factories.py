@@ -9,8 +9,10 @@ import json
 import logging
 import random
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from unittest import mock
 
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -38,6 +40,20 @@ from joanie.core.utils.payment_schedule import (
 )
 
 logger = logging.getLogger(__name__)
+fake = Faker()
+
+
+@contextmanager
+def fake_now():
+    """
+    Context manager to mock the timezone.now() function with a fake date.
+    Useful to create objects with a random created_on date.
+    """
+    with mock.patch(
+        "django.utils.timezone.now",
+        return_value=fake.date_time_this_decade(tzinfo=timezone.utc),
+    ):
+        yield
 
 
 def generate_thumbnails_for_field(field, include_global=False):
