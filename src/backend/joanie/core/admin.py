@@ -582,6 +582,14 @@ class ProductAdmin(
         return "-"
 
 
+@admin.register(models.Discount)
+class DiscountAdmin(admin.ModelAdmin):
+    """Admin class for the Discount model"""
+
+    list_display = ("rate", "amount")
+    search_fields = ["rate", "amount"]
+
+
 @admin.register(models.Order)
 class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Order model"""

@@ -1480,3 +1480,53 @@ class Teacher(BaseModel):
 
     first_name = models.CharField(_("first name"), max_length=255)
     last_name = models.CharField(_("last name"), max_length=255)
+
+
+class Discount(BaseModel):
+    """
+    Discount model allows to define a discount on a price.
+    """
+
+    class Meta:
+        db_table = "joanie_discount"
+        verbose_name = _("Discount")
+        verbose_name_plural = _("Discounts")
+        ordering = ["created_on"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(rate__isnull=False) | models.Q(amount__isnull=False),
+                name="discount_rate_or_amount_required",
+                violation_error_message="Discount rate or amount is required.",
+            ),
+            models.CheckConstraint(
+                check=models.Q(rate__isnull=True) | models.Q(amount__isnull=True),
+                name="discount_rate_and_amount_exclusive",
+                violation_error_message="Discount rate and amount are exclusive.",
+            ),
+        ]
+
+    amount = models.PositiveSmallIntegerField(
+        _("amount"),
+        help_text=_("Discount amount"),
+        null=True,
+        blank=True,
+    )
+    rate = models.FloatField(
+        _("rate"),
+        help_text=_("Discount rate"),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
+    )
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.rate is not None:
+            rate_as_int = int(self.rate * 100)
+            return f"{rate_as_int}%"
+
+        return f"{self.amount} €"
