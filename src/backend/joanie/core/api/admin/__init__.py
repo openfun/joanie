@@ -43,6 +43,31 @@ from joanie.payment import get_payment_backend
 from .enrollment import EnrollmentViewSet
 
 
+class AliasOrderingFilter(OrderingFilter):
+    """
+    Custom filter to handle aliases in ordering fields.
+    """
+
+    def remove_invalid_fields(self, queryset, fields, view, request):
+        """
+        Remove invalid fields from the ordering list.
+        """
+        if not hasattr(view, "ordering_aliases"):
+            return super().remove_invalid_fields(queryset, fields, view, request)
+
+        valid_fields = []
+        for term in fields:
+            # Strip a potential '-' from the beginning.
+            prefix = "-" if term.startswith("-") else ""
+            field = term.lstrip("-")
+            # Replace the alias if needed.
+            if field in view.ordering_aliases:
+                field = view.ordering_aliases[field]
+            valid_fields.append(prefix + field)
+
+        return valid_fields
+
+
 # pylint: disable=too-many-ancestors
 class OrganizationViewSet(viewsets.ModelViewSet):
     """
@@ -53,7 +78,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationSerializer
     queryset = models.Organization.objects.all()
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
     filterset_class = filters.OrganizationAdminFilterSet
 
     def get_serializer_class(self):
@@ -76,7 +101,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_action_classes = {"list": serializers.AdminProductLightSerializer}
     queryset = models.Product.objects.all()
     filterset_class = filters.ProductAdminFilterSet
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
     def get_serializer_class(self):
         if self.action in self.serializer_action_classes:
@@ -114,7 +139,7 @@ class CourseRunViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminCourseRunSerializer
     queryset = models.CourseRun.objects.all().select_related("course")
     filterset_class = filters.CourseRunAdminFilterSet
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
     def get_queryset(self):
         """
@@ -140,7 +165,7 @@ class CertificateDefinitionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminCertificateDefinitionSerializer
     queryset = models.CertificateDefinition.objects.all()
     filterset_class = filters.CertificateDefinitionAdminFilterSet
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
 
 class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -154,7 +179,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     me_serializer_class = serializers.AdminUserCompleteSerializer
     queryset = models.User.objects.all()
     filterset_class = filters.UserAdminFilterSet
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
     def get_queryset(self):
         """
@@ -200,7 +225,7 @@ class CourseAccessViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminCourseAccessSerializer
     queryset = models.CourseAccess.objects.all().select_related("user")
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
     def get_serializer_context(self):
         """
@@ -227,7 +252,7 @@ class OrganizationAccessViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminOrganizationAccessSerializer
     queryset = models.OrganizationAccess.objects.all().select_related("user")
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
     def get_serializer_context(self):
         """
@@ -399,7 +424,7 @@ class TeacherViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminTeacherSerializer
     queryset = models.Teacher.objects.all()
     filterset_class = filters.TeacherAdminFilterSet
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
 
 class SkillViewSet(viewsets.ModelViewSet):
@@ -412,7 +437,7 @@ class SkillViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminSkillSerializer
     queryset = models.Skill.objects.all()
     filterset_class = filters.SkillAdminFilterSet
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
     ordering_fields = ["translations__title"]
 
 
@@ -426,7 +451,7 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.AdminContractDefinitionSerializer
     queryset = models.ContractDefinition.objects.all()
     filterset_class = filters.ContractDefinitionAdminFilterSet
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
 
 class CourseProductRelationViewSet(viewsets.ModelViewSet):
@@ -623,7 +648,15 @@ class OrderViewSet(
         "order_group",
         "credit_card",
     )
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+
+    # Map aliases to actual model field lookups.
+    # For instance, the query parameter "product_title" will map to "product__translations__title"
+    ordering_aliases = {
+        "owner_name": "owner__first_name",
+        "product_title": "product__translations__title",
+        "organization_title": "organization__translations__title",
+    }
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
     def destroy(self, request, *args, **kwargs):
         """Cancels an order."""
@@ -723,7 +756,7 @@ class OrganizationAddressViewSet(
     queryset = models.Address.objects.filter(owner__isnull=True).select_related(
         "organization"
     )
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
     def get_serializer_context(self):
         """
