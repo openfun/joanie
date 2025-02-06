@@ -25,6 +25,7 @@ from joanie.core.models.base import BaseModel
 from joanie.core.utils import merge_dict
 from joanie.payment import enums as payment_enums
 from joanie.payment import get_payment_backend
+from joanie.payment.exceptions import PaymentProviderAPIException
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -458,5 +459,16 @@ def credit_card_post_delete_receiver(sender, instance, *args, **kwargs):
     Each time we delete a credit card from database,
     we have also to delete it from the payment provider
     """
-    payment_backend = get_payment_backend()
-    payment_backend.delete_credit_card(instance)
+    try:
+        payment_backend = get_payment_backend()
+        payment_backend.delete_credit_card(instance)
+    except PaymentProviderAPIException as exception:
+        logger.error(
+            "An error occurred while deleting a credit card token from payment provider.",
+            exc_info=exception,
+            extra={
+                "context": {
+                    "paymentMethodToken": instance.token,
+                }
+            },
+        )
