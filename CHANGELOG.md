@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Catch `PaymentProviderAPIException` on CreditCard `post_delete` signal
+
 ## [2.15.0] - 2025-02-05
 
 ### Changed

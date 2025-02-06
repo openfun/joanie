@@ -1,14 +1,17 @@
 """Test suite for the `CreditCard` Manager."""
 
+from unittest import mock
+
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 
 from joanie.core.factories import UserFactory
+from joanie.payment.exceptions import PaymentProviderAPIException
 from joanie.payment.factories import CreditCardFactory
 from joanie.payment.models import CreditCard
+from joanie.tests.base import LoggingTestCase
 
 
-class CreditCardModelTestCase(TestCase):
+class CreditCardModelTestCase(LoggingTestCase):
     """
     Test case for the CreditCard Manager.
     """
@@ -84,3 +87,47 @@ class CreditCardModelTestCase(TestCase):
         for card in results:
             self.assertEqual(card.payment_provider, "dummy")
             self.assertEqual(card.owner.id, owner.id)
+
+    @mock.patch("joanie.payment.backends.dummy.DummyPaymentBackend.delete_credit_card")
+    def test_models_credit_card_delete_on_payment_provider(
+        self, mock_delete_credit_card
+    ):
+        """
+        When a credit card is deleted from our database, it should also be
+        deleted from the payment provider.
+        """
+        credit_card = CreditCardFactory()
+
+        credit_card.delete()
+        mock_delete_credit_card.assert_called_once_with(credit_card)
+
+        self.assertEqual(CreditCard.objects.count(), 0)
+
+    @mock.patch("joanie.payment.backends.dummy.DummyPaymentBackend.delete_credit_card")
+    def test_models_credit_card_delete_on_payment_provider_error(
+        self, mock_delete_credit_card
+    ):
+        """
+        When a credit card is deleted from our database, it should also be
+        deleted from the payment provider. If the request to the payment provider
+        fails, it should raise an exception but should prevent the resource deletion.
+        """
+        mock_delete_credit_card.side_effect = PaymentProviderAPIException(
+            "Token not found"
+        )
+        credit_card = CreditCardFactory()
+
+        with self.assertLogs() as logger:
+            credit_card.delete()
+
+        mock_delete_credit_card.assert_called_once_with(credit_card)
+        self.assertEqual(CreditCard.objects.count(), 0)
+
+        expected_logs = [
+            (
+                "ERROR",
+                "An error occurred while deleting a credit card token from payment provider.",
+                {"paymentMethodToken": str},
+            ),
+        ]
+        self.assertLogsEquals(logger.records, expected_logs)
