@@ -1413,3 +1413,47 @@ class OrderModelsTestCase(LoggingTestCase):
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
         self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_PAID)
+
+    def test_models_order_and_order_group_discounted_rate_get_discounted_price(self):
+        """
+        When the order group that has a discount rate, is active and is enabled then the order
+        total should be the discounted price.
+        """
+        relation = factories.CourseProductRelationFactory(product__price=100)
+        discount = factories.DiscountFactory(rate=0.2)
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            is_active=True,
+            start=django_timezone.now() - timedelta(seconds=30),
+            end=None,
+            discount=discount,
+            nb_seats=1,
+        )
+
+        order = factories.OrderFactory(
+            course=relation.course, product=relation.product, order_group=order_group
+        )
+
+        self.assertEqual(order.total, Decimal("80.00"))
+
+    def test_models_order_and_order_group_discount_amount_get_discounted_price(self):
+        """
+        When the order group that has a discount amount, is active and is enabled then the order
+        total should be the discounted price.
+        """
+        relation = factories.CourseProductRelationFactory(product__price=100)
+        discount = factories.DiscountFactory(amount=10)
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            is_active=True,
+            start=django_timezone.now() - timedelta(days=1),
+            end=None,
+            discount=discount,
+            nb_seats=10,
+        )
+
+        order = factories.OrderFactory(
+            course=relation.course, product=relation.product, order_group=order_group
+        )
+
+        self.assertEqual(order.total, Decimal("90.00"))
