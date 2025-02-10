@@ -6,6 +6,7 @@ import itertools
 import logging
 from collections import defaultdict
 from datetime import timedelta
+from decimal import Decimal
 
 from django.apps import apps
 from django.conf import settings
@@ -67,6 +68,9 @@ adapter = requests.adapters.HTTPAdapter(
 session = requests.Session()
 session.mount("http://", adapter)
 session.mount("https://", adapter)
+
+
+TOTAL_DECIMAL_PLACES_ACCEPTED = Decimal(10) ** -2
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
@@ -392,6 +396,14 @@ class OrderGroup(BaseModel):
         verbose_name=_("order group end datetime"),
         blank=True,
         null=True,
+    )
+    discount = models.ForeignKey(
+        to="Discount",
+        verbose_name=_("discount on the product price for the order group"),
+        related_name="order_groups",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -871,7 +883,7 @@ class Order(BaseModel):
             raise ValidationError(error_dict)
 
         if not self.created_on:
-            self.total = self.product.price
+            self.total = self.get_total_price()
 
         super().clean()
 
@@ -879,6 +891,25 @@ class Order(BaseModel):
         """Call full clean before saving instance."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def get_total_price(self):
+        """Return the total price considering the order group discount."""
+        if (
+            self.order_group
+            and self.order_group.is_enabled
+            and self.order_group.discount
+        ):
+            discount = self.order_group.discount
+            price = self.product.price
+
+            if discount.rate:
+                total = price - (price * Decimal(str(discount.rate)))
+                return total.quantize(TOTAL_DECIMAL_PLACES_ACCEPTED)
+
+            if discount.amount:
+                return price - discount.amount
+
+        return self.product.price
 
     def get_target_enrollments(self, is_active=None):
         """
