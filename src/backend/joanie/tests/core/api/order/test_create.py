@@ -2113,3 +2113,221 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+    def test_api_order_create_discount_rate_on_order_group(self):
+        """
+        Authenticated user wants to create an order on the order group that is enabled and
+        has a discount rate. The created order should have the total value of the discounted price.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        cases_inside_date_range = [
+            {
+                "start": timezone.now() - timedelta(seconds=10),
+                "end": None,
+            },
+            {
+                "start": None,
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+            {
+                "start": timezone.now() - timedelta(seconds=10),
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+        ]
+        for case in cases_inside_date_range:
+            with self.subTest(start=case["start"], end=case["end"]):
+                relation = factories.CourseProductRelationFactory(product__price=100)
+                order_group = factories.OrderGroupFactory(
+                    discount=factories.DiscountFactory(rate=0.1),
+                    course_product_relation=relation,
+                    is_active=True,
+                    start=case["start"],
+                    end=case["end"],
+                )
+
+                data = {
+                    "course_code": relation.course.code,
+                    "organization_id": str(relation.organizations.first().id),
+                    "order_group_id": str(order_group.id),
+                    "product_id": str(relation.product.id),
+                    "billing_address": BillingAddressDictFactory(),
+                    "has_waived_withdrawal_right": True,
+                }
+
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+                order = models.Order.objects.get(order_group=order_group)
+                self.assertEqual(order.total, 90)
+
+    def test_api_order_create_discount_rate_on_order_group_not_enabled(self):
+        """
+        Authenticated user wants to create an order on the order group that is not enabled and
+        has a discount rate. The created order should not be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        cases_outside_date_range = [
+            {
+                "start": timezone.now() + timedelta(seconds=10),
+                "end": None,
+            },
+            {
+                "start": None,
+                "end": timezone.now() - timedelta(seconds=10),
+            },
+            {
+                "start": timezone.now() + timedelta(seconds=10),
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+        ]
+        for case in cases_outside_date_range:
+            with self.subTest(start=case["start"], end=case["end"]):
+                relation = factories.CourseProductRelationFactory(product__price=100)
+                order_group = factories.OrderGroupFactory(
+                    discount=factories.DiscountFactory(rate=0.1),
+                    course_product_relation=relation,
+                    is_active=True,
+                    start=case["start"],
+                    end=case["end"],
+                )
+
+                data = {
+                    "course_code": relation.course.code,
+                    "organization_id": str(relation.organizations.first().id),
+                    "order_group_id": str(order_group.id),
+                    "product_id": str(relation.product.id),
+                    "billing_address": BillingAddressDictFactory(),
+                    "has_waived_withdrawal_right": True,
+                }
+
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                self.assertDictEqual(
+                    response.json(),
+                    {
+                        "order_group": [
+                            "This order group is not enabled for product "
+                            f"{relation.product.title} and does not accept "
+                            "any orders at the moment."
+                        ]
+                    },
+                )
+
+    def test_api_order_create_discount_amount_on_order_group(self):
+        """
+        Authenticated user wants to create an order on the order group that is enabled and
+        has a discount amount. The created order should have the total value of the discounted
+        price.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        cases_inside_date_range = [
+            {
+                "start": timezone.now() - timedelta(seconds=10),
+                "end": None,
+            },
+            {
+                "start": None,
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+            {
+                "start": timezone.now() - timedelta(seconds=10),
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+        ]
+        for case in cases_inside_date_range:
+            with self.subTest(start=case["start"], end=case["end"]):
+                relation = factories.CourseProductRelationFactory(product__price=100)
+                order_group = factories.OrderGroupFactory(
+                    discount=factories.DiscountFactory(amount=20),
+                    course_product_relation=relation,
+                    is_active=True,
+                    start=case["start"],
+                    end=case["end"],
+                )
+
+                data = {
+                    "course_code": relation.course.code,
+                    "organization_id": str(relation.organizations.first().id),
+                    "order_group_id": str(order_group.id),
+                    "product_id": str(relation.product.id),
+                    "billing_address": BillingAddressDictFactory(),
+                    "has_waived_withdrawal_right": True,
+                }
+
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+                order = models.Order.objects.get(order_group=order_group)
+                self.assertEqual(order.total, 80)
+
+    def test_api_order_create_discount_rate_order_group_enabled_no_more_seat_available(
+        self,
+    ):
+        """
+        Authenticated user creates an order on an order group that is enabled but has no more
+        seat available, the order should not be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            discount=factories.DiscountFactory(rate=0.1),
+            course_product_relation=relation,
+            is_active=True,
+            nb_seats=1,
+        )
+        factories.OrderFactory(
+            order_group=order_group,
+            course=relation.course,
+            product=relation.product,
+            state=random.choice(
+                [enums.ORDER_STATE_COMPLETED, enums.ORDER_STATE_PENDING]
+            ),
+        )
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "order_group_id": str(order_group.id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "order_group": [
+                    f"Maximum number of orders reached for product {relation.product.title}"
+                ]
+            },
+        )
