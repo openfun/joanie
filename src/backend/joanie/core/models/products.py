@@ -20,7 +20,7 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 from parler import models as parler_models
-from stockholm import Money
+from stockholm import Money, Number, Rate
 from urllib3.util import Retry
 
 from joanie.core import enums, utils
@@ -451,6 +451,14 @@ class OrderGroup(BaseModel):
         verbose_name=_("order group end datetime"),
         blank=True,
         null=True,
+    )
+    discount = models.ForeignKey(
+        to="Discount",
+        verbose_name=_("discount on the product price for the order group"),
+        related_name="order_groups",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -930,7 +938,7 @@ class Order(BaseModel):
             raise ValidationError(error_dict)
 
         if not self.created_on:
-            self.total = self.product.price
+            self.total = self.get_discounted_price()
 
         super().clean()
 
@@ -938,6 +946,29 @@ class Order(BaseModel):
         """Call full clean before saving instance."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def get_discounted_price(self):
+        """
+        Return the total price considering the order group discount if it exists. Else, if
+        there is no order group, the total price should be the full product price.
+        """
+        if (
+            not self.order_group
+            or not self.order_group.is_enabled
+            or not self.order_group.discount
+        ):
+            return self.product.price
+
+        price = Money(self.product.price)
+        discount = self.order_group.discount
+
+        discount_amount = (
+            Money(discount.amount)
+            if discount.amount
+            else price * Rate(Number(discount.rate))
+        )
+
+        return round(Money(price - discount_amount).as_decimal(), 2)
 
     def get_target_enrollments(self, is_active=None):
         """
