@@ -125,6 +125,16 @@ export function OrdersList(props: Props) {
         getEntityName={(order) => {
           return order.organization_title;
         }}
+        sortingMode="server"
+        onSortModelChange={(sortModel) => {
+          if (sortModel[0]) {
+            const filterName = sortModel[0].field;
+            const order = sortModel[0].sort === "asc" ? "" : "-";
+            paginatedResource.filtersProps.onFilter({
+              ordering: `${order}${filterName}`,
+            });
+          }
+        }}
       />
     </SimpleCard>
   );
