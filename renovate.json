@@ -13,7 +13,8 @@
       "matchPackageNames": [
         "hashids",
         "PyMongo",
-        "django-storages"
+        "django-storages",
+        "boto3"
       ]
     },
     {
