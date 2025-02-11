@@ -5,7 +5,6 @@ Payment application factories
 import string
 
 import factory.fuzzy
-from faker import Faker
 
 from joanie.core.factories import OrderFactory, UserAddressFactory, UserFactory
 from joanie.payment import models
@@ -66,7 +65,7 @@ class InvoiceFactory(factory.django.DjangoModelFactory):
 
     recipient_address = factory.SubFactory(UserAddressFactory, is_reusable=False)
     order = factory.SubFactory(OrderFactory)
-    total = Faker().pydecimal(left_digits=3, right_digits=2, min_value=0)
+    total = factory.Faker("pydecimal", left_digits=3, right_digits=2, min_value=0)
 
 
 class TransactionFactory(factory.django.DjangoModelFactory):
@@ -77,7 +76,7 @@ class TransactionFactory(factory.django.DjangoModelFactory):
 
         model = models.Transaction
 
-    total = Faker().pydecimal(left_digits=3, right_digits=2, min_value=0)
+    total = factory.Faker("pydecimal", left_digits=3, right_digits=2, min_value=0)
     reference = factory.LazyAttributeSequence(
         lambda t, n: f"{'ref' if t.total < 0 else 'pay'}_{n:05d}"
     )
