@@ -76,6 +76,26 @@ export const mockPlaywrightCrud = async <T extends WithId, Payload>({
         result = [...resources.data];
       }
 
+      let ordering = url.searchParams.get("ordering");
+      if (ordering) {
+        let order = "asc";
+        if (ordering.startsWith("-")) {
+          order = "desc";
+          ordering = ordering.replace("-", "");
+        }
+
+        result = result.sort((a, b) => {
+          if (order === "asc") {
+            // @ts-ignore
+            // Type null cannot be used as an index type. lol
+            return a[ordering] > b[ordering] ? 1 : -1;
+          }
+          // @ts-ignore
+          // Type null cannot be used as an index type.
+          return a[ordering] < b[ordering] ? 1 : -1;
+        });
+      }
+
       setTimeout(async () => {
         const pageNumber = parseInt(url.searchParams.get("page") ?? "1", 10);
         const count = result.length;

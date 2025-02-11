@@ -10,6 +10,7 @@ export interface ResourcesQuery {
   id?: string;
   query?: string;
   page?: number;
+  ordering?: string;
 }
 
 export type QueryOptions<TData extends Resource> = Omit<

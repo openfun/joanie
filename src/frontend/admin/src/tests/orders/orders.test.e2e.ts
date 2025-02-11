@@ -533,6 +533,7 @@ test.describe("Order list", () => {
   let store = getOrderListItemsScenarioStore();
   test.beforeEach(async ({ page }) => {
     store = getOrderListItemsScenarioStore();
+
     await mockPlaywrightCrud<OrderListItem, any>({
       data: store.list,
       routeUrl: "http://localhost:8071/api/v1.0/admin/orders/",
@@ -598,5 +599,28 @@ test.describe("Order list", () => {
         ).toBeVisible();
       }),
     );
+  });
+
+  test("Check ordering", async ({ page }) => {
+    await page.goto(PATH_ADMIN.orders.list);
+
+    const header = page.getByRole("columnheader", { name: "Product" });
+    const field = await header.getAttribute("data-field");
+    await header.click();
+
+    let titles = await page
+      .locator(`[role='gridcell'][data-field='${field}']`)
+      .allInnerTexts();
+    expect(titles).not.toHaveLength(0);
+    expect(titles).toEqual(titles.toSorted());
+
+    await header.click();
+    await page.waitForLoadState("networkidle");
+
+    titles = await page
+      .locator(`[role='gridcell'][data-field='${field}']`)
+      .allInnerTexts();
+    expect(titles).not.toHaveLength(0);
+    expect(titles).toEqual(titles.toSorted().reverse());
   });
 });
