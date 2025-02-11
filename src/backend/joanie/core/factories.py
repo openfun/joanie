@@ -539,7 +539,7 @@ class ProductFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     type = enums.PRODUCT_TYPE_CREDENTIAL
     title = factory.Faker("bs")
     call_to_action = "let's go!"
-    price = Faker().pydecimal(left_digits=3, right_digits=2, min_value=0)
+    price = factory.Faker("pydecimal", left_digits=3, right_digits=2, min_value=0)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
