@@ -42,6 +42,7 @@ class BaseModel(models.Model):
         """Options for the ``BaseTranslatableModel`` model."""
 
         abstract = True
+        ordering = ["created_on"]
 
     def __repr__(self, dict_repr=False):
         return str(self.to_dict())

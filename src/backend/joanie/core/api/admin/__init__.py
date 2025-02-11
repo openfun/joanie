@@ -55,7 +55,6 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = models.Organization.objects.all()
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = filters.OrganizationAdminFilterSet
-    ordering_fields = ["created_on"]
 
     def get_serializer_class(self):
         """
@@ -78,7 +77,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = models.Product.objects.all()
     filterset_class = filters.ProductAdminFilterSet
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
 
     def get_serializer_class(self):
         if self.action in self.serializer_action_classes:
@@ -117,7 +115,6 @@ class CourseRunViewSet(viewsets.ModelViewSet):
     queryset = models.CourseRun.objects.all().select_related("course")
     filterset_class = filters.CourseRunAdminFilterSet
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
 
     def get_queryset(self):
         """
@@ -144,7 +141,6 @@ class CertificateDefinitionViewSet(viewsets.ModelViewSet):
     queryset = models.CertificateDefinition.objects.all()
     filterset_class = filters.CertificateDefinitionAdminFilterSet
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
 
 
 class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -159,8 +155,6 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = models.User.objects.all()
     filterset_class = filters.UserAdminFilterSet
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
-    ordering = "created_on"
 
     def get_queryset(self):
         """
@@ -207,7 +201,6 @@ class CourseAccessViewSet(
     serializer_class = serializers.AdminCourseAccessSerializer
     queryset = models.CourseAccess.objects.all().select_related("user")
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
 
     def get_serializer_context(self):
         """
@@ -235,7 +228,6 @@ class OrganizationAccessViewSet(
     serializer_class = serializers.AdminOrganizationAccessSerializer
     queryset = models.OrganizationAccess.objects.all().select_related("user")
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
 
     def get_serializer_context(self):
         """
@@ -408,7 +400,6 @@ class TeacherViewSet(viewsets.ModelViewSet):
     queryset = models.Teacher.objects.all()
     filterset_class = filters.TeacherAdminFilterSet
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["last_name", "first_name"]
 
 
 class SkillViewSet(viewsets.ModelViewSet):
@@ -436,7 +427,6 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     queryset = models.ContractDefinition.objects.all()
     filterset_class = filters.ContractDefinitionAdminFilterSet
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
 
 
 class CourseProductRelationViewSet(viewsets.ModelViewSet):
@@ -734,7 +724,6 @@ class OrganizationAddressViewSet(
         "organization"
     )
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ["created_on"]
 
     def get_serializer_context(self):
         """
