@@ -94,7 +94,7 @@ export const usePaginatedTableResource = <
     },
     tableProps: {
       onSearch: debouncedSetQuery,
-      setFilter: setListFilters,
+      onFilter,
       loading: resource.states.fetching ?? false,
       rowCount: resource?.meta?.pagination?.count ?? 0,
       onPaginationModelChange: (pagination: GridPaginationModel) => {

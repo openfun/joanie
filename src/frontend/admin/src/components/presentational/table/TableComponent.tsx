@@ -10,12 +10,14 @@ import { GridValidRowModel } from "@mui/x-data-grid/models/gridRows";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
+import { useRouter } from "next/router";
 import { TableDefaultActions } from "@/components/presentational/table/TableDefaultActions";
 import { tableTranslations } from "@/components/presentational/table/translations";
 import { DEFAULT_PAGE_SIZE } from "@/utils/constants";
 import { mergeArrayUnique } from "@/utils/array";
 import { CustomTablePagination } from "@/components/presentational/table/TablePagination";
 import { MenuOption } from "@/components/presentational/button/menu/ButtonMenu";
+import { ResourcesQuery } from "@/hooks/useResources";
 
 export type DefaultTableProps<T extends GridValidRowModel> = {
   enableSelect?: boolean;
@@ -41,6 +43,7 @@ export type TableComponentProps<T extends GridValidRowModel> =
       onRemoveClick?: (row: T) => void;
       getEntityName?: (row: T) => string;
       onSearch?: (term: string) => void;
+      onFilter?: (newFilters: ResourcesQuery) => void;
       multiSelectActions?: ReactElement;
       loading?: boolean;
       columnBuffer?: number;
@@ -52,10 +55,12 @@ export function TableComponent<T extends GridValidRowModel>({
   enableDelete = true,
   enableSelect = false,
   paginationMode = "server",
+  sortingMode = "server",
   enableSearch = true,
   ...props
 }: TableComponentProps<T>) {
   const intl = useIntl();
+  const router = useRouter();
   const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>(
     props.defaultSelectedRows ?? [],
   );
@@ -200,6 +205,23 @@ export function TableComponent<T extends GridValidRowModel>({
             return props.rowHeight ?? 40;
           }}
           paginationMode={paginationMode}
+          sortingMode={sortingMode}
+          onSortModelChange={(sortModel) => {
+            const query = { ...router.query };
+
+            if (sortModel[0]) {
+              const filterName = sortModel[0].field;
+              const order = sortModel[0].sort === "asc" ? "" : "-";
+              const ordering = `${order}${filterName}`;
+              props.onFilter?.({ ordering });
+              query.ordering = ordering;
+            } else {
+              props.onFilter?.({ ordering: undefined });
+              delete query.ordering;
+            }
+
+            router.push({ query });
+          }}
           sx={{
             border: "none",
             borderRadius: 0,
