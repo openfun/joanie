@@ -61,3 +61,11 @@ class PaymentProviderAPIException(APIException):
     status_code = HTTPStatus.BAD_REQUEST
     default_detail = _("Payment provider API error.")
     default_code = "payment_provider_api_error"
+
+
+class PaymentProviderAPIServerException(APIException):
+    """Exception triggered when the payment provider API server call failed"""
+
+    status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+    default_detail = _("Payment provider API server error.")
+    default_code = "payment_provider_api_server_error"

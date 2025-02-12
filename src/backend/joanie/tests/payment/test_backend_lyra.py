@@ -37,6 +37,7 @@ from joanie.payment.backends.lyra import LyraBackend
 from joanie.payment.exceptions import (
     ParseNotificationFailed,
     PaymentProviderAPIException,
+    PaymentProviderAPIServerException,
     RegisterPaymentFailed,
     TokenizationCardFailed,
 )
@@ -137,14 +138,14 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         )
 
         with (
-            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertRaises(PaymentProviderAPIServerException) as context,
             self.assertLogs() as logger,
         ):
             backend.create_payment(order, first_installment, billing_address)
 
         self.assertEqual(
             str(context.exception),
-            "Error when calling Lyra API - RequestException : Connection error",
+            "Error when calling Lyra API Server - RequestException : Connection error",
         )
 
         expected_logs = [
@@ -189,7 +190,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         )
 
         with (
-            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertRaises(PaymentProviderAPIServerException) as context,
             self.assertLogs() as logger,
         ):
             backend.create_payment(order, first_installment, billing_address)
@@ -197,7 +198,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         self.assertEqual(
             str(context.exception),
             (
-                "Error when calling Lyra API - "
+                "Error when calling Lyra API Server - "
                 "HTTPError : 500 Server Error: Internal Server Error "
                 "for url: https://api.lyra.com/api-payment/V4/Charge/CreatePayment"
             ),
@@ -1519,7 +1520,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         )
 
         with (
-            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertRaises(PaymentProviderAPIServerException) as context,
             self.assertLogs() as logger,
         ):
             backend.create_zero_click_payment(
@@ -1528,7 +1529,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
 
         self.assertEqual(
             str(context.exception),
-            "Error when calling Lyra API - RequestException : Connection error",
+            "Error when calling Lyra API Server - RequestException : Connection error",
         )
 
         expected_logs = [
@@ -1572,7 +1573,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         )
 
         with (
-            self.assertRaises(PaymentProviderAPIException) as context,
+            self.assertRaises(PaymentProviderAPIServerException) as context,
             self.assertLogs() as logger,
         ):
             backend.create_zero_click_payment(
@@ -1582,7 +1583,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         self.assertEqual(
             str(context.exception),
             (
-                "Error when calling Lyra API - "
+                "Error when calling Lyra API Server - "
                 "HTTPError : 500 Server Error: Internal Server Error "
                 "for url: https://api.lyra.com/api-payment/V4/Charge/CreatePayment"
             ),
@@ -2441,7 +2442,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
     def test_payment_backend_lyra_is_already_paid_error(self):
         """
         When backend checks if an installment has already been paid, it should return False
-        if the payment has not been made and should update the installment state to refused.
+        if the payment backend response is an error.
         """
         backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org")
@@ -2489,20 +2490,12 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             json=json_response,
         )
 
-        with (
-            self.assertRaises(PaymentProviderAPIException) as context,
-            self.assertLogs() as logger,
-        ):
+        with self.assertLogs() as logger:
             self.assertFalse(backend.is_already_paid(order, order.payment_schedule[0]))
 
         # installment status is not updated
         order.refresh_from_db()
         self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PENDING)
-
-        self.assertEqual(
-            str(context.exception),
-            "Error when calling Lyra API - PSP_010 : transaction not found.",
-        )
 
         expected_logs = [
             (
@@ -2527,3 +2520,71 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             ),
         ]
         self.assertLogsEquals(logger.records, expected_logs)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_is_already_paid_server_error(self):
+        """
+        When backend checks if an installment has already been paid, it should return False
+        if an error occur on the server.
+        """
+        backend = LyraBackend(self.configuration)
+        owner = UserFactory(email="john.doe@acme.org")
+        UserAddressFactory(owner=owner)
+        order = OrderFactory(
+            id="2f3f527a-9f47-4a45-94d5-ad3ef0dbd437",
+            state=ORDER_STATE_PENDING,
+            owner=owner,
+            main_invoice=InvoiceFactory(),
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "fa17d7b8-3b86-4755-ac78-bc039018d696",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Order/Get",
+            status=500,
+            body="Internal Server Error",
+        )
+
+        with self.assertRaises(PaymentProviderAPIServerException) as context:
+            backend.is_already_paid(order, order.payment_schedule[0])
+
+        self.assertEqual(
+            str(context.exception),
+            "Error when calling Lyra API Server - HTTPError : 500 Server Error: "
+            "Internal Server Error for url: "
+            "https://api.lyra.com/api-payment/V4/Order/Get",
+        )
+
+        # installment is left as pending
+        order.refresh_from_db()
+        self.assertEqual(order.payment_schedule[0]["state"], PAYMENT_STATE_PENDING)
+
+        # Invoices are not created
+        self.assertEqual(order.invoices.count(), 1)
+        self.assertIsNotNone(order.main_invoice)
+        self.assertEqual(order.main_invoice.children.count(), 0)
+
+        # Transaction is not created
+        self.assertFalse(
+            Transaction.objects.filter(
+                invoice__parent__order=order,
+                total=order.payment_schedule[0]["amount"].as_decimal(),
+                reference="first_transaction_id",
+            ).exists()
+        )
+
+        # No mail is sent
+        self.assertEqual(mail.outbox, [])

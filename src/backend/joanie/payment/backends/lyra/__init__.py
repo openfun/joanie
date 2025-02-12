@@ -134,8 +134,8 @@ class LyraBackend(BasePaymentBackend):
                 e,
                 extra={"context": context},
             )
-            raise exceptions.PaymentProviderAPIException(
-                f"Error when calling Lyra API - {e.__class__.__name__} : {e}"
+            raise exceptions.PaymentProviderAPIServerException(
+                f"Error when calling Lyra API Server - {e.__class__.__name__} : {e}"
             ) from e
 
         response_json = response.json()
@@ -331,7 +331,10 @@ class LyraBackend(BasePaymentBackend):
         payload = {
             "orderId": str(order.id),
         }
-        response_json = self._call_api(url, payload)
+        try:
+            response_json = self._call_api(url, payload)
+        except exceptions.PaymentProviderAPIException:
+            return False
         answer = response_json.get("answer")
 
         if not answer:
