@@ -8,7 +8,7 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0054_alter_documentimage_options_alter_ordergroup_options_and_more'),
+        ('core', '0053_alter_certificate_options_and_more'),
     ]
 
     operations = [
