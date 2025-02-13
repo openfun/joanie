@@ -12,6 +12,10 @@ and this project adheres to
 
 - Add `start` and `end` datetime fields on order group model
 
+### Changed
+
+- Remove `is_active` on order group client serializer
+
 ## [2.16.0] - 2025-02-13
 
 ### Added

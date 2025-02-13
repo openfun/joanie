@@ -765,7 +765,6 @@ class OrderGroupSerializer(serializers.ModelSerializer):
         model = models.OrderGroup
         fields = [
             "id",
-            "is_active",
             "nb_seats",
             "nb_available_seats",
             "is_enabled",

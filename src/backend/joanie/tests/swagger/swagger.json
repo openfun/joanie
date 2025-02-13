@@ -6226,10 +6226,6 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "is_active": {
-                        "type": "boolean",
-                        "readOnly": true
-                    },
                     "nb_seats": {
                         "type": "integer",
                         "readOnly": true,
@@ -6267,7 +6263,6 @@
                 "required": [
                     "end",
                     "id",
-                    "is_active",
                     "is_enabled",
                     "nb_available_seats",
                     "nb_seats",

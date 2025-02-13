@@ -799,7 +799,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             [
                 {
                     "id": str(order_group1.id),
-                    "is_active": True,
                     "is_enabled": True,
                     "nb_available_seats": order_group1.nb_seats - 3,
                     "nb_seats": order_group1.nb_seats,
@@ -808,7 +807,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 },
                 {
                     "id": str(order_group2.id),
-                    "is_active": True,
                     "is_enabled": True,
                     "nb_available_seats": order_group2.nb_seats,
                     "nb_seats": order_group2.nb_seats,
@@ -844,7 +842,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             [
                 {
                     "id": str(order_group.id),
-                    "is_active": True,
                     "is_enabled": True,
                     "nb_available_seats": 10,
                     "nb_seats": 10,
@@ -870,7 +867,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             [
                 {
                     "id": str(order_group.id),
-                    "is_active": True,
                     "is_enabled": True,
                     "nb_available_seats": 9,
                     "nb_seats": 10,
@@ -895,7 +891,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             [
                 {
                     "id": str(order_group.id),
-                    "is_active": True,
                     "is_enabled": True,
                     "nb_available_seats": 10,
                     "nb_seats": 10,
