@@ -170,6 +170,7 @@
   "components.templates.orders.list.owner": "Propriétaire",
   "components.templates.orders.list.product": "Produit",
   "components.templates.orders.list.state": "État",
+  "components.templates.orders.list.updatedOn": "Mise à jour le",
   "components.templates.orders.view.billingAddress": "Adresse de facturation",
   "components.templates.orders.view.certificate": "Certificat",
   "components.templates.orders.view.certificateDefinitionDate": "Date de délivrance",
