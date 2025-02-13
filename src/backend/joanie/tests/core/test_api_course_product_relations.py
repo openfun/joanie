@@ -503,7 +503,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
 
         # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
@@ -516,7 +516,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["product"]["id"], str(product.id))
 
         # This query should be cached
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
@@ -530,7 +530,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
@@ -632,7 +632,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             )
 
         # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -785,7 +785,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         # A second call to the url should benefit from caching on
         # the course product relation serializer
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             response = self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -892,10 +892,70 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 {
                     "id": str(order_group.id),
                     "is_enabled": True,
-                    "nb_available_seats": 10,
+                    "nb_available_seats": order_group.available_seats,
                     "nb_seats": 10,
                     "start": None,
                     "end": None,
+                },
+            ],
+        )
+
+    def test_api_course_product_relation_return_only_is_active_order_groups(self):
+        """
+        Authenticated user should only have active order groups on the course product
+        relation.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        factories.UserCourseAccessFactory(user=user, course=relation.course)
+
+        order_group_1 = factories.OrderGroupFactory(
+            course_product_relation=relation, is_active=True
+        )
+        factories.OrderGroupFactory(course_product_relation=relation, is_active=False)
+        order_group_2 = factories.OrderGroupFactory(
+            course_product_relation=relation, is_active=True
+        )
+        order_group_3 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            is_active=True,
+            end="2025-02-16T16:35:49.326248Z",
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/{relation.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        self.assertEqual(
+            response.json()["order_groups"],
+            [
+                {
+                    "id": str(order_group_1.id),
+                    "is_enabled": True,
+                    "nb_available_seats": order_group_1.available_seats,
+                    "nb_seats": order_group_1.nb_seats,
+                    "start": None,
+                    "end": None,
+                },
+                {
+                    "id": str(order_group_2.id),
+                    "is_enabled": True,
+                    "nb_available_seats": order_group_2.available_seats,
+                    "nb_seats": order_group_2.nb_seats,
+                    "start": None,
+                    "end": None,
+                },
+                {
+                    "id": str(order_group_3.id),
+                    "is_enabled": False,
+                    "nb_available_seats": order_group_3.available_seats,
+                    "nb_seats": order_group_3.nb_seats,
+                    "start": None,
+                    "end": "2025-02-16T16:35:49.326248Z",
                 },
             ],
         )

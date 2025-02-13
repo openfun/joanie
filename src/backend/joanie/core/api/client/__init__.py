@@ -184,7 +184,12 @@ class CourseProductRelationViewSet(
         elif self.action == "list" or self.action == "retrieve" and not course_id:
             queryset = queryset.filter(course__accesses__user__username=self.username)
 
-        return queryset
+        return queryset.prefetch_related(
+            Prefetch(
+                "order_groups",
+                queryset=models.OrderGroup.objects.filter(is_active=True),
+            )
+        )
 
     def get_permissions(self):
         """Anonymous user should be able to retrieve a course product relation."""
