@@ -1705,3 +1705,12 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
             validated_data.pop("was_created_by_order", None)
 
         return super().update(instance, validated_data)
+
+
+class AdminDiscountSerializer(serializers.ModelSerializer):
+    """Admin Serializer for Discount model"""
+
+    class Meta:
+        model = models.Discount
+        fields = ["id", "amount", "rate"]
+        read_only_fields = ["id"]

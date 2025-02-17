@@ -781,3 +781,14 @@ class OrganizationAddressViewSet(
             ) from error
 
         return super().destroy(request, *args, **kwargs)
+
+
+class DiscountViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin
+):
+    """Admin Discount Viewset"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminDiscountSerializer
+    queryset = models.Discount.objects.all()
