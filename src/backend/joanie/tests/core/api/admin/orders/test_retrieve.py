@@ -119,6 +119,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                     "can_edit": order_group.can_edit,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
                 "total": float(order.total),
                 "total_currency": settings.DEFAULT_CURRENCY,

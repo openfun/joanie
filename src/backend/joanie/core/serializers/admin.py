@@ -457,6 +457,13 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         default=models.OrderGroup._meta.get_field("is_active").default,
     )
     nb_available_seats = serializers.SerializerMethodField(read_only=True)
+    discount = serializers.SlugRelatedField(
+        slug_field="id",
+        queryset=models.Discount.objects.all(),
+        many=False,
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = models.OrderGroup
@@ -470,6 +477,7 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
             "is_enabled",
             "start",
             "end",
+            "discount",
         ]
         read_only_fields = ["id", "can_edit", "created_on", "is_enabled"]
 

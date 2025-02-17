@@ -6434,6 +6434,12 @@
                         "nullable": true,
                         "title": "Order group end datetime",
                         "description": "Date at which the order group activation ends"
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -6499,6 +6505,12 @@
                         "nullable": true,
                         "title": "Order group end datetime",
                         "description": "Date at which the order group activation ends"
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -6538,6 +6550,12 @@
                         "nullable": true,
                         "title": "Order group end datetime",
                         "description": "Date at which the order group activation ends"
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 }
             },
@@ -6570,6 +6588,12 @@
                         "nullable": true,
                         "title": "Order group end datetime",
                         "description": "Date at which the order group activation ends"
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 }
             },
@@ -8626,6 +8650,12 @@
                         "nullable": true,
                         "title": "Order group end datetime",
                         "description": "Date at which the order group activation ends"
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 }
             },
