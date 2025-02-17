@@ -42,12 +42,13 @@ class OrderGroupAdminApiTest(TestCase):
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
+        discount = factories.DiscountFactory(rate=0.3)
         order_groups = factories.OrderGroupFactory.create_batch(
-            3, course_product_relation=relation
+            3, course_product_relation=relation, discount=discount
         )
         factories.OrderGroupFactory.create_batch(5)
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(16):
             response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
@@ -63,6 +64,12 @@ class OrderGroupAdminApiTest(TestCase):
                 "can_edit": True,
                 "start": None,
                 "end": None,
+                "discount": {
+                    "id": str(discount.id),
+                    "amount": None,
+                    "rate": 0.3,
+                    "is_used": 3,
+                },
             }
             for order_group in order_groups
         ]
@@ -114,9 +121,12 @@ class OrderGroupAdminApiTest(TestCase):
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            discount=factories.DiscountFactory(amount=30),
+        )
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(7):
             response = self.client.get(
                 f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
             )
@@ -134,6 +144,12 @@ class OrderGroupAdminApiTest(TestCase):
             "can_edit": True,
             "start": None,
             "end": None,
+            "discount": {
+                "id": str(order_group.discount.id),
+                "amount": 30,
+                "rate": None,
+                "is_used": 1,
+            },
         }
         self.assertEqual(content, expected_return)
 
@@ -576,3 +592,134 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertFalse(content["is_active"])
         self.assertIsNone(content["nb_available_seats"])
         self.assertIsNone(content["nb_seats"])
+
+    def test_admin_api_order_group_update_discount(self):
+        """Authenticated admin user can add a discount on the order group."""
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        discount = factories.DiscountFactory(rate=0.5)
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+
+        response = self.client.put(
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            content_type="application/json",
+            data={"discount_id": str(discount.id)},
+        )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(content["discount"], str(discount.id))
+
+    def test_admin_api_order_group_partially_update_discount(self):
+        """Authenticated admin user can partially update an existing order group's discount."""
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            discount=factories.DiscountFactory(rate=0.5),
+        )
+        new_discount = factories.DiscountFactory(amount=10)
+
+        response = self.client.patch(
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            content_type="application/json",
+            data={"discount_id": str(new_discount.id)},
+        )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(content["discount"], str(new_discount.id))
+
+    def test_admin_api_order_group_update_to_remove_discount(self):
+        """Authenticated admin user wants to remove the order group's discount."""
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            discount=factories.DiscountFactory(rate=0.5),
+        )
+
+        response = self.client.put(
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            content_type="application/json",
+            data={"discount_id": None},
+        )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIsNone(content["discount"])
+
+    def test_admin_api_order_group_add_discount_that_does_not_exist(self):
+        """
+        Authenticated admin user should not be able to update an order group with a discount
+        id that does not exist
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+
+        response = self.client.put(
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            content_type="application/json",
+            data={"discount_id": "fake_discount_id"},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_api_admin_order_group_create_with_discount(self):
+        """
+        Admin authenticated user should be able to create an order group with a discount.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        discount = factories.DiscountFactory(rate=0.1)
+
+        response = self.client.post(
+            f"{self.base_url}/{relation.id}/order-groups/",
+            content_type="application/json",
+            data={
+                "discount_id": str(discount.id),
+            },
+        )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(content["discount"], str(discount.id))
+
+    def test_api_admin_order_group_create_with_fake_discount(self):
+        """
+        Admin authenticated user should be able not be able to create an order group
+        with a discount that does not exists.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+
+        response = self.client.post(
+            f"{self.base_url}/{relation.id}/order-groups/",
+            content_type="application/json",
+            data={
+                "discount_id": "fake_discount_id",
+            },
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
