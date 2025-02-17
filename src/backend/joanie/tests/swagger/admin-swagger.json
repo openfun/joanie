@@ -871,12 +871,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOrderGroupRequest"
+                                "$ref": "#/components/schemas/AdminOrderGroupUpdateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOrderGroupRequest"
+                                "$ref": "#/components/schemas/AdminOrderGroupUpdateRequest"
                             }
                         }
                     }
@@ -891,7 +891,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOrderGroup"
+                                    "$ref": "#/components/schemas/AdminOrderGroupUpdate"
                                 }
                             }
                         },
@@ -930,12 +930,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOrderGroupRequest"
+                                "$ref": "#/components/schemas/PatchedAdminOrderGroupUpdateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOrderGroupRequest"
+                                "$ref": "#/components/schemas/PatchedAdminOrderGroupUpdateRequest"
                             }
                         }
                     }
@@ -950,7 +950,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOrderGroup"
+                                    "$ref": "#/components/schemas/AdminOrderGroupUpdate"
                                 }
                             }
                         },
@@ -6391,15 +6391,14 @@
                     },
                     "nb_seats": {
                         "type": "integer",
-                        "maximum": 32767,
-                        "minimum": 0,
+                        "readOnly": true,
                         "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
                         "type": "boolean",
-                        "default": true
+                        "readOnly": true
                     },
                     "nb_available_seats": {
                         "type": "integer",
@@ -6424,6 +6423,7 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
+                        "readOnly": true,
                         "nullable": true,
                         "title": "Order group start datetime",
                         "description": "Date at which the order group activation begins"
@@ -6431,22 +6431,30 @@
                     "end": {
                         "type": "string",
                         "format": "date-time",
+                        "readOnly": true,
                         "nullable": true,
                         "title": "Order group end datetime",
                         "description": "Date at which the order group activation ends"
+                    },
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscount"
                     }
                 },
                 "required": [
                     "can_edit",
                     "created_on",
+                    "end",
                     "id",
+                    "is_active",
                     "is_enabled",
-                    "nb_available_seats"
+                    "nb_available_seats",
+                    "nb_seats",
+                    "start"
                 ]
             },
             "AdminOrderGroupCreate": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group.",
+                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group. You can also add a discount.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -6489,16 +6497,18 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -6511,7 +6521,7 @@
             },
             "AdminOrderGroupCreateRequest": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group.",
+                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group. You can also add a discount.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -6528,16 +6538,18 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 }
             },
@@ -6545,6 +6557,82 @@
                 "type": "object",
                 "description": "Admin Serializer for OrderGroup model",
                 "properties": {
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscountRequest"
+                    }
+                }
+            },
+            "AdminOrderGroupUpdate": {
+                "type": "object",
+                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true,
+                        "title": "Number of seats",
+                        "description": "The maximum number of orders that can be validated for a given order group"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "nb_available_seats": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Return the number of available seats for this order group.",
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "can_edit": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_enabled": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "can_edit",
+                    "created_on",
+                    "id",
+                    "is_enabled",
+                    "nb_available_seats"
+                ]
+            },
+            "AdminOrderGroupUpdateRequest": {
+                "type": "object",
+                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
+                "properties": {
                     "nb_seats": {
                         "type": "integer",
                         "maximum": 32767,
@@ -6560,16 +6648,18 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 }
             },
@@ -8597,9 +8687,9 @@
                     }
                 }
             },
-            "PatchedAdminOrderGroupRequest": {
+            "PatchedAdminOrderGroupUpdateRequest": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model",
+                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -8616,16 +8706,18 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
                     }
                 }
             },
