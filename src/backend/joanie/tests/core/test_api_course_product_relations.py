@@ -760,7 +760,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         course = relation.course
         factories.UserCourseAccessFactory(user=user, course=course)
         order_group1 = factories.OrderGroupFactory(
-            course_product_relation=relation, nb_seats=random.randint(10, 100)
+            course_product_relation=relation,
+            nb_seats=random.randint(10, 100),
+            discount=factories.DiscountFactory(amount=10),
         )
         order_group2 = factories.OrderGroupFactory(course_product_relation=relation)
         for _ in range(3):
@@ -804,6 +806,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group1.nb_seats,
                     "start": None,
                     "end": None,
+                    "discount": str(order_group1.discount.id),
                 },
                 {
                     "id": str(order_group2.id),
@@ -812,6 +815,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group2.nb_seats,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
             ],
         )
@@ -847,6 +851,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": 10,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
             ],
         )
@@ -872,6 +877,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": 10,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
             ],
         )
@@ -896,6 +902,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": 10,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
             ],
         )
@@ -940,6 +947,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group_1.nb_seats,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
                 {
                     "id": str(order_group_2.id),
@@ -948,6 +956,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group_2.nb_seats,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
                 {
                     "id": str(order_group_3.id),
@@ -956,6 +965,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group_3.nb_seats,
                     "start": None,
                     "end": "2025-02-16T16:35:49.326248Z",
+                    "discount": None,
                 },
             ],
         )
