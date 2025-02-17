@@ -1676,3 +1676,8 @@ class Discount(BaseModel):
             return f"{rate_as_int}%"
 
         return f"{self.amount} €"
+
+    @property
+    def usage_count(self):
+        """Returns the count of how many times a discount is used through order groups."""
+        return self.order_groups.count()
