@@ -770,6 +770,7 @@ class OrderGroupSerializer(serializers.ModelSerializer):
             "is_enabled",
             "start",
             "end",
+            "discount",
         ]
         read_only_fields = fields
 
