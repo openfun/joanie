@@ -203,6 +203,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
         "nb_available_seats",
         "start",
         "end",
+        "discount",
     )
     search_fields = ("course_product_relation", "start", "end")
     fields = (
@@ -212,6 +213,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
         "nb_seats",
         "start",
         "end",
+        "discount",
     )
     readonly_fields = ("nb_available_seats", "is_enabled")
     readonly_update_fields = ("course_product_relation", "nb_seats")
@@ -501,8 +503,18 @@ class ProductAdmin(
 class DiscountAdmin(admin.ModelAdmin):
     """Admin class for the Discount model"""
 
-    list_display = ("rate", "amount")
+    list_display = ("id", "string_discount_value", "is_used")
     search_fields = ["rate", "amount"]
+    readonly_fields = ("is_used",)
+
+    def is_used(self, obj):  # pylint: disable=no-self-use
+        """Returns a counter of how many times the discount is used in order groups"""
+        return obj.usage_count
+
+    @admin.display(description="Discount")
+    def string_discount_value(self, obj):  # pylint: disable=no-self-use
+        """Returns the string representation of the discount value."""
+        return str(obj)
 
 
 @admin.register(models.Order)
