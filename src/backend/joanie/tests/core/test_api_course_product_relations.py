@@ -769,14 +769,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             factories.OrderFactory(
                 course=course,
                 product=product,
-                order_group=order_group1,
+                order_groups=[order_group1],
                 state=random.choice(enums.ORDER_STATES_BINDING),
             )
         for state, _label in enums.ORDER_STATE_CHOICES:
             if state in enums.ORDER_STATES_BINDING:
                 continue
             factories.OrderFactory(
-                course=course, product=product, order_group=order_group1, state=state
+                course=course, product=product, order_groups=[order_group1], state=state
             )
 
         with self.assertNumQueries(53):
@@ -831,7 +831,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             course_product_relation=relation, nb_seats=10
         )
         order = factories.OrderFactory(
-            product=product, course=relation.course, order_group=order_group
+            product=product, course=relation.course, order_groups=[order_group]
         )
 
         response = self.client.get(
