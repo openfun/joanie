@@ -6522,12 +6522,11 @@
                         ],
                         "readOnly": true
                     },
-                    "order_group": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminOrderGroup"
-                            }
-                        ],
+                    "order_groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderGroup"
+                        },
                         "readOnly": true
                     },
                     "total": {
@@ -6581,7 +6580,7 @@
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice",
-                    "order_group",
+                    "order_groups",
                     "organization",
                     "owner",
                     "payment_schedule",
