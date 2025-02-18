@@ -752,6 +752,15 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 order_relation.course_runs.set(relation.course_runs.all())
 
     @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def order_groups(self, create, extracted, **kwargs):
+        """
+        Set order groups if any
+        """
+        if extracted:
+            self.order_groups.set(extracted)
+
+    @factory.post_generation
     def main_invoice(self, create, extracted, **kwargs):
         """
         Generate invoice if needed
@@ -840,6 +849,15 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         if self.course:
             course_relations = course_relations.filter(course=self.course)
         return course_relations.first().organizations.order_by("?").first()
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def order_groups(self, create, extracted, **kwargs):
+        """
+        Set order groups if any
+        """
+        if extracted:
+            self.order_groups.set(extracted)
 
     @factory.post_generation
     def main_invoice(self, create, extracted, **kwargs):

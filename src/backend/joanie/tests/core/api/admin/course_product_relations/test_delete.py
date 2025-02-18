@@ -89,7 +89,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             course_product_relation=relation,
         )
         factories.OrderFactory(
-            order_group=order_group,
+            order_groups=[order_group],
             product=relation.product,
             course=relation.course,
         )

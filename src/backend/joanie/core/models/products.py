@@ -11,7 +11,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models.functions import Lower
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -362,8 +362,29 @@ class ProductTargetCourseRelation(BaseModel):
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
+class OrderGroupManager(models.Manager):
+    """Custom manager for the OrderGroup model."""
+
+    def find_actives(self, course_product_relation_id):
+        """
+        Retrieve all active order groups for a given course product relation,
+        ordered by position.
+        """
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                is_active=True,
+                course_product_relation_id=course_product_relation_id,
+            )
+            .order_by("position")
+        )
+
+
 class OrderGroup(BaseModel):
     """Order group to enforce a maximum number of seats for a product."""
+
+    objects = OrderGroupManager()
 
     nb_seats = models.PositiveSmallIntegerField(
         default=None,
@@ -381,6 +402,13 @@ class OrderGroup(BaseModel):
         on_delete=models.CASCADE,
     )
     is_active = models.BooleanField(_("is active"), default=True)
+    position = models.PositiveSmallIntegerField(
+        _("priority"),
+        help_text=_("Priority of the order group"),
+        default=None,
+        null=True,
+        blank=True,
+    )
     start = models.DateTimeField(
         help_text=_("Date at which the order group activation begins"),
         verbose_name=_("order group start datetime"),
@@ -449,6 +477,59 @@ class OrderGroup(BaseModel):
         end = self.end or now
 
         return start <= now <= end
+
+    @property
+    def is_assignable(self):
+        """
+        Returns boolean whether the order group is enabled, and have available seats.
+        """
+        return self.is_enabled and self.available_seats != 0
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to assign the next available position number
+        within its course product relation if not already set.
+        """
+        if not self.created_on and self.position is None:
+            self.position = self.course_product_relation.order_groups.count()
+
+        return super().save(*args, **kwargs)
+
+    def set_position(self, position):
+        """
+        Set the position of the order group and update the positions of other order groups
+        in the same course product relation accordingly.
+        """
+        if position == self.position:
+            return  # Nothing to do
+
+        # Get count and normalize position within valid range (0 to count-1)
+        count = OrderGroup.objects.filter(
+            course_product_relation_id=self.course_product_relation_id
+        ).count()
+        position = max(0, min(position, count - 1))
+
+        old_position = self.position
+
+        with transaction.atomic():
+            if old_position < position:
+                # Moving down - shift intermediate items up
+                OrderGroup.objects.filter(
+                    course_product_relation_id=self.course_product_relation_id,
+                    position__gt=old_position,
+                    position__lte=position,
+                ).update(position=models.F("position") - 1)
+            else:
+                # Moving up - shift intermediate items down
+                OrderGroup.objects.filter(
+                    course_product_relation_id=self.course_product_relation_id,
+                    position__lt=old_position,
+                    position__gte=position,
+                ).update(position=models.F("position") + 1)
+
+            # Update this order group's position
+            self.position = position
+            self.save(update_fields=["position"])
 
 
 class OrderManager(models.Manager):
@@ -566,14 +647,11 @@ class Order(BaseModel):
         blank=True,
         null=True,
     )
-
-    order_group = models.ForeignKey(
+    order_groups = models.ManyToManyField(
         OrderGroup,
         verbose_name=_("order group"),
         related_name="orders",
-        on_delete=models.SET_NULL,
         blank=True,
-        null=True,
     )
     target_courses = models.ManyToManyField(
         Course,
@@ -838,48 +916,28 @@ class Order(BaseModel):
                     )
                 error_dict["__all__"].append(message)
 
-            if (
-                self.order_group_id
-                and self.order_group.course_product_relation.product_id
-                != self.product_id
-                and self.order_group.course_product_relation.course != course
-            ):
-                error_dict["order_group"].append(
-                    f"This order group does not apply to the product {product_title:s} "
-                    f"and the course {course_title}."
-                )
+            order_groups = OrderGroup.objects.find_actives(
+                course_product_relation_id=course_product_relation.id
+            )
+            seats_limitation = None
+            for order_group in order_groups:
+                if order_group.nb_seats is not None:
+                    if order_group.available_seats == 0:
+                        seats_limitation = order_group
+                        continue
 
-            if course_product_relation and any(
-                order_group.is_enabled
-                for order_group in course_product_relation.order_groups.all()
-            ):
-                if not self.order_group_id or not self.order_group.is_enabled:
-                    error_dict["order_group"].append(
-                        f"An enabled order group is required for product {product_title:s}."
-                    )
-                elif (
-                    self.order_group.is_enabled
-                    and self.order_group.nb_seats is not None
-                ):
-                    if self.order_group.available_seats == 0:
-                        error_dict["order_group"].append(
-                            f"Maximum number of orders reached for product {product_title:s}"
-                        )
-            elif (
-                course_product_relation
-                and self.order_group
-                and not self.order_group.is_enabled
-            ):
+                    seats_limitation = None
+
+                if order_group.is_enabled:
+                    self.order_groups.add(order_group)
+
+            if seats_limitation:
                 error_dict["order_group"].append(
-                    f"This order group is not enabled for product {product_title:s} "
-                    "and does not accept any orders at the moment."
+                    f"Maximum number of orders reached for product {product_title:s}"
                 )
 
         if error_dict:
             raise ValidationError(error_dict)
-
-        if not self.created_on:
-            self.total = self.get_discounted_price()
 
         super().clean()
 
@@ -893,23 +951,24 @@ class Order(BaseModel):
         Return the total price considering the order group discount if it exists. Else, if
         there is no order group, the total price should be the full product price.
         """
-        if (
-            not self.order_group
-            or not self.order_group.is_enabled
-            or not self.order_group.discount
-        ):
-            return self.product.price
+        for order_group in self.order_groups.all():
+            price = Money(self.product.price)
+            if discount := order_group.discount:
+                discount_amount = (
+                    Money(discount.amount)
+                    if discount.amount
+                    else price * Rate(Number(discount.rate))
+                )
+                return round(Money(price - discount_amount).as_decimal(), 2)
 
-        price = Money(self.product.price)
-        discount = self.order_group.discount
+        return self.product.price
 
-        discount_amount = (
-            Money(discount.amount)
-            if discount.amount
-            else price * Rate(Number(discount.rate))
-        )
-
-        return round(Money(price - discount_amount).as_decimal(), 2)
+    def freeze_total(self):
+        """
+        Freeze the total of the order.
+        """
+        self.total = self.get_discounted_price()
+        self.save()
 
     def get_target_enrollments(self, is_active=None):
         """
@@ -1410,6 +1469,7 @@ class Order(BaseModel):
         """
         Transition order to assigned state, creates an invoice if needed and call the flow update.
         """
+        self.freeze_total()
         self.flow.assign()
         if not self.is_free:
             self._create_main_invoice(billing_address)
