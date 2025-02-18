@@ -947,6 +947,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group_1.nb_seats,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
                 {
                     "id": str(order_group_2.id),
@@ -955,6 +956,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group_2.nb_seats,
                     "start": None,
                     "end": None,
+                    "discount": None,
                 },
                 {
                     "id": str(order_group_3.id),
@@ -963,6 +965,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group_3.nb_seats,
                     "start": None,
                     "end": "2025-02-16T16:35:49.326248Z",
+                    "discount": None,
                 },
             ],
         )
