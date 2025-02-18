@@ -485,15 +485,6 @@ class CreditCard(BaseModel):
     )
     expiration_year = models.PositiveSmallIntegerField(_("expiration year"))
     last_numbers = models.CharField(_("last 4 numbers"), max_length=4)
-    # Deprecated
-    owner = models.ForeignKey(
-        to=User,
-        verbose_name=_("owner"),
-        related_name="credit_cards",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
     owners = models.ManyToManyField(
         to=User,
         verbose_name=_("owners"),
@@ -501,7 +492,6 @@ class CreditCard(BaseModel):
         through="CreditCardOwnership",
         through_fields=("credit_card", "owner"),
     )
-    is_main = models.BooleanField(_("main"), default=False)  # Deprecated
     payment_provider = models.CharField(
         _("payment provider"), max_length=50, null=True, blank=True
     )

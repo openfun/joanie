@@ -293,7 +293,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # - Credit card has been deleted
         self.assertIsNone(order.credit_card)
-        self.assertEqual(owner.credit_cards.count(), 0)
+        self.assertEqual(owner.payment_cards.count(), 0)
         with self.assertRaises(CreditCard.DoesNotExist):
             CreditCard.objects.get(id=credit_card.id)
             credit_card.refresh_from_db()
