@@ -40,10 +40,11 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
         order = factories.OrderGeneratorFactory(
             course=relation.course,
             product=relation.product,
-            order_group=order_group,
+            order_groups=[order_group],
             organization=relation.organizations.first(),
             state=enums.ORDER_STATE_COMPLETED,
         )
+        order.freeze_total()
 
         # Create certificate
         factories.OrderCertificateFactory(
@@ -61,7 +62,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
             total=D("1.00"),
         )
 
-        with self.assertNumQueries(39):
+        with self.assertNumQueries(40):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -108,19 +109,21 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                     "code": order.organization.code,
                     "title": order.organization.title,
                 },
-                "order_group": {
-                    "id": str(order_group.id),
-                    "nb_seats": order_group.nb_seats,
-                    "is_active": order_group.is_active,
-                    "is_enabled": order_group.is_enabled,
-                    "nb_available_seats": order_group.nb_seats
-                    - order_group.get_nb_binding_orders(),
-                    "created_on": format_date(order_group.created_on),
-                    "can_edit": order_group.can_edit,
-                    "start": None,
-                    "end": None,
-                    "discount": None,
-                },
+                "order_groups": [
+                    {
+                        "id": str(order_group.id),
+                        "nb_seats": order_group.nb_seats,
+                        "is_active": order_group.is_active,
+                        "is_enabled": order_group.is_enabled,
+                        "nb_available_seats": order_group.nb_seats
+                        - order_group.get_nb_binding_orders(),
+                        "created_on": format_date(order_group.created_on),
+                        "can_edit": order_group.can_edit,
+                        "start": None,
+                        "end": None,
+                        "discount": None,
+                    }
+                ],
                 "total": float(order.total),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "contract": {
@@ -241,7 +244,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
             order=order, certificate_definition=order.product.certificate_definition
         )
 
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(15):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -312,7 +315,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                     "code": order.organization.code,
                     "title": order.organization.title,
                 },
-                "order_group": None,
+                "order_groups": [],
                 "total": float(order.total),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "contract": None,
