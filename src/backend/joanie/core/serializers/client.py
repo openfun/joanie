@@ -1158,11 +1158,12 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Product.objects.all(), slug_field="id", source="product"
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
-    order_group_id = serializers.SlugRelatedField(
-        queryset=models.OrderGroup.objects.all(),
+    order_group_ids = serializers.SlugRelatedField(
+        source="order_groups",
+        many=True,
         slug_field="id",
         required=False,
-        source="order_group",
+        read_only=True,
     )
     target_courses = OrderTargetCourseRelationSerializer(
         read_only=True, many=True, source="course_relations"
@@ -1194,7 +1195,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollment",
             "id",
             "main_invoice_reference",
-            "order_group_id",
+            "order_group_ids",
             "organization",
             "owner",
             "product_id",
@@ -1236,14 +1237,14 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """
-        Make the "course", "organization", "order_group", "product"
+        Make the "course", "organization", "order_group_ids", "product"
         and "has_waived_withdrawal_right" fields read_only only on update.
         """
         validated_data.pop("course", None)
         validated_data.pop("enrollment", None)
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
-        validated_data.pop("order_group", None)
+        validated_data.pop("order_group_ids", None)
         validated_data.pop("has_waived_withdrawal_right", None)
         return super().update(instance, validated_data)
 

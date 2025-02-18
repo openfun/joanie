@@ -430,7 +430,7 @@ class OrderFlow:
         # on related orders
         # e.g. number of remaining seats when an order group is used
         # see test_api_course_product_relation_read_detail_with_order_groups_cache
-        if self.instance.order_group:
+        if self.instance.order_groups.exists():
             course_id = (
                 self.instance.course_id or self.instance.enrollment.course_run.course_id
             )
