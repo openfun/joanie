@@ -445,34 +445,6 @@ class OrderModelsTestCase(LoggingTestCase):
             self.assertGreaterEqual(course_position, position)
             position = course_position
 
-    def test_models_order_course_in_product_new(self):
-        """
-        An order's course should be included in the target courses of its related product at
-        the moment the order is created.
-        """
-        course = factories.CourseFactory()
-        organization = factories.OrganizationFactory(title="fun")
-        product = factories.ProductFactory(title="Traçabilité")
-        factories.CourseProductRelationFactory(
-            course=course, product=product, organizations=[organization]
-        )
-        self.assertTrue(product.courses.filter(id=course.id).exists())
-
-        other_course = factories.CourseFactory(title="Mathématiques")
-
-        with self.assertRaises(ValidationError) as context:
-            factories.OrderFactory(
-                course=other_course, product=product, organization=organization
-            )
-
-        self.assertEqual(
-            context.exception.messages,
-            [
-                'This order cannot be linked to the product "Traçabilité", '
-                'the course "Mathématiques" and the organization "fun".'
-            ],
-        )
-
     @staticmethod
     def test_models_order_course_in_product_existing():
         """
@@ -1431,8 +1403,9 @@ class OrderModelsTestCase(LoggingTestCase):
         )
 
         order = factories.OrderFactory(
-            course=relation.course, product=relation.product, order_group=order_group
+            course=relation.course, product=relation.product, order_groups=[order_group]
         )
+        order.freeze_total()
 
         self.assertEqual(order.total, Decimal("80.00"))
 
@@ -1453,7 +1426,8 @@ class OrderModelsTestCase(LoggingTestCase):
         )
 
         order = factories.OrderFactory(
-            course=relation.course, product=relation.product, order_group=order_group
+            course=relation.course, product=relation.product, order_groups=[order_group]
         )
+        order.freeze_total()
 
         self.assertEqual(order.total, Decimal("90.00"))

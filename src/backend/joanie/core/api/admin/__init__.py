@@ -647,7 +647,6 @@ class OrderViewSet(
         "contract__definition",
         "certificate",
         "certificate__certificate_definition",
-        "order_group",
         "credit_card",
     )
 

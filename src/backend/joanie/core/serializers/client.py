@@ -1158,11 +1158,11 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Product.objects.all(), slug_field="id", source="product"
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
-    order_group_id = serializers.SlugRelatedField(
-        queryset=models.OrderGroup.objects.all(),
+    order_groups = serializers.SlugRelatedField(
+        many=True,
         slug_field="id",
         required=False,
-        source="order_group",
+        read_only=True,
     )
     target_courses = OrderTargetCourseRelationSerializer(
         read_only=True, many=True, source="course_relations"
@@ -1194,7 +1194,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollment",
             "id",
             "main_invoice_reference",
-            "order_group_id",
+            "order_groups",
             "organization",
             "owner",
             "product_id",

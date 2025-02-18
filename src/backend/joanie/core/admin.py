@@ -211,6 +211,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
     search_fields = ("course_product_relation", "start", "end")
     fields = (
         "course_product_relation",
+        "position",
         "is_enabled",
         "is_active",
         "nb_seats",

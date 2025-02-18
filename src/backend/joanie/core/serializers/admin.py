@@ -1253,7 +1253,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     certificate = AdminCertificateSerializer()
     main_invoice = AdminInvoiceSerializer()
     organization = AdminOrganizationLightSerializer(read_only=True)
-    order_group = AdminOrderGroupSerializer(read_only=True)
+    order_groups = AdminOrderGroupSerializer(read_only=True, many=True)
     payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
     credit_card = AdminCreditCardSerializer(read_only=True)
     has_waived_withdrawal_right = serializers.BooleanField(read_only=True)
@@ -1269,7 +1269,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "course",
             "enrollment",
             "organization",
-            "order_group",
+            "order_groups",
             "total",
             "total_currency",
             "contract",
