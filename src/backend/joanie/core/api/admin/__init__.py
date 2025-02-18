@@ -784,7 +784,11 @@ class OrganizationAddressViewSet(
 
 
 class DiscountViewSet(
-    viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     """Admin Discount Viewset"""
 

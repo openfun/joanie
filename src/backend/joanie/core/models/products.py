@@ -70,9 +70,6 @@ session.mount("http://", adapter)
 session.mount("https://", adapter)
 
 
-TOTAL_DECIMAL_PLACES_ACCEPTED = Decimal("0.01")
-
-
 # pylint: disable=too-many-public-methods, too-many-lines
 class Product(parler_models.TranslatableModel, BaseModel):
     """

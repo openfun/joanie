@@ -1710,7 +1710,13 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
 class AdminDiscountSerializer(serializers.ModelSerializer):
     """Admin Serializer for Discount model"""
 
+    is_used = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = models.Discount
-        fields = ["id", "amount", "rate"]
-        read_only_fields = ["id"]
+        fields = ["id", "amount", "rate", "is_used"]
+        read_only_fields = ["id", "is_used"]
+
+    def get_is_used(self, discount):
+        """Return the count of where the discount is used through order groups"""
+        return models.OrderGroup.objects.filter(discount=discount).count()

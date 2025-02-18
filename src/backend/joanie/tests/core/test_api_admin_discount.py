@@ -29,6 +29,7 @@ class DiscountAdminApiTest(TestCase):
         self.client.login(username=admin.username, password="password")
 
         discounts = factories.DiscountFactory.create_batch(2)
+        factories.OrderGroupFactory.create_batch(2, discount=discounts[0])
 
         response = self.client.get("/api/v1.0/admin/discounts/")
 
@@ -40,11 +41,13 @@ class DiscountAdminApiTest(TestCase):
                     "id": str(discounts[0].id),
                     "amount": discounts[0].amount,
                     "rate": discounts[0].rate,
+                    "is_used": 2,
                 },
                 {
                     "id": str(discounts[1].id),
                     "amount": discounts[1].amount,
                     "rate": discounts[1].rate,
+                    "is_used": 0,
                 },
             ],
         )
@@ -54,27 +57,53 @@ class DiscountAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        response = self.client.delete("/api/v1.0/admin/discounts/")
+        discount = factories.DiscountFactory()
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        response = self.client.delete(f"/api/v1.0/admin/discounts/{discount.id}/")
+
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
 
     def test_api_admin_authenticated_discount_partially_update(self):
         """Authenticated admin user should not be able to partially update a discount"""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        response = self.client.patch("/api/v1.0/admin/discounts/")
+        discount = factories.DiscountFactory(rate=0.3, amount=None)
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        response = self.client.patch(
+            f"/api/v1.0/admin/discounts/{discount.id}/",
+            content_type="application/json",
+            data={
+                "rate": 0.1,
+            },
+        )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(content["rate"], 0.1)
 
     def test_api_admin_authenticated_discount_update(self):
         """Authenticated admin user should not be able to update a discount"""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        response = self.client.patch("/api/v1.0/admin/discounts/")
+        discount = factories.DiscountFactory(rate=0.3)
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        response = self.client.put(
+            f"/api/v1.0/admin/discounts/{discount.id}/",
+            content_type="application/json",
+            data={
+                "rate": None,
+                "amount": 33,
+            },
+        )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(content["amount"], 33)
+        self.assertIsNone(content["rate"])
 
     def test_api_admin_authenticated_discount_create(self):
         """Authenticated admin user should be able to create a discount"""
@@ -87,4 +116,8 @@ class DiscountAdminApiTest(TestCase):
             data={"rate": 0.2, "amount": None},
         )
 
+        content = response.json()
+
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(content["rate"], 0.2)
+        self.assertIsNone(content["amount"])
