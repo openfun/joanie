@@ -1159,10 +1159,10 @@ class OrderSerializer(serializers.ModelSerializer):
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
     order_group_id = serializers.SlugRelatedField(
-        queryset=models.OrderGroup.objects.all(),
         slug_field="id",
         required=False,
         source="order_group",
+        read_only=True,
     )
     target_courses = OrderTargetCourseRelationSerializer(
         read_only=True, many=True, source="course_relations"
@@ -1231,6 +1231,15 @@ class OrderSerializer(serializers.ModelSerializer):
         if organization_id:
             organization = get_object_or_404(models.Organization, id=organization_id)
             validated_data["organization"] = organization
+
+        try:
+            course_id = validated_data["course"].id
+        except KeyError:
+            course_id = validated_data["enrollment"].course_run.course_id
+
+        validated_data["order_group"] = models.OrderGroup.objects.find_assignable(
+            course_id, validated_data["product"].id
+        )
 
         return super().create(validated_data)
 
