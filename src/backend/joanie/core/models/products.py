@@ -21,7 +21,7 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 from parler import models as parler_models
-from stockholm import Money
+from stockholm import Money, Number, Rate
 from urllib3.util import Retry
 
 from joanie.core import enums, utils
@@ -70,7 +70,7 @@ session.mount("http://", adapter)
 session.mount("https://", adapter)
 
 
-TOTAL_DECIMAL_PLACES_ACCEPTED = Decimal(10) ** -2
+TOTAL_DECIMAL_PLACES_ACCEPTED = Decimal("0.01")
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
@@ -893,23 +893,27 @@ class Order(BaseModel):
         super().save(*args, **kwargs)
 
     def get_total_price(self):
-        """Return the total price considering the order group discount."""
+        """
+        Return the total price considering the order group discount if it exists. Else, if
+        there is no order group, the total price should be the full product price.
+        """
         if (
-            self.order_group
-            and self.order_group.is_enabled
-            and self.order_group.discount
+            not self.order_group
+            or not self.order_group.is_enabled
+            or not self.order_group.discount
         ):
-            discount = self.order_group.discount
-            price = self.product.price
+            return self.product.price
 
-            if discount.rate:
-                total = price - (price * Decimal(str(discount.rate)))
-                return total.quantize(TOTAL_DECIMAL_PLACES_ACCEPTED)
+        price = Money(self.product.price)
+        discount = self.order_group.discount
 
-            if discount.amount:
-                return price - discount.amount
+        discount_amount = (
+            Money(discount.amount)
+            if discount.amount
+            else price * Rate(Number(discount.rate))
+        )
 
-        return self.product.price
+        return Decimal(str(Money(price - discount_amount).as_float()))
 
     def get_target_enrollments(self, is_active=None):
         """
