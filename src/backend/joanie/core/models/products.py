@@ -70,6 +70,9 @@ session.mount("http://", adapter)
 session.mount("https://", adapter)
 
 
+TOTAL_DECIMAL_PLACES_ACCEPTED = Decimal("0.01")
+
+
 # pylint: disable=too-many-public-methods, too-many-lines
 class Product(parler_models.TranslatableModel, BaseModel):
     """
@@ -910,7 +913,9 @@ class Order(BaseModel):
             else price * Rate(Number(discount.rate))
         )
 
-        return Decimal(str(Money(price - discount_amount).as_float()))
+        return Decimal(str(Money(price - discount_amount))).quantize(
+            TOTAL_DECIMAL_PLACES_ACCEPTED
+        )
 
     def get_target_enrollments(self, is_active=None):
         """
