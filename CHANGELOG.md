@@ -14,6 +14,7 @@ and this project adheres to
 
 ### Changed
 
+- Remove `owner` and `is_main` in CreditCard model permanently
 - Remove `is_active` on order group client serializer
 
 ## [2.16.0] - 2025-02-13

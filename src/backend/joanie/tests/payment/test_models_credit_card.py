@@ -2,7 +2,7 @@
 
 from unittest import mock
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import FieldError, ValidationError
 
 from joanie.core import enums
 from joanie.core.factories import OrderFactory, UserFactory
@@ -262,4 +262,30 @@ class CreditCardModelTestCase(LoggingTestCase):
         )
         self.assertFalse(
             CreditCard.objects.filter(orders__state__in=no_card_order_states).exists()
+        )
+
+    def test_models_credit_card_owner_field_is_removed(self):
+        """
+        The `owner` field of the CreditCard is removed, it should raise an error if
+        when we want to set a User.
+        """
+        with self.assertRaises(FieldError) as context:
+            CreditCardFactory(owner=UserFactory())
+
+        self.assertEqual(
+            str(context.exception),
+            "Invalid field name(s) for model CreditCard: 'owner'.",
+        )
+
+    def test_models_credit_card_is_main_field_is_removed(self):
+        """
+        The `is_main` field of the CreditCard is removed, it should raise an error if
+        when we want to set a boolean value.
+        """
+        with self.assertRaises(FieldError) as context:
+            CreditCardFactory(is_main=True)
+
+        self.assertEqual(
+            str(context.exception),
+            "Invalid field name(s) for model CreditCard: 'is_main'.",
         )
