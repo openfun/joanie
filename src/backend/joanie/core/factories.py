@@ -1432,3 +1432,12 @@ class TeacherFactory(factory.django.DjangoModelFactory):
 
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
+
+
+class VoucherFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """Factory for the Voucher model"""
+
+    class Meta:
+        model = models.Voucher
+
+    order_group = factory.SubFactory(OrderGroupFactory)

@@ -681,6 +681,14 @@ class Order(BaseModel):
         blank=True,
         null=True,
     )
+    voucher = models.ForeignKey(
+        to="Voucher",
+        verbose_name=_("voucher"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         db_table = "joanie_order"
@@ -1664,3 +1672,67 @@ class Discount(BaseModel):
             return f"{rate_as_int}%"
 
         return f"{self.amount} €"
+
+
+class Voucher(BaseModel):
+    """
+    Voucher model allows to define a voucher that can be associated to an order group and used
+    by a user to get a discount or access to a product.
+    """
+
+    class Meta:
+        db_table = "joanie_voucher"
+        verbose_name = _("Voucher")
+        verbose_name_plural = _("Vouchers")
+        ordering = ["created_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["code", "order_group"],
+                name="unique_code_order_group",
+                violation_error_message=(
+                    "A voucher with this code already exists for this order group."
+                ),
+            ),
+        ]
+
+    code = models.CharField(
+        _("code"),
+        help_text=_("Voucher code"),
+        max_length=255,
+        default=utils.generate_random_code,
+    )
+    order_group = models.ForeignKey(
+        to=OrderGroup,
+        verbose_name=_("order group"),
+        related_name="vouchers",
+        on_delete=models.CASCADE,
+    )
+    used_by = models.ManyToManyField(
+        to=User,
+        verbose_name=_("used by"),
+        related_name="vouchers",
+        blank=True,
+    )
+    single_use = models.BooleanField(
+        _("single use"),
+        help_text=_("Voucher can be used only once per user."),
+        default=False,
+    )
+    single_user = models.BooleanField(
+        _("single user"),
+        help_text=_("Voucher can be used by only one user."),
+        default=False,
+    )
+    is_usable = models.BooleanField(
+        _("is usable"),
+        help_text=_("Voucher is usable."),
+        default=True,
+    )
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code or str(self.order_group)
