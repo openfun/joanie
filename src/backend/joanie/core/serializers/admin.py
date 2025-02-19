@@ -434,6 +434,21 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
         return settings.DEFAULT_CURRENCY
 
 
+class AdminDiscountSerializer(serializers.ModelSerializer):
+    """Admin Serializer for Discount model"""
+
+    is_used = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Discount
+        fields = ["id", "amount", "rate", "is_used"]
+        read_only_fields = ["id", "is_used"]
+
+    def get_is_used(self, discount):
+        """Return the count of where the discount is used through order groups"""
+        return models.OrderGroup.objects.filter(discount=discount).count()
+
+
 class AdminOrderGroupSerializer(serializers.ModelSerializer):
     """
     Admin Serializer for OrderGroup model
@@ -457,13 +472,7 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         default=models.OrderGroup._meta.get_field("is_active").default,
     )
     nb_available_seats = serializers.SerializerMethodField(read_only=True)
-    discount = serializers.SlugRelatedField(
-        slug_field="id",
-        queryset=models.Discount.objects.all(),
-        many=False,
-        required=False,
-        allow_null=True,
-    )
+    discount = AdminDiscountSerializer(read_only=False)
 
     class Meta:
         model = models.OrderGroup
@@ -486,17 +495,59 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         return order_group.available_seats
 
 
+class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
+    """
+    Admin serializer for Order Group reserved for partial update and update actions.
+
+    It allows to update the field discount of an order group.
+    """
+
+    discount = serializers.SlugRelatedField(
+        slug_field="id",
+        queryset=models.Discount.objects.all(),
+        many=False,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta(AdminOrderGroupSerializer.Meta):
+        fields = [*AdminOrderGroupSerializer.Meta.fields]
+
+    def update(self, instance, validated_data):
+        """Update the discount for the order group"""
+        if discount_id := self.initial_data.get("discount_id"):
+            discount = get_object_or_404(models.Discount, id=discount_id)
+            validated_data["discount"] = discount
+        if discount_id is None:
+            instance.discount = None
+
+        return super().update(instance, validated_data)
+
+
 @extend_schema_serializer(exclude_fields=("course_product_relation",))
-class AdminOrderGroupCreateSerializer(AdminOrderGroupSerializer):
+class AdminOrderGroupCreateSerializer(AdminOrderGroupUpdateSerializer):
     """
     Admin Serializer for OrderGroup model reserved to create action.
 
     Unlike `AdminOrderGroupSerializer`, it allows to pass a product to create
-    the order group.
+    the order group. You can also add a discount.
     """
 
-    class Meta(AdminOrderGroupSerializer.Meta):
-        fields = [*AdminOrderGroupSerializer.Meta.fields, "course_product_relation"]
+    class Meta(AdminOrderGroupUpdateSerializer.Meta):
+        fields = [
+            *AdminOrderGroupUpdateSerializer.Meta.fields,
+            "course_product_relation",
+        ]
+
+    def create(self, validated_data):
+        """
+        Attach the discount to the order group.
+        """
+        if discount_id := self.initial_data.get("discount_id"):
+            discount = get_object_or_404(models.Discount, id=discount_id)
+            validated_data["discount"] = discount
+
+        return super().create(validated_data)
 
 
 class AdminCourseNestedSerializer(serializers.ModelSerializer):
@@ -1705,18 +1756,3 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
             validated_data.pop("was_created_by_order", None)
 
         return super().update(instance, validated_data)
-
-
-class AdminDiscountSerializer(serializers.ModelSerializer):
-    """Admin Serializer for Discount model"""
-
-    is_used = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = models.Discount
-        fields = ["id", "amount", "rate", "is_used"]
-        read_only_fields = ["id", "is_used"]
-
-    def get_is_used(self, discount):
-        """Return the count of where the discount is used through order groups"""
-        return models.OrderGroup.objects.filter(discount=discount).count()
