@@ -454,6 +454,36 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
     Admin Serializer for OrderGroup model
     """
 
+    nb_available_seats = serializers.SerializerMethodField(read_only=True)
+    discount = AdminDiscountSerializer(read_only=False, required=False)
+
+    class Meta:
+        model = models.OrderGroup
+        fields = [
+            "id",
+            "nb_seats",
+            "is_active",
+            "nb_available_seats",
+            "created_on",
+            "can_edit",
+            "is_enabled",
+            "start",
+            "end",
+            "discount",
+        ]
+        read_only_fields = fields
+
+    def get_nb_available_seats(self, order_group) -> int | None:
+        """Return the number of available seats for this order group."""
+        return order_group.available_seats
+
+@extend_schema_serializer(exclude_fields=("course_product_relation",))
+class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
+    """
+    Admin serializer for Order Group reserved for partial update and update actions.
+
+    It allows to update the field discount of an order group.
+    """
     nb_seats = serializers.IntegerField(
         required=False,
         allow_null=True,
@@ -471,37 +501,8 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         required=False,
         default=models.OrderGroup._meta.get_field("is_active").default,
     )
-    nb_available_seats = serializers.SerializerMethodField(read_only=True)
-    discount = AdminDiscountSerializer(read_only=False)
-
-    class Meta:
-        model = models.OrderGroup
-        fields = [
-            "id",
-            "nb_seats",
-            "is_active",
-            "nb_available_seats",
-            "created_on",
-            "can_edit",
-            "is_enabled",
-            "start",
-            "end",
-            "discount",
-        ]
-        read_only_fields = ["id", "can_edit", "created_on", "is_enabled"]
-
-    def get_nb_available_seats(self, order_group) -> int | None:
-        """Return the number of available seats for this order group."""
-        return order_group.available_seats
-
-
-class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
-    """
-    Admin serializer for Order Group reserved for partial update and update actions.
-
-    It allows to update the field discount of an order group.
-    """
-
+    start = serializers.DateTimeField(required=False, allow_null=True)
+    end = serializers.DateTimeField(required=False, allow_null=True)
     discount = serializers.SlugRelatedField(
         slug_field="id",
         queryset=models.Discount.objects.all(),
@@ -524,7 +525,6 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
         return super().update(instance, validated_data)
 
 
-@extend_schema_serializer(exclude_fields=("course_product_relation",))
 class AdminOrderGroupCreateSerializer(AdminOrderGroupUpdateSerializer):
     """
     Admin Serializer for OrderGroup model reserved to create action.

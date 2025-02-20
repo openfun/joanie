@@ -6662,15 +6662,14 @@
                     },
                     "nb_seats": {
                         "type": "integer",
-                        "maximum": 32767,
-                        "minimum": 0,
+                        "readOnly": true,
                         "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
                         "type": "boolean",
-                        "default": true
+                        "readOnly": true
                     },
                     "nb_available_seats": {
                         "type": "integer",
@@ -6695,6 +6694,7 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
+                        "readOnly": true,
                         "nullable": true,
                         "title": "Order group start datetime",
                         "description": "Date at which the order group activation begins"
@@ -6702,6 +6702,7 @@
                     "end": {
                         "type": "string",
                         "format": "date-time",
+                        "readOnly": true,
                         "nullable": true,
                         "title": "Order group end datetime",
                         "description": "Date at which the order group activation ends"
@@ -6713,10 +6714,13 @@
                 "required": [
                     "can_edit",
                     "created_on",
-                    "discount",
+                    "end",
                     "id",
+                    "is_active",
                     "is_enabled",
-                    "nb_available_seats"
+                    "nb_available_seats",
+                    "nb_seats",
+                    "start"
                 ]
             },
             "AdminOrderGroupCreate": {
@@ -6764,16 +6768,12 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
                     },
                     "discount": {
                         "type": "string",
@@ -6809,16 +6809,12 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
                     },
                     "discount": {
                         "type": "string",
@@ -6832,39 +6828,10 @@
                 "type": "object",
                 "description": "Admin Serializer for OrderGroup model",
                 "properties": {
-                    "nb_seats": {
-                        "type": "integer",
-                        "maximum": 32767,
-                        "minimum": 0,
-                        "nullable": true,
-                        "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given order group"
-                    },
-                    "is_active": {
-                        "type": "boolean",
-                        "default": true
-                    },
-                    "start": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
-                    },
-                    "end": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
-                    },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscountRequest"
                     }
-                },
-                "required": [
-                    "discount"
-                ]
+                }
             },
             "AdminOrderGroupUpdate": {
                 "type": "object",
@@ -6911,16 +6878,12 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
                     },
                     "discount": {
                         "type": "string",
@@ -6956,16 +6919,12 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
                     },
                     "discount": {
                         "type": "string",
@@ -9070,16 +9029,12 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
                     },
                     "discount": {
                         "type": "string",
