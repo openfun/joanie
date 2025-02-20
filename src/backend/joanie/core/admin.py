@@ -601,7 +601,7 @@ class DiscountAdmin(admin.ModelAdmin):
 
     def is_used(self, obj):  # pylint: disable=no-self-use
         """Returns a counter of how many times the discount is used in order groups"""
-        return models.OrderGroup.objects.filter(discount=obj).count()
+        return obj.usage_count
 
     @admin.display(description="Discount")
     def string_discount_value(self, obj):  # pylint: disable=no-self-use
