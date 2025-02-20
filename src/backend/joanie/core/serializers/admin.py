@@ -446,7 +446,7 @@ class AdminDiscountSerializer(serializers.ModelSerializer):
 
     def get_is_used(self, discount):
         """Return the count of where the discount is used through order groups"""
-        return models.OrderGroup.objects.filter(discount=discount).count()
+        return discount.usage_count
 
 
 class AdminOrderGroupSerializer(serializers.ModelSerializer):
@@ -477,6 +477,7 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         """Return the number of available seats for this order group."""
         return order_group.available_seats
 
+
 @extend_schema_serializer(exclude_fields=("course_product_relation",))
 class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
     """
@@ -484,6 +485,7 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
 
     It allows to update the field discount of an order group.
     """
+
     nb_seats = serializers.IntegerField(
         required=False,
         allow_null=True,
