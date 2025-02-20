@@ -1434,7 +1434,7 @@ class OrderModelsTestCase(LoggingTestCase):
             course=relation.course, product=relation.product, order_group=order_group
         )
 
-        self.assertEqual(Decimal(str(order.total)), Decimal("80.00"))
+        self.assertEqual(order.total, Decimal("80.00"))
 
     def test_models_order_and_order_group_discount_amount_get_total_price(self):
         """
@@ -1456,4 +1456,4 @@ class OrderModelsTestCase(LoggingTestCase):
             course=relation.course, product=relation.product, order_group=order_group
         )
 
-        self.assertEqual(Decimal(str(order.total)), Decimal("90.00"))
+        self.assertEqual(order.total, Decimal("90.00"))

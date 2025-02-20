@@ -6,7 +6,6 @@ import itertools
 import logging
 from collections import defaultdict
 from datetime import timedelta
-from decimal import Decimal
 
 from django.apps import apps
 from django.conf import settings
@@ -68,9 +67,6 @@ adapter = requests.adapters.HTTPAdapter(
 session = requests.Session()
 session.mount("http://", adapter)
 session.mount("https://", adapter)
-
-
-TOTAL_DECIMAL_PLACES_ACCEPTED = Decimal("0.01")
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
@@ -913,9 +909,7 @@ class Order(BaseModel):
             else price * Rate(Number(discount.rate))
         )
 
-        return Decimal(str(Money(price - discount_amount))).quantize(
-            TOTAL_DECIMAL_PLACES_ACCEPTED
-        )
+        return round(Money(price - discount_amount).as_decimal(), 2)
 
     def get_target_enrollments(self, is_active=None):
         """
