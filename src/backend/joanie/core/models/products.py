@@ -365,11 +365,28 @@ class ProductTargetCourseRelation(BaseModel):
 class OrderGroupManager(models.Manager):
     """Custom manager for the OrderGroup model."""
 
-    def find_assignables(self, course_product_relation_id):
+    def find_assignables(self, course_product_relation_id, voucher_code=None):
         """
         Retrieve all active order groups for a given course product relation,
         ordered by position.
         """
+        if voucher_code:
+            try:
+                return (
+                    super()
+                    .get_queryset()
+                    .get(
+                        vouchers__code__iexact=voucher_code,
+                        vouchers__is_usable=True,
+                        is_active=True,
+                        course_product_relation_id=course_product_relation_id,
+                    )
+                )
+            except ObjectDoesNotExist as exc:
+                raise PermissionDenied(
+                    _("The voucher code does not exist or is not valid.")
+                ) from exc
+
         return (
             super()
             .get_queryset()
@@ -1754,3 +1771,13 @@ class Voucher(BaseModel):
 
     def __str__(self):
         return self.code or str(self.order_group)
+
+    def use(self):
+        """
+        Use the voucher.
+        """
+        if not self.is_usable:
+            raise ValidationError("Voucher is not usable.")
+
+        self.is_usable = False
+        self.save(update_fields=["is_usable"])

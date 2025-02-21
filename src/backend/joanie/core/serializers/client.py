@@ -1182,6 +1182,13 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     has_waived_withdrawal_right = serializers.BooleanField()
+    voucher_id = serializers.SlugRelatedField(
+        queryset=models.Voucher.objects.all(),
+        slug_field="id",
+        source="voucher",
+        required=False,
+        write_only=True,
+    )
 
     class Meta:
         model = models.Order
@@ -1205,6 +1212,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_currency",
             "payment_schedule",
             "has_waived_withdrawal_right",
+            "voucher_id",
         ]
         read_only_fields = fields
 
@@ -1231,6 +1239,23 @@ class OrderSerializer(serializers.ModelSerializer):
         if organization_id:
             organization = get_object_or_404(models.Organization, id=organization_id)
             validated_data["organization"] = organization
+
+        try:
+            course_id = validated_data["course"].id
+        except KeyError:
+            course_id = validated_data["enrollment"].course_run.course_id
+
+        voucher_code = self.initial_data.get("voucher_code")
+
+        order_group = models.OrderGroup.objects.find_assignable(
+            course_id, validated_data["product"].id, voucher_code
+        )
+        validated_data["order_group"] = order_group
+
+        if voucher_code and order_group and order_group.vouchers:
+            voucher = order_group.vouchers.get(code=voucher_code)
+            voucher.use()
+            validated_data["voucher_id"] = voucher.id
 
         return super().create(validated_data)
 
