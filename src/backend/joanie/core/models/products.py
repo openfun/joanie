@@ -879,7 +879,7 @@ class Order(BaseModel):
             raise ValidationError(error_dict)
 
         if not self.created_on:
-            self.total = self.get_total_price()
+            self.total = self.get_discounted_price()
 
         super().clean()
 
@@ -888,7 +888,7 @@ class Order(BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    def get_total_price(self):
+    def get_discounted_price(self):
         """
         Return the total price considering the order group discount if it exists. Else, if
         there is no order group, the total price should be the full product price.

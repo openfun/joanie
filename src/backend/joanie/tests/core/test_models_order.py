@@ -1414,7 +1414,7 @@ class OrderModelsTestCase(LoggingTestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
         self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_PAID)
 
-    def test_models_order_and_order_group_discounted_rate_get_total_price(self):
+    def test_models_order_and_order_group_discounted_rate_get_discounted_price(self):
         """
         When the order group that has a discount rate, is active and is enabled then the order
         total should be the discounted price.
@@ -1436,7 +1436,7 @@ class OrderModelsTestCase(LoggingTestCase):
 
         self.assertEqual(order.total, Decimal("80.00"))
 
-    def test_models_order_and_order_group_discount_amount_get_total_price(self):
+    def test_models_order_and_order_group_discount_amount_get_discounted_price(self):
         """
         When the order group that has a discount amount, is active and is enabled then the order
         total should be the discounted price.
