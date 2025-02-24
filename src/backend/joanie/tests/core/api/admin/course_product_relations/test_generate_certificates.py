@@ -11,7 +11,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import enums, factories
-from joanie.core.models import Certificate, CourseProductRelation
+from joanie.core.models import Certificate, CourseProductRelation, CourseState, Order
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 
 
@@ -681,5 +681,75 @@ class AdminCourseProductRelationApiTest(TestCase):
         self.assertEqual(second_response.status_code, HTTPStatus.NOT_FOUND)
         self.assertIsNone(cache.get(f"celery_certificate_generation_{cpr.id}"))
         # Verify that certificates were generated
+        for order in orders:
+            self.assertTrue(Certificate.objects.filter(order=order).exists())
+
+    @mock.patch(
+        "joanie.lms_handler.backends.dummy.DummyLMSBackend.get_grades",
+        return_value={"passed": True},
+    )
+    def test_api_admin_course_product_relation_generate_certificate_product_certificate(
+        self, _mock_get_grades
+    ):
+        """
+        Authenticated admin user should be able to generate certificate for products of type
+        certificate. Once the generation is done, the cache data must be deleted, and
+        we should find our certificates.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        course_run = factories.CourseRunFactory(
+            is_listed=True, state=CourseState.ONGOING_OPEN
+        )
+        enrollments = factories.EnrollmentFactory.create_batch(
+            20, course_run=course_run
+        )
+        product = factories.ProductFactory(
+            price=0,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+        relation = factories.CourseProductRelationFactory(
+            product=product, course=enrollments[0].course_run.course
+        )
+
+        for enrollment in enrollments:
+            factories.OrderFactory(
+                product=relation.product,
+                enrollment=enrollment,
+                course=None,
+                state=enums.ORDER_STATE_COMPLETED,
+            )
+
+        response = self.client.post(
+            f"/api/v1.0/admin/course-product-relations/{relation.id}/generate_certificates/",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "course_product_relation_id": str(relation.id),
+                "count_certificate_to_generate": 20,
+                "count_exist_before_generation": 0,
+            },
+        )
+
+        second_response = self.client.get(
+            f"/api/v1.0/admin/course-product-relations/{relation.id}"
+            "/check_certificates_generation_process/",
+            content_type="application/json",
+        )
+
+        self.assertEqual(second_response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertIsNone(cache.get(f"celery_certificate_generation_{relation.id}"))
+
+        # Verify that all the certificates were generated
+        orders = Order.objects.filter(
+            product=relation.product,
+            state=enums.ORDER_STATE_COMPLETED,
+            certificate__isnull=False,
+        )
         for order in orders:
             self.assertTrue(Certificate.objects.filter(order=order).exists())
