@@ -9,6 +9,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import factories
+from joanie.core.models import OrderGroup
 
 
 class OrderGroupModelTestCase(TestCase):
@@ -163,3 +164,122 @@ class OrderGroupModelTestCase(TestCase):
         )
 
         self.assertFalse(order_group_2.is_enabled)
+
+    def test_model_order_group_find_assignable_none(self):
+        """
+        Should return None if no order group is found for the given course and product.
+        """
+        relation = factories.CourseProductRelationFactory()
+
+        applicable_order_group = OrderGroup.objects.find_assignable(
+            relation.course_id,
+            relation.product_id,
+        )
+
+        self.assertIsNone(applicable_order_group)
+
+    def test_model_order_group_find_assignable_other_course(self):
+        """
+        Should return None if the order group is not linked to the given course.
+        """
+        relation = factories.CourseProductRelationFactory()
+        factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+        course = factories.CourseFactory(products=[relation.product])
+
+        applicable_order_group = OrderGroup.objects.find_assignable(
+            course.id,
+            relation.product_id,
+        )
+
+        self.assertIsNone(applicable_order_group)
+
+    def test_model_order_group_find_assignable_other_product(self):
+        """
+        Should return None if the order group is not linked to the given product.
+        """
+        relation = factories.CourseProductRelationFactory()
+        factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+        product = factories.ProductFactory(courses=[relation.course])
+
+        applicable_order_group = OrderGroup.objects.find_assignable(
+            relation.course_id,
+            product.id,
+        )
+
+        self.assertIsNone(applicable_order_group)
+
+    def test_model_order_group_find_assignable(self):
+        """
+        Should return the order group linked to the given course and product.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+
+        applicable_order_group = OrderGroup.objects.find_assignable(
+            relation.course_id,
+            relation.product_id,
+        )
+
+        self.assertEqual(applicable_order_group, order_group)
+
+    def test_model_order_group_find_assignable_position(self):
+        """
+        Should return the order group linked to the given course and product
+        ordered by position.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_group_1 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+        order_group_2 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+
+        applicable_order_group = OrderGroup.objects.find_assignable(
+            relation.course_id,
+            relation.product_id,
+        )
+
+        self.assertEqual(applicable_order_group, order_group_1)
+
+        order_group_1.position = 1
+        order_group_1.save()
+
+        applicable_order_group = OrderGroup.objects.find_assignable(
+            relation.course_id,
+            relation.product_id,
+        )
+
+        self.assertEqual(applicable_order_group, order_group_2)
+
+    def test_model_order_group_find_assignable_last_matching(self):
+        """
+        Should return the last order group linked to the given course and product
+        ordered by position, even if the order group is not assignable.
+        """
+        relation = factories.CourseProductRelationFactory()
+        factories.OrderGroupFactory(
+            course_product_relation=relation,
+            nb_seats=0,
+        )
+        factories.OrderGroupFactory(
+            course_product_relation=relation,
+            nb_seats=0,
+        )
+        order_group_3 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            nb_seats=0,
+        )
+
+        applicable_order_group = OrderGroup.objects.find_assignable(
+            relation.course_id,
+            relation.product_id,
+        )
+
+        self.assertEqual(applicable_order_group, order_group_3)

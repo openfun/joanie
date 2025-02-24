@@ -362,8 +362,37 @@ class ProductTargetCourseRelation(BaseModel):
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
+class OrderGroupManager(models.Manager):
+    """Custom manager for the OrderGroup model."""
+
+    def find_assignable(self, course_id, product_id):
+        """
+        Find the first assignable order group for a given course and product,
+        or the last one which will be used to display a message to the user.
+        """
+        last_matching_order_group = None
+        order_groups = (
+            super()
+            .get_queryset()
+            .filter(
+                is_active=True,
+                course_product_relation__course_id=course_id,
+                course_product_relation__product_id=product_id,
+            )
+            .order_by("position")
+        )
+        for order_group in order_groups:
+            last_matching_order_group = order_group
+            if order_group.is_assignable:
+                return order_group
+
+        return last_matching_order_group
+
+
 class OrderGroup(BaseModel):
     """Order group to enforce a maximum number of seats for a product."""
+
+    objects = OrderGroupManager()
 
     nb_seats = models.PositiveSmallIntegerField(
         default=None,
@@ -381,6 +410,11 @@ class OrderGroup(BaseModel):
         on_delete=models.CASCADE,
     )
     is_active = models.BooleanField(_("is active"), default=True)
+    position = models.PositiveSmallIntegerField(
+        _("priority"),
+        default=0,
+        help_text=_("Priority of the order group"),
+    )
     start = models.DateTimeField(
         help_text=_("Date at which the order group activation begins"),
         verbose_name=_("order group start datetime"),
@@ -449,6 +483,13 @@ class OrderGroup(BaseModel):
         end = self.end or now
 
         return start <= now <= end
+
+    @property
+    def is_assignable(self):
+        """
+        Returns boolean whether the order group is enabled, and have available seats.
+        """
+        return self.is_enabled and self.available_seats != 0
 
 
 class OrderManager(models.Manager):
