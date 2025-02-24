@@ -11,7 +11,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import enums, factories
-from joanie.core.models import Certificate, CourseProductRelation
+from joanie.core.models import Certificate, CourseProductRelation, CourseState
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 
 
@@ -683,3 +683,75 @@ class AdminCourseProductRelationApiTest(TestCase):
         # Verify that certificates were generated
         for order in orders:
             self.assertTrue(Certificate.objects.filter(order=order).exists())
+
+    @mock.patch("joanie.core.api.admin.generate_certificates_task")
+    @mock.patch(
+        "joanie.lms_handler.backends.dummy.DummyLMSBackend.get_grades",
+        return_value={"passed": True},
+    )
+    def test_api_admin_course_product_relation_generate_certificate_product_certificate(
+        self, _mock_get_grades, mock_generate_certificates_task
+    ):
+        """
+        Authenticated admin user should be able to generate certificate for order with products
+        of type certificate. The task should be called with the orders that are eligible to get
+        their certificate generated.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        course_run = factories.CourseRunFactory(
+            is_listed=True, state=CourseState.ONGOING_OPEN
+        )
+        enrollments = factories.EnrollmentFactory.create_batch(7, course_run=course_run)
+        product = factories.ProductFactory(
+            price=0,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+        relation = factories.CourseProductRelationFactory(
+            product=product, course=enrollments[0].course_run.course
+        )
+
+        # Create 3 orders where the certificate will be generated
+        order_ids = []
+        for enrollment in enrollments[:3]:
+            order_ids.append(
+                factories.OrderFactory(
+                    product=relation.product,
+                    enrollment=enrollment,
+                    course=None,
+                    state=enums.ORDER_STATE_COMPLETED,
+                ).id
+            )
+        # Create 4 orders where the certificate has been generated
+        for enrollment in enrollments[3:]:
+            factories.OrderCertificateFactory(
+                order=factories.OrderFactory(
+                    product=relation.product,
+                    course=None,
+                    enrollment=enrollment,
+                    state=enums.ORDER_STATE_COMPLETED,
+                )
+            )
+
+        response = self.client.post(
+            f"/api/v1.0/admin/course-product-relations/{relation.id}/generate_certificates/",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "course_product_relation_id": str(relation.id),
+                "count_certificate_to_generate": 3,
+                "count_exist_before_generation": 4,
+            },
+        )
+        self.assertTrue(mock_generate_certificates_task.delay.called)
+        self.assertTrue(
+            mock_generate_certificates_task.delay.called_with(
+                order_ids=order_ids,
+                cache_key=f"celery_certificate_generation_{relation.id}",
+            )
+        )
