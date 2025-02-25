@@ -14,6 +14,7 @@ and this project adheres to
 
 ### Changed
 
+- Remove `generate_certificates` action in django admin views
 - Remove `owner` and `is_main` in CreditCard model permanently
 - Remove `is_active` on order group client serializer
 
