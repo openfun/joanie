@@ -5,10 +5,8 @@ Test suite for products admin pages
 import random
 import uuid
 from http import HTTPStatus
-from unittest import mock
 
 from django.conf import settings
-from django.contrib.messages import get_messages
 from django.urls import reverse
 
 import lxml.html
@@ -350,58 +348,14 @@ class ProductAdminTestCase(BaseAPITestCase):
         # - The related course should be displayed
         related_course = related_courses_field.cssselect("li")
         self.assertEqual(len(related_course), 1)
-        # - And it should contain two links
+        # - And it should contain one link
         links = related_course[0].cssselect("a")
-        self.assertEqual(len(links), 2)
+        self.assertEqual(len(links), 1)
         # - 1st a link to go to the related course change view
         self.assertEqual(links[0].text_content(), f"{course.code} | {course.title}")
         self.assertEqual(
             links[0].attrib["href"],
             reverse("admin:core_course_change", args=(course.pk,)),
-        )
-
-        # - 2nd a link to generate certificate for the course - product couple
-        self.assertEqual(links[1].text_content(), "Generate certificates")
-        self.assertEqual(
-            links[1].attrib["href"],
-            reverse(
-                "admin:generate_certificates",
-                kwargs={"product_id": product.id, "course_code": course.code},
-            ),
-        )
-
-    @mock.patch("joanie.core.helpers.generate_certificates_for_orders", return_value=0)
-    def test_admin_product_generate_certificate_for_course(
-        self, mock_generate_certificates
-    ):
-        """
-        Product Admin should contain an endpoint which triggers the
-        `create_certificates` management command with product and course as options.
-        """
-        user = factories.UserFactory(is_staff=True, is_superuser=True)
-        self.client.login(username=user.username, password="password")
-
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course])
-
-        response = self.client.get(
-            reverse(
-                "admin:generate_certificates",
-                kwargs={"course_code": course.code, "product_id": product.id},
-            ),
-        )
-
-        # - Generate certificates command should have been called
-        mock_generate_certificates.assert_called_once()
-
-        # Check the presence of a confirmation message
-        messages = list(get_messages(response.wsgi_request))
-        self.assertEqual(len(messages), 1)
-        self.assertEqual(str(messages[0]), "No certificates have been generated.")
-
-        # - User should be redirected to the product change view
-        self.assertRedirects(
-            response, reverse("admin:core_product_change", args=(product.id,))
         )
 
     def test_admin_product_use_translatable_change_form_with_actions_template(self):

@@ -45,10 +45,3 @@ class CourseAdminTestCase(BaseAPITestCase):
         # Django parler tabs should be displayed
         parler_tabs = html.cssselect(".parler-language-tabs span")
         self.assertEqual(len(parler_tabs), len(settings.LANGUAGES))
-
-        # Django object actions should be displayed
-        object_actions = html.cssselect(".objectaction-item")
-        self.assertEqual(len(object_actions), 1)
-        self.assertEqual(
-            object_actions[0].attrib["data-tool-name"], "generate_certificates"
-        )
