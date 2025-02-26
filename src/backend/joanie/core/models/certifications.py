@@ -241,7 +241,7 @@ class Certificate(BaseModel):
         # - Retrieve the current language code or a fallback if the language is not available
         current_language_code = get_language_settings(get_language()).get("code")
         site = Site.objects.get_current()
-        with override(current_language_code, True):
+        with override(current_language_code):
             path = reverse(
                 "certificate-verification", kwargs={"certificate_id": self.pk}
             )

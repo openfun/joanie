@@ -63,6 +63,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         self.assertRegex(
             document_text, rf"https://example.com/en-us/certificates/{certificate.id}"
         )
+        self.assertRegex(document_text, r"en-us")
 
         with switch_language(product, "fr-fr"):
             document = issuers.generate_document(
@@ -79,6 +80,8 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
                 rf"https://example.com/fr-fr/certificates/{certificate.id}",
             )
 
+            self.assertRegex(document_text, r"fr-fr")
+
         with switch_language(product, "de-de"):
             # - Finally, unknown language should use the default language as fallback
             document = issuers.generate_document(
@@ -94,6 +97,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
                 document_text,
                 rf"https://example.com/en-us/certificates/{certificate.id}",
             )
+            self.assertRegex(document_text, r"en-us")
 
     def test_utils_issuers_generate_document_certificate_document(self):
         """
@@ -248,6 +252,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             document_text, rf"https://example.com/en-us/certificates/{certificate.id}"
         )
         self.assertRegex(document_text, r"https://example.com/terms")
+        self.assertRegex(document_text, r"en-us")
 
         with switch_language(product, "fr-fr"):
             document = issuers.generate_document(
@@ -271,6 +276,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
                 document_text,
                 r"Compétence 1.*Compétence 2",
             )
+            self.assertRegex(document_text, r"fr-fr")
 
         with switch_language(product, "de-de"):
             # - Finally, unknown language should use the default language as fallback
@@ -287,6 +293,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
                 document_text,
                 rf"https://example.com/en-us/certificates/{certificate.id}",
             )
+            self.assertRegex(document_text, r"en-us")
 
     def test_utils_issuers_generate_document_certificate_unicamp_degree_document_without_certification_level(  # pylint: disable=line-too-long
         self,
@@ -334,3 +341,21 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             document_text,
             r"Certification.*level",
         )
+        self.assertRegex(document_text, r"en-us")
+
+        with switch_language(product, "fr-fr"):
+            document = issuers.generate_document(
+                name=certificate.certificate_definition.template,
+                context=certificate.get_document_context(),
+            )
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(document_text, r"fr-fr")
+
+        with switch_language(product, "de-de"):
+            # - Finally, unknown language should use the default language as fallback
+            document = issuers.generate_document(
+                name=certificate.certificate_definition.template,
+                context=certificate.get_document_context(),
+            )
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(document_text, r"en-us")
