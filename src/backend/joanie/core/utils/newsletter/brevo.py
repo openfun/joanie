@@ -12,33 +12,30 @@ from django.urls import reverse
 
 import requests
 
-logger = logging.getLogger(__name__)
+from joanie.core.utils.newsletter.base import NewsletterClient
 
 
-class Brevo:
+class Brevo(NewsletterClient):
     """
     Brevo API client.
     """
 
+    name = "Brevo"
+
     def __init__(self, user=None):
+        self.list_id = settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID
+        self.api_url = settings.BREVO_API_URL
+        self.contact_url = f"{self.api_url}contacts"
+        self.list_contacts_url = f"{self.api_url}contacts/lists/{self.list_id}/contacts"
+        self.subscribe_to_list_url = f"{self.list_contacts_url}/add"
+        self.unsubscribe_from_list_url = f"{self.list_contacts_url}/remove"
         self.headers = {
             "accept": "application/json",
             "content-type": "application/json",
             "api-key": settings.BREVO_API_KEY,
         }
 
-        self.list_id = settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID
-        self.user = user or {}
-
-        self.api_url = settings.BREVO_API_URL
-        self.contact_url = f"{self.api_url}contacts"
-        self.list_contacts_url = f"{self.api_url}contacts/lists/{self.list_id}/contacts"
-        self.subscribe_to_list_url = f"{self.list_contacts_url}/add"
-        self.unsubscribe_from_list_url = f"{self.list_contacts_url}/remove"
-
-    def _log_info(self, message):
-        """Log an info message."""
-        logger.info(message, self.user.get("id"), self.list_id)
+        super().__init__(user)
 
     def _call_api(self, url, payload=None, query_params=None, log_level=logging.ERROR):
         """
@@ -50,24 +47,8 @@ class Brevo:
             response = requests.get(
                 url, params=query_params, headers=self.headers, timeout=5
             )
-        if not response.ok:
-            logger.log(
-                log_level,
-                "Error calling Brevo API %s | %s: %s",
-                url,
-                response.status_code,
-                response.text,
-                extra={
-                    "context": {
-                        "user_id": self.user.get("id"),
-                        "list_id": self.list_id,
-                        "url": url,
-                        "response": response.text,
-                    }
-                },
-            )
 
-        return response
+        return self._check_response_api(response, log_level)
 
     def create_contact_to_commercial_list(self, log_level=logging.ERROR):
         """
@@ -143,7 +124,7 @@ class Brevo:
         Create a webhook for the Brevo API.
         """
         webook_url = base_url + reverse("commercial_newsletter_subscription_webhook")
-        logger.info("Webhook endpoint %s", webook_url)
+        self.logger.info("Webhook endpoint %s", webook_url)
 
         url = f"{self.api_url}webhooks"
 
@@ -165,7 +146,7 @@ class Brevo:
             return None
 
         webhook_id = response.json().get("id")
-        logger.info("Webhook created %s", webhook_id)
+        self.logger.info("Webhook created %s", webhook_id)
         return webhook_id
 
     def get_contacts_count(self):
