@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Add `start` and `end` datetime fields on order group model
+- Add Sarbacane newsletter client
 
 ### Changed
 
