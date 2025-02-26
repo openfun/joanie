@@ -540,6 +540,28 @@ class Base(Configuration):
         None, environ_name="BREVO_WEBHOOK_TOKEN", environ_prefix=None
     )
 
+    SARBACANE_API_URL = values.Value(
+        "https://sarbacaneapis.com/v1",
+        environ_name="SARBACANE_API_URL",
+        environ_prefix=None,
+    )
+    SARBACANE_API_KEY = values.Value(
+        None, environ_name="SARBACANE_API_KEY", environ_prefix=None
+    )
+    SARBACANE_ACCOUNT_ID = values.Value(
+        None, environ_name="SARBACANE_ACCOUNT_ID", environ_prefix=None
+    )
+    SARBACANE_COMMERCIAL_NEWSLETTER_LIST_ID = values.Value(
+        None,
+        environ_name="SARBACANE_COMMERCIAL_NEWSLETTER_LIST_ID",
+        environ_prefix=None,
+    )
+    SARBACANE_COMMERCIAL_NEWSLETTER_BLACKLIST_ID = values.Value(
+        None,
+        environ_name="SARBACANE_COMMERCIAL_NEWSLETTER_BLACKLIST_ID",
+        environ_prefix=None,
+    )
+
     # Open edX database import
     EDX_DOMAIN = values.Value(None, environ_name="EDX_DOMAIN", environ_prefix=None)
     EDX_DATABASE_HOST = values.Value(
