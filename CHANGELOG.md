@@ -18,8 +18,9 @@ and this project adheres to
 - Remove `owner` and `is_main` in CreditCard model permanently
 - Remove `is_active` on order group client serializer
 
-## Fixed
+### Fixed
 
+- Internationalization of certificate verification view
 - BO: generate certificates for orders with product of type certificate
 
 ## [2.16.0] - 2025-02-13
