@@ -64,3 +64,9 @@ class NewsletterClient:
         Remove a contact from the commercial newsletter list.
         """
         raise NotImplementedError("This method should be implemented by the subclass.")
+
+    def handle_notification(self, request):
+        """
+        Handle a notification from the newsletter client.
+        """
+        raise NotImplementedError("This method should be implemented by the subclass.")

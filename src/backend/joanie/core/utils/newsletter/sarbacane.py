@@ -10,6 +10,9 @@ from django.conf import settings
 import requests
 
 from joanie.core.utils.newsletter.base import NewsletterClient
+from joanie.core.utils.newsletter.subscription import (
+    check_commercial_newsletter_subscription_webhook,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -136,3 +139,26 @@ class Sarbacane(NewsletterClient):
         return any(
             self.blacklist_id in contact.get("blacklistIds") for contact in content
         )
+
+    def _get_unsubscriber(self, unsubscriber_id: str) -> dict:
+        """
+        Get an unsubscriber from the blacklist.
+        """
+        response = self._call_api(f"{self.url_list_unsubscribers}/{unsubscriber_id}")
+
+        if not response.ok:
+            return None
+
+        return response.json()
+
+    def handle_notification(self, request):
+        """
+        Handle a notification from the newsletter client.
+        """
+        event = request.data
+        if (unsubscriber_id := event.get("ID")) and event["type"] == "unsubscribe":
+            unsubcriber = self._get_unsubscriber(unsubscriber_id)
+            if unsubcriber:
+                check_commercial_newsletter_subscription_webhook.delay(
+                    [unsubcriber["email"]],
+                )

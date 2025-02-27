@@ -12,7 +12,11 @@ from django.urls import reverse
 
 import requests
 
+from joanie.core.models.accounts import User
 from joanie.core.utils.newsletter.base import NewsletterClient
+from joanie.core.utils.newsletter.subscription import (
+    check_commercial_newsletter_subscription_webhook,
+)
 
 
 class Brevo(NewsletterClient):
@@ -172,3 +176,18 @@ class Brevo(NewsletterClient):
         if limit == 1:
             return response.json().get("count")
         return response.json().get("contacts")
+
+    def handle_notification(self, request):
+        """
+        Handle a notification from Brevo.
+        """
+        emails_to_check = []
+        for event in request.data:
+            if (
+                settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID in event["list_id"]
+                and event["event"] == "unsubscribe"
+                and User.objects.filter(email=event["email"]).exists()
+            ):
+                emails_to_check.append(event["email"])
+        if emails_to_check:
+            check_commercial_newsletter_subscription_webhook.delay(emails_to_check)

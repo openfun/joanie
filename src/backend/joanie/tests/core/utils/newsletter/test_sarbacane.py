@@ -3,9 +3,11 @@
 Sarbacane API client test module.
 """
 
+from unittest.mock import patch
 from urllib.parse import quote_plus
 
 from django.conf import settings
+from django.http import HttpRequest
 from django.test import override_settings
 
 import responses
@@ -573,8 +575,112 @@ class SarbacaneTestCase(LoggingTestCase):
                     (
                         f"Error calling Sarbacane API {self.url_list_contacts}"
                         f"?email={email_url_encoded}"
+                        ' | 400: {"error": "Invalid parameter"}'
                     ),
-                    ' | 400: {"error": "Invalid parameter"}',
                 ),
+            ],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    @patch(
+        "joanie.core.utils.newsletter.sarbacane.check_commercial_newsletter_subscription_webhook"
+    )
+    def test_handle_notification_unsubscribe(self, mock_check_subscription):
+        """
+        Test handling a notification from Sarbacane when a user unsubscribes.
+        """
+        # Create a mock request with unsubscribe event data
+        unsubscriber_id = "1234567890"
+        responses.add(
+            responses.GET,
+            f"{self.url_list_unsubscribers}/{unsubscriber_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "apiKey": settings.SARBACANE_API_KEY,
+                        "accountId": settings.SARBACANE_ACCOUNT_ID,
+                    }
+                ),
+            ],
+            status=200,
+            json={
+                "createdAt": "2025-02-27T13:39:11.679142Z",
+                "createdBy": "SARBACANE",
+                "email": "user@example.com",
+                "id": unsubscriber_id,
+                "modifiedAt": "2025-03-03T14:11:21.088577Z",
+                "modifiedBy": "SARBACANE",
+                "phones": "",
+                "source": "DEV - Campagne de test",
+                "state": "UNSUBSCRIBERS",
+            },
+        )
+
+        request = HttpRequest()
+        request.data = {"ID": unsubscriber_id, "type": "unsubscribe"}
+
+        # Call the handle_notification method
+        Sarbacane().handle_notification(request)
+
+        # Check that the webhook was called with the correct email
+        mock_check_subscription.delay.assert_called_once_with(["user@example.com"])
+
+    @patch(
+        "joanie.core.utils.newsletter.sarbacane.check_commercial_newsletter_subscription_webhook"
+    )
+    def test_handle_notification_not_unsubscribe(self, mock_check_subscription):
+        """
+        Test handling a notification from Sarbacane when the event is not an unsubscribe.
+        """
+        # Create a mock request with a different event type
+        request = HttpRequest()
+        request.data = {"ID": "1234567890", "type": "open"}
+
+        # Call the handle_notification method
+        Sarbacane().handle_notification(request)
+
+        # Check that the webhook was not called
+        mock_check_subscription.delay.assert_not_called()
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    @patch(
+        "joanie.core.utils.newsletter.sarbacane.check_commercial_newsletter_subscription_webhook"
+    )
+    def test_handle_notification_unknown_subscriber_id(self, mock_check_subscription):
+        """
+        Test handling a notification from Sarbacane when the subscriber ID is not found.
+        """
+
+        responses.add(
+            responses.GET,
+            f"{self.url_list_unsubscribers}/unknown-subscriber-id",
+            status=404,
+            json={"message": "CONTACT_NOT_FOUND"},
+        )
+
+        request = HttpRequest()
+        request.data = {"ID": "unknown-subscriber-id", "type": "unsubscribe"}
+
+        # Call the handle_notification method
+        with self.assertLogs() as logger:
+            Sarbacane().handle_notification(request)
+
+        # Check that the webhook was not called
+        mock_check_subscription.delay.assert_not_called()
+        self.assertLogsEquals(
+            logger.records,
+            [
+                (
+                    "ERROR",
+                    (
+                        "Error calling Sarbacane API "
+                        f"{self.url_list_unsubscribers}/unknown-subscriber-id"
+                        ' | 404: {"message": "CONTACT_NOT_FOUND"}'
+                    ),
+                )
             ],
         )
