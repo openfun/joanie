@@ -527,6 +527,11 @@ class Base(Configuration):
     CELERY_DEFAULT_QUEUE = values.Value("celery")
 
     # Newsletters
+    JOANIE_NEWSLETTER_CLIENT = values.Value(
+        None,
+        environ_name="JOANIE_NEWSLETTER_CLIENT",
+        environ_prefix=None,
+    )
     BREVO_API_URL = values.Value(
         "https://api.brevo.com/v3/", environ_name="BREVO_API_URL", environ_prefix=None
     )

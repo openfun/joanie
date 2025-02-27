@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from django.conf import settings
+from django.test import override_settings
 
 from joanie.core.factories import UserFactory
 from joanie.core.models import User
@@ -14,12 +15,13 @@ from joanie.core.utils.newsletter.subscription import (
 from joanie.tests.base import LoggingTestCase
 
 
+@override_settings(JOANIE_NEWSLETTER_CLIENT="joanie.core.utils.newsletter.brevo.Brevo")
 class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
     """
     Test suite for newsletter subscription utilities.
     """
 
-    @patch("joanie.core.utils.newsletter.subscription.Brevo")
+    @patch("joanie.core.utils.newsletter.brevo.Brevo")
     def test_set_commercial_newsletter_subscription_true(self, mock_brevo):
         """
         If the user has subscribed to the commercial newsletter, it should be added
@@ -33,7 +35,7 @@ class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
 
         mock_brevo().subscribe_to_commercial_list.assert_called_once()
 
-    @patch("joanie.core.utils.newsletter.subscription.Brevo")
+    @patch("joanie.core.utils.newsletter.brevo.Brevo")
     def test_set_commercial_newsletter_subscription_false(self, mock_brevo):
         """
         If the user has not subscribed to the commercial newsletter, it should be removed
@@ -48,7 +50,7 @@ class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
         mock_brevo().unsubscribe_from_commercial_list.assert_called_once()
 
     @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
-    @patch("joanie.core.utils.newsletter.subscription.Brevo")
+    @patch("joanie.core.utils.newsletter.brevo.Brevo")
     def test_check_commercial_newsletter_subscription_webhook(
         self, mock_brevo, mock_set_commercial_newsletter_subscription
     ):
@@ -73,7 +75,7 @@ class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
         mock_set_commercial_newsletter_subscription.delay.assert_called_once()
 
     @patch("joanie.core.models.accounts.set_commercial_newsletter_subscription")
-    @patch("joanie.core.utils.newsletter.subscription.Brevo")
+    @patch("joanie.core.utils.newsletter.brevo.Brevo")
     def test_check_commercial_newsletter_subscription_webhook_no_user(
         self, mock_brevo, mock_set_commercial_newsletter_subscription
     ):
@@ -97,7 +99,7 @@ class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
         self.assertFalse(user.has_subscribed_to_commercial_newsletter)
         mock_set_commercial_newsletter_subscription.delay.assert_called_once()
 
-    @patch("joanie.core.utils.newsletter.subscription.Brevo")
+    @patch("joanie.core.utils.newsletter.brevo.Brevo")
     def test_synchronize_brevo_subscriptions(self, mock_brevo):
         """
         Test synchronize brevo subscriptions
@@ -125,7 +127,7 @@ class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
         self.assertEqual(mock_brevo().get_contacts.call_count, 1)
         self.assertEqual(mock_brevo().subscribe_to_commercial_list.call_count, 0)
 
-    @patch("joanie.core.utils.newsletter.subscription.Brevo")
+    @patch("joanie.core.utils.newsletter.brevo.Brevo")
     def test_synchronize_brevo_subscriptions_loop(self, mock_brevo):
         """
         Test synchronize brevo subscriptions with multiple loops
