@@ -19,12 +19,13 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
     """Test suite for remote API endpoints on course run."""
 
     @override_settings(
+        JOANIE_NEWSLETTER_CLIENT="joanie.core.utils.newsletter.brevo.Brevo",
         JOANIE_AUTHORIZED_API_TOKENS=["auth-token"],
         BREVO_COMMERCIAL_NEWSLETTER_LIST_ID=123456,
     )
     @responses.activate(assert_all_requests_are_fired=True)
     @patch(
-        "joanie.core.api.remote_endpoints.check_commercial_newsletter_subscription_webhook"
+        "joanie.core.utils.newsletter.brevo.check_commercial_newsletter_subscription_webhook"
     )
     def test_commercial_newsletter_subscription_webhook(
         self, mock_check_commercial_newsletter_subscription_webhook
@@ -62,12 +63,13 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         )
 
     @override_settings(
+        JOANIE_NEWSLETTER_CLIENT="joanie.core.utils.newsletter.brevo.Brevo",
         JOANIE_AUTHORIZED_API_TOKENS=["auth-token"],
         BREVO_COMMERCIAL_NEWSLETTER_LIST_ID=123456,
     )
     @responses.activate(assert_all_requests_are_fired=True)
     @patch(
-        "joanie.core.api.remote_endpoints.check_commercial_newsletter_subscription_webhook"
+        "joanie.core.utils.newsletter.brevo.check_commercial_newsletter_subscription_webhook"
     )
     def test_commercial_newsletter_subscription_webhook_other_list(
         self, mock_check_commercial_newsletter_subscription_webhook
@@ -102,12 +104,13 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         mock_check_commercial_newsletter_subscription_webhook.delay.assert_not_called()
 
     @override_settings(
+        JOANIE_NEWSLETTER_CLIENT="joanie.core.utils.newsletter.brevo.Brevo",
         JOANIE_AUTHORIZED_API_TOKENS=["auth-token"],
         BREVO_COMMERCIAL_NEWSLETTER_LIST_ID=123456,
     )
     @responses.activate(assert_all_requests_are_fired=True)
     @patch(
-        "joanie.core.api.remote_endpoints.check_commercial_newsletter_subscription_webhook"
+        "joanie.core.utils.newsletter.brevo.check_commercial_newsletter_subscription_webhook"
     )
     def test_commercial_newsletter_subscription_webhook_other_event(
         self, mock_check_commercial_newsletter_subscription_webhook
@@ -142,12 +145,13 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
         mock_check_commercial_newsletter_subscription_webhook.delay.assert_not_called()
 
     @override_settings(
+        JOANIE_NEWSLETTER_CLIENT="joanie.core.utils.newsletter.brevo.Brevo",
         JOANIE_AUTHORIZED_API_TOKENS=["auth-token"],
         BREVO_COMMERCIAL_NEWSLETTER_LIST_ID=123456,
     )
     @responses.activate(assert_all_requests_are_fired=True)
     @patch(
-        "joanie.core.api.remote_endpoints.check_commercial_newsletter_subscription_webhook"
+        "joanie.core.utils.newsletter.brevo.check_commercial_newsletter_subscription_webhook"
     )
     def test_commercial_newsletter_subscription_webhook_unknown_email(
         self, mock_check_commercial_newsletter_subscription_webhook

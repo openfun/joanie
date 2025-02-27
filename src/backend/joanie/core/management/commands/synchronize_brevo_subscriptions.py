@@ -4,7 +4,7 @@ import logging
 
 from django.core.management import BaseCommand
 
-from joanie.core.utils.newsletter.subscription import synchronize_brevo_subscriptions
+from joanie.core.utils.newsletter.brevo.tasks import synchronize_brevo_subscriptions
 
 logger = logging.getLogger(__name__)
 

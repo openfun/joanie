@@ -4,7 +4,6 @@ Remote endpoints API for other servers.
 
 from http import HTTPStatus
 
-from django.conf import settings
 from django.http import JsonResponse
 
 from rest_framework.decorators import (
@@ -15,12 +14,9 @@ from rest_framework.decorators import (
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from joanie.core.models import User
 from joanie.core.permissions import HasAPIKey
 from joanie.core.utils.course_run import get_course_run_metrics
-from joanie.core.utils.newsletter.subscription import (
-    check_commercial_newsletter_subscription_webhook,
-)
+from joanie.core.utils.newsletter import get_newsletter_client
 
 
 @api_view(["GET"])
@@ -47,22 +43,12 @@ def enrollments_and_orders_on_course_run(request: Request):
 
 
 @api_view(["POST"])
-@permission_classes([HasAPIKey])
 @authentication_classes([])
 def commercial_newsletter_subscription_webhook(request: Request):
     """
     Webhook to handle newsletter subscription events.
-
-    Remote service must have its token set in Joanie's settings `JOANIE_AUTHORIZED_API_TOKENS`
     """
-    emails_to_check = []
-    for event in request.data:
-        if (
-            settings.BREVO_COMMERCIAL_NEWSLETTER_LIST_ID in event["list_id"]
-            and event["event"] == "unsubscribe"
-            and User.objects.filter(email=event["email"]).exists()
-        ):
-            emails_to_check.append(event["email"])
-    if emails_to_check:
-        check_commercial_newsletter_subscription_webhook.delay(emails_to_check)
+
+    if client := get_newsletter_client():
+        client().handle_notification(request)
     return Response(status=HTTPStatus.OK)

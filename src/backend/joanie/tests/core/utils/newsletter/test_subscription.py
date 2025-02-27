@@ -7,15 +7,18 @@ from django.test import override_settings
 
 from joanie.core.factories import UserFactory
 from joanie.core.models import User
+from joanie.core.utils.newsletter.brevo.tasks import synchronize_brevo_subscriptions
 from joanie.core.utils.newsletter.subscription import (
     check_commercial_newsletter_subscription_webhook,
     set_commercial_newsletter_subscription,
-    synchronize_brevo_subscriptions,
 )
 from joanie.tests.base import LoggingTestCase
 
 
-@override_settings(JOANIE_NEWSLETTER_CLIENT="joanie.core.utils.newsletter.brevo.Brevo")
+@override_settings(
+    JOANIE_NEWSLETTER_CLIENT="joanie.core.utils.newsletter.brevo.Brevo",
+    BREVO_COMMERCIAL_NEWSLETTER_LIST_ID="list-id",
+)
 class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
     """
     Test suite for newsletter subscription utilities.
@@ -99,7 +102,7 @@ class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
         self.assertFalse(user.has_subscribed_to_commercial_newsletter)
         mock_set_commercial_newsletter_subscription.delay.assert_called_once()
 
-    @patch("joanie.core.utils.newsletter.brevo.Brevo")
+    @patch("joanie.core.utils.newsletter.brevo.tasks.Brevo")
     def test_synchronize_brevo_subscriptions(self, mock_brevo):
         """
         Test synchronize brevo subscriptions
@@ -127,7 +130,7 @@ class UtilsNewsletterSubscriptionTestCase(LoggingTestCase):
         self.assertEqual(mock_brevo().get_contacts.call_count, 1)
         self.assertEqual(mock_brevo().subscribe_to_commercial_list.call_count, 0)
 
-    @patch("joanie.core.utils.newsletter.brevo.Brevo")
+    @patch("joanie.core.utils.newsletter.brevo.tasks.Brevo")
     def test_synchronize_brevo_subscriptions_loop(self, mock_brevo):
         """
         Test synchronize brevo subscriptions with multiple loops
