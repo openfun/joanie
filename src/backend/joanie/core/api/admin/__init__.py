@@ -594,6 +594,8 @@ class NestedCourseProductRelationOrderGroupViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_classes = {
         "create": serializers.AdminOrderGroupCreateSerializer,
+        "update": serializers.AdminOrderGroupUpdateSerializer,
+        "partial_update": serializers.AdminOrderGroupUpdateSerializer,
     }
     default_serializer_class = serializers.AdminOrderGroupSerializer
     queryset = models.OrderGroup.objects.all().select_related("course_product_relation")
@@ -781,3 +783,18 @@ class OrganizationAddressViewSet(
             ) from error
 
         return super().destroy(request, *args, **kwargs)
+
+
+class DiscountViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Admin Discount Viewset"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminDiscountSerializer
+    queryset = models.Discount.objects.all()

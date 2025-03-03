@@ -434,9 +434,56 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
         return settings.DEFAULT_CURRENCY
 
 
+class AdminDiscountSerializer(serializers.ModelSerializer):
+    """Admin Serializer for Discount model"""
+
+    is_used = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Discount
+        fields = ["id", "amount", "rate", "is_used"]
+        read_only_fields = ["id", "is_used"]
+
+    def get_is_used(self, discount):
+        """Return the count of where the discount is used through order groups"""
+        return discount.usage_count
+
+
 class AdminOrderGroupSerializer(serializers.ModelSerializer):
     """
     Admin Serializer for OrderGroup model
+    """
+
+    nb_available_seats = serializers.SerializerMethodField(read_only=True)
+    discount = AdminDiscountSerializer(read_only=False, required=False)
+
+    class Meta:
+        model = models.OrderGroup
+        fields = [
+            "id",
+            "nb_seats",
+            "is_active",
+            "nb_available_seats",
+            "created_on",
+            "can_edit",
+            "is_enabled",
+            "start",
+            "end",
+            "discount",
+        ]
+        read_only_fields = fields
+
+    def get_nb_available_seats(self, order_group) -> int | None:
+        """Return the number of available seats for this order group."""
+        return order_group.available_seats
+
+
+@extend_schema_serializer(exclude_fields=("course_product_relation",))
+class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
+    """
+    Admin serializer for Order Group reserved for partial update and update actions.
+
+    It allows to update the field discount of an order group.
     """
 
     nb_seats = serializers.IntegerField(
@@ -456,39 +503,53 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         required=False,
         default=models.OrderGroup._meta.get_field("is_active").default,
     )
-    nb_available_seats = serializers.SerializerMethodField(read_only=True)
+    start = serializers.DateTimeField(required=False, allow_null=True)
+    end = serializers.DateTimeField(required=False, allow_null=True)
+    discount = serializers.SlugRelatedField(
+        slug_field="id",
+        queryset=models.Discount.objects.all(),
+        many=False,
+        required=False,
+        allow_null=True,
+    )
 
-    class Meta:
-        model = models.OrderGroup
-        fields = [
-            "id",
-            "nb_seats",
-            "is_active",
-            "nb_available_seats",
-            "created_on",
-            "can_edit",
-            "is_enabled",
-            "start",
-            "end",
-        ]
-        read_only_fields = ["id", "can_edit", "created_on", "is_enabled"]
+    class Meta(AdminOrderGroupSerializer.Meta):
+        fields = [*AdminOrderGroupSerializer.Meta.fields]
 
-    def get_nb_available_seats(self, order_group) -> int | None:
-        """Return the number of available seats for this order group."""
-        return order_group.available_seats
+    def update(self, instance, validated_data):
+        """Update the discount for the order group"""
+        if discount_id := self.initial_data.get("discount_id"):
+            discount = get_object_or_404(models.Discount, id=discount_id)
+            validated_data["discount"] = discount
+        if discount_id is None:
+            instance.discount = None
+
+        return super().update(instance, validated_data)
 
 
-@extend_schema_serializer(exclude_fields=("course_product_relation",))
-class AdminOrderGroupCreateSerializer(AdminOrderGroupSerializer):
+class AdminOrderGroupCreateSerializer(AdminOrderGroupUpdateSerializer):
     """
     Admin Serializer for OrderGroup model reserved to create action.
 
     Unlike `AdminOrderGroupSerializer`, it allows to pass a product to create
-    the order group.
+    the order group. You can also add a discount.
     """
 
-    class Meta(AdminOrderGroupSerializer.Meta):
-        fields = [*AdminOrderGroupSerializer.Meta.fields, "course_product_relation"]
+    class Meta(AdminOrderGroupUpdateSerializer.Meta):
+        fields = [
+            *AdminOrderGroupUpdateSerializer.Meta.fields,
+            "course_product_relation",
+        ]
+
+    def create(self, validated_data):
+        """
+        Attach the discount to the order group.
+        """
+        if discount_id := self.initial_data.get("discount_id"):
+            discount = get_object_or_404(models.Discount, id=discount_id)
+            validated_data["discount"] = discount
+
+        return super().create(validated_data)
 
 
 class AdminCourseNestedSerializer(serializers.ModelSerializer):
