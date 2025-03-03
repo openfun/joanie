@@ -1781,3 +1781,95 @@ class Voucher(BaseModel):
 
         self.is_usable = False
         self.save(update_fields=["is_usable"])
+
+
+class PurchaseRequest(BaseModel):
+    """
+    Purchase Request models allows to define a group of seats an entity
+    wants to purchase for an offer.
+    # Bon de Commande in french
+    """
+    seats_reserved = models.PositiveSmallIntegerField(
+        verbose_name=_("seats_reserved"),
+        help_text=_("Seat amount"),
+        validators=[MinValueValidator(0)],
+    )
+    offer = models.ForeignKey(
+        to=CourseProductRelation,
+        verbose_name=_("purchase request for course product relation session"),
+        related_name="purchase_offers",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    reference_contact = models.ForeignKey(
+        to=User,
+        verbose_name=_("offer contact of reference"),
+        related_name="offer_references",
+        on_delete=models.RESTRICT,
+        db_index=True,
+    )
+
+    class Meta:
+        db_table = "joanie_purchase_request"
+        verbose_name = _("Purchase Request")
+        verbose_name_plural = _("Purchase Requests")
+        ordering = ["created_on"]
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class Quote(BaseModel):
+    """
+    Quote model allows to define the cost estimates for a certain offer.
+    # Devis in french
+    """
+    purchase_request = models.ForeignKey(
+        to=PurchaseRequest,
+        verbose_name=_("source purchase request"),
+        help_text=_("source of purchase request"),
+        on_delete=models.CASCADE,
+        blank=False,
+        null=False,
+    )
+    price = models.DecimalField(
+        _("price for quote"),
+        help_text=_("tax included"),
+        decimal_places=2,
+        default=0.00,
+        max_digits=9,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
+    )
+    payment_method =  models.CharField(
+        _("payment_method"), choices=enums.PAYMENT_METHODS, max_length=50
+    )
+    needs_contract =  models.BooleanField(
+        help_text=_(
+            "Ticked if the quote demands a contrat per student"
+        ),
+        verbose_name=_("needs a contract"),
+        default=False,
+    )
+    needs_convention = models.BooleanField(
+        help_text=_(
+            "Ticked if the quote demands a convention between organization, enterprise "
+            "and students."
+        ),
+        verbose_name=_("needs a convention"),
+        default=False,
+    )
+
+    class Meta:
+        db_table = "joanie_quote"
+        verbose_name = _("Quote")
+        verbose_name_plural = _("Quotes")
+        ordering = ["created_on"]
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
