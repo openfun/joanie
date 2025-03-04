@@ -211,7 +211,7 @@ class OrderGroupAdminApiTest(TestCase):
             "nb_seats": 5,
             "is_active": True,
         }
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.post(
                 f"{self.base_url}/{relation.id}/order-groups/",
                 content_type="application/json",
@@ -344,7 +344,7 @@ class OrderGroupAdminApiTest(TestCase):
 
         relation = factories.CourseProductRelationFactory()
         order_group = factories.OrderGroupFactory(course_product_relation=relation)
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.delete(
                 f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
             )
@@ -360,7 +360,7 @@ class OrderGroupAdminApiTest(TestCase):
 
         relation = factories.CourseProductRelationFactory()
         order_group = factories.OrderGroupFactory(course_product_relation=relation)
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.delete(
                 f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
             )

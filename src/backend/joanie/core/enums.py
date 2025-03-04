@@ -230,3 +230,11 @@ PAYMENT_STATE_CHOICES = (
     (PAYMENT_STATE_CANCELED, _("Canceled")),
     (PAYMENT_STATE_ERROR, _("Error")),
 )
+
+PAYMENT_BY_SEPA_TRANSFER = "sepa"
+PAYMENT_BY_CREDIT_CARD = "credit_card"
+
+PAYMENT_METHODS = (
+    (PAYMENT_SEPA_TRANSFER), _("Sepa transfer"),
+    (PAYMENT_CREDIT_CARD), _("Credit card")
+)

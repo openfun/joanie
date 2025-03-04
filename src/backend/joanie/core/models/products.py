@@ -11,7 +11,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models.functions import Lower
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -362,8 +362,46 @@ class ProductTargetCourseRelation(BaseModel):
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
+class OrderGroupManager(models.Manager):
+    """Custom manager for the OrderGroup model."""
+
+    def find_assignables(self, course_product_relation_id, voucher_code=None):
+        """
+        Retrieve all active order groups for a given course product relation,
+        ordered by position.
+        """
+        if voucher_code:
+            try:
+                return (
+                    super()
+                    .get_queryset()
+                    .get(
+                        vouchers__code__iexact=voucher_code,
+                        vouchers__is_usable=True,
+                        is_active=True,
+                        course_product_relation_id=course_product_relation_id,
+                    )
+                )
+            except ObjectDoesNotExist as exc:
+                raise PermissionDenied(
+                    _("The voucher code does not exist or is not valid.")
+                ) from exc
+
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                is_active=True,
+                course_product_relation_id=course_product_relation_id,
+            )
+            .order_by("position")
+        )
+
+
 class OrderGroup(BaseModel):
     """Order group to enforce a maximum number of seats for a product."""
+
+    objects = OrderGroupManager()
 
     nb_seats = models.PositiveSmallIntegerField(
         default=None,
@@ -381,6 +419,13 @@ class OrderGroup(BaseModel):
         on_delete=models.CASCADE,
     )
     is_active = models.BooleanField(_("is active"), default=True)
+    position = models.PositiveSmallIntegerField(
+        _("priority"),
+        help_text=_("Priority of the order group"),
+        default=None,
+        null=True,
+        blank=True,
+    )
     start = models.DateTimeField(
         help_text=_("Date at which the order group activation begins"),
         verbose_name=_("order group start datetime"),
@@ -449,6 +494,59 @@ class OrderGroup(BaseModel):
         end = self.end or now
 
         return start <= now <= end
+
+    @property
+    def is_assignable(self):
+        """
+        Returns boolean whether the order group is enabled, and have available seats.
+        """
+        return self.is_enabled and self.available_seats != 0
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to assign the next available position number
+        within its course product relation if not already set.
+        """
+        if not self.created_on and self.position is None:
+            self.position = self.course_product_relation.order_groups.count()
+
+        return super().save(*args, **kwargs)
+
+    def set_position(self, position):
+        """
+        Set the position of the order group and update the positions of other order groups
+        in the same course product relation accordingly.
+        """
+        if position == self.position:
+            return  # Nothing to do
+
+        # Get count and normalize position within valid range (0 to count-1)
+        count = OrderGroup.objects.filter(
+            course_product_relation_id=self.course_product_relation_id
+        ).count()
+        position = max(0, min(position, count - 1))
+
+        old_position = self.position
+
+        with transaction.atomic():
+            if old_position < position:
+                # Moving down - shift intermediate items up
+                OrderGroup.objects.filter(
+                    course_product_relation_id=self.course_product_relation_id,
+                    position__gt=old_position,
+                    position__lte=position,
+                ).update(position=models.F("position") - 1)
+            else:
+                # Moving up - shift intermediate items down
+                OrderGroup.objects.filter(
+                    course_product_relation_id=self.course_product_relation_id,
+                    position__lt=old_position,
+                    position__gte=position,
+                ).update(position=models.F("position") + 1)
+
+            # Update this order group's position
+            self.position = position
+            self.save(update_fields=["position"])
 
 
 class OrderManager(models.Manager):
@@ -566,14 +664,11 @@ class Order(BaseModel):
         blank=True,
         null=True,
     )
-
-    order_group = models.ForeignKey(
+    order_groups = models.ManyToManyField(
         OrderGroup,
         verbose_name=_("order group"),
         related_name="orders",
-        on_delete=models.SET_NULL,
         blank=True,
-        null=True,
     )
     target_courses = models.ManyToManyField(
         Course,
@@ -631,6 +726,14 @@ class Order(BaseModel):
     credit_card = models.ForeignKey(
         to="payment.CreditCard",
         verbose_name=_("credit card"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    voucher = models.ForeignKey(
+        to="Voucher",
+        verbose_name=_("voucher"),
         related_name="orders",
         on_delete=models.SET_NULL,
         blank=True,
@@ -838,48 +941,28 @@ class Order(BaseModel):
                     )
                 error_dict["__all__"].append(message)
 
-            if (
-                self.order_group_id
-                and self.order_group.course_product_relation.product_id
-                != self.product_id
-                and self.order_group.course_product_relation.course != course
-            ):
-                error_dict["order_group"].append(
-                    f"This order group does not apply to the product {product_title:s} "
-                    f"and the course {course_title}."
-                )
+            order_groups = OrderGroup.objects.find_assignables(
+                course_product_relation_id=course_product_relation.id
+            )
+            seats_limitation = None
+            for order_group in order_groups:
+                if order_group.nb_seats is not None:
+                    if order_group.available_seats == 0:
+                        seats_limitation = order_group
+                        continue
 
-            if course_product_relation and any(
-                order_group.is_enabled
-                for order_group in course_product_relation.order_groups.all()
-            ):
-                if not self.order_group_id or not self.order_group.is_enabled:
-                    error_dict["order_group"].append(
-                        f"An enabled order group is required for product {product_title:s}."
-                    )
-                elif (
-                    self.order_group.is_enabled
-                    and self.order_group.nb_seats is not None
-                ):
-                    if self.order_group.available_seats == 0:
-                        error_dict["order_group"].append(
-                            f"Maximum number of orders reached for product {product_title:s}"
-                        )
-            elif (
-                course_product_relation
-                and self.order_group
-                and not self.order_group.is_enabled
-            ):
+                    seats_limitation = None
+
+                if order_group.is_enabled:
+                    self.order_groups.add(order_group)
+
+            if seats_limitation:
                 error_dict["order_group"].append(
-                    f"This order group is not enabled for product {product_title:s} "
-                    "and does not accept any orders at the moment."
+                    f"Maximum number of orders reached for product {product_title:s}"
                 )
 
         if error_dict:
             raise ValidationError(error_dict)
-
-        if not self.created_on:
-            self.total = self.get_discounted_price()
 
         super().clean()
 
@@ -893,23 +976,24 @@ class Order(BaseModel):
         Return the total price considering the order group discount if it exists. Else, if
         there is no order group, the total price should be the full product price.
         """
-        if (
-            not self.order_group
-            or not self.order_group.is_enabled
-            or not self.order_group.discount
-        ):
-            return self.product.price
+        for order_group in self.order_groups.all():
+            price = Money(self.product.price)
+            if discount := order_group.discount:
+                discount_amount = (
+                    Money(discount.amount)
+                    if discount.amount
+                    else price * Rate(Number(discount.rate))
+                )
+                return round(Money(price - discount_amount).as_decimal(), 2)
 
-        price = Money(self.product.price)
-        discount = self.order_group.discount
+        return self.product.price
 
-        discount_amount = (
-            Money(discount.amount)
-            if discount.amount
-            else price * Rate(Number(discount.rate))
-        )
-
-        return round(Money(price - discount_amount).as_decimal(), 2)
+    def freeze_total(self):
+        """
+        Freeze the total of the order.
+        """
+        self.total = self.get_discounted_price()
+        self.save()
 
     def get_target_enrollments(self, is_active=None):
         """
@@ -1410,6 +1494,7 @@ class Order(BaseModel):
         """
         Transition order to assigned state, creates an invoice if needed and call the flow update.
         """
+        self.freeze_total()
         self.flow.assign()
         if not self.is_free:
             self._create_main_invoice(billing_address)
@@ -1622,3 +1707,169 @@ class Discount(BaseModel):
     def usage_count(self):
         """Returns the count of how many times a discount is used through order groups."""
         return self.order_groups.count()
+
+
+class Voucher(BaseModel):
+    """
+    Voucher model allows to define a voucher that can be associated to an order group and used
+    by a user to get a discount or access to a product.
+    """
+
+    class Meta:
+        db_table = "joanie_voucher"
+        verbose_name = _("Voucher")
+        verbose_name_plural = _("Vouchers")
+        ordering = ["created_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["code", "order_group"],
+                name="unique_code_order_group",
+                violation_error_message=(
+                    "A voucher with this code already exists for this order group."
+                ),
+            ),
+        ]
+
+    code = models.CharField(
+        _("code"),
+        help_text=_("Voucher code"),
+        max_length=255,
+        default=utils.generate_random_code,
+    )
+    order_group = models.ForeignKey(
+        to=OrderGroup,
+        verbose_name=_("order group"),
+        related_name="vouchers",
+        on_delete=models.CASCADE,
+    )
+    used_by = models.ManyToManyField(
+        to=User,
+        verbose_name=_("used by"),
+        related_name="vouchers",
+        blank=True,
+    )
+    single_use = models.BooleanField(
+        _("single use"),
+        help_text=_("Voucher can be used only once per user."),
+        default=False,
+    )
+    single_user = models.BooleanField(
+        _("single user"),
+        help_text=_("Voucher can be used by only one user."),
+        default=False,
+    )
+    is_usable = models.BooleanField(
+        _("is usable"),
+        help_text=_("Voucher is usable."),
+        default=True,
+    )
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code or str(self.order_group)
+
+    def use(self):
+        """
+        Use the voucher.
+        """
+        if not self.is_usable:
+            raise ValidationError("Voucher is not usable.")
+
+        self.is_usable = False
+        self.save(update_fields=["is_usable"])
+
+
+class PurchaseRequest(BaseModel):
+    """
+    Purchase Request models allows to define a group of seats an entity
+    wants to purchase for an offer.
+    # Bon de Commande in french
+    """
+    seats_reserved = models.PositiveSmallIntegerField(
+        verbose_name=_("seats_reserved"),
+        help_text=_("Seat amount"),
+        validators=[MinValueValidator(0)],
+    )
+    offer = models.ForeignKey(
+        to=CourseProductRelation,
+        verbose_name=_("purchase request for course product relation session"),
+        related_name="purchase_offers",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    reference_contact = models.ForeignKey(
+        to=User,
+        verbose_name=_("offer contact of reference"),
+        related_name="offer_references",
+        on_delete=models.RESTRICT,
+        db_index=True,
+    )
+
+    class Meta:
+        db_table = "joanie_purchase_request"
+        verbose_name = _("Purchase Request")
+        verbose_name_plural = _("Purchase Requests")
+        ordering = ["created_on"]
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class Quote(BaseModel):
+    """
+    Quote model allows to define the cost estimates for a certain offer.
+    # Devis in french
+    """
+    purchase_request = models.ForeignKey(
+        to=PurchaseRequest,
+        verbose_name=_("source purchase request"),
+        help_text=_("source of purchase request"),
+        on_delete=models.CASCADE,
+        blank=False,
+        null=False,
+    )
+    price = models.DecimalField(
+        _("price for quote"),
+        help_text=_("tax included"),
+        decimal_places=2,
+        default=0.00,
+        max_digits=9,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
+    )
+    payment_method =  models.CharField(
+        _("payment_method"), choices=enums.PAYMENT_METHODS, max_length=50
+    )
+    needs_contract =  models.BooleanField(
+        help_text=_(
+            "Ticked if the quote demands a contrat per student"
+        ),
+        verbose_name=_("needs a contract"),
+        default=False,
+    )
+    needs_convention = models.BooleanField(
+        help_text=_(
+            "Ticked if the quote demands a convention between organization, enterprise "
+            "and students."
+        ),
+        verbose_name=_("needs a convention"),
+        default=False,
+    )
+
+    class Meta:
+        db_table = "joanie_quote"
+        verbose_name = _("Quote")
+        verbose_name_plural = _("Quotes")
+        ordering = ["created_on"]
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)

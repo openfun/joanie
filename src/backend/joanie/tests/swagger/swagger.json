@@ -6126,10 +6126,14 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "order_group_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
+                    "order_groups": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "readOnly": true
                     },
                     "organization": {
                         "allOf": [
@@ -6205,6 +6209,7 @@
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice_reference",
+                    "order_groups",
                     "organization",
                     "owner",
                     "payment_schedule",
@@ -6380,11 +6385,6 @@
                         "format": "uuid",
                         "description": "primary key for the record as UUID"
                     },
-                    "order_group_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
-                    },
                     "product_id": {
                         "type": "string",
                         "format": "uuid",
@@ -6392,6 +6392,12 @@
                     },
                     "has_waived_withdrawal_right": {
                         "type": "boolean"
+                    },
+                    "voucher_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "writeOnly": true
                     }
                 },
                 "required": [
