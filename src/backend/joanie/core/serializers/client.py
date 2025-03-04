@@ -1182,6 +1182,13 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     has_waived_withdrawal_right = serializers.BooleanField()
+    voucher_id = serializers.SlugRelatedField(
+        queryset=models.Voucher.objects.all(),
+        slug_field="id",
+        source="voucher",
+        required=False,
+        write_only=True,
+    )
 
     class Meta:
         model = models.Order
@@ -1205,6 +1212,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_currency",
             "payment_schedule",
             "has_waived_withdrawal_right",
+            "voucher_id",
         ]
         read_only_fields = fields
 
@@ -1231,6 +1239,53 @@ class OrderSerializer(serializers.ModelSerializer):
         if organization_id:
             organization = get_object_or_404(models.Organization, id=organization_id)
             validated_data["organization"] = organization
+
+        try:
+            course_id = validated_data["course"].id
+        except KeyError:
+            course_id = validated_data["enrollment"].course_run.course_id
+
+        try:
+            product_id = validated_data["product"].id
+        except KeyError:
+            product_id = validated_data["enrollment"].course_run.product_id
+
+        filters = {"product": product_id, "course": course_id}
+        if organization_id:
+            filters.update({"organizations": organization_id})
+        course_product_relation = models.CourseProductRelation.objects.get(**filters)
+
+        order_groups = models.OrderGroup.objects.find_assignables(
+            course_product_relation_id=course_product_relation.id
+        )
+        seats_limitation = None
+        for order_group in order_groups:
+            if order_group.nb_seats is not None:
+                if order_group.available_seats == 0:
+                    seats_limitation = order_group
+                    continue
+
+                seats_limitation = None
+
+            if order_group.is_enabled:
+                if "order_groups" not in validated_data:
+                    validated_data["order_groups"] = []
+                validated_data["order_groups"].append(order_group)
+
+        if seats_limitation:
+            raise serializers.ValidationError(
+                {
+                    "order_group": [
+                        f"Maximum number of orders reached for "
+                        f"product {validated_data['product'].title:s}"
+                    ]
+                }
+            )
+
+        if voucher_code := self.initial_data.get("voucher_code"):
+            voucher = models.Voucher.objects.get(code=voucher_code)
+            voucher.use()
+            validated_data["voucher_id"] = voucher.id
 
         return super().create(validated_data)
 
