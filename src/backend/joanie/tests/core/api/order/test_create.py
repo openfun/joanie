@@ -2209,7 +2209,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_order_create_discount_voucher(self):
+    def test_api_order_create_discount_voucher_1(self):
         """
         Authenticated user wants to create an order with a voucher discount.
         """

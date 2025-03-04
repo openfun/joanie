@@ -48,6 +48,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         voucher = factories.VoucherFactory(
             order_group__discount=factories.DiscountFactory(rate=0.1),
             order_group__course_product_relation__product__price=100,
+            order_group__nb_seats=None,
         )
 
         response = self.post(voucher)

@@ -1245,15 +1245,45 @@ class OrderSerializer(serializers.ModelSerializer):
         except KeyError:
             course_id = validated_data["enrollment"].course_run.course_id
 
-        voucher_code = self.initial_data.get("voucher_code")
+        try:
+            product_id = validated_data["product"].id
+        except KeyError:
+            product_id = validated_data["enrollment"].course_run.product_id
 
-        order_group = models.OrderGroup.objects.find_assignable(
-            course_id, validated_data["product"].id, voucher_code
+        filters = {"product": product_id, "course": course_id}
+        if organization_id:
+            filters.update({"organizations": organization_id})
+        course_product_relation = models.CourseProductRelation.objects.get(**filters)
+
+        order_groups = models.OrderGroup.objects.find_assignables(
+            course_product_relation_id=course_product_relation.id
         )
-        validated_data["order_group"] = order_group
+        seats_limitation = None
+        for order_group in order_groups:
+            if order_group.nb_seats is not None:
+                if order_group.available_seats == 0:
+                    seats_limitation = order_group
+                    continue
 
-        if voucher_code and order_group and order_group.vouchers:
-            voucher = order_group.vouchers.get(code=voucher_code)
+                seats_limitation = None
+
+            if order_group.is_enabled:
+                if "order_groups" not in validated_data:
+                    validated_data["order_groups"] = []
+                validated_data["order_groups"].append(order_group)
+
+        if seats_limitation:
+            raise serializers.ValidationError(
+                {
+                    "order_group": [
+                        f"Maximum number of orders reached for "
+                        f"product {validated_data['product'].title:s}"
+                    ]
+                }
+            )
+
+        if voucher_code := self.initial_data.get("voucher_code"):
+            voucher = models.Voucher.objects.get(code=voucher_code)
             voucher.use()
             validated_data["voucher_id"] = voucher.id
 

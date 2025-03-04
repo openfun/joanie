@@ -293,20 +293,3 @@ class OrderGroupModelTestCase(TestCase):
                 order_group_3,
             ],
         )
-
-    def test_model_order_group_find_assignable_voucher_code(self):
-        """
-        Should return the order group linked to the given course and product
-        ordered by position.
-        """
-        relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
-            course_product_relation=relation,
-        )
-        voucher = factories.VoucherFactory(order_group=order_group)
-
-        applicable_order_group = OrderGroup.objects.find_assignables(
-            relation.id, voucher.code
-        )
-
-        self.assertEqual(applicable_order_group, [order_group])
