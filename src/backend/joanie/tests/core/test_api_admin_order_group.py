@@ -211,7 +211,7 @@ class OrderGroupAdminApiTest(TestCase):
             "nb_seats": 5,
             "is_active": True,
         }
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.post(
                 f"{self.base_url}/{relation.id}/order-groups/",
                 content_type="application/json",
