@@ -1398,7 +1398,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(13):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1444,7 +1444,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(13):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -2199,3 +2199,80 @@ class OrderCreateApiTest(BaseAPITestCase):
                 ]
             },
         )
+
+    def test_api_order_create_discount_voucher(self):
+        """
+        An order created with a voucher should have the total value of the discounted price.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory(product__price=100)
+        voucher = factories.VoucherFactory(
+            order_group__discount=factories.DiscountFactory(rate=0.1),
+            order_group__course_product_relation=relation,
+            order_group__nb_seats=1,
+            multiple_use=False,
+            multiple_users=False,
+        )
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+            "voucher_code": voucher.code,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+
+        order = models.Order.objects.get()
+        self.assertEqual(order.total, 90)
+        self.assertEqual(order.voucher, voucher)
+        voucher.refresh_from_db()
+        self.assertFalse(voucher.is_usable_by(order.owner))
+
+    def test_api_order_create_discount_voucher_unusable(self):
+        """
+        An order creation with a voucher that is already consumed should fail.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory(product__price=100)
+        voucher = factories.VoucherFactory(
+            order_group__discount=factories.DiscountFactory(rate=0.1),
+            order_group__course_product_relation=relation,
+            order_group__nb_seats=1,
+            multiple_use=False,
+            multiple_users=False,
+        )
+        factories.OrderFactory(
+            course=relation.course,
+            product=relation.product,
+            voucher=voucher,
+        )
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+            "voucher_code": voucher.code,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
