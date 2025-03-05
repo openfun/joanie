@@ -7,7 +7,9 @@ import collections.abc
 import hashlib
 import json
 import re
+import secrets
 
+from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 
 from configurations import values
@@ -218,3 +220,8 @@ class Echo:
     def write(self, value):
         """Write the value by returning it, instead of storing in a buffer."""
         return value
+
+
+def generate_random_code():
+    """Generate a random code."""
+    return get_random_string(18)
