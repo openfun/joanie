@@ -20,7 +20,7 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 from parler import models as parler_models
-from stockholm import Money, Number, Rate
+from stockholm import Money
 from urllib3.util import Retry
 
 from joanie.core import enums, utils
@@ -51,6 +51,7 @@ from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
     aggregate_course_runs_dates,
 )
+from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.signature.backends import get_signature_backend
 
@@ -714,6 +715,14 @@ class Order(BaseModel):
         blank=True,
         null=True,
     )
+    voucher = models.ForeignKey(
+        to="Voucher",
+        verbose_name=_("voucher"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         db_table = "joanie_order"
@@ -890,52 +899,6 @@ class Order(BaseModel):
                     )
                 )
 
-        # pylint: disable=no-member
-        if not self.created_on and (self.enrollment or self.course) and self.product:
-            course = self.course or self.enrollment.course_run.course
-            course_title = course.title
-            product_title = self.product.title
-
-            try:
-                filters = {"product": self.product_id, "course": course}
-                if self.organization_id:
-                    filters.update({"organizations": self.organization_id})
-                course_product_relation = CourseProductRelation.objects.get(**filters)
-            except ObjectDoesNotExist:
-                course_product_relation = None
-                if self.organization_id:
-                    message = _(
-                        f'This order cannot be linked to the product "{product_title}", '
-                        f'the course "{course_title}" and '
-                        f'the organization "{self.organization.title}".'
-                    )
-                else:
-                    message = _(
-                        f'This order cannot be linked to the product "{product_title}" and '
-                        f'the course "{course_title}".'
-                    )
-                error_dict["__all__"].append(message)
-
-            order_groups = OrderGroup.objects.find_actives(
-                course_product_relation_id=course_product_relation.id
-            )
-            seats_limitation = None
-            for order_group in order_groups:
-                if order_group.nb_seats is not None:
-                    if order_group.available_seats == 0:
-                        seats_limitation = order_group
-                        continue
-
-                    seats_limitation = None
-
-                if order_group.is_enabled:
-                    self.order_groups.add(order_group)
-
-            if seats_limitation:
-                error_dict["order_group"].append(
-                    f"Maximum number of orders reached for product {product_title:s}"
-                )
-
         if error_dict:
             raise ValidationError(error_dict)
 
@@ -951,15 +914,14 @@ class Order(BaseModel):
         Return the total price considering the order group discount if it exists. Else, if
         there is no order group, the total price should be the full product price.
         """
+        if self.voucher:
+            discount = self.voucher.discount or self.voucher.order_group.discount
+            if discount:
+                return calculate_price(self.product.price, discount)
+
         for order_group in self.order_groups.all():
-            price = Money(self.product.price)
             if discount := order_group.discount:
-                discount_amount = (
-                    Money(discount.amount)
-                    if discount.amount
-                    else price * Rate(Number(discount.rate))
-                )
-                return round(Money(price - discount_amount).as_decimal(), 2)
+                return calculate_price(self.product.price, discount)
 
         return self.product.price
 
@@ -1682,3 +1644,112 @@ class Discount(BaseModel):
     def usage_count(self):
         """Returns the count of how many times a discount is used through order groups."""
         return self.order_groups.count()
+
+
+class Voucher(BaseModel):
+    """
+    Voucher model allows to define a voucher that can be associated to an order group and used
+    by a user to get a discount or access to a product.
+    """
+
+    class Meta:
+        db_table = "joanie_voucher"
+        verbose_name = _("Voucher")
+        verbose_name_plural = _("Vouchers")
+        ordering = ["created_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["code", "order_group"],
+                name="unique_code_order_group",
+                violation_error_message=(
+                    "A voucher with this code already exists for this order group."
+                ),
+            ),
+            models.CheckConstraint(
+                check=models.Q(discount__isnull=False)
+                | models.Q(order_group__isnull=False),
+                name="voucher_discount_or_order_group_required",
+                violation_error_message="Voucher discount or order group is required.",
+            ),
+        ]
+
+    code = models.CharField(
+        _("code"),
+        help_text=_("Voucher code"),
+        max_length=255,
+        default=utils.generate_random_code,
+    )
+    order_group = models.ForeignKey(
+        to=OrderGroup,
+        verbose_name=_("order group"),
+        related_name="vouchers",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    discount = models.ForeignKey(
+        to=Discount,
+        verbose_name=_("discount"),
+        related_name="vouchers",
+        on_delete=models.RESTRICT,
+        blank=True,
+        null=True,
+    )
+    used_by = models.ManyToManyField(
+        to=User,
+        verbose_name=_("used by"),
+        related_name="vouchers",
+        blank=True,
+    )
+    multiple_use = models.BooleanField(
+        _("multiple use"),
+        help_text=_("Voucher can be used multiple times per user."),
+        default=False,
+    )
+    multiple_users = models.BooleanField(
+        _("multiple users"),
+        help_text=_("Voucher can be used by multiple users."),
+        default=False,
+    )
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code or str(self.order_group)
+
+    def is_usable_by(self, user):
+        """
+        Depending on the voucher configuration, check if the voucher can be used by the user.
+        """
+        # Voucher can be used multiple times by multiple users
+        if self.multiple_use and self.multiple_users:
+            return True
+
+        # No other user can use the voucher
+        if self.multiple_use:
+            return not self.used_by.exclude(pk=user.pk).exists()
+
+        # No other voucher can be used by the user
+        if self.multiple_users:
+            return not self.used_by.filter(pk=user.pk).exists()
+
+        # Voucher can be used only once by one user
+        return not self.used_by.exists()
+
+    def use(self, user):
+        """
+        Use the voucher.
+        """
+        if not self.is_usable_by(user):
+            raise ValidationError("Voucher is not usable.")
+
+        self.used_by.add(user)
+
+    def restore(self, user):
+        """
+        Restore the voucher.
+        """
+        self.used_by.remove(user)

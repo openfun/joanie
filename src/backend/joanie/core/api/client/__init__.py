@@ -466,16 +466,10 @@ class OrderViewSet(
             )
 
         # - Validate data then create an order
-        try:
-            self.perform_create(serializer)
-        except (DRFValidationError, IntegrityError):
-            return Response(
-                (
-                    f"Cannot create order related to the product {product.id} "
-                    f"and course {course.code}"
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-            )
+        self.perform_create(serializer)
+
+        if serializer.instance.voucher:
+            serializer.instance.voucher.use(serializer.instance.owner)
 
         serializer.instance.init_flow(
             billing_address=request.data.get("billing_address")
@@ -496,6 +490,8 @@ class OrderViewSet(
             )
 
         order.flow.cancel()
+        if order.voucher:
+            order.voucher.restore(order.owner)
         return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=True, methods=["GET"])
