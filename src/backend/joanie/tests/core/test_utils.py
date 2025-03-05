@@ -2,7 +2,7 @@
 
 from django.test import TestCase
 
-from joanie.core.utils import merge_dict
+from joanie.core.utils import generate_random_code, merge_dict
 
 
 class UtilsTestCase(TestCase):
@@ -16,3 +16,12 @@ class UtilsTestCase(TestCase):
             merge_dict(dict_1, dict_2),
             {"k1": {"k11": {"a": 0, "b": 10}, "k12": {"a": 3}}},
         )
+
+    def test_utils_generate_random_code(self):
+        """Generate a random code."""
+        code = generate_random_code()
+
+        self.assertIsInstance(code, str)
+        self.assertEqual(len(code), 18)
+        self.assertTrue(code.isalnum())
+        self.assertTrue(code.isascii())
