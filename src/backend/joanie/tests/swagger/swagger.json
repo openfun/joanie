@@ -6392,6 +6392,12 @@
                     },
                     "has_waived_withdrawal_right": {
                         "type": "boolean"
+                    },
+                    "voucher_code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Voucher code",
+                        "writeOnly": true
                     }
                 },
                 "required": [
