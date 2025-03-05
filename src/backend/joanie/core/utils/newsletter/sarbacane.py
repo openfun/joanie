@@ -4,15 +4,40 @@ Sarbacane API client.
 """
 
 import logging
+from http import HTTPStatus
 
 from django.conf import settings
 
 import requests
+from urllib3.util import Retry
 
 from joanie.core.utils.newsletter.base import NewsletterClient
 from joanie.core.utils.newsletter.subscription import (
     check_commercial_newsletter_subscription_webhook,
 )
+
+RETRY_STATUSES = [
+    HTTPStatus.INTERNAL_SERVER_ERROR,
+    HTTPStatus.BAD_GATEWAY,
+    HTTPStatus.SERVICE_UNAVAILABLE,
+    HTTPStatus.GATEWAY_TIMEOUT,
+    HTTPStatus.NOT_FOUND,
+]
+
+
+adapter = requests.adapters.HTTPAdapter(
+    max_retries=Retry(
+        total=3,
+        backoff_factor=0.1,
+        status_forcelist=RETRY_STATUSES,
+        allowed_methods=["GET"],
+        raise_on_status=False,
+    )
+)
+
+session = requests.Session()
+session.mount("http://", adapter)
+session.mount("https://", adapter)
 
 logger = logging.getLogger(__name__)
 
@@ -64,14 +89,14 @@ class Sarbacane(NewsletterClient):
         Call the Sarbacane API with the given payload.
         """
         if method == "POST":
-            response = requests.post(url, json=payload, headers=self.headers, timeout=5)
+            response = session.post(url, json=payload, headers=self.headers, timeout=15)
         elif method == "DELETE":
-            response = requests.delete(
-                url, params=query_params, json=payload, headers=self.headers, timeout=5
+            response = session.delete(
+                url, params=query_params, json=payload, headers=self.headers, timeout=15
             )
         else:
-            response = requests.get(
-                url, params=query_params, headers=self.headers, timeout=5
+            response = session.get(
+                url, params=query_params, headers=self.headers, timeout=15
             )
 
         return self._check_response_api(response, log_level)
