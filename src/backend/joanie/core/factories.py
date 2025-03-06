@@ -835,12 +835,18 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
     total = factory.LazyAttribute(lambda o: o.product.price)
     enrollment = None
     state = enums.ORDER_STATE_DRAFT
+    batch_order = None
+    voucher = None
 
     @factory.lazy_attribute
     def owner(self):
         """Retrieve the user from the enrollment when available or create a new one."""
         if self.enrollment:
             return self.enrollment.user
+
+        if self.state == enums.ORDER_STATE_TO_OWN:
+            return None
+
         return UserFactory(language="en-us")
 
     @factory.lazy_attribute
@@ -875,7 +881,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
                 extracted.save()
                 return extracted
 
-            if self.state != enums.ORDER_STATE_DRAFT:
+            if self.state not in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_TO_OWN]:
                 from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
                     InvoiceFactory,
                 )
@@ -1012,6 +1018,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         if self.state not in [
             enums.ORDER_STATE_DRAFT,
             enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_OWN,
         ]:
             self.state = enums.ORDER_STATE_DRAFT
 
@@ -1148,6 +1155,11 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             self.save()
             self.flow.refunded()
 
+        if self.state == enums.ORDER_STATE_TO_OWN:
+            self.batch_order = BatchOrderFactory()
+            self.voucher = VoucherFactory(discount=DiscountFactory(rate=1))
+            self.save()
+
     @factory.post_generation
     # pylint: disable=method-hidden
     def payment_schedule(self, create, extracted, **kwargs):
@@ -1176,6 +1188,62 @@ class OrderTargetCourseRelationFactory(
     order = factory.SubFactory(OrderFactory)
     course = factory.SubFactory(CourseFactory)
     position = factory.fuzzy.FuzzyInteger(0, 1000)
+
+
+class TraineeFactory(factory.DictFactory):
+    """Factory to create trainees for batch orders"""
+
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+
+
+class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """Factory for the Batch Order model"""
+
+    class Meta:
+        model = models.BatchOrder
+
+    relation = factory.SubFactory(
+        CourseProductRelationFactory,
+        product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+        product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
+    )
+    owner = factory.SubFactory(UserFactory)
+    identification_number = factory.Faker("random_number", digits=14, fix_len=True)
+    company_name = factory.Faker("word")
+    address = factory.Faker("street_address")
+    postcode = factory.Faker("postcode")
+    city = factory.Faker("city")
+    country = factory.Faker("country_code")
+    nb_seats = factory.fuzzy.FuzzyInteger(1, 20)
+
+    @factory.lazy_attribute
+    def organization(self):
+        """Retrieve the organization from the product/course relation."""
+        course_relations = self.relation.product.course_relations
+        return course_relations.first().organizations.order_by("?").first()
+
+    @factory.lazy_attribute
+    def total(self):
+        """Generate the total of the batch order from the product price and the number of seats"""
+        return self.nb_seats * self.relation.product.price
+
+    @factory.lazy_attribute
+    def trainees(self):
+        """
+        Prepare a list of dictionary with first name and last name of students.
+        We ensure that the length of trainees matches the number of seats.
+        """
+        return TraineeFactory.create_batch(self.nb_seats)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument
+    def order_groups(self, create, extracted, **kwargs):
+        """
+        Set order groups if any
+        """
+        if extracted:
+            self.order_groups.set(extracted)
 
 
 class AddressFactory(DebugModelFactory, factory.django.DjangoModelFactory):
