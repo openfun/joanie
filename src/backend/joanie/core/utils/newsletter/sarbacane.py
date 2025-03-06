@@ -27,8 +27,8 @@ RETRY_STATUSES = [
 
 adapter = requests.adapters.HTTPAdapter(
     max_retries=Retry(
-        total=3,
-        backoff_factor=0.1,
+        total=settings.SARBACANE_API_RETRY_TOTAL,
+        backoff_factor=settings.SARBACANE_API_RETRY_BACKOFF_FACTOR,
         status_forcelist=RETRY_STATUSES,
         allowed_methods=["GET"],
         raise_on_status=False,
