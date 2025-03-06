@@ -85,7 +85,10 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         factories.UserAddressFactory(owner=user)
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
-                order = factories.OrderGeneratorFactory(owner=user, state=state)
+                if state == enums.ORDER_STATE_TO_OWN:
+                    order = factories.OrderGeneratorFactory(state=state)
+                else:
+                    order = factories.OrderGeneratorFactory(owner=user, state=state)
                 token = self.get_user_token(user.username)
 
                 response = self.client.post(
@@ -103,6 +106,8 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
                         content[0],
                         "No contract definition attached to the contract's product.",
                     )
+                elif state == enums.ORDER_STATE_TO_OWN:
+                    self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
                     self.assertEqual(

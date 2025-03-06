@@ -16,6 +16,7 @@ from joanie.core.enums import (
     ORDER_STATE_REFUNDED,
     ORDER_STATE_REFUNDING,
     ORDER_STATE_SIGNING,
+    ORDER_STATE_TO_OWN,
     ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
     ORDER_STATE_TO_SIGN,
     PAYMENT_STATE_CANCELED,
@@ -26,6 +27,7 @@ from joanie.core.enums import (
 )
 from joanie.core.exceptions import InvalidConversionError
 from joanie.core.factories import OrderFactory, OrderGeneratorFactory
+from joanie.core.models import Contract
 from joanie.payment.models import Invoice, Transaction
 
 
@@ -433,3 +435,18 @@ class TestOrderFactory(TestCase):
 
         self.assertIsNotNone(order.invoices.all())
         self.assertEqual(Invoice.objects.filter(order=order).count(), 0)
+
+    def test_factory_order_state_to_own(self):
+        """
+        When we create an order with the state `to_own` with the OrderGeneratorFactory, we should
+        not have an owner, no payment schedule and no contract. Although, it should an organization
+        set, a voucher discount of 100% and is attached to a batch order.
+        """
+        order = OrderGeneratorFactory(state=ORDER_STATE_TO_OWN)
+
+        self.assertIsNone(order.owner)
+        self.assertFalse(Contract.objects.filter(order=order).exists())
+        self.assertEqual(order.payment_schedule, [])
+        self.assertTrue(order.organization)
+        self.assertEqual(order.voucher.discount.rate, 1)
+        self.assertIsNotNone(order.batch_order)

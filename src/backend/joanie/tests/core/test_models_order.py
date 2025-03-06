@@ -699,7 +699,10 @@ class OrderModelsTestCase(LoggingTestCase):
         factories.UserAddressFactory(owner=user)
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
-                order = factories.OrderGeneratorFactory(owner=user, state=state)
+                if state == enums.ORDER_STATE_TO_OWN:
+                    order = factories.OrderGeneratorFactory(state=state)
+                else:
+                    order = factories.OrderGeneratorFactory(owner=user, state=state)
 
                 if state in [enums.ORDER_STATE_TO_SIGN, enums.ORDER_STATE_SIGNING]:
                     order.submit_for_signature(user=user)
@@ -710,7 +713,11 @@ class OrderModelsTestCase(LoggingTestCase):
                     ):
                         order.submit_for_signature(user=user)
 
-                    if state in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_ASSIGNED]:
+                    if state in [
+                        enums.ORDER_STATE_DRAFT,
+                        enums.ORDER_STATE_ASSIGNED,
+                        enums.ORDER_STATE_TO_OWN,
+                    ]:
                         error_message = (
                             "No contract definition attached to the contract's product."
                         )
