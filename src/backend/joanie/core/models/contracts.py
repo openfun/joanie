@@ -93,8 +93,9 @@ class Contract(BaseModel):
         verbose_name=_("order"),
         on_delete=models.PROTECT,
         editable=False,
+        null=True,
+        blank=True,
     )
-
     # Set on contract generation
     definition_checksum = models.CharField(
         max_length=255, editable=False, blank=True, null=True

@@ -1464,3 +1464,53 @@ class VoucherFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     )
     multiple_use = False
     multiple_users = False
+
+
+class TraineeFactory(factory.DictFactory):
+    """Factory to create trainees for batch orders"""
+
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+
+
+class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """Factory for the Batch Order model"""
+
+    class Meta:
+        model = models.BatchOrder
+
+    relation = factory.SubFactory(
+        CourseProductRelationFactory,
+        product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+        product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
+    )
+    owner = factory.SubFactory(UserFactory)
+    identification_number = factory.Faker("random_number", digits=14, fix_len=True)
+    company_name = factory.Faker("word")
+    address = factory.Faker("street_address")
+    postcode = factory.Faker("postcode")
+    city = factory.Faker("city")
+    country = factory.Faker("country_code")
+    nb_seats = factory.fuzzy.FuzzyInteger(1, 20)
+    voucher = None
+    contract = None
+
+    @factory.lazy_attribute
+    def organization(self):
+        """Retrieve the organization from the product/course relation."""
+        course_relations = self.relation.product.course_relations
+        return course_relations.first().organizations.order_by("?").first()
+
+    @factory.lazy_attribute
+    def total(self):
+        """Generate the total of the batch order from the product price and the number of seats"""
+        return self.nb_seats * self.relation.product.price
+
+    # pylint: disable=unused-argument
+    @factory.lazy_attribute
+    def trainees(self):
+        """
+        Prepare a list of dictionary with first name and last name of students.
+        We ensure that the length of trainees matches the number of seats.
+        """
+        return TraineeFactory.create_batch(self.nb_seats)
