@@ -553,6 +553,14 @@ class Base(Configuration):
     SARBACANE_API_KEY = values.Value(
         None, environ_name="SARBACANE_API_KEY", environ_prefix=None
     )
+    # https://urllib3.readthedocs.io/en/stable/reference/urllib3.util.html?highlight=backoff_factor
+    # Use 0.25 factor as default [0s, 0.5s, 1s]
+    SARBACANE_API_RETRY_BACKOFF_FACTOR = values.Value(
+        0.25, environ_name="SARBACANE_API_RETRY_BACKOFF_FACTOR", environ_prefix=None
+    )
+    SARBACANE_API_RETRY_TOTAL = values.Value(
+        3, environ_name="SARBACANE_API_RETRY_TOTAL", environ_prefix=None
+    )
     SARBACANE_ACCOUNT_ID = values.Value(
         None, environ_name="SARBACANE_ACCOUNT_ID", environ_prefix=None
     )
