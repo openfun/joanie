@@ -59,6 +59,9 @@ CATALOG_VISIBILITY_CHOICES = (
 
 ORDER_STATE_DRAFT = "draft"  # order has been created
 ORDER_STATE_ASSIGNED = "assigned"  # order has been assigned to an organization
+ORDER_STATE_TO_OWN = (
+    "to_own"  # order is paid with batch order and doesn't have owner yet
+)
 ORDER_STATE_TO_SAVE_PAYMENT_METHOD = (
     "to_save_payment_method"  # order needs a payment method
 )
@@ -104,6 +107,12 @@ ORDER_STATE_CHOICES = (
     (
         ORDER_STATE_REFUNDED,
         pgettext_lazy("As in: the order payments are refunded", "Refunded"),
+    ),
+    (
+        ORDER_STATE_TO_OWN,
+        pgettext_lazy(
+            "As in: the order is paid through batch order but without owner", "To own"
+        ),
     ),
 )
 ORDER_STATE_ALLOW_ENROLLMENT = (
