@@ -10,6 +10,7 @@ from datetime import timedelta
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from django.db.models.functions import Lower
@@ -20,6 +21,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 import requests
+from django_countries.fields import CountryField
 from parler import models as parler_models
 from stockholm import Money
 from urllib3.util import Retry
@@ -97,7 +99,6 @@ class Product(parler_models.TranslatableModel, BaseModel):
     )
     price = models.DecimalField(
         _("price"),
-        help_text=_("tax included"),
         decimal_places=2,
         default=0.00,
         max_digits=9,
@@ -666,7 +667,6 @@ class Order(BaseModel):
     total = models.DecimalField(
         _("price"),
         editable=False,
-        help_text=_("tax included"),
         decimal_places=2,
         max_digits=9,
         default=0.00,
@@ -679,6 +679,8 @@ class Order(BaseModel):
         related_name="orders",
         on_delete=models.RESTRICT,
         db_index=True,
+        null=True,
+        blank=True,
     )
     _has_consent_to_terms = models.BooleanField(
         verbose_name=_("has consent to terms"),
@@ -719,6 +721,14 @@ class Order(BaseModel):
     voucher = models.ForeignKey(
         to="Voucher",
         verbose_name=_("voucher"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    batch_order = models.ForeignKey(
+        to="BatchOrder",
+        verbose_name=_("batch_order"),
         related_name="orders",
         on_delete=models.SET_NULL,
         blank=True,
@@ -899,10 +909,6 @@ class Order(BaseModel):
                         "The order cannot be created on course run that is in archived state."
                     )
                 )
-
-        if self.voucher and not self.created_on:
-            if not self.voucher.is_usable_by(self.owner.id):
-                error_dict["voucher"].append(_("The voucher is not usable."))
 
         if error_dict:
             raise ValidationError(error_dict)
@@ -1747,3 +1753,102 @@ class Voucher(BaseModel):
 
         # Voucher can be used only once by one user
         return not orders_queryset.exists()
+
+
+class BatchOrder(BaseModel):
+    """
+    BatchOrder allows to define a batch of orders to prepare.
+    """
+
+    class Meta:
+        db_table = "joanie_batch_order"
+        verbose_name = _("batch order")
+        verbose_name_plural = _("batch orders")
+        ordering = ["created_on"]
+
+    relation = models.ForeignKey(
+        to=CourseProductRelation,
+        verbose_name=_("course product relation batch orders"),
+        related_name="batch_orders",
+        on_delete=models.CASCADE,
+    )
+    organization = models.ForeignKey(
+        to=Organization,
+        verbose_name=_("organization"),
+        related_name="batch_orders",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    voucher = models.ForeignKey(
+        to=Voucher,
+        verbose_name=_("voucher"),
+        related_name="batch_orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    contract = models.ForeignKey(
+        to=Contract,
+        help_text=_("contract of type convention"),
+        verbose_name=_("contract"),
+        related_name="batch_orders",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    owner = models.ForeignKey(
+        to=User,
+        verbose_name=_("owner"),
+        related_name="batch_orders",
+        help_text=_("eligible person to sign the convention from the company"),
+        on_delete=models.RESTRICT,
+        db_index=True,
+    )
+    identification_number = models.CharField(
+        verbose_name=_("company identification number"),
+        help_text=_("company identification number like SIRET in France"),
+        max_length=255,
+    )
+    activity_declaration_number = models.CharField(
+        verbose_name=_("activity declaration number"),
+        help_text=_("company activity code number declared"),
+        max_length=255,
+    )
+    address = models.CharField(
+        verbose_name=_("address"), help_text=_("company address"), max_length=255
+    )
+    post_code = models.CharField(
+        verbose_name=_("postcode"), help_text=_("company postcode"), max_length=50
+    )
+    city = models.CharField(
+        verbose_name=_("city"), help_text=_("company city"), max_length=255
+    )
+    country = CountryField(verbose_name=_("company country"))
+    nb_seats = models.PositiveSmallIntegerField(
+        verbose_name=_("Number of seats"),
+        help_text=_("The number of seats to reserve"),
+        default=1,
+        validators=[MinValueValidator(1)],
+    )
+    total = models.DecimalField(
+        _("total"),
+        editable=False,
+        help_text=_("total price for orders"),
+        decimal_places=2,
+        max_digits=9,
+        default=0.00,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
+    )
+    trainees = models.JSONField(
+        verbose_name=_("trainees"),
+        help_text=_("trainees name list"),
+        editable=True,
+        encoder=DjangoJSONEncoder,
+    )
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
