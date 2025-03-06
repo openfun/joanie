@@ -10,8 +10,10 @@ from datetime import timedelta
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
+from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.functions import Lower
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -20,6 +22,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 import requests
+from django_countries.fields import CountryField
 from parler import models as parler_models
 from stockholm import Money
 from urllib3.util import Retry
@@ -30,6 +33,7 @@ from joanie.core.fields.schedule import (
     OrderPaymentScheduleDecoder,
     OrderPaymentScheduleEncoder,
 )
+from joanie.core.flows.batch_order import BatchOrderFlow
 from joanie.core.flows.order import OrderFlow
 from joanie.core.models.accounts import Address, User
 from joanie.core.models.activity_logs import ActivityLog
@@ -48,6 +52,7 @@ from joanie.core.utils import (
     contract_definition as contract_definition_utility,
 )
 from joanie.core.utils import issuers, webhooks
+from joanie.core.utils.billing_address import CompanyBillingAddress
 from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
     aggregate_course_runs_dates,
@@ -97,7 +102,6 @@ class Product(parler_models.TranslatableModel, BaseModel):
     )
     price = models.DecimalField(
         _("price"),
-        help_text=_("tax included"),
         decimal_places=2,
         default=0.00,
         max_digits=9,
@@ -725,7 +729,6 @@ class Order(BaseModel):
     total = models.DecimalField(
         _("price"),
         editable=False,
-        help_text=_("tax included"),
         decimal_places=2,
         max_digits=9,
         default=0.00,
@@ -738,6 +741,8 @@ class Order(BaseModel):
         related_name="orders",
         on_delete=models.RESTRICT,
         db_index=True,
+        null=True,
+        blank=True,
     )
     _has_consent_to_terms = models.BooleanField(
         verbose_name=_("has consent to terms"),
@@ -778,6 +783,14 @@ class Order(BaseModel):
     voucher = models.ForeignKey(
         to="Voucher",
         verbose_name=_("voucher"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    batch_order = models.ForeignKey(
+        to="BatchOrder",
+        verbose_name=_("batch_order"),
         related_name="orders",
         on_delete=models.SET_NULL,
         blank=True,
@@ -1806,3 +1819,361 @@ class Voucher(BaseModel):
 
         # Voucher can be used only once by one user
         return not orders_queryset.exists()
+
+
+class BatchOrder(BaseModel):
+    """
+    BatchOrder allows to define a batch of orders to prepare.
+    """
+
+    class Meta:
+        db_table = "joanie_batch_order"
+        verbose_name = _("batch order")
+        verbose_name_plural = _("batch orders")
+        ordering = ["created_on"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(state=enums.BATCH_ORDER_STATE_DRAFT)
+                | models.Q(organization__isnull=False),
+                name="required_organization_if_not_draft",
+                violation_error_message="BatchOrder requires organization unless in draft state.",
+            ),
+        ]
+
+    relation = models.ForeignKey(
+        to=CourseProductRelation,
+        verbose_name=_("course product relation batch orders"),
+        related_name="batch_orders",
+        on_delete=models.CASCADE,
+    )
+    organization = models.ForeignKey(
+        to=Organization,
+        verbose_name=_("organization"),
+        related_name="batch_orders",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    voucher = models.ForeignKey(
+        to=Voucher,
+        verbose_name=_("voucher"),
+        related_name="batch_orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    contract = models.ForeignKey(
+        to=Contract,
+        help_text=_("contract of type convention"),
+        verbose_name=_("contract"),
+        related_name="batch_orders",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    owner = models.ForeignKey(
+        to=User,
+        verbose_name=_("owner"),
+        related_name="batch_orders",
+        help_text=_("eligible person to sign the convention from the company"),
+        on_delete=models.RESTRICT,
+        db_index=True,
+    )
+    identification_number = models.CharField(
+        verbose_name=_("company identification number"),
+        help_text=_("company identification number like SIRET in France"),
+        max_length=255,
+    )
+    company_name = models.CharField(
+        verbose_name=_("company name"),
+        help_text=_("company name"),
+        max_length=255,
+    )
+    address = models.CharField(
+        verbose_name=_("address"), help_text=_("company address"), max_length=255
+    )
+    postcode = models.CharField(
+        verbose_name=_("postcode"), help_text=_("company postcode"), max_length=50
+    )
+    city = models.CharField(
+        verbose_name=_("city"), help_text=_("company city"), max_length=255
+    )
+    country = CountryField(verbose_name=_("company country"))
+    nb_seats = models.PositiveSmallIntegerField(
+        verbose_name=_("Number of seats"),
+        help_text=_("The number of seats to reserve"),
+        default=1,
+        validators=[MinValueValidator(1)],
+    )
+    trainees = models.JSONField(
+        verbose_name=_("trainees"),
+        help_text=_("trainees name list"),
+        editable=True,
+        blank=True,
+        null=True,
+        encoder=DjangoJSONEncoder,
+        default=list,
+    )
+    total = models.DecimalField(
+        _("total"),
+        editable=False,
+        help_text=_("total price for orders"),
+        decimal_places=2,
+        max_digits=9,
+        default=0.00,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
+    )
+    state = models.CharField(
+        default=enums.BATCH_ORDER_STATE_DRAFT,
+        choices=enums.BATCH_ORDER_STATE_CHOICES,
+        db_index=True,
+    )
+
+    # pylint:disable=no-member
+    def clean(self):
+        """
+        Ensure that the number of reserved seats (`nb_seats`) matches the number of trainees
+        in the `trainees` list when saving a BatchOrder instance.
+        """
+        if len(self.trainees) != self.nb_seats:
+            raise ValidationError(
+                _("The number of trainees must match the number of seats.")
+            )
+
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        """Initiate Batch Order object"""
+        super().__init__(*args, **kwargs)
+        self.flow = BatchOrderFlow(self)
+
+    def init_flow(self):
+        """
+        Transition batch order to assigned state, creates a main invoice,
+        generates a contract.
+        """
+        if not self.organization:
+            self.organization = self.get_organization_with_least_active_orders()
+
+        self.set_total()
+        self.create_main_invoice()
+
+        # Generate the contract
+        if self.relation.product.contract_definition and not self.contract:
+            self.contract = Contract.objects.create(
+                definition=self.relation.product.contract_definition
+            )
+        self.flow.update()
+        self.save()
+
+    def set_total(self):
+        """Compute the total price for the batch order whether there is a discount."""
+        price_per_seat = Money(self.relation.product.price).as_decimal()
+        total = round(self.nb_seats * price_per_seat, 2)
+
+        if self.voucher:
+            discount = self.voucher.discount or self.voucher.order_group.discount
+            self.total = calculate_price(total, discount)
+        else:
+            self.total = total
+
+    def get_organization_with_least_active_orders(self):
+        """
+        Get the organization with the least active orders to assign it to the batch order.
+        """
+        order_count_filter = Q(order__product=self.relation.product) & ~Q(
+            order__state__in=[
+                enums.ORDER_STATE_DRAFT,
+                enums.ORDER_STATE_ASSIGNED,
+                enums.ORDER_STATE_CANCELED,
+            ]
+        )
+        order_count_filter &= Q(order__course=self.relation.course)
+
+        organizations = self.relation.organizations.annotate(
+            order_count=Count("order", filter=order_count_filter, distinct=True),
+            is_author=Exists(
+                Organization.objects.filter(
+                    pk=OuterRef("pk"), courses__id=self.relation.course_id
+                )
+            ),
+        )
+
+        return organizations.order_by("order_count", "-is_author", "?").first()
+
+    # pylint: disable=no-member
+    def submit_for_signature(self, user: User):
+        """
+        Submit the contract of type convention to signature if it has not been submitted yet.
+        In the cases where it has been submitted to signature but it has not been signed yet,
+        if the context has changed, we will resubmit the refresh version of the contract
+        of type convention. Also, if the document's validity has been reached, we will resubmit
+        a newer version for it to be eligble to be signed.
+        """
+        if not self.relation.product.contract_definition_id:
+            message = "No contract definition attached to the contract's product."
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                        "relation__product": self.relation.product.to_dict(),
+                    }
+                },
+            )
+            raise ValidationError(message)
+
+        if self.state == enums.BATCH_ORDER_STATE_DRAFT:
+            raise ValidationError(
+                _(
+                    f"Your batch order cannot be submitted for signature, state: {self.state}"
+                )
+            )
+
+        if self.contract.student_signed_on:
+            message = "Contract is already signed by the buyer, cannot resubmit."
+            logger.error(
+                message, extra={"context": {"contract": self.contract.to_dict()}}
+            )
+            raise PermissionDenied(message)
+
+        contract_definition = self.relation.product.contract_definition
+        context = contract_definition_utility.generate_document_context(
+            contract_definition=contract_definition,
+            user=user,
+            batch_order=self,
+        )
+        context_with_images = embed_images_in_context(context)
+        file_bytes = issuers.generate_document(
+            name=contract_definition.name, context=context_with_images
+        )
+
+        was_already_submitted = (
+            self.contract.submitted_for_signature_on
+            and self.contract.signature_backend_reference
+        )
+        should_be_resubmitted = was_already_submitted and (
+            not self.contract.is_eligible_for_signing()
+            or self.contract.context != context
+        )
+
+        backend_signature = get_signature_backend()
+
+        if should_be_resubmitted:
+            backend_signature.delete_signing_procedure(
+                self.contract.signature_backend_reference
+            )
+
+        if should_be_resubmitted or not was_already_submitted:
+            now = timezone.now()
+            reference, checksum = backend_signature.submit_for_signature(
+                title=f"{now.strftime('%Y-%m-%d')}_{self.relation.course.code}_{self.pk}",
+                file_bytes=file_bytes,
+                batch_order=self,
+            )
+            self.contract.tag_submission_for_signature(
+                reference, checksum, context, is_batch_order=True
+            )
+            self.flow.update()
+
+        return backend_signature.get_signature_invitation_link(
+            self.owner.email, [self.contract.signature_backend_reference]
+        )
+
+    def generate_orders(self):
+        """
+        Generate orders and vouchers once the batch order has been paid.
+        """
+        if self.state != enums.BATCH_ORDER_STATE_COMPLETED:
+            message = "The batch order is not yet paid."
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                        "relation": self.relation.to_dict(),
+                    }
+                },
+            )
+            raise ValidationError(message)
+
+        orders = [
+            Order.objects.create(
+                owner=None,
+                product_id=self.relation.product_id,
+                course_id=self.relation.course_id,
+                organization_id=self.organization.id,
+            )
+            for _ in range(self.nb_seats)
+        ]
+
+        self.orders.set(orders)
+        self.save()
+
+        return orders
+
+    def generate_vouchers(self):
+        """Generate a voucher for each the prepared order"""
+        if not self.orders.exists():
+            message = (
+                "You should first generate the orders before generating the vouchers"
+            )
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                    }
+                },
+            )
+            raise ValidationError(message)
+
+        # Create discount of 100 % because the batch order is paid in advance
+        discount = Discount.objects.create(rate=1)
+
+        vouchers = [
+            Voucher.objects.create(
+                discount=discount, multiple_use=False, multiple_users=False
+            )
+            for order in range(len(self.orders.all()))
+        ]
+
+        return vouchers
+
+    def create_billing_address(self):
+        """
+        Create a billing address for the batch order
+        """
+        return CompanyBillingAddress(
+            address=self.address,
+            postcode=self.postcode,
+            city=self.city,
+            country=self.country,
+            language=self.owner.language,
+            first_name=self.owner.first_name,
+            last_name="",
+        )
+
+    def create_main_invoice(self):
+        """
+        Create the main invoice for the batch order.
+        """
+        Invoice = apps.get_model("payment", "Invoice")  # pylint: disable=invalid-name
+        Invoice.objects.create(batch_order=self, total=self.total)
+
+    @cached_property
+    def main_invoice(self) -> dict | None:
+        """
+        Return main batch_order's invoice. It corresponds to the only invoice related
+        to the batch order without parent.
+        """
+        try:
+            return self.invoices.get(parent__isnull=True)
+        except ObjectDoesNotExist:
+            return None
