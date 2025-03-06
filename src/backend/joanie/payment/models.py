@@ -56,8 +56,16 @@ class Invoice(BaseModel):
         verbose_name=_("order"),
         related_name="invoices",
         on_delete=models.PROTECT,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
+    )
+    batch_order = models.ForeignKey(
+        to="core.BatchOrder",
+        verbose_name=_("batch order"),
+        related_name="invoices",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
     )
     total = models.DecimalField(
         _("total"),
@@ -71,6 +79,8 @@ class Invoice(BaseModel):
         verbose_name=_("invoice address"),
         related_name="invoices",
         on_delete=models.RESTRICT,
+        blank=True,
+        null=True,
     )
     localized_context = models.JSONField(
         _("context"),
@@ -183,7 +193,9 @@ class Invoice(BaseModel):
         """
 
         context = {}
-        related_product = self.order.product
+        related_product = (
+            self.order.product if self.order else self.batch_order.relation.product
+        )
         for language, __ in settings.LANGUAGES:
             with switch_language(related_product, language):
                 context[language] = {
@@ -247,7 +259,8 @@ class Invoice(BaseModel):
         Generate a normalized reference related to the date
         and the related order
         """
-        order_uid_fragment = str(self.order.id).split("-", maxsplit=1)[0]
+        order_uid = self.order.id if self.order else self.batch_order.id
+        order_uid_fragment = str(order_uid).split("-", maxsplit=1)[0]
         timestamp = int(timezone.now().timestamp() * 1_000)  # Time in milliseconds
 
         return f"{order_uid_fragment}-{timestamp}"
