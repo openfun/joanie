@@ -9,6 +9,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 import markdown
+from django_countries.serializer_fields import CountryField
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import exceptions, serializers
 from rest_framework.generics import get_object_or_404
@@ -1300,3 +1301,135 @@ class OrderSerializer(serializers.ModelSerializer):
         Return the currency used
         """
         return settings.DEFAULT_CURRENCY
+
+
+class BatchOrderSerializer(serializers.ModelSerializer):
+    """BatchOrder client serializer"""
+
+    id = serializers.CharField(read_only=True)
+    owner = serializers.CharField(
+        source="owner.username", read_only=True, required=False
+    )
+    total = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        required=False,
+    )
+    currency = serializers.SerializerMethodField(read_only=True)
+    relation_id = serializers.SlugRelatedField(
+        queryset=models.CourseProductRelation.objects.all(),
+        slug_field="id",
+        source="relation",
+        required=False,
+        write_only=False,
+    )
+    organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
+    main_invoice_reference = serializers.SlugRelatedField(
+        read_only=True, slug_field="reference", source="main_invoice"
+    )
+    voucher = serializers.SlugRelatedField(
+        queryset=models.Voucher.objects.all(),
+        slug_field="code",
+        required=False,
+        write_only=True,
+    )
+    country = CountryField(required=False)
+    nb_seats = serializers.IntegerField(
+        min_value=1,
+        help_text="The number of seats to reserve",
+    )
+    trainees = serializers.JSONField(default=list)
+    order_group_ids = serializers.SlugRelatedField(
+        source="order_groups",
+        many=True,
+        slug_field="id",
+        required=False,
+        read_only=True,
+    )
+
+    class Meta:
+        model = models.BatchOrder
+        fields = [
+            "id",
+            "owner",
+            "total",
+            "currency",
+            "relation_id",
+            "organization",
+            "main_invoice_reference",
+            "contract_id",
+            "voucher",
+            "company_name",
+            "identification_number",
+            "address",
+            "postcode",
+            "city",
+            "country",
+            "nb_seats",
+            "trainees",
+            "order_group_ids",
+        ]
+        read_only_fields = [
+            "id",
+            "owner",
+            "total",
+            "currency",
+            "organization",
+            "main_invoice_reference",
+            "contract_id",
+            "order_group_ids",
+        ]
+
+    def get_currency(self, *args, **kwargs) -> str:
+        """
+        Return the currency used
+        """
+        return settings.DEFAULT_CURRENCY
+
+    def create(self, validated_data):
+        """
+        Verify that the number of available seats in order groups of the course product relation
+        is sufficient to meet the required seats specified in the batch order.
+        """
+        organization_id = self.initial_data.get("organization_id")
+        if organization_id:
+            organization = get_object_or_404(models.Organization, id=organization_id)
+            validated_data["organization"] = organization
+
+        course_product_relation_id = self.initial_data.get("relation_id")
+        nb_seats = self.initial_data.get("nb_seats")
+
+        order_groups = models.OrderGroup.objects.find_actives(
+            course_product_relation_id=course_product_relation_id
+        )
+        seats_limitation = None
+        for order_group in order_groups:
+            if order_group.nb_seats is not None:
+                if order_group.available_seats < nb_seats:
+                    seats_limitation = order_group
+                    continue
+
+                seats_limitation = None
+
+            if order_group.is_enabled:
+                if "order_groups" not in validated_data:
+                    validated_data["order_groups"] = []
+                validated_data["order_groups"].append(order_group)
+
+        if seats_limitation:
+            relation = models.CourseProductRelation.objects.get(
+                id=course_product_relation_id
+            )
+            raise serializers.ValidationError(
+                {
+                    "order_group": [
+                        "Maximum number of orders reached for "
+                        f"product {relation.product.title:s}"
+                    ]
+                }
+            )
+
+        return super().create(validated_data)
