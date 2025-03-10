@@ -158,13 +158,14 @@ def generate_zip_archive(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) ->
     return zip_archive_name
 
 
-def order_has_organization_owner(order) -> bool:
+def order_has_organization_owner(order, batch_order) -> bool:
     """
     Returns True whether we can find at least one organization owner
     with the appropriate access rights, otherwise we return False.
     """
+    organization = order.organization if order else batch_order.organization
     return OrganizationAccess.objects.filter(
-        organization=order.organization, role=enums.OWNER
+        organization=organization, role=enums.OWNER
     ).exists()
 
 

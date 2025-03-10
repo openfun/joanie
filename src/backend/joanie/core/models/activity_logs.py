@@ -50,7 +50,8 @@ class ActivityLogContextField(models.JSONField):
         """
         Validate the context field for a payment type activity log
         """
-        if "order_id" not in value:
+        payment_context = value not in ["order_id", "batch_order_id"]
+        if not payment_context:
             raise ValidationError("The context field must have an order_id")
 
 
@@ -87,38 +88,55 @@ class ActivityLog(BaseModel):
         verbose_name_plural = _("activity_logs")
 
     @classmethod
-    def create_payment_succeeded_activity_log(cls, order):
+    def create_payment_succeeded_activity_log(cls, order, is_batch=False):
         """
         Create a payment succeeded activity log
         """
+        context = (
+            {"order_id": str(order.id)}
+            if not is_batch
+            else {"batch_order_id": str(order.id)}
+        )
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
-            context={"order_id": str(order.id)},
+            context=context,
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
         )
 
     @classmethod
-    def create_payment_failed_activity_log(cls, order):
+    def create_payment_failed_activity_log(cls, order, is_batch=False):
         """
         Create a payment failed activity log
         """
+        context = (
+            {"order_id": str(order.id)}
+            if not is_batch
+            else {"batch_order_id": str(order.id)}
+        )
+
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_ERROR,
-            context={"order_id": str(order.id)},
+            context=context,
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
         )
 
     @classmethod
-    def create_payment_refunded_activity_log(cls, order):
+    def create_payment_refunded_activity_log(cls, order, is_batch=False):
         """
         Create a payment refunded activity log
         """
+        context = (
+            {"order_id": str(order.id)}
+            if not is_batch
+            else {"batch_order_id": str(order.id)}
+        )
+
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
-            context={"order_id": str(order.id)},
+            context=context,
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED,
         )
 

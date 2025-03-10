@@ -930,6 +930,17 @@ class CourseProductRelationSerializer(CourseProductRelationLightSerializer):
         read_only_fields = fields
 
 
+class CourseProductRelationLightSerializerNoOrg(CourseProductRelationLightSerializer):
+    """Course Product Relation serializer without organization for batch order serializer"""
+
+    class Meta(CourseProductRelationLightSerializer.Meta):
+        fields = [
+            field
+            for field in CourseProductRelationLightSerializer.Meta.fields
+            if field not in ["organizations", "is_withdrawable"]
+        ]
+
+
 class ProductRelationSerializer(CachedModelSerializer):
     """
     Serialize a course product relation.
@@ -1296,6 +1307,102 @@ class OrderSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def get_total_currency(self, *args, **kwargs) -> str:
+        """
+        Return the currency used
+        """
+        return settings.DEFAULT_CURRENCY
+
+
+class BatchOrderSerializer(serializers.ModelSerializer):
+    """BatchOrder client serializer"""
+
+    id = serializers.CharField(read_only=True)
+    owner = serializers.CharField(
+        source="owner.username", read_only=True, required=False
+    )
+    total = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        required=False,
+    )
+    currency = serializers.SerializerMethodField(read_only=True)
+    relation_id = serializers.SlugRelatedField(
+        queryset=models.CourseProductRelation.objects.all(),
+        slug_field="id",
+        source="relation",
+        required=False,
+        write_only=True,
+    )
+    relation = CourseProductRelationLightSerializerNoOrg(read_only=True)
+    organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
+    main_invoice_reference = serializers.SlugRelatedField(
+        read_only=True, slug_field="reference", source="main_invoice"
+    )
+    contract_id = serializers.SlugRelatedField(
+        queryset=models.Contract.objects.all(),
+        slug_field="id",
+        source="contract",
+        required=False,
+    )
+    voucher = serializers.SlugRelatedField(
+        queryset=models.Voucher.objects.all(),
+        slug_field="code",
+        required=False,
+        write_only=True,
+    )
+    company_name = serializers.CharField(max_length=255)
+    identification_number = serializers.CharField(max_length=255)
+    address = serializers.CharField(max_length=255)
+    postcode = serializers.CharField(max_length=50)
+    city = serializers.CharField(max_length=255)
+    country = serializers.ChoiceField(
+        required=False,
+        choices=models.BatchOrder._meta.get_field("country").choices,
+        default=models.BatchOrder._meta.get_field("country").default,
+        help_text=models.BatchOrder._meta.get_field("country").help_text,
+    )
+    nb_seats = serializers.IntegerField(
+        min_value=1,
+        help_text="The number of seats to reserve",
+    )
+    trainees = serializers.JSONField(default=list)
+
+    class Meta:
+        model = models.BatchOrder
+        fields = [
+            "id",
+            "owner",
+            "total",
+            "currency",
+            "relation",
+            "relation_id",
+            "organization",
+            "main_invoice_reference",
+            "contract_id",
+            "voucher",
+            "company_name",
+            "identification_number",
+            "address",
+            "postcode",
+            "city",
+            "country",
+            "nb_seats",
+            "trainees",
+        ]
+        read_only_fields = [
+            "id",
+            "owner",
+            "total",
+            "currency",
+            "organization",
+            "main_invoice_reference",
+            "contract_id",
+        ]
+
+    def get_currency(self, *args, **kwargs) -> str:
         """
         Return the currency used
         """

@@ -56,6 +56,7 @@ router.register("users", api_client.UserViewSet, basename="users")
 router.register(
     "activity-logs", api_client.ActivityLogViewSet, basename="activity-logs"
 )
+router.register("batch-orders", api_client.BatchOrderViewSet, basename="batch-orders")
 
 # - Routes nested under a course
 course_related_router = DefaultRouter()

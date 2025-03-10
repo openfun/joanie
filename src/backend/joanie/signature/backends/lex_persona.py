@@ -32,50 +32,57 @@ class LexPersonaBackend(BaseSignatureBackend):
         "TOKEN",
     ]
 
-    def _prepare_recipient_data_for_student_signer(
-        self, order: models.Order
+    def _prepare_recipient_data_for_buyer_signer(
+        self,
+        order=None,
+        batch_order=None,
     ) -> list[dict]:
         """
         Prepare recipient data of a user in order to include it in the creation payload of a
         signature procedure of a file. It returns a dictionary containing signer's information.
         """
-        try:
-            country = order.main_invoice.recipient_address.country.code
-        except AttributeError:
-            country = settings.JOANIE_DEFAULT_COUNTRY_CODE
+        owner = order.owner if order else batch_order.owner
+        if order:
+            try:
+                country = order.main_invoice.recipient_address.country.code
+            except AttributeError:
+                country = settings.JOANIE_DEFAULT_COUNTRY_CODE
+        else:
+            country = batch_order.country.code
 
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
 
         return [
             {
-                "email": order.owner.email,
-                "firstName": order.owner.first_name,
+                "email": owner.email,
+                "firstName": owner.first_name,
                 # Currently, we only have the `full_name` from OpenEdx that we set in the user's
                 # `first_name` in Joanie. We don't have yet the `last_name` and `first_name` that
                 # are separated in our database. In order to prepare the awaited payload for the
                 # signature provider, we set a dot : ".", for the `lastName` key.
                 "lastName": ".",
                 "country": country.upper(),
-                "preferred_locale": order.owner.language.lower(),
+                "preferred_locale": owner.language.lower(),
                 "consentPageId": consent_page_id,
             }
         ]
 
     def _prepare_recipient_data_for_organization_signer(
-        self, order: models.Order
+        self, order=None, batch_order=None
     ) -> list[dict]:
         """
         Prepare recipient data of an organization in order to include it in the creation payload
         of a signature procedure of a file. It returns a dictionary containing signer's information.
         """
+        organization = order.organization if order else batch_order.organization
         try:
             country = order.organization.country.code
         except AttributeError:
             country = settings.JOANIE_DEFAULT_COUNTRY_CODE
-
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
         accesses = models.OrganizationAccess.objects.filter(
-            organization=order.organization, role=enums.OWNER
+            organization=organization,
+            role=enums.OWNER,
         )
 
         return [
@@ -391,14 +398,20 @@ class LexPersonaBackend(BaseSignatureBackend):
 
         return response.json()
 
-    def submit_for_signature(self, title: str, file_bytes: bytes, order: models.Order):
+    def submit_for_signature(
+        self,
+        title: str,
+        file_bytes: bytes,
+        order=None,
+        batch_order=None,
+    ):
         """
         Convenience method that wraps the signature procedure creation, file upload, and start
         the signing procedure.
         It returns the signature backend reference and the hash of the file from the signature
         provider.
         """
-        if not order_has_organization_owner(order=order):
+        if not order_has_organization_owner(order=order, batch_order=batch_order):
             error_msg = (
                 "No organization owner found to initiate "
                 f"the signature process for order {order.id}."
@@ -406,12 +419,16 @@ class LexPersonaBackend(BaseSignatureBackend):
             logger.warning(error_msg)
             raise ValidationError(error_msg)
 
-        student_recipient_data = self._prepare_recipient_data_for_student_signer(order)
+        buyer_recipient_data = self._prepare_recipient_data_for_buyer_signer(
+            order=order, batch_order=batch_order
+        )
         organization_recipient_data = (
-            self._prepare_recipient_data_for_organization_signer(order)
+            self._prepare_recipient_data_for_organization_signer(
+                order=order, batch_order=batch_order
+            )
         )
         reference_id = self._create_workflow(
-            title, student_recipient_data, organization_recipient_data
+            title, buyer_recipient_data, organization_recipient_data
         )
         file_hash = self._upload_file_to_workflow(file_bytes, reference_id)
         self._start_procedure(reference_id=reference_id)
@@ -583,15 +600,22 @@ class LexPersonaBackend(BaseSignatureBackend):
         If the parameter `with_payload_student` is set to `True`, the student and organization
         signatories steps are prepared, else, only the organization's step is prepared.
         """
-        order = models.Order.objects.get(
-            contract__signature_backend_reference=reference_id
-        )
+        order = None
+        batch_order = None
+        try:
+            order = models.Order.objects.get(
+                contract__signature_backend_reference=reference_id
+            )
+        except models.Order.DoesNotExist:
+            batch_order = models.BatchOrder.objects.get(
+                contract__signature_backend_reference=reference_id
+            )
         payload_organization_signatories = {
             "steps": [
                 {
                     "stepType": "signature",
                     "recipients": self._prepare_recipient_data_for_organization_signer(
-                        order
+                        order=order, batch_order=batch_order
                     ),
                     "requiredRecipients": 1,
                     "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
@@ -611,8 +635,8 @@ class LexPersonaBackend(BaseSignatureBackend):
             "steps": [
                 {
                     "stepType": "signature",
-                    "recipients": self._prepare_recipient_data_for_student_signer(
-                        order
+                    "recipients": self._prepare_recipient_data_for_buyer_signer(
+                        order=order, batch_order=batch_order
                     ),
                     "requiredRecipients": 1,
                     "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
