@@ -1852,3 +1852,65 @@ class BatchOrder(BaseModel):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+    # pylint: disable=no-member
+    def submit_for_signature(self, user: User):
+        """
+        Submit the contract of type convention to signature if it has not been submitted yet.
+        In the cases where it has been submitted to signature but it has not been signed yet,
+        if the context has changed, we will resubmit the refresh version of the contract
+        of type convention. Also, if the document's validity has been reached, we will resubmit
+        a newer version for it to be eligble to be signed.
+        """
+        if not self.relation.product.contract_definition_id:
+            message = "No contract definition attached to the contract's product."
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                        "relation__product": self.relation.product.to_dict(),
+                    }
+                },
+            )
+            raise ValidationError(message)
+
+        backend_signature = get_signature_backend()
+
+        contract_definition = self.contract.definition
+        context = contract_definition_utility.generate_document_context(
+            contract_definition=contract_definition,
+            user=user,
+            batch_order=self,
+        )
+        context_with_images = embed_images_in_context(context)
+        file_bytes = issuers.generate_document(
+            name=contract_definition.name, context=context_with_images
+        )
+
+        was_already_submitted = (
+            self.contract.submitted_for_signature_on
+            and self.contract.signature_backend_reference
+        )
+        should_be_resubmitted = was_already_submitted and (
+            not self.contract.is_eligible_for_signing()
+            or self.contract.context != context
+        )
+
+        if should_be_resubmitted:
+            backend_signature.delete_signing_procedure(
+                self.contract.signature_backend_reference
+            )
+
+        if should_be_resubmitted or not was_already_submitted:
+            now = timezone.now()
+            reference, checksum = backend_signature.submit_for_signature(
+                title=f"{now.strftime('%Y-%m-%d')}_{self.relation.course.code}_{self.pk}",
+                file_bytes=file_bytes,
+                batch_order=self,
+            )
+            self.contract.tag_submission_for_signature(reference, checksum, context)
+
+        return backend_signature.get_signature_invitation_link(
+            self.owner.email, [self.contract.signature_backend_reference]
+        )
