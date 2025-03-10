@@ -27,7 +27,13 @@ class DummySignatureBackend(BaseSignatureBackend):
     required_settings = []
 
     # pylint: disable=unused-argument, no-value-for-parameter
-    def submit_for_signature(self, title: str, file_bytes: bytes, order: models.Order):
+    def submit_for_signature(
+        self,
+        title: str,
+        file_bytes: bytes,
+        order=None,
+        batch_order=None,
+    ):
         """
         Dummy method that creates a signature procedure with a fake file to be signed.
         It returns a dummy signature backend reference, and a dummy file hash.
