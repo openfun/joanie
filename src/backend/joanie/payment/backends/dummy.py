@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework.test import APIRequestFactory
+from stockholm import Money
 
 from joanie.core.models import Order, User
 from joanie.payment import exceptions
@@ -139,23 +140,30 @@ class DummyPaymentBackend(BasePaymentBackend):
     def _get_payment_data(
         self,
         order,
-        installment,
+        installment=None,
         credit_card_token=None,
         billing_address=None,
     ):
         """Build the generic payment object."""
         order_id = str(order.id)
-        payment_id = self.get_payment_id(installment.get("id"))
+        payment_id = (
+            self.get_payment_id(installment.get("id"))
+            if installment
+            else str(order.relation.product.id)
+        )
         notification_url = self.get_notification_url()
         payment_info = {
             "id": payment_id,
-            "amount": int(installment["amount"].sub_units),
+            "amount": int(installment["amount"].sub_units)
+            if installment
+            else int(Money(order.total).sub_units),
             "notification_url": notification_url,
             "metadata": {
                 "order_id": order_id,
-                "installment_id": str(installment["id"]),
             },
         }
+        if installment:
+            payment_info["metadata"]["installment_id"] = str(installment["id"])
         if billing_address:
             payment_info["billing_address"] = billing_address
         if credit_card_token:
@@ -173,7 +181,7 @@ class DummyPaymentBackend(BasePaymentBackend):
         self,
         order,
         installment,
-        billing_address=None,
+        billing_address,
     ):
         """
         Generate a payment object then store it in the cache.

@@ -273,9 +273,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             _mock_submit_for_signature.call_args[1]["title"],
             f"{now.strftime('%Y-%m-%d')}_{batch_order.relation.course.code}_{batch_order.pk}",
         )
-        self.assertEqual(
-            _mock_submit_for_signature.call_args[1]["order"], batch_order
-        )
+        self.assertEqual(_mock_submit_for_signature.call_args[1]["order"], batch_order)
         self.assertIsInstance(
             _mock_submit_for_signature.call_args[1]["file_bytes"], bytes
         )

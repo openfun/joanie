@@ -10,7 +10,7 @@ from django.core.files.storage import storages
 from django.db.models import Q
 
 from joanie.core import enums
-from joanie.core.models import Contract, OrganizationAccess
+from joanie.core.models import BatchOrder, Contract, Order, OrganizationAccess
 from joanie.signature.backends import get_signature_backend
 
 logger = getLogger(__name__)
@@ -158,7 +158,7 @@ def generate_zip_archive(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) ->
     return zip_archive_name
 
 
-def order_has_organization_owner(order) -> bool:
+def order_has_organization_owner(order: Order | BatchOrder) -> bool:
     """
     Returns True whether we can find at least one organization owner
     with the appropriate access rights, otherwise we return False.
