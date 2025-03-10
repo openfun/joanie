@@ -345,6 +345,227 @@
                 }
             }
         },
+        "/api/v1.0/batch-orders/": {
+            "get": {
+                "operationId": "batch_orders_list",
+                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - relation id (course product relation)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedBatchOrderList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "batch_orders_create",
+                "description": "Create the batch order and start the state of flows",
+                "tags": [
+                    "batch-orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchOrderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchOrderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/batch-orders/{id}/": {
+            "get": {
+                "operationId": "batch_orders_retrieve",
+                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - relation id (course product relation)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/batch-orders/{id}/submit-for-payment/": {
+            "post": {
+                "operationId": "batch_orders_submit_for_payment_create",
+                "description": "Submit the batch order for payment.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/batch-orders/{id}/submit-for-signature/": {
+            "post": {
+                "operationId": "batch_orders_submit_for_signature_create",
+                "description": "Create the contract from the product's contract definition and get the invitation\nlink to sign it.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/certificates/": {
             "get": {
                 "operationId": "certificates_list",
@@ -2833,12 +3054,13 @@
                                     "refunded",
                                     "refunding",
                                     "signing",
+                                    "to_own",
                                     "to_save_payment_method",
                                     "to_sign"
                                 ]
                             }
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded",
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
                         "explode": true,
                         "style": "form"
                     },
@@ -2861,12 +3083,13 @@
                                     "refunded",
                                     "refunding",
                                     "signing",
+                                    "to_own",
                                     "to_save_payment_method",
                                     "to_sign"
                                 ]
                             }
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded",
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
                         "explode": true,
                         "style": "form"
                     }
@@ -4679,6 +4902,182 @@
                     "title"
                 ]
             },
+            "BatchOrder": {
+                "type": "object",
+                "description": "BatchOrder client serializer",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "owner": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true,
+                        "readOnly": true
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Return the currency used",
+                        "readOnly": true
+                    },
+                    "relation_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "organization": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Organization"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "main_invoice_reference": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "contract_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "contract of type convention",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "description": "company name",
+                        "maxLength": 255
+                    },
+                    "identification_number": {
+                        "type": "string",
+                        "title": "Company identification number",
+                        "description": "company identification number like SIRET in France",
+                        "maxLength": 255
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "company address",
+                        "maxLength": 255
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "description": "company postcode",
+                        "maxLength": 50
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "company city",
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "The number of seats to reserve"
+                    },
+                    "trainees": {},
+                    "order_group_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "address",
+                    "city",
+                    "company_name",
+                    "contract_id",
+                    "currency",
+                    "id",
+                    "identification_number",
+                    "main_invoice_reference",
+                    "nb_seats",
+                    "order_group_ids",
+                    "organization",
+                    "owner",
+                    "postcode",
+                    "total"
+                ]
+            },
+            "BatchOrderRequest": {
+                "type": "object",
+                "description": "BatchOrder client serializer",
+                "properties": {
+                    "relation_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "voucher": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Voucher code",
+                        "writeOnly": true
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company name",
+                        "maxLength": 255
+                    },
+                    "identification_number": {
+                        "type": "string",
+                        "minLength": 1,
+                        "title": "Company identification number",
+                        "description": "company identification number like SIRET in France",
+                        "maxLength": 255
+                    },
+                    "address": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company address",
+                        "maxLength": 255
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company postcode",
+                        "maxLength": 50
+                    },
+                    "city": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company city",
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "The number of seats to reserve"
+                    },
+                    "trainees": {}
+                },
+                "required": [
+                    "address",
+                    "city",
+                    "company_name",
+                    "identification_number",
+                    "nb_seats",
+                    "postcode"
+                ]
+            },
             "Certificate": {
                 "type": "object",
                 "description": "Certificate model serializer",
@@ -6419,10 +6818,11 @@
                     "no_payment",
                     "completed",
                     "refunding",
-                    "refunded"
+                    "refunded",
+                    "to_own"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own"
             },
             "OrderTargetCourseRelation": {
                 "type": "object",
@@ -6665,6 +7065,37 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Address"
+                        }
+                    }
+                }
+            },
+            "PaginatedBatchOrderList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BatchOrder"
                         }
                     }
                 }

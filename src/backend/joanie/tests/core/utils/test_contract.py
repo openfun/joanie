@@ -704,7 +704,7 @@ class UtilsContractTestCase(TestCase):
             order=order, definition=order.product.contract_definition
         )
 
-        self.assertFalse(contract_utility.order_has_organization_owner(order=order))
+        self.assertFalse(contract_utility.order_has_organization_owner(order))
 
     def test_utils_contract_organization_has_owner_returns_true(
         self,
@@ -728,7 +728,7 @@ class UtilsContractTestCase(TestCase):
             3, organization=order.organization, role="owner"
         )
 
-        self.assertTrue(contract_utility.order_has_organization_owner(order=order))
+        self.assertTrue(contract_utility.order_has_organization_owner(order))
 
     def test_utils_contract_get_signature_references_student_has_signed(self):
         """

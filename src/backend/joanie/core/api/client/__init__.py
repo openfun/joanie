@@ -616,6 +616,142 @@ class OrderViewSet(
         return Response(status=HTTPStatus.CREATED)
 
 
+class BatchOrderViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.
+
+    GET /api/batch-orders/
+        Return list of all orders for a user with pagination
+
+    GET /api/batch-orders/:batch_order_id/
+        Return information about a batch order
+
+    POST /api/batch-orders/ with expected data:
+        - relation id (course product relation)
+        - company required data (name, identification number, address, postcode, city, country)
+        - number of seats
+        - exhaustive list of trainees (should match the number of seats)
+        Return new batch_order just created
+
+    POST /api/batch-orders/:batch_order_id/submit-for-signature/
+        Return an invitation link to pay the batch order
+
+    POST /api/batch-orders/:batch_order_id/submit-for-payment/
+        Returns the info to pay the batch order
+    """
+
+    lookup_field = "pk"
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.BatchOrderSerializer
+    ordering = ["-created_on"]
+
+    def get_queryset(self):
+        """Custom queryset to limit to batch orders owned by the logged-in user."""
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        return models.BatchOrder.objects.filter(
+            owner__username=username
+        ).select_related(
+            "contract",
+            "relation",
+            "organization",
+        )
+
+    def perform_create(self, serializer):
+        """Force the order's "owner" field to the logged-in user."""
+        serializer.save(owner=self.request.user)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """Create the batch order and start the state of flows"""
+        serializer = self.get_serializer(data=request.data)
+
+        relation_id = request.data.get("relation_id")
+        try:
+            relation = CourseProductRelation.objects.get(pk=relation_id)
+        except CourseProductRelation.DoesNotExist:
+            return Response(
+                f"The course product relation does not exist: {relation_id}",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        organization = get_least_active_organization(relation.product, relation.course)
+        serializer.initial_data["organization_id"] = organization.id
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
+
+        self.perform_create(serializer)
+        serializer.instance.init_flow()
+
+        return Response(serializer.data, status=HTTPStatus.CREATED)
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "application/json"): OpenApiTypes.OBJECT,
+        },
+    )
+    @action(detail=True, methods=["POST"], url_path="submit-for-signature")
+    def submit_for_signature(self, request, pk=None):  # pylint: disable=unused-argument
+        """
+        Create the contract from the product's contract definition and get the invitation
+        link to sign it.
+        """
+        batch_order = self.get_object()
+
+        invitation_link = batch_order.submit_for_signature(request.user)
+
+        return JsonResponse({"invitation_link": invitation_link}, status=HTTPStatus.OK)
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "application/json"): OpenApiTypes.OBJECT,
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(detail=True, methods=["POST"], url_path="submit-for-payment")
+    def submit_for_payment(self, request, pk=None):  # pylint: disable=unused-argument
+        """
+        Submit the batch order for payment.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.state not in [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+        ]:
+            return Response(
+                {
+                    "detail": (
+                        f"The batch order is not ready to submit for payment: {batch_order.state}."
+                    )
+                },
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        batch_order.flow.update()
+
+        payment_backend = get_payment_backend()
+        payment_infos = payment_backend.create_payment(
+            order=batch_order,
+            billing_address=batch_order.create_billing_address(),
+            installment=None,
+        )
+
+        return Response(payment_infos, status=HTTPStatus.OK)
+
+
 class AddressViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
