@@ -50,8 +50,10 @@ class ActivityLogContextField(models.JSONField):
         """
         Validate the context field for a payment type activity log
         """
-        if "order_id" not in value:
-            raise ValidationError("The context field must have an order_id")
+        if "batchorder_id" not in value and "order_id" not in value:
+            raise ValidationError(
+                "The context field must have an order_id or a batchorder_id"
+            )
 
 
 class ActivityLog(BaseModel):
@@ -87,38 +89,38 @@ class ActivityLog(BaseModel):
         verbose_name_plural = _("activity_logs")
 
     @classmethod
-    def create_payment_succeeded_activity_log(cls, order):
+    def create_payment_succeeded_activity_log(cls, order: "Order | BatchOrder"):
         """
         Create a payment succeeded activity log
         """
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
-            context={"order_id": str(order.id)},
+            context={f"{order.class_name}_id": str(order.id)},
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
         )
 
     @classmethod
-    def create_payment_failed_activity_log(cls, order):
+    def create_payment_failed_activity_log(cls, order: "Order | BatchOrder"):
         """
         Create a payment failed activity log
         """
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_ERROR,
-            context={"order_id": str(order.id)},
+            context={f"{order.class_name}_id": str(order.id)},
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
         )
 
     @classmethod
-    def create_payment_refunded_activity_log(cls, order):
+    def create_payment_refunded_activity_log(cls, order: "Order | BatchOrder"):
         """
         Create a payment refunded activity log
         """
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
-            context={"order_id": str(order.id)},
+            context={f"{order.class_name}_id": str(order.id)},
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED,
         )
 
