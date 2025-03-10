@@ -63,9 +63,203 @@ def apply_contract_definition_context_processors(context):
     return context
 
 
+def prepare_organization_context(
+    language_code, contract_definition, order=None, batch_order=None
+):
+    """Prepare organization context for the document generation."""
+    # pylint: disable=cyclic-import, import-outside-toplevel
+    from joanie.core.models import Address
+    from joanie.core.serializers.client import AddressSerializer
+
+    organization_context = {
+        "address": ORGANIZATION_FALLBACK_ADDRESS,
+        "logo_id": None,
+        "name": _("<ORGANIZATION_NAME>"),
+        "representative": _("<REPRESENTATIVE>"),
+        "representative_profession": _("<REPRESENTATIVE_PROFESSION>"),
+        "enterprise_code": _("<ENTERPRISE_CODE>"),
+        "activity_category_code": _("<ACTIVITY_CATEGORY_CODE>"),
+        "signatory_representative": _("<SIGNATORY_REPRESENTATIVE>"),
+        "signatory_representative_profession": _(
+            "<SIGNATURE_REPRESENTATIVE_PROFESSION>"
+        ),
+        "contact_phone": _("<CONTACT_PHONE>"),
+        "contact_email": _("<CONTACT_EMAIL>"),
+        "dpo_email": _("<DPO_EMAIL_ADDRESS>"),
+    }
+
+    if order or batch_order:
+        organization = order.organization if order else batch_order.organization
+        logo_checksum = file_checksum(organization.logo)
+        logo_image, created = DocumentImage.objects.get_or_create(
+            checksum=logo_checksum,
+            defaults={"file": organization.logo},
+        )
+        if created:
+            contract_definition.images.set([logo_image])
+        organization_logo_id = str(logo_image.id)
+
+        try:
+            organization_address = organization.addresses.get(is_main=True)
+        except Address.DoesNotExist:
+            organization_address = None
+        if organization_address:
+            organization_address = AddressSerializer(organization_address).data
+
+        organization_context.update(
+            {
+                "address": organization_address,
+                "logo_id": organization_logo_id,
+                "name": organization.safe_translation_getter(
+                    "title", language_code=language_code
+                ),
+                "representative": organization.representative,
+                "representative_profession": organization.representative_profession,
+                "enterprise_code": organization.enterprise_code,
+                "activity_category_code": organization.activity_category_code,
+                "signatory_representative": organization.signatory_representative,
+                "signatory_representative_profession": (
+                    organization.signatory_representative_profession
+                ),
+                "contact_phone": organization.contact_phone,
+                "contact_email": organization.contact_email,
+                "dpo_email": organization.dpo_email,
+            }
+        )
+
+    return organization_context
+
+
+def prepare_course_context(language_code, order=None):
+    """Prepare course context for the document generation"""
+    course_context = {
+        "name": _("<COURSE_NAME>"),
+        "code": _("<COURSE_CODE>"),
+        "start": _("<COURSE_START_DATE>"),
+        "end": _("<COURSE_END_DATE>"),
+        "effort": _("<COURSE_EFFORT>"),
+        "price": _("<COURSE_PRICE>"),
+        "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
+    }
+
+    if order:
+        course_dates = order.get_equivalent_course_run_dates()
+        course_start = course_dates["start"]
+        course_end = course_dates["end"]
+        course_effort = order.course.effort
+        # Transform duration value to ISO 8601 format
+        if isinstance(course_effort, timedelta):
+            course_effort = duration_iso_string(course_effort)
+        # Transform date value to ISO 8601 format
+        if isinstance(course_start, date):
+            course_start = course_start.isoformat()
+        if isinstance(course_end, date):
+            course_end = course_end.isoformat()
+
+        course_context.update(
+            {
+                "name": order.product.safe_translation_getter(
+                    "title", language_code=language_code
+                ),
+                "code": order.course.code,
+                "start": course_start,
+                "end": course_end,
+                "effort": course_effort,
+                "price": str(order.total),
+            }
+        )
+
+    return course_context
+
+
+def prepare_student_context(user):
+    """
+    Prepare student context for document generation.
+    """
+    student_context = {
+        "address": USER_FALLBACK_ADDRESS,
+        "name": _("<STUDENT_NAME>"),
+        "email": _("<STUDENT_EMAIL>"),
+        "phone_number": _("<STUDENT_PHONE_NUMBER>"),
+        "payment_schedule": None,
+    }
+
+    if user:
+        student_context.update(
+            {
+                "name": user.name,
+                "email": user.email,
+                "phone_number": user.phone_number,
+            }
+        )
+
+    return student_context
+
+
+def prepare_contract_definition_context(language_code, contract_definition):
+    """
+    Prepare contract definition context for document generation.
+    """
+    contract_definition_context = {
+        "title": _("<CONTRACT_TITLE>"),
+        "description": _("<CONTRACT_DESCRIPTION>"),
+        "body": _("&lt;CONTRACT_BODY&gt;"),
+        "appendix": _("&lt;CONTRACT_APPENDIX&gt;"),
+        "language": language_code,
+    }
+
+    if contract_definition:
+        contract_definition_context.update(
+            {
+                "title": contract_definition.title,
+                "description": contract_definition.description,
+                "body": contract_definition.get_body_in_html(),
+                "appendix": contract_definition.get_appendix_in_html(),
+            }
+        )
+
+    return contract_definition_context
+
+
+def prepare_company_context(batch_order):
+    """Prepare batch order company informations for document generation"""
+    company_context = {
+        "name": _("<COMPANY_NAME>"),
+        "address": _("<COMPANY_ADDRESS>"),
+        "post_code": _("<COMPANY_POSTCODE>"),
+        "city": _("<COMPANY_CITY>"),
+        "identification_number": _("<COMPANY_IDENTIFICATION_NUMBER>"),
+        "number_seats": _("<NUMBER_OF_SEATS_RESERVED>"),
+        "trainees": None,
+    }
+
+    if batch_order:
+        company_context.update(
+            {
+                "name": batch_order.company_name,
+                "address": batch_order.address,
+                "postcode": batch_order.postcode,
+                "city": batch_order.city,
+                "identification_number": batch_order.identification_number,
+                "number_seats": batch_order.nb_seats,
+                "trainees": [
+                    {
+                        "first_name": trainee["first_name"],
+                        "last_name": trainee["last_name"],
+                    }
+                    for trainee in batch_order.trainees
+                ],
+            }
+        )
+
+    return company_context
+
+
 # ruff: noqa: PLR0912, PLR0915
-# pylint: disable=import-outside-toplevel, too-many-locals, too-many-statements
-def generate_document_context(contract_definition=None, user=None, order=None):
+# pylint: disable=import-outside-toplevel, too-many-locals, too-many-statements, too-many-branches
+def generate_document_context(
+    contract_definition=None, user=None, order=None, batch_order=None
+):
     """
     Generate a document context for a contract definition.
 
@@ -76,101 +270,31 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     the parameters are set.
     """
     # pylint: disable=cyclic-import
-    from joanie.core.models import Address
     from joanie.core.serializers.client import AddressSerializer
 
     contract_language = (
         contract_definition.language if contract_definition else settings.LANGUAGE_CODE
     )
 
-    organization_logo_id = None
-    organization_name = _("<ORGANIZATION_NAME>")
-    organization_representative = _("<REPRESENTATIVE>")
-    organization_representative_profession = _("<REPRESENTATIVE_PROFESSION>")
-    organization_enterprise_code = _("<ENTERPRISE_CODE>")
-    organization_activity_category_code = _("<ACTIVITY_CATEGORY_CODE>")
-    organization_signatory_representative = _("<SIGNATORY_REPRESENTATIVE>")
-    organization_signatory_profession = _("<SIGNATURE_REPRESENTATIVE_PROFESSION>")
-    organization_contact_phone = _("<CONTACT_PHONE>")
-    organization_contact_email = _("<CONTACT_EMAIL>")
-    organization_dpo_email = _("<DPO_EMAIL_ADDRESS>")
-    organization_address = ORGANIZATION_FALLBACK_ADDRESS
-
-    course_code = _("<COURSE_CODE>")
-    course_name = _("<COURSE_NAME>")
-    course_start = _("<COURSE_START_DATE>")
-    course_end = _("<COURSE_END_DATE>")
-    course_effort = _("<COURSE_EFFORT>")
-    course_price = _("<COURSE_PRICE>")
-
-    user_name = _("<STUDENT_NAME>")
-    user_email = _("<STUDENT_EMAIL>")
-    user_phone_number = _("<STUDENT_PHONE_NUMBER>")
-    user_address = USER_FALLBACK_ADDRESS
-    payment_schedule = None
-
-    contract_body = _("&lt;CONTRACT_BODY&gt;")
-    contract_appendix = _("&lt;CONTRACT_APPENDIX&gt;")
-    contract_title = _("<CONTRACT_TITLE>")
-    contract_description = _("<CONTRACT_DESCRIPTION>")
-
-    if contract_definition:
-        contract_body = contract_definition.get_body_in_html()
-        contract_appendix = contract_definition.get_appendix_in_html()
-        contract_title = contract_definition.title
-        contract_description = contract_definition.description
-
-    if user:
-        user_name = user.name
-        user_email = user.email
-        user_phone_number = user.phone_number
+    organization_context = prepare_organization_context(
+        language_code=contract_language,
+        contract_definition=contract_definition,
+        order=order,
+        batch_order=batch_order,
+    )
+    course_context = prepare_course_context(
+        language_code=contract_language, order=order
+    )
+    student_context = prepare_student_context(user=user)
+    contract_context = prepare_contract_definition_context(
+        language_code=contract_language, contract_definition=contract_definition
+    )
+    company_context = prepare_company_context(batch_order=batch_order)
 
     if order:
-        logo_checksum = file_checksum(order.organization.logo)
-        logo_image, created = DocumentImage.objects.get_or_create(
-            checksum=logo_checksum,
-            defaults={"file": order.organization.logo},
-        )
-        if created:
-            contract_definition.images.set([logo_image])
-        organization_logo_id = str(logo_image.id)
-
-        organization_name = order.organization.safe_translation_getter(
-            "title", language_code=contract_language
-        )
-        organization_representative = order.organization.representative
-        organization_representative_profession = (
-            order.organization.representative_profession
-        )
-        organization_enterprise_code = order.organization.enterprise_code
-        organization_activity_category_code = order.organization.activity_category_code
-        organization_signatory_representative = (
-            order.organization.signatory_representative
-        )
-        organization_signatory_profession = (
-            order.organization.signatory_representative_profession
-        )
-        organization_contact_phone = order.organization.contact_phone
-        organization_contact_email = order.organization.contact_email
-        organization_dpo_email = order.organization.dpo_email
-
-        try:
-            organization_address = order.organization.addresses.get(is_main=True)
-        except Address.DoesNotExist:
-            organization_address = None
-
-        # Course
-        course_code = order.course.code
-        course_name = order.product.safe_translation_getter(
-            "title", language_code=contract_language
-        )
-        course_dates = order.get_equivalent_course_run_dates()
-        course_start = course_dates["start"]
-        course_end = course_dates["end"]
-        course_effort = order.course.effort
-        course_price = str(order.total)
         user_address = order.main_invoice.recipient_address
-
+        user_address = AddressSerializer(user_address).data
+        student_context.update({"address": user_address})
         # Payment Schedule
         try:
             beginning_contract_date, course_start_date, course_end_date = (
@@ -192,60 +316,14 @@ def generate_document_context(contract_definition=None, user=None, order=None):
                 }
                 for installment in installments
             ]
-
-    # Transform duration value to ISO 8601 format
-    if isinstance(course_effort, timedelta):
-        course_effort = duration_iso_string(course_effort)
-    # Transform date value to ISO 8601 format
-    if isinstance(course_start, date):
-        course_start = course_start.isoformat()
-    if isinstance(course_end, date):
-        course_end = course_end.isoformat()
-
-    if organization_address:
-        organization_address = AddressSerializer(organization_address).data
-
-    if user_address:
-        user_address = AddressSerializer(user_address).data
+            student_context.update({"payment_schedule": payment_schedule})
 
     context = {
-        "contract": {
-            "title": contract_title,
-            "description": contract_description,
-            "body": contract_body,
-            "appendix": contract_appendix,
-            "language": contract_language,
-        },
-        "course": {
-            "name": course_name,
-            "code": course_code,
-            "start": course_start,
-            "end": course_end,
-            "effort": course_effort,
-            "price": course_price,
-            "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
-        },
-        "student": {
-            "address": user_address,
-            "name": user_name,
-            "email": user_email,
-            "phone_number": user_phone_number,
-            "payment_schedule": payment_schedule,
-        },
-        "organization": {
-            "address": organization_address,
-            "logo_id": organization_logo_id,
-            "name": organization_name,
-            "representative": organization_representative,
-            "representative_profession": organization_representative_profession,
-            "enterprise_code": organization_enterprise_code,
-            "activity_category_code": organization_activity_category_code,
-            "signatory_representative": organization_signatory_representative,
-            "signatory_representative_profession": organization_signatory_profession,
-            "contact_phone": organization_contact_phone,
-            "contact_email": organization_contact_email,
-            "dpo_email": organization_dpo_email,
-        },
+        "contract": contract_context,
+        "course": course_context,
+        "student": student_context,
+        "organization": organization_context,
+        "company": company_context,
     }
 
     return apply_contract_definition_context_processors(context)

@@ -154,6 +154,15 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     for installment in order.payment_schedule
                 ],
             },
+            "company": {
+                "address": "<COMPANY_ADDRESS>",
+                "post_code": "<COMPANY_POSTCODE>",
+                "city": "<COMPANY_CITY>",
+                "identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
+                "name": "<COMPANY_NAME>",
+                "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
+                "trainees": None,
+            },
             "organization": {
                 "address": {
                     "id": str(address_organization.id),
@@ -243,6 +252,15 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "phone_number": str(user.phone_number),
                 "payment_schedule": None,
             },
+            "company": {
+                "address": "<COMPANY_ADDRESS>",
+                "post_code": "<COMPANY_POSTCODE>",
+                "city": "<COMPANY_CITY>",
+                "identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
+                "name": "<COMPANY_NAME>",
+                "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
+                "trainees": None,
+            },
             "organization": {
                 "address": {
                     "address": "<ORGANIZATION_ADDRESS_STREET_NAME>",
@@ -321,6 +339,15 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "email": "<STUDENT_EMAIL>",
                 "phone_number": "<STUDENT_PHONE_NUMBER>",
                 "payment_schedule": None,
+            },
+            "company": {
+                "address": "<COMPANY_ADDRESS>",
+                "post_code": "<COMPANY_POSTCODE>",
+                "city": "<COMPANY_CITY>",
+                "identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
+                "name": "<COMPANY_NAME>",
+                "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
+                "trainees": None,
             },
             "organization": {
                 "address": {
