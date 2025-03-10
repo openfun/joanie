@@ -79,3 +79,28 @@ class BasePaymentTestCase(TestCase):
         self.assertNotIn("trans ", email_content)
         # catalog url is included in the email
         self.assertIn("https://richie.education", email_content)
+
+    def _check_batch_order_paid_email_sent(self, email, batch_order):
+        """Shortcut to check over batch order successful payment email"""
+        # check we send it to the right email
+        self.assertEqual(mail.outbox[0].to[0], email)
+        self.assertRegex(mail.outbox[0].subject, "Batch order payment validated!")
+
+        email_content = " ".join(mail.outbox[0].body.split())
+        fullname = batch_order.owner.get_full_name()
+
+        # Check body
+        if "fr" in batch_order.owner.language:
+            self.assertIn(f"Bonjour {fullname}", email_content)
+        else:
+            self.assertIn(f"Hello {fullname}", email_content)
+        # Check the product title is in the correct language
+        with switch_language(batch_order.relation.product, batch_order.owner.language):
+            self.assertIn(batch_order.relation.product.title, email_content)
+
+        self.assertIn(str(batch_order.nb_seats), email_content)
+        # emails are generated from mjml format, test rendering of email doesn't
+        # contain any trans tag, it might happen if \n are generated
+        self.assertNotIn("trans ", email_content)
+        # catalog url is included in the email
+        self.assertIn("https://richie.education", email_content)
