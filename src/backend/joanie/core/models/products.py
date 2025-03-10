@@ -1914,3 +1914,69 @@ class BatchOrder(BaseModel):
         return backend_signature.get_signature_invitation_link(
             self.owner.email, [self.contract.signature_backend_reference]
         )
+
+    def generate_orders(self):
+        """
+        Generate orders and vouchers once the convention has been signed by the company's
+        representative.
+        """
+        if (
+            not self.contract.submitted_for_signature_on
+            or not self.contract.student_signed_on
+        ):
+            message = "The convention has not been submitted nor signed by the company"
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                        "relation": self.relation.to_dict(),
+                    }
+                },
+            )
+            raise ValidationError(message)
+
+        orders = [
+            Order.objects.create(
+                owner=None,
+                product_id=self.relation.product_id,
+                course_id=self.relation.course_id,
+                # organization_id=self.organization_id, # Should let the random for equity
+                # contract=self.contract #
+            )
+            for _ in range(self.nb_seats)
+        ]
+
+        self.orders.set(orders)
+        self.save()
+
+        return orders
+
+    def generate_vouchers(self):
+        """Generate a voucher for each the prepared order"""
+        if not self.orders:
+            message = (
+                "You should first generate the orders before generating the vouchers"
+            )
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                    }
+                },
+            )
+            raise ValidationError(message)
+
+        # Create discount of 100 % because the batch order is paid in advance
+        discount = Discount.objects.create(rate=1)
+
+        vouchers = [
+            Voucher.objects.create(
+                discount=discount,
+                single_use=True,
+            )
+            for order in range(self.orders.all())
+        ]
+
+        return vouchers
