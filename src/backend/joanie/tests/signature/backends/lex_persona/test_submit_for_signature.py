@@ -643,3 +643,248 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             str(context.exception.message),
             f"No organization owner found to initiate the signature process for order {order.id}.",
         )
+
+    # pylint: disable=too-many-locals,unexpected-keyword-arg,no-value-for-parameter
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_submit_for_signature_success_for_batch_order(self):
+        """valid test submit for signature for a batch order"""
+        user = factories.UserFactory(email="johnnydo@example.fr")
+        batch_order = factories.BatchOrderFactory(
+            owner=user,
+            relation__product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        batch_order.init_flow()
+        accesses = factories.UserOrganizationAccessFactory.create_batch(
+            3, organization=batch_order.organization, role="owner"
+        )
+        file_bytes = b"Some fake content"
+        workflow_id = "wfl_id_fake"
+        title = "Contract Definition"
+
+        # Create workflow
+        create_workflow_api_url = (
+            "https://lex_persona.test01.com/api/users/usr_id_fake/workflows"
+        )
+        create_workflow_response_data = {
+            "created": 1696238245608,
+            "currentRecipientEmails": [],
+            "currentRecipientUsers": [],
+            "description": "Contract Definition",
+            "email": batch_order.owner.email,
+            "firstName": batch_order.owner.first_name,
+            "groupId": "grp_id_fake",
+            "id": workflow_id,
+            "lastName": ".",
+            "logs": [],
+            "name": "Contract Definition",
+            "notifiedEvents": [
+                "recipientRefused",
+                "recipientFinished",
+            ],
+            "progress": 0,
+            "steps": [
+                {
+                    "allowComments": True,
+                    "hideAttachments": False,
+                    "hideWorkflowRecipients": True,
+                    "id": "stp_J5gCgaRRY4NHtbGs474WjMkA",
+                    "invitePeriod": None,
+                    "isFinished": False,
+                    "isStarted": False,
+                    "logs": [],
+                    "maxInvites": 0,
+                    "recipients": [
+                        {
+                            "consentPageId": "cop_id_fake",
+                            "country": "FR",
+                            "email": "johnnydoe@example.fr",
+                            "firstName": "Johnny",
+                            "lastName": ".",
+                            "preferredLocale": "fr",
+                        }
+                    ],
+                    "requiredRecipients": 1,
+                    "sendDownloadLink": True,
+                    "stepType": "signature",
+                    "validityPeriod": 86400000,
+                }
+            ],
+            "tenantId": "ten_id_fake",
+            "updated": 1696238245608,
+            "userId": "usr_id_fake",
+            "viewAuthorizedGroups": ["grp_id_fake"],
+            "viewAuthorizedUsers": [],
+            "watchers": [],
+            "workflowStatus": "stopped",
+        }
+        responses.add(
+            responses.POST,
+            create_workflow_api_url,
+            status=HTTPStatus.OK,
+            json=create_workflow_response_data,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "name": title,
+                        "description": title,
+                        "steps": [
+                            {
+                                "stepType": "signature",
+                                "recipients": [
+                                    {
+                                        "consentPageId": "cop_id_fake",
+                                        "country": batch_order.country.code.upper(),  # pylint: disable=line-too-long
+                                        "email": user.email,
+                                        "firstName": user.first_name,
+                                        "lastName": ".",
+                                        "preferred_locale": user.language.lower(),
+                                    }
+                                ],
+                                "requiredRecipients": 1,
+                                "validityPeriod": (
+                                    settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
+                                    * 1000
+                                ),
+                                "invitePeriod": None,
+                                "maxInvites": 0,
+                                "sendDownloadLink": True,
+                                "allowComments": False,
+                                "hideAttachments": False,
+                                "hideWorkflowRecipients": False,
+                            },
+                            {
+                                "stepType": "signature",
+                                "recipients": [
+                                    {
+                                        "email": access.user.email,
+                                        "firstName": access.user.first_name,
+                                        "lastName": ".",
+                                        "country": batch_order.organization.country.code.upper(),
+                                        "preferred_locale": access.user.language.lower(),
+                                        "consentPageId": "cop_id_fake",
+                                    }
+                                    for access in reversed(accesses)
+                                ],
+                                "requiredRecipients": 1,
+                                "validityPeriod": (
+                                    settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
+                                    * 1000
+                                ),
+                                "invitePeriod": None,
+                                "maxInvites": 0,
+                                "sendDownloadLink": True,
+                                "allowComments": False,
+                                "hideAttachments": False,
+                                "hideWorkflowRecipients": False,
+                            },
+                        ],
+                        "notifiedEvents": [
+                            "recipientRefused",
+                            "recipientFinished",
+                        ],
+                        "watchers": [],
+                    }
+                ),
+            ],
+        )
+
+        # Upload file to workflow
+        upload_file_api_url = (
+            f"https://lex_persona.test01.com/api/workflows/{workflow_id}"
+            "/parts?createDocuments=true&ignoreAttachments=false"
+            "&signatureProfileId=sip_profile_id_fake&unzip=false&pdf2pdfa=auto"
+        )
+        upload_file_response_data = {
+            "documents": [
+                {
+                    "created": 1696238255558,
+                    "groupId": "grp_id_fake",
+                    "id": "doc_id_fake",
+                    "parts": [
+                        {
+                            "contentType": "application/pdf",
+                            "filename": "contract_definition.pdf",
+                            "hash": "wpTD3tstfdt9XfuFK+sv4/y6fv3lx3hwZ2gjQ2DBrxs=",
+                            "size": 123616,
+                        }
+                    ],
+                    "signatureProfileId": "sip_profile_id_fake",
+                    "tenantId": "ten_id_fake",
+                    "updated": 1696238255558,
+                    "userId": "usr_id_fake",
+                    "viewAuthorizedGroups": ["grp_id_fake"],
+                    "viewAuthorizedUsers": [],
+                    "workflowId": "wfl_id_fake",
+                    "workflowName": "Heavy Duty Wool Watch",
+                }
+            ],
+            "ignoredAttachments": 0,
+            "parts": [
+                {
+                    "contentType": "application/pdf",
+                    "filename": "contract_definition.pdf",
+                    "hash": "wpTD3tstfdt9XfuFK+sv4/y6fv3lx3hwZ2gjQ2DBrxs=",
+                    "size": 123616,
+                }
+            ],
+        }
+        responses.add(
+            responses.POST,
+            upload_file_api_url,
+            status=HTTPStatus.OK,
+            json=upload_file_response_data,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.multipart_matcher(
+                    {
+                        "file1": (
+                            "contract_definition.pdf",
+                            file_bytes,
+                            "application/pdf",
+                        ),
+                    },
+                ),
+            ],
+        )
+
+        ## Start procedure
+        start_procedure_api_url = (
+            f"https://lex_persona.test01.com/api/workflows/{workflow_id}"
+        )
+        start_procedure_response_data = get_expected_workflow_payload("started")
+        responses.add(
+            responses.PATCH,
+            start_procedure_api_url,
+            status=HTTPStatus.OK,
+            json=start_procedure_response_data,
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "Authorization": "Bearer token_id_fake",
+                    },
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "workflowStatus": "started",
+                    }
+                ),
+            ],
+        )
+
+        lex_persona_backend = get_signature_backend()
+
+        reference_id, file_hash = lex_persona_backend.submit_for_signature(
+            title=title, file_bytes=file_bytes, order=batch_order
+        )
+
+        self.assertEqual(workflow_id, reference_id)
+        self.assertEqual(file_hash, upload_file_response_data["parts"][0].get("hash"))
