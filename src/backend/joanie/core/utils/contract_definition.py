@@ -64,8 +64,10 @@ def apply_contract_definition_context_processors(context):
 
 
 # ruff: noqa: PLR0912, PLR0915
-# pylint: disable=import-outside-toplevel, too-many-locals, too-many-statements
-def generate_document_context(contract_definition=None, user=None, order=None):
+# pylint: disable=import-outside-toplevel, too-many-locals, too-many-statements, too-many-branches
+def generate_document_context(
+    contract_definition=None, user=None, order=None, batch_order=None
+):
     """
     Generate a document context for a contract definition.
 
@@ -114,6 +116,14 @@ def generate_document_context(contract_definition=None, user=None, order=None):
     contract_title = _("<CONTRACT_TITLE>")
     contract_description = _("<CONTRACT_DESCRIPTION>")
 
+    company_address = _("<COMPANY_ADDRESS>")
+    company_post_code = _("<COMPANY_POSTCODE>")
+    company_city = _("<COMPANY_CITY>")
+    company_identification_number = _("<COMPANY_IDENTIFICATION_NUMBER>")
+    company_activity_declaration_number = _("<COMPANY_ACTIVITY_DECLARATION_NUMBER>")
+    number_seats = _("<NUMBER_OF_SEATS_RESERVED>")
+    trainees = None
+
     if contract_definition:
         contract_body = contract_definition.get_body_in_html()
         contract_appendix = contract_definition.get_appendix_in_html()
@@ -125,7 +135,19 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         user_email = user.email
         user_phone_number = user.phone_number
 
-    if order:
+    if batch_order:
+        company_address = (batch_order.address,)
+        company_post_code = (batch_order.post_code,)
+        company_city = (batch_order.city,)
+        company_identification_number = (batch_order.identification_number,)
+        company_activity_declaration_number = (batch_order.activity_declaration_number,)
+        number_seats = (batch_order.nb_seats,)
+        trainees = [
+            {"first_name": trainee["first_name"], "last_name": trainee["last_name"]}
+            for trainee in batch_order.trainees
+        ]
+
+    if order or batch_order:
         logo_checksum = file_checksum(order.organization.logo)
         logo_image, created = DocumentImage.objects.get_or_create(
             checksum=logo_checksum,
@@ -170,7 +192,6 @@ def generate_document_context(contract_definition=None, user=None, order=None):
         course_effort = order.course.effort
         course_price = str(order.total)
         user_address = order.main_invoice.recipient_address
-
         # Payment Schedule
         try:
             beginning_contract_date, course_start_date, course_end_date = (
@@ -245,6 +266,15 @@ def generate_document_context(contract_definition=None, user=None, order=None):
             "contact_phone": organization_contact_phone,
             "contact_email": organization_contact_email,
             "dpo_email": organization_dpo_email,
+        },
+        "company": {
+            "trainees": trainees,
+            "address": company_address,
+            "post_code": company_post_code,
+            "city": company_city,
+            "identification_number": company_identification_number,
+            "activity_declaration_number": company_activity_declaration_number,
+            "number_seats": number_seats,
         },
     }
 

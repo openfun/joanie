@@ -113,7 +113,13 @@ class BaseSignatureBackend:
             "subclasses of BaseSignatureBackend must provide a handle_notification() method."
         )
 
-    def submit_for_signature(self, title: str, file_bytes: bytes, order: models.Order):
+    def submit_for_signature(
+        self,
+        title: str,
+        file_bytes: bytes,
+        order=None,
+        batch_order=None,
+    ):
         """
         Submit for signature a file with the signature provider.
         """
