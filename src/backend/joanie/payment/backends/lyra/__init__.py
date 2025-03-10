@@ -16,7 +16,7 @@ from rest_framework.parsers import FormParser, JSONParser
 from stockholm import Money
 
 from joanie.core.enums import PAYMENT_STATE_PAID, PAYMENT_STATE_REFUSED
-from joanie.core.models import Order, User
+from joanie.core.models import BatchOrder, Order, User
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.models import CreditCard, CreditCardOwnership, Invoice, Transaction
@@ -402,6 +402,14 @@ class LyraBackend(BasePaymentBackend):
         if order_id is None:
             return self._handle_notification_tokenization_card_for_user(answer)
 
+        # Check if the notification was initiated from a batch order payment
+        try:
+            batch_order = BatchOrder.objects.get(id=order_id)
+        except BatchOrder.DoesNotExist:
+            batch_order = None
+        if batch_order:
+            return self._handle_notification_batch_order(answer, batch_order)
+
         try:
             order = Order.objects.get(id=order_id)
         except Order.DoesNotExist as error:
@@ -480,6 +488,32 @@ class LyraBackend(BasePaymentBackend):
             self._do_on_payment_failure(order, installment_id)
 
         return None
+
+    def _handle_notification_batch_order(self, answer, batch_order):
+        """
+        Handle payment notification of Lyra from a batch order
+        """
+        if answer["orderStatus"] == "PAID":
+            transaction_id = answer["transactions"][0]["uuid"]
+            amount = f"{answer['orderDetails']['orderTotalAmount'] / 100:.2f}"
+            billing_details = answer["customer"]["billingDetails"]
+            payment = {
+                "id": transaction_id,
+                "amount": D(amount),
+                "billing_address": {
+                    "address": billing_details["address"],
+                    "city": billing_details["city"],
+                    "country": billing_details["country"],
+                    "first_name": billing_details["firstName"],
+                    "last_name": billing_details["lastName"],
+                    "postcode": billing_details["zipCode"],
+                },
+            }
+            self._do_on_batch_order_payment_success(
+                batch_order=batch_order, payment=payment
+            )
+        else:
+            self._do_on_batch_order_payment_failure(batch_order=batch_order)
 
     def _handle_notification_tokenization_card_for_user(self, answer):
         """

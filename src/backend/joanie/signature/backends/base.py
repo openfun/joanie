@@ -51,7 +51,12 @@ class BaseSignatureBackend:
         contract.student_signed_on = django_timezone.now()
         contract.save()
 
-        contract.order.flow.update()
+        if contract.batch_orders.count() == 1:
+            batch_order = contract.batch_orders.first()
+            flow = batch_order.flow
+        else:
+            flow = contract.order.flow
+        flow.update()
 
         logger.info("Student signed the contract '%s'", contract.id)
 
@@ -113,7 +118,12 @@ class BaseSignatureBackend:
             "subclasses of BaseSignatureBackend must provide a handle_notification() method."
         )
 
-    def submit_for_signature(self, title: str, file_bytes: bytes, order: models.Order):
+    def submit_for_signature(
+        self,
+        title: str,
+        file_bytes: bytes,
+        order: models.Order | models.BatchOrder,
+    ):
         """
         Submit for signature a file with the signature provider.
         """
