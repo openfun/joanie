@@ -38,43 +38,99 @@ class BasePaymentBackend:
         self.configuration = configuration
 
     @classmethod
-    def _do_on_payment_success(cls, order, payment):
+    def _do_on_payment_success(cls, order, payment, is_batch=False):
         """
         Generic actions triggered when a succeeded payment has been received.
         It creates an invoice and registers the debit transaction,
         then mark invoice as paid if transaction amount is equal to the invoice amount
         then mark the order as completed
         """
-        invoice = Invoice.objects.create(
-            order=order,
-            parent=order.main_invoice,
-            total=0,
-            recipient_address=order.main_invoice.recipient_address,
-        )
+        if is_batch:
+            invoice = Invoice.objects.create(
+                batch_order=order,
+                parent=order.main_invoice,
+                total=0,
+                recipient_address=order.main_invoice.recipient_address,
+            )
+            # - Store the payment transaction
+            Transaction.objects.create(
+                total=payment["amount"],
+                invoice=invoice,
+                reference=payment["id"],
+            )
 
-        # - Store the payment transaction
-        Transaction.objects.create(
-            total=payment["amount"],
-            invoice=invoice,
-            reference=payment["id"],
-        )
+            order.flow.update()
+            order.save()  # Transition flow to completed
 
-        # Store last credit card numbers as it may be deleted by the flow update
-        credit_card_last_numbers = order.credit_card.last_numbers
-        # Will trigger flow update
-        order.set_installment_paid(payment["installment_id"])
+            order.generate_orders()
+            vouchers = order.generate_vouchers()
 
-        order_completed = order.state == ORDER_STATE_COMPLETED
+            cls._send_mail_batch_order_payment_success(
+                batch_order=order,
+                amount=payment["amount"]
+                if "." in str(payment["amount"])
+                else payment["amount"] / 100,
+                vouchers=vouchers,
+            )
+        else:
+            invoice = Invoice.objects.create(
+                order=order,
+                parent=order.main_invoice,
+                total=0,
+                recipient_address=order.main_invoice.recipient_address,
+            )
+            # - Store the payment transaction
+            Transaction.objects.create(
+                total=payment["amount"],
+                invoice=invoice,
+                reference=payment["id"],
+            )
 
-        # Because with Lyra Payment Provider, we get the value in cents
-        cls._send_mail_payment_installment_success(
-            order=order,
-            amount=payment["amount"]
-            if "." in str(payment["amount"])
-            else payment["amount"] / 100,
-            credit_card_last_numbers=credit_card_last_numbers,
-            upcoming_installment=not order_completed,
-        )
+            # Store last credit card numbers as it may be deleted by the flow update
+            credit_card_last_numbers = order.credit_card.last_numbers
+            # Will trigger flow update
+            order.set_installment_paid(payment["installment_id"])
+
+            order_completed = order.state == ORDER_STATE_COMPLETED
+            # Because with Lyra Payment Provider, we get the value in cents
+            cls._send_mail_payment_installment_success(
+                order=order,
+                amount=payment["amount"]
+                if "." in str(payment["amount"])
+                else payment["amount"] / 100,
+                credit_card_last_numbers=credit_card_last_numbers,
+                upcoming_installment=not order_completed,
+            )
+
+    @classmethod
+    def _send_mail_batch_order_payment_success(cls, batch_order, amount, vouchers):
+        """
+        Send mail with the current language fo the user when the batch order
+        has been successfully fully paid
+        """
+        with override(batch_order.owner.language):
+            product_title = batch_order.relation.product.safe_translation_getter(
+                "title", language_code=batch_order.owner.language
+            )
+            emails.send(
+                subject=_("Batch order payment validated!"),
+                template_vars={
+                    "title": _("Payment confirmed!"),
+                    "email": batch_order.owner.email,
+                    "fullname": batch_order.owner.get_full_name(),
+                    "product_title": product_title,
+                    "total": Money(batch_order.total),
+                    "number_of_seats": batch_order.nb_seats,
+                    "vouchers": vouchers,
+                    "price": amount,
+                    "site": {
+                        "name": settings.JOANIE_CATALOG_NAME,
+                        "url": settings.JOANIE_CATALOG_BASE_URL,
+                    },
+                },
+                template_name="order_validated",
+                to_user_email=batch_order.owner.email,
+            )
 
     @classmethod
     def _send_mail_subscription_success(cls, order):
@@ -83,13 +139,17 @@ class BasePaymentBackend:
         confirmed
         """
         with override(order.owner.language):
+            product_title = order.product.safe_translation_getter(
+                "title", language_code=order.owner.language
+            )
             emails.send(
                 subject=_("Subscription confirmed!"),
                 template_vars={
                     "title": _("Subscription confirmed!"),
                     "email": order.owner.email,
                     "fullname": order.owner.name,
-                    "product": order.product,
+                    "product_title": product_title,
+                    "total": order.total,
                     "site": {
                         "name": settings.JOANIE_CATALOG_NAME,
                         "url": settings.JOANIE_CATALOG_BASE_URL,
@@ -184,13 +244,16 @@ class BasePaymentBackend:
             )
 
     @classmethod
-    def _do_on_payment_failure(cls, order, installment_id):
+    def _do_on_payment_failure(cls, order, installment_id, is_batch=False):
         """
         Generic actions triggered when a failed payment has been received.
         Mark the invoice as pending.
         """
-        order.set_installment_refused(installment_id)
-        cls._send_mail_refused_debit(order, installment_id)
+        if is_batch:
+            order.flow.failed_payment()
+        else:
+            order.set_installment_refused(installment_id)
+            cls._send_mail_refused_debit(order, installment_id)
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference, installment_id):

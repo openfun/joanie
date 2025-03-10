@@ -199,26 +199,36 @@ class LoggingTestCase(TestCase):
 class ActivityLogMixingTestCase:
     """Mixin for activity log testing"""
 
-    def assertPaymentSuccessActivityLog(self, order):
+    def assertPaymentSuccessActivityLog(self, order, is_batch=False):
         """Check that the activity log is a payment success type"""
+        context = (
+            {"order_id": str(order.id)}
+            if not is_batch
+            else {"batch_order_id": str(order.id)}
+        )
         self.assertTrue(
             ActivityLog.objects.filter(
                 user=order.owner,
                 level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
                 type=enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
-                context={"order_id": str(order.id)},
+                context=context,
             ).exists(),
             "Payment success activity log not found",
         )
 
-    def assertPaymentFailedActivityLog(self, order):
+    def assertPaymentFailedActivityLog(self, order, is_batch=False):
         """Check that the activity log is a payment failed type"""
+        context = (
+            {"order_id": str(order.id)}
+            if not is_batch
+            else {"batch_order_id": str(order.id)}
+        )
         self.assertTrue(
             ActivityLog.objects.filter(
                 user=order.owner,
                 level=enums.ACTIVITY_LOG_LEVEL_ERROR,
                 type=enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
-                context={"order_id": str(order.id)},
+                context=context,
             ).exists(),
             "Payment failed activity log not found",
         )
