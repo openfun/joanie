@@ -1953,3 +1953,33 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
             validated_data.pop("was_created_by_order", None)
 
         return super().update(instance, validated_data)
+
+
+class AdminVoucherSerializer(serializers.ModelSerializer):
+    """Serializer for Voucher model."""
+
+    discount_id = serializers.SlugRelatedField(
+        slug_field="id",
+        source="discount",
+        queryset=models.Discount.objects.all(),
+        many=False,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = models.Voucher
+        fields = [
+            "id",
+            "created_on",
+            "updated_on",
+            "code",
+            "discount_id",
+            "multiple_use",
+            "multiple_users",
+        ]
+        read_only_fields = [
+            "id",
+            "created_on",
+            "updated_on",
+        ]

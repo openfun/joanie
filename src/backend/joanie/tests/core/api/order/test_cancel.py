@@ -87,9 +87,6 @@ class OrderCancelApiTest(BaseAPITestCase):
             price=100,
         )
         offering = product.offerings.first()
-        offering_rule = factories.OfferingRuleFactory(
-            course_product_relation=offering,
-        )
 
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
@@ -100,7 +97,7 @@ class OrderCancelApiTest(BaseAPITestCase):
                     # No credit card should be created and a voucher is already attached to order
                     self.assertIsNone(order.credit_card)
                 else:
-                    voucher = factories.VoucherFactory(offering_rule=offering_rule)
+                    voucher = factories.VoucherFactory()
                     order = factories.OrderFactory(
                         owner=user, state=state, voucher=voucher, product=product
                     )

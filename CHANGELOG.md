@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add Voucher admin API
+
 ## [3.0.3] - 2025-09-04
 
 ### Changed
@@ -52,6 +56,7 @@ and this project adheres to
 - Add Offer rules to ProductRelationSerializer
 - Add cron task to sync offering rules
 - Language tab for offering rule
+- Add Voucher admin API
 
 ### Changed
 
