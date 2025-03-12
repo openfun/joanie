@@ -2770,6 +2770,42 @@
             }
         },
         "/api/v1.0/admin/discounts/{id}/": {
+            "get": {
+                "operationId": "discounts_retrieve",
+                "description": "Admin Discount Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "discounts"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminDiscount"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
             "put": {
                 "operationId": "discounts_update",
                 "description": "Admin Discount Viewset",
@@ -5497,6 +5533,257 @@
                             }
                         },
                         "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/vouchers/": {
+            "get": {
+                "operationId": "vouchers_list",
+                "description": "Admin Voucher Viewset",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "vouchers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminVoucherList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "vouchers_create",
+                "description": "Admin Voucher Viewset",
+                "tags": [
+                    "vouchers"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminVoucherRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminVoucherRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminVoucher"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/vouchers/{id}/": {
+            "get": {
+                "operationId": "vouchers_retrieve",
+                "description": "Admin Voucher Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "vouchers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminVoucher"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "vouchers_update",
+                "description": "Admin Voucher Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "vouchers"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminVoucherRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminVoucherRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminVoucher"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "vouchers_partial_update",
+                "description": "Admin Voucher Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "vouchers"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminVoucherRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminVoucherRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminVoucher"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "vouchers_destroy",
+                "description": "Admin Voucher Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "vouchers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
                     }
                 }
             }
@@ -8293,6 +8580,92 @@
                     "full_name"
                 ]
             },
+            "AdminVoucher": {
+                "type": "object",
+                "description": "Serializer for Voucher model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "Voucher code",
+                        "maxLength": 255
+                    },
+                    "order_group_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
+                    "discount_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
+                    "multiple_use": {
+                        "type": "boolean",
+                        "description": "Voucher can be used multiple times per user."
+                    },
+                    "multiple_users": {
+                        "type": "boolean",
+                        "description": "Voucher can be used by multiple users."
+                    }
+                },
+                "required": [
+                    "created_on",
+                    "id",
+                    "updated_on"
+                ]
+            },
+            "AdminVoucherRequest": {
+                "type": "object",
+                "description": "Serializer for Voucher model.",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Voucher code",
+                        "maxLength": 255
+                    },
+                    "order_group_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
+                    "discount_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
+                    "multiple_use": {
+                        "type": "boolean",
+                        "description": "Voucher can be used multiple times per user."
+                    },
+                    "multiple_users": {
+                        "type": "boolean",
+                        "description": "Voucher can be used by multiple users."
+                    }
+                }
+            },
             "BlankEnum": {
                 "enum": [
                     ""
@@ -9202,6 +9575,37 @@
                     }
                 }
             },
+            "PaginatedAdminVoucherList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminVoucher"
+                        }
+                    }
+                }
+            },
             "PatchedAdminCertificateDefinitionRequest": {
                 "type": "object",
                 "description": "Serializer for CertificationDefinition model.",
@@ -9692,6 +10096,38 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 255
+                    }
+                }
+            },
+            "PatchedAdminVoucherRequest": {
+                "type": "object",
+                "description": "Serializer for Voucher model.",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Voucher code",
+                        "maxLength": 255
+                    },
+                    "order_group_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
+                    "discount_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    },
+                    "multiple_use": {
+                        "type": "boolean",
+                        "description": "Voucher can be used multiple times per user."
+                    },
+                    "multiple_users": {
+                        "type": "boolean",
+                        "description": "Voucher can be used by multiple users."
                     }
                 }
             },
