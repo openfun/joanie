@@ -70,6 +70,12 @@ class BaseAPITestCase(PerfRecTestCaseMixin, TestCase):
         """
         return generate_jwt_token_from_user(user, expires_at)
 
+    def assertStatusCodeEqual(self, response, status_code):
+        """
+        Assert that the response status code is equal to the expected status code.
+        """
+        self.assertEqual(response.status_code, status_code, response.json())
+
 
 class LoggingTestCase(PerfRecTestCaseMixin, TestCase):
     """Base test case for logging tests"""

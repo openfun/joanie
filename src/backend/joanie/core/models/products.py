@@ -2569,6 +2569,7 @@ class Voucher(BaseModel):
         help_text=_("Voucher code"),
         max_length=255,
         default=generate_random_code,
+        unique=True,
     )
     discount = models.ForeignKey(
         to=Discount,
