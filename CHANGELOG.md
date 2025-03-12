@@ -16,6 +16,7 @@ and this project adheres to
   and bank transfer
 - Add payment methods for batch orders
 - Add unique reference for a quote once generated
+- Add Voucher admin API
 
 ## [3.0.4] - 2025-09-25
 
