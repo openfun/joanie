@@ -2007,3 +2007,64 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
             validated_data.pop("was_created_by_order", None)
 
         return super().update(instance, validated_data)
+
+
+class AdminVoucherDetailSerializer(serializers.ModelSerializer):
+    """Detail serializer for Voucher model."""
+
+    discount = AdminDiscountSerializer()
+    orders_count = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Voucher
+        fields = [
+            "id",
+            "created_on",
+            "updated_on",
+            "code",
+            "discount",
+            "is_active",
+            "multiple_use",
+            "multiple_users",
+            "orders_count",
+        ]
+        read_only_fields = [
+            "id",
+            "created_on",
+            "updated_on",
+        ]
+
+    def get_orders_count(self, instance) -> int:
+        """Return the number of orders associated with this voucher."""
+        return instance.orders.count()
+
+
+class AdminVoucherSerializer(serializers.ModelSerializer):
+    """Serializer for Voucher model."""
+
+    discount_id = serializers.SlugRelatedField(
+        slug_field="id",
+        source="discount",
+        queryset=models.Discount.objects.all(),
+        many=False,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = models.Voucher
+        fields = [
+            "id",
+            "created_on",
+            "updated_on",
+            "code",
+            "is_active",
+            "discount_id",
+            "multiple_use",
+            "multiple_users",
+        ]
+        read_only_fields = [
+            "id",
+            "created_on",
+            "updated_on",
+        ]

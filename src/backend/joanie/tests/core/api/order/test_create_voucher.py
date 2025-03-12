@@ -18,7 +18,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
             user = factories.UserFactory()
 
         if not offering:
-            offering = voucher.offering_rule.course_product_relation
+            offering = factories.OfferingFactory()
 
         data = {
             "course_code": offering.course.code,
@@ -41,15 +41,16 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         """
         Authenticated user wants to create an order with a voucher discount.
         """
+        offering = factories.OfferingFactory(
+            product__price=100,
+        )
         voucher = factories.VoucherFactory(
-            offering_rule__discount=factories.DiscountFactory(rate=0.1),
-            offering_rule__course_product_relation__product__price=100,
-            offering_rule__nb_seats=None,
+            discount=factories.DiscountFactory(rate=0.1),
             multiple_use=False,
             multiple_users=False,
         )
 
-        response = self.create_order(voucher)
+        response = self.create_order(voucher, offering=offering)
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
 
@@ -87,7 +88,6 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         A multiple use and single user voucher can be used multiple times by the same user.
         """
         voucher = factories.VoucherFactory(
-            offering_rule=None,
             multiple_use=True,
             multiple_users=False,
             discount=factories.DiscountFactory(rate=0.1),
@@ -123,7 +123,6 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         A single use and multiple user voucher can be used once by each user.
         """
         voucher = factories.VoucherFactory(
-            offering_rule=None,
             multiple_use=False,
             multiple_users=True,
             discount=factories.DiscountFactory(rate=0.1),
@@ -160,7 +159,6 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         each user.
         """
         voucher = factories.VoucherFactory(
-            offering_rule=None,
             multiple_use=True,
             multiple_users=True,
             discount=factories.DiscountFactory(rate=0.1),
