@@ -31,6 +31,7 @@ and this project adheres to
 - Add Offer rules to ProductRelationSerializer
 - Add cron task to sync offering rules
 - Language tab for offering rule
+- Add Voucher admin API
 
 ### Changed
 
