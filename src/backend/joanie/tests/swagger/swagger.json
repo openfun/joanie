@@ -6253,16 +6253,16 @@
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "title": "Rule starts at",
+                        "description": "Date at which the order group rule starts"
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "title": "Rule ends at",
+                        "description": "Date at which the order group rule ends"
                     },
                     "discount": {
                         "type": "string",
@@ -6270,7 +6270,7 @@
                         "description": "primary key for the record as UUID",
                         "readOnly": true,
                         "nullable": true,
-                        "title": "Discount on the product price for the order group"
+                        "title": "Product price discount"
                     }
                 },
                 "required": [

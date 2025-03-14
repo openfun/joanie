@@ -198,6 +198,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
 
     list_display = (
         "course_product_relation",
+        "position",
         "is_active",
         "is_enabled",
         "nb_available_seats",
