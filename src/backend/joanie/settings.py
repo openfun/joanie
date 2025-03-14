@@ -441,6 +441,12 @@ class Base(Configuration):
         environ_name="JOANIE_ORDER_UPDATE_DELAY_LIMIT_IN_SECONDS",
         environ_prefix=None,
     )
+    # Minimum time authorized to fix a failed payment on a batch order before canceling it
+    JOANIE_BATCH_ORDER_FIX_PAYMENT_DELAY_LIMIT = values.Value(
+        60 * 60 * 24 * 3,  # 3 days in seconds
+        environ_name="JOANIE_BATCH_ORDER_FIX_PAYMENT_DELAY_LIMIT",
+        environ_prefix=None,
+    )
 
     # CORS
     CORS_ALLOW_CREDENTIALS = True
