@@ -6696,16 +6696,16 @@
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "title": "Rule starts at",
+                        "description": "Date at which the order group rule starts"
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
                         "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "title": "Rule ends at",
+                        "description": "Date at which the order group rule ends"
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscount"
@@ -6776,10 +6776,7 @@
                         "nullable": true
                     },
                     "discount": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "nullable": true
+                        "$ref": "#/components/schemas/AdminDiscount"
                     }
                 },
                 "required": [
@@ -6817,10 +6814,7 @@
                         "nullable": true
                     },
                     "discount": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "nullable": true
+                        "$ref": "#/components/schemas/AdminDiscountRequest"
                     }
                 }
             },
@@ -6886,10 +6880,7 @@
                         "nullable": true
                     },
                     "discount": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "nullable": true
+                        "$ref": "#/components/schemas/AdminDiscount"
                     }
                 },
                 "required": [
@@ -6927,10 +6918,7 @@
                         "nullable": true
                     },
                     "discount": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "nullable": true
+                        "$ref": "#/components/schemas/AdminDiscountRequest"
                     }
                 }
             },
@@ -9037,10 +9025,7 @@
                         "nullable": true
                     },
                     "discount": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "nullable": true
+                        "$ref": "#/components/schemas/AdminDiscountRequest"
                     }
                 }
             },
