@@ -465,26 +465,26 @@ class OrderGroup(BaseModel):
     is_active = models.BooleanField(_("is active"), default=True)
     position = models.PositiveSmallIntegerField(
         _("priority"),
-        help_text=_("Priority of the order group"),
+        help_text=_("Priority"),
         default=None,
         null=True,
         blank=True,
     )
     start = models.DateTimeField(
-        help_text=_("Date at which the order group activation begins"),
-        verbose_name=_("order group start datetime"),
+        help_text=_("Date at which the order group rule starts"),
+        verbose_name=_("rule starts at"),
         blank=True,
         null=True,
     )
     end = models.DateTimeField(
-        help_text=_("Date at which the order group activation ends"),
-        verbose_name=_("order group end datetime"),
+        help_text=_("Date at which the order group rule ends"),
+        verbose_name=_("rule ends at"),
         blank=True,
         null=True,
     )
     discount = models.ForeignKey(
         to="Discount",
-        verbose_name=_("discount on the product price for the order group"),
+        verbose_name=_("Product price discount"),
         related_name="order_groups",
         on_delete=models.CASCADE,
         null=True,
@@ -492,6 +492,9 @@ class OrderGroup(BaseModel):
     )
 
     class Meta:
+        verbose_name = _("Order group")
+        verbose_name_plural = _("Order groups")
+        ordering = ["course_product_relation", "position"]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(start__lte=models.F("end")),
@@ -1706,8 +1709,11 @@ class Discount(BaseModel):
 
     @property
     def usage_count(self):
-        """Returns the count of how many times a discount is used through order groups."""
-        return self.order_groups.count()
+        """
+        Returns the count of how many times a discount is used through order groups
+        and vouchers.
+        """
+        return self.order_groups.count() + self.vouchers.count()
 
 
 def generate_random_code():
