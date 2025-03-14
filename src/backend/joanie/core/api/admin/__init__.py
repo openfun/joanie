@@ -598,7 +598,9 @@ class NestedCourseProductRelationOrderGroupViewSet(
         "partial_update": serializers.AdminOrderGroupUpdateSerializer,
     }
     default_serializer_class = serializers.AdminOrderGroupSerializer
-    queryset = models.OrderGroup.objects.all().select_related("course_product_relation")
+    queryset = models.OrderGroup.objects.all().select_related(
+        "course_product_relation", "discount"
+    )
     ordering = "created_on"
     lookup_fields = ["course_product_relation", "pk"]
     lookup_url_kwargs = ["course_product_relation_id", "pk"]
