@@ -505,13 +505,6 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
     )
     start = serializers.DateTimeField(required=False, allow_null=True)
     end = serializers.DateTimeField(required=False, allow_null=True)
-    discount = serializers.SlugRelatedField(
-        slug_field="id",
-        queryset=models.Discount.objects.all(),
-        many=False,
-        required=False,
-        allow_null=True,
-    )
 
     class Meta(AdminOrderGroupSerializer.Meta):
         fields = [*AdminOrderGroupSerializer.Meta.fields]

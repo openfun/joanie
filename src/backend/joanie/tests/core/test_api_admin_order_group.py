@@ -610,10 +610,17 @@ class OrderGroupAdminApiTest(TestCase):
             data={"discount_id": str(discount.id)},
         )
 
-        content = response.json()
-
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(content["discount"], str(discount.id))
+        content = response.json()
+        self.assertEqual(
+            content["discount"],
+            {
+                "id": str(discount.id),
+                "amount": discount.amount,
+                "rate": discount.rate,
+                "is_used": 1,
+            },
+        )
 
     def test_admin_api_order_group_partially_update_discount(self):
         """Authenticated admin user can partially update an existing order group's discount."""
@@ -633,10 +640,17 @@ class OrderGroupAdminApiTest(TestCase):
             data={"discount_id": str(new_discount.id)},
         )
 
-        content = response.json()
-
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(content["discount"], str(new_discount.id))
+        content = response.json()
+        self.assertEqual(
+            content["discount"],
+            {
+                "id": str(new_discount.id),
+                "amount": new_discount.amount,
+                "rate": new_discount.rate,
+                "is_used": 1,
+            },
+        )
 
     def test_admin_api_order_group_update_to_remove_discount(self):
         """Authenticated admin user wants to remove the order group's discount."""
@@ -702,7 +716,15 @@ class OrderGroupAdminApiTest(TestCase):
         content = response.json()
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(content["discount"], str(discount.id))
+        self.assertEqual(
+            content["discount"],
+            {
+                "id": str(discount.id),
+                "amount": discount.amount,
+                "rate": discount.rate,
+                "is_used": 1,
+            },
+        )
 
     def test_api_admin_order_group_create_with_fake_discount(self):
         """
