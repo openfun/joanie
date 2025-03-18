@@ -165,8 +165,8 @@ export function CourseProductRelationRow({
       ...orderGroup,
       ...restPayload,
       nb_available_seats:
-        orderGroup.nb_available_seats +
-        (payload.nb_seats - orderGroup.nb_seats),
+        (orderGroup.nb_available_seats ?? 0) +
+        ((payload.nb_seats ?? 0) - (orderGroup.nb_seats ?? 0)),
     });
     courseProductRelationQuery.methods.editOrderGroup(
       {
@@ -212,10 +212,11 @@ export function CourseProductRelationRow({
   const create = (payload: DTOOrderGroup) => {
     const dummy: OrderGroupDummy = {
       dummyId: orderGroupList.length + 1 + "",
-      nb_available_seats: payload.nb_seats,
-      nb_seats: payload.nb_seats,
+      nb_available_seats: payload.nb_seats ?? null,
+      nb_seats: payload.nb_seats ?? null,
       can_edit: false,
       is_active: payload.is_active,
+      discount: null,
     };
 
     dummyListMethods.push(dummy);
@@ -332,6 +333,7 @@ export function CourseProductRelationRow({
                       is_active: isActive,
                       nb_seats: orderGroup.nb_seats,
                       course_product_relation: relation.id,
+                      discount_id: orderGroup.discount?.id ?? null,
                     },
                     { ...orderGroup },
                     orderIndex,
