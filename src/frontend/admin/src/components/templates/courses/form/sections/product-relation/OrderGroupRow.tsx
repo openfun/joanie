@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from "react-intl";
 import { SxProps } from "@mui/material/styles";
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
 import { OrderGroup, OrderGroupDummy } from "@/services/api/models/OrderGroup";
+import { getDiscountLabel } from "@/services/api/models/Discount";
 
 const messages = defineMessages({
   mainTitleOrderGroup: {
@@ -15,6 +16,11 @@ const messages = defineMessages({
     id: "components.templates.courses.form.productRelation.row.subTitleOrderGroup",
     description: "Sub title for the order group row",
     defaultMessage: "{reservedSeats}/{totalSeats} seats",
+  },
+  discountLabel: {
+    id: "components.templates.courses.form.productRelation.row.discountLabel",
+    description: "Discount label",
+    defaultMessage: "Discount",
   },
   addOrderGroupButton: {
     id: "components.templates.courses.form.productRelation.row.addOrderGroupButton",
@@ -37,12 +43,14 @@ const messages = defineMessages({
 const isOrderGroup = (
   item: OrderGroup | OrderGroupDummy,
 ): item is OrderGroup => {
+  if (!item) return false;
   return "id" in item;
 };
 
 const isOrderGroupDummy = (
   item: OrderGroup | OrderGroupDummy,
 ): item is OrderGroupDummy => {
+  if (!item) return false;
   return "dummyId" in item;
 };
 
@@ -65,10 +73,24 @@ export function OrderGroupRow({
   const mainTitle = intl.formatMessage(messages.mainTitleOrderGroup, {
     number: orderIndex + 1,
   });
-  const subTitle = intl.formatMessage(messages.subTitleOrderGroup, {
-    reservedSeats: orderGroup.nb_seats - orderGroup.nb_available_seats,
-    totalSeats: orderGroup.nb_seats,
-  });
+
+  function getSubTitle() {
+    const seats =
+      orderGroup.nb_available_seats !== null
+        ? intl.formatMessage(messages.subTitleOrderGroup, {
+            reservedSeats:
+              (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0),
+            totalSeats: orderGroup.nb_seats,
+          })
+        : "";
+
+    const discount = orderGroup.discount
+      ? `${intl.formatMessage(messages.discountLabel)}: ${getDiscountLabel(orderGroup.discount)}`
+      : "";
+
+    if (seats && discount) return `${seats} - ${discount}`;
+    return seats || discount;
+  }
 
   const sxProps: SxProps = { backgroundColor: "background" };
   const disableMessage = !canEdit
@@ -85,7 +107,7 @@ export function OrderGroupRow({
         loading={true}
         sx={sxProps}
         mainTitle={mainTitle}
-        subTitle={subTitle}
+        subTitle={getSubTitle()}
       />
     );
   }
@@ -104,7 +126,7 @@ export function OrderGroupRow({
         onEdit={onEdit}
         sx={sxProps}
         mainTitle={mainTitle}
-        subTitle={subTitle}
+        subTitle={getSubTitle()}
         permanentRightActions={
           <Switch
             inputProps={{
