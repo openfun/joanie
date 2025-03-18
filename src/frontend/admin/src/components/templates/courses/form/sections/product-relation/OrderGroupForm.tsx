@@ -10,6 +10,7 @@ import { OrderGroup } from "@/services/api/models/OrderGroup";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
 import RHFSwitch from "@/components/presentational/hook-form/RHFSwitch";
 import { Maybe } from "@/types/utils";
+import { DiscountSelect } from "@/components/presentational/discount/DiscountSelect";
 
 const messages = defineMessages({
   numberOfSeatInputLabel: {
@@ -22,11 +23,17 @@ const messages = defineMessages({
     defaultMessage: "Activate this order group",
     description: "The input label for the activate switch",
   },
+  discountLabel: {
+    id: "components.templates.products.form.sections.OderGroups.OrderGroupForm.discountLabel",
+    defaultMessage: "Discount",
+    description: "The input label for the discount select",
+  },
 });
 
 export type OrderGroupFormValues = {
-  nb_seats: number;
+  nb_seats?: number | null | undefined;
   is_active: boolean;
+  discount_id?: string | null | undefined;
 };
 
 type Props = {
@@ -38,20 +45,22 @@ const getMinNbSeats = (orderGroup?: OrderGroup): number => {
   if (!orderGroup) {
     return 0;
   }
-  return orderGroup.nb_seats - orderGroup.nb_available_seats;
+  return (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
 };
 
 export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
   const intl = useIntl();
 
   const Schema = Yup.object().shape({
-    nb_seats: Yup.number().min(getMinNbSeats(orderGroup)).required(),
+    nb_seats: Yup.number().min(getMinNbSeats(orderGroup)).nullable(),
     is_active: Yup.boolean().required(),
+    discount_id: Yup.string().nullable(),
   });
 
   const getDefaultValues = () => ({
-    nb_seats: orderGroup?.nb_seats ?? 0,
+    nb_seats: orderGroup?.nb_seats ?? null,
     is_active: orderGroup?.is_active ?? false,
+    discount_id: orderGroup?.discount?.id ?? null,
   });
 
   const form = useForm({
@@ -75,6 +84,13 @@ export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
             type="number"
             name="nb_seats"
             label={intl.formatMessage(messages.numberOfSeatInputLabel)}
+          />
+        </Grid2>
+        <Grid2 size={12}>
+          <DiscountSelect
+            name="discount_id"
+            label={intl.formatMessage(messages.discountLabel)}
+            helperText={form.formState.errors.discount_id?.message}
           />
         </Grid2>
         <Grid2 size={12}>
