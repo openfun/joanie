@@ -18,6 +18,10 @@ import {
 } from "@/services/api/models/Relations";
 import { DTOOrderGroup, OrderGroup } from "@/services/api/models/OrderGroup";
 import { mockCourseRunsFromCourse } from "@/tests/mocks/course-runs/course-runs-mocks";
+import { Discount, DTODiscount } from "@/services/api/models/Discount";
+import { DiscountFactory } from "@/services/factories/discounts";
+
+const discounts: Discount[] = DiscountFactory(3);
 
 export const getCourseScenarioStore = () => {
   const list = CourseFactory(5);
@@ -146,6 +150,16 @@ export const getCourseScenarioStore = () => {
     return postUpdateOrganization(payload, undefined, organizationList);
   };
 
+  const createDiscount = (payload: DTODiscount) => {
+    let discount = DiscountFactory();
+    discount = {
+      ...discount,
+      ...payload,
+    };
+    discounts.push(discount);
+    return discount;
+  };
+
   return {
     list,
     organizations: organizationList,
@@ -153,12 +167,14 @@ export const getCourseScenarioStore = () => {
     products,
     courseRuns,
     orderGroups,
+    discounts,
     postUpdate,
     createOrg,
     postProductRelation,
     productRelations,
     mockCourseRunsFromCourse,
     mockOrderGroup,
+    createDiscount,
   };
 };
 
@@ -199,8 +215,8 @@ export const mockOrderGroup = async (
         ...orderGroupToEdit,
         ...payload,
         nb_available_seats:
-          orderGroupToEdit.nb_available_seats +
-          (payload.nb_seats - orderGroupToEdit.nb_seats),
+          (orderGroupToEdit.nb_available_seats ?? 0) +
+          ((payload.nb_seats ?? 0) - (orderGroupToEdit.nb_seats ?? 0)),
       };
       const index = orderGroupResource.getResourceIndex(orderGroupToEdit.id);
       orderGroupList[index] = result;
@@ -210,11 +226,20 @@ export const mockOrderGroup = async (
         ...payload,
         nb_available_seats: payload.nb_seats,
         can_edit: false,
+        discount: null,
       };
       orderGroupList.push(result);
       const relation = relationsResource.getResource(relationId);
       relation.order_groups = relation.order_groups.concat(result);
     }
+
+    if (payload.discount_id) {
+      const discount = discounts.find((d) => d.id === payload.discount_id);
+      if (discount) {
+        result.discount = discount;
+      }
+    }
+
     return result;
   };
 
