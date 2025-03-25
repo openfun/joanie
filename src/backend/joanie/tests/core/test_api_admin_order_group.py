@@ -316,6 +316,38 @@ class OrderGroupAdminApiTest(TestCase):
             1,
         )
 
+    def test_admin_api_order_group_patch_authenticated_empty_nb_seats(self):
+        """
+        The frontend sends an empty string when the user wants to set the number of seats to None.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation, is_active=False
+        )
+        data = {
+            "nb_seats": "",
+            "is_active": True,
+        }
+        with self.assertNumQueries(5):
+            response = self.client.patch(
+                f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
+                content_type="application/json",
+                data=data,
+            )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["nb_seats"], None)
+        self.assertEqual(content["is_active"], data["is_active"])
+        self.assertEqual(
+            models.OrderGroup.objects.filter(
+                nb_seats__isnull=True, is_active=data["is_active"]
+            ).count(),
+            1,
+        )
+
     # delete
     def test_admin_api_order_group_delete_anonymous(self):
         """
@@ -709,7 +741,10 @@ class OrderGroupAdminApiTest(TestCase):
             f"{self.base_url}/{relation.id}/order-groups/",
             content_type="application/json",
             data={
+                "nb_seats": "",
+                "is_active": True,
                 "discount_id": str(discount.id),
+                "course_product_relation": str(relation.id),
             },
         )
 
