@@ -509,6 +509,15 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
     class Meta(AdminOrderGroupSerializer.Meta):
         fields = [*AdminOrderGroupSerializer.Meta.fields]
 
+    def to_internal_value(self, data):
+        """
+        Override the default to_internal_value method to handle CSV data.
+        """
+        if data.get("nb_seats") == "":
+            data["nb_seats"] = None
+
+        return super().to_internal_value(data)
+
     def update(self, instance, validated_data):
         """Update the discount for the order group"""
         if discount_id := self.initial_data.get("discount_id"):
