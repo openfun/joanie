@@ -428,7 +428,7 @@ jobs:
           command: yarn playwright install --with-deps chromium
       - run:
           name: Run test command
-          command: PLAYWRIGHT_JUNIT_OUTPUT_FILE=./reports/playwright-ct/results.xml yarn test-ct --shard=$(($CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL} --reporter=junit,list
+          command: PLAYWRIGHT_JUNIT_OUTPUT_FILE=./reports/playwright-ct/results.xml yarn test:ct --shard=$(($CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL} --reporter=junit,list
       - store_test_results:
           path: ./reports/playwright-ct/
 
