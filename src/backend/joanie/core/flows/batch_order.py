@@ -113,6 +113,16 @@ class BatchOrderFlow:
     def completed(self):
         """Batch order is mark as complete because it's been paid"""
 
+    @state.transition(
+        source=enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+        target=enums.BATCH_ORDER_STATE_CANCELED,
+    )
+    def cancel(self):
+        """
+        Batch order is mark as `canceled` because the payment is still in failure after
+        tolerated time limit
+        """
+
     def update(self):
         """
         Update the batch order state.

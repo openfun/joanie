@@ -1762,6 +1762,27 @@ class Voucher(BaseModel):
         return not orders_queryset.exists()
 
 
+class BatchOrderManager(models.Manager):
+    """Custom manager Batch Order model"""
+
+    def get_stuck_failed_payment_batch_orders(self):
+        """
+        Retrieve batch orders that didn't fix failed payment beyond
+        the tolerated time limit of last update.
+        """
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                state=enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+                updated_on__lte=timezone.now()
+                - timedelta(
+                    seconds=settings.JOANIE_BATCH_ORDER_FIX_PAYMENT_DELAY_LIMIT
+                ),
+            )
+        )
+
+
 class BatchOrder(BaseModel):
     """
     BatchOrder allows to define a batch of orders to prepare.
@@ -1780,6 +1801,8 @@ class BatchOrder(BaseModel):
                 violation_error_message="BatchOrder requires organization unless in draft state.",
             ),
         ]
+
+    objects = BatchOrderManager()
 
     relation = models.ForeignKey(
         to=CourseProductRelation,
