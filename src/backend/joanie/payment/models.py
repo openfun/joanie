@@ -259,11 +259,8 @@ class Invoice(BaseModel):
         Generate a normalized reference related to the date
         and the related order
         """
-        order_uid_fragment = (
-            str(self.order.id).split("-", maxsplit=1)[0]
-            if self.order
-            else str(self.batch_order.id).split("-", maxsplit=1)[0]
-        )
+        order_uid = self.order.id if self.order else self.batch_order.id
+        order_uid_fragment = str(order_uid).split("-", maxsplit=1)[0]
         timestamp = int(timezone.now().timestamp() * 1_000)  # Time in milliseconds
 
         return f"{order_uid_fragment}-{timestamp}"

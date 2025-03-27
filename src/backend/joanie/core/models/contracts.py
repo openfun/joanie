@@ -231,9 +231,7 @@ class Contract(BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    def tag_submission_for_signature(
-        self, reference, checksum, context, is_batch_order=False
-    ):
+    def tag_submission_for_signature(self, reference, checksum, context):
         """
         Updates the contract from an order that we have submitted to the signature provider.
         """
@@ -242,7 +240,7 @@ class Contract(BaseModel):
         self.definition_checksum = checksum
         self.signature_backend_reference = reference
         self.save()
-        if not is_batch_order:
+        if self.order:
             self.order.flow.update()
 
     def reset_submission_for_signature(self):
@@ -255,7 +253,8 @@ class Contract(BaseModel):
         self.definition_checksum = None
         self.signature_backend_reference = None
         self.save()
-        self.order.flow.update()
+        if self.order:
+            self.order.flow.update()
 
     def is_eligible_for_signing(self):
         """

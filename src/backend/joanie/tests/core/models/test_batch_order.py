@@ -10,7 +10,6 @@ from django.test import override_settings
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories
-from joanie.core.models import BatchOrder
 from joanie.core.utils import contract_definition
 from joanie.core.utils.billing_address import CompanyBillingAddress
 from joanie.payment.models import Invoice
@@ -26,23 +25,12 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         Ensure that the number of reserved seats (`nb_seats`) matches the number of trainees
         in the `trainees` list when saving a BatchOrder instance.
         """
-        relation = factories.CourseProductRelationFactory()
-        owner = factories.UserFactory()
-        batch_order = BatchOrder(
-            owner=owner,
-            relation=relation,
-            identification_number="1234",
-            company_name="acme",
-            address="some_avenue",
-            postcode="00001",
-            city="France",
-            country="FR",
-            nb_seats=2,
-            trainees=[{"first_name": "John", "last_name": "Doe"}],
-        )
 
         with self.assertRaises(ValidationError) as context:
-            batch_order.save()
+            factories.BatchOrderFactory(
+                nb_seats=2,
+                trainees=[{"first_name": "John", "last_name": "Doe"}],
+            )
 
         self.assertTrue(
             "The number of trainees must match the number of seats."
@@ -296,11 +284,12 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         'submitted_for_signature_on', 'context', 'definition_checksum',
         and 'signature_backend_reference'.
         """
-        batch_order = factories.BatchOrderFactory(
-            contract__signature_backend_reference="wfl_fake_dummy_id_123",
-            contract__definition_checksum="fake_test_file_hash_1",
-            contract__context="content",
-            contract__submitted_for_signature_on=django_timezone.now(),
+        batch_order = factories.BatchOrderFactory()
+        batch_order.contract = factories.ContractFactory(
+            signature_backend_reference="wfl_fake_dummy_id_123",
+            definition_checksum="fake_test_file_hash_1",
+            context="content",
+            submitted_for_signature_on=django_timezone.now(),
         )
         batch_order.init_flow()
 
@@ -377,11 +366,12 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             with self.subTest(state=state):
                 batch_order = factories.BatchOrderFactory(state=state, nb_seats=12)
                 if state == enums.BATCH_ORDER_STATE_COMPLETED:
-                    orders = batch_order.generate_orders()
-                    self.assertEqual(len(orders), 12)
+                    batch_order.generate_orders()
                     self.assertEqual(batch_order.orders.count(), 12)
                     for order in batch_order.orders.all():
                         self.assertIsNone(order.owner)
+                        self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
+                        self.assertEqual(order.voucher.discount.rate, 1)
                 else:
                     with self.assertRaises(ValidationError) as context:
                         batch_order.generate_orders()
@@ -418,27 +408,20 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         When we call the method to create a billing address, it should take
         the informations about the company from the batch order object.
         """
-        batch_order = factories.BatchOrderFactory(
-            company_name="Acme",
-            address="Street of awesomeness",
-            postcode="29000",
-            city="Awesome",
-            country="FR",
-        )
+        batch_order = factories.BatchOrderFactory()
 
         billing_address = batch_order.create_billing_address()
 
-        self.assertIsInstance(billing_address, CompanyBillingAddress)
         self.assertEqual(
             billing_address,
             CompanyBillingAddress(
-                address="Street of awesomeness",
-                postcode="29000",
-                city="Awesome",
-                country="FR",
+                address=batch_order.address,
+                postcode=batch_order.postcode,
+                city=batch_order.city,
+                country=batch_order.country,
                 first_name=batch_order.owner.first_name,
                 language=batch_order.owner.language,
-                last_name="",
+                last_name=batch_order.owner.last_name,
             ),
         )
 
@@ -456,3 +439,18 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         main_invoice = Invoice.objects.get(batch_order=batch_order, parent__isnull=True)
 
         self.assertEqual(batch_order.main_invoice, main_invoice)
+
+    def test_models_batch_order_property_vouchers(self):
+        """
+        The property vouchers should return the list of vouchers codes that are attached
+        to the batch order orders
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_COMPLETED, nb_seats=3
+        )
+        batch_order.generate_orders()
+        expected_vouchers = [order.voucher.code for order in batch_order.orders.all()]
+
+        vouchers = batch_order.vouchers
+
+        self.assertEqual(vouchers, expected_vouchers)

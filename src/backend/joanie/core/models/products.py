@@ -1909,8 +1909,6 @@ class BatchOrder(BaseModel):
         verbose_name=_("trainees"),
         help_text=_("trainees name list"),
         editable=True,
-        blank=True,
-        null=True,
         encoder=DjangoJSONEncoder,
         default=list,
     )
@@ -1928,6 +1926,12 @@ class BatchOrder(BaseModel):
         default=enums.BATCH_ORDER_STATE_DRAFT,
         choices=enums.BATCH_ORDER_STATE_CHOICES,
         db_index=True,
+    )
+    order_groups = models.ManyToManyField(
+        OrderGroup,
+        verbose_name=_("order group"),
+        related_name="batch_orders",
+        blank=True,
     )
 
     # pylint:disable=no-member
@@ -1961,7 +1965,7 @@ class BatchOrder(BaseModel):
         if not self.organization:
             self.organization = self.get_organization_with_least_active_orders()
 
-        self.set_total()
+        self.freeze_total()
         self.create_main_invoice()
 
         # Generate the contract
@@ -1972,29 +1976,48 @@ class BatchOrder(BaseModel):
         self.flow.update()
         self.save()
 
-    def set_total(self):
-        """Compute the total price for the batch order whether there is a discount."""
+    def get_discounted_price(self):
+        """
+        When a voucher is used, return the discounted price. Otherwise, return the total price,
+        considering the order group discount if applicable. If neither a voucher nor an order
+        group discount exists, return the total amount based on the number of seats taken.
+        """
         price_per_seat = Money(self.relation.product.price).as_decimal()
-        total = round(self.nb_seats * price_per_seat, 2)
+        total = self.nb_seats * price_per_seat
 
         if self.voucher:
             discount = self.voucher.discount or self.voucher.order_group.discount
-            self.total = calculate_price(total, discount)
-        else:
-            self.total = total
+            if discount:
+                return calculate_price(total, discount)
+
+        for order_group in self.order_groups.all():
+            if discount := order_group.discount:
+                return calculate_price(total, discount)
+
+        return total
+
+    def freeze_total(self):
+        """
+        Freeze the total price for the batch order.
+        """
+        self.total = self.get_discounted_price()
+        self.save(update_fields=["total"])
 
     def get_organization_with_least_active_orders(self):
         """
         Get the organization with the least active orders to assign it to the batch order.
         """
-        order_count_filter = Q(order__product=self.relation.product) & ~Q(
-            order__state__in=[
-                enums.ORDER_STATE_DRAFT,
-                enums.ORDER_STATE_ASSIGNED,
-                enums.ORDER_STATE_CANCELED,
-            ]
+        order_count_filter = (
+            Q(order__product=self.relation.product)
+            & ~Q(
+                order__state__in=[
+                    enums.ORDER_STATE_DRAFT,
+                    enums.ORDER_STATE_ASSIGNED,
+                    enums.ORDER_STATE_CANCELED,
+                ]
+            )
+            & Q(order__course=self.relation.course)
         )
-        order_count_filter &= Q(order__course=self.relation.course)
 
         organizations = self.relation.organizations.annotate(
             order_count=Count("order", filter=order_count_filter, distinct=True),
@@ -2077,9 +2100,7 @@ class BatchOrder(BaseModel):
                 file_bytes=file_bytes,
                 batch_order=self,
             )
-            self.contract.tag_submission_for_signature(
-                reference, checksum, context, is_batch_order=True
-            )
+            self.contract.tag_submission_for_signature(reference, checksum, context)
             self.flow.update()
 
         return backend_signature.get_signature_invitation_link(
@@ -2114,9 +2135,14 @@ class BatchOrder(BaseModel):
         ]
 
         self.orders.set(orders)
-        self.save()
+        for order in orders:
+            order.flow.assign()  # mark them as assigned
 
-        return orders
+        for order, voucher in zip(orders, self.generate_vouchers(), strict=False):
+            order.voucher = voucher
+            order.flow.to_own()  # mark them as to_own
+
+        self.save()
 
     def generate_vouchers(self):
         """Generate a voucher for each the prepared order"""
@@ -2145,6 +2171,11 @@ class BatchOrder(BaseModel):
         ]
 
         return vouchers
+
+    @property
+    def vouchers(self):
+        """Return the exhaustive list of voucher codes generated from the orders"""
+        return [order.voucher.code for order in self.orders.all()]
 
     def create_billing_address(self):
         """

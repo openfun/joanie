@@ -32,6 +32,11 @@ class Migration(migrations.Migration):
             field=models.DecimalField(blank=True, decimal_places=2, default=0.0, editable=False, max_digits=9, validators=[django.core.validators.MinValueValidator(0.0)], verbose_name='price'),
         ),
         migrations.AlterField(
+            model_name='order',
+            name='state',
+            field=models.CharField(choices=[('draft', 'Draft'), ('assigned', 'Assigned'), ('to_save_payment_method', 'To save payment method'), ('to_sign', 'To sign'), ('signing', 'Signing'), ('pending', 'Pending'), ('canceled', 'Canceled'), ('pending_payment', 'Pending payment'), ('failed_payment', 'Failed payment'), ('no_payment', 'No payment'), ('completed', 'Completed'), ('refunding', 'Refunding'), ('refunded', 'Refunded'), ('to_own', 'To own')], db_index=True, default='draft'),
+        ),
+        migrations.AlterField(
             model_name='product',
             name='price',
             field=models.DecimalField(blank=True, decimal_places=2, default=0.0, max_digits=9, validators=[django.core.validators.MinValueValidator(0.0)], verbose_name='price'),
@@ -49,13 +54,14 @@ class Migration(migrations.Migration):
                 ('city', models.CharField(help_text='company city', max_length=255, verbose_name='city')),
                 ('country', django_countries.fields.CountryField(max_length=2, verbose_name='company country')),
                 ('nb_seats', models.PositiveSmallIntegerField(default=1, help_text='The number of seats to reserve', validators=[django.core.validators.MinValueValidator(1)], verbose_name='Number of seats')),
-                ('trainees', models.JSONField(blank=True, default=list, encoder=django.core.serializers.json.DjangoJSONEncoder, help_text='trainees name list', null=True, verbose_name='trainees')),
+                ('trainees', models.JSONField(default=list, encoder=django.core.serializers.json.DjangoJSONEncoder, help_text='trainees name list', verbose_name='trainees')),
                 ('total', models.DecimalField(blank=True, decimal_places=2, default=0.0, editable=False, help_text='total price for orders', max_digits=9, validators=[django.core.validators.MinValueValidator(0.0)], verbose_name='total')),
                 ('contract', models.ForeignKey(blank=True, help_text='contract of type convention', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='batch_orders', to='core.contract', verbose_name='contract')),
                 ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='batch_orders', to='core.organization', verbose_name='organization')),
                 ('owner', models.ForeignKey(help_text='eligible person to sign the convention from the company', on_delete=django.db.models.deletion.RESTRICT, related_name='batch_orders', to=settings.AUTH_USER_MODEL, verbose_name='owner')),
                 ('relation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='batch_orders', to='core.courseproductrelation', verbose_name='course product relation batch orders')),
                 ('voucher', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='batch_orders', to='core.voucher', verbose_name='voucher')),
+                ('order_groups', models.ManyToManyField(blank=True, related_name='batch_orders', to='core.ordergroup', verbose_name='order group')),
             ],
             options={
                 'verbose_name': 'batch order',
