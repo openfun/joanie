@@ -1,5 +1,6 @@
 """Test suite for BatchOrder Create API"""
 
+from decimal import Decimal
 from http import HTTPStatus
 
 from joanie.core import factories, models
@@ -143,7 +144,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertEqual(batch_order.trainees, data["trainees"])
         self.assertEqual(batch_order.company_name, data["company_name"])
         self.assertIsNotNone(batch_order.organization)
-        self.assertEqual(float(batch_order.total), 20)
+        self.assertEqual(batch_order.total, Decimal("20.00"))
 
     def test_api_batch_order_create_authenticated_with_voucher_code(self):
         """
@@ -196,4 +197,106 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertEqual(batch_order.trainees, data["trainees"])
         self.assertEqual(batch_order.company_name, data["company_name"])
         self.assertIsNotNone(batch_order.organization)
-        self.assertEqual(float(batch_order.total), 240)
+        self.assertEqual(batch_order.total, Decimal("240.00"))
+
+    def test_api_batch_order_create_authenticated_fails_order_group_no_more_seats_available(
+        self,
+    ):
+        """
+        Authenticated user should not be able to create a batch order when the requested number
+        of seats is above the order group available seats.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=10,
+        )
+        factories.OrderGroupFactory(
+            course_product_relation=relation,
+            is_active=True,
+            nb_seats=1,
+        )
+
+        data = {
+            "relation_id": relation.id,
+            "nb_seats": 2,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "trainees": [
+                {"first_name": "John", "last_name": "Doe"},
+                {"first_name": "Jane", "last_name": "Doe"},
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertEqual(
+            response.json(),
+            {
+                "order_group": [
+                    "Maximum number of orders reached for "
+                    f"product {relation.product.title}"
+                ]
+            },
+        )
+
+    def test_api_batch_order_create_authenticated_when_order_group_for_relation_has_discount(self):
+        """
+        When the order group has a discount and enough available seats, the batch order
+        should be created with the discounted price.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__price=10,
+        )
+        order_group = factories.OrderGroupFactory(
+            discount=factories.DiscountFactory(rate=0.1),
+            course_product_relation=relation,
+            is_active=True,
+            nb_seats=4,
+        )
+        data = {
+            "relation_id": relation.id,
+            "nb_seats": 3,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "trainees": [
+                {"first_name": "John", "last_name": "Doe"},
+                {"first_name": "Jane", "last_name": "Doe"},
+                {"first_name": "Joanie", "last_name": "Richie"},
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+
+        batch_order = models.BatchOrder.objects.get(owner=user)
+
+        self.assertEqual(batch_order.owner, user)
+        self.assertEqual(batch_order.relation, relation)
+        self.assertEqual(batch_order.nb_seats, 3)
+        self.assertEqual(batch_order.order_groups.first(), order_group)
+        self.assertEqual(batch_order.total, Decimal("27.00"))

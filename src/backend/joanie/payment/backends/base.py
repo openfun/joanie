@@ -38,69 +38,73 @@ class BasePaymentBackend:
         self.configuration = configuration
 
     @classmethod
-    def _do_on_payment_success(cls, order, payment, is_batch=False):
+    def _do_on_payment_success(cls, order, payment):
         """
         Generic actions triggered when a succeeded payment has been received.
         It creates an invoice and registers the debit transaction,
         then mark invoice as paid if transaction amount is equal to the invoice amount
         then mark the order as completed
         """
-        if is_batch:
-            invoice = Invoice.objects.create(
-                batch_order=order,
-                parent=order.main_invoice,
-                total=0,
-                recipient_address=order.main_invoice.recipient_address,
-            )
-            # - Store the payment transaction
-            Transaction.objects.create(
-                total=payment["amount"],
-                invoice=invoice,
-                reference=payment["id"],
-            )
+        invoice = Invoice.objects.create(
+            order=order,
+            parent=order.main_invoice,
+            total=0,
+            recipient_address=order.main_invoice.recipient_address,
+        )
+        # - Store the payment transaction
+        Transaction.objects.create(
+            total=payment["amount"],
+            invoice=invoice,
+            reference=payment["id"],
+        )
 
-            order.flow.update()
-            order.save()  # Transition flow to completed
+        # Store last credit card numbers as it may be deleted by the flow update
+        credit_card_last_numbers = order.credit_card.last_numbers
+        # Will trigger flow update
+        order.set_installment_paid(payment["installment_id"])
 
-            order.generate_orders()
-            vouchers = order.generate_vouchers()
+        order_completed = order.state == ORDER_STATE_COMPLETED
 
-            cls._send_mail_batch_order_payment_success(
-                batch_order=order,
-                amount=payment["amount"]
-                if "." in str(payment["amount"])
-                else payment["amount"] / 100,
-                vouchers=vouchers,
-            )
-        else:
-            invoice = Invoice.objects.create(
-                order=order,
-                parent=order.main_invoice,
-                total=0,
-                recipient_address=order.main_invoice.recipient_address,
-            )
-            # - Store the payment transaction
-            Transaction.objects.create(
-                total=payment["amount"],
-                invoice=invoice,
-                reference=payment["id"],
-            )
+        # Because with Lyra Payment Provider, we get the value in cents
+        cls._send_mail_payment_installment_success(
+            order=order,
+            amount=payment["amount"]
+            if "." in str(payment["amount"])
+            else payment["amount"] / 100,
+            credit_card_last_numbers=credit_card_last_numbers,
+            upcoming_installment=not order_completed,
+        )
 
-            # Store last credit card numbers as it may be deleted by the flow update
-            credit_card_last_numbers = order.credit_card.last_numbers
-            # Will trigger flow update
-            order.set_installment_paid(payment["installment_id"])
+    @classmethod
+    def _do_on_batch_order_payment_success(cls, batch_order, payment):
+        """
+        Generic action when a batch order payment has succeeded
+        It creates an invoice and registers the debit transaction,
+        then mark invoice as paid if transaction amount is equal to the invoice amount
+        then mark the batch order as completed.
+        """
+        invoice = Invoice.objects.create(
+            batch_order=batch_order,
+            parent=batch_order.main_invoice,
+            total=0,
+        )
+        # - Store the payment transaction
+        Transaction.objects.create(
+            total=payment["amount"],
+            invoice=invoice,
+            reference=payment["id"],
+        )
 
-            order_completed = order.state == ORDER_STATE_COMPLETED
-            # Because with Lyra Payment Provider, we get the value in cents
-            cls._send_mail_payment_installment_success(
-                order=order,
-                amount=payment["amount"]
-                if "." in str(payment["amount"])
-                else payment["amount"] / 100,
-                credit_card_last_numbers=credit_card_last_numbers,
-                upcoming_installment=not order_completed,
-            )
+        batch_order.flow.update()
+        batch_order.generate_orders()
+
+        cls._send_mail_batch_order_payment_success(
+            batch_order=batch_order,
+            amount=payment["amount"]
+            if "." in str(payment["amount"])
+            else payment["amount"] / 100,
+            vouchers=batch_order.vouchers,
+        )
 
     @classmethod
     def _send_mail_batch_order_payment_success(cls, batch_order, amount, vouchers):
@@ -244,16 +248,18 @@ class BasePaymentBackend:
             )
 
     @classmethod
-    def _do_on_payment_failure(cls, order, installment_id, is_batch=False):
+    def _do_on_payment_failure(cls, order, installment_id):
         """
         Generic actions triggered when a failed payment has been received.
         Mark the invoice as pending.
         """
-        if is_batch:
-            order.flow.failed_payment()
-        else:
-            order.set_installment_refused(installment_id)
-            cls._send_mail_refused_debit(order, installment_id)
+        order.set_installment_refused(installment_id)
+        cls._send_mail_refused_debit(order, installment_id)
+
+    @classmethod
+    def _do_on_batch_order_payment_failure(cls, batch_order):
+        """Generic action triggered when a failed payment has been received."""
+        batch_order.flow.failed_payment()
 
     @staticmethod
     def _do_on_refund(amount, invoice, refund_reference, installment_id):

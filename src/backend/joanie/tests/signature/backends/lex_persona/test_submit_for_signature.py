@@ -883,7 +883,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         lex_persona_backend = get_signature_backend()
 
         reference_id, file_hash = lex_persona_backend.submit_for_signature(
-            title=title, file_bytes=file_bytes, batch_order=batch_order
+            title=title, file_bytes=file_bytes, order=batch_order
         )
 
         self.assertEqual(workflow_id, reference_id)

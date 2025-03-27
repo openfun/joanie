@@ -15,7 +15,7 @@ from requests import HTTPError, RequestException
 from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
-    BATCH_ORDER_STATE_SIGNING,
+    BATCH_ORDER_STATE_PENDING,
     ORDER_STATE_COMPLETED,
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
@@ -2598,7 +2598,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         """
         backend = LyraBackend(self.configuration)
         batch_order = BatchOrderFactory(
-            state=BATCH_ORDER_STATE_SIGNING,
+            state=BATCH_ORDER_STATE_PENDING,
             relation__product__price=D("120.00"),
             nb_seats=2,
         )
@@ -2666,9 +2666,9 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             },
         )
 
-    @patch.object(BasePaymentBackend, "_do_on_payment_failure")
+    @patch.object(BasePaymentBackend, "_do_on_batch_order_payment_failure")
     def test_payment_backend_lyra_handle_notification_payment_failure_for_batch_order(
-        self, mock_do_on_payment_failure
+        self, mock_do_on_batch_order_payment_failure
     ):
         """
         When backend receives a payment notification which failed for a batch order, the generic
@@ -2676,7 +2676,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         """
         backend = LyraBackend(self.configuration)
         batch_order = BatchOrderFactory(
-            state=BATCH_ORDER_STATE_SIGNING,
+            state=BATCH_ORDER_STATE_PENDING,
             id="758c2570-a7af-4335-b091-340d0cc6e694",
             owner__email="john.doe@acme.org",
             relation__product__price=D("123.45"),
@@ -2691,23 +2691,23 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
 
         backend.handle_notification(request)
 
-        mock_do_on_payment_failure.assert_called_once_with(
-            order=batch_order, installment_id=None, is_batch=True
+        mock_do_on_batch_order_payment_failure.assert_called_once_with(
+            batch_order=batch_order,
         )
 
-    @patch.object(BasePaymentBackend, "_do_on_payment_success")
+    @patch.object(BasePaymentBackend, "_do_on_batch_order_payment_success")
     def test_payment_backend_lyra_handle_notification_for_batch_order(
-        self, mock_do_on_payment_success
+        self, mock_do_on_batch_order_payment_success
     ):
         """
         When we receive a notification from the successful payment of a batch order,
-        the generic method `_do_on_payment_success` should be called.
+        the generic method `_do_on_batch_order_payment_success` should be called.
         """
         backend = LyraBackend(self.configuration)
         batch_order = BatchOrderFactory(
             id="514070fe-c12c-48b8-97cf-5262708673a3",
             owner__email="john.doe@acme.org",
-            state=BATCH_ORDER_STATE_SIGNING,
+            state=BATCH_ORDER_STATE_PENDING,
             relation__product__price=D("123.45"),
             nb_seats=1,
         )
@@ -2728,8 +2728,8 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
-        mock_do_on_payment_success.assert_called_once_with(
-            order=batch_order,
+        mock_do_on_batch_order_payment_success.assert_called_once_with(
+            batch_order=batch_order,
             payment={
                 "id": transaction_id,
                 "amount": D("123.45"),
@@ -2742,5 +2742,4 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
                     "postcode": billing_details["zipCode"],
                 },
             },
-            is_batch=True,
         )

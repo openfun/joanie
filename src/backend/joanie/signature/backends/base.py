@@ -43,7 +43,7 @@ class BaseSignatureBackend:
 
         return getattr(settings, setting_name, None)
 
-    def _confirm_student_signature(self, contract, batch_order=False):
+    def _confirm_student_signature(self, contract):
         """
         Update the contract object when the file has been signed with the signature provider.
         We update the field 'student_signed_on' with a new timestamp.
@@ -51,9 +51,11 @@ class BaseSignatureBackend:
         contract.student_signed_on = django_timezone.now()
         contract.save()
 
-        flow = (
-            contract.batch_orders.first().flow if batch_order else contract.order.flow
-        )
+        if contract.batch_orders.count() == 1:
+            batch_order = contract.batch_orders.first()
+            flow = batch_order.flow
+        else:
+            flow = contract.order.flow
         flow.update()
 
         logger.info("Student signed the contract '%s'", contract.id)
@@ -94,9 +96,8 @@ class BaseSignatureBackend:
                 "The contract validity date of expiration has passed."
             )
 
-        is_from_batch_order = contract.batch_orders.count() == 1
         if contract.student_signed_on is None:
-            self._confirm_student_signature(contract, batch_order=is_from_batch_order)
+            self._confirm_student_signature(contract)
         elif contract.organization_signed_on is None:
             self._confirm_organization_signature(contract)
 
@@ -121,8 +122,7 @@ class BaseSignatureBackend:
         self,
         title: str,
         file_bytes: bytes,
-        order=None,
-        batch_order=None,
+        order: models.Order | models.BatchOrder,
     ):
         """
         Submit for signature a file with the signature provider.

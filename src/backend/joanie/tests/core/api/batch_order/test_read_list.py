@@ -49,10 +49,11 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
         )
         bo.init_flow()
 
-        response = self.client.get(
-            "/api/v1.0/batch-orders/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(6):
+            response = self.client.get(
+                "/api/v1.0/batch-orders/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
 
@@ -68,46 +69,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                         "owner": user.username,
                         "total": float(bo.total),
                         "currency": settings.DEFAULT_CURRENCY,
-                        "relation": {
-                            "course": {
-                                "id": str(bo.relation.course.id),
-                                "code": bo.relation.course.code,
-                                "cover": "_this_field_is_mocked",
-                                "title": bo.relation.course.title,
-                            },
-                            "created_on": bo.relation.created_on.strftime(
-                                "%Y-%m-%dT%H:%M:%S.%fZ"
-                            ),
-                            "id": str(bo.relation.id),
-                            "order_groups": [],
-                            "product": {
-                                "call_to_action": "let's go!",
-                                "certificate_definition": None,
-                                "contract_definition": {
-                                    "id": str(
-                                        bo.relation.product.contract_definition.id
-                                    ),
-                                    "description": (
-                                        bo.relation.product.contract_definition.description
-                                    ),
-                                    "language": bo.relation.product.contract_definition.language,
-                                    "title": bo.relation.product.contract_definition.title,
-                                },
-                                "id": str(bo.relation.product.id),
-                                "instructions": "",
-                                "price": float(bo.relation.product.price),
-                                "price_currency": settings.DEFAULT_CURRENCY,
-                                "state": {
-                                    "priority": bo.relation.product.state["priority"],
-                                    "datetime": None,
-                                    "call_to_action": None,
-                                    "text": "to be scheduled",
-                                },
-                                "target_courses": [],
-                                "title": bo.relation.product.title,
-                                "type": bo.relation.product.type,
-                            },
-                        },
+                        "relation_id": str(bo.relation.id),
                         "organization": {
                             "id": str(bo.organization.id),
                             "code": bo.organization.code,
@@ -133,6 +95,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                             {"last_name": "Doe", "first_name": "John"},
                             {"last_name": "Doe", "first_name": "Jane"},
                         ],
+                        "order_group_ids": [],
                     },
                 ],
             },
