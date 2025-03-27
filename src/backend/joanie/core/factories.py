@@ -831,12 +831,18 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
     total = factory.LazyAttribute(lambda o: o.product.price)
     enrollment = None
     state = enums.ORDER_STATE_DRAFT
+    batch_order = None
+    voucher = None
 
     @factory.lazy_attribute
     def owner(self):
         """Retrieve the user from the enrollment when available or create a new one."""
         if self.enrollment:
             return self.enrollment.user
+
+        if self.state == enums.ORDER_STATE_TO_OWN:
+            return None
+
         return UserFactory(language="en-us")
 
     @factory.lazy_attribute
@@ -871,7 +877,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
                 extracted.save()
                 return extracted
 
-            if self.state != enums.ORDER_STATE_DRAFT:
+            if self.state not in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_TO_OWN]:
                 from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
                     InvoiceFactory,
                 )
@@ -1008,6 +1014,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         if self.state not in [
             enums.ORDER_STATE_DRAFT,
             enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_OWN,
         ]:
             self.state = enums.ORDER_STATE_DRAFT
 
@@ -1143,6 +1150,11 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             self.cancel_remaining_installments()
             self.save()
             self.flow.refunded()
+
+        if self.state == enums.ORDER_STATE_TO_OWN:
+            self.batch_order = BatchOrderFactory()
+            self.voucher = VoucherFactory(discount=DiscountFactory(rate=1))
+            self.save()
 
     @factory.post_generation
     # pylint: disable=method-hidden
@@ -1492,8 +1504,6 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     city = factory.Faker("city")
     country = factory.Faker("country_code")
     nb_seats = factory.fuzzy.FuzzyInteger(1, 20)
-    voucher = None
-    contract = None
 
     @factory.lazy_attribute
     def organization(self):
@@ -1514,3 +1524,12 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         We ensure that the length of trainees matches the number of seats.
         """
         return TraineeFactory.create_batch(self.nb_seats)
+
+    @factory.post_generation
+    # pylint: disable=unused-argument,no-member
+    def order_groups(self, create, extracted, **kwargs):
+        """
+        Set order groups if any
+        """
+        if extracted:
+            self.order_groups.set(extracted)

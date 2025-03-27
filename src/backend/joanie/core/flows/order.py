@@ -295,6 +295,20 @@ class OrderFlow:
     def refunded(self):
         """Mark an order as "refunded" """
 
+    def _can_be_state_to_own(self):
+        """
+        When an order has no owner and is attached to a batch order.
+        """
+        return self.instance.owner is None and self.instance.batch_order is not None
+
+    @state.transition(
+        source=enums.ORDER_STATE_ASSIGNED,
+        target=enums.ORDER_STATE_TO_OWN,
+        conditions=[_can_be_state_to_own],
+    )
+    def to_own(self):
+        """Mark an order as `to_own`"""
+
     def update(self):
         """
         Update the order state.

@@ -50,7 +50,7 @@ class CreateDevDemoTestCase(TestCase):
         nb_product_credential += (
             1  # create_product_credential_purchased with installment payment failed
         )
-        nb_product_credential += 13  # one order of each state
+        nb_product_credential += 14  # one order of each state
 
         nb_product = nb_product_credential + nb_product_certificate
         nb_product += 1  # Become a certified botanist gradeo

@@ -72,6 +72,7 @@ ORDER_STATE_NO_PAYMENT = "no_payment"  # no payment has been made
 ORDER_STATE_COMPLETED = "completed"  # is completed
 ORDER_STATE_REFUNDING = "refunding"  # order is being reimbursed
 ORDER_STATE_REFUNDED = "refunded"  # order installment payments are refunded
+ORDER_STATE_TO_OWN = "to_own"  # order is paid but does not have owner yet
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_DRAFT, _("Draft")),  # default
@@ -104,6 +105,12 @@ ORDER_STATE_CHOICES = (
     (
         ORDER_STATE_REFUNDED,
         pgettext_lazy("As in: the order payments are refunded", "Refunded"),
+    ),
+    (
+        ORDER_STATE_TO_OWN,
+        pgettext_lazy(
+            "As in: the order is paid through batch order but without owner", "To own"
+        ),
     ),
 )
 ORDER_STATE_ALLOW_ENROLLMENT = (
