@@ -70,10 +70,11 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
         )
         batch_order.init_flow()
 
-        response = self.client.get(
-            f"/api/v1.0/batch-orders/{batch_order.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+        with self.assertNumQueries(5):
+            response = self.client.get(
+                f"/api/v1.0/batch-orders/{batch_order.id}/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
 
         self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertDictEqual(
@@ -83,46 +84,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                 "owner": user.username,
                 "total": float(batch_order.total),
                 "currency": settings.DEFAULT_CURRENCY,
-                "relation": {
-                    "course": {
-                        "id": str(batch_order.relation.course.id),
-                        "code": batch_order.relation.course.code,
-                        "cover": "_this_field_is_mocked",
-                        "title": batch_order.relation.course.title,
-                    },
-                    "created_on": batch_order.relation.created_on.strftime(
-                        "%Y-%m-%dT%H:%M:%S.%fZ"
-                    ),
-                    "id": str(batch_order.relation.id),
-                    "order_groups": [],
-                    "product": {
-                        "call_to_action": "let's go!",
-                        "certificate_definition": None,
-                        "contract_definition": {
-                            "id": str(
-                                batch_order.relation.product.contract_definition.id
-                            ),
-                            "description": (
-                                batch_order.relation.product.contract_definition.description
-                            ),
-                            "language": batch_order.relation.product.contract_definition.language,
-                            "title": batch_order.relation.product.contract_definition.title,
-                        },
-                        "id": str(batch_order.relation.product.id),
-                        "instructions": "",
-                        "price": float(batch_order.relation.product.price),
-                        "price_currency": settings.DEFAULT_CURRENCY,
-                        "state": {
-                            "priority": batch_order.relation.product.state["priority"],
-                            "datetime": None,
-                            "call_to_action": None,
-                            "text": "to be scheduled",
-                        },
-                        "target_courses": [],
-                        "title": batch_order.relation.product.title,
-                        "type": batch_order.relation.product.type,
-                    },
-                },
+                "relation_id": str(batch_order.relation.id),
                 "organization": {
                     "id": str(batch_order.organization.id),
                     "code": batch_order.organization.code,
@@ -148,5 +110,6 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                     {"last_name": "Doe", "first_name": "John"},
                     {"last_name": "Doe", "first_name": "Jane"},
                 ],
+                "order_group_ids": [],
             },
         )

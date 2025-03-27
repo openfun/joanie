@@ -34,15 +34,13 @@ class TestBasePaymentBackend(BasePaymentBackend):
 
     __test__ = False
 
-    def call_do_on_payment_success(self, order, payment, is_batch=False):
+    def call_do_on_payment_success(self, order, payment):
         """call private method _do_on_payment_success"""
-        self._do_on_payment_success(order, payment, is_batch)
+        self._do_on_payment_success(order, payment)
 
-    def call_do_on_payment_failure(self, order, installment_id=None, is_batch=False):
+    def call_do_on_payment_failure(self, order, installment_id=None):
         """call private method _do_on_payment_failure"""
-        self._do_on_payment_failure(
-            order, installment_id=installment_id, is_batch=is_batch
-        )
+        self._do_on_payment_failure(order, installment_id=installment_id)
 
     def call_do_on_refund(
         self,
@@ -58,6 +56,14 @@ class TestBasePaymentBackend(BasePaymentBackend):
             refund_reference,
             installment_id,
         )
+
+    def call_do_on_batch_order_payment_success(self, batch_order, payment):
+        """call private method _do_on_batch_order_payment_success"""
+        self._do_on_batch_order_payment_success(batch_order, payment)
+
+    def call_do_on_batch_order_payment_failure(self, batch_order):
+        """call private method _do_on_batch_order_payment_failure"""
+        self._do_on_batch_order_payment_failure(batch_order)
 
     def abort_payment(self, payment_id):
         pass
@@ -1359,7 +1365,9 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             "billing_address": batch_order.create_billing_address(),
         }
 
-        backend.call_do_on_payment_success(batch_order, payment, is_batch=True)
+        backend.call_do_on_batch_order_payment_success(
+            batch_order=batch_order, payment=payment
+        )
 
         # - Payment transaction has been registered
         self.assertEqual(
@@ -1380,7 +1388,7 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self._check_batch_order_paid_email_sent("johndoe@example.fr", batch_order)
 
         # - An event has been created
-        self.assertPaymentSuccessActivityLog(batch_order, is_batch=True)
+        self.assertPaymentSuccessActivityLog(batch_order)
 
     def test_payment_backend_base_do_on_payment_failure_for_batch_order(self):
         """
@@ -1414,12 +1422,10 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # Simulate that we submit for payment, that triggers `pending` state
         batch_order.flow.pending()
 
-        backend.call_do_on_payment_failure(
-            order=batch_order, installment_id=None, is_batch=True
-        )
+        backend.call_do_on_batch_order_payment_failure(batch_order=batch_order)
 
         # - Payment has failed gracefully and changed batch order state to failed payment
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_FAILED_PAYMENT)
 
         # - An event has been created
-        self.assertPaymentFailedActivityLog(batch_order, is_batch=True)
+        self.assertPaymentFailedActivityLog(batch_order)

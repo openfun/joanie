@@ -509,13 +509,11 @@ class LyraBackend(BasePaymentBackend):
                     "postcode": billing_details["zipCode"],
                 },
             }
-            self._do_on_payment_success(
-                order=batch_order, payment=payment, is_batch=True
+            self._do_on_batch_order_payment_success(
+                batch_order=batch_order, payment=payment
             )
         else:
-            self._do_on_payment_failure(
-                order=batch_order, installment_id=None, is_batch=True
-            )
+            self._do_on_batch_order_payment_failure(batch_order=batch_order)
 
     def _handle_notification_tokenization_card_for_user(self, answer):
         """

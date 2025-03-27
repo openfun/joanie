@@ -34,35 +34,33 @@ class LexPersonaBackend(BaseSignatureBackend):
 
     def _prepare_recipient_data_for_buyer_signer(
         self,
-        order=None,
-        batch_order=None,
+        order: models.Order | models.BatchOrder,
     ) -> list[dict]:
         """
         Prepare recipient data of a user in order to include it in the creation payload of a
         signature procedure of a file. It returns a dictionary containing signer's information.
         """
-        owner = order.owner if order else batch_order.owner
-        if order:
+        if hasattr(order, "country"):
+            country = order.country.code
+        else:
             try:
                 country = order.main_invoice.recipient_address.country.code
             except AttributeError:
                 country = settings.JOANIE_DEFAULT_COUNTRY_CODE
-        else:
-            country = batch_order.country.code
 
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
 
         return [
             {
-                "email": owner.email,
-                "firstName": owner.first_name,
+                "email": order.owner.email,
+                "firstName": order.owner.first_name,
                 # Currently, we only have the `full_name` from OpenEdx that we set in the user's
                 # `first_name` in Joanie. We don't have yet the `last_name` and `first_name` that
                 # are separated in our database. In order to prepare the awaited payload for the
                 # signature provider, we set a dot : ".", for the `lastName` key.
                 "lastName": ".",
                 "country": country.upper(),
-                "preferred_locale": owner.language.lower(),
+                "preferred_locale": order.owner.language.lower(),
                 "consentPageId": consent_page_id,
             }
         ]
@@ -402,8 +400,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         self,
         title: str,
         file_bytes: bytes,
-        order=None,
-        batch_order=None,
+        order: models.Order | models.BatchOrder,
     ):
         """
         Convenience method that wraps the signature procedure creation, file upload, and start
@@ -411,7 +408,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         It returns the signature backend reference and the hash of the file from the signature
         provider.
         """
-        if not order_has_organization_owner(order=order, batch_order=batch_order):
+        if not order_has_organization_owner(order=order):
             error_msg = (
                 "No organization owner found to initiate "
                 f"the signature process for order {order.id}."
@@ -419,13 +416,9 @@ class LexPersonaBackend(BaseSignatureBackend):
             logger.warning(error_msg)
             raise ValidationError(error_msg)
 
-        buyer_recipient_data = self._prepare_recipient_data_for_buyer_signer(
-            order=order, batch_order=batch_order
-        )
+        buyer_recipient_data = self._prepare_recipient_data_for_buyer_signer(order)
         organization_recipient_data = (
-            self._prepare_recipient_data_for_organization_signer(
-                order=order, batch_order=batch_order
-            )
+            self._prepare_recipient_data_for_organization_signer(order)
         )
         reference_id = self._create_workflow(
             title, buyer_recipient_data, organization_recipient_data
@@ -600,14 +593,12 @@ class LexPersonaBackend(BaseSignatureBackend):
         If the parameter `with_payload_student` is set to `True`, the student and organization
         signatories steps are prepared, else, only the organization's step is prepared.
         """
-        order = None
-        batch_order = None
         try:
             order = models.Order.objects.get(
                 contract__signature_backend_reference=reference_id
             )
         except models.Order.DoesNotExist:
-            batch_order = models.BatchOrder.objects.get(
+            order = models.BatchOrder.objects.get(
                 contract__signature_backend_reference=reference_id
             )
         payload_organization_signatories = {
@@ -615,7 +606,7 @@ class LexPersonaBackend(BaseSignatureBackend):
                 {
                     "stepType": "signature",
                     "recipients": self._prepare_recipient_data_for_organization_signer(
-                        order=order, batch_order=batch_order
+                        order
                     ),
                     "requiredRecipients": 1,
                     "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
@@ -635,9 +626,7 @@ class LexPersonaBackend(BaseSignatureBackend):
             "steps": [
                 {
                     "stepType": "signature",
-                    "recipients": self._prepare_recipient_data_for_buyer_signer(
-                        order=order, batch_order=batch_order
-                    ),
+                    "recipients": self._prepare_recipient_data_for_buyer_signer(order),
                     "requiredRecipients": 1,
                     "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
                     * 1000,
