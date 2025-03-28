@@ -145,14 +145,12 @@ class BatchOrderFlow:
             in [enums.BATCH_ORDER_STATE_PENDING, enums.BATCH_ORDER_STATE_FAILED_PAYMENT]
             and target == enums.BATCH_ORDER_STATE_COMPLETED
         ):
-            ActivityLog.create_payment_succeeded_activity_log(
-                self.instance, is_batch=True
-            )
+            ActivityLog.create_payment_succeeded_activity_log(self.instance)
         # When the batch order payment has failed, we should log the payment in Activity Log
         if (
             source == enums.BATCH_ORDER_STATE_PENDING
             and target == enums.BATCH_ORDER_STATE_FAILED_PAYMENT
         ):
-            ActivityLog.create_payment_failed_activity_log(self.instance, is_batch=True)
+            ActivityLog.create_payment_failed_activity_log(self.instance)
 
         self.instance.save()
