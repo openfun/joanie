@@ -121,3 +121,126 @@ class DiscountAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(content["rate"], 0.2)
         self.assertIsNone(content["amount"])
+
+
+class DiscountAdminApiListFilterTest(TestCase):
+    """
+    Test suite for Discount Admin API list filter.
+    """
+
+    maxDiff = None
+
+    def setUp(self):
+        """
+        Set up the test case.
+        """
+        self.discounts = [
+            factories.DiscountFactory(amount=10),
+            factories.DiscountFactory(amount=100),
+            factories.DiscountFactory(amount=101),
+            factories.DiscountFactory(rate=0.1),
+            factories.DiscountFactory(rate=0.11),
+            factories.DiscountFactory(amount=20),
+            factories.DiscountFactory(amount=200),
+            factories.DiscountFactory(amount=201),
+            factories.DiscountFactory(rate=0.2),
+            factories.DiscountFactory(rate=0.21),
+        ]
+
+    def _test_discounts_results(self, response, expected_discounts):
+        """
+        Helper method to test the response of the API.
+        """
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": len(expected_discounts),
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(discount.id),
+                        "amount": discount.amount,
+                        "rate": discount.rate,
+                        "is_used": 0,
+                    }
+                    for discount in expected_discounts
+                ],
+            },
+        )
+
+    def test_api_admin_discount_list_filtered_by_number(self):
+        """
+        Authenticated admin user should be able to get the list of discounts
+        filtered by number.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/discounts/?query=10")
+
+        self._test_discounts_results(
+            response,
+            [
+                self.discounts[0],
+                self.discounts[1],
+                self.discounts[2],
+                self.discounts[3],
+                self.discounts[4],
+            ],
+        )
+
+    def test_api_admin_discount_list_filtered_by_type_amount(self):
+        """
+        Authenticated admin user should be able to get the list of discounts
+        filtered by type (€).
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/discounts/?query=€")
+
+        self._test_discounts_results(
+            response,
+            [
+                self.discounts[0],
+                self.discounts[1],
+                self.discounts[2],
+                self.discounts[5],
+                self.discounts[6],
+                self.discounts[7],
+            ],
+        )
+
+    def test_api_admin_discount_list_filtered_by_type_rate(self):
+        """
+        Authenticated admin user should be able to get the list of discounts
+        filtered by type (%).
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/discounts/?query=%")
+
+        self._test_discounts_results(
+            response,
+            [
+                self.discounts[3],
+                self.discounts[4],
+                self.discounts[8],
+                self.discounts[9],
+            ],
+        )
+
+    def test_api_admin_discount_list_filtered_by_type_and_number(self):
+        """
+        Authenticated admin user should be able to get the list of discounts
+        filtered by type and number.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/discounts/?query=20€")
+
+        self._test_discounts_results(response, [self.discounts[5]])
