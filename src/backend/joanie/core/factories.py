@@ -618,11 +618,15 @@ class DiscountFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Discount
+        django_get_or_create = ("rate", "amount")
+
+    amount = None
+    rate = None
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         """Create an instance of the model, and save it to the database."""
-        if "rate" not in kwargs and "amount" not in kwargs:
+        if not kwargs.get("rate") and not kwargs.get("amount"):
             if random.choice([True, False]):
                 kwargs["rate"] = Faker().pyfloat(
                     left_digits=1, right_digits=4, positive=True, max_value=1
