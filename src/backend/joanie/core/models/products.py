@@ -1686,12 +1686,14 @@ class Discount(BaseModel):
         help_text=_("Discount amount"),
         null=True,
         blank=True,
+        unique=True,
     )
     rate = models.FloatField(
         _("rate"),
         help_text=_("Discount rate"),
         null=True,
         blank=True,
+        unique=True,
         validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
     )
 
