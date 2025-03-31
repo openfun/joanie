@@ -802,3 +802,4 @@ class DiscountViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminDiscountSerializer
     queryset = models.Discount.objects.all()
+    filterset_class = filters.DiscountAdminFilterSet
