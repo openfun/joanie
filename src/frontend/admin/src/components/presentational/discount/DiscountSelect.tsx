@@ -231,15 +231,14 @@ export function DiscountSelect(
             </Grid2>
             {form.formState.errors.root && (
               <Grid2 size={12}>
-                {/* <Typography color="error">{{ form.formState.errors.root.message }}</Typography> */}
-                <Typography color="error">fuck</Typography>
+                <Typography color="error">
+                  {form.formState.errors.root.message}
+                </Typography>
               </Grid2>
             )}
           </Grid2>
         </RHFProvider>
       </CustomModal>
-      {/*  </DialogContent> */}
-      {/* </Dialog> */}
     </>
   );
 }
