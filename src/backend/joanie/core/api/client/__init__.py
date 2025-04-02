@@ -337,6 +337,27 @@ class OrderViewSet(
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
+        if voucher_code := request.data.get("voucher_code"):
+            voucher = models.Voucher.objects.get(code=voucher_code)
+            user = models.User.objects.get(username=self.request.auth["username"])
+
+            if not voucher.is_usable_by(user.id):
+                return Response(
+                    f"Voucher already claimed by user {user.id}",
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+
+            order = models.Order.objects.filter(
+                voucher__code=voucher_code, state=enums.ORDER_STATE_TO_OWN
+            ).first()
+
+            if order:
+                order.owner = user
+                order.flow.update()
+                return Response(
+                    "Voucher accepted. Owner assigned.", status=HTTPStatus.OK
+                )
+
         enrollment = None
         if enrollment_id := request.data.get("enrollment_id"):
             try:

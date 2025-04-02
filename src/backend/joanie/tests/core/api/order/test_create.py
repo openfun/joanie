@@ -2275,3 +2275,147 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_from_batch_order_already_used(
+        self, mock_enroll_user_to_course_run
+    ):
+        """
+        When the voucher code from a batch order has already been used by the user, he cannot
+        use that same voucher code twice.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=2, state=enums.BATCH_ORDER_STATE_COMPLETED
+        )
+        batch_order.generate_orders()
+        voucher_codes = batch_order.vouchers
+
+        order = batch_order.orders.filter(voucher__code=voucher_codes[0]).first()
+        order.owner = user
+        order.flow.update()
+        order.save()
+        # Make sure he is enrolled to the course run
+        mock_enroll_user_to_course_run.assert_called_once()
+        mock_enroll_user_to_course_run.reset_mock()
+        # Prepare the data where he attempts to use his voucher code a second time
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": voucher_codes[0],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        # Make sure the transition did not succeed and enroll method was not called
+        mock_enroll_user_to_course_run.assert_not_called()
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_from_batch_order_used_by_another_user(
+        self, mock_enroll_user_to_course_run
+    ):
+        """
+        When the voucher code from a batch order has been used by another user, the
+        order should not be assigned. Otherwise, he should use another code to be assigned to
+        an existing order with the state to own.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=2, state=enums.BATCH_ORDER_STATE_COMPLETED
+        )
+        batch_order.generate_orders()
+        voucher_codes = batch_order.vouchers
+
+        # Let's assign the first order with the 1st voucher code with an owner
+        order = batch_order.orders.filter(voucher__code=voucher_codes[0]).first()
+        order.owner = factories.UserFactory()
+        order.flow.update()
+        order.save()
+        # Make sure that flow update enrolls the owner to the course run
+        mock_enroll_user_to_course_run.assert_called_once()
+        mock_enroll_user_to_course_run.reset_mock()
+        # Let's now simulate that the second owner uses the wrong voucher code to claim an order
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": voucher_codes[0],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        # He should not be enrolled because he used the wrong voucher code that was consumed
+        mock_enroll_user_to_course_run.assert_not_called()
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        # We will use the second available voucher code from the batch order
+        data.update(voucher_code=voucher_codes[1])
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        # Make sure he is enrolled to the course run
+        mock_enroll_user_to_course_run.assert_called_once()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        order = models.Order.objects.get(owner=user)
+        # The order should be marked as `completed`
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_from_a_batch_order(
+        self, mock_enroll_user_to_course_run
+    ):
+        """
+        When the user uses a voucher code that was generated through a batch order,
+        he should be assigned to one of the orders available. When it succeeds, the
+        method `enroll_user_to_course_run` should be called in the order flow state transition.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            relation__product__price=100,
+            nb_seats=2,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+        voucher_codes = batch_order.vouchers
+
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": voucher_codes[0],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_enroll_user_to_course_run.assert_called_once()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        order = models.Order.objects.get(owner=user)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)

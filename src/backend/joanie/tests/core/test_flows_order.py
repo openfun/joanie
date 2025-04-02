@@ -1050,6 +1050,32 @@ class OrderFlowsTestCase(LoggingTestCase):
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
+    def test_flows_order_to_own_state_to_complete(self):
+        """
+        When the order state is in `to_own` and we assign an owner, it should update to the
+        state `completed`.
+        """
+        order = factories.OrderGeneratorFactory(
+            product__price="100.00", state=enums.ORDER_STATE_TO_OWN
+        )
+        order.owner = factories.UserFactory()
+
+        order.flow.update()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    def test_flows_order_to_own_state_to_complete_without_owner_should_fail(self):
+        """
+        When the order state is in `to_own`, it cannot transition to completed without an owner.
+        """
+        order = factories.OrderGeneratorFactory(
+            product__price="100.00", state=enums.ORDER_STATE_TO_OWN
+        )
+        with self.assertRaises(TransitionNotAllowed):
+            order.flow.complete()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
+
     def test_flows_order_complete_first_paid(self):
         """
         Test that the pending_payment transition failed when the first installment
