@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Claim an order generated from a batch order through voucher code
+
 ## [2.18.0] - 2025-05-23
 
 ### Changed
