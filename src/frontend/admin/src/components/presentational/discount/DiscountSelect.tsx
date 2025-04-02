@@ -175,7 +175,7 @@ export function DiscountSelect(
         loading={discounts.states.fetching}
         enableAdd={true}
         onAddClick={discountModal.handleOpen}
-        onFilter={(term) => setQuery(term)}
+        onFilter={setQuery}
       />
       <FormHelperText>
         {props.helperText || intl.formatMessage(messages.discountHelperText)}
