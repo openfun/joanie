@@ -168,8 +168,14 @@ class OrderFlow:
     def _can_be_state_completed(self):
         """
         An order state can be set to completed if all installments
-        are completed.
+        are completed, or if the order is already paid through a batch order.
         """
+        if (
+            self.instance.state == enums.ORDER_STATE_TO_OWN
+            and self.instance.voucher.discount.rate == 1
+        ):
+            return self.instance.batch_order and self.instance.owner
+
         fully_paid = self.instance.is_free
         if not fully_paid and self.instance.payment_schedule:
             fully_paid = all(
@@ -186,6 +192,7 @@ class OrderFlow:
             enums.ORDER_STATE_FAILED_PAYMENT,
             enums.ORDER_STATE_PENDING,
             enums.ORDER_STATE_SIGNING,
+            enums.ORDER_STATE_TO_OWN,
         ],
         target=enums.ORDER_STATE_COMPLETED,
         conditions=[_can_be_state_completed],
@@ -325,6 +332,7 @@ class OrderFlow:
             self.no_payment,
             self.failed_payment,
             self.refunded,
+            self.to_own,
         ]:
             with suppress(fsm.TransitionNotAllowed):
                 logger.debug(
@@ -352,7 +360,8 @@ class OrderFlow:
             BasePaymentBackend._send_mail_subscription_success(order=self.instance)
 
         if (
-            not self.instance.payment_schedule
+            not source == enums.ORDER_STATE_TO_OWN
+            and not self.instance.payment_schedule
             and not self.instance.is_free
             and target in [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_COMPLETED]
         ):
@@ -413,7 +422,12 @@ class OrderFlow:
             source == enums.ORDER_STATE_ASSIGNED
             and target == enums.ORDER_STATE_COMPLETED
         ) or (
-            source in [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_NO_PAYMENT]
+            source
+            in [
+                enums.ORDER_STATE_PENDING,
+                enums.ORDER_STATE_NO_PAYMENT,
+                enums.ORDER_STATE_TO_OWN,
+            ]
             and target
             in [enums.ORDER_STATE_PENDING_PAYMENT, enums.ORDER_STATE_COMPLETED]
         ):
