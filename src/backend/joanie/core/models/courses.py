@@ -869,7 +869,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
 
         return f"https://{site.domain:s}{resource_path:s}"
 
-    def get_serialized(self, visibility=None):
+    def get_serialized(self, visibility=None, certifying=True):
         """
         Return data for the course run that will be sent to the remote web hooks.
         Course run visibility can be forced via the eponym argument.
@@ -895,10 +895,29 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             "enrollment_end": self.enrollment_end.isoformat()
             if self.enrollment_end
             else None,
+            "certificate_offer": self.get_certificate_offer() if certifying else None,
             "languages": self.languages,
             "resource_link": self.uri,
             "start": self.start.isoformat() if self.start else None,
         }
+
+    def get_certificate_offer(self):
+        """
+        Return certificate offer if the related course has a certificate product.
+        According to the product price, the offer is set to 'paid' or 'free'.
+        """
+        max_product_price = self.course.products.filter(
+            type=enums.PRODUCT_TYPE_CERTIFICATE
+        ).aggregate(models.Max("price"))["price__max"]
+
+        if max_product_price is None:
+            return None
+
+        return (
+            enums.COURSE_OFFER_PAID
+            if max_product_price > 0
+            else enums.COURSE_OFFER_FREE
+        )
 
     # pylint: disable=invalid-name
     def get_equivalent_serialized_course_runs_for_related_products(

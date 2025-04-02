@@ -104,6 +104,8 @@ def on_save_product_target_course_relation(instance, **kwargs):
     webhooks.synchronize_course_runs(serialized_course_runs)
 
 
+# pylint: disable=too-many-branches
+# ruff: noqa: PLR0912
 def on_change_course_product_relation(action, instance, pk_set, **kwargs):
     """Synchronize products related to the course/product relation being changed."""
     if isinstance(instance, models.Course):
@@ -133,7 +135,31 @@ def on_change_course_product_relation(action, instance, pk_set, **kwargs):
             return
 
     elif isinstance(instance, models.Product):
-        if action == "post_add":
+        # If the product is a certificate, we need to synchronize the course runs
+        # on which the product is linked (through the course)
+        if instance.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            if action == "post_add":
+                serialized_course_runs = (
+                    models.Product.get_serialized_certificated_course_runs([instance])
+                )
+            elif action == "pre_clear":
+                serialized_course_runs = (
+                    models.Product.get_serialized_certificated_course_runs(
+                        [instance],
+                        certifying=False,
+                    )
+                )
+            elif action == "pre_remove":
+                serialized_course_runs = (
+                    models.Product.get_serialized_certificated_course_runs(
+                        [instance],
+                        models.Course.objects.filter(pk__in=pk_set),
+                        certifying=False,
+                    )
+                )
+            else:
+                return
+        elif action == "post_add":
             serialized_course_runs = (
                 models.Product.get_equivalent_serialized_course_runs_for_products(
                     [instance]
@@ -157,5 +183,29 @@ def on_change_course_product_relation(action, instance, pk_set, **kwargs):
             return
     else:
         return
+
+    webhooks.synchronize_course_runs(serialized_course_runs)
+
+
+def on_save_product(instance, created, **kwargs):
+    """
+    Synchronize product or all ongoing and future course runs
+    if the product is a certificate when product is updated.
+    """
+    # If the product is created, it can't have yet any course linked to it
+    # so we don't need to synchronize it
+    if created:
+        return
+
+    if instance.type == enums.PRODUCT_TYPE_CERTIFICATE:
+        serialized_course_runs = models.Product.get_serialized_certificated_course_runs(
+            [instance]
+        )
+    else:
+        serialized_course_runs = (
+            models.Product.get_equivalent_serialized_course_runs_for_products(
+                [instance]
+            )
+        )
 
     webhooks.synchronize_course_runs(serialized_course_runs)

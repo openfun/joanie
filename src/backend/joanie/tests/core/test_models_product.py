@@ -1,3 +1,4 @@
+# pylint: disable=too-many-public-methods
 """
 Test suite for products models
 """
@@ -6,12 +7,14 @@ import random
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal as D
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.test import TestCase
 from django.utils import timezone as django_timezone
 
-from joanie.core import enums, factories
+from joanie.core import enums, factories, models
+from joanie.core.models import CourseState
 
 
 class ProductModelsTestCase(TestCase):
@@ -133,7 +136,9 @@ class ProductModelsTestCase(TestCase):
         product_types = [
             t for t, _name in enums.PRODUCT_TYPE_CHOICES if t != "certificate"
         ]
-        product = factories.ProductFactory(type=random.choice(product_types))
+        product = factories.ProductFactory(
+            type=random.choice(product_types), price="50.00"
+        )
         self.assertEqual(
             product.get_equivalent_course_run_data(),
             {
@@ -143,6 +148,9 @@ class ProductModelsTestCase(TestCase):
                 "enrollment_start": None,
                 "languages": [],
                 "start": None,
+                "offer": "paid",
+                "price": D("50.00"),
+                "price_currency": "EUR",
             },
         )
 
@@ -195,7 +203,7 @@ class ProductModelsTestCase(TestCase):
             ]
         ]
         product = factories.ProductFactory(
-            target_courses=[cr.course for cr in course_runs]
+            target_courses=[cr.course for cr in course_runs], price="50.00"
         )
 
         with self.assertNumQueries(2):
@@ -208,6 +216,9 @@ class ProductModelsTestCase(TestCase):
             "enrollment_start": "2022-11-20T09:00:00+00:00",
             "enrollment_end": "2022-12-05T19:00:00+00:00",
             "catalog_visibility": "course_and_search",
+            "offer": "paid",
+            "price": D("50.00"),
+            "price_currency": "EUR",
         }
         self.assertEqual(data, expected_data)
         self.assertTrue(
@@ -264,6 +275,66 @@ class ProductModelsTestCase(TestCase):
             },
         )
 
+    def test_models_product_get_equivalent_course_run_offer_free(self):
+        """
+        Check that product offer is processed according to its type and price.
+        """
+        product = factories.ProductFactory(
+            price=0,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+
+        self.assertEqual(product.get_equivalent_course_run_offer(), {"offer": "free"})
+
+    def test_models_product_get_equivalent_course_run_offer_certificate_free(self):
+        """
+        Check that product offer is processed according to its type and price.
+        """
+        product = factories.ProductFactory(
+            price=0,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+
+        self.assertEqual(
+            product.get_equivalent_course_run_offer(), {"certificate_offer": "free"}
+        )
+
+    def test_models_product_get_equivalent_course_run_offer_paid(self):
+        """
+        Check that product offer is processed according to its type and price.
+        """
+        product = factories.ProductFactory(
+            price="999.99",
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+
+        self.assertEqual(
+            product.get_equivalent_course_run_offer(),
+            {
+                "offer": "paid",
+                "price": D("999.99"),
+                "price_currency": settings.DEFAULT_CURRENCY,
+            },
+        )
+
+    def test_models_product_get_equivalent_course_run_offer_certificate_paid(self):
+        """
+        Check that product offer is processed according to its type and price.
+        """
+        product = factories.ProductFactory(
+            price="80.00",
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+
+        self.assertEqual(
+            product.get_equivalent_course_run_offer(),
+            {
+                "certificate_offer": "paid",
+                "certificate_price": D("80.00"),
+                "price_currency": settings.DEFAULT_CURRENCY,
+            },
+        )
+
     def test_models_product_get_equivalent_serialized_course_runs_for_products(
         self,
     ):
@@ -280,7 +351,10 @@ class ProductModelsTestCase(TestCase):
             languages=["fr"],
         )
         product = factories.ProductFactory(
-            target_courses=[course_run.course], courses=[course]
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            price="90.00",
+            target_courses=[course_run.course],
+            courses=[course],
         )
         relation = product.course_relations.first()
 
@@ -294,6 +368,9 @@ class ProductModelsTestCase(TestCase):
                     "enrollment_start": course_run.enrollment_start.isoformat(),
                     "start": course_run.start.isoformat(),
                     "languages": ["fr"],
+                    "offer": "paid",
+                    "price": D("90.00"),
+                    "price_currency": "EUR",
                     "course": "00000",
                     "resource_link": (
                         "https://example.com/api/v1.0/"
@@ -320,7 +397,7 @@ class ProductModelsTestCase(TestCase):
             languages=["fr"],
         )
         product = factories.ProductFactory(
-            target_courses=[course_run.course], courses=[course]
+            target_courses=[course_run.course], courses=[course], price="50.00"
         )
         relation = product.course_relations.first()
 
@@ -341,6 +418,9 @@ class ProductModelsTestCase(TestCase):
                         "https://example.com/api/v1.0/"
                         f"courses/{relation.course.code}/products/{relation.product.id}/"
                     ),
+                    "offer": "paid",
+                    "price": D("50.00"),
+                    "price_currency": "EUR",
                 }
             ],
         )
@@ -375,3 +455,55 @@ class ProductModelsTestCase(TestCase):
         course_run = factories.CourseRunFactory()
         product = factories.ProductFactory(target_courses=[course_run.course])
         self.assertEqual(product.state, course_run.state)
+
+    def test_models_product_get_serialized_certificated_course_runs(self):
+        """
+        Test that get_serialized_certificated_course_runs returns all
+        the course runs for certificate products and an empty list for
+        enrollment and credential products.
+        """
+        runs = factories.CourseRunFactory.create_batch(
+            3, state=CourseState.ONGOING_OPEN
+        )
+        products = [
+            factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE, courses=[runs[0].course]
+            ),
+            factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_ENROLLMENT, courses=[runs[1].course]
+            ),
+            factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[runs[2].course]
+            ),
+        ]
+
+        result = models.Product.get_serialized_certificated_course_runs(products)
+        # Only course run linked to the certificate product should be returned
+        self.assertCountEqual(result, [runs[0].get_serialized()])
+        self.assertEqual(result[0]["certificate_offer"], "paid")
+
+    def test_models_product_get_serialized_certificated_course_runs_certifying(self):
+        """
+        The get_serialized_certificated_course_runs accepts a `certifying` parameter
+        when it is sets to `False`, the certificate_offer should be set to None.
+        """
+        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+        products = [
+            factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE, courses=[run.course]
+            )
+        ]
+
+        result = models.Product.get_serialized_certificated_course_runs(
+            products, certifying=True
+        )
+        # Only course run linked to the certificate product should be returned
+        self.assertCountEqual(result, [run.get_serialized(certifying=True)])
+        self.assertEqual(result[0]["certificate_offer"], "paid")
+
+        result = models.Product.get_serialized_certificated_course_runs(
+            products, certifying=False
+        )
+        # Only course run linked to the certificate product should be returned
+        self.assertCountEqual(result, [run.get_serialized(certifying=False)])
+        self.assertEqual(result[0]["certificate_offer"], None)

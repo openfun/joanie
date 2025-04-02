@@ -8,6 +8,7 @@ import json
 import logging
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 
 import requests
 from urllib3.util import Retry
@@ -33,7 +34,10 @@ def synchronize_course_runs(serialized_course_runs):
     if not settings.COURSE_WEB_HOOKS or not serialized_course_runs:
         return
 
-    json_course_runs = json.dumps(serialized_course_runs).encode("utf-8")
+    json_course_runs = json.dumps(serialized_course_runs, cls=DjangoJSONEncoder).encode(
+        "utf-8"
+    )
+
     for webhook in settings.COURSE_WEB_HOOKS:
         signature = hmac.new(
             str(webhook["secret"]).encode("utf-8"),
@@ -44,8 +48,11 @@ def synchronize_course_runs(serialized_course_runs):
         try:
             response = session.post(
                 webhook["url"],
-                json=serialized_course_runs,
-                headers={"Authorization": f"SIG-HMAC-SHA256 {signature:s}"},
+                data=json_course_runs,
+                headers={
+                    "Authorization": f"SIG-HMAC-SHA256 {signature:s}",
+                    "Content-Type": "application/json",
+                },
                 verify=bool(webhook.get("verify", True)),
                 timeout=3,
             )

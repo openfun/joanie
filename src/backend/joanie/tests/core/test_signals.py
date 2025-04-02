@@ -2,12 +2,14 @@
 
 import random
 from datetime import datetime
+from decimal import Decimal as D
 from unittest import mock
 from zoneinfo import ZoneInfo
 
 from django.test.testcases import TestCase
 
 from joanie.core import enums, factories, models
+from joanie.core.models.courses import CourseState
 from joanie.core.utils import webhooks
 
 # pylint: disable=too-many-locals,too-many-public-methods,too-many-lines
@@ -445,19 +447,22 @@ class SignalsTestCase(TestCase):
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_course_product_relation_create(self, mock_sync):
         """Product synchronization should be triggered when a product is created for a course."""
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         product = factories.ProductFactory(target_courses=[course_run.course])
         course = factories.CourseFactory(products=[product])
         mock_sync.reset_mock()
 
         product_types = [
-            t for t, _name in enums.PRODUCT_TYPE_CHOICES if t != "certificate"
+            product_type
+            for product_type, _ in enums.PRODUCT_TYPE_CHOICES
+            if product_type != enums.PRODUCT_TYPE_CERTIFICATE
         ]
         new_product = course.products.create(
             type=random.choice(product_types),
         )
 
         self.assertEqual(mock_sync.call_count, 1)
+
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         relation = models.CourseProductRelation.objects.get(
             course=course, product=new_product
@@ -765,6 +770,66 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["catalog_visibility"], "hidden")
+
+    # Edit certificate product relation
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_change_certificate_product_course_relation_create(
+        self, mock_sync
+    ):
+        """
+        Certificate product synchronization should be triggered
+        when a course is created for a product.
+        """
+        course_run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+        product = factories.ProductFactory(
+            courses=[course_run.course],
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            price="50.00",
+        )
+        mock_sync.reset_mock()
+
+        product.courses.create(code="123")
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+
+        self.assertCountEqual(synchronized_course_runs, [course_run.get_serialized()])
+
+        for course_run in synchronized_course_runs:
+            self.assertEqual(course_run["certificate_offer"], "paid")
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_change_certificate_product_course_relation_clear(
+        self, mock_sync
+    ):
+        """
+        Certificate Product synchronization should be triggered
+        when a product's courses are cleared.
+        """
+        courses = factories.CourseFactory.create_batch(2)
+        cr1 = factories.CourseRunFactory(
+            course=courses[0], state=CourseState.ONGOING_OPEN
+        )
+        cr2 = factories.CourseRunFactory(
+            course=courses[1], state=CourseState.ONGOING_OPEN
+        )
+
+        product = factories.ProductFactory(
+            courses=courses, type=enums.PRODUCT_TYPE_CERTIFICATE, price="50.00"
+        )
+        mock_sync.reset_mock()
+
+        product.courses.clear()
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertCountEqual(
+            synchronized_course_runs,
+            [cr.get_serialized(certifying=False) for cr in [cr1, cr2]],
+        )
+        for course_run in synchronized_course_runs:
+            self.assertEqual(course_run["certificate_offer"], None)
 
     # Product course run restrict relation
 
@@ -1430,3 +1495,96 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
         )
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_change_product_type_certificate(self, mock_sync):
+        """
+        Product synchronization should be triggered when product data change.
+        If the product is of type certificate, all course runs from which this
+        product will be sold should synchronized.
+        """
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE, price="50.00"
+        )
+
+        cr1 = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+        )
+        cr2 = factories.CourseRunFactory(
+            state=CourseState.FUTURE_OPEN,
+        )
+        cr3 = factories.CourseRunFactory(
+            state=CourseState.ARCHIVED_CLOSED,
+        )
+        factories.CourseRunFactory(
+            state=CourseState.ONGOING_CLOSED,
+        )
+
+        mock_sync.reset_mock()
+
+        factories.CourseProductRelationFactory(product=product, course=cr1.course)
+        factories.CourseProductRelationFactory(product=product, course=cr2.course)
+        factories.CourseProductRelationFactory(product=product, course=cr3.course)
+
+        # Update the product price
+        product.price = "52.00"
+        product.save()
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+
+        # Only cr1 and cr2 should have been synchronized
+        # cr3 has been ignored because it is archived
+        # The fourth course run has been ignored it does offer the certificate product
+        serialized_course_runs = [cr.get_serialized() for cr in [cr1, cr2]]
+        self.assertCountEqual(synchronized_course_runs, serialized_course_runs)
+
+        for entry in serialized_course_runs:
+            self.assertEqual(entry["certificate_offer"], "paid")
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_change_product_type_credential(self, mock_sync):
+        """
+        Product synchronization should be triggered when product data change.
+        If the product is different from certificate,
+        all course product relation should be synchronized.
+        """
+
+        cr1 = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+        )
+        cr2 = factories.CourseRunFactory(
+            state=CourseState.FUTURE_OPEN,
+        )
+        cr3 = factories.CourseRunFactory(
+            state=CourseState.ARCHIVED_CLOSED,
+        )
+        factories.CourseRunFactory(
+            state=CourseState.ONGOING_CLOSED,
+        )
+        mock_sync.reset_mock()
+
+        # Create the product should not trigger a synchronization
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            price="50.00",
+            courses=[cr1.course, cr2.course, cr3.course],
+        )
+
+        # Update the product price should
+        product.price = "52.00"
+        product.save()
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+
+        serialized_course_runs = (
+            product.get_equivalent_serialized_course_runs_for_products([product])
+        )
+        self.assertEqual(len(synchronized_course_runs), 3)
+        self.assertCountEqual(synchronized_course_runs, serialized_course_runs)
+
+        for entry in serialized_course_runs:
+            self.assertEqual(entry["offer"], "paid")
+            self.assertEqual(entry["price"], D("52.00"))
+            self.assertEqual(entry["price_currency"], "EUR")

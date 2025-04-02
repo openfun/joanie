@@ -230,3 +230,7 @@ PAYMENT_STATE_CHOICES = (
     (PAYMENT_STATE_CANCELED, _("Canceled")),
     (PAYMENT_STATE_ERROR, _("Error")),
 )
+
+# Course offers
+COURSE_OFFER_PAID = "paid"
+COURSE_OFFER_FREE = "free"

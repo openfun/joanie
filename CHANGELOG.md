@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Add course offer information into course webhook synchronization payload
+
 ## [2.17.1] - 2025-03-06
 
 ### Fixed
