@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Claim an order generated from a batch order through voucher code
+
 ### Changed
 
 - Add course offer information into course webhook synchronization payload
