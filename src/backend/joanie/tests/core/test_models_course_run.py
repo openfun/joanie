@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone as django_timezone
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.factories import CourseRunFactory
 from joanie.core.models import CourseRun, CourseState, Enrollment
 
@@ -452,6 +452,7 @@ class CourseRunModelsTestCase(TestCase):
                 "enrollment_end": "2022-09-09T09:00:00+00:00",
                 "languages": course_run.languages,
                 "catalog_visibility": "course_and_search",
+                "certificate_offer": None,
             },
         )
         course_run.is_listed = False
@@ -467,6 +468,7 @@ class CourseRunModelsTestCase(TestCase):
                 "enrollment_end": "2022-09-09T09:00:00+00:00",
                 "languages": course_run.languages,
                 "catalog_visibility": "hidden",
+                "certificate_offer": None,
             },
         )
 
@@ -493,6 +495,7 @@ class CourseRunModelsTestCase(TestCase):
                 "enrollment_end": "2022-09-09T09:00:00+00:00",
                 "languages": course_run.languages,
                 "catalog_visibility": "hidden",
+                "certificate_offer": None,
             },
         )
 
@@ -616,10 +619,58 @@ class CourseRunModelsTestCase(TestCase):
 
     def test_models_course_run_user_with_no_enrollment_can_enroll(self):
         """
-        Test that a user that has no enrollment yet, can enroll to the an opened course run.
+        Test that a user that has no enrollment yet, can enroll to an opened course run.
         """
         user = factories.UserFactory()
         course_run = factories.CourseRunFactory()
 
         self.assertTrue(course_run.can_enroll(user))
         self.assertEqual(Enrollment.objects.count(), 0)
+
+    def test_models_course_run_get_certificate_offer_none(self):
+        """
+        Test the get_certificate_offer method of the CourseRun model.
+        If no certificate product is related to the course, the course run should have
+        no offer.
+        """
+        course_run = factories.CourseRunFactory()
+        self.assertEqual(course_run.get_certificate_offer(), None)
+
+    def test_models_course_run_get_certificate_offer_none_with_credential_product(self):
+        """
+        Test the get_certificate_offer method of the CourseRun model.
+        If no certificate product is related to the course, the course run should have
+        no offer.
+        """
+        course_run = factories.CourseRunFactory()
+        factories.ProductFactory(
+            courses=[course_run.course],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+        self.assertEqual(course_run.get_certificate_offer(), None)
+
+    def test_models_course_run_get_certificate_offer_free(self):
+        """
+        Test the get_certificate_offer method of the CourseRun model.
+        If a free certificate product is linked to the course, the course run should have
+        a free offer.
+        """
+        course_run = factories.CourseRunFactory()
+        factories.ProductFactory(
+            courses=[course_run.course], type=enums.PRODUCT_TYPE_CERTIFICATE, price=0
+        )
+        self.assertEqual(course_run.get_certificate_offer(), enums.COURSE_OFFER_FREE)
+
+    def test_models_course_run_get_certificate_offer_paid(self):
+        """
+        Test the get_certificate_offer method of the CourseRun model.
+        If a not free certificate product is linked to the course, the course run should have
+        a paid offer.
+        """
+        course_run = factories.CourseRunFactory()
+        factories.ProductFactory(
+            courses=[course_run.course],
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            price=42.00,
+        )
+        self.assertEqual(course_run.get_certificate_offer(), enums.COURSE_OFFER_PAID)

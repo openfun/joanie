@@ -190,6 +190,9 @@ class Product(parler_models.TranslatableModel, BaseModel):
         equivalent course run are calculated based on the course runs of each course targeted
         by this product.
 
+        The offer properties may vary according to the product price. If the product is not free,
+        we don't want to set explicitly a price.
+
         If a product has no target courses or no related course runs, it will still return
         an equivalent course run with null dates and hidden visibility.
         """
@@ -203,6 +206,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
             or (enums.COURSE_AND_SEARCH if any(dates.values()) else enums.HIDDEN),
             "languages": self.get_equivalent_course_run_languages(),
             # Get dates from aggregate
+            **self.get_equivalent_course_run_offer(),
             **{
                 key: value.isoformat() if value else None
                 for key, value in dates.items()
@@ -230,6 +234,29 @@ class Product(parler_models.TranslatableModel, BaseModel):
             self.target_course_runs,
             ignore_archived=ignore_archived,
         )
+
+    def get_equivalent_course_run_offer(self):
+        """
+        Return the offer properties for the equivalent course run.
+        If the product is a certificate, we bind offer information into
+        certificate_offer properties otherwise we bind into offer properties.
+
+        Furthermore, if the product is free, we don't want to set explicitly a price.
+        """
+
+        fields = {"offer": "offer", "price": "price"}
+
+        if self.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            fields = {"offer": "certificate_offer", "price": "certificate_price"}
+
+        if self.price == 0:
+            return {fields["offer"]: enums.COURSE_OFFER_FREE}
+
+        return {
+            fields["offer"]: enums.COURSE_OFFER_PAID,
+            fields["price"]: self.price,
+            "price_currency": settings.DEFAULT_CURRENCY,
+        }
 
     @staticmethod
     def get_equivalent_serialized_course_runs_for_products(
@@ -267,6 +294,38 @@ class Product(parler_models.TranslatableModel, BaseModel):
                 )
 
         return equivalent_course_runs
+
+    @staticmethod
+    def get_serialized_certificated_course_runs(
+        products, courses=None, certifying=True
+    ):
+        """
+        Return a list of serialized course runs related to
+        the given certificate products.
+
+        visibility: [CATALOG_VISIBILITY_CHOICES]:
+            If not None, force visibility for the synchronized products. Useful when
+            synchronizing a product that does not have anymore course runs and should
+            therefore be hidden.
+        """
+        serialized_course_runs = []
+        now = timezone.now()
+
+        for product in products:
+            if product.type != enums.PRODUCT_TYPE_CERTIFICATE:
+                continue
+
+            courses = courses or product.courses.all()
+            course_runs = CourseRun.objects.filter(course__in=courses, end__gt=now)
+
+            serialized_course_runs.extend(
+                [
+                    course_run.get_serialized(certifying=certifying)
+                    for course_run in course_runs
+                ]
+            )
+
+        return serialized_course_runs
 
     @property
     def state(self) -> str:
