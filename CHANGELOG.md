@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Claim an order generated from a batch order through voucher code
+
+### Changed
+
 - Upgrade `djangorestframework` to 3.16.0
 
 ## [2.18.1] - 2025-05-28
