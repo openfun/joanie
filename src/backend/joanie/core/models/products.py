@@ -2142,7 +2142,9 @@ class Voucher(BaseModel):
         if self.multiple_use and self.multiple_users:
             return True
 
-        orders_queryset = self.orders.exclude(state__in=enums.ORDER_INACTIVE_STATES)
+        orders_queryset = self.orders.exclude(
+            state__in=enums.ORDER_STATES_VOUCHER_CLAIMABLE
+        )
 
         # Voucher can be used multiple times but only by one user
         if self.multiple_use:
