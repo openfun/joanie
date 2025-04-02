@@ -224,7 +224,8 @@ export const mockOrderGroup = async (
       result = {
         id: faker.string.uuid(),
         ...payload,
-        nb_available_seats: payload.nb_seats,
+        nb_seats: payload.nb_seats ?? null,
+        nb_available_seats: payload.nb_seats ?? null,
         can_edit: false,
         discount: null,
       };

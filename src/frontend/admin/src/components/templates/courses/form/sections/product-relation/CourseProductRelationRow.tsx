@@ -212,8 +212,8 @@ export function CourseProductRelationRow({
   const create = (payload: DTOOrderGroup) => {
     const dummy: OrderGroupDummy = {
       dummyId: orderGroupList.length + 1 + "",
-      nb_available_seats: payload.nb_seats,
-      nb_seats: payload.nb_seats,
+      nb_available_seats: payload.nb_seats ?? null,
+      nb_seats: payload.nb_seats ?? null,
       can_edit: false,
       is_active: payload.is_active,
       discount: null,

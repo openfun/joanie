@@ -3,8 +3,8 @@ import { Discount } from "@/services/api/models/Discount";
 
 export type OrderGroup = {
   id: string;
-  nb_available_seats?: number | null;
-  nb_seats?: number | null;
+  nb_available_seats: number | null;
+  nb_seats: number | null;
   is_active: boolean;
   can_edit: boolean;
   discount: Discount | null;
