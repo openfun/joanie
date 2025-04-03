@@ -11,20 +11,12 @@ from http import HTTPStatus
 from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
-from django.db.models import (
-    Count,
-    Exists,
-    OuterRef,
-    Prefetch,
-    Q,
-    Subquery,
-)
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from babel.util import distinct
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, viewsets
@@ -42,6 +34,7 @@ from joanie.core.models import CourseProductRelation
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.core.utils.signature import check_signature
 from joanie.payment import enums as payment_enums
@@ -340,46 +333,6 @@ class OrderViewSet(
         """Force the order's "owner" field to the logged-in user."""
         serializer.save(owner=self.request.user)
 
-    def _get_organization_with_least_active_orders(
-        self, product, course, enrollment=None
-    ):
-        """
-        Return the organization with the least not canceled order count
-        for a given product and course.
-        """
-        course_id = course.id if course else enrollment.course_run.course_id
-
-        try:
-            course_relation = product.course_relations.get(course_id=course_id)
-        except models.CourseProductRelation.DoesNotExist:
-            return None
-
-        order_count_filter = Q(order__product=product) & ~Q(
-            order__state__in=[
-                enums.ORDER_STATE_DRAFT,
-                enums.ORDER_STATE_ASSIGNED,
-                enums.ORDER_STATE_CANCELED,
-            ]
-        )
-        if enrollment:
-            order_count_filter &= Q(order__enrollment=enrollment)
-        else:
-            order_count_filter &= Q(order__course=course)
-
-        try:
-            organizations = course_relation.organizations.annotate(
-                order_count=Count("order", filter=order_count_filter, distinct=True),
-                is_author=Exists(
-                    models.Organization.objects.filter(
-                        pk=OuterRef("pk"), courses__id=course_id
-                    )
-                ),
-            )
-
-            return organizations.order_by("order_count", "-is_author", "?").first()
-        except models.Organization.DoesNotExist:
-            return None
-
     # pylint: disable=too-many-return-statements
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -427,9 +380,7 @@ class OrderViewSet(
             course = enrollment.course_run.course
 
         if not serializer.initial_data.get("organization_id"):
-            organization = self._get_organization_with_least_active_orders(
-                product, course, enrollment
-            )
+            organization = get_least_active_organization(product, course, enrollment)
             if organization:
                 serializer.initial_data["organization_id"] = organization.id
 

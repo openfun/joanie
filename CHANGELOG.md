@@ -11,6 +11,8 @@ and this project adheres to
 ### Changed
 
 - Add course offer information into course webhook synchronization payload
+- Update organization assignation logic to ignore order with pending signature
+  or without payment method defined.
 
 ## [2.17.1] - 2025-03-06
 

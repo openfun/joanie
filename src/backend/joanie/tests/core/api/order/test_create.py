@@ -11,7 +11,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from joanie.core import enums, factories, models
-from joanie.core.api.client import OrderViewSet
+from joanie.core.api import client as api_client
 from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
@@ -593,9 +593,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             # Now order should have an organization set
             self.assertIsNotNone(order.organization)
 
-    @mock.patch.object(
-        OrderViewSet, "_get_organization_with_least_active_orders", return_value=None
-    )
+    @mock.patch.object(api_client, "get_least_active_organization", return_value=None)
     def test_api_order_create_should_auto_assign_organization_if_needed(
         self, mocked_round_robin
     ):
@@ -662,45 +660,35 @@ class OrderCreateApiTest(BaseAPITestCase):
             organizations=[organization, expected_organization]
         )
 
-        # Create 3 orders for the first organization (1 draft, 1 pending, 1 canceled)
-        factories.OrderFactory(
-            organization=organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_DRAFT,
-        )
+        ignored_states = [
+            state
+            for [state, _] in enums.ORDER_STATE_CHOICES
+            if state not in enums.ORDER_STATES_BINDING
+        ]
+
+        # Create orders for the first organization (1 for each ignored, 1 take in account)
+        for state in ignored_states:
+            factories.OrderFactory(
+                organization=organization,
+                product=relation.product,
+                course=relation.course,
+                state=state,
+            )
         factories.OrderFactory(
             organization=organization,
             product=relation.product,
             course=relation.course,
             state=enums.ORDER_STATE_PENDING,
         )
-        factories.OrderFactory(
-            organization=organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_CANCELED,
-        )
 
-        # 3 ignored orders for the second organization (1 draft, 1 assigned, 1 canceled)
-        factories.OrderFactory(
-            organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_DRAFT,
-        )
-        factories.OrderFactory(
-            organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_ASSIGNED,
-        )
-        factories.OrderFactory(
-            organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_CANCELED,
-        )
+        # ignored orders for the second organization
+        for state in ignored_states:
+            factories.OrderFactory(
+                organization=expected_organization,
+                product=relation.product,
+                course=relation.course,
+                state=state,
+            )
 
         # Then create an order without organization
         data = {
