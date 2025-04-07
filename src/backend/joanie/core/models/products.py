@@ -1677,13 +1677,6 @@ class Voucher(BaseModel):
         verbose_name_plural = _("Vouchers")
         ordering = ["created_on"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["code", "order_group"],
-                name="unique_code_order_group",
-                violation_error_message=(
-                    "A voucher with this code already exists for this order group."
-                ),
-            ),
             models.CheckConstraint(
                 check=models.Q(discount__isnull=False)
                 | models.Q(order_group__isnull=False),
@@ -1697,6 +1690,7 @@ class Voucher(BaseModel):
         help_text=_("Voucher code"),
         max_length=255,
         default=generate_random_code,
+        unique=True,
     )
     order_group = models.ForeignKey(
         to=OrderGroup,
