@@ -49,50 +49,40 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             organizations=[organization, expected_organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
-
-        # Create 3 orders for the first organization (1 draft, 1 pending, 1 canceled)
-        factories.OrderFactory(
-            organization=organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_DRAFT,
+        batch_order = factories.BatchOrderFactory(
+            organization=None, relation=relation, nb_seats=1
         )
+
+        ignored_states = [
+            state
+            for [state, _] in enums.ORDER_STATE_CHOICES
+            if state not in enums.ORDER_STATES_BINDING
+        ]
+
+        # Create orders for the first organization (1 for each ignored, 1 take in account)
+        for state in ignored_states:
+            factories.OrderFactory(
+                organization=organization,
+                product=relation.product,
+                course=relation.course,
+                state=state,
+            )
         factories.OrderFactory(
             organization=organization,
             product=relation.product,
             course=relation.course,
             state=enums.ORDER_STATE_PENDING,
         )
-        factories.OrderFactory(
-            organization=organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_CANCELED,
-        )
 
-        # 3 ignored orders for the second organization (1 draft, 1 assigned, 1 canceled)
-        factories.OrderFactory(
-            organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_DRAFT,
-        )
-        factories.OrderFactory(
-            organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_ASSIGNED,
-        )
-        factories.OrderFactory(
-            organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_CANCELED,
-        )
+        # ignored orders for the second organization
+        for state in ignored_states:
+            factories.OrderFactory(
+                organization=expected_organization,
+                product=relation.product,
+                course=relation.course,
+                state=state,
+            )
 
-        batch_order = factories.BatchOrderFactory(
-            organization=None, relation=relation, nb_seats=1
-        )
         batch_order.init_flow()
 
         self.assertEqual(batch_order.organization, expected_organization)

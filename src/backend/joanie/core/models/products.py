@@ -13,7 +13,6 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, Validat
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
-from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.functions import Lower
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -58,6 +57,7 @@ from joanie.core.utils.course_run.aggregate_course_runs_dates import (
     aggregate_course_runs_dates,
 )
 from joanie.core.utils.discount import calculate_price
+from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.signature.backends import get_signature_backend
 
@@ -1963,7 +1963,9 @@ class BatchOrder(BaseModel):
         generates a contract.
         """
         if not self.organization:
-            self.organization = self.get_organization_with_least_active_orders()
+            self.organization = get_least_active_organization(
+                self.relation.product, self.relation.course
+            )
 
         self.freeze_total()
         self.create_main_invoice()
@@ -2002,33 +2004,6 @@ class BatchOrder(BaseModel):
         """
         self.total = self.get_discounted_price()
         self.save(update_fields=["total"])
-
-    def get_organization_with_least_active_orders(self):
-        """
-        Get the organization with the least active orders to assign it to the batch order.
-        """
-        order_count_filter = (
-            Q(order__product=self.relation.product)
-            & ~Q(
-                order__state__in=[
-                    enums.ORDER_STATE_DRAFT,
-                    enums.ORDER_STATE_ASSIGNED,
-                    enums.ORDER_STATE_CANCELED,
-                ]
-            )
-            & Q(order__course=self.relation.course)
-        )
-
-        organizations = self.relation.organizations.annotate(
-            order_count=Count("order", filter=order_count_filter, distinct=True),
-            is_author=Exists(
-                Organization.objects.filter(
-                    pk=OuterRef("pk"), courses__id=self.relation.course_id
-                )
-            ),
-        )
-
-        return organizations.order_by("order_count", "-is_author", "?").first()
 
     # pylint: disable=no-member
     def submit_for_signature(self, user: User):

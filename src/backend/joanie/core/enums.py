@@ -59,6 +59,9 @@ CATALOG_VISIBILITY_CHOICES = (
 
 ORDER_STATE_DRAFT = "draft"  # order has been created
 ORDER_STATE_ASSIGNED = "assigned"  # order has been assigned to an organization
+ORDER_STATE_TO_OWN = (
+    "to_own"  # order is paid with batch order and doesn't have owner yet
+)
 ORDER_STATE_TO_SAVE_PAYMENT_METHOD = (
     "to_save_payment_method"  # order needs a payment method
 )
@@ -72,7 +75,6 @@ ORDER_STATE_NO_PAYMENT = "no_payment"  # no payment has been made
 ORDER_STATE_COMPLETED = "completed"  # is completed
 ORDER_STATE_REFUNDING = "refunding"  # order is being reimbursed
 ORDER_STATE_REFUNDED = "refunded"  # order installment payments are refunded
-ORDER_STATE_TO_OWN = "to_own"  # order is paid but does not have owner yet
 
 ORDER_STATE_CHOICES = (
     (ORDER_STATE_DRAFT, _("Draft")),  # default
