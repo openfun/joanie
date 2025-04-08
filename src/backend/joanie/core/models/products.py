@@ -1950,13 +1950,7 @@ class BatchOrder(BaseModel):
         """
         order_count_filter = (
             Q(order__product=self.relation.product)
-            & ~Q(
-                order__state__in=[
-                    enums.ORDER_STATE_DRAFT,
-                    enums.ORDER_STATE_ASSIGNED,
-                    enums.ORDER_STATE_CANCELED,
-                ]
-            )
+            & Q(order__state__in=enums.ORDER_STATES_BINDING)
             & Q(order__course=self.relation.course)
         )
 
