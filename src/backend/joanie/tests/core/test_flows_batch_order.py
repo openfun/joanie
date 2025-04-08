@@ -4,6 +4,8 @@ Test suite for Batch order flows.
 
 from django.utils import timezone
 
+from viewflow import fsm
+
 from joanie.core import enums, factories
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import LoggingTestCase
@@ -137,3 +139,18 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         batch_order.flow.update()
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
+
+    def test_flow_batch_order_cancel_state(self):
+        """The batch order can transition to state canceled only if it was in failed payment"""
+        for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                batch_order = factories.BatchOrderFactory(state=state)
+                if state == enums.BATCH_ORDER_STATE_FAILED_PAYMENT:
+                    batch_order.flow.cancel()
+                    batch_order.save()
+                    self.assertEqual(
+                        batch_order.state, enums.BATCH_ORDER_STATE_CANCELED
+                    )
+                else:
+                    with self.assertRaises(fsm.TransitionNotAllowed):
+                        batch_order.flow.cancel()
