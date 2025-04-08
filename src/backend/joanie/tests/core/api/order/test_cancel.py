@@ -69,9 +69,15 @@ class OrderCancelApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
-                order = factories.OrderFactory(owner=user, state=state)
+                voucher = factories.VoucherFactory()
+                order = factories.OrderFactory(owner=user, state=state, voucher=voucher)
                 # A credit card should be created
                 self.assertIsNotNone(order.credit_card)
+                # The voucher should be used for states other than canceled or refunded
+                if state in enums.ORDER_INACTIVE_STATES:
+                    self.assertTrue(order.voucher.is_usable_by(user))
+                else:
+                    self.assertFalse(order.voucher.is_usable_by(user))
                 response = self.client.post(
                     f"/api/v1.0/orders/{order.id}/cancel/",
                     HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -89,6 +95,8 @@ class OrderCancelApiTest(BaseAPITestCase):
                     self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
                     # The credit card should be deleted
                     self.assertIsNone(order.credit_card)
+                    # The voucher should be reusable
+                    self.assertTrue(order.voucher.is_usable_by(user))
 
     def test_api_order_cancel_authenticated_completed(self):
         """

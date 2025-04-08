@@ -6126,10 +6126,14 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "order_group_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
+                    "order_group_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "readOnly": true
                     },
                     "organization": {
                         "allOf": [
@@ -6205,6 +6209,7 @@
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice_reference",
+                    "order_group_ids",
                     "organization",
                     "owner",
                     "payment_schedule",
@@ -6258,9 +6263,18 @@
                         "nullable": true,
                         "title": "Order group end datetime",
                         "description": "Date at which the order group activation ends"
+                    },
+                    "discount": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Discount on the product price for the order group"
                     }
                 },
                 "required": [
+                    "discount",
                     "end",
                     "id",
                     "is_enabled",
@@ -6371,11 +6385,6 @@
                         "format": "uuid",
                         "description": "primary key for the record as UUID"
                     },
-                    "order_group_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
-                    },
                     "product_id": {
                         "type": "string",
                         "format": "uuid",
@@ -6383,6 +6392,12 @@
                     },
                     "has_waived_withdrawal_right": {
                         "type": "boolean"
+                    },
+                    "voucher_code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Voucher code",
+                        "writeOnly": true
                     }
                 },
                 "required": [

@@ -11,9 +11,10 @@ from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models.functions import Lower
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
@@ -51,6 +52,7 @@ from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
     aggregate_course_runs_dates,
 )
+from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.signature.backends import get_signature_backend
 
@@ -421,8 +423,29 @@ class ProductTargetCourseRelation(BaseModel):
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
+class OrderGroupManager(models.Manager):
+    """Custom manager for the OrderGroup model."""
+
+    def find_actives(self, course_product_relation_id):
+        """
+        Retrieve all active order groups for a given course product relation,
+        ordered by position.
+        """
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                is_active=True,
+                course_product_relation_id=course_product_relation_id,
+            )
+            .order_by("position")
+        )
+
+
 class OrderGroup(BaseModel):
     """Order group to enforce a maximum number of seats for a product."""
+
+    objects = OrderGroupManager()
 
     nb_seats = models.PositiveSmallIntegerField(
         default=None,
@@ -440,6 +463,13 @@ class OrderGroup(BaseModel):
         on_delete=models.CASCADE,
     )
     is_active = models.BooleanField(_("is active"), default=True)
+    position = models.PositiveSmallIntegerField(
+        _("priority"),
+        help_text=_("Priority of the order group"),
+        default=None,
+        null=True,
+        blank=True,
+    )
     start = models.DateTimeField(
         help_text=_("Date at which the order group activation begins"),
         verbose_name=_("order group start datetime"),
@@ -451,6 +481,14 @@ class OrderGroup(BaseModel):
         verbose_name=_("order group end datetime"),
         blank=True,
         null=True,
+    )
+    discount = models.ForeignKey(
+        to="Discount",
+        verbose_name=_("discount on the product price for the order group"),
+        related_name="order_groups",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -500,6 +538,59 @@ class OrderGroup(BaseModel):
         end = self.end or now
 
         return start <= now <= end
+
+    @property
+    def is_assignable(self):
+        """
+        Returns boolean whether the order group is enabled, and have available seats.
+        """
+        return self.is_enabled and self.available_seats != 0
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to assign the next available position number
+        within its course product relation if not already set.
+        """
+        if not self.created_on and self.position is None:
+            self.position = self.course_product_relation.order_groups.count()
+
+        return super().save(*args, **kwargs)
+
+    def set_position(self, position):
+        """
+        Set the position of the order group and update the positions of other order groups
+        in the same course product relation accordingly.
+        """
+        if position == self.position:
+            return  # Nothing to do
+
+        # Get count and normalize position within valid range (0 to count-1)
+        count = OrderGroup.objects.filter(
+            course_product_relation_id=self.course_product_relation_id
+        ).count()
+        position = max(0, min(position, count - 1))
+
+        old_position = self.position
+
+        with transaction.atomic():
+            if old_position < position:
+                # Moving down - shift intermediate items up
+                OrderGroup.objects.filter(
+                    course_product_relation_id=self.course_product_relation_id,
+                    position__gt=old_position,
+                    position__lte=position,
+                ).update(position=models.F("position") - 1)
+            else:
+                # Moving up - shift intermediate items down
+                OrderGroup.objects.filter(
+                    course_product_relation_id=self.course_product_relation_id,
+                    position__lt=old_position,
+                    position__gte=position,
+                ).update(position=models.F("position") + 1)
+
+            # Update this order group's position
+            self.position = position
+            self.save(update_fields=["position"])
 
 
 class OrderManager(models.Manager):
@@ -617,14 +708,11 @@ class Order(BaseModel):
         blank=True,
         null=True,
     )
-
-    order_group = models.ForeignKey(
+    order_groups = models.ManyToManyField(
         OrderGroup,
         verbose_name=_("order group"),
         related_name="orders",
-        on_delete=models.SET_NULL,
         blank=True,
-        null=True,
     )
     target_courses = models.ManyToManyField(
         Course,
@@ -682,6 +770,14 @@ class Order(BaseModel):
     credit_card = models.ForeignKey(
         to="payment.CreditCard",
         verbose_name=_("credit card"),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    voucher = models.ForeignKey(
+        to="Voucher",
+        verbose_name=_("voucher"),
         related_name="orders",
         on_delete=models.SET_NULL,
         blank=True,
@@ -863,74 +959,12 @@ class Order(BaseModel):
                     )
                 )
 
-        # pylint: disable=no-member
-        if not self.created_on and (self.enrollment or self.course) and self.product:
-            course = self.course or self.enrollment.course_run.course
-            course_title = course.title
-            product_title = self.product.title
-
-            try:
-                filters = {"product": self.product_id, "course": course}
-                if self.organization_id:
-                    filters.update({"organizations": self.organization_id})
-                course_product_relation = CourseProductRelation.objects.get(**filters)
-            except ObjectDoesNotExist:
-                course_product_relation = None
-                if self.organization_id:
-                    message = _(
-                        f'This order cannot be linked to the product "{product_title}", '
-                        f'the course "{course_title}" and '
-                        f'the organization "{self.organization.title}".'
-                    )
-                else:
-                    message = _(
-                        f'This order cannot be linked to the product "{product_title}" and '
-                        f'the course "{course_title}".'
-                    )
-                error_dict["__all__"].append(message)
-
-            if (
-                self.order_group_id
-                and self.order_group.course_product_relation.product_id
-                != self.product_id
-                and self.order_group.course_product_relation.course != course
-            ):
-                error_dict["order_group"].append(
-                    f"This order group does not apply to the product {product_title:s} "
-                    f"and the course {course_title}."
-                )
-
-            if course_product_relation and any(
-                order_group.is_enabled
-                for order_group in course_product_relation.order_groups.all()
-            ):
-                if not self.order_group_id or not self.order_group.is_enabled:
-                    error_dict["order_group"].append(
-                        f"An enabled order group is required for product {product_title:s}."
-                    )
-                elif (
-                    self.order_group.is_enabled
-                    and self.order_group.nb_seats is not None
-                ):
-                    if self.order_group.available_seats == 0:
-                        error_dict["order_group"].append(
-                            f"Maximum number of orders reached for product {product_title:s}"
-                        )
-            elif (
-                course_product_relation
-                and self.order_group
-                and not self.order_group.is_enabled
-            ):
-                error_dict["order_group"].append(
-                    f"This order group is not enabled for product {product_title:s} "
-                    "and does not accept any orders at the moment."
-                )
+        if self.voucher and not self.created_on:
+            if not self.voucher.is_usable_by(self.owner.id):
+                error_dict["voucher"].append(_("The voucher is not usable."))
 
         if error_dict:
             raise ValidationError(error_dict)
-
-        if not self.created_on:
-            self.total = self.product.price
 
         super().clean()
 
@@ -938,6 +972,29 @@ class Order(BaseModel):
         """Call full clean before saving instance."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def get_discounted_price(self):
+        """
+        Return the total price considering the order group discount if it exists. Else, if
+        there is no order group, the total price should be the full product price.
+        """
+        if self.voucher:
+            discount = self.voucher.discount or self.voucher.order_group.discount
+            if discount:
+                return calculate_price(self.product.price, discount)
+
+        for order_group in self.order_groups.all():
+            if discount := order_group.discount:
+                return calculate_price(self.product.price, discount)
+
+        return self.product.price
+
+    def freeze_total(self):
+        """
+        Freeze the total of the order.
+        """
+        self.total = self.get_discounted_price()
+        self.save()
 
     def get_target_enrollments(self, is_active=None):
         """
@@ -1438,6 +1495,7 @@ class Order(BaseModel):
         """
         Transition order to assigned state, creates an invoice if needed and call the flow update.
         """
+        self.freeze_total()
         self.flow.assign()
         if not self.is_free:
             self._create_main_invoice(billing_address)
@@ -1645,3 +1703,106 @@ class Discount(BaseModel):
             return f"{rate_as_int}%"
 
         return f"{self.amount} €"
+
+    @property
+    def usage_count(self):
+        """Returns the count of how many times a discount is used through order groups."""
+        return self.order_groups.count()
+
+
+def generate_random_code():
+    """Generate a random unique code for vouchers."""
+    while True:
+        code = get_random_string(18)
+        if not Voucher.objects.filter(code=code).exists():
+            return code
+
+
+class Voucher(BaseModel):
+    """
+    Voucher model allows to define a voucher that can be associated to an order group and used
+    by a user to get a discount or access to a product.
+    """
+
+    class Meta:
+        db_table = "joanie_voucher"
+        verbose_name = _("Voucher")
+        verbose_name_plural = _("Vouchers")
+        ordering = ["created_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["code", "order_group"],
+                name="unique_code_order_group",
+                violation_error_message=(
+                    "A voucher with this code already exists for this order group."
+                ),
+            ),
+            models.CheckConstraint(
+                check=models.Q(discount__isnull=False)
+                | models.Q(order_group__isnull=False),
+                name="voucher_discount_or_order_group_required",
+                violation_error_message="Voucher discount or order group is required.",
+            ),
+        ]
+
+    code = models.CharField(
+        _("code"),
+        help_text=_("Voucher code"),
+        max_length=255,
+        default=generate_random_code,
+    )
+    order_group = models.ForeignKey(
+        to=OrderGroup,
+        verbose_name=_("order group"),
+        related_name="vouchers",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    discount = models.ForeignKey(
+        to=Discount,
+        verbose_name=_("discount"),
+        related_name="vouchers",
+        on_delete=models.RESTRICT,
+        blank=True,
+        null=True,
+    )
+    multiple_use = models.BooleanField(
+        _("multiple use"),
+        help_text=_("Voucher can be used multiple times per user."),
+        default=False,
+    )
+    multiple_users = models.BooleanField(
+        _("multiple users"),
+        help_text=_("Voucher can be used by multiple users."),
+        default=False,
+    )
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code or str(self.order_group)
+
+    def is_usable_by(self, user_id):
+        """
+        Depending on the voucher configuration, check if the voucher can be used by the user.
+        """
+        # Voucher can be used multiple times by multiple users
+        if self.multiple_use and self.multiple_users:
+            return True
+
+        orders_queryset = self.orders.exclude(state__in=enums.ORDER_INACTIVE_STATES)
+
+        # Voucher can be used multiple times but only by one user
+        if self.multiple_use:
+            return not orders_queryset.exclude(owner_id=user_id).exists()
+
+        # Voucher can be used by multiple users but only once per user
+        if self.multiple_users:
+            return not orders_queryset.filter(owner_id=user_id).exists()
+
+        # Voucher can be used only once by one user
+        return not orders_queryset.exists()

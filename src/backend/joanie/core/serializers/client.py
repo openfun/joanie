@@ -1,5 +1,5 @@
-# ruff: noqa: SLF001
-# pylint: disable=too-many-lines
+# ruff: noqa: SLF001, PLR0912
+# pylint: disable=too-many-lines, too-many-branches
 """Client serializers for Joanie Core app."""
 
 from decimal import Decimal as D
@@ -770,6 +770,7 @@ class OrderGroupSerializer(serializers.ModelSerializer):
             "is_enabled",
             "start",
             "end",
+            "discount",
         ]
         read_only_fields = fields
 
@@ -1157,11 +1158,12 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Product.objects.all(), slug_field="id", source="product"
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
-    order_group_id = serializers.SlugRelatedField(
-        queryset=models.OrderGroup.objects.all(),
+    order_group_ids = serializers.SlugRelatedField(
+        source="order_groups",
+        many=True,
         slug_field="id",
         required=False,
-        source="order_group",
+        read_only=True,
     )
     target_courses = OrderTargetCourseRelationSerializer(
         read_only=True, many=True, source="course_relations"
@@ -1181,6 +1183,13 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     has_waived_withdrawal_right = serializers.BooleanField()
+    voucher_code = serializers.SlugRelatedField(
+        queryset=models.Voucher.objects.all(),
+        slug_field="code",
+        source="voucher",
+        required=False,
+        write_only=True,
+    )
 
     class Meta:
         model = models.Order
@@ -1193,7 +1202,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollment",
             "id",
             "main_invoice_reference",
-            "order_group_id",
+            "order_group_ids",
             "organization",
             "owner",
             "product_id",
@@ -1204,6 +1213,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_currency",
             "payment_schedule",
             "has_waived_withdrawal_right",
+            "voucher_code",
         ]
         read_only_fields = fields
 
@@ -1231,18 +1241,57 @@ class OrderSerializer(serializers.ModelSerializer):
             organization = get_object_or_404(models.Organization, id=organization_id)
             validated_data["organization"] = organization
 
+        try:
+            course_id = validated_data["course"].id
+        except KeyError:
+            course_id = validated_data["enrollment"].course_run.course_id
+
+        product_id = validated_data["product"].id
+
+        filters = {"product": product_id, "course": course_id}
+        if organization_id:
+            filters.update({"organizations": organization_id})
+        course_product_relation = models.CourseProductRelation.objects.get(**filters)
+
+        order_groups = models.OrderGroup.objects.find_actives(
+            course_product_relation_id=course_product_relation.id
+        )
+        seats_limitation = None
+        for order_group in order_groups:
+            if order_group.nb_seats is not None:
+                if order_group.available_seats == 0:
+                    seats_limitation = order_group
+                    continue
+
+                seats_limitation = None
+
+            if order_group.is_enabled:
+                if "order_groups" not in validated_data:
+                    validated_data["order_groups"] = []
+                validated_data["order_groups"].append(order_group)
+
+        if seats_limitation:
+            raise serializers.ValidationError(
+                {
+                    "order_group": [
+                        "Maximum number of orders reached for "
+                        f"product {validated_data['product'].title:s}"
+                    ]
+                }
+            )
+
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """
-        Make the "course", "organization", "order_group", "product"
+        Make the "course", "organization", "order_group_ids", "product"
         and "has_waived_withdrawal_right" fields read_only only on update.
         """
         validated_data.pop("course", None)
         validated_data.pop("enrollment", None)
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
-        validated_data.pop("order_group", None)
+        validated_data.pop("order_group_ids", None)
         validated_data.pop("has_waived_withdrawal_right", None)
         return super().update(instance, validated_data)
 
