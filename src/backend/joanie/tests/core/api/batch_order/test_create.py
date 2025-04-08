@@ -251,7 +251,9 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             },
         )
 
-    def test_api_batch_order_create_authenticated_when_order_group_for_relation_has_discount(self):
+    def test_api_batch_order_create_authenticated_when_order_group_for_relation_has_discount(
+        self,
+    ):
         """
         When the order group has a discount and enough available seats, the batch order
         should be created with the discounted price.

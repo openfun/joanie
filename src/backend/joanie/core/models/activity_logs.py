@@ -89,7 +89,7 @@ class ActivityLog(BaseModel):
         verbose_name_plural = _("activity_logs")
 
     @classmethod
-    def create_payment_succeeded_activity_log(cls, order):
+    def create_payment_succeeded_activity_log(cls, order: "Order | BatchOrder"):
         """
         Create a payment succeeded activity log
         """
@@ -101,7 +101,7 @@ class ActivityLog(BaseModel):
         )
 
     @classmethod
-    def create_payment_failed_activity_log(cls, order):
+    def create_payment_failed_activity_log(cls, order: "Order | BatchOrder"):
         """
         Create a payment failed activity log
         """
@@ -113,7 +113,7 @@ class ActivityLog(BaseModel):
         )
 
     @classmethod
-    def create_payment_refunded_activity_log(cls, order):
+    def create_payment_refunded_activity_log(cls, order: "Order | BatchOrder"):
         """
         Create a payment refunded activity log
         """
