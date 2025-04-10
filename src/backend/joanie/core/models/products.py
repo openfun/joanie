@@ -57,7 +57,6 @@ from joanie.core.utils.course_run.aggregate_course_runs_dates import (
     aggregate_course_runs_dates,
 )
 from joanie.core.utils.discount import calculate_price
-from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.signature.backends import get_signature_backend
 
@@ -1962,11 +1961,6 @@ class BatchOrder(BaseModel):
         Transition batch order to assigned state, creates a main invoice,
         generates a contract.
         """
-        if not self.organization:
-            self.organization = get_least_active_organization(
-                self.relation.product, self.relation.course
-            )
-
         self.freeze_total()
         self.create_main_invoice()
 
@@ -2073,7 +2067,7 @@ class BatchOrder(BaseModel):
             reference, checksum = backend_signature.submit_for_signature(
                 title=f"{now.strftime('%Y-%m-%d')}_{self.relation.course.code}_{self.pk}",
                 file_bytes=file_bytes,
-                batch_order=self,
+                order=self,
             )
             self.contract.tag_submission_for_signature(reference, checksum, context)
             self.flow.update()
@@ -2099,53 +2093,21 @@ class BatchOrder(BaseModel):
             )
             raise ValidationError(message)
 
-        orders = [
-            Order.objects.create(
+        discount, _ = Discount.objects.get_or_create(rate=1)
+
+        for _ in range(self.nb_seats):
+            order = Order.objects.create(
                 owner=None,
-                product_id=self.relation.product_id,
-                course_id=self.relation.course_id,
-                organization_id=self.organization.id,
+                product=self.relation.product,
+                course=self.relation.course,
+                organization=self.organization,
             )
-            for _ in range(self.nb_seats)
-        ]
-
-        self.orders.set(orders)
-        for order in orders:
-            order.flow.assign()  # mark them as assigned
-
-        for order, voucher in zip(orders, self.generate_vouchers(), strict=False):
-            order.voucher = voucher
-            order.flow.to_own()  # mark them as to_own
-
-        self.save()
-
-    def generate_vouchers(self):
-        """Generate a voucher for each the prepared order"""
-        if not self.orders.exists():
-            message = (
-                "You should first generate the orders before generating the vouchers"
-            )
-            logger.error(
-                message,
-                extra={
-                    "context": {
-                        "batch_order": self.to_dict(),
-                    }
-                },
-            )
-            raise ValidationError(message)
-
-        # Create discount of 100 % because the batch order is paid in advance
-        discount = Discount.objects.create(rate=1)
-
-        vouchers = [
-            Voucher.objects.create(
+            order.voucher = Voucher.objects.create(
                 discount=discount, multiple_use=False, multiple_users=False
             )
-            for order in range(len(self.orders.all()))
-        ]
-
-        return vouchers
+            order.flow.assign()
+            self.orders.add(order)
+            order.flow.update()
 
     @property
     def vouchers(self):

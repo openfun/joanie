@@ -315,6 +315,7 @@ class OrderFlow:
         """
         logger.debug("Transitioning order %s", self.instance.id)
         for transition in [
+            self.to_own,
             self.complete,
             self.to_sign,
             self.signing,

@@ -37,56 +37,6 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             in str(context.exception)
         )
 
-    def test_models_batch_order_create_auto_assign_organization_with_least_orders(self):
-        """
-        Order auto-assignment logic should always return the organization with the least
-        active orders count for the given product course relation.
-        """
-        organization, expected_organization = (
-            factories.OrganizationFactory.create_batch(2)
-        )
-        relation = factories.CourseProductRelationFactory(
-            organizations=[organization, expected_organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        batch_order = factories.BatchOrderFactory(
-            organization=None, relation=relation, nb_seats=1
-        )
-
-        ignored_states = [
-            state
-            for [state, _] in enums.ORDER_STATE_CHOICES
-            if state not in enums.ORDER_STATES_BINDING
-        ]
-
-        # Create orders for the first organization (1 for each ignored, 1 take in account)
-        for state in ignored_states:
-            factories.OrderFactory(
-                organization=organization,
-                product=relation.product,
-                course=relation.course,
-                state=state,
-            )
-        factories.OrderFactory(
-            organization=organization,
-            product=relation.product,
-            course=relation.course,
-            state=enums.ORDER_STATE_PENDING,
-        )
-
-        # ignored orders for the second organization
-        for state in ignored_states:
-            factories.OrderFactory(
-                organization=expected_organization,
-                product=relation.product,
-                course=relation.course,
-                state=state,
-            )
-
-        batch_order.init_flow()
-
-        self.assertEqual(batch_order.organization, expected_organization)
-
     def test_models_batch_order_when_the_product_has_no_contract_definition(self):
         """
         When product does not have a contract definition, submitting to signature
@@ -324,7 +274,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             f"{now.strftime('%Y-%m-%d')}_{batch_order.relation.course.code}_{batch_order.pk}",
         )
         self.assertEqual(
-            _mock_submit_for_signature.call_args[1]["batch_order"], batch_order
+            _mock_submit_for_signature.call_args[1]["order"], batch_order
         )
         self.assertIsInstance(
             _mock_submit_for_signature.call_args[1]["file_bytes"], bytes
@@ -367,30 +317,6 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                         batch_order.generate_orders()
                     self.assertTrue(
                         "The batch order is not yet paid." in str(context.exception)
-                    )
-
-    def test_models_batch_order_generate_vouchers(self):
-        """
-        Vouchers of a batch order should only be triggered when the orders were generated.
-        All voucher must be at 1 discount rate.
-        """
-        for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
-            with self.subTest(state=state):
-                batch_order = factories.BatchOrderFactory(state=state, nb_seats=12)
-                if state == enums.BATCH_ORDER_STATE_COMPLETED:
-                    batch_order.generate_orders()
-                    vouchers = batch_order.generate_vouchers()
-                    self.assertEqual(len(vouchers), 12)
-                    for voucher in vouchers:
-                        self.assertEqual(voucher.discount.rate, 1)
-                        self.assertFalse(voucher.multiple_use)
-                        self.assertFalse(voucher.multiple_users)
-                else:
-                    with self.assertRaises(ValidationError) as context:
-                        batch_order.generate_vouchers()
-                    self.assertTrue(
-                        "You should first generate the orders before generating the vouchers"
-                        in str(context.exception)
                     )
 
     def test_models_batch_order_create_billing_address(self):

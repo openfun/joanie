@@ -1516,7 +1516,6 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """Generate the total of the batch order from the product price and the number of seats"""
         return self.nb_seats * self.relation.product.price
 
-    # pylint: disable=unused-argument
     @factory.lazy_attribute
     def trainees(self):
         """
@@ -1526,7 +1525,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         return TraineeFactory.create_batch(self.nb_seats)
 
     @factory.post_generation
-    # pylint: disable=unused-argument,no-member
+    # pylint: disable=unused-argument
     def order_groups(self, create, extracted, **kwargs):
         """
         Set order groups if any
