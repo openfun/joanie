@@ -1646,6 +1646,18 @@ class BatchOrderViewSet(
     def create(self, request, *args, **kwargs):
         """Create the batch order and start the state of flows"""
         serializer = self.get_serializer(data=request.data)
+
+        relation_id = request.data.get("relation_id")
+        try:
+            relation = CourseProductRelation.objects.get(pk=relation_id)
+        except CourseProductRelation.DoesNotExist:
+            return Response(
+                f"The course product relation does not exist: {relation_id}",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        organization = get_least_active_organization(relation.product, relation.course)
+        serializer.initial_data["organization_id"] = organization.id
+
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
 

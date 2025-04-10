@@ -3,7 +3,7 @@
 from decimal import Decimal
 from http import HTTPStatus
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -251,6 +251,37 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             },
         )
 
+    def test_api_batch_order_create_relation_does_not_exist(self):
+        """
+        Authenticated user passing a relation id that does not exist should get an error and
+        the batch order should not be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        data = {
+            "relation_id": "fake_relation_id",
+            "nb_seats": 1,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "trainees": [
+                {"first_name": "John", "last_name": "Doe"},
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+
     def test_api_batch_order_create_authenticated_when_order_group_for_relation_has_discount(
         self,
     ):
@@ -302,3 +333,76 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertEqual(batch_order.nb_seats, 3)
         self.assertEqual(batch_order.order_groups.first(), order_group)
         self.assertEqual(batch_order.total, Decimal("27.00"))
+
+    def test_api_batch_order_create_auto_assign_organization_with_least_orders(self):
+        """
+        The order auto-assignment logic should always return the organization with the least
+        active orders count for the given product course relation when we create a batch order.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        organization, expected_organization = (
+            factories.OrganizationFactory.create_batch(2)
+        )
+        relation = factories.CourseProductRelationFactory(
+            organizations=[organization, expected_organization],
+            product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+
+        ignored_states = [
+            state
+            for [state, _] in enums.ORDER_STATE_CHOICES
+            if state not in enums.ORDER_STATES_BINDING
+        ]
+
+        # Create orders for the first organization (1 for each ignored, 1 take in account)
+        for state in ignored_states:
+            factories.OrderFactory(
+                organization=organization,
+                product=relation.product,
+                course=relation.course,
+                state=state,
+            )
+        factories.OrderFactory(
+            organization=organization,
+            product=relation.product,
+            course=relation.course,
+            state=enums.ORDER_STATE_PENDING,
+        )
+
+        # ignored orders for the second organization
+        for state in ignored_states:
+            factories.OrderFactory(
+                organization=expected_organization,
+                product=relation.product,
+                course=relation.course,
+                state=state,
+            )
+
+        data = {
+            "relation_id": relation.id,
+            "nb_seats": 1,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "trainees": [
+                {"first_name": "John", "last_name": "Doe"},
+            ],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+
+        batch_order = models.BatchOrder.objects.get(relation=relation)
+
+        self.assertEqual(batch_order.organization, expected_organization)

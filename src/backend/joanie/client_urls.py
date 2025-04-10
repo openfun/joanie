@@ -44,6 +44,7 @@ router.register("courses", api_client.CourseViewSet, basename="courses")
 router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
 router.register("enrollments", api_client.EnrollmentViewSet, basename="enrollments")
 router.register("orders", api_client.OrderViewSet, basename="orders")
+router.register("batch-orders", api_client.BatchOrderViewSet, basename="batch-orders")
 router.register(
     "organizations", api_client.OrganizationViewSet, basename="organizations"
 )
@@ -56,7 +57,6 @@ router.register("users", api_client.UserViewSet, basename="users")
 router.register(
     "activity-logs", api_client.ActivityLogViewSet, basename="activity-logs"
 )
-router.register("batch-orders", api_client.BatchOrderViewSet, basename="batch-orders")
 
 # - Routes nested under a course
 course_related_router = DefaultRouter()

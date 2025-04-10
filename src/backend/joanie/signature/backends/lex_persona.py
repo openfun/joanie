@@ -66,20 +66,19 @@ class LexPersonaBackend(BaseSignatureBackend):
         ]
 
     def _prepare_recipient_data_for_organization_signer(
-        self, order=None, batch_order=None
+        self, order: models.Order | models.BatchOrder
     ) -> list[dict]:
         """
         Prepare recipient data of an organization in order to include it in the creation payload
         of a signature procedure of a file. It returns a dictionary containing signer's information.
         """
-        organization = order.organization if order else batch_order.organization
         try:
             country = order.organization.country.code
         except AttributeError:
             country = settings.JOANIE_DEFAULT_COUNTRY_CODE
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
         accesses = models.OrganizationAccess.objects.filter(
-            organization=organization,
+            organization=order.organization,
             role=enums.OWNER,
         )
 

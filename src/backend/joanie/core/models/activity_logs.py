@@ -96,7 +96,7 @@ class ActivityLog(BaseModel):
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
-            context={f"{order._meta.model_name}_id": str(order.id)},  # noqa: SLF001
+            context={f"{order.class_name}_id": str(order.id)},
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
         )
 
@@ -108,7 +108,7 @@ class ActivityLog(BaseModel):
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_ERROR,
-            context={f"{order._meta.model_name}_id": str(order.id)},  # noqa: SLF001
+            context={f"{order.class_name}_id": str(order.id)},
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
         )
 
@@ -120,7 +120,7 @@ class ActivityLog(BaseModel):
         return cls.objects.create(
             user=order.owner,
             level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
-            context={f"{order._meta.model_name}_id": str(order.id)},  # noqa: SLF001
+            context={f"{order.class_name}_id": str(order.id)},
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED,
         )
 

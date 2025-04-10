@@ -31,8 +31,7 @@ class DummySignatureBackend(BaseSignatureBackend):
         self,
         title: str,
         file_bytes: bytes,
-        order=None,
-        batch_order=None,
+        order: models.Order | models.BatchOrder,
     ):
         """
         Dummy method that creates a signature procedure with a fake file to be signed.

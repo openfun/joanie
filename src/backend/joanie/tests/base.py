@@ -206,7 +206,7 @@ class ActivityLogMixingTestCase:
                 user=order.owner,
                 level=enums.ACTIVITY_LOG_LEVEL_SUCCESS,
                 type=enums.ACTIVITY_LOG_TYPE_PAYMENT_SUCCEEDED,
-                context={f"{order._meta.model_name}_id": str(order.id)},
+                context={f"{order.class_name}_id": str(order.id)},
             ).exists(),
             "Payment success activity log not found",
         )
@@ -218,7 +218,7 @@ class ActivityLogMixingTestCase:
                 user=order.owner,
                 level=enums.ACTIVITY_LOG_LEVEL_ERROR,
                 type=enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
-                context={f"{order._meta.model_name}_id": str(order.id)},
+                context={f"{order.class_name}_id": str(order.id)},
             ).exists(),
             "Payment failed activity log not found",
         )
