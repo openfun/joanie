@@ -4,6 +4,8 @@ Test suite for Batch order flows.
 
 from django.utils import timezone
 
+from viewflow import fsm
+
 from joanie.core import enums, factories
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import LoggingTestCase
@@ -39,19 +41,24 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_DRAFT)
         self.assertIsNone(batch_order.organization)
 
-    def test_flow_batch_order_assigned(self):
-        """
-        When we call the init flow method on a draft state batch order, it should assign
-        an organization to it.
-        """
+    def test_flow_batch_assigned_requires_an_organization(self):
+        """The batch order cannot be in assigned state if it does not have an organization"""
         batch_order = factories.BatchOrderFactory(organization=None)
 
-        batch_order.init_flow()
+        with self.assertRaises(fsm.TransitionNotAllowed):
+            batch_order.flow.assign()
+
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_DRAFT)
+
+    def test_flow_batch_order_assigned(self):
+        """When the batch order has an organization, it can be in state assigned."""
+        batch_order = factories.BatchOrderFactory(organization=None)
+
+        batch_order.organization = factories.OrganizationFactory()
+
+        batch_order.flow.update()
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_ASSIGNED)
-        self.assertIsNotNone(batch_order.organization)
-        self.assertIsNotNone(batch_order.contract)
-        self.assertIsNone(batch_order.contract.submitted_for_signature_on)
 
     def test_flow_batch_order_to_sign_because_submit_for_signature(self):
         """
@@ -59,7 +66,9 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         to `to_sign`. It means that the contract is submitted and requires a signature
         from the buyer.
         """
-        batch_order = factories.BatchOrderFactory(organization=None)
+        batch_order = factories.BatchOrderFactory(
+            organization=factories.OrganizationFactory()
+        )
         batch_order.init_flow()
 
         batch_order.submit_for_signature(user=batch_order.owner)
@@ -71,7 +80,9 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         When the contract has been signed by the buyer, the state of the batch order
         should transition to signing.
         """
-        batch_order = factories.BatchOrderFactory(organization=None)
+        batch_order = factories.BatchOrderFactory(
+            organization=factories.OrganizationFactory()
+        )
         batch_order.init_flow()
         batch_order.submit_for_signature(user=batch_order.owner)
 
