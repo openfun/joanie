@@ -1808,7 +1808,7 @@ class Voucher(BaseModel):
             return True
 
         orders_queryset = self.orders.exclude(
-            state__in=[*enums.ORDER_INACTIVE_STATES, enums.ORDER_STATE_TO_OWN]
+            state__in=enums.ORDER_STATES_VOUCHER_CLAIMABLE
         )
 
         # Voucher can be used multiple times but only by one user

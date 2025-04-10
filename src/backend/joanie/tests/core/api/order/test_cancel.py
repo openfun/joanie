@@ -80,8 +80,8 @@ class OrderCancelApiTest(BaseAPITestCase):
                     )
                     # A credit card should be created
                     self.assertIsNotNone(order.credit_card)
-                # The voucher should be used for states other than canceled or refunded
-                if state in [*enums.ORDER_INACTIVE_STATES, enums.ORDER_STATE_TO_OWN]:
+                # The voucher should be used for states other than canceled or refunded or to_own
+                if state in enums.ORDER_STATES_VOUCHER_CLAIMABLE:
                     self.assertTrue(order.voucher.is_usable_by(user))
                 else:
                     self.assertFalse(order.voucher.is_usable_by(user))

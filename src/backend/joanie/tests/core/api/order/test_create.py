@@ -10,6 +10,8 @@ from unittest import mock
 from django.conf import settings
 from django.utils import timezone
 
+from viewflow import fsm
+
 from joanie.core import enums, factories, models
 from joanie.core.api import client as api_client
 from joanie.core.models import CourseState
@@ -2293,7 +2295,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         batch_order.generate_orders()
         voucher_codes = batch_order.vouchers
 
-        order = batch_order.orders.filter(voucher__code=voucher_codes[0]).first()
+        order = batch_order.orders.get(voucher__code=voucher_codes[0])
         order.owner = user
         order.flow.update()
         order.save()
@@ -2338,7 +2340,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         voucher_codes = batch_order.vouchers
 
         # Let's assign the first order with the 1st voucher code with an owner
-        order = batch_order.orders.filter(voucher__code=voucher_codes[0]).first()
+        order = batch_order.orders.get(voucher__code=voucher_codes[0])
         order.owner = factories.UserFactory()
         order.flow.update()
         order.save()
@@ -2380,6 +2382,82 @@ class OrderCreateApiTest(BaseAPITestCase):
         # The order should be marked as `completed`
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
+    @mock.patch(
+        "joanie.core.flows.order.OrderFlow.complete",
+        side_effect=fsm.TransitionNotAllowed,
+    )
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_transition_to_complete_state_fails(
+        self, mock_enroll_user_to_course_run, _mock_can_be_state_complete
+    ):
+        """
+        When an error occurs during the transition of the order to completed, the order should
+        not be claimed and still available and the voucher code should still be usable by the
+        user. The user should not be enrolled to course run.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=2,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+        voucher_codes = batch_order.vouchers
+        order = batch_order.orders.get(voucher__code=voucher_codes[0])
+
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": voucher_codes[0],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_enroll_user_to_course_run.assert_not_called()
+
+        voucher = models.Voucher.objects.get(code=voucher_codes[0])
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
+        self.assertTrue(voucher.is_usable_by(user.id))
+
+    def test_api_order_create_with_fake_voucher_code(self):
+        """
+        Authenticated user attempts to pass a fake voucher code to claim an order.
+        He should get an error in return.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            relation__product__price=100,
+            nb_seats=2,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": "fake_voucher_code",
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+
     @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
     def test_api_order_create_with_voucher_code_from_a_batch_order(
         self, mock_enroll_user_to_course_run
@@ -2388,6 +2466,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         When the user uses a voucher code that was generated through a batch order,
         he should be assigned to one of the orders available. When it succeeds, the
         method `enroll_user_to_course_run` should be called in the order flow state transition.
+        Finally, the voucher code should not be usable anymore by the user once used.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -2417,5 +2496,9 @@ class OrderCreateApiTest(BaseAPITestCase):
         mock_enroll_user_to_course_run.assert_called_once()
 
         self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+
         order = models.Order.objects.get(owner=user)
+        voucher = models.Voucher.objects.get(code=voucher_codes[0])
+
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+        self.assertFalse(voucher.is_usable_by(user.id))
