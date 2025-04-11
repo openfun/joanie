@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.forms import fields
 from django.utils import timezone as django_timezone
 
+from babel.numbers import get_currency_symbol
 from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
@@ -334,8 +335,9 @@ class DiscountAdminFilterSet(filters.FilterSet):
                 return Q(rate=rate)
             return Q(rate__icontains=rate)
 
-        if "€" in value:
-            value = value.replace("€", "")
+        currency_symbol = get_currency_symbol(settings.DEFAULT_CURRENCY)
+        if currency_symbol in value:
+            value = value.replace(currency_symbol, "")
             queryset = queryset.filter(amount_filter(value, exact=True))
         elif "%" in value:
             value = value.replace("%", "")
