@@ -2,6 +2,7 @@ import * as React from "react";
 import Switch from "@mui/material/Switch";
 import { defineMessages, useIntl } from "react-intl";
 import { SxProps } from "@mui/material/styles";
+import Box from "@mui/material/Box";
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
 import { OrderGroup, OrderGroupDummy } from "@/services/api/models/OrderGroup";
 import { getDiscountLabel } from "@/services/api/models/Discount";
@@ -17,10 +18,20 @@ const messages = defineMessages({
     description: "Sub title for the order group row",
     defaultMessage: "{reservedSeats}/{totalSeats} seats",
   },
+  startLabel: {
+    id: "components.templates.courses.form.productRelation.row.startLabel",
+    description: "Start date label",
+    defaultMessage: "From: ",
+  },
+  endLabel: {
+    id: "components.templates.courses.form.productRelation.row.endLabel",
+    description: "End date label",
+    defaultMessage: "To: ",
+  },
   discountLabel: {
     id: "components.templates.courses.form.productRelation.row.discountLabel",
     description: "Discount label",
-    defaultMessage: "Discount",
+    defaultMessage: "Discount: ",
   },
   addOrderGroupButton: {
     id: "components.templates.courses.form.productRelation.row.addOrderGroupButton",
@@ -75,21 +86,58 @@ export function OrderGroupRow({
   });
 
   function getSubTitle() {
-    const seats =
-      orderGroup.nb_available_seats !== null
-        ? intl.formatMessage(messages.subTitleOrderGroup, {
-            reservedSeats:
-              (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0),
-            totalSeats: orderGroup.nb_seats,
-          })
-        : "";
+    const rules: string[] = [];
 
-    const discount = orderGroup.discount
-      ? `${intl.formatMessage(messages.discountLabel)}: ${getDiscountLabel(orderGroup.discount)}`
-      : "";
+    if (orderGroup.nb_available_seats !== null) {
+      const reservedSeats =
+        (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+      const totalSeats = orderGroup.nb_seats;
+      rules.push(
+        intl.formatMessage(messages.subTitleOrderGroup, {
+          reservedSeats,
+          totalSeats,
+        }),
+      );
+    }
 
-    if (seats && discount) return `${seats} - ${discount}`;
-    return seats || discount;
+    if (orderGroup.start) {
+      rules.push(
+        intl.formatMessage(messages.startLabel) +
+          intl.formatTime(new Date(orderGroup.start), {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }),
+      );
+    }
+
+    if (orderGroup.end) {
+      rules.push(
+        intl.formatMessage(messages.endLabel) +
+          intl.formatTime(new Date(orderGroup.end), {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }),
+      );
+    }
+
+    if (orderGroup.discount) {
+      rules.push(
+        intl.formatMessage(messages.discountLabel) +
+          getDiscountLabel(orderGroup.discount),
+      );
+    }
+
+    return (
+      <>
+        {rules.map((rule, index) => (
+          <Box key={`${rule}-${index}`} sx={{ mt: 0 }}>
+            {rule}
+          </Box>
+        ))}
+      </>
+    );
   }
 
   const sxProps: SxProps = { backgroundColor: "background" };
