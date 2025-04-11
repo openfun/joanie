@@ -24,7 +24,7 @@ export function TranslationsProvider({ children }: PropsWithChildren<{}>) {
   const allLanguages = useAllLanguages();
   const [currentLocale, setCurrentLocale] = useState<LocalesEnum>(defaultLocal);
   const [adapterLocale] = useState<Locale>(
-    defaultLocal !== LocalesEnum.FRENCH ? fr : enUS,
+    defaultLocal === LocalesEnum.FRENCH ? fr : enUS,
   );
 
   const invalidateInfinityQueries = async (newLocale: string) => {
