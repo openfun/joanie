@@ -356,6 +356,8 @@ jobs:
     parallelism: 5
     resource_class: large
     working_directory: ~/joanie/src/frontend/admin
+    environment:
+      TZ: "Europe/Paris"
     steps:
       - checkout:
           path: ~/joanie

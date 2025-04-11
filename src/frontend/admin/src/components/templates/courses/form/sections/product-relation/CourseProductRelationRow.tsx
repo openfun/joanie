@@ -214,6 +214,8 @@ export function CourseProductRelationRow({
       dummyId: orderGroupList.length + 1 + "",
       nb_available_seats: payload.nb_seats ?? null,
       nb_seats: payload.nb_seats ?? null,
+      start: payload.start ?? null,
+      end: payload.end ?? null,
       can_edit: false,
       is_active: payload.is_active,
       discount: null,
