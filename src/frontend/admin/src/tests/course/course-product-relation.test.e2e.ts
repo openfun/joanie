@@ -231,6 +231,12 @@ test.describe("Course product relation", () => {
     await page.getByRole("heading", { name: "Add an order group" }).click();
     await page.getByLabel("Number of seats").click();
     await page.getByLabel("Number of seats").fill("1919");
+    await page
+      .getByRole("textbox", { name: "Start date" })
+      .fill("01/31/2023 10:00 AM");
+    await page
+      .getByRole("textbox", { name: "End date" })
+      .fill("02/15/2023 10:00 AM");
     await page.getByRole("combobox", { name: "Discount" }).click();
     await page
       .getByRole("option", { name: getDiscountLabel(store.discounts[0]) })
@@ -242,10 +248,15 @@ test.describe("Course product relation", () => {
     const addedOrderGroup =
       course.product_relations[0].order_groups[orderGroupLength - 1];
     await expect(
-      page.getByText(
-        `Order group ${orderGroupLength}0/1919 seats - Discount: ${getDiscountLabel(store.discounts[0])}`,
-      ),
+      page.getByText(`Order group ${orderGroupLength}`),
     ).toBeVisible();
+    await expect(page.getByText(`0/1919 seats`)).toBeVisible();
+    await expect(
+      page.getByText(`Discount: ${getDiscountLabel(store.discounts[0])}`),
+    ).toBeVisible();
+    await expect(page.getByText("From: 01/31/2023, 10:00 AM")).toBeVisible();
+    await expect(page.getByText("To: 02/15/2023, 10:00 AM")).toBeVisible();
+
     await expect(
       page.getByTestId(`is-active-switch-order-group-${addedOrderGroup.id}`),
     ).toBeVisible();

@@ -11,20 +11,31 @@ import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField
 import RHFSwitch from "@/components/presentational/hook-form/RHFSwitch";
 import { Maybe } from "@/types/utils";
 import { DiscountSelect } from "@/components/presentational/discount/DiscountSelect";
+import { RHFDateTimePicker } from "@/components/presentational/hook-form/RHFDateTimePicker";
 
 const messages = defineMessages({
   numberOfSeatInputLabel: {
-    id: "components.templates.products.form.sections.OderGroups.OrderGroupForm.numberOfSeatInputLabel",
+    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.numberOfSeatInputLabel",
     defaultMessage: "Number of seats",
     description: "The input label for the number of seats",
   },
+  startLabel: {
+    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.startLabel",
+    defaultMessage: "Start date",
+    description: "The input label for the start date",
+  },
+  endLabel: {
+    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.endLabel",
+    defaultMessage: "End date",
+    description: "The input label for the end date",
+  },
   isActiveLabel: {
-    id: "components.templates.products.form.sections.OderGroups.OrderGroupForm.isActiveLabel",
+    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.isActiveLabel",
     defaultMessage: "Activate this order group",
     description: "The input label for the activate switch",
   },
   discountLabel: {
-    id: "components.templates.products.form.sections.OderGroups.OrderGroupForm.discountLabel",
+    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.discountLabel",
     defaultMessage: "Discount",
     description: "The input label for the discount select",
   },
@@ -53,12 +64,16 @@ export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
 
   const Schema = Yup.object().shape({
     nb_seats: Yup.number().min(getMinNbSeats(orderGroup)).nullable(),
+    start: Yup.string().nullable(),
+    end: Yup.string().nullable(),
     is_active: Yup.boolean().required(),
     discount_id: Yup.string().nullable(),
   });
 
   const getDefaultValues = () => ({
     nb_seats: orderGroup?.nb_seats ?? null,
+    start: orderGroup?.start ?? null,
+    end: orderGroup?.end ?? null,
     is_active: orderGroup?.is_active ?? false,
     discount_id: orderGroup?.discount?.id ?? null,
   });
@@ -84,6 +99,20 @@ export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
             type="number"
             name="nb_seats"
             label={intl.formatMessage(messages.numberOfSeatInputLabel)}
+          />
+        </Grid2>
+        <Grid2 size={12}>
+          <RHFDateTimePicker
+            name="start"
+            label={intl.formatMessage(messages.startLabel)}
+            slotProps={{ field: { clearable: true } }}
+          />
+        </Grid2>
+        <Grid2 size={12}>
+          <RHFDateTimePicker
+            name="end"
+            label={intl.formatMessage(messages.endLabel)}
+            slotProps={{ field: { clearable: true } }}
           />
         </Grid2>
         <Grid2 size={12}>
