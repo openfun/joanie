@@ -537,11 +537,13 @@ class OrderCreateApiTest(BaseAPITestCase):
                 state=random.choice(enums.ORDER_STATE_CHOICES)[0],
             )
 
-            if order.state not in [
-                enums.ORDER_STATE_CANCELED,
-                enums.ORDER_STATE_ASSIGNED,
-                enums.ORDER_STATE_DRAFT,
-            ]:
+            to_ignore_states = [
+                state
+                for [state, _] in enums.ORDER_STATE_CHOICES
+                if state not in enums.ORDER_STATES_BINDING
+            ]
+
+            if order.state not in to_ignore_states:
                 counter[str(order.organization.id)] += 1
 
         data = {

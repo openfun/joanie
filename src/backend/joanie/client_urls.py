@@ -44,6 +44,7 @@ router.register("courses", api_client.CourseViewSet, basename="courses")
 router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
 router.register("enrollments", api_client.EnrollmentViewSet, basename="enrollments")
 router.register("orders", api_client.OrderViewSet, basename="orders")
+router.register("batch-orders", api_client.BatchOrderViewSet, basename="batch-orders")
 router.register(
     "organizations", api_client.OrganizationViewSet, basename="organizations"
 )
