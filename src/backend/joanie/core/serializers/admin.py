@@ -511,10 +511,12 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
 
     def to_internal_value(self, data):
         """
-        Override the default to_internal_value method to handle CSV data.
+        Override the default to_internal_value method to remove empty strings
+        from the data dictionary before validation.
         """
-        if data.get("nb_seats") == "":
-            data["nb_seats"] = None
+        for key in list(data.keys()):
+            if data[key] == "":
+                data[key] = None
 
         return super().to_internal_value(data)
 

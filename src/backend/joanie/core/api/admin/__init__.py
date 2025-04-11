@@ -611,8 +611,6 @@ class NestedCourseProductRelationOrderGroupViewSet(
         """
         data = request.data
         data["course_product_relation"] = kwargs.get("course_product_relation_id")
-        if "nb_seats" in data and not data.get("nb_seats"):
-            data.pop("nb_seats")
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
