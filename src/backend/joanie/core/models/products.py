@@ -20,6 +20,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 import requests
+from babel.numbers import get_currency_symbol
 from parler import models as parler_models
 from stockholm import Money
 from urllib3.util import Retry
@@ -1707,7 +1708,7 @@ class Discount(BaseModel):
             rate_as_int = int(self.rate * 100)
             return f"{rate_as_int}%"
 
-        return f"{self.amount} €"
+        return f"{self.amount} {get_currency_symbol(settings.DEFAULT_CURRENCY)}"
 
     @property
     def usage_count(self):
