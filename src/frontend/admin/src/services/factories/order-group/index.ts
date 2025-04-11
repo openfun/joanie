@@ -8,6 +8,8 @@ const build = (): OrderGroup => {
     id: faker.string.uuid(),
     nb_seats: nbSeat,
     nb_available_seats: faker.number.int({ max: nbSeat }),
+    start: faker.date.recent().toISOString(),
+    end: faker.date.future().toISOString(),
     is_active: faker.datatype.boolean(),
     can_edit: faker.datatype.boolean(),
     discount: DiscountFactory(),
