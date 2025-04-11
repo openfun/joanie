@@ -230,6 +230,8 @@ export const mockOrderGroup = async (
         ...payload,
         nb_seats: payload.nb_seats ?? null,
         nb_available_seats: payload.nb_seats ?? null,
+        start: payload.start ?? null,
+        end: payload.end ?? null,
         can_edit: false,
         discount: null,
       };
