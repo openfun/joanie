@@ -333,10 +333,43 @@ class OrderViewSet(
         """Force the order's "owner" field to the logged-in user."""
         serializer.save(owner=self.request.user)
 
-    # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-return-statements, too-many-locals
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
+        if voucher_code := request.data.get("voucher_code"):
+            try:
+                voucher = models.Voucher.objects.get(code=voucher_code)
+            except models.Voucher.DoesNotExist:
+                return Response("Invalid voucher code", status=HTTPStatus.BAD_REQUEST)
+
+            user = self.request.user
+            if not voucher.is_usable_by(user.id):
+                return Response(
+                    f"Voucher already claimed by user {user.id}",
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+
+            try:
+                order = models.Order.objects.get(
+                    voucher__code=voucher_code,
+                    voucher__discount__rate=1,
+                    state=enums.ORDER_STATE_TO_OWN,
+                )
+                order.owner = user
+                order.flow.update()
+                is_completed = order.state == enums.ORDER_STATE_COMPLETED
+                if not is_completed:
+                    return Response(
+                        f"Failed to transition — order is in {order.state}",
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+                return Response(
+                    serializers.OrderSerializer(order).data, status=HTTPStatus.OK
+                )
+            except models.Order.DoesNotExist:
+                pass
+
         enrollment = None
         if enrollment_id := request.data.get("enrollment_id"):
             try:
