@@ -401,6 +401,36 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertFalse(models.OrderGroup.objects.filter(id=order_group.id).exists())
 
+    def test_admin_api_order_group_create_start_date(self):
+        """
+        Authenticated admin user should be able to create an order group and set
+        a start and end date.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        data = {
+            "start": "2025-06-01T00:00:00Z",
+            "end": "",
+            "discount_id": "",
+            "nb_seats": "",
+            "is_active": False,
+        }
+
+        response = self.client.post(
+            f"{self.base_url}/{relation.id}/order-groups/",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+
+        content = response.json()
+
+        self.assertEqual(content["start"], data["start"])
+        self.assertFalse(content["is_active"])
+
     def test_admin_api_order_group_create_start_and_end_date(self):
         """
         Authenticated admin user should be able to create an order group and set
@@ -706,6 +736,31 @@ class OrderGroupAdminApiTest(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsNone(content["discount"])
+
+    def test_admin_api_order_group_update_to_remove_start(self):
+        """Authenticated admin user wants to remove the order group's discount."""
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            discount=factories.DiscountFactory(rate=0.5),
+            start=django_timezone.now(),
+        )
+
+        response = self.client.put(
+            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            content_type="application/json",
+            data={"start": ""},
+        )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIsNone(content["start"])
+        order_group.refresh_from_db()
+        self.assertIsNone(order_group.start)
 
     def test_admin_api_order_group_add_discount_that_does_not_exist(self):
         """
