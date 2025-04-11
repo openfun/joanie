@@ -1,7 +1,7 @@
 """Test suite for discount model."""
 
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from joanie.core.models import Discount
 
@@ -11,7 +11,11 @@ class DiscountModelsTestCase(TestCase):
 
     def test_models_discount_str(self):
         """str should return the amount if it exists."""
-        self.assertEqual(str(Discount(amount=10)), "10 €")
+        with override_settings(DEFAULT_CURRENCY="USD"):
+            self.assertEqual(str(Discount(amount=10)), "10 $")
+
+        with override_settings(DEFAULT_CURRENCY="EUR"):
+            self.assertEqual(str(Discount(amount=10)), "10 €")
 
     def test_models_discount_str_rate(self):
         """str should return the rate if it exists."""
