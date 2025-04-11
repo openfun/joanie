@@ -20,6 +20,8 @@ class OrderGroupAdminApiTest(TestCase):
 
     base_url = "/api/v1.0/admin/course-product-relations"
 
+    maxDiff = None
+
     # list
     def test_admin_api_order_group_list_anonymous(self):
         """
@@ -43,24 +45,63 @@ class OrderGroupAdminApiTest(TestCase):
 
         relation = factories.CourseProductRelationFactory()
         discount = factories.DiscountFactory(rate=0.3)
-        order_groups = factories.OrderGroupFactory.create_batch(
-            3, course_product_relation=relation, discount=discount
-        )
+        order_group_1 =  factories.OrderGroupFactory(course_product_relation=relation, discount=discount)
+        order_group_2 =  factories.OrderGroupFactory(course_product_relation=relation, discount=discount)
+        order_group_3 =  factories.OrderGroupFactory(course_product_relation=relation, discount=discount)
         factories.OrderGroupFactory.create_batch(5)
 
         with self.assertNumQueries(16):
             response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         expected_return = [
             {
-                "id": str(order_group.id),
-                "nb_seats": order_group.nb_seats,
-                "is_active": order_group.is_active,
-                "is_enabled": order_group.is_enabled,
-                "nb_available_seats": order_group.nb_seats
-                - order_group.get_nb_binding_orders(),
-                "created_on": order_group.created_on.isoformat().replace("+00:00", "Z"),
+                "id": str(order_group_1.id),
+                "nb_seats": order_group_1.nb_seats,
+                "is_active": order_group_1.is_active,
+                "is_enabled": order_group_1.is_enabled,
+                "nb_available_seats": order_group_1.nb_seats
+                - order_group_1.get_nb_binding_orders(),
+                "created_on": order_group_1.created_on.isoformat().replace("+00:00", "Z"),
+                "can_edit": True,
+                "start": None,
+                "end": None,
+                "discount": {
+                    "id": str(discount.id),
+                    "amount": None,
+                    "rate": 0.3,
+                    "is_used": 3,
+                },
+            },
+            {
+                "id": str(order_group_2.id),
+                "nb_seats": order_group_2.nb_seats,
+                "is_active": order_group_2.is_active,
+                "is_enabled": order_group_2.is_enabled,
+                "nb_available_seats": order_group_2.nb_seats
+                - order_group_2.get_nb_binding_orders(),
+                "created_on": order_group_2.created_on.isoformat().replace("+00:00", "Z"),
+                "can_edit": True,
+                "start": None,
+                "end": None,
+                "discount": {
+                    "id": str(discount.id),
+                    "amount": None,
+                    "rate": 0.3,
+                    "is_used": 3,
+                },
+            },
+            {
+                "id": str(order_group_3.id),
+                "nb_seats": order_group_3.nb_seats,
+                "is_active": order_group_3.is_active,
+                "is_enabled": order_group_3.is_enabled,
+                "nb_available_seats": order_group_3.nb_seats
+                - order_group_3.get_nb_binding_orders(),
+                "created_on": order_group_3.created_on.isoformat().replace("+00:00", "Z"),
                 "can_edit": True,
                 "start": None,
                 "end": None,
@@ -71,13 +112,10 @@ class OrderGroupAdminApiTest(TestCase):
                     "is_used": 3,
                 },
             }
-            for order_group in order_groups
         ]
+
         self.assertEqual(content["count"], 3)
-        self.assertEqual(
-            content["results"],
-            sorted(expected_return, key=itemgetter("created_on")),
-        )
+        self.assertEqual(content["results"], expected_return)
 
     def test_admin_api_order_group_list_lambda_user(self):
         """
