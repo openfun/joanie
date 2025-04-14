@@ -4,7 +4,6 @@ Test suite for OrderGroup Admin API.
 
 from datetime import timedelta
 from http import HTTPStatus
-from operator import itemgetter
 
 from django.db import IntegrityError
 from django.test import TestCase
@@ -43,13 +42,18 @@ class OrderGroupAdminApiTest(TestCase):
 
         relation = factories.CourseProductRelationFactory()
         discount = factories.DiscountFactory(rate=0.3)
-        order_groups = factories.OrderGroupFactory.create_batch(
-            3, course_product_relation=relation, discount=discount
-        )
+        order_groups = [
+            factories.OrderGroupFactory(
+                position=i, course_product_relation=relation, discount=discount
+            )
+            for i in range(3)
+        ]
+
         factories.OrderGroupFactory.create_batch(5)
 
         with self.assertNumQueries(16):
             response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
+
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         expected_return = [
@@ -74,10 +78,7 @@ class OrderGroupAdminApiTest(TestCase):
             for order_group in order_groups
         ]
         self.assertEqual(content["count"], 3)
-        self.assertEqual(
-            content["results"],
-            sorted(expected_return, key=itemgetter("created_on")),
-        )
+        self.assertEqual(content["results"], expected_return)
 
     def test_admin_api_order_group_list_lambda_user(self):
         """
