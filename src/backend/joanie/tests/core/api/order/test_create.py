@@ -511,45 +511,45 @@ class OrderCreateApiTest(BaseAPITestCase):
     def test_api_order_create_authenticated_organization_passed_several(self):
         """
         It should be possible to create then submit an order without passing an
-        organization if there are several linked to the product.
+        organization if there are several linked to the product when it's free.
         The one with the least active order count should be allocated.
         """
-        course = factories.CourseFactory()
-        organizations = factories.OrganizationFactory.create_batch(2)
-        target_course = factories.CourseFactory()
-        product = factories.ProductFactory(
-            courses=[],
-            target_courses=[target_course],
-            price=0.00,
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        organization, expected_organization = (
+            factories.OrganizationFactory.create_batch(2)
         )
-        factories.CourseProductRelationFactory(
-            course=course, product=product, organizations=organizations
+        relation = factories.CourseProductRelationFactory(
+            product__price=0.00, organizations=[organization, expected_organization]
         )
 
-        # Randomly create 9 orders for both organizations with random state and count
-        # the number of active orders for each organization
-        counter = {str(org.id): 0 for org in organizations}
-        for _ in range(9):
-            order = factories.OrderFactory(
-                organization=random.choice(organizations),
-                course=course,
-                product=product,
-                state=random.choice(enums.ORDER_STATE_CHOICES)[0],
+        for state in enums.ORDER_STATES_BINDING:
+            factories.OrderFactory(
+                organization=organization,
+                course=relation.course,
+                product=relation.product,
+                state=state,
             )
 
-            if order.state not in [
-                enums.ORDER_STATE_CANCELED,
-                enums.ORDER_STATE_ASSIGNED,
-                enums.ORDER_STATE_DRAFT,
-            ]:
-                counter[str(order.organization.id)] += 1
+        ignored_states = [
+            state
+            for [state, _] in enums.ORDER_STATE_CHOICES
+            if state not in enums.ORDER_STATES_BINDING
+        ]
+        for state in ignored_states:
+            factories.OrderFactory(
+                organization=expected_organization,
+                course=relation.course,
+                product=relation.product,
+                state=state,
+            )
 
         data = {
-            "course_code": course.code,
-            "product_id": str(product.id),
+            "course_code": relation.course.code,
+            "product_id": str(relation.product.id),
             "has_waived_withdrawal_right": True,
         }
-        token = self.get_user_token("panoramix")
 
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -558,11 +558,12 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+
         order_id = response.json()["id"]
-        self.assertEqual(models.Order.objects.count(), 10)  # 9 + 1
         # The chosen organization should be one of the organizations with the lowest order count
         organization_id = models.Order.objects.get(id=order_id).organization.id
-        self.assertEqual(counter[str(organization_id)], min(counter.values()))
+        self.assertEqual(organization_id, expected_organization.id)
 
     def test_api_order_create_should_auto_assign_organization(self):
         """
