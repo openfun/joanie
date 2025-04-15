@@ -51,6 +51,9 @@ admin_router.register(
 admin_router.register("users", api_admin.UserViewSet, basename="admin_user")
 admin_router.register("orders", api_admin.OrderViewSet, basename="admin_orders")
 admin_router.register(
+    "batch-orders", api_admin.BatchOrderViewSet, basename="admin_batch_orders"
+)
+admin_router.register(
     "enrollments", api_admin.EnrollmentViewSet, basename="admin_enrollments"
 )
 admin_router.register("teachers", api_admin.TeacherViewSet, basename="admin_teachers")
