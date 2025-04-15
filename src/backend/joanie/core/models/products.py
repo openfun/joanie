@@ -1907,6 +1907,27 @@ class BatchOrder(BaseModel):
         """Return the exhaustive list of voucher codes generated from the orders"""
         return [order.voucher.code for order in self.orders.all()]
 
+    def cancel_orders(self):
+        """
+        Cancel all orders associated with this batch order and delete their linked vouchers.
+        """
+        if self.state != enums.BATCH_ORDER_STATE_CANCELED:
+            message = "You must cancel the batch order before canceling the orders"
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                    }
+                },
+            )
+            raise ValidationError(message)
+
+        for order in self.orders.all():
+            order.voucher.delete()
+            order.voucher = None
+            order.flow.cancel()
+
     def create_billing_address(self):
         """
         Create a billing address for the batch order

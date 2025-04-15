@@ -9,7 +9,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.test import override_settings
 from django.utils import timezone as django_timezone
 
-from joanie.core import enums, factories
+from joanie.core import enums, factories, models
 from joanie.core.utils import contract_definition
 from joanie.core.utils.billing_address import CompanyBillingAddress
 from joanie.payment.models import Invoice
@@ -368,3 +368,25 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         vouchers = batch_order.vouchers
 
         self.assertEqual(vouchers, expected_vouchers)
+
+    def test_models_batch_order_cancel_orders(self):
+        """
+        When we cancel a batch order that was completed, the generated orders should be canceled
+        and the voucher codes should be deleted. It's the only state where we have orders and
+        vouchers available.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_COMPLETED
+        )
+
+        batch_order.generate_orders()
+        # Store vouchers
+        voucher_codes = batch_order.vouchers
+        batch_order.flow.cancel()
+        batch_order.cancel_orders()
+
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)
+        self.assertFalse(
+            batch_order.orders.exclude(state=enums.ORDER_STATE_CANCELED).exists()
+        )
+        self.assertFalse(models.Voucher.objects.filter(code__in=voucher_codes).exists())
