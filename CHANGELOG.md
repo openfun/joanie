@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Add admin api endpoints for `BatchOrder` resources to create, read, list
+  and cancel
 - Claim an order generated from a batch order through voucher code
 
 ## [2.18.0] - 2025-05-23
