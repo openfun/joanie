@@ -6,6 +6,7 @@ from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 
@@ -34,6 +35,7 @@ from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
 )
+from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import (
     get_transaction_references_to_refund,
     has_installment_paid,
@@ -739,6 +741,47 @@ class OrderViewSet(
             content_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="orders_{now}.csv"'},
         )
+
+
+class BatchOrderViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Admin Batch Order Viewset
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminBatchOrderSerializer
+    queryset = models.BatchOrder.objects.all().select_related(
+        "contract",
+        "relation",
+        "organization",
+    )
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+
+    def perform_create(self, serializer):
+        """Override `perform_create` to start the flow of the batch order object"""
+        instance = serializer.save()
+        instance.init_flow()
+
+    def destroy(self, request, *args, **kwargs):
+        """Cancel a batch order."""
+        batch_order = self.get_object()
+
+        is_completed = batch_order.state == enums.BATCH_ORDER_STATE_COMPLETED
+
+        batch_order.flow.cancel()
+
+        if is_completed:
+            # Delete orders and linked vouchers
+            batch_order.cancel_orders()
+
+        return Response(status=HTTPStatus.NO_CONTENT)
 
 
 class OrganizationAddressViewSet(
