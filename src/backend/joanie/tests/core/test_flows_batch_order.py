@@ -148,3 +148,15 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         batch_order.flow.update()
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
+
+    def test_flow_batch_order_cancel_orders(self):
+        """
+        We can cancel the order from any states.
+        """
+
+        for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                batch_order = factories.BatchOrderFactory(state=state)
+                batch_order.flow.cancel()
+
+                self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)
