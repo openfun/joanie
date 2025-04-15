@@ -1731,11 +1731,21 @@ class BatchOrder(BaseModel):
         """
         Ensure that the number of reserved seats (`nb_seats`) matches the number of trainees
         in the `trainees` list when saving a BatchOrder instance.
+        If there is an update with a voucher code on the batch order in state `draft` or `assigned`
+        we should compute the total again.
         """
         if len(self.trainees) != self.nb_seats:
             raise ValidationError(
                 _("The number of trainees must match the number of seats.")
             )
+
+        if (
+            self.created_on
+            and self.voucher
+            and self.state in enums.BATCH_ORDER_STATES_MUTABLE_TOTAL
+        ):
+            total = self.get_discounted_price()
+            self.total = min(total, self.total)
 
         return super().clean()
 

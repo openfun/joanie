@@ -6,6 +6,7 @@ from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 
@@ -34,6 +35,7 @@ from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
 )
+from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import (
     get_transaction_references_to_refund,
     has_installment_paid,
@@ -741,6 +743,157 @@ class OrderViewSet(
             content_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="orders_{now}.csv"'},
         )
+
+
+class BatchOrderViewSet(SerializerPerActionMixin, viewsets.ModelViewSet):
+    """Create update and read admin BatchOrder Viewset"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    default_serializer_class = serializers.AdminBatchOrderSerializer
+    serializer_classes = {
+        "update": serializers.AdminBatchOrderUpdateSerializer,
+        "partial_update": serializers.AdminBatchOrderUpdateSerializer,
+    }
+    queryset = models.BatchOrder.objects.all().select_related(
+        "contract",
+        "relation",
+        "organization",
+    )
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+
+    @staticmethod
+    def get_request_schema_parameters(create=False):
+        """
+        Return the parameters to use in the OpenAPI schema.
+        """
+        return [
+            OpenApiParameter(
+                name="relation_id",
+                required=create,
+                type=OpenApiTypes.UUID,
+            ),
+            OpenApiParameter(
+                name="owner",
+                required=create,
+                type=OpenApiTypes.UUID,
+            ),
+            OpenApiParameter(
+                name="trainees",
+                required=create,
+                type=OpenApiTypes.UUID,
+                many=True,
+            ),
+            OpenApiParameter(
+                name="company_name",
+                required=create,
+                type=OpenApiTypes.STR,
+                many=True,
+            ),
+            OpenApiParameter(
+                name="address",
+                required=create,
+                type=OpenApiTypes.STR,
+                many=True,
+            ),
+            OpenApiParameter(
+                name="city",
+                required=create,
+                type=OpenApiTypes.STR,
+                many=True,
+            ),
+            OpenApiParameter(
+                name="postcode",
+                required=create,
+                type=OpenApiTypes.STR,
+                many=True,
+            ),
+            OpenApiParameter(
+                name="country",
+                required=create,
+                type=OpenApiTypes.STR,
+                many=True,
+            ),
+            OpenApiParameter(
+                name="identification_number",
+                required=create,
+                type=OpenApiTypes.STR,
+                many=True,
+            ),
+        ]
+
+    @extend_schema(parameters=get_request_schema_parameters(create=True))
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """Create the batch order and start the state of flows"""
+        serializer = self.get_serializer(data=request.data)
+
+        relation_id = request.data.get("relation_id")
+        try:
+            relation = models.CourseProductRelation.objects.get(pk=relation_id)
+        except models.CourseProductRelation.DoesNotExist:
+            return Response(
+                f"The course product relation does not exist: {relation_id}",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        if organization_id := request.data.get("organization_id"):
+            try:
+                organization = models.Organization.objects.get(pk=organization_id)
+            except models.Organization.DoesNotExist:
+                return Response(
+                    f"The organization does not exist: {organization_id}",
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+        else:
+            organization = get_least_active_organization(
+                relation.product, relation.course
+            )
+
+        serializer.initial_data["organization_id"] = organization.id
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
+
+        self.perform_create(serializer)
+        serializer.instance.init_flow()
+
+        return Response(serializer.data, status=HTTPStatus.CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        """Cancels an batch order."""
+        batch_order = self.get_object()
+
+        is_completed = batch_order.state == enums.BATCH_ORDER_STATE_COMPLETED
+
+        batch_order.flow.cancel()
+
+        if is_completed:
+            batch_order.cancel_orders()
+
+        return Response(status=HTTPStatus.NO_CONTENT)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Prevent to update the voucher if the batch order is not in state `draft` or `assigned`.
+        """
+        batch_order = self.get_object()
+
+        if (
+            request.data.get("voucher")
+            and batch_order.state not in enums.BATCH_ORDER_STATES_MUTABLE_TOTAL
+        ):
+            return Response(
+                f"Cannot add a voucher code when batch order is in state {batch_order.state}",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        if batch_order.state not in enums.BATCH_ORDER_STATES_ALLOWS_CONTRACT_UPDATE:
+            return Response(
+                f"Cannot update batch order in state {batch_order.state}, contract is signed.",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        return super().update(request, *args, **kwargs)
 
 
 class OrganizationAddressViewSet(
