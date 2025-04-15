@@ -107,6 +107,15 @@ class BatchOrderFlow:
         """
 
     @state.transition(
+        source=fsm.State.ANY,
+        target=enums.BATCH_ORDER_STATE_CANCELED,
+    )
+    def cancel(self):
+        """
+        Mark batch order instance as "canceled".
+        """
+
+    @state.transition(
         source=enums.BATCH_ORDER_STATE_PENDING,
         target=enums.BATCH_ORDER_STATE_COMPLETED,
     )

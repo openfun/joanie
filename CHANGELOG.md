@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add admin api endpoints to CRUD `BatchOrder` resources
 - Claim an order generated from a batch order through voucher code
 
 ### Changed
