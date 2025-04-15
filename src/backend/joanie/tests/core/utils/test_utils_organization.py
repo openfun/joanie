@@ -85,6 +85,7 @@ class UtilsOrganizationTestCase(TestCase):
                     enums.ORDER_STATE_CANCELED,
                     enums.ORDER_STATE_REFUNDING,
                     enums.ORDER_STATE_REFUNDED,
+                    enums.ORDER_STATE_TO_OWN,
                 ]:
                     self.assertEqual(selected_organization, self.organization_1)
                 else:

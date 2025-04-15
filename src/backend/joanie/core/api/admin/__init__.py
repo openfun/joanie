@@ -594,9 +594,13 @@ class NestedCourseProductRelationOrderGroupViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_classes = {
         "create": serializers.AdminOrderGroupCreateSerializer,
+        "update": serializers.AdminOrderGroupUpdateSerializer,
+        "partial_update": serializers.AdminOrderGroupUpdateSerializer,
     }
     default_serializer_class = serializers.AdminOrderGroupSerializer
-    queryset = models.OrderGroup.objects.all().select_related("course_product_relation")
+    queryset = models.OrderGroup.objects.all().select_related(
+        "course_product_relation", "discount"
+    )
     ordering = "created_on"
     lookup_fields = ["course_product_relation", "pk"]
     lookup_url_kwargs = ["course_product_relation_id", "pk"]
@@ -607,6 +611,8 @@ class NestedCourseProductRelationOrderGroupViewSet(
         """
         data = request.data
         data["course_product_relation"] = kwargs.get("course_product_relation_id")
+        if "nb_seats" in data and not data.get("nb_seats"):
+            data.pop("nb_seats")
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -645,7 +651,6 @@ class OrderViewSet(
         "contract__definition",
         "certificate",
         "certificate__certificate_definition",
-        "order_group",
         "credit_card",
     )
 
@@ -781,3 +786,19 @@ class OrganizationAddressViewSet(
             ) from error
 
         return super().destroy(request, *args, **kwargs)
+
+
+class DiscountViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Admin Discount Viewset"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminDiscountSerializer
+    queryset = models.Discount.objects.all()
+    filterset_class = filters.DiscountAdminFilterSet

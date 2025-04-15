@@ -9,6 +9,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import factories
+from joanie.core.models import OrderGroup
 
 
 class OrderGroupModelTestCase(TestCase):
@@ -23,7 +24,7 @@ class OrderGroupModelTestCase(TestCase):
         self.assertTrue(order_group.can_edit)
 
         factories.OrderFactory(
-            order_group=order_group,
+            order_groups=[order_group],
             product=order_group.course_product_relation.product,
             course=order_group.course_product_relation.course,
         )
@@ -163,3 +164,131 @@ class OrderGroupModelTestCase(TestCase):
         )
 
         self.assertFalse(order_group_2.is_enabled)
+
+    def test_models_order_group_position_default(self):
+        """
+        The position value should be set to the first available position for the given relation
+        if not set.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_group_1 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            position=None,
+        )
+        self.assertEqual(order_group_1.position, 0)
+
+        order_group_2 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            position=None,
+        )
+        self.assertEqual(order_group_2.position, 1)
+
+        order_group_3 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            position=0,
+        )
+        self.assertEqual(order_group_3.position, 0)
+
+    def test_model_order_group_set_position(self):
+        """
+        Should update the position of the order group and reorder the other order groups
+        linked to the same relation.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_1, order_2, order_3 = factories.OrderGroupFactory.create_batch(
+            3, course_product_relation=relation
+        )
+        self.assertEqual(order_1.position, 0)
+        self.assertEqual(order_2.position, 1)
+        self.assertEqual(order_3.position, 2)
+
+        order_1.set_position(2)
+
+        order_1.refresh_from_db()
+        order_2.refresh_from_db()
+        order_3.refresh_from_db()
+        self.assertEqual(order_2.position, 0)
+        self.assertEqual(order_3.position, 1)
+        self.assertEqual(order_1.position, 2)
+
+        order_1.set_position(0)
+
+        order_1.refresh_from_db()
+        order_2.refresh_from_db()
+        order_3.refresh_from_db()
+        self.assertEqual(order_1.position, 0)
+        self.assertEqual(order_2.position, 1)
+        self.assertEqual(order_3.position, 2)
+
+    def test_model_order_group_find_actives_none(self):
+        """
+        Should return None if no order group is found for the given course and product.
+        """
+        relation = factories.CourseProductRelationFactory()
+
+        assignable_order_groups = OrderGroup.objects.find_actives(relation.id)
+
+        self.assertQuerysetEqual(assignable_order_groups, [])
+
+    def test_model_order_group_find_actives(self):
+        """
+        Should return the order group linked to the given course and product.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+
+        assignable_order_groups = OrderGroup.objects.find_actives(relation.id)
+
+        self.assertQuerysetEqual(assignable_order_groups, [order_group])
+
+    def test_model_order_group_find_actives_position(self):
+        """
+        Should return the order group linked to the given course and product
+        ordered by position.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_group_1 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+        order_group_2 = factories.OrderGroupFactory(
+            course_product_relation=relation,
+        )
+
+        assignable_order_groups = OrderGroup.objects.find_actives(relation.id)
+
+        self.assertQuerysetEqual(
+            assignable_order_groups, [order_group_1, order_group_2]
+        )
+
+        order_group_1.position = 1
+        order_group_1.save()
+        order_group_2.position = 0
+        order_group_2.save()
+
+        assignable_order_groups = OrderGroup.objects.find_actives(relation.id)
+
+        self.assertQuerysetEqual(
+            assignable_order_groups, [order_group_2, order_group_1]
+        )
+
+    def test_model_order_group_find_actives_multiples(self):
+        """
+        Should return the order groups linked to the given course and product.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_group_1 = factories.OrderGroupFactory(course_product_relation=relation)
+        order_group_2 = factories.OrderGroupFactory(course_product_relation=relation)
+        order_group_3 = factories.OrderGroupFactory(course_product_relation=relation)
+
+        assignable_order_groups = OrderGroup.objects.find_actives(relation.id)
+
+        self.assertQuerysetEqual(
+            assignable_order_groups,
+            [
+                order_group_1,
+                order_group_2,
+                order_group_3,
+            ],
+        )

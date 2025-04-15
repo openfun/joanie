@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Claim an order generated from a batch order through voucher code
+
 ### Changed
 
 - Add course offer information into course webhook synchronization payload
@@ -25,6 +29,7 @@ and this project adheres to
 
 ### Added
 
+- Add `Discount` relation to `OrderGroup` model
 - Add `start` and `end` datetime fields on order group model
 - Add Sarbacane newsletter client
 
