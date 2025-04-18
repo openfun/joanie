@@ -557,6 +557,44 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         )
 
 
+@admin.register(models.BatchOrder)
+class BatchOrderAdmin(admin.ModelAdmin):
+    """Admin class for the Batch Order model"""
+
+    list_display = (
+        "id",
+        "created_on",
+        "organization",
+        "owner",
+        "relation",
+        "state",
+        "company_name",
+        "identification_number",
+        "nb_seats",
+    )
+    readonly_fields = (
+        "state",
+        "total",
+        "invoice",
+        "contract",
+    )
+    list_filter = [OwnerFilter, OrganizationFilter, "state"]
+
+    def invoice(self, obj):  # pylint: disable=no-self-use
+        """Retrieve the root invoice related to the order."""
+        invoice = obj.invoices.get(parent__isnull=True)
+
+        return format_html(
+            (
+                "<a href='"
+                f"{reverse('admin:payment_invoice_change', args=(invoice.id,))}"
+                "'>"
+                f"{str(invoice)}"
+                "</a>"
+            )
+        )
+
+
 @admin.register(models.Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
     """Admin class for the Enrollment model"""
