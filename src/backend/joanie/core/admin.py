@@ -557,6 +557,111 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         )
 
 
+@admin.register(models.BatchOrder)
+class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
+    """Admin class for the Batch Order model"""
+
+    actions = (ACTION_NAME_CANCEL,)
+    # Custom for to handle voucher code input and trainees list
+    form = forms.BatchOrderAdminForm
+    list_filter = [OwnerFilter, OrganizationFilter, "state"]
+    autocomplete_fields = ["organization", "owner"]
+    list_display = (
+        "id",
+        "relation",
+        "organization",
+        "nb_seats",
+        "orders_generated",
+        "owner",
+        "state",
+        "company_name",
+        "created_on",
+    )
+    readonly_fields = (
+        "state",
+        "total",
+        "contract",
+        "invoice",
+        "order_groups",
+        "orders_generated",
+    )
+    fieldsets = (
+        (
+            _("Main information"),
+            {
+                "fields": (
+                    "owner",
+                    "company_name",
+                    "identification_number",
+                    "address",
+                    "city",
+                    "postcode",
+                    "country",
+                )
+            },
+        ),
+        (
+            _("Order details"),
+            {
+                "fields": (
+                    "relation",
+                    "organization",
+                    "voucher",
+                    "nb_seats",
+                    "trainees",
+                    "total",
+                )
+            },
+        ),
+        (
+            "Additional details",
+            {
+                "fields": (
+                    "state",
+                    "invoice",
+                    "contract",
+                    "order_groups",
+                    "orders_generated",
+                )
+            },
+        ),
+    )
+
+    def get_actions(self, request):
+        """Remove the dropdown bar menu of action in list view"""
+        return {}
+
+    def has_delete_permission(self, request, obj=None):
+        """Remove the delete action by returning False on the permission to delete"""
+        return False
+
+    @admin.display(boolean=True, description="Orders generated")
+    def orders_generated(self, obj):
+        """Returns boolean value whether the orders are generated or not."""
+        return obj.orders.exists()
+
+    @admin.action(description=_("Cancel batch order"))
+    def cancel(self, request, instance):  # pylint: disable=no-self-use
+        """Cancel batch orders"""
+        instance.flow.cancel()
+        if instance.orders.exists():
+            instance.cancel_orders()
+
+    def invoice(self, obj):  # pylint: disable=no-self-use
+        """Retrieve the root invoice related to the order."""
+        invoice = obj.invoices.get(parent__isnull=True)
+
+        return format_html(
+            (
+                "<a href='"
+                f"{reverse('admin:payment_invoice_change', args=(invoice.id,))}"
+                "'>"
+                f"{str(invoice)}"
+                "</a>"
+            )
+        )
+
+
 @admin.register(models.Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
     """Admin class for the Enrollment model"""
