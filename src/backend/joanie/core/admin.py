@@ -557,6 +557,152 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         )
 
 
+@admin.register(models.BatchOrder)
+class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
+    """Admin class for the Batch Order model"""
+
+    actions = (ACTION_NAME_CANCEL,)
+    # Custom for to handle voucher code input and trainees list
+    form = forms.BatchOrderAdminForm
+    list_filter = [OwnerFilter, OrganizationFilter, "state"]
+    autocomplete_fields = ["organization", "owner"]
+    list_display = (
+        "id",
+        "relation",
+        "organization",
+        "nb_seats",
+        "owner",
+        "state",
+        "company_name",
+        "created_on",
+    )
+    readonly_fields = (
+        "state",
+        "total",
+        "contract",
+        "invoice",
+        "order_groups",
+    )
+    fieldsets = (
+        (
+            _("Main information"),
+            {
+                "fields": (
+                    "owner",
+                    "company_name",
+                    "identification_number",
+                    "address",
+                    "city",
+                    "postcode",
+                    "country",
+                )
+            },
+        ),
+        (
+            _("Order details"),
+            {
+                "fields": (
+                    "relation",
+                    "organization",
+                    "voucher",
+                    "nb_seats",
+                    "trainees",
+                    "total",
+                )
+            },
+        ),
+        (
+            "Additional details",
+            {
+                "fields": (
+                    "state",
+                    "invoice",
+                    "contract",
+                    "order_groups",
+                )
+            },
+        ),
+    )
+
+    def get_actions(self, request):
+        """Remove the dropdown bar menu of action in list view"""
+        return {}
+
+    def get_change_actions(self, request, object_id, form_url):
+        """
+        We only need the custom actions to be present in the change form. Each action is
+        present depending on the state of the batch order. Only the action cancel is enabled
+        at any state.
+        """
+        actions = super().get_change_actions(request, object_id, form_url)
+        actions = list(actions)
+
+        if not self.model.objects.filter(
+            pk=object_id, state=enums.BATCH_ORDER_STATE_DRAFT
+        ).exists():
+            actions.remove(ACTION_NAME_ASSIGN_ORGANIZATION)
+
+        if not self.model.objects.filter(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED, pk=object_id
+        ).exists():
+            actions.remove(ACTION_NAME_SUBMIT_TO_SIGNATURE)
+
+        if not self.model.objects.filter(
+            state__in=[
+                enums.BATCH_ORDER_STATE_SIGNING,
+                enums.BATCH_ORDER_STATE_PENDING,
+            ],
+            pk=object_id,
+        ).exists():
+            actions.remove(ACTION_NAME_VALIDATE_SUCCESS_PAYMENT)
+
+        if not self.model.objects.filter(
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            orders__isnull=True,
+            pk=object_id,
+        ).exists():
+            actions.remove(ACTION_NAME_GENERATE_ORDERS)
+
+        if not self.model.objects.filter(
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            orders__isnull=False,
+            pk=object_id,
+        ).exists():
+            actions.remove(ACTION_NAME_SEND_MAIL_VOUCHERS)
+
+        return actions
+
+    def has_delete_permission(self, request, obj=None):
+        """Remove the delete action by returning False on the permission to delete"""
+        return False
+
+    @admin.display(boolean=True, description="Orders generated")
+    def orders_generated(self, obj):
+        """Returns boolean value whether the orders are generated or not."""
+        return obj.orders.exists()
+
+    @admin.action(description=_("Cancel selected batch orders"))
+    def cancel(self, request, queryset):  # pylint: disable=no-self-use
+        """Cancel batch orders"""
+        queryset.flow.cancel()
+        if queryset.orders.exists():
+            queryset.cancel_orders()
+
+    def invoice(self, obj):  # pylint: disable=no-self-use
+        """Retrieve the root invoice related to the order."""
+        invoice = obj.invoices.get(parent__isnull=True)
+
+        return format_html(
+            (
+                "<a href='"
+                f"{reverse('admin:payment_invoice_change', args=(invoice.id,))}"
+                "'>"
+                f"{str(invoice)}"
+                "</a>"
+            )
+        )
+
+
 @admin.register(models.Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
     """Admin class for the Enrollment model"""
