@@ -1635,11 +1635,18 @@ class BatchOrder(BaseModel):
         ordering = ["created_on"]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(state=enums.BATCH_ORDER_STATE_DRAFT)
+                check=models.Q(
+                    state__in=[
+                        enums.BATCH_ORDER_STATE_DRAFT,
+                        enums.BATCH_ORDER_STATE_CANCELED,
+                    ]
+                )
                 | models.Q(organization__isnull=False),
-                name="required_organization_if_not_draft",
-                violation_error_message="BatchOrder requires organization unless in draft state.",
-            ),
+                name="required_organization_if_not_draft_or_canceled",
+                violation_error_message=(
+                    "BatchOrder requires organization unless in draft or cancel states."
+                ),
+            )
         ]
 
     relation = models.ForeignKey(
