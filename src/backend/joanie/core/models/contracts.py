@@ -223,8 +223,13 @@ class Contract(BaseModel):
 
     # pylint: disable=no-member
     def __str__(self):
-        course = self.order.course if self.order.course else self.order.enrollment
-        return f"{self.order.owner}'s contract for course {course}"
+        if self.order:
+            course = self.order.course if self.order.course else self.order.enrollment
+            owner = self.order.owner
+        else:
+            course = self.batch_orders.first().relation.course
+            owner = self.batch_orders.first().owner
+        return f"{owner}'s contract for course {course}"
 
     def save(self, *args, **kwargs):
         """Enforce validation each time an instance is saved."""
