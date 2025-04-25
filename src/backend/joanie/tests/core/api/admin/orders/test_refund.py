@@ -156,6 +156,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
     @override_settings(
         JOANIE_CATALOG_NAME="Test Catalog",
+        JOANIE_CATALOG_BASE_URL="https://richie.education",
         DEFAULT_CURRENCY="EUR",
         JOANIE_PAYMENT_SCHEDULE_LIMITS={
             100: (20, 30, 30, 20),
@@ -327,7 +328,8 @@ class OrdersAdminApiRefundTestCase(TestCase):
             f"Withdrawn on {order.payment_schedule[3]['due_date'].strftime('%m/%d/%Y')}",
             "Canceled",
             "Total €100.00",
-            f"This mail has been sent to {order.owner.email} by Test Catalog [None]",
+            f"This mail has been sent to {order.owner.email} by Test Catalog \
+                [https://richie.education]",
         ]
 
         self.assertEqual(
