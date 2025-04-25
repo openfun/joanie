@@ -5,7 +5,7 @@ Core application forms declaration
 from django import forms
 from django.contrib.admin import widgets
 
-from joanie.core import models
+from joanie.core import enums, models
 
 
 class CourseProductRelationAdminForm(forms.ModelForm):
@@ -147,3 +147,31 @@ class BatchOrderAdminForm(forms.ModelForm):
             trainees.append({"first_name": first_name, "last_name": last_name})
 
         return trainees
+
+    def save(self, commit=False):
+        """
+        Override the save method because we should verify that there
+        enough seats available according to the nb_seats requested in the
+        available order groups
+        """
+        if self.instance.state == enums.BATCH_ORDER_STATE_DRAFT:
+            order_groups = models.OrderGroup.objects.find_actives(
+                course_product_relation_id=self.instance.relation.id
+            )
+
+            seats_limitation = None
+            for order_group in order_groups:
+                if order_group.nb_seats is not None:
+                    if order_group.available_seats < self.cleaned_data["nb_seats"]:
+                        seats_limitation = order_group
+                        continue
+
+                    seats_limitation = None
+
+                if order_group.is_enabled:
+                    self.instance.order_groups.add(order_group)
+
+            if seats_limitation:
+                raise ValueError("seat limitation has been reached")
+
+        return super().save(commit=False)
