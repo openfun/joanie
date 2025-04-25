@@ -32,6 +32,18 @@ The easiest way to start working on the project is to use GNU Make:
 $ make bootstrap
 ```
 
+> Please note that with apple silicon (Mx chips), you may encounter difficulties launching docker compose, notably because some images are not compatible. In this case, you can specify the platform in the docker compose file, as in the example below:
+> ```
+> -- a/docker-compose.yml
+> +++ b/docker-compose.yml
+> @@ -122,6 +122,7 @@ services:
+>        - app
+>  
+>   dockerize:
+> +    platform: "linux/amd64"
+>      image: jwilder/dockerize
+> ```
+
 This command builds the `app` container, installs dependencies, performs
 database migrations and compile translations. It's a good idea to use this
 command each time you are pulling code from the project repository to avoid
