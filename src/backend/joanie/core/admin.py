@@ -13,12 +13,24 @@ from django.utils.translation import ngettext_lazy
 
 from admin_auto_filters.filters import AutocompleteFilter
 from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
-from django_object_actions import DjangoObjectActions
+from django_object_actions import DjangoObjectActions, takes_instance_or_queryset
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
 
-from joanie.core import forms, models
+from joanie.core import enums, forms, models
+from joanie.core.utils.batch_order import (
+    assign_organization,
+    get_active_order_group,
+    send_mail_invitation_link,
+    send_mail_vouchers,
+    validate_success_payment,
+)
 
 ACTION_NAME_CANCEL = "cancel"
+ACTION_NAME_ASSIGN_ORGANIZATION = "assign_organization"
+ACTION_NAME_GENERATE_ORDERS = "generate_orders"
+ACTION_NAME_SUBMIT_TO_SIGNATURE = "submit_to_signature"
+ACTION_NAME_VALIDATE_SUCCESS_PAYMENT = "validate_success_payment"
+ACTION_NAME_SEND_MAIL_VOUCHERS = "send_mail_vouchers"
 
 
 def summarize_certification_to_user(request, count):
@@ -561,19 +573,34 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Batch Order model"""
 
-    actions = (ACTION_NAME_CANCEL,)
-    # Custom for to handle voucher code input and trainees list
     form = forms.BatchOrderAdminForm
+    # Custom actions
+    actions = (
+        ACTION_NAME_CANCEL,
+        ACTION_NAME_ASSIGN_ORGANIZATION,
+        ACTION_NAME_SUBMIT_TO_SIGNATURE,
+        ACTION_NAME_GENERATE_ORDERS,
+        ACTION_NAME_VALIDATE_SUCCESS_PAYMENT,
+        ACTION_NAME_SEND_MAIL_VOUCHERS,
+    )
+    change_actions = (
+        ACTION_NAME_CANCEL,
+        ACTION_NAME_ASSIGN_ORGANIZATION,
+        ACTION_NAME_SUBMIT_TO_SIGNATURE,
+        ACTION_NAME_GENERATE_ORDERS,
+        ACTION_NAME_VALIDATE_SUCCESS_PAYMENT,
+        ACTION_NAME_SEND_MAIL_VOUCHERS,
+    )
     list_filter = [OwnerFilter, OrganizationFilter, "state"]
     autocomplete_fields = ["organization", "owner"]
     list_display = (
         "id",
+        "state",
         "relation",
         "organization",
         "nb_seats",
         "orders_generated",
         "owner",
-        "state",
         "company_name",
         "created_on",
     )
@@ -631,6 +658,43 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         """Remove the dropdown bar menu of action in list view"""
         return {}
 
+    def get_change_actions(self, request, object_id, form_url):
+        """
+        We only need the custom actions to be present in the change form. Each action is
+        present depending on the state of the batch order. Only the action cancel is enabled
+        at any state.
+        """
+        actions = super().get_change_actions(request, object_id, form_url)
+        actions = list(actions)
+
+        batch_order = self.model.objects.get(pk=object_id)
+
+        if batch_order.state != enums.BATCH_ORDER_STATE_DRAFT:
+            actions.remove(ACTION_NAME_ASSIGN_ORGANIZATION)
+
+        if batch_order.state != enums.BATCH_ORDER_STATE_ASSIGNED:
+            actions.remove(ACTION_NAME_SUBMIT_TO_SIGNATURE)
+
+        if batch_order.state not in [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+        ]:
+            actions.remove(ACTION_NAME_VALIDATE_SUCCESS_PAYMENT)
+
+        if (
+            batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED
+            or batch_order.orders.exists()
+        ):
+            actions.remove(ACTION_NAME_GENERATE_ORDERS)
+
+        if (
+            batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED
+            or not batch_order.orders.exists()
+        ):
+            actions.remove(ACTION_NAME_SEND_MAIL_VOUCHERS)
+
+        return actions
+
     def has_delete_permission(self, request, obj=None):
         """Remove the delete action by returning False on the permission to delete"""
         return False
@@ -646,6 +710,140 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         instance.flow.cancel()
         if instance.orders.exists():
             instance.cancel_orders()
+
+    @takes_instance_or_queryset
+    def assign_organization(self, request, queryset):  # pylint: disable=no-self-use
+        """Custom action to assign an organization to batch orders passed as a queryset."""
+        for batch_order in queryset:
+            if batch_order.state != enums.BATCH_ORDER_STATE_DRAFT:
+                messages.warning(request, _("Batch order should be in state 'draft'."))
+                continue
+
+            try:
+                assign_organization(batch_order)
+            except ValueError as exception:
+                return messages.warning(request, _(f"{exception}"))
+
+            return messages.success(
+                request, _(f"{batch_order.id} assigned to an organization")
+            )
+
+    @takes_instance_or_queryset
+    def submit_to_signature(self, request, queryset):
+        """
+        Custom action to submit to signature the contract of the batch order.
+        When the contract is not yet signed and if the list of trainees has changed,
+        the admin user can call this method again to update the initial contract.
+        """
+        for batch_order in queryset:
+            if batch_order.state not in [
+                enums.BATCH_ORDER_STATE_ASSIGNED,
+                enums.BATCH_ORDER_STATE_TO_SIGN,
+            ]:
+                messages.warning(
+                    request,
+                    _(
+                        f"Cannot submit to signature the contract, state : {batch_order.state}"
+                    ),
+                )
+                continue
+
+            if batch_order.order_groups.exists():
+                if (
+                    batch_order.order_groups.first().available_seats
+                    < batch_order.nb_seats
+                ):
+                    initial_order_group = batch_order.order_groups.first()
+                    batch_order.order_groups.remove(initial_order_group)
+
+                    try:
+                        order_group = get_active_order_group(
+                            relation_id=batch_order.relation.id,
+                            nb_seats=batch_order.nb_seats,
+                        )
+                    except ValueError as exception:
+                        return messages.warning(
+                            request,
+                            _(f"{batch_order.id} - {exception}"),
+                        )
+
+                    batch_order.order_groups.add(order_group)
+
+            invitation_link = batch_order.submit_for_signature(batch_order.owner)
+            send_mail_invitation_link(batch_order, invitation_link)
+
+            return messages.success(
+                request,
+                _(f"{batch_order.id} - Email invitation link to sign contract sent."),
+            )
+
+    @takes_instance_or_queryset
+    def validate_success_payment(self, request, queryset):
+        """
+        Custom action to validate a success payment from the batch order owner. The payment
+        is made outside the payment backend, so do the admin user is responsible to validate
+        manually once they have received the payment.
+        """
+        for batch_order in queryset:
+            if batch_order.state not in [
+                enums.BATCH_ORDER_STATE_SIGNING,
+                enums.BATCH_ORDER_STATE_PENDING,
+            ]:
+                messages.warning(
+                    request,
+                    _("Your batch order is not in state 'signing' nor 'pending'."),
+                )
+                continue
+
+            # Transition to `pending` state if neeeded because normally
+            # we do this through the API when submitting to payment
+            if batch_order.state == enums.BATCH_ORDER_STATE_SIGNING:
+                batch_order.flow.update()
+
+            validate_success_payment(batch_order)
+
+            return self.message_user(
+                request, _(f"{batch_order.id} payment success validated.")
+            )
+
+    @takes_instance_or_queryset
+    def generate_orders(self, request, queryset):
+        """
+        Custom action to generate orders for a batch order once in completed state.
+        """
+        for batch_order in queryset:
+            if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+                messages.warning(
+                    request,
+                    _(
+                        "Your batch order is not in 'completed' state. Cannot generate orders."
+                    ),
+                )
+                continue
+
+            batch_order.generate_orders()
+
+            return self.message_user(
+                request,
+                _(f"{batch_order.id} orders generated."),
+            )
+
+    @takes_instance_or_queryset
+    def send_mail_vouchers(self, request, queryset):
+        """
+        Custom action to send the email with the vouchers once the orders and vouchers
+        are generated
+        """
+        for batch_order in queryset:
+            if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+                continue
+
+            send_mail_vouchers(batch_order)
+
+            return self.message_user(
+                request,
+                _(f"{batch_order.id} mail sent to: {batch_order.owner.email}."),
+            )
 
     def invoice(self, obj):  # pylint: disable=no-self-use
         """Retrieve the root invoice related to the order."""
