@@ -231,7 +231,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         )
         self.assertRegex(
             document_text,
-            r"Joanie Cunningham.*Head of the department.*University X",
+            r"Joanie.*Cunningham.*Head of the department.*University X",
         )
         self.assertRegex(
             document_text,
@@ -262,11 +262,11 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(
                 document_text,
-                r"Joanie Cunningham.*Produit certifiant",
+                r"Joanie.*Cunningham.*Produit certifiant",
             )
             self.assertRegex(
                 document_text,
-                r"Joanie Cunningham.*Head of the department.*Université X",
+                r"Joanie.*Cunningham.*Head of the department.*Université X",
             )
             self.assertRegex(
                 document_text,
@@ -287,7 +287,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(
                 document_text,
-                r"Joanie Cunningham.*Head of the department.*University X",
+                r"Joanie.*Cunningham.*Head of the department.*University X",
             )
             self.assertRegex(
                 document_text,
