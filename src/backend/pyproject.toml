@@ -58,7 +58,6 @@ dependencies = [
     "payplug==1.4.0",
     "psycopg[binary]==3.2.6",
     "pydantic[email]>2",
-    "PyJWT==2.10.1",
     "pyRdfa3==3.6.4",
     "python-dateutil==2.9.0.post0",
     "requests==2.32.3",
