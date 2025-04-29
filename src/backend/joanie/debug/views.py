@@ -94,6 +94,41 @@ class DebugMailSuccessPaymentViewTxt(DebugMailSuccessPayment):
     template_name = "mail/text/order_validated.txt"
 
 
+class DebugInvitationSignatureLink(TemplateView):
+    """
+    Debug View to check the layout of the invitation signature link email when it's triggered
+    from the django admin view of batch orders.
+    """
+
+    def get_context_data(self, **kwargs):
+        """Generates sample datas to have a valid debug email"""
+        batch_order = factories.BatchOrderFactory()
+        context = super().get_context_data(**kwargs)
+        context["title"] = "👨‍💻Development email preview"
+        context["email"] = batch_order.owner.email
+        context["fullname"] = batch_order.owner.name
+        context["product_title"] = batch_order.relation.product.title
+        context["invitation_link"] = "http://localhost:8071/"
+        context["site"] = {
+            "name": settings.JOANIE_CATALOG_NAME,
+            "url": settings.JOANIE_CATALOG_BASE_URL,
+        }
+
+        return context
+
+
+class DebugInvitationSignatureLinkHtml(DebugInvitationSignatureLink):
+    """Debug View to check the layout of the invitation signature link email in html format."""
+
+    template_name = "mail/html/invitation_to_sign_contract.html"
+
+
+class DebugInvitationSignatureLinkTxt(DebugInvitationSignatureLink):
+    """Debug View to check the layout of the invitation signature link email in text format."""
+
+    template_name = "mail/text/invitation_to_sign_contract.txt"
+
+
 class DebugMailSuccessPaymentViewBatchOrderHtml(TemplateView):
     """
     Debug View to check the layout of the success payment email for a batch order
