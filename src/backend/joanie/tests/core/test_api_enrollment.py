@@ -31,7 +31,8 @@ from joanie.tests.base import BaseAPITestCase
             "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
             "SELECTOR_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
         }
-    ]
+    ],
+    COURSE_WEB_HOOKS=[],
 )
 class EnrollmentApiTest(BaseAPITestCase):
     """Test the API of the Enrollment object."""

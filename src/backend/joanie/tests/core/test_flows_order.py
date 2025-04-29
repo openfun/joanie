@@ -282,7 +282,8 @@ class OrderFlowsTestCase(LoggingTestCase):
                 "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
                 "SELECTOR_REGEX": r".*",
             }
-        ]
+        ],
+        COURSE_WEB_HOOKS=[],
     )
     def test_flows_order_validate_auto_enroll(self):
         """
@@ -393,7 +394,8 @@ class OrderFlowsTestCase(LoggingTestCase):
                 "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
                 "SELECTOR_REGEX": r".*",
             }
-        ]
+        ],
+        COURSE_WEB_HOOKS=[],
     )
     def test_flows_order_validate_auto_enroll_edx_failure(self):
         """
@@ -539,7 +541,8 @@ class OrderFlowsTestCase(LoggingTestCase):
                 "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
                 "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
             }
-        ]
+        ],
+        COURSE_WEB_HOOKS=[],
     )
     def test_flows_order_complete_preexisting_enrollments_targeted_moodle(self):
         """
@@ -659,7 +662,8 @@ class OrderFlowsTestCase(LoggingTestCase):
                 "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
                 "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
             }
-        ]
+        ],
+        COURSE_WEB_HOOKS=[],
     )
     def test_flows_order_validate_auto_enroll_moodle_failure(self):
         """
@@ -751,6 +755,7 @@ class OrderFlowsTestCase(LoggingTestCase):
                 self.assertIsNone(order.credit_card)
 
     @responses.activate
+    @override_settings(COURSE_WEB_HOOKS=[])
     def test_flows_order_cancel_certificate_product_openedx_enrollment_mode(self):
         """
         Test that the source enrollment is set back to "honor" in the LMS when a related order
@@ -834,7 +839,8 @@ class OrderFlowsTestCase(LoggingTestCase):
                 "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
                 "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
             }
-        ]
+        ],
+        COURSE_WEB_HOOKS=[],
     )
     def test_flows_order_cancel_certificate_product_moodle(self):
         """
