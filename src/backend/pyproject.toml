@@ -87,7 +87,6 @@ dev = [
     "django-extensions==4.1",
     "drf-spectacular-sidecar==2025.4.1",
     "ipdb==0.13.13",
-    "ipython==9.2.0",
     "lxml==5.4.0",
     "pdbpp==0.11.6",
     "pdfminer.six==20250416",
