@@ -145,19 +145,7 @@ test.describe("<TranslatableForm/>", () => {
       </TranslatableFormProvider>,
     );
     states = await page.context().storageState();
-    storage = states.origins[0].localStorage;
-    expect(
-      storage.some(
-        (entry) =>
-          entry.name === "translateContentLanguage" && entry.value === "en-us",
-      ),
-    ).toBe(false);
-    expect(
-      storage.some(
-        (entry) =>
-          entry.name === "django_language_saved" && entry.value === "en-us",
-      ),
-    ).toBe(false);
+    expect(states.origins.length).toBe(0);
     cookie = states.cookies.find((entry) => entry.name === "django_language");
     expect(cookie).toBeDefined();
     expect(cookie!.value).toBe("en-us");
