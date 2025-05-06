@@ -20,6 +20,7 @@ from joanie.core.serializers.fields import (
     ThumbnailDetailField,
 )
 from joanie.core.utils import Echo
+from joanie.core.utils.batch_order import get_active_order_group
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
 
@@ -1760,24 +1761,10 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             ).id
 
         nb_seats = validated_data.get("nb_seats")
-        order_groups = models.OrderGroup.objects.find_actives(
-            course_product_relation_id=validated_data["relation"].id
-        )
-
-        seats_limitation = None
         validated_data.setdefault("order_groups", [])
-        for order_group in order_groups:
-            if (
-                order_group.nb_seats is not None
-                and order_group.available_seats < nb_seats
-            ):
-                seats_limitation = order_group
-                continue
-
-            if order_group.is_enabled:
-                validated_data["order_groups"].append(order_group)
-
-        if seats_limitation:
+        try:
+            order_group = get_active_order_group(relation.id, nb_seats)
+        except ValueError as exception:
             raise serializers.ValidationError(
                 {
                     "order_group": [
@@ -1785,7 +1772,9 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
                         f"product {relation.product.title:s}"
                     ]
                 }
-            )
+            ) from exception
+        if order_group:
+            validated_data["order_groups"].append(order_group)
 
         return super().create(validated_data)
 
