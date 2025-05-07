@@ -75,7 +75,6 @@ class UtilsOrganizationTestCase(TestCase):
                 selected_organization = get_least_active_organization(
                     self.product, self.course
                 )
-
                 if state in [
                     enums.ORDER_STATE_DRAFT,
                     enums.ORDER_STATE_ASSIGNED,
@@ -85,7 +84,6 @@ class UtilsOrganizationTestCase(TestCase):
                     enums.ORDER_STATE_CANCELED,
                     enums.ORDER_STATE_REFUNDING,
                     enums.ORDER_STATE_REFUNDED,
-                    enums.ORDER_STATE_TO_OWN,
                 ]:
                     self.assertEqual(selected_organization, self.organization_1)
                 else:

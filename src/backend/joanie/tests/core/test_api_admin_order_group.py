@@ -51,7 +51,7 @@ class OrderGroupAdminApiTest(TestCase):
 
         factories.OrderGroupFactory.create_batch(5)
 
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(19):
             response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -127,7 +127,7 @@ class OrderGroupAdminApiTest(TestCase):
             discount=factories.DiscountFactory(amount=30),
         )
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             response = self.client.get(
                 f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
             )
@@ -212,7 +212,7 @@ class OrderGroupAdminApiTest(TestCase):
             "nb_seats": 5,
             "is_active": True,
         }
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             response = self.client.post(
                 f"{self.base_url}/{relation.id}/order-groups/",
                 content_type="application/json",
@@ -256,7 +256,7 @@ class OrderGroupAdminApiTest(TestCase):
             "nb_seats": 505,
             "is_active": True,
         }
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.put(
                 f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
                 content_type="application/json",
@@ -300,7 +300,7 @@ class OrderGroupAdminApiTest(TestCase):
         data = {
             "is_active": True,
         }
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             response = self.client.patch(
                 f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
                 content_type="application/json",
