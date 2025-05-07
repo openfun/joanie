@@ -18,7 +18,7 @@ def get_least_active_organization(product, course, enrollment=None):
         return None
 
     order_count_filter = Q(order__product=product) & Q(
-        order__state__in=enums.ORDER_STATES_BINDING
+        order__state__in=(*enums.ORDER_STATES_BINDING, enums.ORDER_STATE_TO_OWN)
     )
 
     if enrollment:

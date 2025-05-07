@@ -773,13 +773,13 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 state=random.choice(enums.ORDER_STATES_BINDING),
             )
         for state, _label in enums.ORDER_STATE_CHOICES:
-            if state in enums.ORDER_STATES_BINDING:
+            if state in (*enums.ORDER_STATES_BINDING, enums.ORDER_STATE_TO_OWN):
                 continue
             factories.OrderFactory(
                 course=course, product=product, order_groups=[order_group1], state=state
             )
 
-        with self.assertNumQueries(53):
+        with self.assertNumQueries(55):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

@@ -8,7 +8,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.models import OrderGroup
 
 
@@ -292,3 +292,48 @@ class OrderGroupModelTestCase(TestCase):
                 order_group_3,
             ],
         )
+
+    def test_model_order_group_available_seat_property(self):
+        """
+        The property `available_seats` should return the count of seats available on the order
+        group. It should take in account the orders in binding states and the state `to_own`.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation, nb_seats=10
+        )
+
+        ignored_states = [
+            state
+            for [state, _] in enums.ORDER_STATE_CHOICES
+            if state not in (*enums.ORDER_STATES_BINDING, enums.ORDER_STATE_TO_OWN)
+        ]
+        for state in ignored_states:
+            factories.OrderFactory(
+                state=state,
+                product=relation.product,
+                course=relation.course,
+                order_groups=[order_group],
+            )
+
+        # There are 5 states that are considered 'binding'
+        for state in enums.ORDER_STATES_BINDING:
+            factories.OrderFactory(
+                state=state,
+                product=relation.product,
+                course=relation.course,
+                order_groups=[order_group],
+            )
+
+        # Add 1 order in state 'to_own'
+        factories.OrderFactory(
+            state=enums.ORDER_STATE_TO_OWN,
+            product=relation.product,
+            course=relation.course,
+            order_groups=[order_group],
+        )
+
+        # There should be only 4 seats left available
+        self.assertEqual(order_group.available_seats, 4)
+        self.assertEqual(order_group.get_nb_binding_orders(), 5)
+        self.assertEqual(order_group.get_nb_to_own_orders(), 1)
