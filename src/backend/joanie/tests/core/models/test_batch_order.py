@@ -290,7 +290,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             )
 
         self.assertTrue(
-            "BatchOrder requires organization unless in draft state."
+            "BatchOrder requires organization unless in draft of cancel states."
             in str(context.exception)
         )
 

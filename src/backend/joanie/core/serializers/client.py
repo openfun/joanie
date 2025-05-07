@@ -17,6 +17,7 @@ from rest_framework.generics import get_object_or_404
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
+from joanie.core.utils.batch_order import get_active_order_group
 from joanie.payment.models import CreditCard
 
 
@@ -1401,25 +1402,11 @@ class BatchOrderSerializer(serializers.ModelSerializer):
 
         course_product_relation_id = self.initial_data.get("relation_id")
         nb_seats = self.initial_data.get("nb_seats")
+        validated_data.setdefault("order_groups", [])
 
-        order_groups = models.OrderGroup.objects.find_actives(
-            course_product_relation_id=course_product_relation_id
-        )
-        seats_limitation = None
-        for order_group in order_groups:
-            if order_group.nb_seats is not None:
-                if order_group.available_seats < nb_seats:
-                    seats_limitation = order_group
-                    continue
-
-                seats_limitation = None
-
-            if order_group.is_enabled:
-                if "order_groups" not in validated_data:
-                    validated_data["order_groups"] = []
-                validated_data["order_groups"].append(order_group)
-
-        if seats_limitation:
+        try:
+            order_group = get_active_order_group(course_product_relation_id, nb_seats)
+        except ValueError as exception:
             relation = models.CourseProductRelation.objects.get(
                 id=course_product_relation_id
             )
@@ -1430,6 +1417,8 @@ class BatchOrderSerializer(serializers.ModelSerializer):
                         f"product {relation.product.title:s}"
                     ]
                 }
-            )
+            ) from exception
+        if order_group:
+            validated_data["order_groups"].append(order_group)
 
         return super().create(validated_data)

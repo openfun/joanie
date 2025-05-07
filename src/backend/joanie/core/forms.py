@@ -5,7 +5,7 @@ Core application forms declaration
 from django import forms
 from django.contrib.admin import widgets
 
-from joanie.core import models
+from joanie.core import enums, models
 
 
 class CourseProductRelationAdminForm(forms.ModelForm):
@@ -62,3 +62,116 @@ class ProductTargetCourseRelationAdminForm(forms.ModelForm):
             # Get all course runs related to the course instance.
             queryset = models.CourseRun.objects.filter(course=instance.course)
             self.fields["course_runs"].queryset = queryset
+
+
+class BatchOrderAdminForm(forms.ModelForm):
+    """
+    This is a customized form to handle voucher code that is passed during creation or editing
+    a batch order.
+    """
+
+    voucher = forms.CharField(
+        required=False,
+        help_text="Enter a voucher code",
+        label="Voucher code",
+    )
+    trainees = forms.CharField(
+        widget=forms.Textarea(),
+        required=False,
+        help_text="Enter one full name per line, e.g.:<br>John Doe<br>Jane Smith",
+        label="Trainees",
+    )
+
+    class Meta:
+        fields = [
+            "organization",
+            "owner",
+            "company_name",
+            "identification_number",
+            "address",
+            "city",
+            "postcode",
+            "country",
+            "relation",
+            "nb_seats",
+            "voucher",
+            "trainees",
+        ]
+        model = models.BatchOrder
+
+    def get_initial_for_field(self, field, field_name):
+        """
+        Return initial data for field on form. For voucher, return the voucher code instead
+        of the id, and for the trainees return in a more human-friendly format instead of JSON.
+        """
+        value = super().get_initial_for_field(field, field_name)
+
+        if field_name == "trainees" and value:
+            value = "\n".join(
+                f"{trainee.get('first_name')} {trainee.get('last_name')}"
+                for trainee in value
+            )
+        if field_name == "voucher" and value:
+            value = models.Voucher.objects.get(id=value).code
+
+        return value
+
+    def clean_voucher(self):
+        """
+        Convert the entered voucher code to a Voucher object, or raise an error if not found.
+        If no code is provided, the field is left unset.
+        """
+        voucher_info = self.cleaned_data.get("voucher")
+        if not voucher_info:
+            return None
+
+        try:
+            voucher = models.Voucher.objects.get(code=voucher_info)
+        except models.Voucher.DoesNotExist as exception:
+            raise forms.ValidationError("Voucher code not found.") from exception
+
+        return voucher
+
+    def clean_trainees(self):
+        """
+        Convert the trainees fullnames in the format awaited by the field `trainees`
+        of the BatchOrder model.
+        """
+        trainees_data = self.cleaned_data.get("trainees")
+        trainees_fullnames = trainees_data.strip().splitlines()
+
+        trainees = []
+        for trainee_fullname in trainees_fullnames:
+            # Force the split after the first occurence of a space because long lastname exists
+            first_name, last_name = trainee_fullname.split(" ", 1)
+            trainees.append({"first_name": first_name, "last_name": last_name})
+
+        return trainees
+
+    def save(self, commit=False):
+        """
+        Override the save method because we should verify that there
+        enough seats available according to the nb_seats requested in the
+        available order groups
+        """
+        if self.instance.state == enums.BATCH_ORDER_STATE_DRAFT:
+            order_groups = models.OrderGroup.objects.find_actives(
+                course_product_relation_id=self.instance.relation.id
+            )
+
+            seats_limitation = None
+            for order_group in order_groups:
+                if order_group.nb_seats is not None:
+                    if order_group.available_seats < self.cleaned_data["nb_seats"]:
+                        seats_limitation = order_group
+                        continue
+
+                    seats_limitation = None
+
+                if order_group.is_enabled:
+                    self.instance.order_groups.add(order_group)
+
+            if seats_limitation:
+                raise ValueError("seat limitation has been reached")
+
+        return super().save(commit=False)
