@@ -47,6 +47,13 @@ class BaseModel(models.Model):
     def __repr__(self, dict_repr=False):
         return str(self.to_dict())
 
+    @property
+    def class_name(self):
+        """
+        Return the class name of the model.
+        """
+        return self._meta.model_name
+
     def get_cache_key(self, prefix, is_language_sensitive=False, language=None):
         """
         Return a cache key for the instance. If the key is going to be used for multilingual

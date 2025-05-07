@@ -55,6 +55,20 @@ class OrderFlow:
         Transition order to assigned state.
         """
 
+    def _can_be_state_to_own(self):
+        """
+        When an order has no owner and is attached to a batch order.
+        """
+        return self.instance.owner is None and self.instance.batch_order is not None
+
+    @state.transition(
+        source=enums.ORDER_STATE_ASSIGNED,
+        target=enums.ORDER_STATE_TO_OWN,
+        conditions=[_can_be_state_to_own],
+    )
+    def to_own(self):
+        """Mark an order as `to_own`"""
+
     def _can_be_state_to_save_payment_method(self):
         """
         An order state can be set to_save_payment_method if the order is not free
@@ -154,8 +168,14 @@ class OrderFlow:
     def _can_be_state_completed(self):
         """
         An order state can be set to completed if all installments
-        are completed.
+        are completed, or if the order is already paid through a batch order.
         """
+        if (
+            self.instance.state == enums.ORDER_STATE_TO_OWN
+            and self.instance.voucher.discount.rate == 1
+        ):
+            return self.instance.batch_order and self.instance.owner
+
         fully_paid = self.instance.is_free
         if not fully_paid and self.instance.payment_schedule:
             fully_paid = all(
@@ -172,6 +192,7 @@ class OrderFlow:
             enums.ORDER_STATE_FAILED_PAYMENT,
             enums.ORDER_STATE_PENDING,
             enums.ORDER_STATE_SIGNING,
+            enums.ORDER_STATE_TO_OWN,
         ],
         target=enums.ORDER_STATE_COMPLETED,
         conditions=[_can_be_state_completed],
@@ -301,6 +322,7 @@ class OrderFlow:
         """
         logger.debug("Transitioning order %s", self.instance.id)
         for transition in [
+            self.to_own,
             self.complete,
             self.to_sign,
             self.signing,
@@ -310,6 +332,7 @@ class OrderFlow:
             self.no_payment,
             self.failed_payment,
             self.refunded,
+            self.to_own,
         ]:
             with suppress(fsm.TransitionNotAllowed):
                 logger.debug(
@@ -337,7 +360,8 @@ class OrderFlow:
             BasePaymentBackend._send_mail_subscription_success(order=self.instance)
 
         if (
-            not self.instance.payment_schedule
+            not source == enums.ORDER_STATE_TO_OWN
+            and not self.instance.payment_schedule
             and not self.instance.is_free
             and target in [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_COMPLETED]
         ):
@@ -398,7 +422,12 @@ class OrderFlow:
             source == enums.ORDER_STATE_ASSIGNED
             and target == enums.ORDER_STATE_COMPLETED
         ) or (
-            source in [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_NO_PAYMENT]
+            source
+            in [
+                enums.ORDER_STATE_PENDING,
+                enums.ORDER_STATE_NO_PAYMENT,
+                enums.ORDER_STATE_TO_OWN,
+            ]
             and target
             in [enums.ORDER_STATE_PENDING_PAYMENT, enums.ORDER_STATE_COMPLETED]
         ):
@@ -409,10 +438,13 @@ class OrderFlow:
             except Exception as error:
                 capture_exception(error)
 
-        if target in [enums.ORDER_STATE_CANCELED, enums.ORDER_STATE_REFUNDED]:
+        if self.instance.payment_schedule and target in [
+            enums.ORDER_STATE_CANCELED,
+            enums.ORDER_STATE_REFUNDED,
+        ]:
             self.instance.cancel_remaining_installments()
 
-        if target == enums.ORDER_STATE_CANCELED:
+        if self.instance.owner and target == enums.ORDER_STATE_CANCELED:
             self.instance.unenroll_user_from_course_runs()
 
         if self.instance.credit_card and target in [
@@ -430,7 +462,7 @@ class OrderFlow:
         # on related orders
         # e.g. number of remaining seats when an order group is used
         # see test_api_course_product_relation_read_detail_with_order_groups_cache
-        if self.instance.order_group:
+        if self.instance.order_groups.exists():
             course_id = (
                 self.instance.course_id or self.instance.enrollment.course_run.course_id
             )
