@@ -519,6 +519,14 @@ class OrderGroup(BaseModel):
             state__in=enums.ORDER_STATES_BINDING,
         ).count()
 
+    def get_nb_to_own_orders(self):
+        """Query the number of orders that are in `to_own` state related to this order group."""
+        return self.orders.filter(
+            course_id=self.course_product_relation.course_id,
+            product_id=self.course_product_relation.product_id,
+            state=enums.ORDER_STATE_TO_OWN,
+        ).count()
+
     @property
     def can_edit(self):
         """Return True if the order group can be edited."""
@@ -526,10 +534,12 @@ class OrderGroup(BaseModel):
 
     @property
     def available_seats(self) -> int | None:
-        """Return the number of available seats on the order group."""
+        """Return the number of available seats on the order group, or None if unlimited."""
         if self.nb_seats is None:
             return None
-        return self.nb_seats - self.get_nb_binding_orders()
+
+        used_seats = self.get_nb_binding_orders() + self.get_nb_to_own_orders()
+        return self.nb_seats - used_seats
 
     @property
     def is_enabled(self):
@@ -1895,6 +1905,9 @@ class BatchOrder(BaseModel):
                 course=self.relation.course,
                 organization=self.organization,
             )
+            if self.order_groups.exists():
+                order.order_groups.add(self.order_groups.first())
+
             order.voucher = Voucher.objects.create(
                 discount=discount, multiple_use=False, multiple_users=False
             )
