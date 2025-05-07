@@ -1886,6 +1886,8 @@ class BatchOrder(BaseModel):
             )
             raise ValidationError(message)
 
+        order_group = self.order_groups.first() if self.order_groups.exists() else None
+
         discount, _ = Discount.objects.get_or_create(rate=1)
 
         for _ in range(self.nb_seats):
@@ -1895,6 +1897,9 @@ class BatchOrder(BaseModel):
                 course=self.relation.course,
                 organization=self.organization,
             )
+            if order_group:
+                order.order_groups.add(order_group)
+
             order.voucher = Voucher.objects.create(
                 discount=discount, multiple_use=False, multiple_users=False
             )
