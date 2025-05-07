@@ -8,7 +8,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.models import OrderGroup
 
 
@@ -292,3 +292,22 @@ class OrderGroupModelTestCase(TestCase):
                 order_group_3,
             ],
         )
+
+    def test_model_order_group_get_nb_binding_orders(self):
+        """
+        Should return all the orders that are counted as binding state from that order group.
+        The available_seats property should return the leftover seats available.
+        """
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation, nb_seats=10
+        )
+        # There are 6 states that are considered 'binding'
+        for state in enums.ORDER_STATES_BINDING:
+            order = factories.OrderFactory(
+                state=state, product=relation.product, course=relation.course
+            )
+            order.order_groups.add(order_group)
+
+        self.assertEqual(order_group.get_nb_binding_orders(), 6)
+        self.assertEqual(order_group.available_seats, 4)
