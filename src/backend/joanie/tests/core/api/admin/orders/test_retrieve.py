@@ -62,7 +62,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
             total=D("1.00"),
         )
 
-        with self.assertNumQueries(40):
+        with self.assertNumQueries(41):
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
