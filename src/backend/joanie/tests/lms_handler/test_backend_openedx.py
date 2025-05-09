@@ -31,7 +31,8 @@ from joanie.lms_handler.backends.openedx import (
             "COURSE_REGEX": r"^.*/courses/(?P<course_id>.*)/course/?$",
             "SELECTOR_REGEX": r".*",
         }
-    ]
+    ],
+    COURSE_WEB_HOOKS=[],
 )
 class OpenEdXLMSBackendTestCase(TestCase):
     """Test suite for the OpenEdX LMS Backend."""
