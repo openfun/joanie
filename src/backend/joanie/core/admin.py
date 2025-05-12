@@ -357,6 +357,19 @@ class CourseRunAdmin(TranslatableAdmin):
         queryset.update(is_gradable=True)
 
 
+@admin.register(models.CourseProductRelation)
+class CourseProductRelationAdmin(admin.ModelAdmin):
+    """Admin class for the CourseProductRelation model"""
+
+    list_display = ("course", "product")
+    list_filter = [CourseFilter, ProductFilter]
+    search_fields = [
+        "course__code",
+        "course__translations__title",
+        "product__translations__title",
+    ]
+
+
 @admin.register(models.Organization)
 class OrganizationAdmin(TranslatableAdmin):
     """Admin class for the Organization model"""
