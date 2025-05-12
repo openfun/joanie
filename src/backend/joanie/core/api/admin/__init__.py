@@ -29,6 +29,7 @@ from joanie.core.authentication import SessionAuthenticationWithAuthenticateHead
 from joanie.core.exceptions import CertificateGenerationError
 from joanie.core.tasks import (
     generate_certificates_task,
+    generate_orders_and_send_vouchers_task,
     update_organization_signatories_contracts_task,
 )
 from joanie.core.utils.batch_order import validate_success_payment
@@ -806,6 +807,29 @@ class BatchOrderViewSet(
         validate_success_payment(batch_order)
 
         return Response(status=HTTPStatus.NO_CONTENT)
+
+    @action(methods=["POST"], detail=True, url_path="generate-orders")
+    def generate_orders(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Generates the orders of the batch order when the state is completed exclusively.
+        Once all orders are generated, the task will send the email with the voucher codes
+        to the batch order's owner.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+            raise ValidationError(
+                "Cannot generate orders, batch order is not in `completed` state"
+            )
+
+        if batch_order.orders.exists():
+            raise ValidationError(
+                "Orders were already generated. Cannot generate twice."
+            )
+
+        generate_orders_and_send_vouchers_task.delay(batch_order_id=str(batch_order.id))
+
+        return Response(status=HTTPStatus.ACCEPTED)
 
 
 class OrganizationAddressViewSet(
