@@ -7232,11 +7232,18 @@
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "Description of the order group"
                     }
                 },
                 "required": [
                     "can_edit",
                     "created_on",
+                    "description",
                     "end",
                     "id",
                     "is_active",
@@ -7300,6 +7307,10 @@
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -7338,6 +7349,10 @@
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscountRequest"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             },
@@ -7404,6 +7419,10 @@
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -7442,6 +7461,10 @@
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscountRequest"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             },
@@ -9581,6 +9604,10 @@
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscountRequest"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             },

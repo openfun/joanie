@@ -807,6 +807,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "start": None,
                     "end": None,
                     "discount": str(order_group1.discount.id),
+                    "description": None,
                 },
                 {
                     "id": str(order_group2.id),
@@ -816,6 +817,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "start": None,
                     "end": None,
                     "discount": None,
+                    "description": None,
                 },
             ],
         )
@@ -852,6 +854,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "start": None,
                     "end": None,
                     "discount": None,
+                    "description": None,
                 },
             ],
         )
@@ -878,6 +881,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "start": None,
                     "end": None,
                     "discount": None,
+                    "description": None,
                 },
             ],
         )
@@ -903,6 +907,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "start": None,
                     "end": None,
                     "discount": None,
+                    "description": None,
                 },
             ],
         )
@@ -948,6 +953,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "start": None,
                     "end": None,
                     "discount": None,
+                    "description": None,
                 },
                 {
                     "id": str(order_group_2.id),
@@ -957,6 +963,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "start": None,
                     "end": None,
                     "discount": None,
+                    "description": None,
                 },
                 {
                     "id": str(order_group_3.id),
@@ -966,6 +973,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "start": None,
                     "end": "2025-02-16T16:35:49.326248Z",
                     "discount": None,
+                    "description": None,
                 },
             ],
         )
