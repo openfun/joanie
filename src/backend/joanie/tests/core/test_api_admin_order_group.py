@@ -59,6 +59,7 @@ class OrderGroupAdminApiTest(TestCase):
         expected_return = [
             {
                 "id": str(order_group.id),
+                "description": order_group.description,
                 "nb_seats": order_group.nb_seats,
                 "is_active": order_group.is_active,
                 "is_enabled": order_group.is_enabled,
@@ -136,6 +137,7 @@ class OrderGroupAdminApiTest(TestCase):
         content = response.json()
         expected_return = {
             "id": str(order_group.id),
+            "description": order_group.description,
             "nb_seats": order_group.nb_seats,
             "is_active": order_group.is_active,
             "is_enabled": order_group.is_enabled,

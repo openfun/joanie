@@ -473,6 +473,7 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
             "start",
             "end",
             "discount",
+            "description",
         ]
         read_only_fields = fields
 
@@ -508,6 +509,9 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
     )
     start = serializers.DateTimeField(required=False, allow_null=True)
     end = serializers.DateTimeField(required=False, allow_null=True)
+    description = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
 
     class Meta(AdminOrderGroupSerializer.Meta):
         fields = [*AdminOrderGroupSerializer.Meta.fields]

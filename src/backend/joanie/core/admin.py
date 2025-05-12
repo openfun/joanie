@@ -211,6 +211,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
     list_display = (
         "course_product_relation",
         "position",
+        "description",
         "is_active",
         "is_enabled",
         "nb_available_seats",
@@ -222,6 +223,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
     fields = (
         "course_product_relation",
         "position",
+        "description",
         "is_enabled",
         "is_active",
         "nb_seats",
