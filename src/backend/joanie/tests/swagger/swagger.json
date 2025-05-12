@@ -6670,9 +6670,16 @@
                         "readOnly": true,
                         "nullable": true,
                         "title": "Product price discount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "Description of the order group"
                     }
                 },
                 "required": [
+                    "description",
                     "discount",
                     "end",
                     "id",
