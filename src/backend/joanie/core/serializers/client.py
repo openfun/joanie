@@ -758,10 +758,20 @@ class OrderLightSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class DiscountSerializer(serializers.ModelSerializer):
+    """Serializer for Discount model"""
+
+    class Meta:
+        model = models.Discount
+        fields = ["amount", "rate"]
+        read_only_fields = fields
+
+
 class OrderGroupSerializer(serializers.ModelSerializer):
     """Serializer for order groups in a product."""
 
     nb_available_seats = serializers.SerializerMethodField(read_only=True)
+    discount = DiscountSerializer(read_only=True)
 
     class Meta:
         model = models.OrderGroup

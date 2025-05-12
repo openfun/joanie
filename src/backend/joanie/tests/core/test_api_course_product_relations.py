@@ -780,7 +780,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 course=course, product=product, order_groups=[order_group1], state=state
             )
 
-        with self.assertNumQueries(55):
+        with self.assertNumQueries(56):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -807,7 +807,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "nb_seats": order_group1.nb_seats,
                     "start": None,
                     "end": None,
-                    "discount": str(order_group1.discount.id),
+                    "discount": {
+                        "amount": order_group1.discount.amount,
+                        "rate": order_group1.discount.rate,
+                    },
                     "description": None,
                 },
                 {
