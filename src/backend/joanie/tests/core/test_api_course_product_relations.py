@@ -748,6 +748,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     }
                     for organization in relation.organizations.all()
                 ],
+                "discounted_price": None,
             },
         )
 
@@ -820,6 +821,30 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "description": None,
                 },
             ],
+        )
+
+    def test_api_course_product_relation_read_detail_discount(self):
+        """The discounted price should be calculated as expected."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        factories.UserCourseAccessFactory(user=user, course=relation.course)
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            nb_seats=random.randint(10, 100),
+            discount=factories.DiscountFactory(amount=10),
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/{relation.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            content["discounted_price"],
+            float(relation.product.price) - order_group.discount.amount,
         )
 
     def test_api_course_product_relation_read_detail_with_order_groups_cache(self):
