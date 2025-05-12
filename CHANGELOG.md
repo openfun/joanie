@@ -21,6 +21,10 @@ and this project adheres to
 
 - Upgrade `djangorestframework` to 3.16.0
 
+### Fixed
+
+- Invalidate course product relation cache on order group update
+
 ## [2.18.1] - 2025-05-28
 
 ### Fixed
