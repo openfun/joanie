@@ -806,6 +806,27 @@ class BatchOrderViewSet(
 
         return Response(status=HTTPStatus.NO_CONTENT)
 
+    @action(methods=["POST"], detail=True, url_path="generate-orders")
+    def generate_orders(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Generates the orders of the batch order when the state is completed exclusively.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+            raise ValidationError(
+                "Cannot generate orders, batch order is not in `completed` state"
+            )
+
+        if batch_order.orders.exists():
+            raise ValidationError(
+                "Orders were already generated. Cannot generate twice."
+            )
+
+        batch_order.generate_orders()
+
+        return Response(status=HTTPStatus.ACCEPTED)
+
 
 class OrganizationAddressViewSet(
     mixins.CreateModelMixin,
