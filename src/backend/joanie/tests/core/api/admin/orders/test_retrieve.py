@@ -112,6 +112,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                 "order_groups": [
                     {
                         "id": str(order_group.id),
+                        "description": order_group.description,
                         "nb_seats": order_group.nb_seats,
                         "is_active": order_group.is_active,
                         "is_enabled": order_group.is_enabled,
