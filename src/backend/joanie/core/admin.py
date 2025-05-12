@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 Core application admin
 """
@@ -367,6 +368,19 @@ class CourseRunAdmin(TranslatableAdmin):
     def mark_as_gradable(self, request, queryset):  # pylint: disable=no-self-use
         """Mark selected course runs as gradable"""
         queryset.update(is_gradable=True)
+
+
+@admin.register(models.CourseProductRelation)
+class CourseProductRelationAdmin(admin.ModelAdmin):
+    """Admin class for the CourseProductRelation model"""
+
+    list_display = ("course", "product")
+    list_filter = [CourseFilter, ProductFilter]
+    search_fields = [
+        "course__code",
+        "course__translations__title",
+        "product__translations__title",
+    ]
 
 
 @admin.register(models.Organization)
