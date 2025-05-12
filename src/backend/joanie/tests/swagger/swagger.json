@@ -5751,11 +5751,18 @@
                     "is_withdrawable": {
                         "type": "boolean",
                         "readOnly": true
+                    },
+                    "discounted_price": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Return the discounted price of the product if any.",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "course",
                     "created_on",
+                    "discounted_price",
                     "id",
                     "is_withdrawable",
                     "order_groups",
