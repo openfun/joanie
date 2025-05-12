@@ -1,9 +1,13 @@
 """Base Serializer classes for the Joanie project."""
 
+import logging
+
 from django.conf import settings
 from django.core.cache import cache
 
 from rest_framework import serializers
+
+logger = logging.getLogger(__name__)
 
 
 class CachedModelSerializer(serializers.ModelSerializer):
@@ -16,7 +20,6 @@ class CachedModelSerializer(serializers.ModelSerializer):
         Cache the serializer representation for the current instance.
         """
         cache_key = instance.get_cache_key(
-            f"{self.__class__.__name__}",
             is_language_sensitive=True,
         )
         representation = cache.get(cache_key)
@@ -28,7 +31,20 @@ class CachedModelSerializer(serializers.ModelSerializer):
                 "cache_ttl",
                 settings.JOANIE_SERIALIZER_DEFAULT_CACHE_TTL,
             )
+            logger.debug(
+                "Setting cache for %s: %s (cache_ttl=%s)",
+                self.__class__.__name__,
+                cache_key,
+                cache_ttl,
+            )
             cache.set(cache_key, representation, cache_ttl)
+        else:
+            logger.debug(
+                "Cache hit for %s: %s (cache_ttl=%s)",
+                self.__class__.__name__,
+                cache_key,
+                settings.JOANIE_SERIALIZER_DEFAULT_CACHE_TTL,
+            )
 
         return representation
 

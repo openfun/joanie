@@ -5,14 +5,19 @@ In this base model, we activate generic behaviours that apply to all our models 
 checks and validation that go further than what Django is doing.
 """
 
+import logging
 import uuid
 from itertools import chain
 
+from django.conf import settings
+from django.core.cache import cache
 from django.db import models
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from joanie.core.utils import file_checksum
+
+logger = logging.getLogger(__name__)
 
 
 class BaseModel(models.Model):
@@ -54,19 +59,35 @@ class BaseModel(models.Model):
         """
         return self._meta.model_name
 
-    def get_cache_key(self, prefix, is_language_sensitive=False, language=None):
+    def get_cache_key(self, prefix=None, is_language_sensitive=False, language=None):
         """
         Return a cache key for the instance. If the key is going to be used for multilingual
-        content, an extra argument `is_local_sensitive` can be set to True to bind
+        content, an extra argument `is_language_sensitive` can be set to True to bind
         the active language to the cache key. Alternatively, a `language` argument is
         also accepted to bind a specific language to the cache key.
         """
+        if prefix is None:
+            prefix = self.__class__.__name__
+
         cache_key = f"{prefix:s}-{self.id!s}-{self.updated_on.timestamp():.6f}"
         if is_language_sensitive or language:
             current_language = language or get_language()
             cache_key = f"{cache_key}-{current_language}"
 
         return cache_key
+
+    def clear_cache(self):
+        """
+        Clear the instance cache for all languages.
+        """
+        for language, _ in settings.LANGUAGES:
+            cache_key = self.get_cache_key(language=language)
+            logger.debug(
+                "Clearing cache for %s: %s",
+                self.__class__.__name__,
+                cache_key,
+            )
+            cache.delete(cache_key)
 
     def to_dict(self):
         """Return a dictionary representation of the model."""
