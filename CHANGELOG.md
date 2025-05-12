@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Added actions in admin api endpoints `BatchOrder` to validate payment,
+  generate orders and send voucher codes, and send invitation signature link
 - Add admin api endpoints for `BatchOrder` resources to create, read, list
   and cancel
 - Claim an order generated from a batch order through voucher code
