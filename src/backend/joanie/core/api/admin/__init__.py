@@ -31,6 +31,7 @@ from joanie.core.tasks import (
     generate_certificates_task,
     update_organization_signatories_contracts_task,
 )
+from joanie.core.utils.batch_order import validate_success_payment
 from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
@@ -781,6 +782,28 @@ class BatchOrderViewSet(
         if is_completed:
             # Delete orders and linked vouchers
             batch_order.cancel_orders()
+
+        return Response(status=HTTPStatus.NO_CONTENT)
+
+    @action(methods=["POST"], detail=True, url_path="validate-payment")
+    def validate_payment(self, request, pk=None):  # pylint:disable=unused-argument
+        """Validates the payment for the batch order if its state is in `signing` or `pending`"""
+        batch_order = self.get_object()
+
+        if batch_order.state not in [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+        ]:
+            raise ValidationError(
+                "Your batch order is not in a state to validate the payment"
+            )
+
+        if batch_order.state == enums.BATCH_ORDER_STATE_SIGNING:
+            # Normally it transitions to `pending` when submitting to payment through
+            # the backend payment
+            batch_order.flow.update()
+
+        validate_success_payment(batch_order)
 
         return Response(status=HTTPStatus.NO_CONTENT)
 
