@@ -494,6 +494,13 @@ class OrderGroup(BaseModel):
         null=True,
         blank=True,
     )
+    description = models.CharField(
+        _("description"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Description of the order group"),
+    )
 
     class Meta:
         verbose_name = _("Order group")
