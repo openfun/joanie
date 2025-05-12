@@ -16,6 +16,7 @@ and this project adheres to
   and cancel
 - Claim an order generated from a batch order through voucher code
 - Add description to order group model
+- Add discounted price to course product relation serializer
 
 ### Changed
 
