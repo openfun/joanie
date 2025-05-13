@@ -32,7 +32,11 @@ from joanie.core.tasks import (
     generate_orders_and_send_vouchers_task,
     update_organization_signatories_contracts_task,
 )
-from joanie.core.utils.batch_order import validate_success_payment
+from joanie.core.utils.batch_order import (
+    get_active_order_group,
+    send_mail_invitation_link,
+    validate_success_payment,
+)
 from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
@@ -785,6 +789,46 @@ class BatchOrderViewSet(
             batch_order.cancel_orders()
 
         return Response(status=HTTPStatus.NO_CONTENT)
+
+    @action(methods=["POST"], detail=True, url_path="submit-for-signature")
+    def submit_for_signature(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Sends an email to the batch order owner with the invitation signature link to sign
+        the contract.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.state not in [
+            enums.BATCH_ORDER_STATE_ASSIGNED,
+            enums.BATCH_ORDER_STATE_TO_SIGN,
+        ]:
+            raise ValidationError(
+                "Batch order state should be `assigned` or `to_sign`."
+            )
+
+        if batch_order.order_groups.exists():
+            # Verify if the actual order group still accepts the number of seats requested
+            if batch_order.order_groups.first().available_seats < batch_order.nb_seats:
+                initial_order_group = batch_order.order_groups.first()
+                batch_order.order_groups.remove(initial_order_group)
+
+                try:
+                    order_group = get_active_order_group(
+                        relation_id=batch_order.relation.id,
+                        nb_seats=batch_order.nb_seats,
+                    )
+                except ValueError as exception:
+                    raise ValidationError(
+                        "Cannot submit to signature, active order groups has no seats left"
+                    ) from exception
+
+                batch_order.order_groups.add(order_group)
+
+        invitation_link = batch_order.submit_for_signature(batch_order.owner)
+
+        send_mail_invitation_link(batch_order, invitation_link)
+
+        return Response(status=HTTPStatus.ACCEPTED)
 
     @action(methods=["POST"], detail=True, url_path="validate-payment")
     def validate_payment(self, request, pk=None):  # pylint:disable=unused-argument
