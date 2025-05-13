@@ -31,7 +31,10 @@ from joanie.core.tasks import (
     generate_certificates_task,
     update_organization_signatories_contracts_task,
 )
-from joanie.core.utils.batch_order import validate_success_payment
+from joanie.core.utils.batch_order import (
+    send_mail_vouchers,
+    validate_success_payment,
+)
 from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
@@ -824,6 +827,21 @@ class BatchOrderViewSet(
             )
 
         batch_order.generate_orders()
+
+        return Response(status=HTTPStatus.ACCEPTED)
+
+    @action(methods=["POST"], detail=True, url_path="send-mail-vouchers")
+    def send_mail_vouchers(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Sends an email with the voucher codes to the batch order owner if orders were
+        generated and is in state `completed`.
+        """
+        batch_order = self.get_object()
+
+        if not batch_order.orders.exists():
+            raise ValidationError("Cannot send vouchers, orders are not yet generated.")
+
+        send_mail_vouchers(batch_order)
 
         return Response(status=HTTPStatus.ACCEPTED)
 

@@ -220,6 +220,59 @@
                 }
             }
         },
+        "/api/v1.0/admin/batch-orders/{id}/send-mail-vouchers/": {
+            "post": {
+                "operationId": "batch_orders_send_mail_vouchers_create",
+                "description": "Sends an email with the voucher codes to the batch order owner if orders were\ngenerated and is in state `completed`.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/batch-orders/{id}/validate-payment/": {
             "post": {
                 "operationId": "batch_orders_validate_payment_create",
