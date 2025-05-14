@@ -88,7 +88,7 @@ describe("<OrderGroupRow />", () => {
     );
 
     screen.getByRole("heading", { name: /order group 1/i });
-    screen.getByText("From: 04/01/2025, 2:00 AM");
+    screen.getByText("From: 4/1/25, 2:00 AM");
   });
 
   it("renders end date", async () => {
@@ -110,6 +110,6 @@ describe("<OrderGroupRow />", () => {
     );
 
     screen.getByRole("heading", { name: /order group 1/i });
-    screen.getByText("To: 04/10/2025, 12:00 AM");
+    screen.getByText("To: 4/10/25, 12:00 AM");
   });
 });

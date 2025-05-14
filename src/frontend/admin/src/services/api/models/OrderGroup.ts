@@ -3,6 +3,7 @@ import { Discount } from "@/services/api/models/Discount";
 
 export type OrderGroup = {
   id: string;
+  description: string | null;
   nb_available_seats: number | null;
   nb_seats: number | null;
   start: string | null;
@@ -17,6 +18,7 @@ export type OrderGroupDummy = Omit<OrderGroup, "id"> & {
 };
 
 export type DTOOrderGroup = {
+  description?: OrderGroup["description"];
   nb_seats?: OrderGroup["nb_seats"];
   start?: OrderGroup["start"];
   end?: OrderGroup["end"];
