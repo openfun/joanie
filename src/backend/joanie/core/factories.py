@@ -689,7 +689,7 @@ class OrderGroupFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         model = models.OrderGroup
 
     course_product_relation = factory.SubFactory(CourseProductRelationFactory)
-    nb_seats = factory.fuzzy.FuzzyInteger(0, 100)
+    nb_seats = factory.fuzzy.FuzzyInteger(1, 100)
 
 
 class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
