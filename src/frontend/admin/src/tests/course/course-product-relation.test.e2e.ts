@@ -17,7 +17,11 @@ import {
   DTOCourseProductRelation,
 } from "@/services/api/models/Relations";
 import { OrderGroup } from "@/services/api/models/OrderGroup";
-import { expectHaveClasses, expectHaveNotClasses } from "@/tests/utils";
+import {
+  expectHaveClasses,
+  expectHaveNotClasses,
+  formatShortDateTest,
+} from "@/tests/utils";
 import {
   Discount,
   DTODiscount,
@@ -110,12 +114,18 @@ test.describe("Course product relation", () => {
         const orderGroups = relation.order_groups ?? [];
         await Promise.all(
           orderGroups.map(async (orderGroup, index) => {
+            const usedSeats =
+              (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+            const start = await formatShortDateTest(page, orderGroup.start!);
+            const end = await formatShortDateTest(page, orderGroup.end!);
             await expect(
               page.getByText(
-                `Order group ${index + 1}${
-                  (orderGroup.nb_seats ?? 0) -
-                  (orderGroup.nb_available_seats ?? 0)
-                }/${orderGroup.nb_seats} seats`,
+                `Order group ${index + 1}` +
+                  orderGroup.description +
+                  `${usedSeats}/${orderGroup.nb_seats} seats` +
+                  `From: ${start}` +
+                  `To: ${end}` +
+                  `Discount: ${getDiscountLabel(orderGroup.discount!)}`,
               ),
             ).toHaveCount(1);
           }),
@@ -254,8 +264,8 @@ test.describe("Course product relation", () => {
     await expect(
       page.getByText(`Discount: ${getDiscountLabel(store.discounts[0])}`),
     ).toBeVisible();
-    await expect(page.getByText("From: 01/31/2023, 10:00 AM")).toBeVisible();
-    await expect(page.getByText("To: 02/15/2023, 10:00 AM")).toBeVisible();
+    await expect(page.getByText("From: 1/31/23, 10:00 AM")).toBeVisible();
+    await expect(page.getByText("To: 2/15/23, 10:00 AM")).toBeVisible();
 
     await expect(
       page.getByTestId(`is-active-switch-order-group-${addedOrderGroup.id}`),
@@ -295,6 +305,7 @@ test.describe("Course product relation", () => {
     const course = store.list[0];
     let orderGroup = course.product_relations?.[0]
       .order_groups[0] as OrderGroup;
+
     orderGroup.can_edit = true;
     orderGroup.is_active = true;
     await store.mockOrderGroup(
@@ -323,11 +334,17 @@ test.describe("Course product relation", () => {
     await page.getByTestId("submit-button-order-group-form").click();
     orderGroup = course.product_relations?.[0].order_groups[0] as OrderGroup;
 
+    const usedSeats =
+      (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+    const start = await formatShortDateTest(page, orderGroup.start!);
+    const end = await formatShortDateTest(page, orderGroup.end!);
     await expect(
-      orderGroupRowLocator.getByText(
-        `Order group 1${
-          (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0)
-        }/999999 seats`,
+      page.getByText(
+        "Order group 1" +
+          orderGroup.description +
+          `${usedSeats}/999999 seats` +
+          `From: ${start}` +
+          `To: ${end}`,
       ),
     ).toHaveCount(1);
   });
@@ -351,10 +368,16 @@ test.describe("Course product relation", () => {
       page.getByRole("heading", { name: `Edit course: ${course.title}` }),
     ).toBeVisible();
 
+    const usedSeats =
+      (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+    const start = await formatShortDateTest(page, orderGroup.start!);
+    const end = await formatShortDateTest(page, orderGroup.end!);
     const orderGroupLocator = page.getByText(
-      `Order group 1${(orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0)}/${
-        orderGroup.nb_seats
-      } seats`,
+      "Order group 1" +
+        orderGroup.description +
+        `${usedSeats}/${orderGroup.nb_seats} seats` +
+        `From: ${start}` +
+        `To: ${end}`,
     );
 
     await expect(orderGroupLocator).toHaveCount(1);

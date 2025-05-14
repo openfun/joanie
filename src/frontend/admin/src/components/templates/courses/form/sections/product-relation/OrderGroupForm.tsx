@@ -14,6 +14,11 @@ import { DiscountSelect } from "@/components/presentational/discount/DiscountSel
 import { RHFDateTimePicker } from "@/components/presentational/hook-form/RHFDateTimePicker";
 
 const messages = defineMessages({
+  descriptionInputLabel: {
+    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.descriptionInputLabel",
+    defaultMessage: "Description",
+    description: "The input label for the description",
+  },
   numberOfSeatInputLabel: {
     id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.numberOfSeatInputLabel",
     defaultMessage: "Number of seats",
@@ -42,6 +47,7 @@ const messages = defineMessages({
 });
 
 export type OrderGroupFormValues = {
+  description?: string | null | undefined;
   nb_seats?: number | null | undefined;
   is_active: boolean;
   discount_id?: string | null | undefined;
@@ -94,6 +100,13 @@ export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
       onSubmit={form.handleSubmit((values) => onSubmit?.(values))}
     >
       <Grid2 container spacing={2}>
+        <Grid2 size={12}>
+          <RHFTextField
+            type="text"
+            name="description"
+            label={intl.formatMessage(messages.descriptionInputLabel)}
+          />
+        </Grid2>
         <Grid2 size={12}>
           <RHFTextField
             type="number"
