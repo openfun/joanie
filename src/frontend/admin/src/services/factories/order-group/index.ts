@@ -6,6 +6,7 @@ const build = (): OrderGroup => {
   const nbSeat = faker.number.int({ max: 200 });
   return {
     id: faker.string.uuid(),
+    description: faker.lorem.sentence({ min: 1, max: 3 }),
     nb_seats: nbSeat,
     nb_available_seats: faker.number.int({ max: nbSeat }),
     start: faker.date.recent().toISOString(),
