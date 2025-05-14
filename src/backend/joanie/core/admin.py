@@ -199,6 +199,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
     list_display = (
         "course_product_relation",
         "position",
+        "description",
         "is_active",
         "is_enabled",
         "nb_available_seats",
@@ -210,6 +211,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
     fields = (
         "course_product_relation",
         "position",
+        "description",
         "is_enabled",
         "is_active",
         "nb_seats",
@@ -353,6 +355,19 @@ class CourseRunAdmin(TranslatableAdmin):
     def mark_as_gradable(self, request, queryset):  # pylint: disable=no-self-use
         """Mark selected course runs as gradable"""
         queryset.update(is_gradable=True)
+
+
+@admin.register(models.CourseProductRelation)
+class CourseProductRelationAdmin(admin.ModelAdmin):
+    """Admin class for the CourseProductRelation model"""
+
+    list_display = ("course", "product")
+    list_filter = [CourseFilter, ProductFilter]
+    search_fields = [
+        "course__code",
+        "course__translations__title",
+        "product__translations__title",
+    ]
 
 
 @admin.register(models.Organization)
