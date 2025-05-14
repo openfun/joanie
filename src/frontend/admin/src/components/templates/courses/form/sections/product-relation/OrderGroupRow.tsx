@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
 import { OrderGroup, OrderGroupDummy } from "@/services/api/models/OrderGroup";
 import { getDiscountLabel } from "@/services/api/models/Discount";
+import { formatShortDate } from "@/utils/dates";
 
 const messages = defineMessages({
   mainTitleOrderGroup: {
@@ -88,6 +89,10 @@ export function OrderGroupRow({
   function getSubTitle() {
     const rules: string[] = [];
 
+    if (orderGroup.description) {
+      rules.push(orderGroup.description);
+    }
+
     if (orderGroup.nb_available_seats !== null) {
       const reservedSeats =
         (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
@@ -103,22 +108,13 @@ export function OrderGroupRow({
     if (orderGroup.start) {
       rules.push(
         intl.formatMessage(messages.startLabel) +
-          intl.formatTime(new Date(orderGroup.start), {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          }),
+          formatShortDate(orderGroup.start),
       );
     }
 
     if (orderGroup.end) {
       rules.push(
-        intl.formatMessage(messages.endLabel) +
-          intl.formatTime(new Date(orderGroup.end), {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          }),
+        intl.formatMessage(messages.endLabel) + formatShortDate(orderGroup.end),
       );
     }
 
