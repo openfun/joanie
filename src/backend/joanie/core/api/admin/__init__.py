@@ -31,6 +31,12 @@ from joanie.core.tasks import (
     generate_certificates_task,
     update_organization_signatories_contracts_task,
 )
+from joanie.core.utils.batch_order import (
+    get_active_order_group,
+    send_mail_invitation_link,
+    send_mail_vouchers,
+    validate_success_payment,
+)
 from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
@@ -782,6 +788,104 @@ class BatchOrderViewSet(
             batch_order.cancel_orders()
 
         return Response(status=HTTPStatus.NO_CONTENT)
+
+    @action(methods=["POST"], detail=True, url_path="submit-for-signature")
+    def submit_for_signature(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Sends an email to the batch order owner with the invitation signature link to sign
+        the contract.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.state not in [
+            enums.BATCH_ORDER_STATE_ASSIGNED,
+            enums.BATCH_ORDER_STATE_TO_SIGN,
+        ]:
+            raise ValidationError(
+                "Batch order state should be `assigned` or `to_sign`."
+            )
+
+        if batch_order.order_groups.exists():
+            # Verify if the actual order group still accepts the number of seats requested
+            if batch_order.order_groups.first().available_seats < batch_order.nb_seats:
+                initial_order_group = batch_order.order_groups.first()
+                batch_order.order_groups.remove(initial_order_group)
+
+                try:
+                    order_group = get_active_order_group(
+                        relation_id=batch_order.relation.id,
+                        nb_seats=batch_order.nb_seats,
+                    )
+                except ValueError as exception:
+                    raise ValidationError(
+                        "Cannot submit to signature, active order groups has no seats left"
+                    ) from exception
+
+                batch_order.order_groups.add(order_group)
+
+        invitation_link = batch_order.submit_for_signature(batch_order.owner)
+
+        send_mail_invitation_link(batch_order, invitation_link)
+
+        return Response(status=HTTPStatus.ACCEPTED)
+
+    @action(methods=["POST"], detail=True, url_path="validate-payment")
+    def validate_payment(self, request, pk=None):  # pylint:disable=unused-argument
+        """Validates the payment for the batch order if its state is in `signing` or `pending`"""
+        batch_order = self.get_object()
+
+        if batch_order.state not in [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+        ]:
+            raise ValidationError(
+                "Your batch order is not in a state to valid the payment"
+            )
+
+        if batch_order.state == enums.BATCH_ORDER_STATE_SIGNING:
+            # Normally it transitions to `pending` when submitting to payment through
+            # the backend payment
+            batch_order.flow.update()
+
+        validate_success_payment(batch_order)
+
+        return Response(status=HTTPStatus.NO_CONTENT)
+
+    @action(methods=["POST"], detail=True, url_path="generate-orders")
+    def generate_orders(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Generates the orders of the batch order when the state is completed exclusively.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+            raise ValidationError(
+                "Cannot generate orders, batch order is not in `completed` state"
+            )
+
+        if batch_order.orders.exists():
+            raise ValidationError(
+                "Orders were already generated. Cannot generate twice."
+            )
+
+        batch_order.generate_orders()
+
+        return Response(status=HTTPStatus.ACCEPTED)
+
+    @action(methods=["POST"], detail=True, url_path="send-mail-vouchers")
+    def send_mail_vouchers(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Sends an email with the voucher codes to the batch order owner if orders were
+        generated and is in state `completed`.
+        """
+        batch_order = self.get_object()
+
+        if not batch_order.orders.exists():
+            raise ValidationError("Cannot send vouchers, orders are not yet generated.")
+
+        send_mail_vouchers(batch_order)
+
+        return Response(status=HTTPStatus.ACCEPTED)
 
 
 class OrganizationAddressViewSet(
