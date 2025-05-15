@@ -1,0 +1,49 @@
+<mjml>
+  <mj-include path="./partial/header.mjml" />
+  <mj-body mj-class="bg--blue-100">
+    <mj-wrapper css-class="wrapper" padding="20px 40px 40px 40px">
+      <mj-include path="./partial/welcome.mjml" />
+      <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% blocktranslate with title=product_title %}
+              For your batch order with the course <strong>{{ title }}</strong>, a contract
+              awaits your signature.
+            {% endblocktranslate %}
+          </mj-text>
+          <mj-button href="{{ invitation_link }}"
+            target="_blank"
+            background-color="#3d85c6"
+            color="white"
+            font-size="16px"
+            padding="35px 15px 30px"
+            border-radius="4px">
+            Visualize the documents
+          </mj-button>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 30px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% blocktranslate %}
+              To sign this document, please click the button above or copy the following address
+              and paste it into your browser's address bar:
+              <a href="{{ invitation_link }}">{{invitation_link}}</a>
+            {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 30px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% blocktranslate %}
+            Once your contract is signed, please contact the support team to guide you with payment
+            details.
+            {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+    <mj-include path="./partial/footer.mjml" />
+  </mj-body>
+</mjml>
