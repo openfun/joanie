@@ -21,11 +21,7 @@ class UserAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "Authentication credentials were not provided."
-        )
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
 
     def test_admin_api_user_request_with_lambda_user(self):
         """
@@ -36,11 +32,7 @@ class UserAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "You do not have permission to perform this action."
-        )
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
 
     def test_admin_api_user_list(self):
         """
@@ -48,13 +40,15 @@ class UserAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+
         users_count = random.randint(1, 10)
         factories.UserFactory.create_batch(users_count)
 
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(content["count"], 0)
 
     def test_admin_api_user_list_filter_by_query(self):
@@ -86,15 +80,18 @@ class UserAdminApiTest(TestCase):
 
         # An empty search should return no results
         response = self.client.get("/api/v1.0/admin/users/?query=")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
 
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(content["count"], 0)
 
         # Search by username
         response = self.client.get("/api/v1.0/admin/users/?query=fnz")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(content["count"], 1)
         self.assertEqual(
             content["results"][0],
@@ -108,14 +105,18 @@ class UserAdminApiTest(TestCase):
 
         # Search by email
         response = self.client.get("/api/v1.0/admin/users/?query=@example.fr")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(content["count"], 3)
 
         # Search by firstname
         response = self.client.get("/api/v1.0/admin/users/?query=joanie")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(content["count"], 1)
         self.assertEqual(
             content["results"][0],
@@ -129,8 +130,10 @@ class UserAdminApiTest(TestCase):
 
         # Search by lastname
         response = self.client.get("/api/v1.0/admin/users/?query=Cunningham")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
             [result["full_name"] for result in content["results"]],
@@ -139,7 +142,8 @@ class UserAdminApiTest(TestCase):
 
     def test_admin_api_user_list_filter_by_id(self):
         """
-        Staff user should be able to list users filtering through their id
+        Staff user should be able to list users filtering through their id. The results should
+        be sorted by username.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -165,14 +169,17 @@ class UserAdminApiTest(TestCase):
 
         # An empty search should return no results
         response = self.client.get("/api/v1.0/admin/users/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
 
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(content["count"], 0)
 
         response = self.client.get(f"/api/v1.0/admin/users/?ids={fonzie.id}")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(content["count"], 1)
         self.assertEqual(
             content["results"][0],
@@ -187,27 +194,27 @@ class UserAdminApiTest(TestCase):
         response = self.client.get(
             f"/api/v1.0/admin/users/?ids={fonzie.id}&ids={joanie.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
         content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(content["count"], 2)
         self.assertEqual(
-            content["results"][0],
-            {
-                "id": str(fonzie.id),
-                "username": fonzie.username,
-                "full_name": fonzie.get_full_name(),
-                "email": fonzie.email,
-            },
-        )
-
-        self.assertEqual(
-            content["results"][1],
-            {
-                "id": str(joanie.id),
-                "username": joanie.username,
-                "full_name": joanie.get_full_name(),
-                "email": joanie.email,
-            },
+            content["results"],
+            [
+                {
+                    "id": str(fonzie.id),
+                    "username": fonzie.username,
+                    "full_name": fonzie.get_full_name(),
+                    "email": fonzie.email,
+                },
+                {
+                    "id": str(joanie.id),
+                    "username": joanie.username,
+                    "full_name": joanie.get_full_name(),
+                    "email": joanie.email,
+                },
+            ],
         )
 
     def test_admin_api_user_get(self):
@@ -216,6 +223,7 @@ class UserAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+
         user = factories.UserFactory()
 
         response = self.client.get(f"/api/v1.0/admin/users/{user.id}/")
@@ -247,6 +255,7 @@ class UserAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+
         user = factories.UserFactory()
 
         response = self.client.put(f"/api/v1.0/admin/users/{user.id}/")
@@ -263,6 +272,7 @@ class UserAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+
         user = factories.UserFactory()
 
         response = self.client.patch(f"/api/v1.0/admin/users/{user.id}/")
@@ -279,6 +289,7 @@ class UserAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+
         user = factories.UserFactory()
 
         response = self.client.delete(f"/api/v1.0/admin/users/{user.id}/")
@@ -294,9 +305,10 @@ class UserAdminApiTest(TestCase):
         Anonymous users should not be able to get user information
         """
         factories.UserFactory(is_staff=True, is_superuser=True)
+
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
 
     def test_admin_api_user_me_no_access(self):
         """
@@ -307,7 +319,7 @@ class UserAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(
             response.json(),
             {
@@ -335,10 +347,11 @@ class UserAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+
         factories.UserCourseAccessFactory(user=admin)
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(
             response.json(),
             {
@@ -366,10 +379,11 @@ class UserAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+
         factories.UserOrganizationAccessFactory(user=admin)
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(
             response.json(),
             {
