@@ -829,13 +829,7 @@ class OrganizationAddressViewSet(
         return super().destroy(request, *args, **kwargs)
 
 
-class DiscountViewSet(
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
+class DiscountViewSet(viewsets.ModelViewSet):
     """Admin Discount Viewset"""
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
@@ -843,3 +837,12 @@ class DiscountViewSet(
     serializer_class = serializers.AdminDiscountSerializer
     queryset = models.Discount.objects.all()
     filterset_class = filters.DiscountAdminFilterSet
+
+
+class VoucherViewSet(viewsets.ModelViewSet):
+    """Admin Voucher Viewset"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminVoucherSerializer
+    queryset = models.Voucher.objects.all()
