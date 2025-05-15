@@ -11,7 +11,7 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(TestCase):
     """Test suite for the admin batch orders API generate orders endpoint."""
 
     def test_api_admin_batch_orders_generate_orders_anonymous(self):
-        """Anonymous user shouldn't be able to validatate payment for a batch order."""
+        """Anonymous user shouldn't be able to validate payment for a batch order."""
 
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/generate-orders/",
