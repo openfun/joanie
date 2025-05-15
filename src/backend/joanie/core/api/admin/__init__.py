@@ -180,6 +180,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = models.User.objects.all()
     filterset_class = filters.UserAdminFilterSet
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+    ordering = ["username"]
 
     def get_queryset(self):
         """
