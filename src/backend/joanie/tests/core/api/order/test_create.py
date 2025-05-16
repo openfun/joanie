@@ -10,6 +10,8 @@ from unittest import mock
 from django.conf import settings
 from django.utils import timezone
 
+from viewflow import fsm
+
 from joanie.core import enums, factories, models
 from joanie.core.api import client as api_client
 from joanie.core.models import CourseState
@@ -107,7 +109,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get()
@@ -130,7 +132,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": None,
-                "order_group_id": None,
+                "order_group_ids": [],
                 "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
@@ -322,7 +324,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     "was_created_by_order": enrollment.was_created_by_order,
                 },
                 "main_invoice_reference": None,
-                "order_group_id": None,
+                "order_group_ids": [],
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -948,7 +950,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": None,
-                "order_group_id": None,
+                "order_group_ids": [],
                 "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
@@ -1098,24 +1100,6 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
-
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertFalse(models.Order.objects.exists())
-        self.assertDictEqual(
-            response.json(),
-            {
-                "__all__": [
-                    'This order cannot be linked to the product "balançoire", '
-                    'the course "mathématiques" and the organization "fun".'
-                ]
-            },
-        )
 
         # Linking the organization to the product should solve the problem
         product.course_relations.first().organizations.add(organization)
@@ -1267,7 +1251,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_waived_withdrawal_right": True,
         }
 
-        with self.assertNumQueries(64):
+        with self.assertNumQueries(76):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1298,7 +1282,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": order.main_invoice.reference,
-                "order_group_id": None,
+                "order_group_ids": [],
                 "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
@@ -1405,26 +1389,25 @@ class OrderCreateApiTest(BaseAPITestCase):
             product=product,
             course=course,
             state=enums.ORDER_STATE_COMPLETED,
-            order_group=order_group,
+            order_groups=[order_group],
         )
         data = {
             "course_code": course.code,
             "organization_id": str(relation.organizations.first().id),
-            "order_group_id": str(order_group.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
             "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(14):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
         self.assertDictEqual(
             response.json(),
             {
@@ -1450,21 +1433,20 @@ class OrderCreateApiTest(BaseAPITestCase):
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        order_group = models.OrderGroup.objects.create(
+        models.OrderGroup.objects.create(
             course_product_relation=relation, is_active=True, nb_seats=0
         )
         billing_address = BillingAddressDictFactory()
         data = {
             "course_code": course.code,
             "organization_id": str(relation.organizations.first().id),
-            "order_group_id": str(order_group.id),
             "product_id": str(product.id),
             "billing_address": billing_address,
             "has_waived_withdrawal_right": True,
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(24):
+        with self.assertNumQueries(14):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1503,12 +1485,11 @@ class OrderCreateApiTest(BaseAPITestCase):
             10,
             product=relation.product,
             course=relation.course,
-            order_group=order_group,
+            order_groups=[order_group],
         )
         data = {
             "course_code": relation.course.code,
             "organization_id": str(relation.organizations.first().id),
-            "order_group_id": str(order_group.id),
             "product_id": str(relation.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
@@ -1591,50 +1572,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         order = models.Order.objects.get(id=order_id)
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
-    def test_api_order_create_order_group_required(self):
-        """
-        An order group must be passed when placing an order if the ordered product defines
-        at least one active order group.
-        """
-        user = factories.UserFactory()
-        course = factories.CourseFactory()
-        product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
-            course=course,
-            product=product,
-            organizations=factories.OrganizationFactory.create_batch(2),
-        )
-        models.OrderGroup.objects.create(course_product_relation=relation, nb_seats=1)
-        billing_address = BillingAddressDictFactory()
-        data = {
-            "course_code": course.code,
-            "organization_id": str(relation.organizations.first().id),
-            "product_id": str(product.id),
-            "billing_address": billing_address,
-            "has_waived_withdrawal_right": True,
-        }
-        token = self.generate_token_from_user(user)
-
-        with self.assertNumQueries(20):
-            response = self.client.post(
-                "/api/v1.0/orders/",
-                data=data,
-                content_type="application/json",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertDictEqual(
-            response.json(),
-            {
-                "order_group": [
-                    f"An enabled order group is required for product {product.title}."
-                ]
-            },
-        )
-        self.assertFalse(
-            models.Order.objects.filter(course=course, product=product).exists()
-        )
-
     def test_api_order_create_order_group_unrelated(self):
         """The order group must apply to the product being ordered."""
         user = factories.UserFactory()
@@ -1647,11 +1584,10 @@ class OrderCreateApiTest(BaseAPITestCase):
         billing_address = BillingAddressDictFactory()
 
         # Order group related to another product
-        order_group = factories.OrderGroupFactory()
+        factories.OrderGroupFactory()
 
         data = {
             "course_code": relation.course.code,
-            "order_group_id": str(order_group.id),
             "organization_id": str(organization.id),
             "product_id": str(relation.product.id),
             "billing_address": billing_address,
@@ -1664,17 +1600,13 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertDictEqual(
-            response.json(),
-            {
-                "order_group": [
-                    f"This order group does not apply to the product {relation.product.title} "
-                    f"and the course {relation.course.title}."
-                ]
-            },
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(
+            models.Order.objects.filter(
+                course=relation.course, product=relation.product
+            ).count(),
+            1,
         )
-        self.assertFalse(models.Order.objects.exists())
 
     def test_api_order_create_several_order_groups(self):
         """A product can have several active order groups."""
@@ -1689,14 +1621,11 @@ class OrderCreateApiTest(BaseAPITestCase):
         order_group1 = models.OrderGroup.objects.create(
             course_product_relation=relation, nb_seats=1
         )
-        order_group2 = models.OrderGroup.objects.create(
-            course_product_relation=relation, nb_seats=1
-        )
         billing_address = BillingAddressDictFactory()
         factories.OrderFactory(
             product=product,
             course=course,
-            order_group=order_group1,
+            order_groups=[order_group1],
             state=random.choice(
                 [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_COMPLETED]
             ),
@@ -1713,11 +1642,11 @@ class OrderCreateApiTest(BaseAPITestCase):
         # Order group 1 should already be full
         response = self.client.post(
             "/api/v1.0/orders/",
-            data={"order_group_id": str(order_group1.id), **data},
+            data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
         self.assertDictEqual(
             response.json(),
             {
@@ -1730,19 +1659,22 @@ class OrderCreateApiTest(BaseAPITestCase):
             models.Order.objects.filter(course=course, product=product).count(), 1
         )
 
-        # Order group 2 should still have place
+        order_group2 = models.OrderGroup.objects.create(
+            course_product_relation=relation, nb_seats=1
+        )
+        # Order group 2 should be assigned
         response = self.client.post(
             "/api/v1.0/orders/",
-            data={"order_group_id": str(order_group2.id), **data},
+            data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         self.assertEqual(
             models.Order.objects.filter(course=course, product=product).count(), 2
         )
         self.assertEqual(
-            models.Order.objects.filter(order_group=order_group2).count(), 1
+            models.Order.objects.filter(order_groups=order_group2.id).count(), 1
         )
 
     def test_api_order_create_inactive_order_groups(self):
@@ -1955,47 +1887,17 @@ class OrderCreateApiTest(BaseAPITestCase):
             2,
             course=relation.course,
             product=relation.product,
-            order_group=order_group,
+            order_groups=[order_group],
             state=enums.ORDER_STATE_PENDING,
         )
-
-        order_group.is_active = False
-        order_group.save()
-        order_group.refresh_from_db()
 
         data = {
             "course_code": relation.course.code,
             "organization_id": str(relation.organizations.first().id),
-            "order_group_id": str(order_group.id),
             "product_id": str(relation.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
         }
-
-        response = self.client.post(
-            "/api/v1.0/orders/",
-            data=data,
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertDictEqual(
-            response.json(),
-            {
-                "order_group": [
-                    f"This order group is not enabled for product {relation.product.title} "
-                    "and does not accept any orders at the moment."
-                ]
-            },
-        )
-        self.assertEqual(
-            models.Order.objects.filter(order_group=order_group).count(), 2
-        )
-
-        order_group.is_active = True
-        order_group.save()
-        order_group.refresh_from_db()
 
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -2006,19 +1908,20 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
-            models.Order.objects.filter(order_group=order_group).count(), 3
+            models.Order.objects.filter(order_groups=order_group.id).count(), 3
         )
 
     def test_api_order_create_when_order_group_is_not_active_and_nb_seats_is_0(self):
         """
         When we want to create an order and the order group is not active and
-        has a number of seat to 0, an error should be raised and the order cannot be created.
+        has a number of seat to 0, the order group should be ignored,
+        and the order should be created.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        factories.OrderGroupFactory(
             course_product_relation=relation,
             is_active=False,
             nb_seats=0,
@@ -2027,7 +1930,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": relation.course.code,
             "organization_id": str(relation.organizations.first().id),
-            "order_group_id": str(order_group.id),
             "product_id": str(relation.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
@@ -2040,16 +1942,8 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertDictEqual(
-            response.json(),
-            {
-                "order_group": [
-                    f"This order group is not enabled for product {relation.product.title} "
-                    "and does not accept any orders at the moment."
-                ]
-            },
-        )
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(response.json()["order_group_ids"], [])
 
     def test_api_order_create_when_order_group_is_active_but_not_enabled_yet(self):
         """
@@ -2062,7 +1956,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         relation = factories.CourseProductRelationFactory()
         # This order group will be enabled tomorrow
-        order_group = factories.OrderGroupFactory(
+        factories.OrderGroupFactory(
             course_product_relation=relation,
             is_active=True,
             start=timezone.now() + timedelta(days=1),
@@ -2073,9 +1967,213 @@ class OrderCreateApiTest(BaseAPITestCase):
             is_active=False,
             end=timezone.now() - timedelta(days=1),
         )
-        # This order group should have been chosen in the payload
+        # This order group is active and enabled
         order_group_enabled = factories.OrderGroupFactory(
             course_product_relation=relation, is_active=True, start=timezone.now()
+        )
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(
+            response.json()["order_group_ids"], [str(order_group_enabled.id)]
+        )
+
+    def test_api_order_create_discount_rate_on_order_group(self):
+        """
+        Authenticated user wants to create an order on the order group that is enabled and
+        has a discount rate. The created order should have the total value of the discounted price.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        cases_inside_date_range = [
+            {
+                "start": timezone.now() - timedelta(seconds=10),
+                "end": None,
+            },
+            {
+                "start": None,
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+            {
+                "start": timezone.now() - timedelta(seconds=10),
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+        ]
+        for case in cases_inside_date_range:
+            with self.subTest(start=case["start"], end=case["end"]):
+                relation = factories.CourseProductRelationFactory(product__price=100)
+                order_group = factories.OrderGroupFactory(
+                    discount=factories.DiscountFactory(rate=0.1),
+                    course_product_relation=relation,
+                    is_active=True,
+                    start=case["start"],
+                    end=case["end"],
+                )
+
+                data = {
+                    "course_code": relation.course.code,
+                    "organization_id": str(relation.organizations.first().id),
+                    "product_id": str(relation.product.id),
+                    "billing_address": BillingAddressDictFactory(),
+                    "has_waived_withdrawal_right": True,
+                }
+
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+                order = models.Order.objects.get(order_groups=order_group.id)
+                self.assertEqual(order.total, 90)
+
+    def test_api_order_create_discount_rate_on_order_group_not_enabled(self):
+        """
+        Authenticated user wants to create an order on the order group that is not enabled and
+        has a discount rate. The created order should not be discounted.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        cases_outside_date_range = [
+            {
+                "start": timezone.now() + timedelta(seconds=10),
+                "end": None,
+            },
+            {
+                "start": None,
+                "end": timezone.now() - timedelta(seconds=10),
+            },
+            {
+                "start": timezone.now() + timedelta(seconds=10),
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+        ]
+        for case in cases_outside_date_range:
+            with self.subTest(start=case["start"], end=case["end"]):
+                relation = factories.CourseProductRelationFactory(product__price=100)
+                factories.OrderGroupFactory(
+                    discount=factories.DiscountFactory(rate=0.1),
+                    course_product_relation=relation,
+                    is_active=True,
+                    start=case["start"],
+                    end=case["end"],
+                )
+
+                data = {
+                    "course_code": relation.course.code,
+                    "organization_id": str(relation.organizations.first().id),
+                    "product_id": str(relation.product.id),
+                    "billing_address": BillingAddressDictFactory(),
+                    "has_waived_withdrawal_right": True,
+                }
+
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertEqual(
+                    response.status_code, HTTPStatus.CREATED, response.json()
+                )
+                order = models.Order.objects.get(id=response.json()["id"])
+                self.assertEqual(order.total, 100)
+
+    def test_api_order_create_discount_amount_on_order_group(self):
+        """
+        Authenticated user wants to create an order on the order group that is enabled and
+        has a discount amount. The created order should have the total value of the discounted
+        price.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        cases_inside_date_range = [
+            {
+                "start": timezone.now() - timedelta(seconds=10),
+                "end": None,
+            },
+            {
+                "start": None,
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+            {
+                "start": timezone.now() - timedelta(seconds=10),
+                "end": timezone.now() + timedelta(seconds=10),
+            },
+        ]
+        for case in cases_inside_date_range:
+            with self.subTest(start=case["start"], end=case["end"]):
+                relation = factories.CourseProductRelationFactory(product__price=100)
+                order_group = factories.OrderGroupFactory(
+                    discount=factories.DiscountFactory(amount=20),
+                    course_product_relation=relation,
+                    is_active=True,
+                    start=case["start"],
+                    end=case["end"],
+                )
+
+                data = {
+                    "course_code": relation.course.code,
+                    "organization_id": str(relation.organizations.first().id),
+                    "order_group_id": str(order_group.id),
+                    "product_id": str(relation.product.id),
+                    "billing_address": BillingAddressDictFactory(),
+                    "has_waived_withdrawal_right": True,
+                }
+
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data=data,
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertEqual(response.status_code, HTTPStatus.CREATED)
+
+                order = models.Order.objects.get(order_groups=order_group.id)
+                self.assertEqual(order.total, 80)
+
+    def test_api_order_create_discount_rate_order_group_enabled_no_more_seat_available(
+        self,
+    ):
+        """
+        Authenticated user creates an order on an order group that is enabled but has no more
+        seat available, the order should not be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        order_group = factories.OrderGroupFactory(
+            discount=factories.DiscountFactory(rate=0.1),
+            course_product_relation=relation,
+            is_active=True,
+            nb_seats=1,
+        )
+        factories.OrderFactory(
+            order_groups=[order_group],
+            course=relation.course,
+            product=relation.product,
+            state=random.choice(
+                [enums.ORDER_STATE_COMPLETED, enums.ORDER_STATE_PENDING]
+            ),
         )
 
         data = {
@@ -2099,12 +2197,34 @@ class OrderCreateApiTest(BaseAPITestCase):
             response.json(),
             {
                 "order_group": [
-                    f"An enabled order group is required for product {relation.product.title}."
+                    f"Maximum number of orders reached for product {relation.product.title}"
                 ]
             },
         )
 
-        data.update(order_group_id=str(order_group_enabled.id))
+    def test_api_order_create_discount_voucher(self):
+        """
+        An order created with a voucher should have the total value of the discounted price.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory(product__price=100)
+        voucher = factories.VoucherFactory(
+            order_group__discount=factories.DiscountFactory(rate=0.1),
+            order_group__course_product_relation=relation,
+            order_group__nb_seats=1,
+            multiple_use=False,
+            multiple_users=False,
+        )
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+            "voucher_code": voucher.code,
+        }
 
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -2113,4 +2233,273 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+
+        order = models.Order.objects.get()
+        self.assertEqual(order.total, 90)
+        self.assertEqual(order.voucher, voucher)
+        voucher.refresh_from_db()
+        self.assertFalse(voucher.is_usable_by(order.owner))
+
+    def test_api_order_create_discount_voucher_unusable(self):
+        """
+        An order creation with a voucher that is already consumed should fail.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory(product__price=100)
+        voucher = factories.VoucherFactory(
+            order_group__discount=factories.DiscountFactory(rate=0.1),
+            order_group__course_product_relation=relation,
+            order_group__nb_seats=1,
+            multiple_use=False,
+            multiple_users=False,
+        )
+        factories.OrderFactory(
+            course=relation.course,
+            product=relation.product,
+            voucher=voucher,
+        )
+
+        data = {
+            "course_code": relation.course.code,
+            "organization_id": str(relation.organizations.first().id),
+            "product_id": str(relation.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+            "voucher_code": voucher.code,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_from_batch_order_already_used(
+        self, mock_enroll_user_to_course_run
+    ):
+        """
+        When the voucher code from a batch order has already been used by the user, he cannot
+        use that same voucher code twice.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=2, state=enums.BATCH_ORDER_STATE_COMPLETED
+        )
+        batch_order.generate_orders()
+        voucher_codes = batch_order.vouchers
+
+        order = batch_order.orders.get(voucher__code=voucher_codes[0])
+        order.owner = user
+        order.flow.update()
+        order.save()
+        # Make sure he is enrolled to the course run
+        mock_enroll_user_to_course_run.assert_called_once()
+        mock_enroll_user_to_course_run.reset_mock()
+        # Prepare the data where he attempts to use his voucher code a second time
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": voucher_codes[0],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        # Make sure the transition did not succeed and enroll method was not called
+        mock_enroll_user_to_course_run.assert_not_called()
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_from_batch_order_used_by_another_user(
+        self, mock_enroll_user_to_course_run
+    ):
+        """
+        When the voucher code from a batch order has been used by another user, the
+        order should not be assigned. Otherwise, he should use another code to be assigned to
+        an existing order with the state to own.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=2, state=enums.BATCH_ORDER_STATE_COMPLETED
+        )
+        batch_order.generate_orders()
+        voucher_codes = batch_order.vouchers
+
+        # Let's assign the first order with the 1st voucher code with an owner
+        order = batch_order.orders.get(voucher__code=voucher_codes[0])
+        order.owner = factories.UserFactory()
+        order.flow.update()
+        order.save()
+        # Make sure that flow update enrolls the owner to the course run
+        mock_enroll_user_to_course_run.assert_called_once()
+        mock_enroll_user_to_course_run.reset_mock()
+        # Let's now simulate that the second owner uses the wrong voucher code to claim an order
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": voucher_codes[0],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        # He should not be enrolled because he used the wrong voucher code that was consumed
+        mock_enroll_user_to_course_run.assert_not_called()
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        # We will use the second available voucher code from the batch order
+        data.update(voucher_code=voucher_codes[1])
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        # Make sure he is enrolled to the course run
+        mock_enroll_user_to_course_run.assert_called_once()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        order = models.Order.objects.get(owner=user)
+        # The order should be marked as `completed`
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    @mock.patch(
+        "joanie.core.flows.order.OrderFlow.complete",
+        side_effect=fsm.TransitionNotAllowed,
+    )
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_transition_to_complete_state_fails(
+        self, mock_enroll_user_to_course_run, _mock_can_be_state_complete
+    ):
+        """
+        When an error occurs during the transition of the order to completed, the order should
+        not be claimed and still available and the voucher code should still be usable by the
+        user. The user should not be enrolled to course run.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=2,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+        voucher_codes = batch_order.vouchers
+        order = batch_order.orders.get(voucher__code=voucher_codes[0])
+
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": voucher_codes[0],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_enroll_user_to_course_run.assert_not_called()
+
+        voucher = models.Voucher.objects.get(code=voucher_codes[0])
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
+        self.assertTrue(voucher.is_usable_by(user.id))
+
+    def test_api_order_create_with_fake_voucher_code(self):
+        """
+        Authenticated user attempts to pass a fake voucher code to claim an order.
+        He should get an error in return.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            relation__product__price=100,
+            nb_seats=2,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": "fake_voucher_code",
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_from_a_batch_order(
+        self, mock_enroll_user_to_course_run
+    ):
+        """
+        When the user uses a voucher code that was generated through a batch order,
+        he should be assigned to one of the orders available. When it succeeds, the
+        method `enroll_user_to_course_run` should be called in the order flow state transition.
+        Finally, the voucher code should not be usable anymore by the user once used.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            relation__product__price=100,
+            nb_seats=2,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+        voucher_codes = batch_order.vouchers
+
+        data = {
+            "organization_id": batch_order.organization.id,
+            "product_id": batch_order.relation.product.id,
+            "course_code": batch_order.relation.course.code,
+            "voucher_code": voucher_codes[0],
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_enroll_user_to_course_run.assert_called_once()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+
+        order = models.Order.objects.get(owner=user)
+        voucher = models.Voucher.objects.get(code=voucher_codes[0])
+
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+        self.assertFalse(voucher.is_usable_by(user.id))

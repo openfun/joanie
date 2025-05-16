@@ -40,8 +40,8 @@ export function ContractDefinitionSearch(
         items={contractDefinitionsQuery.items}
         loading={contractDefinitionsQuery.states.fetching}
         onAddClick={onAddClick}
-        onEditClick={() => modal.handleOpen()}
-        onFilter={(term) => setQuery(term)}
+        onEditClick={modal.handleOpen}
+        onFilter={setQuery}
         getOptionLabel={(option: Maybe<ContractDefinition>) =>
           option?.title ?? ""
         }

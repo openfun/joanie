@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { OrderGroup } from "@/services/api/models/OrderGroup";
+import { DiscountFactory } from "@/services/factories/discounts";
 
 const build = (): OrderGroup => {
   const nbSeat = faker.number.int({ max: 200 });
@@ -7,8 +8,11 @@ const build = (): OrderGroup => {
     id: faker.string.uuid(),
     nb_seats: nbSeat,
     nb_available_seats: faker.number.int({ max: nbSeat }),
+    start: faker.date.recent().toISOString(),
+    end: faker.date.future().toISOString(),
     is_active: faker.datatype.boolean(),
     can_edit: faker.datatype.boolean(),
+    discount: DiscountFactory(),
   };
 };
 

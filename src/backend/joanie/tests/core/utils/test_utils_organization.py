@@ -75,7 +75,6 @@ class UtilsOrganizationTestCase(TestCase):
                 selected_organization = get_least_active_organization(
                     self.product, self.course
                 )
-
                 if state in [
                     enums.ORDER_STATE_DRAFT,
                     enums.ORDER_STATE_ASSIGNED,
