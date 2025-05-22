@@ -97,6 +97,29 @@ class BatchOrderFlow:
         Mark batch order instance as "pending" for payment.
         """
 
+    def _can_be_state_quoted(self):
+        """
+        The batch order state can be set to `quoted` if it is related to a quote and the contract
+        is signed by the owner.
+        """
+        return (
+            self.instance.quotes.exists()
+            and self.instance.contract.submitted_for_signature_on
+            and self.instance.contract.student_signed_on
+        )
+
+    @state.transition(
+        source=[
+            enums.BATCH_ORDER_STATE_SIGNING,
+        ],
+        target=enums.BATCH_ORDER_STATE_QUOTED,
+        conditions=[_can_be_state_quoted],
+    )
+    def quoted(self):
+        """
+        Mark batch order instance as "quoted".
+        """
+
     @state.transition(
         source=enums.BATCH_ORDER_STATE_PENDING,
         target=enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
@@ -116,7 +139,10 @@ class BatchOrderFlow:
         """
 
     @state.transition(
-        source=enums.BATCH_ORDER_STATE_PENDING,
+        source=[
+            enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_QUOTED,
+        ],
         target=enums.BATCH_ORDER_STATE_COMPLETED,
     )
     def completed(self):
@@ -131,6 +157,7 @@ class BatchOrderFlow:
             self.assign,
             self.to_sign,
             self.signing,
+            self.quoted,
             self.pending,
             self.completed,
         ]:
@@ -151,7 +178,11 @@ class BatchOrderFlow:
         ActivityLog = apps.get_model("core", "ActivityLog")  # pylint: disable=invalid-name
         if (
             source
-            in [enums.BATCH_ORDER_STATE_PENDING, enums.BATCH_ORDER_STATE_FAILED_PAYMENT]
+            in [
+                enums.BATCH_ORDER_STATE_PENDING,
+                enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+                enums.BATCH_ORDER_STATE_QUOTED,
+            ]
             and target == enums.BATCH_ORDER_STATE_COMPLETED
         ):
             ActivityLog.create_payment_succeeded_activity_log(self.instance)

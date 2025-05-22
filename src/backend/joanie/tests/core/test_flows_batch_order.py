@@ -160,3 +160,31 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
                 batch_order.flow.cancel()
 
                 self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)
+
+    def test_flow_batch_order_quoted(self):
+        """
+        When the batch order is related to a quote and the contract is signed by the buyer,
+        it should transition to `quoted`
+        """
+        batch_order = self.create_batch_order_with_signed_contract(
+            state=enums.BATCH_ORDER_STATE_SIGNING
+        )
+        factories.BatchOrderQuoteFactory(batch_order=batch_order)
+
+        batch_order.flow.update()
+
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
+
+    def test_flow_batch_order_quoted_to_completed(self):
+        """
+        When the batch order is in state `quoted` and the purchase order has been validated
+        manually, it can transition to `completed`.
+        """
+        batch_order = self.create_batch_order_with_signed_contract(
+            state=enums.BATCH_ORDER_STATE_QUOTED
+        )
+        factories.BatchOrderQuoteFactory(batch_order=batch_order)
+
+        batch_order.flow.update()
+
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
