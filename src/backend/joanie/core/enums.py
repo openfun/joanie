@@ -250,6 +250,7 @@ BATCH_ORDER_STATE_DRAFT = "draft"
 BATCH_ORDER_STATE_ASSIGNED = "assigned"
 BATCH_ORDER_STATE_TO_SIGN = "to_sign"
 BATCH_ORDER_STATE_SIGNING = "signing"
+BATCH_ORDER_STATE_QUOTED = "quoted"
 BATCH_ORDER_STATE_PENDING = "pending"
 BATCH_ORDER_STATE_FAILED_PAYMENT = "failed_payment"
 BATCH_ORDER_STATE_CANCELED = "canceled"
@@ -260,8 +261,13 @@ BATCH_ORDER_STATE_CHOICES = (
     (BATCH_ORDER_STATE_ASSIGNED, _("Assigned")),
     (BATCH_ORDER_STATE_TO_SIGN, _("To sign")),
     (BATCH_ORDER_STATE_SIGNING, _("Signing")),
+    (BATCH_ORDER_STATE_QUOTED, _("Quoted")),
     (BATCH_ORDER_STATE_PENDING, _("Pending")),
     (BATCH_ORDER_STATE_FAILED_PAYMENT, _("Failed payment")),
     (BATCH_ORDER_STATE_CANCELED, _("Canceled")),
     (BATCH_ORDER_STATE_COMPLETED, _("Completed")),
 )
+
+# For Quotes of batch orders
+QUOTE_DEFAULT = "quote_default"
+QUOTE_NAME_CHOICES = ((QUOTE_DEFAULT, _("Quote Default")),)

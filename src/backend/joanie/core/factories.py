@@ -1246,6 +1246,15 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             self.order_groups.set(extracted)
 
 
+class BatchOrderQuoteFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create a quote for a batch order"""
+
+    class Meta:
+        model = models.BatchOrderQuote
+
+    batch_order = factory.SubFactory(BatchOrderFactory)
+
+
 class AddressFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create an address"""
 
