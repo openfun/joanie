@@ -6,6 +6,7 @@ import itertools
 import logging
 from collections import defaultdict
 from datetime import timedelta
+from decimal import Decimal as D
 
 from django.apps import apps
 from django.conf import settings
@@ -24,6 +25,7 @@ import requests
 from babel.numbers import get_currency_symbol
 from django_countries.fields import CountryField
 from parler import models as parler_models
+from parler.utils import get_language_settings
 from stockholm import Money
 from urllib3.util import Retry
 
@@ -1972,6 +1974,141 @@ class BatchOrder(BaseModel):
             return self.invoices.get(parent__isnull=True)
         except ObjectDoesNotExist:
             return None
+
+
+class BatchOrderQuote(BaseModel):
+    """
+    Represents a quote associated with a batch order, capturing the estimated pricing,
+    VAT, and contextual data. It's useful when company wants to pay the batch order
+    through a purchase order (in French : 'un bon de commande').
+    """
+
+    class Meta:
+        db_table = "joanie_batch_order_quote"
+        verbose_name = _("batch order quote")
+        verbose_name_plural = _("batch order quotes")
+
+    batch_order = models.ForeignKey(
+        to=BatchOrder,
+        verbose_name=_("batch order"),
+        related_name="quotes",
+        on_delete=models.CASCADE,
+        editable=False,
+    )
+    reference = models.CharField(
+        db_index=True,
+        editable=False,
+        max_length=40,
+        unique=True,
+        help_text=_("Unique reference identifier for the quote."),
+    )
+    localized_context = models.JSONField(
+        verbose_name=_("context"),
+        help_text=_("Localized data that needs to be frozen on quote creation"),
+        editable=False,
+        encoder=DjangoJSONEncoder,
+    )
+    name = models.CharField(
+        verbose_name=_("template name"),
+        max_length=255,
+        choices=enums.QUOTE_NAME_CHOICES,
+        default=enums.QUOTE_DEFAULT,
+    )
+
+    def _build_reference(self):
+        """
+        Build reference related to the related batch order and the date
+        """
+        batch_order_uid_fragment = str(self.batch_order.id).split("-", maxsplit=1)[0]
+        timestamp = int(timezone.now().timestamp() * 1_000)  # Time in milliseconds
+
+        return f"{batch_order_uid_fragment}-{timestamp}"
+
+    def _set_localized_context(self):
+        """
+        Store product's information for all active language into the quote of the
+        batch order. Then we are able to generate the quote document with consitent
+        data on demand. Saving is left to the caller.
+        """
+        context = {}
+        related_product = self.batch_order.relation.product
+
+        for language, __ in settings.LANGUAGES:
+            context[language] = {
+                "product": {
+                    "name": related_product.safe_translation_getter(  # pylint: disable=no-member
+                        "title", language_code=language
+                    ),
+                    "description": related_product.safe_translation_getter(  # pylint: disable=no-member
+                        "description", language_code=language
+                    ),
+                }
+            }
+
+        return context
+
+    def get_document_context(self, language_code=None):
+        """Generate document context."""
+
+        vat = D(settings.JOANIE_VAT)
+        vat_amount = self.batch_order.total * vat / 100
+        net_amount = self.batch_order.total - vat_amount
+        currency = get_currency_symbol(settings.DEFAULT_CURRENCY)
+        discount = (
+            str(self.batch_order.voucher.discount) if self.batch_order.voucher else None
+        )
+
+        base_context = {
+            "metadata": {
+                "issued_on": self.updated_on,
+                "reference": self.reference,
+            },
+            "amount": {
+                "nb_seats": self.batch_order.nb_seats,
+                "discount": discount,
+                "vat_amount": vat_amount,
+                "net_amount": net_amount,
+                "total": Money(self.batch_order.total),
+                "currency": currency,
+            },
+            "customer": {
+                "identification_number": self.batch_order.identification_number,
+                "company": self.batch_order.company_name,
+                "address": self.batch_order.address,
+                "postcode": self.batch_order.postcode,
+                "country": self.batch_order.country,
+                "city": self.batch_order.city,
+            },
+            "seller": {
+                "address": settings.JOANIE_INVOICE_SELLER_ADDRESS,
+            },
+        }
+
+        language_settings = get_language_settings(language_code or get_language())
+
+        try:
+            localized_context = self.localized_context[language_settings["code"]]
+        except KeyError:
+            # - Otherwise use the first entry of the localized context
+            localized_context = list(self.localized_context.values())[0]
+
+        return base_context | localized_context
+
+    def clean(self):
+        """
+        On creation, we create the reference and finally the context for each active languages.
+        """
+        if self.created_on is None:
+            self.reference = self._build_reference()
+            self.localized_context = self._set_localized_context()
+
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+
+        super().save(*args, **kwargs)
 
 
 class Skill(parler_models.TranslatableModel, BaseModel):
