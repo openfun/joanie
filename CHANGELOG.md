@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.18.0] - 2025-05-23
+
 ### Changed
 
 - Add course offer information into course webhook synchronization payload
@@ -630,7 +632,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.17.1...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.18.0...main
+[2.18.0]: https://github.com/openfun/joanie/compare/v2.17.1...v2.18.0
 [2.17.1]: https://github.com/openfun/joanie/compare/v2.17.0...v2.17.1
 [2.17.0]: https://github.com/openfun/joanie/compare/v2.16.0...v2.17.0
 [2.16.0]: https://github.com/openfun/joanie/compare/v2.15.0...v2.16.0
