@@ -587,3 +587,75 @@ class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
                 ),
             ],
         )
+
+    @responses.activate
+    def test_backend_lex_persona_handle_notification_recipient_finished_event_on_batch_order(
+        self,
+    ):
+        """
+        When an incoming event type is 'recipientFinished' and the contract is attached to a
+        batch order, it should update the field `student_signed_on` and
+        `submitted_for_signature_on` to None.
+        """
+        user = factories.UserFactory(email="johnnydo@example.fr")
+        batch_order = factories.BatchOrderFactory(
+            owner=user,
+            relation__product__contract_definition=factories.ContractDefinitionFactory(),
+        )
+        batch_order.contract = factories.ContractFactory(
+            definition=batch_order.relation.product.contract_definition,
+            signature_backend_reference="wfl_id_fake",
+            definition_checksum="fake_test_file_hash",
+            context="content",
+            submitted_for_signature_on=django_timezone.now(),
+        )
+        request_data = {
+            "method": "POST",
+            "path": "https://mocked_joanie_test/api/v1.0/webhook-signature/",
+            "_body": json.dumps(
+                {
+                    "id": "wbe_id_fake",
+                    "tenantId": "ten_id_fake",
+                    "userId": "usr_id_fake",
+                    "webhookId": "wbh_id_fake",
+                    "workflowId": "wfl_id_fake",
+                    "stepId": "stp_id_fake",
+                    "eventType": "recipientFinished",
+                    "created": 1693404075146,
+                    "updated": 1693404075146,
+                }
+            ),
+            "content_type": "application/json",
+        }
+        request = HttpRequest()
+        request.__dict__.update(request_data)
+
+        api_url = "https://lex_persona.test01.com/api/webhookEvents/wbe_id_fake"
+        expected_response_data = {
+            "id": "wbe_id_fake",
+            "tenantId": "ten_id_fake",
+            "userId": "usr_id_fake",
+            "webhookId": "wbh_id_fake",
+            "workflowId": "wfl_id_fake",
+            "stepId": "stp_id_fake",
+            "eventType": "recipientFinished",
+            "created": 1693404075146,
+            "updated": 1693404075146,
+        }
+
+        responses.add(
+            responses.GET, api_url, json=expected_response_data, status=HTTPStatus.OK
+        )
+
+        backend = get_signature_backend()
+
+        with self.assertLogs("joanie") as logger:
+            backend.handle_notification(request)
+
+        batch_order.contract.refresh_from_db()
+        self.assertIsNotNone(batch_order.contract.student_signed_on)
+        self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
+        self.assertLogsEquals(
+            logger.records,
+            [("INFO", f"Student signed the contract '{batch_order.contract.id}'")],
+        )

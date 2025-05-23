@@ -15,6 +15,7 @@ from requests import HTTPError, RequestException
 from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
+    BATCH_ORDER_STATE_PENDING,
     ORDER_STATE_COMPLETED,
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
@@ -26,6 +27,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import (
+    BatchOrderFactory,
     OrderFactory,
     OrderGeneratorFactory,
     ProductFactory,
@@ -2588,3 +2590,156 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
 
         # No mail is sent
         self.assertEqual(mail.outbox, [])
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_create_payment_for_batch_order(self):
+        """
+        When backend creates a payment, it should return a form token.
+        """
+        backend = LyraBackend(self.configuration)
+        batch_order = BatchOrderFactory(
+            state=BATCH_ORDER_STATE_PENDING,
+            relation__product__price=D("120.00"),
+            nb_seats=2,
+        )
+        billing_address = batch_order.create_billing_address()
+
+        with self.open("lyra/responses/create_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 24000,
+                        "currency": "EUR",
+                        "customer": {
+                            "email": batch_order.owner.email,
+                            "reference": str(batch_order.owner.id),
+                            "billingDetails": {
+                                "firstName": billing_address.first_name,
+                                "lastName": billing_address.last_name,
+                                "address": billing_address.address,
+                                "zipCode": billing_address.postcode,
+                                "city": billing_address.city,
+                                "country": billing_address.country.code,
+                                "language": batch_order.owner.language,
+                            },
+                            "shippingDetails": {
+                                "shippingMethod": "DIGITAL_GOOD",
+                            },
+                        },
+                        "orderId": str(batch_order.id),
+                        "formAction": "REGISTER_PAY",
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.create_payment(
+            order=batch_order, installment=None, billing_address=billing_address
+        )
+
+        self.assertEqual(
+            response,
+            {
+                "provider_name": "lyra",
+                "form_token": json_response.get("answer").get("formToken"),
+                "configuration": {
+                    "public_key": self.configuration.get("public_key"),
+                    "base_url": self.configuration.get("api_base_url"),
+                },
+            },
+        )
+
+    @patch.object(BasePaymentBackend, "_do_on_batch_order_payment_failure")
+    def test_payment_backend_lyra_handle_notification_payment_failure_for_batch_order(
+        self, mock_do_on_batch_order_payment_failure
+    ):
+        """
+        When backend receives a payment notification which failed for a batch order, the generic
+        method `_do_on_payment_failure_for_batch_order` should be called.
+        """
+        backend = LyraBackend(self.configuration)
+        batch_order = BatchOrderFactory(
+            state=BATCH_ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner__email="john.doe@acme.org",
+            relation__product__price=D("123.45"),
+        )
+
+        with self.open("lyra/requests/payment_refused.json") as file:
+            json_request = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        mock_do_on_batch_order_payment_failure.assert_called_once_with(
+            batch_order=batch_order,
+        )
+
+    @patch.object(BasePaymentBackend, "_do_on_batch_order_payment_success")
+    def test_payment_backend_lyra_handle_notification_for_batch_order(
+        self, mock_do_on_batch_order_payment_success
+    ):
+        """
+        When we receive a notification from the successful payment of a batch order,
+        the generic method `_do_on_batch_order_payment_success` should be called.
+        """
+        backend = LyraBackend(self.configuration)
+        batch_order = BatchOrderFactory(
+            id="514070fe-c12c-48b8-97cf-5262708673a3",
+            owner__email="john.doe@acme.org",
+            state=BATCH_ORDER_STATE_PENDING,
+            relation__product__price=D("123.45"),
+            nb_seats=1,
+        )
+
+        with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
+            json_request = json.loads(file.read())
+
+        with self.open(
+            "lyra/requests/payment_accepted_no_store_card_answer.json"
+        ) as file:
+            json_answer = json.loads(file.read())
+
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"), data=json_request, format="multipart"
+        )
+
+        backend.handle_notification(request)
+
+        transaction_id = json_answer["transactions"][0]["uuid"]
+        billing_details = json_answer["customer"]["billingDetails"]
+        mock_do_on_batch_order_payment_success.assert_called_once_with(
+            batch_order=batch_order,
+            payment={
+                "id": transaction_id,
+                "amount": D("123.45"),
+                "billing_address": {
+                    "address": billing_details["address"],
+                    "city": billing_details["city"],
+                    "country": billing_details["country"],
+                    "first_name": billing_details["firstName"],
+                    "last_name": billing_details["lastName"],
+                    "postcode": billing_details["zipCode"],
+                },
+            },
+        )

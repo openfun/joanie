@@ -8,6 +8,7 @@ from decimal import Decimal as D
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+from django_countries.serializer_fields import CountryField
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
@@ -19,6 +20,7 @@ from joanie.core.serializers.fields import (
     ThumbnailDetailField,
 )
 from joanie.core.utils import Echo
+from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
 
 
@@ -434,9 +436,56 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
         return settings.DEFAULT_CURRENCY
 
 
+class AdminDiscountSerializer(serializers.ModelSerializer):
+    """Admin Serializer for Discount model"""
+
+    is_used = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Discount
+        fields = ["id", "amount", "rate", "is_used"]
+        read_only_fields = ["id", "is_used"]
+
+    def get_is_used(self, discount):
+        """Return the count of where the discount is used through order groups"""
+        return discount.usage_count
+
+
 class AdminOrderGroupSerializer(serializers.ModelSerializer):
     """
     Admin Serializer for OrderGroup model
+    """
+
+    nb_available_seats = serializers.SerializerMethodField(read_only=True)
+    discount = AdminDiscountSerializer(read_only=False, required=False)
+
+    class Meta:
+        model = models.OrderGroup
+        fields = [
+            "id",
+            "nb_seats",
+            "is_active",
+            "nb_available_seats",
+            "created_on",
+            "can_edit",
+            "is_enabled",
+            "start",
+            "end",
+            "discount",
+        ]
+        read_only_fields = fields
+
+    def get_nb_available_seats(self, order_group) -> int | None:
+        """Return the number of available seats for this order group."""
+        return order_group.available_seats
+
+
+@extend_schema_serializer(exclude_fields=("course_product_relation",))
+class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
+    """
+    Admin serializer for Order Group reserved for partial update and update actions.
+
+    It allows to update the field discount of an order group.
     """
 
     nb_seats = serializers.IntegerField(
@@ -456,39 +505,57 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         required=False,
         default=models.OrderGroup._meta.get_field("is_active").default,
     )
-    nb_available_seats = serializers.SerializerMethodField(read_only=True)
+    start = serializers.DateTimeField(required=False, allow_null=True)
+    end = serializers.DateTimeField(required=False, allow_null=True)
 
-    class Meta:
-        model = models.OrderGroup
-        fields = [
-            "id",
-            "nb_seats",
-            "is_active",
-            "nb_available_seats",
-            "created_on",
-            "can_edit",
-            "is_enabled",
-            "start",
-            "end",
-        ]
-        read_only_fields = ["id", "can_edit", "created_on", "is_enabled"]
+    class Meta(AdminOrderGroupSerializer.Meta):
+        fields = [*AdminOrderGroupSerializer.Meta.fields]
 
-    def get_nb_available_seats(self, order_group) -> int | None:
-        """Return the number of available seats for this order group."""
-        return order_group.available_seats
+    def to_internal_value(self, data):
+        """
+        Override the default to_internal_value method to remove empty strings
+        from the data dictionary before validation.
+        """
+        for key in list(data.keys()):
+            if data[key] == "":
+                data[key] = None
+
+        return super().to_internal_value(data)
+
+    def update(self, instance, validated_data):
+        """Update the discount for the order group"""
+        if discount_id := self.initial_data.get("discount_id"):
+            discount = get_object_or_404(models.Discount, id=discount_id)
+            validated_data["discount"] = discount
+        if discount_id is None:
+            instance.discount = None
+
+        return super().update(instance, validated_data)
 
 
-@extend_schema_serializer(exclude_fields=("course_product_relation",))
-class AdminOrderGroupCreateSerializer(AdminOrderGroupSerializer):
+class AdminOrderGroupCreateSerializer(AdminOrderGroupUpdateSerializer):
     """
     Admin Serializer for OrderGroup model reserved to create action.
 
     Unlike `AdminOrderGroupSerializer`, it allows to pass a product to create
-    the order group.
+    the order group. You can also add a discount.
     """
 
-    class Meta(AdminOrderGroupSerializer.Meta):
-        fields = [*AdminOrderGroupSerializer.Meta.fields, "course_product_relation"]
+    class Meta(AdminOrderGroupUpdateSerializer.Meta):
+        fields = [
+            *AdminOrderGroupUpdateSerializer.Meta.fields,
+            "course_product_relation",
+        ]
+
+    def create(self, validated_data):
+        """
+        Attach the discount to the order group.
+        """
+        if discount_id := self.initial_data.get("discount_id"):
+            discount = get_object_or_404(models.Discount, id=discount_id)
+            validated_data["discount"] = discount
+
+        return super().create(validated_data)
 
 
 class AdminCourseNestedSerializer(serializers.ModelSerializer):
@@ -1192,7 +1259,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     certificate = AdminCertificateSerializer()
     main_invoice = AdminInvoiceSerializer()
     organization = AdminOrganizationLightSerializer(read_only=True)
-    order_group = AdminOrderGroupSerializer(read_only=True)
+    order_groups = AdminOrderGroupSerializer(read_only=True, many=True)
     payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
     credit_card = AdminCreditCardSerializer(read_only=True)
     has_waived_withdrawal_right = serializers.BooleanField(read_only=True)
@@ -1208,7 +1275,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "course",
             "enrollment",
             "organization",
-            "order_group",
+            "order_groups",
             "total",
             "total_currency",
             "contract",
@@ -1588,6 +1655,139 @@ class AdminOrderListExportSerializer(serializers.ListSerializer):
         yield writer.writerow(self.child.headers)
         for row in self.data:
             yield writer.writerow(row.values())
+
+
+class AdminBatchOrderSerializer(serializers.ModelSerializer):
+    """Admin Batch Order Serializer"""
+
+    owner = serializers.SlugRelatedField(
+        queryset=models.User.objects.all(),
+        slug_field="id",
+    )
+    total = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+    )
+    currency = serializers.SerializerMethodField(read_only=True)
+    relation = serializers.SlugRelatedField(
+        queryset=models.CourseProductRelation.objects.all(),
+        slug_field="id",
+        write_only=False,
+    )
+    organization = AdminOrganizationLightSerializer(read_only=True)
+    main_invoice_reference = serializers.SlugRelatedField(
+        read_only=True, slug_field="reference", source="main_invoice"
+    )
+    voucher = serializers.SlugRelatedField(
+        queryset=models.Voucher.objects.all(),
+        slug_field="code",
+        required=False,
+    )
+    country = CountryField(required=False)
+    nb_seats = serializers.IntegerField(
+        min_value=1,
+        help_text="The number of seats to reserve",
+    )
+    trainees = serializers.JSONField(default=list)
+    order_groups = AdminOrderGroupSerializer(read_only=True, many=True)
+    vouchers = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.BatchOrder
+        fields = [
+            "id",
+            "owner",
+            "total",
+            "currency",
+            "relation",
+            "organization",
+            "main_invoice_reference",
+            "contract_id",
+            "company_name",
+            "identification_number",
+            "address",
+            "postcode",
+            "city",
+            "country",
+            "nb_seats",
+            "trainees",
+            "voucher",
+            "vouchers",
+            "order_groups",
+        ]
+        read_only_fields = [
+            "id",
+            "total",
+            "currency",
+            "main_invoice_reference",
+            "contract_id",
+            "order_groups",
+            "vouchers",
+        ]
+
+    def get_currency(self, *args, **kwargs) -> str:
+        """
+        Return the currency used
+        """
+        return settings.DEFAULT_CURRENCY
+
+    def get_vouchers(self, instance) -> list:
+        """Return the voucher codes generated"""
+        return instance.vouchers
+
+    def create(self, validated_data):
+        """
+        When an organization is passed, we should add it to the validated data,
+        otherwise, we should set the organization with the least active orders.
+        Verify that the number of available seats in order groups of the course
+        product relation is sufficient to meet the required seats specified in
+        the batch order.
+        """
+        relation = validated_data.get("relation")
+        if organization_id := self.initial_data.get("organization", None):
+            if models.Organization.objects.filter(id=organization_id).exists():
+                validated_data["organization_id"] = organization_id
+            else:
+                raise serializers.ValidationError(
+                    {"organization_id": "Resource does not exist."}
+                )
+        else:
+            validated_data["organization_id"] = get_least_active_organization(
+                relation.product, relation.course
+            ).id
+
+        nb_seats = validated_data.get("nb_seats")
+        order_groups = models.OrderGroup.objects.find_actives(
+            course_product_relation_id=validated_data["relation"].id
+        )
+
+        seats_limitation = None
+        validated_data.setdefault("order_groups", [])
+        for order_group in order_groups:
+            if (
+                order_group.nb_seats is not None
+                and order_group.available_seats < nb_seats
+            ):
+                seats_limitation = order_group
+                continue
+
+            if order_group.is_enabled:
+                validated_data["order_groups"].append(order_group)
+
+        if seats_limitation:
+            raise serializers.ValidationError(
+                {
+                    "order_group": [
+                        "Maximum number of orders reached for "
+                        f"product {relation.product.title:s}"
+                    ]
+                }
+            )
+
+        return super().create(validated_data)
 
 
 class AdminEnrollmentLightSerializer(serializers.ModelSerializer):

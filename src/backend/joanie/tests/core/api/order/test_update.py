@@ -64,7 +64,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 "enrollment",
                 "id",
                 "main_invoice_reference",
-                "order_group_id",
+                "order_group_ids",
                 "organization",
                 "owner",
                 "product_id",

@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add admin api endpoints for `BatchOrder` resources to create, read, list
+  and cancel
+- Claim an order generated from a batch order through voucher code
+
 ### Changed
 
 - Add course offer information into course webhook synchronization payload
@@ -25,6 +31,7 @@ and this project adheres to
 
 ### Added
 
+- Add `Discount` relation to `OrderGroup` model
 - Add `start` and `end` datetime fields on order group model
 - Add Sarbacane newsletter client
 

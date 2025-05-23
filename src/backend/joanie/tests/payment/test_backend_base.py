@@ -8,11 +8,14 @@ from unittest import mock
 
 from django.core import mail
 from django.test import override_settings
+from django.utils import timezone
 
 from stockholm import Money
 
 from joanie.core import enums
 from joanie.core.factories import (
+    BatchOrderFactory,
+    ContractFactory,
     OrderFactory,
     ProductFactory,
     UserAddressFactory,
@@ -53,6 +56,14 @@ class TestBasePaymentBackend(BasePaymentBackend):
             refund_reference,
             installment_id,
         )
+
+    def call_do_on_batch_order_payment_success(self, batch_order, payment):
+        """call private method _do_on_batch_order_payment_success"""
+        self._do_on_batch_order_payment_success(batch_order, payment)
+
+    def call_do_on_batch_order_payment_failure(self, batch_order):
+        """call private method _do_on_batch_order_payment_failure"""
+        self._do_on_batch_order_payment_failure(batch_order)
 
     def abort_payment(self, payment_id):
         pass
@@ -1313,3 +1324,108 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
         self._check_installment_refused_email_sent("sam@fun-test.fr", order)
+
+    def test_payment_backend_base_do_on_payment_success_for_batch_order(self):
+        """
+        Base backend contains a method `_do_on_payment_success` that handles successful
+        payment of a batch order that is in `pending` state. It should create a
+        child invoice related to the provided batch order, a transaction from payment
+        information provided and mark the batch order as completed. Finally, it sends an
+        email into the owner's language to confirm the payment.
+        """
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(email="johndoe@example.fr", language="fr-fr")
+        product = ProductFactory(
+            price=Decimal("200.00"),
+            title="Product 1",
+        )
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        batch_order = BatchOrderFactory(
+            owner=owner,
+            relation__product=product,
+        )
+        batch_order.init_flow()
+        batch_order.contract = ContractFactory(
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=None,
+            organization_signed_on=None,
+            context="context",
+            definition_checksum="1234",
+            signature_backend_reference="wfl_test_id",
+        )
+        batch_order.flow.to_sign()
+        batch_order.contract.student_signed_on = timezone.now()
+        batch_order.flow.signing()
+        # Simulate that we submit for payment, that triggers that switch to `pending` state
+        batch_order.flow.pending()
+
+        payment = {
+            "id": "pay_0",
+            "amount": batch_order.total,
+            "billing_address": batch_order.create_billing_address(),
+        }
+
+        backend.call_do_on_batch_order_payment_success(
+            batch_order=batch_order, payment=payment
+        )
+
+        # - Payment transaction has been registered
+        self.assertEqual(
+            Transaction.objects.filter(
+                reference="pay_0", total=batch_order.total
+            ).count(),
+            1,
+        )
+        # - Invoice has been created
+        self.assertEqual(batch_order.invoices.count(), 2)
+        self.assertIsNotNone(batch_order.main_invoice)
+        self.assertEqual(batch_order.main_invoice.children.count(), 1)
+
+        # - Batch Order has been completed
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
+
+        # - Email has been sent
+        self._check_batch_order_paid_email_sent("johndoe@example.fr", batch_order)
+
+        # - An event has been created
+        self.assertPaymentSuccessActivityLog(batch_order)
+
+    def test_payment_backend_base_do_on_payment_failure_for_batch_order(self):
+        """
+        Base backend contains a method `_do_on_payment_failure_batch_order` that handles failed
+        payment of a batch order. It should send an email and change the state of the batch
+        order to failed payment. The email should be in the owner language.
+        """
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(email="johndoe@example.fr", language="fr-fr")
+        product = ProductFactory(
+            price=Decimal("200.00"),
+            title="Product 1",
+        )
+        product.translations.create(language_code="fr-fr", title="Produit 1")
+        batch_order = BatchOrderFactory(
+            owner=owner,
+            relation__product=product,
+        )
+        batch_order.init_flow()
+        batch_order.contract = ContractFactory(
+            submitted_for_signature_on=timezone.now(),
+            student_signed_on=None,
+            organization_signed_on=None,
+            context="context",
+            definition_checksum="1234",
+            signature_backend_reference="wfl_test_id",
+        )
+        batch_order.flow.to_sign()
+        batch_order.contract.student_signed_on = timezone.now()
+        batch_order.flow.signing()
+        # Simulate that we submit for payment, that triggers `pending` state
+        batch_order.flow.pending()
+
+        backend.call_do_on_batch_order_payment_failure(batch_order=batch_order)
+
+        # - Payment has failed gracefully and changed batch order state to failed payment
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_FAILED_PAYMENT)
+
+        # - An event has been created
+        self.assertPaymentFailedActivityLog(batch_order)
