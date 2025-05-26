@@ -774,6 +774,8 @@ class Test(Base):
         }
     ]
 
+    COURSE_WEB_HOOKS = []
+
     JOANIE_PAYMENT_BACKEND = {
         "backend": "joanie.payment.backends.dummy.DummyPaymentBackend",
         "timeout": 5,

@@ -32,17 +32,21 @@ class LexPersonaBackend(BaseSignatureBackend):
         "TOKEN",
     ]
 
-    def _prepare_recipient_data_for_student_signer(
-        self, order: models.Order
+    def _prepare_recipient_data_for_buyer_signer(
+        self,
+        order: models.Order | models.BatchOrder,
     ) -> list[dict]:
         """
         Prepare recipient data of a user in order to include it in the creation payload of a
         signature procedure of a file. It returns a dictionary containing signer's information.
         """
-        try:
-            country = order.main_invoice.recipient_address.country.code
-        except AttributeError:
-            country = settings.JOANIE_DEFAULT_COUNTRY_CODE
+        if hasattr(order, "country"):
+            country = order.country.code
+        else:
+            try:
+                country = order.main_invoice.recipient_address.country.code
+            except AttributeError:
+                country = settings.JOANIE_DEFAULT_COUNTRY_CODE
 
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
 
@@ -62,7 +66,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         ]
 
     def _prepare_recipient_data_for_organization_signer(
-        self, order: models.Order
+        self, order: models.Order | models.BatchOrder
     ) -> list[dict]:
         """
         Prepare recipient data of an organization in order to include it in the creation payload
@@ -72,10 +76,10 @@ class LexPersonaBackend(BaseSignatureBackend):
             country = order.organization.country.code
         except AttributeError:
             country = settings.JOANIE_DEFAULT_COUNTRY_CODE
-
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
         accesses = models.OrganizationAccess.objects.filter(
-            organization=order.organization, role=enums.OWNER
+            organization=order.organization,
+            role=enums.OWNER,
         )
 
         return [
@@ -391,7 +395,12 @@ class LexPersonaBackend(BaseSignatureBackend):
 
         return response.json()
 
-    def submit_for_signature(self, title: str, file_bytes: bytes, order: models.Order):
+    def submit_for_signature(
+        self,
+        title: str,
+        file_bytes: bytes,
+        order: models.Order | models.BatchOrder,
+    ):
         """
         Convenience method that wraps the signature procedure creation, file upload, and start
         the signing procedure.
@@ -406,12 +415,12 @@ class LexPersonaBackend(BaseSignatureBackend):
             logger.warning(error_msg)
             raise ValidationError(error_msg)
 
-        student_recipient_data = self._prepare_recipient_data_for_student_signer(order)
+        buyer_recipient_data = self._prepare_recipient_data_for_buyer_signer(order)
         organization_recipient_data = (
             self._prepare_recipient_data_for_organization_signer(order)
         )
         reference_id = self._create_workflow(
-            title, student_recipient_data, organization_recipient_data
+            title, buyer_recipient_data, organization_recipient_data
         )
         file_hash = self._upload_file_to_workflow(file_bytes, reference_id)
         self._start_procedure(reference_id=reference_id)
@@ -583,9 +592,14 @@ class LexPersonaBackend(BaseSignatureBackend):
         If the parameter `with_payload_student` is set to `True`, the student and organization
         signatories steps are prepared, else, only the organization's step is prepared.
         """
-        order = models.Order.objects.get(
-            contract__signature_backend_reference=reference_id
-        )
+        try:
+            order = models.Order.objects.get(
+                contract__signature_backend_reference=reference_id
+            )
+        except models.Order.DoesNotExist:
+            order = models.BatchOrder.objects.get(
+                contract__signature_backend_reference=reference_id
+            )
         payload_organization_signatories = {
             "steps": [
                 {
@@ -611,9 +625,7 @@ class LexPersonaBackend(BaseSignatureBackend):
             "steps": [
                 {
                     "stepType": "signature",
-                    "recipients": self._prepare_recipient_data_for_student_signer(
-                        order
-                    ),
+                    "recipients": self._prepare_recipient_data_for_buyer_signer(order),
                     "requiredRecipients": 1,
                     "validityPeriod": settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
                     * 1000,

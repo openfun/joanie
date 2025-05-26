@@ -2,8 +2,10 @@ import * as React from "react";
 import Switch from "@mui/material/Switch";
 import { defineMessages, useIntl } from "react-intl";
 import { SxProps } from "@mui/material/styles";
+import Box from "@mui/material/Box";
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
 import { OrderGroup, OrderGroupDummy } from "@/services/api/models/OrderGroup";
+import { getDiscountLabel } from "@/services/api/models/Discount";
 
 const messages = defineMessages({
   mainTitleOrderGroup: {
@@ -15,6 +17,21 @@ const messages = defineMessages({
     id: "components.templates.courses.form.productRelation.row.subTitleOrderGroup",
     description: "Sub title for the order group row",
     defaultMessage: "{reservedSeats}/{totalSeats} seats",
+  },
+  startLabel: {
+    id: "components.templates.courses.form.productRelation.row.startLabel",
+    description: "Start date label",
+    defaultMessage: "From: ",
+  },
+  endLabel: {
+    id: "components.templates.courses.form.productRelation.row.endLabel",
+    description: "End date label",
+    defaultMessage: "To: ",
+  },
+  discountLabel: {
+    id: "components.templates.courses.form.productRelation.row.discountLabel",
+    description: "Discount label",
+    defaultMessage: "Discount: ",
   },
   addOrderGroupButton: {
     id: "components.templates.courses.form.productRelation.row.addOrderGroupButton",
@@ -37,12 +54,14 @@ const messages = defineMessages({
 const isOrderGroup = (
   item: OrderGroup | OrderGroupDummy,
 ): item is OrderGroup => {
+  if (!item) return false;
   return "id" in item;
 };
 
 const isOrderGroupDummy = (
   item: OrderGroup | OrderGroupDummy,
 ): item is OrderGroupDummy => {
+  if (!item) return false;
   return "dummyId" in item;
 };
 
@@ -65,10 +84,61 @@ export function OrderGroupRow({
   const mainTitle = intl.formatMessage(messages.mainTitleOrderGroup, {
     number: orderIndex + 1,
   });
-  const subTitle = intl.formatMessage(messages.subTitleOrderGroup, {
-    reservedSeats: orderGroup.nb_seats - orderGroup.nb_available_seats,
-    totalSeats: orderGroup.nb_seats,
-  });
+
+  function getSubTitle() {
+    const rules: string[] = [];
+
+    if (orderGroup.nb_available_seats !== null) {
+      const reservedSeats =
+        (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+      const totalSeats = orderGroup.nb_seats;
+      rules.push(
+        intl.formatMessage(messages.subTitleOrderGroup, {
+          reservedSeats,
+          totalSeats,
+        }),
+      );
+    }
+
+    if (orderGroup.start) {
+      rules.push(
+        intl.formatMessage(messages.startLabel) +
+          intl.formatTime(new Date(orderGroup.start), {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }),
+      );
+    }
+
+    if (orderGroup.end) {
+      rules.push(
+        intl.formatMessage(messages.endLabel) +
+          intl.formatTime(new Date(orderGroup.end), {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }),
+      );
+    }
+
+    if (orderGroup.discount) {
+      rules.push(
+        intl.formatMessage(messages.discountLabel) +
+          getDiscountLabel(orderGroup.discount),
+      );
+    }
+
+    return (
+      <>
+        {rules.map((rule, index) => (
+          <Box key={`${rule}-${index}`} sx={{ mt: 0 }}>
+            {rule}
+          </Box>
+        ))}
+      </>
+    );
+  }
 
   const sxProps: SxProps = { backgroundColor: "background" };
   const disableMessage = !canEdit
@@ -85,7 +155,7 @@ export function OrderGroupRow({
         loading={true}
         sx={sxProps}
         mainTitle={mainTitle}
-        subTitle={subTitle}
+        subTitle={getSubTitle()}
       />
     );
   }
@@ -104,7 +174,7 @@ export function OrderGroupRow({
         onEdit={onEdit}
         sx={sxProps}
         mainTitle={mainTitle}
-        subTitle={subTitle}
+        subTitle={getSubTitle()}
         permanentRightActions={
           <Switch
             inputProps={{

@@ -27,10 +27,23 @@
             <h1>{%trans "Your order has been confirmed."%}</h1>
           </mj-text>
           <mj-text padding="0">
-            {% blocktranslate with title=product.title price=product.price trimmed %}
-              You have bought <strong>{{ title }}</strong>
-              <br />for a price of <strong>{{ price }}</strong>.
-            {% endblocktranslate %}
+            {% if number_of_seats %}
+              {% blocktranslate with total=price|format_currency_with_symbol title=product_title trimmed %}
+                You have bought <strong>{{ title }}</strong>
+                <br />for a price of <strong>{{ total }}</strong> for {{number_of_seats}} seats.
+                <br />Here are your <strong>single use vouchers</strong> :
+              {% endblocktranslate %}
+              <ul>
+                {% for voucher in vouchers %}
+                  <li>{{ voucher }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              {% blocktranslate with title=product_title price=total trimmed %}
+                You have bought <strong>{{ title }}</strong>
+                <br />for a price of <strong>{{ price }}</strong>.
+              {% endblocktranslate %}
+            {% endif %}
           </mj-text>
         </mj-column>
       </mj-section>

@@ -165,7 +165,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled from related enrollments
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(14):
             order.flow.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -203,7 +203,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             order.flow.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -1055,6 +1055,32 @@ class OrderFlowsTestCase(LoggingTestCase):
         order.flow.complete()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    def test_flows_order_to_own_state_to_complete(self):
+        """
+        When the order state is in `to_own` and we assign an owner, it should update to the
+        state `completed`.
+        """
+        order = factories.OrderGeneratorFactory(
+            product__price="100.00", state=enums.ORDER_STATE_TO_OWN
+        )
+        order.owner = factories.UserFactory()
+
+        order.flow.update()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+
+    def test_flows_order_to_own_state_to_complete_without_owner_should_fail(self):
+        """
+        When the order state is in `to_own`, it cannot transition to completed without an owner.
+        """
+        order = factories.OrderGeneratorFactory(
+            product__price="100.00", state=enums.ORDER_STATE_TO_OWN
+        )
+        with self.assertRaises(TransitionNotAllowed):
+            order.flow.complete()
+
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
 
     def test_flows_order_complete_first_paid(self):
         """

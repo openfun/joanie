@@ -71,7 +71,7 @@ class OrderReadApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -107,7 +107,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "state": order.state,
                 "main_invoice_reference": order.main_invoice.reference,
-                "order_group_id": None,
+                "order_group_ids": [],
                 "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                 "organization": {
                     "id": str(order.organization.id),

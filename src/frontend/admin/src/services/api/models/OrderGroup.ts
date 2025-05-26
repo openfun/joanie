@@ -1,11 +1,15 @@
 import { CourseProductRelation } from "@/services/api/models/Relations";
+import { Discount } from "@/services/api/models/Discount";
 
 export type OrderGroup = {
   id: string;
-  nb_available_seats: number;
-  nb_seats: number;
+  nb_available_seats: number | null;
+  nb_seats: number | null;
+  start: string | null;
+  end: string | null;
   is_active: boolean;
   can_edit: boolean;
+  discount: Discount | null;
 };
 
 export type OrderGroupDummy = Omit<OrderGroup, "id"> & {
@@ -13,7 +17,10 @@ export type OrderGroupDummy = Omit<OrderGroup, "id"> & {
 };
 
 export type DTOOrderGroup = {
-  nb_seats: OrderGroup["nb_seats"];
+  nb_seats?: OrderGroup["nb_seats"];
+  start?: OrderGroup["start"];
+  end?: OrderGroup["end"];
   is_active: OrderGroup["is_active"];
   course_product_relation: CourseProductRelation["id"];
+  discount_id?: Discount["id"] | null;
 };

@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add admin api endpoints for `BatchOrder` resources to create, read, list
+  and cancel
+- Claim an order generated from a batch order through voucher code
+
 ## [2.18.0] - 2025-05-23
 
 ### Changed
@@ -27,6 +33,7 @@ and this project adheres to
 
 ### Added
 
+- Add `Discount` relation to `OrderGroup` model
 - Add `start` and `end` datetime fields on order group model
 - Add Sarbacane newsletter client
 
