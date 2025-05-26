@@ -494,6 +494,13 @@ class OrderGroup(BaseModel):
         null=True,
         blank=True,
     )
+    description = models.CharField(
+        _("description"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Description of the order group"),
+    )
 
     class Meta:
         verbose_name = _("Order group")
@@ -571,7 +578,26 @@ class OrderGroup(BaseModel):
         if not self.created_on and self.position is None:
             self.position = self.course_product_relation.order_groups.count()
 
+        # clear product relation cache
+        logger.debug(
+            "Clearing caches from order group for course product relation %s",
+            self.course_product_relation,
+        )
+        self.course_product_relation.clear_cache()
         return super().save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        """
+        Override delete method to clear the cache of the course product relation
+        and to synchronize with webhooks.
+        """
+        # clear product relation cache
+        logger.debug(
+            "Clearing caches from order group for course product relation %s",
+            self.course_product_relation,
+        )
+        self.course_product_relation.clear_cache()
+        super().delete(using=using, keep_parents=keep_parents)
 
     def set_position(self, position):
         """
