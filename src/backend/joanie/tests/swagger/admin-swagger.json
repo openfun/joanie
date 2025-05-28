@@ -6209,8 +6209,7 @@
                                 "$ref": "#/components/schemas/OrderStateEnum"
                             }
                         ],
-                        "readOnly": true,
-                        "default": "draft"
+                        "readOnly": true
                     },
                     "owner": {
                         "allOf": [
