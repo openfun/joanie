@@ -12,14 +12,13 @@ from django.conf import settings
 from django.db.models import Q
 
 import requests
-from rest_framework.parsers import FormParser, JSONParser
 from stockholm import Money
 
-from joanie.core.enums import PAYMENT_STATE_PAID, PAYMENT_STATE_REFUSED
+from joanie.core.enums import PAYMENT_STATE_PAID
 from joanie.core.models import Order, User
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
-from joanie.payment.models import CreditCard, CreditCardOwnership, Invoice, Transaction
+from joanie.payment.models import CreditCard, Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +39,6 @@ class LyraBackend(BasePaymentBackend):
     """
 
     name = "lyra"
-
-    parser_classes = (FormParser, JSONParser)
 
     def __init__(self, configuration):
         """
@@ -382,8 +379,7 @@ class LyraBackend(BasePaymentBackend):
         https://docs.lyra.com/fr/rest/V4.0/api/kb/ipn.html#quel-est-le-principe-de-fonctionnement-dune-ipn-header
         https://docs.lyra.com/fr/rest/V4.0/api/kb/ipn_usage.html
         """
-        request.parsers = self.parser_classes
-        post_data = request.POST.dict()
+        post_data = request.data
 
         if not self._check_hash(post_data):
             raise exceptions.ParseNotificationFailed()
