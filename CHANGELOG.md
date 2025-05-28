@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.18.1] - 2025-05-28
+
 ### Fixed
 
 - Downgrade `djangorestframework` to 3.15.2 to fix payzen notifications
@@ -636,7 +638,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v2.18.0...main
+[unreleased]: https://github.com/openfun/joanie/compare/v2.18.1...main
+[2.18.1]: https://github.com/openfun/joanie/compare/v2.18.0...v2.18.1
 [2.18.0]: https://github.com/openfun/joanie/compare/v2.17.1...v2.18.0
 [2.17.1]: https://github.com/openfun/joanie/compare/v2.17.0...v2.17.1
 [2.17.0]: https://github.com/openfun/joanie/compare/v2.16.0...v2.17.0
