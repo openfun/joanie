@@ -2588,3 +2588,4 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
 
         # No mail is sent
         self.assertEqual(mail.outbox, [])
+ 
