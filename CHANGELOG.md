@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Upgrade `djangorestframework` to 3.16.0
+
 ## [2.18.1] - 2025-05-28
 
 ### Fixed

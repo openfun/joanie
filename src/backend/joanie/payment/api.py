@@ -10,7 +10,8 @@ from django.db.models import BooleanField, Case, Value, When
 from django.http import JsonResponse
 
 from rest_framework import mixins, permissions, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, parser_classes
+from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 
 from joanie.core.models import User
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
+@parser_classes([FormParser])
 @transaction.atomic()
 def webhook(request):
     """

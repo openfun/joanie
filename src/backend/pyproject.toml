@@ -45,7 +45,7 @@ dependencies = [
     "django-viewflow==2.2.10",
     "Django<5",
     "djangorestframework-simplejwt==5.5.0",
-    "djangorestframework==3.15.2",
+    "djangorestframework==3.16.0",
     "drf_spectacular==0.28.0",
     "dockerflow==2024.4.2",
     "easy_thumbnails==2.10",
