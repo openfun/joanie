@@ -8,9 +8,9 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.core import mail
-from django.http import HttpRequest
 from django.test import override_settings
 from django.urls import reverse
+from django.utils.http import urlencode
 
 from joanie.core.enums import ORDER_STATE_PENDING
 from joanie.core.factories import (
@@ -21,11 +21,6 @@ from joanie.core.factories import (
 )
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.backends.lyra import LyraBackend
-from joanie.payment.exceptions import (
-    ParseNotificationFailed,
-    RegisterPaymentFailed,
-    TokenizationCardFailed,
-)
 from joanie.payment.models import CreditCard
 from joanie.tests.base import LoggingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
@@ -34,18 +29,22 @@ from joanie.tests.payment.base_payment import BasePaymentTestCase
 @override_settings(
     JOANIE_CATALOG_NAME="Test Catalog",
     JOANIE_CATALOG_BASE_URL="https://richie.education",
+    JOANIE_PAYMENT_BACKEND={
+        "backend": "joanie.payment.backends.lyra.LyraBackend",
+        "configuration": {
+            "username": "69876357",
+            "password": "testpassword_DEMOPRIVATEKEY23G4475zXZQ2UA5x7M",
+            "public_key": "69876357:testpublickey_DEMOPUBLICKEY95me92597fd28tGD4r5",
+            "api_base_url": "https://api.lyra.com",
+        },
+    },
 )
 class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
     """Test case of the Lyra backend"""
 
     def setUp(self):
         """Define once configuration required to instantiate a lyra backend."""
-        self.configuration = {
-            "username": "69876357",
-            "password": "testpassword_DEMOPRIVATEKEY23G4475zXZQ2UA5x7M",
-            "public_key": "69876357:testpublickey_DEMOPUBLICKEY95me92597fd28tGD4r5",
-            "api_base_url": "https://api.lyra.com",
-        }
+        self.configuration = settings.JOANIE_PAYMENT_BACKEND.get("configuration")
 
     def open(self, path):
         """Open a file from the lyra backend directory."""
@@ -56,20 +55,19 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         When backend receives a notification for a unknown lyra resource,
         a ParseNotificationFailed exception should be raised
         """
-        backend = LyraBackend(self.configuration)
-
         with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
             json_request = json.loads(file.read())
         json_request["kr-hash"] = "wrong_hash"
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        with self.assertRaises(ParseNotificationFailed) as context:
-            backend.handle_notification(request)
-
-        self.assertEqual(str(context.exception), "Cannot parse notification.")
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.json(), "Cannot parse notification.")
 
     @patch("joanie.payment.backends.lyra.LyraBackend._check_hash")
     def test_payment_backend_lyra_handle_notification_payment_unknown_order(
@@ -80,22 +78,25 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         unknown order, it should raises a RegisterPaymentFailed exception.
         """
         mock_check_hash.return_value = True
-        backend = LyraBackend(self.configuration)
 
         with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
             json_request = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        with self.assertRaises(RegisterPaymentFailed) as context:
-            backend.handle_notification(request)
+        self.assertEqual(response.status_code, 400, response.content)
 
         self.assertEqual(
-            str(context.exception),
-            "Payment b4a819d9e4224247b58ccc861321a94a relies on "
-            "a non-existing order (514070fe-c12c-48b8-97cf-5262708673a3).",
+            response.json(),
+            {
+                "detail": "Payment b4a819d9e4224247b58ccc861321a94a relies "
+                "on a non-existing order (514070fe-c12c-48b8-97cf-5262708673a3)."
+            },
         )
 
     @patch.object(BasePaymentBackend, "_do_on_payment_failure")
@@ -106,7 +107,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         When backend receives a payment notification which failed, the generic
         method `_do_on_payment_failure` should be called.
         """
-        backend = LyraBackend(self.configuration)
         order = OrderGeneratorFactory(
             state=ORDER_STATE_PENDING,
             id="758c2570-a7af-4335-b091-340d0cc6e694",
@@ -121,11 +121,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         with self.open("lyra/requests/payment_refused.json") as file:
             json_request = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         mock_do_on_payment_failure.assert_called_once_with(
             order, first_installment["id"]
@@ -139,7 +142,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         When backend receives a payment notification, the generic
         method `_do_on_payment_success` should be called.
         """
-        backend = LyraBackend(self.configuration)
         order = OrderGeneratorFactory(
             state=ORDER_STATE_PENDING,
             id="514070fe-c12c-48b8-97cf-5262708673a3",
@@ -160,11 +162,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         ) as file:
             json_answer = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
@@ -191,7 +196,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         """
         When backend receives a payment success notification, success email is sent
         """
-        backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org", language="en-us")
         order = OrderGeneratorFactory(
             state=ORDER_STATE_PENDING,
@@ -208,11 +212,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
             json_request = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         # Email has been sent
         self._check_installment_paid_email_sent(order.owner.email, order)
@@ -241,14 +248,17 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
 
         card_id = json_answer["transactions"][0]["paymentMethodToken"]
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
-        )
-
         # - Right now there is no credit card with token `card_00000`
         self.assertEqual(CreditCard.objects.filter(token=card_id).count(), 0)
 
-        backend.handle_notification(request)
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
@@ -284,7 +294,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         When backend receives a payment notification, the generic
         method `_do_on_payment_success` should be called.
         """
-        backend = LyraBackend(self.configuration)
         owner = UserFactory(email="john.doe@acme.org")
         product = ProductFactory(price=D("123.45"))
         order = OrderFactory(
@@ -300,11 +309,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         with self.open("lyra/requests/one_click_payment_accepted_answer.json") as file:
             json_answer = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
@@ -351,11 +363,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         with self.open("lyra/requests/tokenize_card_answer.json") as file:
             json_answer = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
@@ -406,11 +421,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
 
         self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         card_id = json_answer["transactions"][0]["paymentMethodToken"]
         initial_issuer_transaction_identifier = json_answer["transactions"][0][
@@ -448,11 +466,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
 
         self.assertFalse(CreditCard.objects.filter(owners=user_1).exists())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         card_id = json_answer["transactions"][0]["paymentMethodToken"]
         initial_issuer_transaction_identifier = json_answer["transactions"][0][
@@ -479,11 +500,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
 
         self.assertFalse(CreditCard.objects.filter(owners=user_2).exists())
 
-        request_2 = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request_2, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request_2),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request_2)
+        self.assertEqual(response.status_code, 200, response.content)
 
         shared_card_token_id = json_answer_2["transactions"][0]["paymentMethodToken"]
         card.refresh_from_db()
@@ -501,7 +525,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         When backend receives a credit card tokenization notification for a user,
         and this user does not exists, it should raises a TokenizationCardFailed
         """
-        backend = LyraBackend(self.configuration)
         user = UserFactory(email="john.doe@acme.org")
 
         with self.open("lyra/requests/tokenize_card_for_user.json") as file:
@@ -509,11 +532,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
 
         self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
-        with self.assertRaises(TokenizationCardFailed):
-            backend.handle_notification(request)
+
+        self.assertEqual(response.status_code, 400, response.content)
 
         self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
@@ -524,7 +550,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         When backend receives a credit card tokenization notification for a user,
         and the tokenization has failed, it should not create a new card
         """
-        backend = LyraBackend(self.configuration)
         user = UserFactory(
             email="john.doe@acme.org", id="0a920c52-7ecc-47b3-83f5-127b846ac79c"
         )
@@ -534,11 +559,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
 
         self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
@@ -551,7 +579,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         method `_do_on_payment_failure` should be called and it must also call
         the method responsible to send the email to the user.
         """
-        backend = LyraBackend(self.configuration)
         user = UserFactory(
             first_name="John",
             last_name="Doe",
@@ -572,11 +599,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         with self.open("lyra/requests/payment_refused.json") as file:
             json_request = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         mock_send_mail_refused_debit.assert_called_once_with(
             order, first_installment["id"]
@@ -590,7 +620,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         method `_do_on_payment_failure` should be called and the email must be sent
         in the preferred language of the user.
         """
-        backend = LyraBackend(self.configuration)
         user = UserFactory(
             first_name="John",
             last_name="Doe",
@@ -612,11 +641,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         with self.open("lyra/requests/payment_refused.json") as file:
             json_request = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertEqual(len(mail.outbox), 1)
@@ -636,7 +668,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         method `_do_on_payment_failure` should be called and the email must be sent
         in the preferred language of the user. In our case, it will be the French language.
         """
-        backend = LyraBackend(self.configuration)
         user = UserFactory(
             first_name="John",
             last_name="Doe",
@@ -659,11 +690,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         with self.open("lyra/requests/payment_refused.json") as file:
             json_request = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertEqual(len(mail.outbox), 1)
@@ -685,7 +719,6 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         method `_do_on_payment_failure` should be called and the email must be sent
         in the fallback language if the translation does not exist.
         """
-        backend = LyraBackend(self.configuration)
         user = UserFactory(
             first_name="John",
             last_name="Doe",
@@ -708,11 +741,14 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
         with self.open("lyra/requests/payment_refused.json") as file:
             json_request = json.loads(file.read())
 
-        request = APIRequestFactory().post(
-            reverse("payment_webhook"), data=json_request, format="multipart"
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
         )
 
-        backend.handle_notification(request)
+        self.assertEqual(response.status_code, 200, response.content)
 
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertEqual(len(mail.outbox), 1)
