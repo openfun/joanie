@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Downgrade `djangorestframework` to 3.15.2 to fix payzen notifications
+
 ## [2.18.0] - 2025-05-23
 
 ### Changed
