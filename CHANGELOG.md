@@ -22,6 +22,7 @@ and this project adheres to
 ### Changed
 
 - Upgrade `djangorestframework` to 3.16.0
+- Use discounted_price in payment_schedule
 
 ### Fixed
 
