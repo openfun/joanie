@@ -36,6 +36,7 @@ from joanie.core.utils import normalize_phone_number, payment_schedule, webhooks
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
     aggregate_course_runs_dates,
 )
+from joanie.core.utils.discount import calculate_price
 from joanie.lms_handler import LMSHandler
 from joanie.signature.backends import get_signature_backend
 
@@ -804,6 +805,16 @@ class CourseProductRelation(BaseModel):
         return payment_schedule.has_withdrawal_period(
             timezone.localdate(), start_date.date()
         )
+
+    @property
+    def discounted_price(self) -> str | None:
+        """
+        Return the discounted price of the product, if any.
+        """
+        for order_group in self.order_groups.all():
+            if discount := order_group.discount:
+                return calculate_price(self.product.price, discount)  # pylint: disable=no-member
+        return None
 
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):
