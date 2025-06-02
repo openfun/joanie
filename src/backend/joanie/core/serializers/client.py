@@ -18,7 +18,6 @@ from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
 from joanie.core.utils.batch_order import get_active_order_group
-from joanie.core.utils.discount import calculate_price
 from joanie.payment.models import CreditCard
 
 
@@ -925,7 +924,6 @@ class CourseProductRelationSerializer(CourseProductRelationLightSerializer):
 
     order_groups = OrderGroupSerializer(many=True, read_only=True)
     is_withdrawable = serializers.BooleanField(read_only=True)
-    discounted_price = serializers.SerializerMethodField(read_only=True)
 
     class Meta(CourseProductRelationLightSerializer.Meta):
         fields = CourseProductRelationLightSerializer.Meta.fields + [
@@ -934,15 +932,6 @@ class CourseProductRelationSerializer(CourseProductRelationLightSerializer):
             "discounted_price",
         ]
         read_only_fields = fields
-
-    def get_discounted_price(self, instance) -> str | None:
-        """
-        Return the discounted price of the product if any.
-        """
-        for order_group in instance.order_groups.all():
-            if discount := order_group.discount:
-                return calculate_price(instance.product.price, discount)
-        return None
 
 
 class ProductRelationSerializer(CachedModelSerializer):

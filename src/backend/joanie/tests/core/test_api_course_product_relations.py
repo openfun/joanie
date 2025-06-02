@@ -1554,7 +1554,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_course_product_relation_payment_schedule_with_product_id_anonymous(
+    def test_api_course_product_relation_payment_schedule_with_product_id(
         self,
     ):
         """
@@ -1626,11 +1626,94 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
     @override_settings(
         JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            5: (30, 70),
+            10: (30, 45, 45),
+            100: (20, 30, 30, 20),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_course_product_relation_payment_schedule_with_product_id_discount(
+        self,
+    ):
+        """
+        Anonymous users should be able to retrieve a payment schedule
+        with applied discount for a single course product relation
+        if a product id is provided and the product is a credential.
+        If there are archived course runs, they should be ignored.
+        """
+        mocked_now = datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+        # Create an archived course_run
+        factories.CourseRunFactory(
+            start=datetime(2023, 12, 15, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2023, 12, 31, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+
+        product = factories.ProductFactory(
+            price=3,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+        )
+        relation = factories.CourseProductRelationFactory(
+            course=course_run.course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        order_group = factories.OrderGroupFactory(
+            discount=factories.DiscountFactory(rate=0.50),
+        )
+        relation.order_groups.add(order_group)
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/"
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 0.45,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 1.05,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2024-03-01",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
             5: (100,),
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_course_product_relation_payment_schedule_with_certificate_product_id_anonymous(
+    def test_api_course_product_relation_payment_schedule_with_certificate_product_id(
         self,
     ):
         """
@@ -1675,6 +1758,71 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 {
                     "id": "00000000-0000-0000-0000-000000000001",
                     "amount": 3.00,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            5: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_course_product_relation_payment_schedule_with_certificate_product_id_discount(
+        self,
+    ):
+        """
+        Anonymous users should be able to retrieve a payment schedule
+        with applied discount for a single course product relation
+        if a product id is provided and the product is a certificate.
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        product = factories.ProductFactory(
+            price=3,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+        relation = factories.CourseProductRelationFactory(
+            course=course_run.course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        order_group = factories.OrderGroupFactory(
+            discount=factories.DiscountFactory(rate=0.50),
+        )
+        relation.order_groups.add(order_group)
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch(
+                "django.utils.timezone.now",
+                return_value=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            ),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/"
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 1.50,
                     "currency": settings.DEFAULT_CURRENCY,
                     "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PENDING,

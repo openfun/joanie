@@ -221,7 +221,8 @@ class CourseProductRelationViewSet(
         )
 
         payment_schedule = generate_payment_schedule(
-            course_product_relation.product.price,
+            course_product_relation.discounted_price
+            or course_product_relation.product.price,
             timezone.now(),
             course_run_dates["start"],
             course_run_dates["end"],

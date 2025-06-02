@@ -5755,7 +5755,7 @@
                     "discounted_price": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Return the discounted price of the product if any.",
+                        "description": "Return the discounted price of the product, if any.",
                         "readOnly": true
                     }
                 },
