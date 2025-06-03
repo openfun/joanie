@@ -117,7 +117,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                     "title": course.title,
                 },
-                "order_groups": [],
                 "is_withdrawable": True,
                 "product": {
                     "instructions": (
@@ -652,7 +651,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                     "title": course.title,
                 },
-                "order_groups": [],
                 "is_withdrawable": True,
                 "product": {
                     "instructions": "",
@@ -749,6 +747,13 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     for organization in relation.organizations.all()
                 ],
                 "discounted_price": None,
+                "discount_rate": None,
+                "discount_amount": None,
+                "discount_start": None,
+                "discount_end": None,
+                "description": None,
+                "nb_available_seats": None,
+                "nb_seats": None,
             },
         )
 
@@ -760,27 +765,27 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         product = relation.product
         course = relation.course
         factories.UserCourseAccessFactory(user=user, course=course)
-        order_group1 = factories.OrderGroupFactory(
+        order_group = factories.OrderGroupFactory(
             course_product_relation=relation,
             nb_seats=random.randint(10, 100),
             discount=factories.DiscountFactory(amount=10),
         )
-        order_group2 = factories.OrderGroupFactory(course_product_relation=relation)
+        factories.OrderGroupFactory(course_product_relation=relation)
         for _ in range(3):
             factories.OrderFactory(
                 course=course,
                 product=product,
-                order_groups=[order_group1],
+                order_groups=[order_group],
                 state=random.choice(enums.ORDER_STATES_BINDING),
             )
         for state, _label in enums.ORDER_STATE_CHOICES:
             if state in (*enums.ORDER_STATES_BINDING, enums.ORDER_STATE_TO_OWN):
                 continue
             factories.OrderFactory(
-                course=course, product=product, order_groups=[order_group1], state=state
+                course=course, product=product, order_groups=[order_group], state=state
             )
 
-        with self.assertNumQueries(55):
+        with self.assertNumQueries(54):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -797,31 +802,13 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(
-            content["order_groups"],
-            [
-                {
-                    "id": str(order_group1.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group1.nb_seats - 3,
-                    "nb_seats": order_group1.nb_seats,
-                    "start": None,
-                    "end": None,
-                    "discount": str(order_group1.discount.id),
-                    "description": None,
-                },
-                {
-                    "id": str(order_group2.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group2.nb_seats,
-                    "nb_seats": order_group2.nb_seats,
-                    "start": None,
-                    "end": None,
-                    "discount": None,
-                    "description": None,
-                },
-            ],
-        )
+        self.assertEqual(content["discount_amount"], order_group.discount.amount)
+        self.assertEqual(content["discount_rate"], order_group.discount.rate)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], order_group.description)
+        self.assertEqual(content["nb_available_seats"], order_group.available_seats)
+        self.assertEqual(content["nb_seats"], order_group.nb_seats)
 
     def test_api_course_product_relation_read_detail_discount(self):
         """The discounted price should be calculated as expected."""
@@ -846,6 +833,13 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             content["discounted_price"],
             float(relation.product.price) - order_group.discount.amount,
         )
+        self.assertEqual(content["discount_amount"], order_group.discount.amount)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], order_group.nb_seats)
+        self.assertEqual(content["nb_seats"], order_group.nb_seats)
 
     def test_api_course_product_relation_read_detail_with_order_groups_cache(self):
         """Cache should be reset on order submit and cancel."""
@@ -868,21 +862,13 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(
-            content["order_groups"],
-            [
-                {
-                    "id": str(order_group.id),
-                    "is_enabled": True,
-                    "nb_available_seats": 10,
-                    "nb_seats": 10,
-                    "start": None,
-                    "end": None,
-                    "discount": None,
-                    "description": None,
-                },
-            ],
-        )
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], 10)
+        self.assertEqual(content["nb_seats"], 10)
 
         # Starting order state flow should impact the number of seat availabilities in the
         # representation of the product
@@ -895,21 +881,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        self.assertEqual(
-            response.json()["order_groups"],
-            [
-                {
-                    "id": str(order_group.id),
-                    "is_enabled": True,
-                    "nb_available_seats": 9,
-                    "nb_seats": 10,
-                    "start": None,
-                    "end": None,
-                    "discount": None,
-                    "description": None,
-                },
-            ],
-        )
+        content = response.json()
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], 9)
+        self.assertEqual(content["nb_seats"], 10)
 
         # Cancelling order should re-credit the number of seat availabilities in the
         # representation of the product
@@ -921,21 +900,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        self.assertEqual(
-            response.json()["order_groups"],
-            [
-                {
-                    "id": str(order_group.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group.available_seats,
-                    "nb_seats": 10,
-                    "start": None,
-                    "end": None,
-                    "discount": None,
-                    "description": None,
-                },
-            ],
-        )
+        content = response.json()
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], 10)
+        self.assertEqual(content["nb_seats"], 10)
 
     def test_api_course_product_relation_return_only_is_active_order_groups(self):
         """
@@ -951,10 +923,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             course_product_relation=relation, is_active=True
         )
         factories.OrderGroupFactory(course_product_relation=relation, is_active=False)
-        order_group_2 = factories.OrderGroupFactory(
-            course_product_relation=relation, is_active=True
-        )
-        order_group_3 = factories.OrderGroupFactory(
+        factories.OrderGroupFactory(course_product_relation=relation, is_active=True)
+        factories.OrderGroupFactory(
             course_product_relation=relation,
             is_active=True,
             end="2025-02-16T16:35:49.326248Z",
@@ -967,41 +937,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        self.assertEqual(
-            response.json()["order_groups"],
-            [
-                {
-                    "id": str(order_group_1.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group_1.available_seats,
-                    "nb_seats": order_group_1.nb_seats,
-                    "start": None,
-                    "end": None,
-                    "discount": None,
-                    "description": None,
-                },
-                {
-                    "id": str(order_group_2.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group_2.available_seats,
-                    "nb_seats": order_group_2.nb_seats,
-                    "start": None,
-                    "end": None,
-                    "discount": None,
-                    "description": None,
-                },
-                {
-                    "id": str(order_group_3.id),
-                    "is_enabled": False,
-                    "nb_available_seats": order_group_3.available_seats,
-                    "nb_seats": order_group_3.nb_seats,
-                    "start": None,
-                    "end": "2025-02-16T16:35:49.326248Z",
-                    "discount": None,
-                    "description": None,
-                },
-            ],
-        )
+        content = response.json()
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], order_group_1.available_seats)
+        self.assertEqual(content["nb_seats"], order_group_1.nb_seats)
 
     def test_api_course_product_relation_create_anonymous(self):
         """

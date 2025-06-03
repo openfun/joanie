@@ -5726,13 +5726,6 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "order_groups": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/OrderGroup"
-                        },
-                        "readOnly": true
-                    },
                     "organizations": {
                         "type": "array",
                         "items": {
@@ -5753,19 +5746,72 @@
                         "readOnly": true
                     },
                     "discounted_price": {
-                        "type": "string",
+                        "type": "number",
+                        "format": "double",
                         "nullable": true,
                         "description": "Return the discounted price of the product, if any.",
+                        "readOnly": true
+                    },
+                    "discount_rate": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true,
+                        "description": "Return the discount rate of the first enabled order group, if any.",
+                        "readOnly": true
+                    },
+                    "discount_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true,
+                        "description": "Return the discount amount of the first enabled order group, if any.",
+                        "readOnly": true
+                    },
+                    "discount_start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "Return the discount start date of the first enabled order group, if any.",
+                        "readOnly": true
+                    },
+                    "discount_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "Return the discount end date of the first enabled order group, if any.",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Return the description of the first enabled order group, if any.",
+                        "readOnly": true
+                    },
+                    "nb_available_seats": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Return the number of seats available for the first enabled order group, if any.",
+                        "readOnly": true
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Return the total number of seats for the first enabled order group, if any.",
                         "readOnly": true
                     }
                 },
                 "required": [
                     "course",
                     "created_on",
+                    "description",
+                    "discount_amount",
+                    "discount_end",
+                    "discount_rate",
+                    "discount_start",
                     "discounted_price",
                     "id",
                     "is_withdrawable",
-                    "order_groups",
+                    "nb_available_seats",
+                    "nb_seats",
                     "organizations",
                     "product"
                 ]
@@ -5794,15 +5840,6 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "order_groups": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "readOnly": true
-                    },
                     "organizations": {
                         "type": "array",
                         "items": {
@@ -5828,7 +5865,6 @@
                     "created_on",
                     "id",
                     "is_withdrawable",
-                    "order_groups",
                     "organizations",
                     "product"
                 ]
@@ -6625,75 +6661,6 @@
                     "target_enrollments",
                     "total",
                     "total_currency"
-                ]
-            },
-            "OrderGroup": {
-                "type": "object",
-                "description": "Serializer for order groups in a product.",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
-                    "nb_seats": {
-                        "type": "integer",
-                        "readOnly": true,
-                        "nullable": true,
-                        "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given order group"
-                    },
-                    "nb_available_seats": {
-                        "type": "integer",
-                        "nullable": true,
-                        "description": "Return the number of available seats for this order group.",
-                        "readOnly": true
-                    },
-                    "is_enabled": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "start": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "nullable": true,
-                        "title": "Rule starts at",
-                        "description": "Date at which the order group rule starts"
-                    },
-                    "end": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "nullable": true,
-                        "title": "Rule ends at",
-                        "description": "Date at which the order group rule ends"
-                    },
-                    "discount": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "readOnly": true,
-                        "nullable": true,
-                        "title": "Product price discount"
-                    },
-                    "description": {
-                        "type": "string",
-                        "readOnly": true,
-                        "nullable": true,
-                        "description": "Description of the order group"
-                    }
-                },
-                "required": [
-                    "description",
-                    "discount",
-                    "end",
-                    "id",
-                    "is_enabled",
-                    "nb_available_seats",
-                    "nb_seats",
-                    "start"
                 ]
             },
             "OrderPayment": {

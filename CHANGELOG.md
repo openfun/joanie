@@ -23,6 +23,8 @@ and this project adheres to
 
 - Upgrade `djangorestframework` to 3.16.0
 - Use discounted_price in payment_schedule
+- Replace order groups from the client API with course product relations
+  properties
 
 ### Fixed
 
