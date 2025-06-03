@@ -758,30 +758,6 @@ class OrderLightSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class OrderGroupSerializer(serializers.ModelSerializer):
-    """Serializer for order groups in a product."""
-
-    nb_available_seats = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = models.OrderGroup
-        fields = [
-            "id",
-            "nb_seats",
-            "nb_available_seats",
-            "is_enabled",
-            "start",
-            "end",
-            "discount",
-            "description",
-        ]
-        read_only_fields = fields
-
-    def get_nb_available_seats(self, order_group) -> int | None:
-        """Return the number of available seats for this order group."""
-        return order_group.available_seats
-
-
 class DefinitionResourcesProductSerializer(serializers.ModelSerializer):
     """
     A serializer for product model which only bind the related
@@ -909,7 +885,6 @@ class CourseProductRelationLightSerializer(CachedModelSerializer):
             "course",
             "created_on",
             "id",
-            "order_groups",
             "organizations",
             "product",
             "is_withdrawable",
@@ -922,14 +897,19 @@ class CourseProductRelationSerializer(CourseProductRelationLightSerializer):
     Serialize a course product relation.
     """
 
-    order_groups = OrderGroupSerializer(many=True, read_only=True)
     is_withdrawable = serializers.BooleanField(read_only=True)
 
     class Meta(CourseProductRelationLightSerializer.Meta):
         fields = CourseProductRelationLightSerializer.Meta.fields + [
-            "order_groups",
             "is_withdrawable",
             "discounted_price",
+            "discount_rate",
+            "discount_amount",
+            "discount_start",
+            "discount_end",
+            "description",
+            "nb_available_seats",
+            "nb_seats",
         ]
         read_only_fields = fields
 
@@ -945,7 +925,6 @@ class ProductRelationSerializer(CachedModelSerializer):
         model = models.CourseProductRelation
         fields = [
             "id",
-            "order_groups",
             "product",
             "is_withdrawable",
         ]
