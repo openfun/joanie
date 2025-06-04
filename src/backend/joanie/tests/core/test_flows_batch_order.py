@@ -7,6 +7,10 @@ from django.utils import timezone
 from viewflow import fsm
 
 from joanie.core import enums, factories
+from joanie.payment.factories import (
+    InvoiceFactory,
+    TransactionFactory,
+)
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import LoggingTestCase
 
@@ -143,6 +147,14 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         """
         batch_order = self.create_batch_order_with_signed_contract(
             state=enums.BATCH_ORDER_STATE_PENDING
+        )
+        invoice = InvoiceFactory(
+            batch_order=batch_order,
+            parent=batch_order.main_invoice,
+            total=0,
+        )
+        TransactionFactory(
+            invoice=invoice,
         )
 
         batch_order.flow.update()

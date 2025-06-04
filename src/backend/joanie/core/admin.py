@@ -724,14 +724,14 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     def cancel(self, request, instance):  # pylint: disable=no-self-use
         """Cancel batch orders"""
         instance.flow.cancel()
-        if instance.orders.exists():
+        if instance.has_orders_generated:
             instance.cancel_orders()
 
     @takes_instance_or_queryset
     def assign_organization(self, request, queryset):  # pylint: disable=no-self-use
         """Custom action to assign an organization to batch orders passed as a queryset."""
         for batch_order in queryset:
-            if batch_order.state != enums.BATCH_ORDER_STATE_DRAFT:
+            if batch_order.is_assigned:
                 messages.warning(request, _("Batch order should be in state 'draft'."))
                 continue
 
@@ -752,10 +752,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         the admin user can call this method again to update the initial contract.
         """
         for batch_order in queryset:
-            if batch_order.state not in [
-                enums.BATCH_ORDER_STATE_ASSIGNED,
-                enums.BATCH_ORDER_STATE_TO_SIGN,
-            ]:
+            if not batch_order.is_eligible_to_get_sign:
                 messages.warning(
                     request,
                     _(
@@ -801,10 +798,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         manually once they have received the payment.
         """
         for batch_order in queryset:
-            if batch_order.state not in [
-                enums.BATCH_ORDER_STATE_SIGNING,
-                enums.BATCH_ORDER_STATE_PENDING,
-            ]:
+            if not batch_order.is_eligible_to_validate_payment:
                 messages.warning(
                     request,
                     _("Your batch order is not in state 'signing' nor 'pending'."),
@@ -813,7 +807,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
             # Transition to `pending` state if neeeded because normally
             # we do this through the API when submitting to payment
-            if batch_order.state == enums.BATCH_ORDER_STATE_SIGNING:
+            if batch_order.is_signed_by_owner:
                 batch_order.flow.update()
 
             validate_success_payment(batch_order)
@@ -828,7 +822,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         Custom action to generate orders for a batch order once in completed state.
         """
         for batch_order in queryset:
-            if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+            if not batch_order.is_paid:
                 messages.warning(
                     request,
                     _(
@@ -851,7 +845,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         are generated
         """
         for batch_order in queryset:
-            if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+            if not batch_order.has_orders_generated:
                 continue
 
             send_mail_vouchers(batch_order)
