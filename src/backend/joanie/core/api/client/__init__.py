@@ -761,10 +761,7 @@ class BatchOrderViewSet(
         """
         batch_order = self.get_object()
 
-        if batch_order.state not in [
-            enums.BATCH_ORDER_STATE_SIGNING,
-            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
-        ]:
+        if not batch_order.is_ready_for_payment:
             return Response(
                 {
                     "detail": (

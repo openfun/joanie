@@ -1874,14 +1874,14 @@ class BatchOrder(BaseModel):
             )
             raise ValidationError(message)
 
-        if self.state == enums.BATCH_ORDER_STATE_DRAFT:
+        if not self.is_assigned:
             raise ValidationError(
                 _(
                     f"Your batch order cannot be submitted for signature, state: {self.state}"
                 )
             )
 
-        if self.contract.student_signed_on:
+        if self.is_signed_by_owner:
             message = "Contract is already signed by the buyer, cannot resubmit."
             logger.error(
                 message, extra={"context": {"contract": self.contract.to_dict()}}
@@ -1933,7 +1933,7 @@ class BatchOrder(BaseModel):
         """
         Generate orders and vouchers once the batch order has been paid.
         """
-        if self.state != enums.BATCH_ORDER_STATE_COMPLETED:
+        if not self.is_paid:
             message = "The batch order is not yet paid."
             logger.error(
                 message,
@@ -1969,6 +1969,72 @@ class BatchOrder(BaseModel):
     def vouchers(self):
         """Return the exhaustive list of voucher codes generated from the orders"""
         return [order.voucher.code for order in self.orders.all()]
+
+    @property
+    def is_assigned(self):
+        """Return boolean value whether the batch order is assigned to an organization"""
+        return self.organization is not None
+
+    @property
+    def is_eligible_to_get_sign(self):
+        """Return boolean value whether the batch order contract can be signed"""
+        return self.state in [
+            enums.BATCH_ORDER_STATE_ASSIGNED,
+            enums.BATCH_ORDER_STATE_TO_SIGN,
+        ]
+
+    @property
+    def is_submitted_to_signature(self):
+        """Return boolean value whether the batch order contract is submitted to signature"""
+        return (
+            self.contract.student_signed_on is None
+            and self.contract.submitted_for_signature_on is not None
+        )
+
+    @property
+    def is_signed_by_owner(self):
+        """Return boolean value whether the batch order contract is signed by the owner"""
+        return (
+            self.contract
+            and self.contract.submitted_for_signature_on is not None
+            and self.contract.student_signed_on is not None
+        )
+
+    @property
+    def is_ready_for_payment(self):
+        """Return boolean value whether the batch order can be submitted to payment"""
+        return self.is_signed_by_owner is True and self.state in [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+        ]
+
+    @property
+    def is_eligible_to_validate_payment(self):
+        """Return boolean value whether we can validate the payment of the batch order"""
+        return self.state in [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+        ]
+
+    @property
+    def is_paid(self):
+        """
+        Return boolean value whether the batch order is fully paid. We should find the child
+        invoice, and if present, the transaction linked to it should exist.
+        """
+        child_invoice = self.invoices.filter(
+            batch_order=self, parent=self.main_invoice, total=0
+        ).first()
+
+        if not child_invoice:
+            return False
+
+        return child_invoice.transactions.filter(invoice=child_invoice).exists()
+
+    @property
+    def has_orders_generated(self):
+        """Return boolean value whether the batch order has the orders generated"""
+        return self.orders.exists()
 
     def cancel_orders(self):
         """
