@@ -406,6 +406,8 @@ jobs:
           command: PLAYWRIGHT_JUNIT_OUTPUT_FILE=./reports/playwright/results.xml yarn test:e2e --shard=$(($CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL} --reporter=junit,list
       - store_test_results:
           path: ./reports/playwright/
+      - store_artifacts:
+          path: ./test-results
 
   test-playwright-ct-front-admin:
     docker:
