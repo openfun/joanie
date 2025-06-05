@@ -124,7 +124,7 @@ class BatchOrderFlow:
         """
         A batch order can be in state completed because it has been fully paid
         """
-        return self.instance.is_fully_paid
+        return self.instance.is_paid
 
     @state.transition(
         source=enums.BATCH_ORDER_STATE_PENDING,
@@ -138,7 +138,7 @@ class BatchOrderFlow:
         """
         Update the batch order state.
         """
-        logger.debug("Transitioning order %s", self.instance.id)
+        logger.debug("Transitioning batch order %s", self.instance.id)
         for transition in [
             self.assign,
             self.to_sign,

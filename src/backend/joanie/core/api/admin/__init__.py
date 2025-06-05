@@ -853,7 +853,7 @@ class BatchOrderViewSet(
         """
         batch_order = self.get_object()
 
-        if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+        if not batch_order.is_paid:
             raise ValidationError(
                 "Cannot generate orders, batch order is not in `completed` state"
             )

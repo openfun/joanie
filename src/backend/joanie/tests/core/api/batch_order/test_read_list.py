@@ -5,7 +5,7 @@ from unittest import mock
 
 from django.conf import settings
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
@@ -38,8 +38,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         factories.BatchOrderFactory()  # Create batch order not owned by the user
         bo = factories.BatchOrderFactory(
-            relation__product__contract_definition=factories.ContractDefinitionFactory(),
-            relation__product__certificate_definition=None,
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
             owner=user,
             nb_seats=2,
             trainees=[
@@ -47,7 +46,6 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
         )
-        bo.init_flow()
 
         with self.assertNumQueries(6):
             response = self.client.get(

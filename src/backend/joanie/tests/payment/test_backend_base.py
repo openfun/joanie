@@ -8,14 +8,14 @@ from unittest import mock
 
 from django.core import mail
 from django.test import override_settings
-from django.utils import timezone
 
 from stockholm import Money
 
 from joanie.core import enums
 from joanie.core.factories import (
     BatchOrderFactory,
-    ContractFactory,
+    ContractDefinitionFactory,
+    CourseProductRelationFactory,
     OrderFactory,
     ProductFactory,
     UserAddressFactory,
@@ -1335,29 +1335,19 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="johndoe@example.fr", language="fr-fr")
-        product = ProductFactory(
-            price=Decimal("200.00"),
-            title="Product 1",
+        relation = CourseProductRelationFactory(
+            product=ProductFactory(
+                price=Decimal("200.00"),
+                title="Product 1",
+                contract_definition=ContractDefinitionFactory(),
+            )
         )
-        product.translations.create(language_code="fr-fr", title="Produit 1")
+        relation.product.translations.create(language_code="fr-fr", title="Produit 1")
         batch_order = BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_PENDING,
             owner=owner,
-            relation__product=product,
+            relation=relation,
         )
-        batch_order.init_flow()
-        batch_order.contract = ContractFactory(
-            submitted_for_signature_on=timezone.now(),
-            student_signed_on=None,
-            organization_signed_on=None,
-            context="context",
-            definition_checksum="1234",
-            signature_backend_reference="wfl_test_id",
-        )
-        batch_order.flow.to_sign()
-        batch_order.contract.student_signed_on = timezone.now()
-        batch_order.flow.signing()
-        # Simulate that we submit for payment, that triggers that switch to `pending` state
-        batch_order.flow.pending()
 
         payment = {
             "id": "pay_0",
@@ -1393,34 +1383,11 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
     def test_payment_backend_base_do_on_payment_failure_for_batch_order(self):
         """
         Base backend contains a method `_do_on_payment_failure_batch_order` that handles failed
-        payment of a batch order. It should send an email and change the state of the batch
-        order to failed payment. The email should be in the owner language.
+        payment of a batch order. It should mark the batch order as in `failed_payment`.
         """
         backend = TestBasePaymentBackend()
-        owner = UserFactory(email="johndoe@example.fr", language="fr-fr")
-        product = ProductFactory(
-            price=Decimal("200.00"),
-            title="Product 1",
-        )
-        product.translations.create(language_code="fr-fr", title="Produit 1")
-        batch_order = BatchOrderFactory(
-            owner=owner,
-            relation__product=product,
-        )
-        batch_order.init_flow()
-        batch_order.contract = ContractFactory(
-            submitted_for_signature_on=timezone.now(),
-            student_signed_on=None,
-            organization_signed_on=None,
-            context="context",
-            definition_checksum="1234",
-            signature_backend_reference="wfl_test_id",
-        )
-        batch_order.flow.to_sign()
-        batch_order.contract.student_signed_on = timezone.now()
-        batch_order.flow.signing()
-        # Simulate that we submit for payment, that triggers `pending` state
-        batch_order.flow.pending()
+
+        batch_order = BatchOrderFactory(state=enums.BATCH_ORDER_STATE_PENDING)
 
         backend.call_do_on_batch_order_payment_failure(batch_order=batch_order)
 

@@ -1857,7 +1857,7 @@ class BatchOrder(BaseModel):
             )
             raise ValidationError(message)
 
-        if self.state == enums.BATCH_ORDER_STATE_DRAFT:
+        if not self.is_assigned:  # self.state == enums.BATCH_ORDER_STATE_DRAFT:
             raise ValidationError(
                 _(
                     f"Your batch order cannot be submitted for signature, state: {self.state}"
@@ -1916,7 +1916,7 @@ class BatchOrder(BaseModel):
         """
         Generate orders and vouchers once the batch order has been paid.
         """
-        if self.state != enums.BATCH_ORDER_STATE_COMPLETED:
+        if not self.is_paid:
             message = "The batch order is not yet paid."
             logger.error(
                 message,
@@ -1977,7 +1977,7 @@ class BatchOrder(BaseModel):
     @property
     def is_signed_by_owner(self):
         """Return boolean value whether the batch order contract is signed by the owner"""
-        return (
+        return bool(
             self.contract.submitted_for_signature_on and self.contract.student_signed_on
         )
 
@@ -1995,13 +1995,17 @@ class BatchOrder(BaseModel):
     @property
     def is_ready_for_payment(self):
         """Return boolean value whether the batch order can be submitted to payment"""
-        return self.state in [
-            enums.BATCH_ORDER_STATE_SIGNING,
-            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
-        ]
+        return bool(
+            self.contract
+            and self.state
+            in [
+                enums.BATCH_ORDER_STATE_SIGNING,
+                enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+            ]
+        )
 
     @property
-    def is_fully_paid(self):
+    def is_paid(self):
         """
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.

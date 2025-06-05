@@ -52,9 +52,9 @@ class UtilsBatchOrderTestCase(TestCase):
         order.order_groups.add(order_group)
 
         # Create the batch order
-        batch_order = factories.BatchOrderFactory(relation=relation, nb_seats=8)
-
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_DRAFT)
+        batch_order = factories.BatchOrderFactory(
+            relation=relation, nb_seats=8, state=enums.BATCH_ORDER_STATE_DRAFT
+        )
 
         assign_organization(batch_order)
 
@@ -232,11 +232,9 @@ class UtilsBatchOrderTestCase(TestCase):
         The utility method `validate_success_payment` should create the invoice and the transaction
         associated to the payment and transition de batch order to 'completed' state.
         """
-        relation = factories.CourseProductRelationFactory(product__price=10)
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_PENDING, nb_seats=2, relation=relation
+            state=enums.BATCH_ORDER_STATE_PENDING, nb_seats=2
         )
-        batch_order.create_main_invoice()
 
         self.assertFalse(
             Invoice.objects.filter(
@@ -276,7 +274,9 @@ class UtilsBatchOrderTestCase(TestCase):
             last_name="Smith",
         )
         relation = factories.CourseProductRelationFactory(
-            product__price=10, product__title="Product 1"
+            product__price=10,
+            product__title="Product 1",
+            product__contract_definition=factories.ContractDefinitionFactory(),
         )
         relation.product.translations.create(
             language_code="fr-fr",
