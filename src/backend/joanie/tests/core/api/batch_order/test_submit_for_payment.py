@@ -105,7 +105,9 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        batch_order = factories.BatchOrderFactory(owner=user)
+        batch_order = factories.BatchOrderFactory(
+            owner=user, state=enums.BATCH_ORDER_STATE_TO_SIGN
+        )
 
         response = self.client.post(
             f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-payment/",

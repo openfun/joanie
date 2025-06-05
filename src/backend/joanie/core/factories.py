@@ -1156,7 +1156,9 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             self.flow.refunded()
 
         if self.state == enums.ORDER_STATE_TO_OWN:
-            self.batch_order = BatchOrderFactory()
+            self.batch_order = BatchOrderFactory(
+                state=enums.BATCH_ORDER_STATE_COMPLETED
+            )
             self.voucher = VoucherFactory(discount=DiscountFactory(rate=1))
             self.save()
 
@@ -1218,32 +1220,90 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     nb_seats = factory.fuzzy.FuzzyInteger(1, 20)
 
     @factory.lazy_attribute
+    # pylint: disable=method-hidden
     def organization(self):
-        """Retrieve the organization from the product/course relation."""
+        """Set organization based on the course relations"""
         course_relations = self.relation.product.course_relations
         return course_relations.first().organizations.order_by("?").first()
 
     @factory.lazy_attribute
     def total(self):
-        """Generate the total of the batch order from the product price and the number of seats"""
+        """Calculate total based on seats and product price"""
         return self.nb_seats * self.relation.product.price
 
     @factory.lazy_attribute
     def trainees(self):
-        """
-        Prepare a list of dictionary with first name and last name of students.
-        We ensure that the length of trainees matches the number of seats.
-        """
+        """Generate trainees based on nb_seats"""
         return TraineeFactory.create_batch(self.nb_seats)
 
     @factory.post_generation
-    # pylint: disable=unused-argument
-    def order_groups(self, create, extracted, **kwargs):
+    def state(self, create, extracted, **kwargs):
         """
-        Set order groups if any
+        Handle state transitions after creation and create related objects
+        depending the state
         """
-        if extracted:
-            self.order_groups.set(extracted)
+        if not create or extracted is None:
+            return
+
+        # Execute transitions based on target state
+        if extracted == enums.BATCH_ORDER_STATE_CANCELED:
+            return
+
+        if extracted == enums.BATCH_ORDER_STATE_DRAFT:
+            self.organization = None
+            self.save()
+            return
+
+        # Initialize flow for all non-draft states
+        self.init_flow()
+
+        if extracted in [
+            enums.BATCH_ORDER_STATE_TO_SIGN,
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+            enums.BATCH_ORDER_STATE_COMPLETED,
+        ]:
+            self.submit_for_signature(self.owner)
+            self.flow.update()
+
+        if extracted in [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+            enums.BATCH_ORDER_STATE_COMPLETED,
+        ]:
+            self.contract.student_signed_on = django_timezone.now()
+            self.contract.save()
+            self.flow.update()
+
+        if extracted in [
+            enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+            enums.BATCH_ORDER_STATE_COMPLETED,
+        ]:
+            self.flow.pending()
+            self.flow.update()
+
+        if extracted == enums.BATCH_ORDER_STATE_FAILED_PAYMENT:
+            self.flow.failed_payment()
+
+        if extracted == enums.BATCH_ORDER_STATE_COMPLETED:
+            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel
+                InvoiceFactory,
+                TransactionFactory,
+            )
+
+            invoice = InvoiceFactory(
+                batch_order=self,
+                parent=self.main_invoice,
+                total=0,
+            )
+            TransactionFactory(
+                invoice=invoice, total=self.total, reference=f"{self.id}"
+            )
+
+        self.save()
 
 
 class AddressFactory(DebugModelFactory, factory.django.DjangoModelFactory):
