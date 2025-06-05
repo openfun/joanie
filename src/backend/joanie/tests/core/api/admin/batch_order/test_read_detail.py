@@ -5,7 +5,7 @@ from http import HTTPStatus
 from django.conf import settings
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import enums, factories
 
 
 class BatchOrdersAdminApiDetailTestCase(TestCase):
@@ -39,8 +39,9 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        batch_order = factories.BatchOrderFactory()
-        batch_order.init_flow()
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
 
         response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 

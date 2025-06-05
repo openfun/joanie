@@ -11,43 +11,25 @@ from joanie.payment.factories import (
     InvoiceFactory,
     TransactionFactory,
 )
-from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import LoggingTestCase
 
 
 class BatchOrderFlowsTestCase(LoggingTestCase):
     """Test suite for the Batch Order flow."""
 
-    def create_batch_order_with_signed_contract(self, state):
-        """
-        Create a batch order where the organization is already assigned, and the contract
-        is signed by the buyer.
-        """
-        return factories.BatchOrderFactory(
-            contract=factories.ContractFactory(
-                submitted_for_signature_on=timezone.now(),
-                student_signed_on=timezone.now(),
-                organization_signed_on=None,
-                context="context",
-                definition_checksum="1234",
-                signature_backend_reference="wfl_test_id",
-            ),
-            state=state,
-        )
-
     def test_flow_batch_order_draft(self):
         """
         When we create batch order and we don't call the init flow method, it
         should stay in draft state and not have an organization attach to it.
         """
-        batch_order = factories.BatchOrderFactory(organization=None)
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_DRAFT)
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_DRAFT)
         self.assertIsNone(batch_order.organization)
 
     def test_flow_batch_assigned_requires_an_organization(self):
         """The batch order cannot be in assigned state if it does not have an organization"""
-        batch_order = factories.BatchOrderFactory(organization=None)
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_DRAFT)
 
         with self.assertRaises(fsm.TransitionNotAllowed):
             batch_order.flow.assign()
@@ -71,9 +53,8 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         from the buyer.
         """
         batch_order = factories.BatchOrderFactory(
-            organization=factories.OrganizationFactory()
+            state=enums.BATCH_ORDER_STATE_ASSIGNED
         )
-        batch_order.init_flow()
 
         batch_order.submit_for_signature(user=batch_order.owner)
 
@@ -84,20 +65,10 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         When the contract has been signed by the buyer, the state of the batch order
         should transition to signing.
         """
-        batch_order = factories.BatchOrderFactory(
-            organization=factories.OrganizationFactory()
-        )
-        batch_order.init_flow()
-        batch_order.submit_for_signature(user=batch_order.owner)
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
+        batch_order.contract.student_signed_on = timezone.now()
 
-        # Trigger the event of the buyer signing the contract
-        signature_backend = get_signature_backend()
-        signature_backend.confirm_signature(
-            reference=batch_order.contract.signature_backend_reference
-        )
-
-        batch_order.contract.refresh_from_db()
-        batch_order.flow.signing()
+        batch_order.flow.update()
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
         self.assertIsNotNone(batch_order.contract.student_signed_on)
@@ -108,9 +79,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         The batch order can be in state pending once the contract has been signed by at least
         the buyer.
         """
-        batch_order = self.create_batch_order_with_signed_contract(
-            state=enums.BATCH_ORDER_STATE_SIGNING
-        )
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_SIGNING)
 
         batch_order.flow.update()
 
@@ -120,9 +89,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         """
         The batch order can be in state failed payment if the payment went wrong.
         """
-        batch_order = self.create_batch_order_with_signed_contract(
-            state=enums.BATCH_ORDER_STATE_PENDING
-        )
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_PENDING)
 
         batch_order.flow.failed_payment()
 
@@ -133,11 +100,11 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         When the payment has failed for the batch order, it can go back into pending state
         when the buyer attemps to fix the payment.
         """
-        batch_order = self.create_batch_order_with_signed_contract(
+        batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_FAILED_PAYMENT
         )
 
-        batch_order.flow.pending()
+        batch_order.flow.update()
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_PENDING)
 
@@ -145,9 +112,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         """
         When the batch order payment is made it can be in state completed.
         """
-        batch_order = self.create_batch_order_with_signed_contract(
-            state=enums.BATCH_ORDER_STATE_PENDING
-        )
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_PENDING)
         invoice = InvoiceFactory(
             batch_order=batch_order,
             parent=batch_order.main_invoice,
@@ -155,6 +120,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         )
         TransactionFactory(
             invoice=invoice,
+            total=batch_order.total,
         )
 
         batch_order.flow.update()
