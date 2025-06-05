@@ -651,9 +651,8 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         batch_order = factories.BatchOrderFactory(
             owner=user,
-            relation__product__contract_definition=factories.ContractDefinitionFactory(),
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
         )
-        batch_order.init_flow()
         accesses = factories.UserOrganizationAccessFactory.create_batch(
             3, organization=batch_order.organization, role="owner"
         )

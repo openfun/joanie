@@ -19,6 +19,7 @@ from stockholm import Money
 
 from joanie.core import factories
 from joanie.core.enums import (
+    BATCH_ORDER_STATE_TO_SIGN,
     CERTIFICATE,
     CONTRACT_DEFINITION_DEFAULT,
     CONTRACT_DEFINITION_UNICAMP,
@@ -102,7 +103,7 @@ class DebugInvitationSignatureLink(TemplateView):
 
     def get_context_data(self, **kwargs):
         """Generates sample datas to have a valid debug email"""
-        batch_order = factories.BatchOrderFactory()
+        batch_order = factories.BatchOrderFactory(state=BATCH_ORDER_STATE_TO_SIGN)
         context = super().get_context_data(**kwargs)
         context["title"] = "👨‍💻Development email preview"
         context["email"] = batch_order.owner.email

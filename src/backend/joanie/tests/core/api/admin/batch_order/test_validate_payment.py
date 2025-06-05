@@ -36,7 +36,7 @@ class BatchOrdersAdminApiValidatePaymentTestCase(TestCase):
     def test_api_admin_batch_orders_validate_payment_should_raise_error(self):
         """
         Authenticated admin user shouldn't be able to validate payment for a batch if the state
-        is neither `signing` or `pending`. It should raise an error.
+        is neither `signing` or `pending` or `completed`. It should raise an error.
         """
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
@@ -45,7 +45,11 @@ class BatchOrdersAdminApiValidatePaymentTestCase(TestCase):
             state
             for state, _ in enums.BATCH_ORDER_STATE_CHOICES
             if state
-            not in [enums.BATCH_ORDER_STATE_SIGNING, enums.BATCH_ORDER_STATE_PENDING]
+            not in [
+                enums.BATCH_ORDER_STATE_SIGNING,
+                enums.BATCH_ORDER_STATE_PENDING,
+                enums.BATCH_ORDER_STATE_COMPLETED,
+            ]
         ]
 
         for state in batch_order_states:
@@ -56,6 +60,7 @@ class BatchOrdersAdminApiValidatePaymentTestCase(TestCase):
                     f"/api/v1.0/admin/batch-orders/{batch_order.id}/validate-payment/",
                     content_type="application/json",
                 )
+
                 self.assertContains(
                     response,
                     "Your batch order is not in a state to validate the payment",
@@ -74,7 +79,6 @@ class BatchOrdersAdminApiValidatePaymentTestCase(TestCase):
         for state in [enums.BATCH_ORDER_STATE_SIGNING, enums.BATCH_ORDER_STATE_PENDING]:
             with self.subTest(state=state):
                 batch_order = factories.BatchOrderFactory(state=state)
-                batch_order.create_main_invoice()
 
                 response = self.client.post(
                     f"/api/v1.0/admin/batch-orders/{batch_order.id}/validate-payment/",

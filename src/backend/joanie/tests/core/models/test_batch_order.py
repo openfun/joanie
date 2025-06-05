@@ -78,8 +78,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         will generate one. At the end of submitting the contract we should get in
         return the invitation link to sign it.
         """
-        batch_order = factories.BatchOrderFactory(nb_seats=2)
-        batch_order.init_flow()
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=2, state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
 
         invitation_link = batch_order.submit_for_signature(user=batch_order.owner)
 
@@ -115,20 +116,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         When submitting a contract that is already signed by the buyer,
         it should raise an error because we cannot submit it again.
         """
-        relation = factories.CourseProductRelationFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-        )
-        batch_order = factories.BatchOrderFactory(
-            relation=relation,
-            contract=factories.ContractFactory(
-                signature_backend_reference="wfl_fake_dummy_id",
-                context="context",
-                definition_checksum="321",
-                submitted_for_signature_on=django_timezone.now(),
-                student_signed_on=django_timezone.now(),
-            ),
-        )
-        batch_order.init_flow()
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_SIGNING)
 
         with (
             self.assertRaises(PermissionDenied) as context,
@@ -166,8 +154,10 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         relation = factories.CourseProductRelationFactory(
             product__contract_definition=factories.ContractDefinitionFactory()
         )
-        batch_order = factories.BatchOrderFactory(relation=relation)
-        batch_order.init_flow()
+        batch_order = factories.BatchOrderFactory(
+            relation=relation, state=enums.BATCH_ORDER_STATE_TO_SIGN
+        )
+
         context = contract_definition.generate_document_context(
             contract_definition=relation.product.contract_definition,
             user=batch_order.owner,
@@ -215,28 +205,32 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             ],
         )
 
+    @override_settings(
+        JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
+    )
     def test_models_batch_order_submit_for_signature_contract_context_has_changed_and_still_valid(
         self,
     ):
         """
-        When the resubmitting a contract and the context has changed and its still in the range
+        When the resubmitting a contract because the context has changed and its still in the range
         of validity period, it should return an invitation link and update the contract fields :
         'submitted_for_signature_on', 'context', 'definition_checksum',
-        and 'signature_backend_reference'.
+        and 'signature_backend_reference'. The newer contract can get sign by the buyer.
         """
-        batch_order = factories.BatchOrderFactory()
-        batch_order.contract = factories.ContractFactory(
-            signature_backend_reference="wfl_fake_dummy_id_123",
-            definition_checksum="fake_test_file_hash_1",
-            context="content",
-            submitted_for_signature_on=django_timezone.now(),
-        )
-        batch_order.init_flow()
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
+        # Force change the product title so it modifies the contract's context when compared
+        # before submitting a newer version
+        batch_order.relation.product.title = "Product 123"
+        batch_order.relation.product.save()
 
         invitation_url = batch_order.submit_for_signature(user=batch_order.owner)
 
         batch_order.contract.refresh_from_db()
         self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
+        # We should get a new signature backend reference
+        self.assertNotEqual(
+            "wfl_fake_dummy_123", batch_order.contract.signature_backend_reference
+        )
         self.assertIn(
             "wfl_fake_dummy_", batch_order.contract.signature_backend_reference
         )
@@ -245,10 +239,13 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertIsNone(batch_order.contract.student_signed_on)
 
         backend = get_signature_backend()
+
         backend.confirm_signature(
             reference=batch_order.contract.signature_backend_reference
         )
-        batch_order.refresh_from_db()
+
+        batch_order.contract.refresh_from_db()
+
         self.assertIsNotNone(batch_order.contract.student_signed_on)
 
     @mock.patch(
@@ -261,8 +258,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         set for the uploaded document title the current date, the related course code
         and the batch order pk.
         """
-        batch_order = factories.BatchOrderFactory()
-        batch_order.init_flow()
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
 
         batch_order.submit_for_signature(user=batch_order.owner)
         now = django_timezone.now()
@@ -283,11 +281,12 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         A batch order cannot be in state assigned if it's not attached
         to an organization.
         """
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_DRAFT)
+        batch_order.organization = None
+        batch_order.state = enums.BATCH_ORDER_STATE_ASSIGNED
 
         with self.assertRaises(ValidationError) as context:
-            factories.BatchOrderFactory(
-                organization=None, state=enums.BATCH_ORDER_STATE_ASSIGNED
-            )
+            batch_order.save()
 
         self.assertTrue(
             "BatchOrder requires organization unless in draft or cancel states."
@@ -345,7 +344,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         When we call the property main_invoice, it should return the main invoice.
         """
         batch_order = factories.BatchOrderFactory(
-            nb_seats=2, relation__product__price=100
+            nb_seats=2,
+            relation__product__price=100,
+            state=enums.BATCH_ORDER_STATE_DRAFT,
         )
 
         batch_order.init_flow()
@@ -357,7 +358,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
     def test_models_batch_order_property_vouchers(self):
         """
         The property vouchers should return the list of vouchers codes that are attached
-        to the batch order orders
+        to the orders of the batch order.
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_COMPLETED, nb_seats=3
