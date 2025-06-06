@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.forms import fields
 from django.utils import timezone as django_timezone
 
+from babel.numbers import get_currency_symbol
 from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
@@ -300,3 +301,48 @@ class OrderAdminFilterSet(filters.FilterSet):
             | Q(owner__first_name__icontains=value)
             | Q(owner__last_name__icontains=value)
         ).distinct()
+
+
+class DiscountAdminFilterSet(filters.FilterSet):
+    """
+    DiscountAdminFilterSet allows to filter this resource with a query for amount and rate.
+    """
+
+    class Meta:
+        model = models.Discount
+        fields: List[str] = ["query"]
+
+    query = filters.CharFilter(method="filter_by_query")
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter resource by looking for amount and rate which contains provided value in
+        "query" query parameter.
+        """
+
+        def amount_filter(amount, exact=False):
+            if exact and amount:
+                return Q(amount=amount)
+            return Q(amount__icontains=amount)
+
+        def rate_filter(rate, exact=False):
+            try:
+                rate = int(rate) / 100
+            except ValueError:
+                pass
+
+            if exact and rate:
+                return Q(rate=rate)
+            return Q(rate__icontains=rate)
+
+        currency_symbol = get_currency_symbol(settings.DEFAULT_CURRENCY)
+        if currency_symbol in value:
+            value = value.replace(currency_symbol, "")
+            queryset = queryset.filter(amount_filter(value, exact=True))
+        elif "%" in value:
+            value = value.replace("%", "")
+            queryset = queryset.filter(rate_filter(value, exact=True))
+        else:
+            queryset = queryset.filter(amount_filter(value) | rate_filter(value))
+
+        return queryset.distinct()

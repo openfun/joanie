@@ -6,6 +6,326 @@
         "description": "This is the Joanie API schema."
     },
     "paths": {
+        "/api/v1.0/admin/batch-orders/": {
+            "get": {
+                "operationId": "batch_orders_list",
+                "description": "Admin Batch Order Viewset",
+                "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminBatchOrderList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "batch_orders_create",
+                "description": "Admin Batch Order Viewset",
+                "tags": [
+                    "batch-orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/batch-orders/{id}/": {
+            "get": {
+                "operationId": "batch_orders_retrieve",
+                "description": "Admin Batch Order Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "batch_orders_destroy",
+                "description": "Cancel a batch order.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/batch-orders/{id}/generate-orders/": {
+            "post": {
+                "operationId": "batch_orders_generate_orders_create",
+                "description": "Generates the orders of the batch order when the state is completed exclusively.\nOnce all orders are generated, the task will send the email with the voucher codes\nto the batch order's owner.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/batch-orders/{id}/submit-for-signature/": {
+            "post": {
+                "operationId": "batch_orders_submit_for_signature_create",
+                "description": "Sends an email to the batch order owner with the invitation signature link to sign\nthe contract.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/batch-orders/{id}/validate-payment/": {
+            "post": {
+                "operationId": "batch_orders_validate_payment_create",
+                "description": "Validates the payment for the batch order if its state is in `signing` or `pending`",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminBatchOrderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/certificate-definitions/": {
             "get": {
                 "operationId": "certificate_definitions_list",
@@ -871,12 +1191,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOrderGroupRequest"
+                                "$ref": "#/components/schemas/AdminOrderGroupUpdateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOrderGroupRequest"
+                                "$ref": "#/components/schemas/AdminOrderGroupUpdateRequest"
                             }
                         }
                     }
@@ -891,7 +1211,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOrderGroup"
+                                    "$ref": "#/components/schemas/AdminOrderGroupUpdate"
                                 }
                             }
                         },
@@ -930,12 +1250,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOrderGroupRequest"
+                                "$ref": "#/components/schemas/PatchedAdminOrderGroupUpdateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOrderGroupRequest"
+                                "$ref": "#/components/schemas/PatchedAdminOrderGroupUpdateRequest"
                             }
                         }
                     }
@@ -950,7 +1270,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOrderGroup"
+                                    "$ref": "#/components/schemas/AdminOrderGroupUpdate"
                                 }
                             }
                         },
@@ -2517,6 +2837,228 @@
                 }
             }
         },
+        "/api/v1.0/admin/discounts/": {
+            "get": {
+                "operationId": "discounts_list",
+                "description": "Admin Discount Viewset",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "discounts"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminDiscountList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "discounts_create",
+                "description": "Admin Discount Viewset",
+                "tags": [
+                    "discounts"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminDiscountRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminDiscountRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminDiscount"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/discounts/{id}/": {
+            "put": {
+                "operationId": "discounts_update",
+                "description": "Admin Discount Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "discounts"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminDiscountRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminDiscountRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminDiscount"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "discounts_partial_update",
+                "description": "Admin Discount Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "discounts"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminDiscountRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminDiscountRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminDiscount"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "discounts_destroy",
+                "description": "Admin Discount Viewset",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "discounts"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/enrollments/": {
             "get": {
                 "operationId": "enrollments_list",
@@ -2976,11 +3518,12 @@
                                 "refunded",
                                 "refunding",
                                 "signing",
+                                "to_own",
                                 "to_save_payment_method",
                                 "to_sign"
                             ]
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded"
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own"
                     }
                 ],
                 "tags": [
@@ -5120,6 +5663,201 @@
     },
     "components": {
         "schemas": {
+            "AdminBatchOrder": {
+                "type": "object",
+                "description": "Admin Batch Order Serializer",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "owner": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true,
+                        "readOnly": true
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Return the currency used",
+                        "readOnly": true
+                    },
+                    "relation": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "organization": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminOrganizationLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "main_invoice_reference": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "contract_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "contract of type convention",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "description": "company name",
+                        "maxLength": 255
+                    },
+                    "identification_number": {
+                        "type": "string",
+                        "title": "Company identification number",
+                        "description": "company identification number like SIRET in France",
+                        "maxLength": 255
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "company address",
+                        "maxLength": 255
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "description": "company postcode",
+                        "maxLength": 50
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "company city",
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "The number of seats to reserve"
+                    },
+                    "trainees": {},
+                    "voucher": {
+                        "type": "string",
+                        "description": "Voucher code"
+                    },
+                    "vouchers": {
+                        "type": "array",
+                        "items": {},
+                        "description": "Return the voucher codes generated",
+                        "readOnly": true
+                    },
+                    "order_groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderGroup"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "address",
+                    "city",
+                    "company_name",
+                    "contract_id",
+                    "currency",
+                    "id",
+                    "identification_number",
+                    "main_invoice_reference",
+                    "nb_seats",
+                    "order_groups",
+                    "organization",
+                    "owner",
+                    "postcode",
+                    "relation",
+                    "total",
+                    "vouchers"
+                ]
+            },
+            "AdminBatchOrderRequest": {
+                "type": "object",
+                "description": "Admin Batch Order Serializer",
+                "properties": {
+                    "owner": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "relation": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company name",
+                        "maxLength": 255
+                    },
+                    "identification_number": {
+                        "type": "string",
+                        "minLength": 1,
+                        "title": "Company identification number",
+                        "description": "company identification number like SIRET in France",
+                        "maxLength": 255
+                    },
+                    "address": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company address",
+                        "maxLength": 255
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company postcode",
+                        "maxLength": 50
+                    },
+                    "city": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company city",
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "The number of seats to reserve"
+                    },
+                    "trainees": {},
+                    "voucher": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Voucher code"
+                    }
+                },
+                "required": [
+                    "address",
+                    "city",
+                    "company_name",
+                    "identification_number",
+                    "nb_seats",
+                    "owner",
+                    "postcode",
+                    "relation"
+                ]
+            },
             "AdminCertificate": {
                 "type": "object",
                 "description": "Read only serializer for Certificate model.",
@@ -5948,6 +6686,62 @@
                     "last_numbers"
                 ]
             },
+            "AdminDiscount": {
+                "type": "object",
+                "description": "Admin Serializer for Discount model",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "amount": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "Discount amount"
+                    },
+                    "rate": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1.0,
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "Discount rate"
+                    },
+                    "is_used": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "is_used"
+                ]
+            },
+            "AdminDiscountRequest": {
+                "type": "object",
+                "description": "Admin Serializer for Discount model",
+                "properties": {
+                    "amount": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "Discount amount"
+                    },
+                    "rate": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1.0,
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "Discount rate"
+                    }
+                }
+            },
             "AdminEnrollment": {
                 "type": "object",
                 "description": "Serializer for Enrollment model",
@@ -6252,12 +7046,11 @@
                         ],
                         "readOnly": true
                     },
-                    "order_group": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminOrderGroup"
-                            }
-                        ],
+                    "order_groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderGroup"
+                        },
                         "readOnly": true
                     },
                     "total": {
@@ -6311,7 +7104,7 @@
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice",
-                    "order_group",
+                    "order_groups",
                     "organization",
                     "owner",
                     "payment_schedule",
@@ -6392,15 +7185,14 @@
                     },
                     "nb_seats": {
                         "type": "integer",
-                        "maximum": 32767,
-                        "minimum": 0,
+                        "readOnly": true,
                         "nullable": true,
                         "title": "Number of seats",
                         "description": "The maximum number of orders that can be validated for a given order group"
                     },
                     "is_active": {
                         "type": "boolean",
-                        "default": true
+                        "readOnly": true
                     },
                     "nb_available_seats": {
                         "type": "integer",
@@ -6425,29 +7217,45 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
+                        "readOnly": true,
                         "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "title": "Rule starts at",
+                        "description": "Date at which the order group rule starts"
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
+                        "readOnly": true,
                         "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "title": "Rule ends at",
+                        "description": "Date at which the order group rule ends"
+                    },
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "Description of the order group"
                     }
                 },
                 "required": [
                     "can_edit",
                     "created_on",
+                    "description",
+                    "end",
                     "id",
+                    "is_active",
                     "is_enabled",
-                    "nb_available_seats"
+                    "nb_available_seats",
+                    "nb_seats",
+                    "start"
                 ]
             },
             "AdminOrderGroupCreate": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group.",
+                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group. You can also add a discount.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -6490,16 +7298,19 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
+                    },
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -6512,7 +7323,7 @@
             },
             "AdminOrderGroupCreateRequest": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group.",
+                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group. You can also add a discount.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -6529,16 +7340,19 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
+                    },
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscountRequest"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             },
@@ -6546,6 +7360,83 @@
                 "type": "object",
                 "description": "Admin Serializer for OrderGroup model",
                 "properties": {
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscountRequest"
+                    }
+                }
+            },
+            "AdminOrderGroupUpdate": {
+                "type": "object",
+                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true,
+                        "title": "Number of seats",
+                        "description": "The maximum number of orders that can be validated for a given order group"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "nb_available_seats": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Return the number of available seats for this order group.",
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "can_edit": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_enabled": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscount"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "can_edit",
+                    "created_on",
+                    "id",
+                    "is_enabled",
+                    "nb_available_seats"
+                ]
+            },
+            "AdminOrderGroupUpdateRequest": {
+                "type": "object",
+                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
+                "properties": {
                     "nb_seats": {
                         "type": "integer",
                         "maximum": 32767,
@@ -6561,16 +7452,19 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
+                    },
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscountRequest"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             },
@@ -8010,10 +8904,11 @@
                     "no_payment",
                     "completed",
                     "refunding",
-                    "refunded"
+                    "refunded",
+                    "to_own"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own"
             },
             "OrganizationAccessRoleChoiceEnum": {
                 "enum": [
@@ -8023,6 +8918,37 @@
                 ],
                 "type": "string",
                 "description": "* `owner` - owner\n* `administrator` - administrator\n* `member` - member"
+            },
+            "PaginatedAdminBatchOrderList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminBatchOrder"
+                        }
+                    }
+                }
             },
             "PaginatedAdminCertificateDefinitionList": {
                 "type": "object",
@@ -8175,6 +9101,37 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/AdminCourseRun"
+                        }
+                    }
+                }
+            },
+            "PaginatedAdminDiscountList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminDiscount"
                         }
                     }
                 }
@@ -8588,6 +9545,27 @@
                     }
                 }
             },
+            "PatchedAdminDiscountRequest": {
+                "type": "object",
+                "description": "Admin Serializer for Discount model",
+                "properties": {
+                    "amount": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true,
+                        "description": "Discount amount"
+                    },
+                    "rate": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 1.0,
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "Discount rate"
+                    }
+                }
+            },
             "PatchedAdminEnrollmentRequest": {
                 "type": "object",
                 "description": "Serializer for Enrollment model",
@@ -8598,9 +9576,9 @@
                     }
                 }
             },
-            "PatchedAdminOrderGroupRequest": {
+            "PatchedAdminOrderGroupUpdateRequest": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model",
+                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -8617,16 +9595,19 @@
                     "start": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group start datetime",
-                        "description": "Date at which the order group activation begins"
+                        "nullable": true
                     },
                     "end": {
                         "type": "string",
                         "format": "date-time",
-                        "nullable": true,
-                        "title": "Order group end datetime",
-                        "description": "Date at which the order group activation ends"
+                        "nullable": true
+                    },
+                    "discount": {
+                        "$ref": "#/components/schemas/AdminDiscountRequest"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             },

@@ -6,6 +6,7 @@ from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 
@@ -28,12 +29,19 @@ from joanie.core.authentication import SessionAuthenticationWithAuthenticateHead
 from joanie.core.exceptions import CertificateGenerationError
 from joanie.core.tasks import (
     generate_certificates_task,
+    generate_orders_and_send_vouchers_task,
     update_organization_signatories_contracts_task,
+)
+from joanie.core.utils.batch_order import (
+    get_active_order_group,
+    send_mail_invitation_link,
+    validate_success_payment,
 )
 from joanie.core.utils.course_product_relation import (
     get_generated_certificates,
     get_orders,
 )
+from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import (
     get_transaction_references_to_refund,
     has_installment_paid,
@@ -595,9 +603,13 @@ class NestedCourseProductRelationOrderGroupViewSet(
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_classes = {
         "create": serializers.AdminOrderGroupCreateSerializer,
+        "update": serializers.AdminOrderGroupUpdateSerializer,
+        "partial_update": serializers.AdminOrderGroupUpdateSerializer,
     }
     default_serializer_class = serializers.AdminOrderGroupSerializer
-    queryset = models.OrderGroup.objects.all().select_related("course_product_relation")
+    queryset = models.OrderGroup.objects.all().select_related(
+        "course_product_relation", "discount"
+    )
     ordering = "created_on"
     lookup_fields = ["course_product_relation", "pk"]
     lookup_url_kwargs = ["course_product_relation_id", "pk"]
@@ -646,7 +658,6 @@ class OrderViewSet(
         "contract__definition",
         "certificate",
         "certificate__certificate_definition",
-        "order_group",
         "credit_card",
     )
 
@@ -739,6 +750,132 @@ class OrderViewSet(
         )
 
 
+class BatchOrderViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Admin Batch Order Viewset
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminBatchOrderSerializer
+    queryset = models.BatchOrder.objects.all().select_related(
+        "contract",
+        "relation",
+        "organization",
+    )
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+
+    def perform_create(self, serializer):
+        """Override `perform_create` to start the flow of the batch order object"""
+        instance = serializer.save()
+        instance.init_flow()
+
+    def destroy(self, request, *args, **kwargs):
+        """Cancel a batch order."""
+        batch_order = self.get_object()
+
+        is_completed = batch_order.state == enums.BATCH_ORDER_STATE_COMPLETED
+
+        batch_order.flow.cancel()
+
+        if is_completed:
+            # Delete orders and linked vouchers
+            batch_order.cancel_orders()
+
+        return Response(status=HTTPStatus.NO_CONTENT)
+
+    @action(methods=["POST"], detail=True, url_path="submit-for-signature")
+    def submit_for_signature(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Sends an email to the batch order owner with the invitation signature link to sign
+        the contract.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.state not in [
+            enums.BATCH_ORDER_STATE_ASSIGNED,
+            enums.BATCH_ORDER_STATE_TO_SIGN,
+        ]:
+            raise ValidationError(
+                "Batch order state should be `assigned` or `to_sign`."
+            )
+
+        if batch_order.order_groups.exists():
+            # Verify if the actual order group still accepts the number of seats requested
+            if batch_order.order_groups.first().available_seats < batch_order.nb_seats:
+                initial_order_group = batch_order.order_groups.first()
+                batch_order.order_groups.remove(initial_order_group)
+
+                try:
+                    order_group = get_active_order_group(
+                        relation_id=batch_order.relation.id,
+                        nb_seats=batch_order.nb_seats,
+                    )
+                except ValueError as exception:
+                    raise ValidationError(
+                        "Cannot submit to signature, active order groups has no seats left"
+                    ) from exception
+
+                batch_order.order_groups.add(order_group)
+
+        invitation_link = batch_order.submit_for_signature(batch_order.owner)
+
+        send_mail_invitation_link(batch_order, invitation_link)
+
+        return Response(status=HTTPStatus.ACCEPTED)
+
+    @action(methods=["POST"], detail=True, url_path="validate-payment")
+    def validate_payment(self, request, pk=None):  # pylint:disable=unused-argument
+        """Validates the payment for the batch order if its state is in `signing` or `pending`"""
+        batch_order = self.get_object()
+
+        if batch_order.state not in [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+        ]:
+            raise ValidationError(
+                "Your batch order is not in a state to validate the payment"
+            )
+
+        if batch_order.state == enums.BATCH_ORDER_STATE_SIGNING:
+            # Normally it transitions to `pending` when submitting to payment through
+            # the backend payment
+            batch_order.flow.update()
+
+        validate_success_payment(batch_order)
+
+        return Response(status=HTTPStatus.NO_CONTENT)
+
+    @action(methods=["POST"], detail=True, url_path="generate-orders")
+    def generate_orders(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Generates the orders of the batch order when the state is completed exclusively.
+        Once all orders are generated, the task will send the email with the voucher codes
+        to the batch order's owner.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+            raise ValidationError(
+                "Cannot generate orders, batch order is not in `completed` state"
+            )
+
+        if batch_order.orders.exists():
+            raise ValidationError(
+                "Orders were already generated. Cannot generate twice."
+            )
+
+        generate_orders_and_send_vouchers_task.delay(batch_order_id=str(batch_order.id))
+
+        return Response(status=HTTPStatus.ACCEPTED)
+
+
 class OrganizationAddressViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -782,3 +919,19 @@ class OrganizationAddressViewSet(
             ) from error
 
         return super().destroy(request, *args, **kwargs)
+
+
+class DiscountViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Admin Discount Viewset"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminDiscountSerializer
+    queryset = models.Discount.objects.all()
+    filterset_class = filters.DiscountAdminFilterSet

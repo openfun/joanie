@@ -1,5 +1,5 @@
-# ruff: noqa: SLF001
-# pylint: disable=too-many-lines
+# ruff: noqa: SLF001, PLR0912
+# pylint: disable=too-many-lines, too-many-branches
 """Client serializers for Joanie Core app."""
 
 from decimal import Decimal as D
@@ -9,6 +9,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 import markdown
+from django_countries.serializer_fields import CountryField
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import exceptions, serializers
 from rest_framework.generics import get_object_or_404
@@ -16,6 +17,7 @@ from rest_framework.generics import get_object_or_404
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
+from joanie.core.utils.batch_order import get_active_order_group
 from joanie.payment.models import CreditCard
 
 
@@ -756,28 +758,6 @@ class OrderLightSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class OrderGroupSerializer(serializers.ModelSerializer):
-    """Serializer for order groups in a product."""
-
-    nb_available_seats = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = models.OrderGroup
-        fields = [
-            "id",
-            "nb_seats",
-            "nb_available_seats",
-            "is_enabled",
-            "start",
-            "end",
-        ]
-        read_only_fields = fields
-
-    def get_nb_available_seats(self, order_group) -> int | None:
-        """Return the number of available seats for this order group."""
-        return order_group.available_seats
-
-
 class DefinitionResourcesProductSerializer(serializers.ModelSerializer):
     """
     A serializer for product model which only bind the related
@@ -905,7 +885,6 @@ class CourseProductRelationLightSerializer(CachedModelSerializer):
             "course",
             "created_on",
             "id",
-            "order_groups",
             "organizations",
             "product",
             "is_withdrawable",
@@ -918,13 +897,19 @@ class CourseProductRelationSerializer(CourseProductRelationLightSerializer):
     Serialize a course product relation.
     """
 
-    order_groups = OrderGroupSerializer(many=True, read_only=True)
     is_withdrawable = serializers.BooleanField(read_only=True)
 
     class Meta(CourseProductRelationLightSerializer.Meta):
         fields = CourseProductRelationLightSerializer.Meta.fields + [
-            "order_groups",
             "is_withdrawable",
+            "discounted_price",
+            "discount_rate",
+            "discount_amount",
+            "discount_start",
+            "discount_end",
+            "description",
+            "nb_available_seats",
+            "nb_seats",
         ]
         read_only_fields = fields
 
@@ -940,7 +925,6 @@ class ProductRelationSerializer(CachedModelSerializer):
         model = models.CourseProductRelation
         fields = [
             "id",
-            "order_groups",
             "product",
             "is_withdrawable",
         ]
@@ -1157,11 +1141,12 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Product.objects.all(), slug_field="id", source="product"
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
-    order_group_id = serializers.SlugRelatedField(
-        queryset=models.OrderGroup.objects.all(),
+    order_group_ids = serializers.SlugRelatedField(
+        source="order_groups",
+        many=True,
         slug_field="id",
         required=False,
-        source="order_group",
+        read_only=True,
     )
     target_courses = OrderTargetCourseRelationSerializer(
         read_only=True, many=True, source="course_relations"
@@ -1181,6 +1166,13 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     has_waived_withdrawal_right = serializers.BooleanField()
+    voucher_code = serializers.SlugRelatedField(
+        queryset=models.Voucher.objects.all(),
+        slug_field="code",
+        source="voucher",
+        required=False,
+        write_only=True,
+    )
 
     class Meta:
         model = models.Order
@@ -1193,7 +1185,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollment",
             "id",
             "main_invoice_reference",
-            "order_group_id",
+            "order_group_ids",
             "organization",
             "owner",
             "product_id",
@@ -1204,6 +1196,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_currency",
             "payment_schedule",
             "has_waived_withdrawal_right",
+            "voucher_code",
         ]
         read_only_fields = fields
 
@@ -1231,18 +1224,57 @@ class OrderSerializer(serializers.ModelSerializer):
             organization = get_object_or_404(models.Organization, id=organization_id)
             validated_data["organization"] = organization
 
+        try:
+            course_id = validated_data["course"].id
+        except KeyError:
+            course_id = validated_data["enrollment"].course_run.course_id
+
+        product_id = validated_data["product"].id
+
+        filters = {"product": product_id, "course": course_id}
+        if organization_id:
+            filters.update({"organizations": organization_id})
+        course_product_relation = models.CourseProductRelation.objects.get(**filters)
+
+        order_groups = models.OrderGroup.objects.find_actives(
+            course_product_relation_id=course_product_relation.id
+        )
+        seats_limitation = None
+        for order_group in order_groups:
+            if order_group.nb_seats is not None:
+                if order_group.available_seats == 0:
+                    seats_limitation = order_group
+                    continue
+
+                seats_limitation = None
+
+            if order_group.is_enabled:
+                if "order_groups" not in validated_data:
+                    validated_data["order_groups"] = []
+                validated_data["order_groups"].append(order_group)
+
+        if seats_limitation:
+            raise serializers.ValidationError(
+                {
+                    "order_group": [
+                        "Maximum number of orders reached for "
+                        f"product {validated_data['product'].title:s}"
+                    ]
+                }
+            )
+
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """
-        Make the "course", "organization", "order_group", "product"
+        Make the "course", "organization", "order_group_ids", "product"
         and "has_waived_withdrawal_right" fields read_only only on update.
         """
         validated_data.pop("course", None)
         validated_data.pop("enrollment", None)
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
-        validated_data.pop("order_group", None)
+        validated_data.pop("order_group_ids", None)
         validated_data.pop("has_waived_withdrawal_right", None)
         return super().update(instance, validated_data)
 
@@ -1251,3 +1283,123 @@ class OrderSerializer(serializers.ModelSerializer):
         Return the currency used
         """
         return settings.DEFAULT_CURRENCY
+
+
+class BatchOrderSerializer(serializers.ModelSerializer):
+    """BatchOrder client serializer"""
+
+    id = serializers.CharField(read_only=True)
+    owner = serializers.CharField(
+        source="owner.username", read_only=True, required=False
+    )
+    total = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        required=False,
+    )
+    currency = serializers.SerializerMethodField(read_only=True)
+    relation_id = serializers.SlugRelatedField(
+        queryset=models.CourseProductRelation.objects.all(),
+        slug_field="id",
+        source="relation",
+        required=False,
+        write_only=False,
+    )
+    organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
+    main_invoice_reference = serializers.SlugRelatedField(
+        read_only=True, slug_field="reference", source="main_invoice"
+    )
+    voucher = serializers.SlugRelatedField(
+        queryset=models.Voucher.objects.all(),
+        slug_field="code",
+        required=False,
+        write_only=True,
+    )
+    country = CountryField(required=False)
+    nb_seats = serializers.IntegerField(
+        min_value=1,
+        help_text="The number of seats to reserve",
+    )
+    trainees = serializers.JSONField(default=list)
+    order_group_ids = serializers.SlugRelatedField(
+        source="order_groups",
+        many=True,
+        slug_field="id",
+        required=False,
+        read_only=True,
+    )
+
+    class Meta:
+        model = models.BatchOrder
+        fields = [
+            "id",
+            "owner",
+            "total",
+            "currency",
+            "relation_id",
+            "organization",
+            "main_invoice_reference",
+            "contract_id",
+            "voucher",
+            "company_name",
+            "identification_number",
+            "address",
+            "postcode",
+            "city",
+            "country",
+            "nb_seats",
+            "trainees",
+            "order_group_ids",
+        ]
+        read_only_fields = [
+            "id",
+            "owner",
+            "total",
+            "currency",
+            "organization",
+            "main_invoice_reference",
+            "contract_id",
+            "order_group_ids",
+        ]
+
+    def get_currency(self, *args, **kwargs) -> str:
+        """
+        Return the currency used
+        """
+        return settings.DEFAULT_CURRENCY
+
+    def create(self, validated_data):
+        """
+        Verify that the number of available seats in order groups of the course product relation
+        is sufficient to meet the required seats specified in the batch order.
+        """
+        organization_id = self.initial_data.get("organization_id")
+        if organization_id:
+            organization = get_object_or_404(models.Organization, id=organization_id)
+            validated_data["organization"] = organization
+
+        course_product_relation_id = self.initial_data.get("relation_id")
+        nb_seats = self.initial_data.get("nb_seats")
+        validated_data.setdefault("order_groups", [])
+
+        try:
+            order_group = get_active_order_group(course_product_relation_id, nb_seats)
+        except ValueError as exception:
+            relation = models.CourseProductRelation.objects.get(
+                id=course_product_relation_id
+            )
+            raise serializers.ValidationError(
+                {
+                    "order_group": [
+                        "Maximum number of orders reached for "
+                        f"product {relation.product.title:s}"
+                    ]
+                }
+            ) from exception
+        if order_group:
+            validated_data["order_groups"].append(order_group)
+
+        return super().create(validated_data)

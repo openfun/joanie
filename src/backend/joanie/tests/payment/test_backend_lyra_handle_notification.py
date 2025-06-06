@@ -1,5 +1,5 @@
 # pylint: disable=line-too-long,unexpected-keyword-arg,no-value-for-parameter,too-many-public-methods,too-many-lines
-"""Test suite of the Lyra backend"""
+"""Test suite of Lyra Backend Handle Notification"""
 
 import json
 from decimal import Decimal as D
@@ -12,8 +12,9 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils.http import urlencode
 
-from joanie.core.enums import ORDER_STATE_PENDING
+from joanie.core.enums import BATCH_ORDER_STATE_PENDING, ORDER_STATE_PENDING
 from joanie.core.factories import (
+    BatchOrderFactory,
     OrderFactory,
     OrderGeneratorFactory,
     ProductFactory,
@@ -40,7 +41,7 @@ from joanie.tests.payment.base_payment import BasePaymentTestCase
     },
 )
 class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
-    """Test case of the Lyra backend"""
+    """Test case of Lyra Backend Handle Notification"""
 
     def setUp(self):
         """Define once configuration required to instantiate a lyra backend."""
@@ -758,3 +759,85 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             mail.outbox[0].subject,
         )
         self.assertIn("Product 1", email_content)
+
+    @patch.object(BasePaymentBackend, "_do_on_batch_order_payment_failure")
+    def test_payment_backend_lyra_handle_notification_payment_failure_for_batch_order(
+        self, mock_do_on_batch_order_payment_failure
+    ):
+        """
+        When backend receives a payment notification which failed for a batch order, the generic
+        method `_do_on_payment_failure_for_batch_order` should be called.
+        """
+        batch_order = BatchOrderFactory(
+            state=BATCH_ORDER_STATE_PENDING,
+            id="758c2570-a7af-4335-b091-340d0cc6e694",
+            owner__email="john.doe@acme.org",
+            relation__product__price=D("123.45"),
+        )
+
+        with self.open("lyra/requests/payment_refused.json") as file:
+            json_request = json.loads(file.read())
+
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+
+        mock_do_on_batch_order_payment_failure.assert_called_once_with(
+            batch_order=batch_order,
+        )
+
+    @patch.object(BasePaymentBackend, "_do_on_batch_order_payment_success")
+    def test_payment_backend_lyra_handle_notification_for_batch_order(
+        self, mock_do_on_batch_order_payment_success
+    ):
+        """
+        When we receive a notification from the successful payment of a batch order,
+        the generic method `_do_on_batch_order_payment_success` should be called.
+        """
+        batch_order = BatchOrderFactory(
+            id="514070fe-c12c-48b8-97cf-5262708673a3",
+            owner__email="john.doe@acme.org",
+            state=BATCH_ORDER_STATE_PENDING,
+            relation__product__price=D("123.45"),
+            nb_seats=1,
+        )
+
+        with self.open("lyra/requests/payment_accepted_no_store_card.json") as file:
+            json_request = json.loads(file.read())
+
+        with self.open(
+            "lyra/requests/payment_accepted_no_store_card_answer.json"
+        ) as file:
+            json_answer = json.loads(file.read())
+
+        response = self.client.post(
+            reverse("payment_webhook"),
+            data=urlencode(json_request),
+            format="multipart",
+            content_type="application/x-www-form-urlencoded",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+
+        transaction_id = json_answer["transactions"][0]["uuid"]
+        billing_details = json_answer["customer"]["billingDetails"]
+        mock_do_on_batch_order_payment_success.assert_called_once_with(
+            batch_order=batch_order,
+            payment={
+                "id": transaction_id,
+                "amount": D("123.45"),
+                "billing_address": {
+                    "address": billing_details["address"],
+                    "city": billing_details["city"],
+                    "country": billing_details["country"],
+                    "first_name": billing_details["firstName"],
+                    "last_name": billing_details["lastName"],
+                    "postcode": billing_details["zipCode"],
+                },
+            },
+        )

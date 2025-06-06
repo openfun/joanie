@@ -93,8 +93,9 @@ class Contract(BaseModel):
         verbose_name=_("order"),
         on_delete=models.PROTECT,
         editable=False,
+        null=True,
+        blank=True,
     )
-
     # Set on contract generation
     definition_checksum = models.CharField(
         max_length=255, editable=False, blank=True, null=True
@@ -222,8 +223,13 @@ class Contract(BaseModel):
 
     # pylint: disable=no-member
     def __str__(self):
-        course = self.order.course if self.order.course else self.order.enrollment
-        return f"{self.order.owner}'s contract for course {course}"
+        if self.order:
+            course = self.order.course if self.order.course else self.order.enrollment
+            owner = self.order.owner
+        else:
+            course = self.batch_orders.first().relation.course
+            owner = self.batch_orders.first().owner
+        return f"{owner}'s contract for course {course}"
 
     def save(self, *args, **kwargs):
         """Enforce validation each time an instance is saved."""
@@ -239,7 +245,8 @@ class Contract(BaseModel):
         self.definition_checksum = checksum
         self.signature_backend_reference = reference
         self.save()
-        self.order.flow.update()
+        if self.order:
+            self.order.flow.update()
 
     def reset_submission_for_signature(self):
         """
@@ -251,7 +258,8 @@ class Contract(BaseModel):
         self.definition_checksum = None
         self.signature_backend_reference = None
         self.save()
-        self.order.flow.update()
+        if self.order:
+            self.order.flow.update()
 
     def is_eligible_for_signing(self):
         """

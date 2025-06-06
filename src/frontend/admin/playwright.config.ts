@@ -43,6 +43,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         locale: "en-us",
+        timezoneId: "Etc/UTC",
       },
     },
   ],

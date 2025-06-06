@@ -356,6 +356,8 @@ jobs:
     parallelism: 5
     resource_class: large
     working_directory: ~/joanie/src/frontend/admin
+    environment:
+      TZ: "Europe/Paris"
     steps:
       - checkout:
           path: ~/joanie
@@ -404,6 +406,8 @@ jobs:
           command: PLAYWRIGHT_JUNIT_OUTPUT_FILE=./reports/playwright/results.xml yarn test:e2e --shard=$(($CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL} --reporter=junit,list
       - store_test_results:
           path: ./reports/playwright/
+      - store_artifacts:
+          path: ./test-results
 
   test-playwright-ct-front-admin:
     docker:
@@ -428,7 +432,7 @@ jobs:
           command: yarn playwright install --with-deps chromium
       - run:
           name: Run test command
-          command: PLAYWRIGHT_JUNIT_OUTPUT_FILE=./reports/playwright-ct/results.xml yarn test-ct --shard=$(($CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL} --reporter=junit,list
+          command: PLAYWRIGHT_JUNIT_OUTPUT_FILE=./reports/playwright-ct/results.xml yarn test:ct --shard=$(($CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL} --reporter=junit,list
       - store_test_results:
           path: ./reports/playwright-ct/
 

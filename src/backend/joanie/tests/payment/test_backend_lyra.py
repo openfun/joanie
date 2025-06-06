@@ -12,6 +12,7 @@ import responses
 from requests import HTTPError, RequestException
 
 from joanie.core.enums import (
+    BATCH_ORDER_STATE_PENDING,
     ORDER_STATE_COMPLETED,
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
@@ -23,6 +24,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_REFUSED,
 )
 from joanie.core.factories import (
+    BatchOrderFactory,
     OrderFactory,
     OrderGeneratorFactory,
     ProductFactory,
@@ -1909,3 +1911,78 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
 
         # No mail is sent
         self.assertEqual(mail.outbox, [])
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_payment_backend_lyra_create_payment_for_batch_order(self):
+        """
+        When backend creates a payment, it should return a form token.
+        """
+        backend = LyraBackend(self.configuration)
+        batch_order = BatchOrderFactory(
+            state=BATCH_ORDER_STATE_PENDING,
+            relation__product__price=D("120.00"),
+            nb_seats=2,
+        )
+        billing_address = batch_order.create_billing_address()
+
+        with self.open("lyra/responses/create_payment.json") as file:
+            json_response = json.loads(file.read())
+
+        responses.add(
+            responses.POST,
+            "https://api.lyra.com/api-payment/V4/Charge/CreatePayment",
+            headers={
+                "Content-Type": "application/json",
+            },
+            match=[
+                responses.matchers.header_matcher(
+                    {
+                        "content-type": "application/json",
+                        "authorization": "Basic Njk4NzYzNTc6dGVzdHBhc3N3b3JkX0RFTU9QUklWQVRFS0VZMjNHNDQ3NXpYWlEyVUE1eDdN",
+                    }
+                ),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 24000,
+                        "currency": "EUR",
+                        "customer": {
+                            "email": batch_order.owner.email,
+                            "reference": str(batch_order.owner.id),
+                            "billingDetails": {
+                                "firstName": billing_address.first_name,
+                                "lastName": billing_address.last_name,
+                                "address": billing_address.address,
+                                "zipCode": billing_address.postcode,
+                                "city": billing_address.city,
+                                "country": billing_address.country.code,
+                                "language": batch_order.owner.language,
+                            },
+                            "shippingDetails": {
+                                "shippingMethod": "DIGITAL_GOOD",
+                            },
+                        },
+                        "orderId": str(batch_order.id),
+                        "formAction": "REGISTER_PAY",
+                        "ipnTargetUrl": "https://example.com/api/v1.0/payments/notifications",
+                    }
+                ),
+            ],
+            status=200,
+            json=json_response,
+        )
+
+        response = backend.create_payment(
+            order=batch_order, installment=None, billing_address=billing_address
+        )
+
+        self.assertEqual(
+            response,
+            {
+                "provider_name": "lyra",
+                "form_token": json_response.get("answer").get("formToken"),
+                "configuration": {
+                    "public_key": self.configuration.get("public_key"),
+                    "base_url": self.configuration.get("api_base_url"),
+                },
+            },
+        )

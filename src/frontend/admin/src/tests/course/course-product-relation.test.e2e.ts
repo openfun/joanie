@@ -17,7 +17,16 @@ import {
   DTOCourseProductRelation,
 } from "@/services/api/models/Relations";
 import { OrderGroup } from "@/services/api/models/OrderGroup";
-import { expectHaveClasses, expectHaveNotClasses } from "@/tests/utils";
+import {
+  expectHaveClasses,
+  expectHaveNotClasses,
+  formatShortDateTest,
+} from "@/tests/utils";
+import {
+  Discount,
+  DTODiscount,
+  getDiscountLabel,
+} from "@/services/api/models/Discount";
 
 const coursesApiUrl = "http://localhost:8071/api/v1.0/admin/courses/";
 test.describe("Course product relation", () => {
@@ -59,6 +68,13 @@ test.describe("Course product relation", () => {
       optionsResult: ORGANIZATION_OPTIONS_REQUEST_RESULT,
     });
 
+    await mockPlaywrightCrud<Discount, DTODiscount>({
+      data: store.discounts,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/discounts/",
+      page,
+      createCallback: store.createDiscount,
+    });
+
     await mockPlaywrightCrud<Course, DTOCourse>({
       data: store.list,
       routeUrl: coursesApiUrl,
@@ -98,11 +114,18 @@ test.describe("Course product relation", () => {
         const orderGroups = relation.order_groups ?? [];
         await Promise.all(
           orderGroups.map(async (orderGroup, index) => {
+            const usedSeats =
+              (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+            const start = await formatShortDateTest(page, orderGroup.start!);
+            const end = await formatShortDateTest(page, orderGroup.end!);
             await expect(
               page.getByText(
-                `Order group ${index + 1}${
-                  orderGroup.nb_seats - orderGroup.nb_available_seats
-                }/${orderGroup.nb_seats} seats`,
+                `Order group ${index + 1}` +
+                  orderGroup.description +
+                  `${usedSeats}/${orderGroup.nb_seats} seats` +
+                  `From: ${start}` +
+                  `To: ${end}` +
+                  `Discount: ${getDiscountLabel(orderGroup.discount!)}`,
               ),
             ).toHaveCount(1);
           }),
@@ -195,7 +218,12 @@ test.describe("Course product relation", () => {
   });
 
   test("Add order group on course product relation", async ({ page }) => {
-    await store.mockOrderGroup(page, store.productRelations, store.orderGroups);
+    await store.mockOrderGroup(
+      page,
+      store.productRelations,
+      store.orderGroups,
+      store.discounts,
+    );
     const course = store.list[0];
     await page.goto(PATH_ADMIN.courses.list);
     course.product_relations = course.product_relations ?? [];
@@ -213,14 +241,32 @@ test.describe("Course product relation", () => {
     await page.getByRole("heading", { name: "Add an order group" }).click();
     await page.getByLabel("Number of seats").click();
     await page.getByLabel("Number of seats").fill("1919");
+    await page
+      .getByRole("textbox", { name: "Start date" })
+      .fill("01/31/2023 10:00 AM");
+    await page
+      .getByRole("textbox", { name: "End date" })
+      .fill("02/15/2023 10:00 AM");
+    await page.getByRole("combobox", { name: "Discount" }).click();
+    await page
+      .getByRole("option", { name: getDiscountLabel(store.discounts[0]) })
+      .click();
+
     await page.getByLabel("Activate this order group").check();
     await page.getByTestId("submit-button-order-group-form").click();
     const orderGroupLength = course.product_relations[0].order_groups.length;
     const addedOrderGroup =
       course.product_relations[0].order_groups[orderGroupLength - 1];
     await expect(
-      page.getByText(`Order group ${orderGroupLength}0/1919 seats`),
+      page.getByText(`Order group ${orderGroupLength}`),
     ).toBeVisible();
+    await expect(page.getByText(`0/1919 seats`)).toBeVisible();
+    await expect(
+      page.getByText(`Discount: ${getDiscountLabel(store.discounts[0])}`),
+    ).toBeVisible();
+    await expect(page.getByText("From: 1/31/23, 10:00 AM")).toBeVisible();
+    await expect(page.getByText("To: 2/15/23, 10:00 AM")).toBeVisible();
+
     await expect(
       page.getByTestId(`is-active-switch-order-group-${addedOrderGroup.id}`),
     ).toBeVisible();
@@ -233,7 +279,12 @@ test.describe("Course product relation", () => {
     orderGroup.can_edit = true;
     orderGroup.is_active = true;
     await store.mockCourseRunsFromCourse(page, []);
-    await store.mockOrderGroup(page, store.productRelations, store.orderGroups);
+    await store.mockOrderGroup(
+      page,
+      store.productRelations,
+      store.orderGroups,
+      store.discounts,
+    );
     await page.goto(PATH_ADMIN.courses.list);
     await page.getByRole("link", { name: course.title }).click();
     await page.getByRole("tab", { name: "Products" }).click();
@@ -254,9 +305,15 @@ test.describe("Course product relation", () => {
     const course = store.list[0];
     let orderGroup = course.product_relations?.[0]
       .order_groups[0] as OrderGroup;
+
     orderGroup.can_edit = true;
     orderGroup.is_active = true;
-    await store.mockOrderGroup(page, store.productRelations, store.orderGroups);
+    await store.mockOrderGroup(
+      page,
+      store.productRelations,
+      store.orderGroups,
+      store.discounts,
+    );
     await page.goto(PATH_ADMIN.courses.list);
     await page.getByRole("link", { name: course.title }).click();
     await page.getByRole("tab", { name: "Products" }).click();
@@ -277,18 +334,29 @@ test.describe("Course product relation", () => {
     await page.getByTestId("submit-button-order-group-form").click();
     orderGroup = course.product_relations?.[0].order_groups[0] as OrderGroup;
 
+    const usedSeats =
+      (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+    const start = await formatShortDateTest(page, orderGroup.start!);
+    const end = await formatShortDateTest(page, orderGroup.end!);
     await expect(
-      orderGroupRowLocator.getByText(
-        `Order group 1${
-          orderGroup.nb_seats - orderGroup.nb_available_seats
-        }/999999 seats`,
+      page.getByText(
+        "Order group 1" +
+          orderGroup.description +
+          `${usedSeats}/999999 seats` +
+          `From: ${start}` +
+          `To: ${end}`,
       ),
     ).toHaveCount(1);
   });
 
   test("Delete order group", async ({ page }) => {
     await store.mockCourseRunsFromCourse(page, []);
-    await store.mockOrderGroup(page, store.productRelations, store.orderGroups);
+    await store.mockOrderGroup(
+      page,
+      store.productRelations,
+      store.orderGroups,
+      store.discounts,
+    );
     const course = store.list[0];
     const orderGroup = course.product_relations?.[0]
       .order_groups[0] as OrderGroup;
@@ -300,10 +368,16 @@ test.describe("Course product relation", () => {
       page.getByRole("heading", { name: `Edit course: ${course.title}` }),
     ).toBeVisible();
 
+    const usedSeats =
+      (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+    const start = await formatShortDateTest(page, orderGroup.start!);
+    const end = await formatShortDateTest(page, orderGroup.end!);
     const orderGroupLocator = page.getByText(
-      `Order group 1${orderGroup.nb_seats - orderGroup.nb_available_seats}/${
-        orderGroup.nb_seats
-      } seats`,
+      "Order group 1" +
+        orderGroup.description +
+        `${usedSeats}/${orderGroup.nb_seats} seats` +
+        `From: ${start}` +
+        `To: ${end}`,
     );
 
     await expect(orderGroupLocator).toHaveCount(1);
@@ -318,5 +392,40 @@ test.describe("Course product relation", () => {
     ).toBeVisible();
     await page.getByRole("button", { name: "Validate" }).click();
     await expect(orderGroupLocator).toHaveCount(0);
+  });
+
+  test("Create discount", async ({ page }) => {
+    await store.mockOrderGroup(
+      page,
+      store.productRelations,
+      store.orderGroups,
+      store.discounts,
+    );
+    const course = store.list[0];
+    await page.goto(PATH_ADMIN.courses.list);
+    course.product_relations = course.product_relations ?? [];
+    await store.mockCourseRunsFromCourse(page, []);
+    await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
+    await Promise.all(
+      course.product_relations.map(async (relation) => {
+        await expect(
+          page.getByRole("heading", { name: relation.product.title }),
+        ).toBeVisible();
+      }),
+    );
+    await page.getByRole("button", { name: "Add order group" }).first().click();
+    await page.getByRole("heading", { name: "Add an order group" }).click();
+    await page.getByTestId("search-add-button").click();
+    await expect(
+      page.getByRole("heading", { name: "Add a discount" }),
+    ).toBeVisible();
+    await page.getByRole("spinbutton", { name: "Rate (%)" }).fill("10");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Add an order group" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.getByText("Order group 3Discount: 10%")).toBeVisible();
   });
 });

@@ -7,6 +7,8 @@ from django.core.management import call_command
 
 from joanie.celery_app import app
 from joanie.core import helpers
+from joanie.core.models import BatchOrder
+from joanie.core.utils.batch_order import send_mail_vouchers
 from joanie.core.utils.contract import update_signatories_for_contracts
 
 from .payment_schedule import *
@@ -47,3 +49,21 @@ def update_organization_signatories_contracts_task(organization_id: str):
     for the given organization.
     """
     update_signatories_for_contracts(organization_id=organization_id)
+
+
+@app.task
+def generate_orders_and_send_vouchers_task(batch_order_id: str):
+    """
+    Generate orders for the batch order and send by email the voucher codes to the
+    buyer when they are all generated.
+    """
+    batch_order = BatchOrder.objects.get(pk=batch_order_id)
+    logger.info("Task generating orders for batch order %s.", batch_order_id)
+
+    batch_order.generate_orders()
+    send_mail_vouchers(batch_order)
+
+    logger.info(
+        "Orders generated and email with voucher codes sent for batch order %s",
+        batch_order_id,
+    )

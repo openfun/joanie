@@ -8,7 +8,27 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Added actions in admin api endpoints `BatchOrder` to validate payment,
+  generate orders and send voucher codes, and send invitation signature link
+- Add admin api endpoints for `BatchOrder` resources to create, read, list
+  and cancel
+- Claim an order generated from a batch order through voucher code
+- Add description to order group model
+- Add discounted price to course product relation serializer
+- Add description to order group form in the back office
+
+### Changed
+
 - Upgrade `djangorestframework` to 3.16.0
+- Use discounted_price in payment_schedule
+- Replace order groups from the client API with course product relations
+  properties
+
+### Fixed
+
+- Invalidate course product relation cache on order group update
 
 ## [2.18.1] - 2025-05-28
 
@@ -35,6 +55,7 @@ and this project adheres to
 
 ### Added
 
+- Add `Discount` relation to `OrderGroup` model
 - Add `start` and `end` datetime fields on order group model
 - Add Sarbacane newsletter client
 

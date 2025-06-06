@@ -94,6 +94,104 @@ class DebugMailSuccessPaymentViewTxt(DebugMailSuccessPayment):
     template_name = "mail/text/order_validated.txt"
 
 
+class DebugInvitationSignatureLink(TemplateView):
+    """
+    Debug View to check the layout of the invitation signature link email when it's triggered
+    from the django admin view of batch orders.
+    """
+
+    def get_context_data(self, **kwargs):
+        """Generates sample datas to have a valid debug email"""
+        batch_order = factories.BatchOrderFactory()
+        context = super().get_context_data(**kwargs)
+        context["title"] = "👨‍💻Development email preview"
+        context["email"] = batch_order.owner.email
+        context["fullname"] = batch_order.owner.name
+        context["product_title"] = batch_order.relation.product.title
+        context["invitation_link"] = "http://localhost:8071/"
+        context["site"] = {
+            "name": settings.JOANIE_CATALOG_NAME,
+            "url": settings.JOANIE_CATALOG_BASE_URL,
+        }
+
+        return context
+
+
+class DebugInvitationSignatureLinkHtml(DebugInvitationSignatureLink):
+    """Debug View to check the layout of the invitation signature link email in html format."""
+
+    template_name = "mail/html/invitation_to_sign_contract.html"
+
+
+class DebugInvitationSignatureLinkTxt(DebugInvitationSignatureLink):
+    """Debug View to check the layout of the invitation signature link email in text format."""
+
+    template_name = "mail/text/invitation_to_sign_contract.txt"
+
+
+class DebugMailSuccessPaymentViewBatchOrderHtml(TemplateView):
+    """
+    Debug View to check the layout of the success payment email for a batch order
+    in html format."
+    """
+
+    template_name = "mail/html/order_validated.html"
+
+    def get_context_data(self, **kwargs):
+        """
+        Generate a context when the payment is succesful for a batch order.
+        """
+        product = factories.ProductFactory(
+            title="Test product", price=Decimal("200.00")
+        )
+        product.set_current_language("fr-fr")
+        product.title = "Test produit"
+        product.save()
+        user = factories.UserFactory(
+            first_name="John", last_name="Doe", language="en-us"
+        )
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=3,
+            relation__product=product,
+            owner=user,
+        )
+        vouchers = factories.VoucherFactory.create_batch(
+            3,
+            discount=factories.DiscountFactory(rate=1),
+            multiple_use=False,
+            multiple_users=False,
+        )
+        current_language = translation.get_language()
+        with translation.override(current_language):
+            product_title = batch_order.relation.product.safe_translation_getter(
+                "title", language_code=current_language
+            )
+            return super().get_context_data(
+                email=batch_order.owner.email,
+                fullname=batch_order.owner.name,
+                product_title=product_title,
+                number_of_seats=batch_order.nb_seats,
+                vouchers=vouchers,
+                price=Money(batch_order.total),
+                site={
+                    "name": settings.JOANIE_CATALOG_NAME,
+                    "url": settings.JOANIE_CATALOG_BASE_URL,
+                },
+                **kwargs,
+            )
+
+
+class DebugMailSuccessPaymentViewBatchOrderTxt(
+    DebugMailSuccessPaymentViewBatchOrderHtml
+):
+    """
+    Debug View to check the layout of the success payment email for a batch order
+    in text format."
+    """
+
+    template_name = "mail/text/order_validated.html"
+
+
 class DebugMailInstallmentPayment(TemplateView):
     """Debug View to check the layout of the success installment payment by email"""
 

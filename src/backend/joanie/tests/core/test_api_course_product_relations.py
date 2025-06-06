@@ -117,7 +117,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                     "title": course.title,
                 },
-                "order_groups": [],
                 "is_withdrawable": True,
                 "product": {
                     "instructions": (
@@ -652,7 +651,6 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     "cover": "_this_field_is_mocked",
                     "title": course.title,
                 },
-                "order_groups": [],
                 "is_withdrawable": True,
                 "product": {
                     "instructions": "",
@@ -748,6 +746,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                     }
                     for organization in relation.organizations.all()
                 ],
+                "discounted_price": None,
+                "discount_rate": None,
+                "discount_amount": None,
+                "discount_start": None,
+                "discount_end": None,
+                "description": None,
+                "nb_available_seats": None,
+                "nb_seats": None,
             },
         )
 
@@ -759,25 +765,27 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         product = relation.product
         course = relation.course
         factories.UserCourseAccessFactory(user=user, course=course)
-        order_group1 = factories.OrderGroupFactory(
-            course_product_relation=relation, nb_seats=random.randint(10, 100)
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            nb_seats=random.randint(10, 100),
+            discount=factories.DiscountFactory(amount=10),
         )
-        order_group2 = factories.OrderGroupFactory(course_product_relation=relation)
+        factories.OrderGroupFactory(course_product_relation=relation)
         for _ in range(3):
             factories.OrderFactory(
                 course=course,
                 product=product,
-                order_group=order_group1,
+                order_groups=[order_group],
                 state=random.choice(enums.ORDER_STATES_BINDING),
             )
         for state, _label in enums.ORDER_STATE_CHOICES:
-            if state in enums.ORDER_STATES_BINDING:
+            if state in (*enums.ORDER_STATES_BINDING, enums.ORDER_STATE_TO_OWN):
                 continue
             factories.OrderFactory(
-                course=course, product=product, order_group=order_group1, state=state
+                course=course, product=product, order_groups=[order_group], state=state
             )
 
-        with self.assertNumQueries(53):
+        with self.assertNumQueries(54):
             self.client.get(
                 f"/api/v1.0/course-product-relations/{relation.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -794,27 +802,44 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(
-            content["order_groups"],
-            [
-                {
-                    "id": str(order_group1.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group1.nb_seats - 3,
-                    "nb_seats": order_group1.nb_seats,
-                    "start": None,
-                    "end": None,
-                },
-                {
-                    "id": str(order_group2.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group2.nb_seats,
-                    "nb_seats": order_group2.nb_seats,
-                    "start": None,
-                    "end": None,
-                },
-            ],
+        self.assertEqual(content["discount_amount"], order_group.discount.amount)
+        self.assertEqual(content["discount_rate"], order_group.discount.rate)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], order_group.description)
+        self.assertEqual(content["nb_available_seats"], order_group.available_seats)
+        self.assertEqual(content["nb_seats"], order_group.nb_seats)
+
+    def test_api_course_product_relation_read_detail_discount(self):
+        """The discounted price should be calculated as expected."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        factories.UserCourseAccessFactory(user=user, course=relation.course)
+        order_group = factories.OrderGroupFactory(
+            course_product_relation=relation,
+            nb_seats=random.randint(10, 100),
+            discount=factories.DiscountFactory(amount=10),
         )
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/{relation.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            content["discounted_price"],
+            float(relation.product.price) - order_group.discount.amount,
+        )
+        self.assertEqual(content["discount_amount"], order_group.discount.amount)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], order_group.nb_seats)
+        self.assertEqual(content["nb_seats"], order_group.nb_seats)
 
     def test_api_course_product_relation_read_detail_with_order_groups_cache(self):
         """Cache should be reset on order submit and cancel."""
@@ -827,7 +852,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             course_product_relation=relation, nb_seats=10
         )
         order = factories.OrderFactory(
-            product=product, course=relation.course, order_group=order_group
+            product=product, course=relation.course, order_groups=[order_group]
         )
 
         response = self.client.get(
@@ -837,19 +862,13 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(
-            content["order_groups"],
-            [
-                {
-                    "id": str(order_group.id),
-                    "is_enabled": True,
-                    "nb_available_seats": 10,
-                    "nb_seats": 10,
-                    "start": None,
-                    "end": None,
-                },
-            ],
-        )
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], 10)
+        self.assertEqual(content["nb_seats"], 10)
 
         # Starting order state flow should impact the number of seat availabilities in the
         # representation of the product
@@ -862,19 +881,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        self.assertEqual(
-            response.json()["order_groups"],
-            [
-                {
-                    "id": str(order_group.id),
-                    "is_enabled": True,
-                    "nb_available_seats": 9,
-                    "nb_seats": 10,
-                    "start": None,
-                    "end": None,
-                },
-            ],
-        )
+        content = response.json()
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], 9)
+        self.assertEqual(content["nb_seats"], 10)
 
         # Cancelling order should re-credit the number of seat availabilities in the
         # representation of the product
@@ -886,19 +900,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        self.assertEqual(
-            response.json()["order_groups"],
-            [
-                {
-                    "id": str(order_group.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group.available_seats,
-                    "nb_seats": 10,
-                    "start": None,
-                    "end": None,
-                },
-            ],
-        )
+        content = response.json()
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], 10)
+        self.assertEqual(content["nb_seats"], 10)
 
     def test_api_course_product_relation_return_only_is_active_order_groups(self):
         """
@@ -914,10 +923,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             course_product_relation=relation, is_active=True
         )
         factories.OrderGroupFactory(course_product_relation=relation, is_active=False)
-        order_group_2 = factories.OrderGroupFactory(
-            course_product_relation=relation, is_active=True
-        )
-        order_group_3 = factories.OrderGroupFactory(
+        factories.OrderGroupFactory(course_product_relation=relation, is_active=True)
+        factories.OrderGroupFactory(
             course_product_relation=relation,
             is_active=True,
             end="2025-02-16T16:35:49.326248Z",
@@ -930,35 +937,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        self.assertEqual(
-            response.json()["order_groups"],
-            [
-                {
-                    "id": str(order_group_1.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group_1.available_seats,
-                    "nb_seats": order_group_1.nb_seats,
-                    "start": None,
-                    "end": None,
-                },
-                {
-                    "id": str(order_group_2.id),
-                    "is_enabled": True,
-                    "nb_available_seats": order_group_2.available_seats,
-                    "nb_seats": order_group_2.nb_seats,
-                    "start": None,
-                    "end": None,
-                },
-                {
-                    "id": str(order_group_3.id),
-                    "is_enabled": False,
-                    "nb_available_seats": order_group_3.available_seats,
-                    "nb_seats": order_group_3.nb_seats,
-                    "start": None,
-                    "end": "2025-02-16T16:35:49.326248Z",
-                },
-            ],
-        )
+        content = response.json()
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], order_group_1.available_seats)
+        self.assertEqual(content["nb_seats"], order_group_1.nb_seats)
 
     def test_api_course_product_relation_create_anonymous(self):
         """
@@ -1511,7 +1497,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_course_product_relation_payment_schedule_with_product_id_anonymous(
+    def test_api_course_product_relation_payment_schedule_with_product_id(
         self,
     ):
         """
@@ -1583,11 +1569,94 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
     @override_settings(
         JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            5: (30, 70),
+            10: (30, 45, 45),
+            100: (20, 30, 30, 20),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_course_product_relation_payment_schedule_with_product_id_discount(
+        self,
+    ):
+        """
+        Anonymous users should be able to retrieve a payment schedule
+        with applied discount for a single course product relation
+        if a product id is provided and the product is a credential.
+        If there are archived course runs, they should be ignored.
+        """
+        mocked_now = datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+        # Create an archived course_run
+        factories.CourseRunFactory(
+            start=datetime(2023, 12, 15, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2023, 12, 31, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+
+        product = factories.ProductFactory(
+            price=3,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+        )
+        relation = factories.CourseProductRelationFactory(
+            course=course_run.course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        order_group = factories.OrderGroupFactory(
+            discount=factories.DiscountFactory(rate=0.50),
+        )
+        relation.order_groups.add(order_group)
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/"
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 0.45,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 1.05,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2024-03-01",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
             5: (100,),
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_course_product_relation_payment_schedule_with_certificate_product_id_anonymous(
+    def test_api_course_product_relation_payment_schedule_with_certificate_product_id(
         self,
     ):
         """
@@ -1632,6 +1701,71 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 {
                     "id": "00000000-0000-0000-0000-000000000001",
                     "amount": 3.00,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            5: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_course_product_relation_payment_schedule_with_certificate_product_id_discount(
+        self,
+    ):
+        """
+        Anonymous users should be able to retrieve a payment schedule
+        with applied discount for a single course product relation
+        if a product id is provided and the product is a certificate.
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2024, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        product = factories.ProductFactory(
+            price=3,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+        relation = factories.CourseProductRelationFactory(
+            course=course_run.course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        order_group = factories.OrderGroupFactory(
+            discount=factories.DiscountFactory(rate=0.50),
+        )
+        relation.order_groups.add(order_group)
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch(
+                "django.utils.timezone.now",
+                return_value=datetime(2024, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            ),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/"
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 1.50,
                     "currency": settings.DEFAULT_CURRENCY,
                     "due_date": "2024-01-17",
                     "state": enums.PAYMENT_STATE_PENDING,

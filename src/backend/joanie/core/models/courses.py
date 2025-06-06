@@ -7,6 +7,7 @@ import logging
 from collections.abc import Mapping
 from datetime import MAXYEAR, datetime
 from datetime import timezone as tz
+from decimal import Decimal
 from typing import TypedDict
 
 from django.apps import apps
@@ -36,6 +37,7 @@ from joanie.core.utils import normalize_phone_number, payment_schedule, webhooks
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
     aggregate_course_runs_dates,
 )
+from joanie.core.utils.discount import calculate_price
 from joanie.lms_handler import LMSHandler
 from joanie.signature.backends import get_signature_backend
 
@@ -804,6 +806,92 @@ class CourseProductRelation(BaseModel):
         return payment_schedule.has_withdrawal_period(
             timezone.localdate(), start_date.date()
         )
+
+    @property
+    def enabled_order_group(self) -> "OrderGroup | None":
+        """
+        Return the first enabled order group for the course product relation.
+        Cache the result to avoid redundant queries.
+        """
+        for order_group in self.order_groups.all():
+            if order_group.is_enabled:
+                return order_group
+        return None
+
+    @property
+    def discounted_price(self) -> Decimal | None:
+        """
+        Return the discounted price of the product, if any.
+        """
+        if order_group := self.enabled_order_group:
+            if discount := order_group.discount:
+                return calculate_price(self.product.price, discount)  # pylint: disable=no-member
+        return None
+
+    @property
+    def discount_amount(self) -> float | None:
+        """
+        Return the discount amount of the first enabled order group, if any.
+        """
+        if order_group := self.enabled_order_group:
+            if discount := order_group.discount:
+                return discount.amount
+        return None
+
+    @property
+    def discount_rate(self) -> float | None:
+        """
+        Return the discount rate of the first enabled order group, if any.
+        """
+        if order_group := self.enabled_order_group:
+            if discount := order_group.discount:
+                return discount.rate
+        return None
+
+    @property
+    def description(self) -> str | None:
+        """
+        Return the description of the first enabled order group, if any.
+        """
+        if order_group := self.enabled_order_group:
+            return order_group.description
+        return None
+
+    @property
+    def discount_start(self) -> datetime | None:
+        """
+        Return the discount start date of the first enabled order group, if any.
+        """
+        if order_group := self.enabled_order_group:
+            return order_group.start
+        return None
+
+    @property
+    def discount_end(self) -> datetime | None:
+        """
+        Return the discount end date of the first enabled order group, if any.
+        """
+        if order_group := self.enabled_order_group:
+            return order_group.end
+        return None
+
+    @property
+    def nb_available_seats(self) -> int | None:
+        """
+        Return the number of seats available for the first enabled order group, if any.
+        """
+        if order_group := self.enabled_order_group:
+            return order_group.available_seats
+        return None
+
+    @property
+    def nb_seats(self) -> int | None:
+        """
+        Return the total number of seats for the first enabled order group, if any.
+        """
+        if order_group := self.enabled_order_group:
+            return order_group.nb_seats
+        return None
 
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):

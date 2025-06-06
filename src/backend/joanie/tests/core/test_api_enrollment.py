@@ -298,7 +298,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(20):
+        with self.assertNumQueries(17):
             self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -320,7 +320,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             [
                 {
                     "id": str(product2.course_relations.last().id),
-                    "order_groups": [],
                     "is_withdrawable": product2.course_relations.last().is_withdrawable,
                     "product": {
                         "instructions": "",
@@ -351,7 +350,6 @@ class EnrollmentApiTest(BaseAPITestCase):
                 },
                 {
                     "id": str(product1.course_relations.last().id),
-                    "order_groups": [],
                     "is_withdrawable": product1.course_relations.last().is_withdrawable,
                     "product": {
                         "instructions": "",
@@ -770,7 +768,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         certificate = factories.OrderCertificateFactory(order=order)
         token = self.generate_token_from_user(order.owner)
 
-        with self.assertNumQueries(33):
+        with self.assertNumQueries(32):
             response = self.client.get(
                 f"/api/v1.0/enrollments/{enrollment.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -807,7 +805,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             [
                 {
                     "id": str(product.course_relations.first().id),
-                    "order_groups": [],
                     "is_withdrawable": product.course_relations.first().is_withdrawable,
                     "product": {
                         "call_to_action": "let's go!",
