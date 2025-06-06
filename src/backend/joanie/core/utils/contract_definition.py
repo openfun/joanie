@@ -9,10 +9,12 @@ from django.utils.duration import duration_iso_string
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
 
-from babel.numbers import get_currency_symbol
-
 from joanie.core.models import DocumentImage
-from joanie.core.utils import file_checksum, image_to_base64
+from joanie.core.utils import (
+    file_checksum,
+    get_default_currency_symbol,
+    image_to_base64,
+)
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 
 # Organization section for generating contract definition
@@ -139,7 +141,7 @@ def prepare_course_context(language_code, order=None):
         "end": _("<COURSE_END_DATE>"),
         "effort": _("<COURSE_EFFORT>"),
         "price": _("<COURSE_PRICE>"),
-        "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
+        "currency": get_default_currency_symbol(),
     }
 
     if order:

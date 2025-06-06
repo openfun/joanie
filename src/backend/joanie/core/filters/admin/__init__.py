@@ -9,11 +9,11 @@ from django.db.models import Q
 from django.forms import fields
 from django.utils import timezone as django_timezone
 
-from babel.numbers import get_currency_symbol
 from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
 from joanie.core.filters.base import MultipleValueFilter
+from joanie.core.utils import get_default_currency_symbol
 
 from .enrollment import EnrollmentAdminFilterSet
 from .skill import SkillAdminFilterSet
@@ -335,7 +335,7 @@ class DiscountAdminFilterSet(filters.FilterSet):
                 return Q(rate=rate)
             return Q(rate__icontains=rate)
 
-        currency_symbol = get_currency_symbol(settings.DEFAULT_CURRENCY)
+        currency_symbol = get_default_currency_symbol()
         if currency_symbol in value:
             value = value.replace(currency_symbol, "")
             queryset = queryset.filter(amount_filter(value, exact=True))
