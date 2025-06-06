@@ -80,16 +80,16 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
     )
     def test_admin_api_course_products_relation_delete_restrict(self, _):
         """
-        Order group with an existing order should not be deleted.
+        Offer rule with an existing order should not be deleted.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
         )
         factories.OrderFactory(
-            order_groups=[order_group],
+            offer_rules=[offer_rule],
             product=relation.product,
             course=relation.course,
         )
@@ -110,15 +110,15 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_admin_api_course_products_relation_delete_order_group(self, _):
+    def test_admin_api_course_products_relation_delete_offer_rule(self, _):
         """
-        Order groups without an existing order should be deleted
+        Offer rules without an existing order should be deleted
         when deleting a course product relation.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
         )
         response = self.client.delete(
@@ -128,5 +128,5 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         with self.assertRaises(models.CourseProductRelation.DoesNotExist):
             relation.refresh_from_db()
-        with self.assertRaises(models.OrderGroup.DoesNotExist):
-            order_group.refresh_from_db()
+        with self.assertRaises(models.OfferRule.DoesNotExist):
+            offer_rule.refresh_from_db()

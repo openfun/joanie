@@ -132,7 +132,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": None,
-                "order_group_ids": [],
+                "offer_rule_ids": [],
                 "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
@@ -324,7 +324,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     "was_created_by_order": enrollment.was_created_by_order,
                 },
                 "main_invoice_reference": None,
-                "order_group_ids": [],
+                "offer_rule_ids": [],
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -950,7 +950,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": None,
-                "order_group_ids": [],
+                "offer_rule_ids": [],
                 "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
@@ -1282,7 +1282,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": order.main_invoice.reference,
-                "order_group_ids": [],
+                "offer_rule_ids": [],
                 "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
@@ -1381,7 +1381,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        order_group = models.OrderGroup.objects.create(
+        offer_rule = models.OfferRule.objects.create(
             course_product_relation=relation, nb_seats=1
         )
         billing_address = BillingAddressDictFactory()
@@ -1389,7 +1389,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             product=product,
             course=course,
             state=enums.ORDER_STATE_COMPLETED,
-            order_groups=[order_group],
+            offer_rules=[offer_rule],
         )
         data = {
             "course_code": course.code,
@@ -1411,7 +1411,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "order_group": [
+                "offer_rule": [
                     f"Maximum number of orders reached for product {product.title}"
                 ]
             },
@@ -1422,7 +1422,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
     def test_api_order_create_authenticated_no_seats(self):
         """
-        If the number of seats is set to 0 on an active order group, we should not be able
+        If the number of seats is set to 0 on an active offer rule, we should not be able
         to create a new order on this group.
         """
         user = factories.UserFactory()
@@ -1433,7 +1433,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        models.OrderGroup.objects.create(
+        models.OfferRule.objects.create(
             course_product_relation=relation, is_active=True, nb_seats=0
         )
         billing_address = BillingAddressDictFactory()
@@ -1458,7 +1458,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "order_group": [
+                "offer_rule": [
                     f"Maximum number of orders reached for product {relation.product.title}"
                 ]
             },
@@ -1467,9 +1467,9 @@ class OrderCreateApiTest(BaseAPITestCase):
             models.Order.objects.filter(product=product, course=course).count(), 0
         )
 
-    def test_api_order_create_authenticated_nb_seat_is_none_on_active_order_group(self):
+    def test_api_order_create_authenticated_nb_seat_is_none_on_active_offer_rule(self):
         """
-        If `nb_seats` is set to `None` on an active order group, there should be no limit
+        If `nb_seats` is set to `None` on an active offer rule, there should be no limit
         to the number of orders.
         """
         user = factories.UserFactory()
@@ -1478,14 +1478,14 @@ class OrderCreateApiTest(BaseAPITestCase):
         relation = factories.CourseProductRelationFactory(
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation, nb_seats=None, is_active=True
         )
         factories.OrderFactory.create_batch(
             10,
             product=relation.product,
             course=relation.course,
-            order_groups=[order_group],
+            offer_rules=[offer_rule],
         )
         data = {
             "course_code": relation.course.code,
@@ -1572,8 +1572,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         order = models.Order.objects.get(id=order_id)
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
 
-    def test_api_order_create_order_group_unrelated(self):
-        """The order group must apply to the product being ordered."""
+    def test_api_order_create_offer_rule_unrelated(self):
+        """The offer rule must apply to the product being ordered."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
@@ -1583,8 +1583,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
         billing_address = BillingAddressDictFactory()
 
-        # Order group related to another product
-        factories.OrderGroupFactory()
+        # Offer rule related to another product
+        factories.OfferRuleFactory()
 
         data = {
             "course_code": relation.course.code,
@@ -1608,8 +1608,8 @@ class OrderCreateApiTest(BaseAPITestCase):
             1,
         )
 
-    def test_api_order_create_several_order_groups(self):
-        """A product can have several active order groups."""
+    def test_api_order_create_several_offer_rules(self):
+        """A product can have several active offer rules."""
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
@@ -1618,14 +1618,14 @@ class OrderCreateApiTest(BaseAPITestCase):
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        order_group1 = models.OrderGroup.objects.create(
+        offer_rule1 = models.OfferRule.objects.create(
             course_product_relation=relation, nb_seats=1
         )
         billing_address = BillingAddressDictFactory()
         factories.OrderFactory(
             product=product,
             course=course,
-            order_groups=[order_group1],
+            offer_rules=[offer_rule1],
             state=random.choice(
                 [enums.ORDER_STATE_PENDING, enums.ORDER_STATE_COMPLETED]
             ),
@@ -1639,7 +1639,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        # Order group 1 should already be full
+        # Offer rule 1 should already be full
         response = self.client.post(
             "/api/v1.0/orders/",
             data=data,
@@ -1650,7 +1650,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "order_group": [
+                "offer_rule": [
                     f"Maximum number of orders reached for product {product.title}"
                 ]
             },
@@ -1659,10 +1659,10 @@ class OrderCreateApiTest(BaseAPITestCase):
             models.Order.objects.filter(course=course, product=product).count(), 1
         )
 
-        order_group2 = models.OrderGroup.objects.create(
+        offer_rule2 = models.OfferRule.objects.create(
             course_product_relation=relation, nb_seats=1
         )
-        # Order group 2 should be assigned
+        # Offer rule 2 should be assigned
         response = self.client.post(
             "/api/v1.0/orders/",
             data=data,
@@ -1674,11 +1674,11 @@ class OrderCreateApiTest(BaseAPITestCase):
             models.Order.objects.filter(course=course, product=product).count(), 2
         )
         self.assertEqual(
-            models.Order.objects.filter(order_groups=order_group2.id).count(), 1
+            models.Order.objects.filter(offer_rules=offer_rule2.id).count(), 1
         )
 
-    def test_api_order_create_inactive_order_groups(self):
-        """An inactive order group should not be taken into account."""
+    def test_api_order_create_inactive_offer_rules(self):
+        """An inactive offer rule should not be taken into account."""
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
@@ -1687,7 +1687,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        models.OrderGroup.objects.create(
+        models.OfferRule.objects.create(
             course_product_relation=relation, nb_seats=1, is_active=False
         )
         billing_address = BillingAddressDictFactory()
@@ -1869,16 +1869,16 @@ class OrderCreateApiTest(BaseAPITestCase):
                         },
                     )
 
-    def test_api_order_create_when_order_group_is_active_and_nb_seats_is_none(self):
+    def test_api_order_create_when_offer_rule_is_active_and_nb_seats_is_none(self):
         """
-        When create an order and the order group is active and has a number of seat
+        When create an order and the offer rule is active and has a number of seat
         set to None, it should let us create unlimited number of orders. Although,
-        when the order group is not active, it should not create the order on the order group.
+        when the offer rule is not active, it should not create the order on the offer rule.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             nb_seats=None,
@@ -1887,7 +1887,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             2,
             course=relation.course,
             product=relation.product,
-            order_groups=[order_group],
+            offer_rules=[offer_rule],
             state=enums.ORDER_STATE_PENDING,
         )
 
@@ -1908,20 +1908,20 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
-            models.Order.objects.filter(order_groups=order_group.id).count(), 3
+            models.Order.objects.filter(offer_rules=offer_rule.id).count(), 3
         )
 
-    def test_api_order_create_when_order_group_is_not_active_and_nb_seats_is_0(self):
+    def test_api_order_create_when_offer_rule_is_not_active_and_nb_seats_is_0(self):
         """
-        When we want to create an order and the order group is not active and
-        has a number of seat to 0, the order group should be ignored,
+        When we want to create an order and the offer rule is not active and
+        has a number of seat to 0, the offer rule should be ignored,
         and the order should be created.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
         relation = factories.CourseProductRelationFactory()
-        factories.OrderGroupFactory(
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=False,
             nb_seats=0,
@@ -1943,11 +1943,11 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json()["order_group_ids"], [])
+        self.assertEqual(response.json()["offer_rule_ids"], [])
 
-    def test_api_order_create_when_order_group_is_active_but_not_enabled_yet(self):
+    def test_api_order_create_when_offer_rule_is_active_but_not_enabled_yet(self):
         """
-        When an authenticated user passes in the payload an order group that is not yet enabled
+        When an authenticated user passes in the payload an offer rule that is not yet enabled
         to create his order, the order should not be created. When the user passes an order
         group that is enabled, the order is created.
         """
@@ -1955,20 +1955,20 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         relation = factories.CourseProductRelationFactory()
-        # This order group will be enabled tomorrow
-        factories.OrderGroupFactory(
+        # This offer rule will be enabled tomorrow
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             start=timezone.now() + timedelta(days=1),
         )
-        # This order group has expired in time
-        factories.OrderGroupFactory(
+        # This offer rule has expired in time
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=False,
             end=timezone.now() - timedelta(days=1),
         )
-        # This order group is active and enabled
-        order_group_enabled = factories.OrderGroupFactory(
+        # This offer rule is active and enabled
+        offer_rule_enabled = factories.OfferRuleFactory(
             course_product_relation=relation, is_active=True, start=timezone.now()
         )
 
@@ -1989,12 +1989,12 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
-            response.json()["order_group_ids"], [str(order_group_enabled.id)]
+            response.json()["offer_rule_ids"], [str(offer_rule_enabled.id)]
         )
 
-    def test_api_order_create_discount_rate_on_order_group(self):
+    def test_api_order_create_discount_rate_on_offer_rule(self):
         """
-        Authenticated user wants to create an order on the order group that is enabled and
+        Authenticated user wants to create an order on the offer rule that is enabled and
         has a discount rate. The created order should have the total value of the discounted price.
         """
         user = factories.UserFactory()
@@ -2016,7 +2016,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         for case in cases_inside_date_range:
             with self.subTest(start=case["start"], end=case["end"]):
                 relation = factories.CourseProductRelationFactory(product__price=100)
-                order_group = factories.OrderGroupFactory(
+                offer_rule = factories.OfferRuleFactory(
                     discount=factories.DiscountFactory(rate=0.1),
                     course_product_relation=relation,
                     is_active=True,
@@ -2041,12 +2041,12 @@ class OrderCreateApiTest(BaseAPITestCase):
 
                 self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
-                order = models.Order.objects.get(order_groups=order_group.id)
+                order = models.Order.objects.get(offer_rules=offer_rule.id)
                 self.assertEqual(order.total, 90)
 
-    def test_api_order_create_discount_rate_on_order_group_not_enabled(self):
+    def test_api_order_create_discount_rate_on_offer_rule_not_enabled(self):
         """
-        Authenticated user wants to create an order on the order group that is not enabled and
+        Authenticated user wants to create an order on the offer rule that is not enabled and
         has a discount rate. The created order should not be discounted.
         """
         user = factories.UserFactory()
@@ -2068,7 +2068,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         for case in cases_outside_date_range:
             with self.subTest(start=case["start"], end=case["end"]):
                 relation = factories.CourseProductRelationFactory(product__price=100)
-                factories.OrderGroupFactory(
+                factories.OfferRuleFactory(
                     discount=factories.DiscountFactory(rate=0.1),
                     course_product_relation=relation,
                     is_active=True,
@@ -2097,9 +2097,9 @@ class OrderCreateApiTest(BaseAPITestCase):
                 order = models.Order.objects.get(id=response.json()["id"])
                 self.assertEqual(order.total, 100)
 
-    def test_api_order_create_discount_amount_on_order_group(self):
+    def test_api_order_create_discount_amount_on_offer_rule(self):
         """
-        Authenticated user wants to create an order on the order group that is enabled and
+        Authenticated user wants to create an order on the offer rule that is enabled and
         has a discount amount. The created order should have the total value of the discounted
         price.
         """
@@ -2122,7 +2122,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         for case in cases_inside_date_range:
             with self.subTest(start=case["start"], end=case["end"]):
                 relation = factories.CourseProductRelationFactory(product__price=100)
-                order_group = factories.OrderGroupFactory(
+                offer_rule = factories.OfferRuleFactory(
                     discount=factories.DiscountFactory(amount=20),
                     course_product_relation=relation,
                     is_active=True,
@@ -2133,7 +2133,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 data = {
                     "course_code": relation.course.code,
                     "organization_id": str(relation.organizations.first().id),
-                    "order_group_id": str(order_group.id),
+                    "offer_rule_id": str(offer_rule.id),
                     "product_id": str(relation.product.id),
                     "billing_address": BillingAddressDictFactory(),
                     "has_waived_withdrawal_right": True,
@@ -2148,27 +2148,27 @@ class OrderCreateApiTest(BaseAPITestCase):
 
                 self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
-                order = models.Order.objects.get(order_groups=order_group.id)
+                order = models.Order.objects.get(offer_rules=offer_rule.id)
                 self.assertEqual(order.total, 80)
 
-    def test_api_order_create_discount_rate_order_group_enabled_no_more_seat_available(
+    def test_api_order_create_discount_rate_offer_rule_enabled_no_more_seat_available(
         self,
     ):
         """
-        Authenticated user creates an order on an order group that is enabled but has no more
+        Authenticated user creates an order on an offer rule that is enabled but has no more
         seat available, the order should not be created.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.1),
             course_product_relation=relation,
             is_active=True,
             nb_seats=1,
         )
         factories.OrderFactory(
-            order_groups=[order_group],
+            offer_rules=[offer_rule],
             course=relation.course,
             product=relation.product,
             state=random.choice(
@@ -2179,7 +2179,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         data = {
             "course_code": relation.course.code,
             "organization_id": str(relation.organizations.first().id),
-            "order_group_id": str(order_group.id),
+            "offer_rule_id": str(offer_rule.id),
             "product_id": str(relation.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
@@ -2196,7 +2196,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "order_group": [
+                "offer_rule": [
                     f"Maximum number of orders reached for product {relation.product.title}"
                 ]
             },
@@ -2210,9 +2210,9 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory(product__price=100)
         voucher = factories.VoucherFactory(
-            order_group__discount=factories.DiscountFactory(rate=0.1),
-            order_group__course_product_relation=relation,
-            order_group__nb_seats=1,
+            offer_rule__discount=factories.DiscountFactory(rate=0.1),
+            offer_rule__course_product_relation=relation,
+            offer_rule__nb_seats=1,
             multiple_use=False,
             multiple_users=False,
         )
@@ -2249,9 +2249,9 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory(product__price=100)
         voucher = factories.VoucherFactory(
-            order_group__discount=factories.DiscountFactory(rate=0.1),
-            order_group__course_product_relation=relation,
-            order_group__nb_seats=1,
+            offer_rule__discount=factories.DiscountFactory(rate=0.1),
+            offer_rule__course_product_relation=relation,
+            offer_rule__nb_seats=1,
             multiple_use=False,
             multiple_users=False,
         )

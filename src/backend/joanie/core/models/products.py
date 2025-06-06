@@ -430,12 +430,12 @@ class ProductTargetCourseRelation(BaseModel):
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
-class OrderGroupManager(models.Manager):
-    """Custom manager for the OrderGroup model."""
+class OfferRuleManager(models.Manager):
+    """Custom manager for the OfferRule model."""
 
     def find_actives(self, course_product_relation_id):
         """
-        Retrieve all active order groups for a given course product relation,
+        Retrieve all active offer rules for a given course product relation,
         ordered by position.
         """
         return (
@@ -449,16 +449,16 @@ class OrderGroupManager(models.Manager):
         )
 
 
-class OrderGroup(BaseModel):
-    """Order group to enforce a maximum number of seats for a product."""
+class OfferRule(BaseModel):
+    """Offer rule to enforce a maximum number of seats for a product."""
 
-    objects = OrderGroupManager()
+    objects = OfferRuleManager()
 
     nb_seats = models.PositiveSmallIntegerField(
         default=None,
         verbose_name=_("Number of seats"),
         help_text=_(
-            "The maximum number of orders that can be validated for a given order group"
+            "The maximum number of orders that can be validated for a given offer rule"
         ),
         null=True,
         blank=True,
@@ -466,7 +466,7 @@ class OrderGroup(BaseModel):
     course_product_relation = models.ForeignKey(
         to=CourseProductRelation,
         verbose_name=_("course product relation"),
-        related_name="order_groups",
+        related_name="offer_rules",
         on_delete=models.CASCADE,
     )
     is_active = models.BooleanField(_("is active"), default=True)
@@ -478,13 +478,13 @@ class OrderGroup(BaseModel):
         blank=True,
     )
     start = models.DateTimeField(
-        help_text=_("Date at which the order group rule starts"),
+        help_text=_("Date at which the offer rule rule starts"),
         verbose_name=_("rule starts at"),
         blank=True,
         null=True,
     )
     end = models.DateTimeField(
-        help_text=_("Date at which the order group rule ends"),
+        help_text=_("Date at which the offer rule rule ends"),
         verbose_name=_("rule ends at"),
         blank=True,
         null=True,
@@ -492,7 +492,7 @@ class OrderGroup(BaseModel):
     discount = models.ForeignKey(
         to="Discount",
         verbose_name=_("Product price discount"),
-        related_name="order_groups",
+        related_name="offer_rules",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -502,12 +502,12 @@ class OrderGroup(BaseModel):
         max_length=255,
         blank=True,
         null=True,
-        help_text=_("Description of the order group"),
+        help_text=_("Description of the offer rule"),
     )
 
     class Meta:
-        verbose_name = _("Order group")
-        verbose_name_plural = _("Order groups")
+        verbose_name = _("Offer rule")
+        verbose_name_plural = _("Offer rules")
         ordering = ["course_product_relation", "position"]
         constraints = [
             models.CheckConstraint(
@@ -518,7 +518,7 @@ class OrderGroup(BaseModel):
         ]
 
     def get_nb_binding_orders(self):
-        """Query the number of binding orders related to this order group."""
+        """Query the number of binding orders related to this offer rule."""
         product_id = self.course_product_relation.product_id
         course_id = self.course_product_relation.course_id
 
@@ -530,7 +530,7 @@ class OrderGroup(BaseModel):
         ).count()
 
     def get_nb_to_own_orders(self):
-        """Query the number of orders that are in `to_own` state related to this order group."""
+        """Query the number of orders that are in `to_own` state related to this offer rule."""
         return self.orders.filter(
             course_id=self.course_product_relation.course_id,
             product_id=self.course_product_relation.product_id,
@@ -539,12 +539,12 @@ class OrderGroup(BaseModel):
 
     @property
     def can_edit(self):
-        """Return True if the order group can be edited."""
+        """Return True if the offer rule can be edited."""
         return not self.orders.exists()
 
     @property
     def available_seats(self) -> int | None:
-        """Return the number of available seats on the order group, or None if unlimited."""
+        """Return the number of available seats on the offer rule, or None if unlimited."""
         if self.nb_seats is None:
             return None
 
@@ -554,7 +554,7 @@ class OrderGroup(BaseModel):
     @property
     def is_enabled(self):
         """
-        Returns boolean whether the order group is enabled based on its activation status
+        Returns boolean whether the offer rule is enabled based on its activation status
         and time constraints.
         """
         if not self.is_active:
@@ -569,7 +569,7 @@ class OrderGroup(BaseModel):
     @property
     def is_assignable(self):
         """
-        Returns boolean whether the order group is enabled, and have available seats.
+        Returns boolean whether the offer rule is enabled, and have available seats.
         """
         return self.is_enabled and self.available_seats != 0
 
@@ -579,11 +579,11 @@ class OrderGroup(BaseModel):
         within its course product relation if not already set.
         """
         if not self.created_on and self.position is None:
-            self.position = self.course_product_relation.order_groups.count()
+            self.position = self.course_product_relation.offer_rules.count()
 
         # clear product relation cache
         logger.debug(
-            "Clearing caches from order group for course product relation %s",
+            "Clearing caches from offer rule for course product relation %s",
             self.course_product_relation_id,
         )
         self.course_product_relation.clear_cache()
@@ -596,7 +596,7 @@ class OrderGroup(BaseModel):
         """
         # clear product relation cache
         logger.debug(
-            "Clearing caches from order group for course product relation %s",
+            "Clearing caches from offer rule for course product relation %s",
             self.course_product_relation_id,
         )
         self.course_product_relation.clear_cache()
@@ -604,14 +604,14 @@ class OrderGroup(BaseModel):
 
     def set_position(self, position):
         """
-        Set the position of the order group and update the positions of other order groups
+        Set the position of the offer rule and update the positions of other offer rules
         in the same course product relation accordingly.
         """
         if position == self.position:
             return  # Nothing to do
 
         # Get count and normalize position within valid range (0 to count-1)
-        count = OrderGroup.objects.filter(
+        count = OfferRule.objects.filter(
             course_product_relation_id=self.course_product_relation_id
         ).count()
         position = max(0, min(position, count - 1))
@@ -621,20 +621,20 @@ class OrderGroup(BaseModel):
         with transaction.atomic():
             if old_position < position:
                 # Moving down - shift intermediate items up
-                OrderGroup.objects.filter(
+                OfferRule.objects.filter(
                     course_product_relation_id=self.course_product_relation_id,
                     position__gt=old_position,
                     position__lte=position,
                 ).update(position=models.F("position") - 1)
             else:
                 # Moving up - shift intermediate items down
-                OrderGroup.objects.filter(
+                OfferRule.objects.filter(
                     course_product_relation_id=self.course_product_relation_id,
                     position__lt=old_position,
                     position__gte=position,
                 ).update(position=models.F("position") + 1)
 
-            # Update this order group's position
+            # Update this offer rule's position
             self.position = position
             self.save(update_fields=["position"])
 
@@ -754,9 +754,9 @@ class Order(BaseModel):
         blank=True,
         null=True,
     )
-    order_groups = models.ManyToManyField(
-        OrderGroup,
-        verbose_name=_("order group"),
+    offer_rules = models.ManyToManyField(
+        OfferRule,
+        verbose_name=_("offer rule"),
         related_name="orders",
         blank=True,
     )
@@ -1030,16 +1030,16 @@ class Order(BaseModel):
 
     def get_discounted_price(self):
         """
-        Return the total price considering the order group discount if it exists. Else, if
-        there is no order group, the total price should be the full product price.
+        Return the total price considering the offer rule discount if it exists. Else, if
+        there is no offer rule, the total price should be the full product price.
         """
         if self.voucher:
-            discount = self.voucher.discount or self.voucher.order_group.discount
+            discount = self.voucher.discount or self.voucher.offer_rule.discount
             if discount:
                 return calculate_price(self.product.price, discount)
 
-        for order_group in self.order_groups.all():
-            if discount := order_group.discount:
+        for offer_rule in self.offer_rules.all():
+            if discount := offer_rule.discount:
                 return calculate_price(self.product.price, discount)
 
         return self.product.price
@@ -1608,11 +1608,11 @@ class Order(BaseModel):
     def discount(self):
         """
         Return the discount applied to the order.
-        It can be either from a voucher or an order group.
+        It can be either from a voucher or an offer rule.
         """
-        for order_group in self.order_groups.all():
-            if discount := order_group.discount:
-                description = order_group.description or ""
+        for offer_rule in self.offer_rules.all():
+            if discount := offer_rule.discount:
+                description = offer_rule.description or ""
                 initial_price = f"{self.product.price} {get_default_currency_symbol()}"
                 return f"{discount} ({initial_price}) {description}"
 
@@ -1779,9 +1779,9 @@ class BatchOrder(BaseModel):
         choices=enums.BATCH_ORDER_STATE_CHOICES,
         db_index=True,
     )
-    order_groups = models.ManyToManyField(
-        OrderGroup,
-        verbose_name=_("order group"),
+    offer_rules = models.ManyToManyField(
+        OfferRule,
+        verbose_name=_("offer rule"),
         related_name="batch_orders",
         blank=True,
     )
@@ -1828,19 +1828,19 @@ class BatchOrder(BaseModel):
     def get_discounted_price(self):
         """
         When a voucher is used, return the discounted price. Otherwise, return the total price,
-        considering the order group discount if applicable. If neither a voucher nor an order
+        considering the offer rule discount if applicable. If neither a voucher nor an order
         group discount exists, return the total amount based on the number of seats taken.
         """
         price_per_seat = Money(self.relation.product.price).as_decimal()
         total = self.nb_seats * price_per_seat
 
         if self.voucher:
-            discount = self.voucher.discount or self.voucher.order_group.discount
+            discount = self.voucher.discount or self.voucher.offer_rule.discount
             if discount:
                 return calculate_price(total, discount)
 
-        for order_group in self.order_groups.all():
-            if discount := order_group.discount:
+        for offer_rule in self.offer_rules.all():
+            if discount := offer_rule.discount:
                 return calculate_price(total, discount)
 
         return total
@@ -1955,8 +1955,8 @@ class BatchOrder(BaseModel):
                 course=self.relation.course,
                 organization=self.organization,
             )
-            if self.order_groups.exists():
-                order.order_groups.add(self.order_groups.first())
+            if self.offer_rules.exists():
+                order.offer_rules.add(self.offer_rules.first())
 
             order.voucher = Voucher.objects.create(
                 discount=discount, multiple_use=False, multiple_users=False
@@ -2136,10 +2136,10 @@ class Discount(BaseModel):
     @property
     def usage_count(self):
         """
-        Returns the count of how many times a discount is used through order groups
+        Returns the count of how many times a discount is used through offer rules
         and vouchers.
         """
-        return self.order_groups.count() + self.vouchers.count()
+        return self.offer_rules.count() + self.vouchers.count()
 
 
 def generate_random_code():
@@ -2152,7 +2152,7 @@ def generate_random_code():
 
 class Voucher(BaseModel):
     """
-    Voucher model allows to define a voucher that can be associated to an order group and used
+    Voucher model allows to define a voucher that can be associated to an offer rule and used
     by a user to get a discount or access to a product.
     """
 
@@ -2163,17 +2163,17 @@ class Voucher(BaseModel):
         ordering = ["created_on"]
         constraints = [
             models.UniqueConstraint(
-                fields=["code", "order_group"],
-                name="unique_code_order_group",
+                fields=["code", "offer_rule"],
+                name="unique_code_offer_rule",
                 violation_error_message=(
-                    "A voucher with this code already exists for this order group."
+                    "A voucher with this code already exists for this offer rule."
                 ),
             ),
             models.CheckConstraint(
                 check=models.Q(discount__isnull=False)
-                | models.Q(order_group__isnull=False),
-                name="voucher_discount_or_order_group_required",
-                violation_error_message="Voucher discount or order group is required.",
+                | models.Q(offer_rule__isnull=False),
+                name="voucher_discount_or_offer_rule_required",
+                violation_error_message="Voucher discount or offer rule is required.",
             ),
         ]
 
@@ -2183,9 +2183,9 @@ class Voucher(BaseModel):
         max_length=255,
         default=generate_random_code,
     )
-    order_group = models.ForeignKey(
-        to=OrderGroup,
-        verbose_name=_("order group"),
+    offer_rule = models.ForeignKey(
+        to=OfferRule,
+        verbose_name=_("offer rule"),
         related_name="vouchers",
         on_delete=models.CASCADE,
         blank=True,
@@ -2216,7 +2216,7 @@ class Voucher(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.code or str(self.order_group)
+        return self.code or str(self.offer_rule)
 
     def is_usable_by(self, user_id):
         """

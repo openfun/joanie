@@ -18,7 +18,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
             user = factories.UserFactory()
 
         if not relation:
-            relation = voucher.order_group.course_product_relation
+            relation = voucher.offer_rule.course_product_relation
 
         data = {
             "course_code": relation.course.code,
@@ -42,9 +42,9 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         Authenticated user wants to create an order with a voucher discount.
         """
         voucher = factories.VoucherFactory(
-            order_group__discount=factories.DiscountFactory(rate=0.1),
-            order_group__course_product_relation__product__price=100,
-            order_group__nb_seats=None,
+            offer_rule__discount=factories.DiscountFactory(rate=0.1),
+            offer_rule__course_product_relation__product__price=100,
+            offer_rule__nb_seats=None,
             multiple_use=False,
             multiple_users=False,
         )
@@ -87,7 +87,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         A multiple use and single user voucher can be used multiple times by the same user.
         """
         voucher = factories.VoucherFactory(
-            order_group=None,
+            offer_rule=None,
             multiple_use=True,
             multiple_users=False,
             discount=factories.DiscountFactory(rate=0.1),
@@ -123,7 +123,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         A single use and multiple user voucher can be used once by each user.
         """
         voucher = factories.VoucherFactory(
-            order_group=None,
+            offer_rule=None,
             multiple_use=False,
             multiple_users=True,
             discount=factories.DiscountFactory(rate=0.1),
@@ -160,7 +160,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         each user.
         """
         voucher = factories.VoucherFactory(
-            order_group=None,
+            offer_rule=None,
             multiple_use=True,
             multiple_users=True,
             discount=factories.DiscountFactory(rate=0.1),

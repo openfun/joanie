@@ -808,14 +808,14 @@ class CourseProductRelation(BaseModel):
         )
 
     @property
-    def enabled_order_group(self) -> "OrderGroup | None":
+    def enabled_offer_rule(self) -> "OfferRule | None":
         """
-        Return the first enabled order group for the course product relation.
+        Return the first enabled offer rule for the course product relation.
         Cache the result to avoid redundant queries.
         """
-        for order_group in self.order_groups.all():
-            if order_group.is_enabled:
-                return order_group
+        for offer_rule in self.offer_rules.all():
+            if offer_rule.is_enabled:
+                return offer_rule
         return None
 
     @property
@@ -823,74 +823,74 @@ class CourseProductRelation(BaseModel):
         """
         Return the discounted price of the product, if any.
         """
-        if order_group := self.enabled_order_group:
-            if discount := order_group.discount:
+        if offer_rule := self.enabled_offer_rule:
+            if discount := offer_rule.discount:
                 return calculate_price(self.product.price, discount)  # pylint: disable=no-member
         return None
 
     @property
     def discount_amount(self) -> float | None:
         """
-        Return the discount amount of the first enabled order group, if any.
+        Return the discount amount of the first enabled offer rule, if any.
         """
-        if order_group := self.enabled_order_group:
-            if discount := order_group.discount:
+        if offer_rule := self.enabled_offer_rule:
+            if discount := offer_rule.discount:
                 return discount.amount
         return None
 
     @property
     def discount_rate(self) -> float | None:
         """
-        Return the discount rate of the first enabled order group, if any.
+        Return the discount rate of the first enabled offer rule, if any.
         """
-        if order_group := self.enabled_order_group:
-            if discount := order_group.discount:
+        if offer_rule := self.enabled_offer_rule:
+            if discount := offer_rule.discount:
                 return discount.rate
         return None
 
     @property
     def description(self) -> str | None:
         """
-        Return the description of the first enabled order group, if any.
+        Return the description of the first enabled offer rule, if any.
         """
-        if order_group := self.enabled_order_group:
-            return order_group.description
+        if offer_rule := self.enabled_offer_rule:
+            return offer_rule.description
         return None
 
     @property
     def discount_start(self) -> datetime | None:
         """
-        Return the discount start date of the first enabled order group, if any.
+        Return the discount start date of the first enabled offer rule, if any.
         """
-        if order_group := self.enabled_order_group:
-            return order_group.start
+        if offer_rule := self.enabled_offer_rule:
+            return offer_rule.start
         return None
 
     @property
     def discount_end(self) -> datetime | None:
         """
-        Return the discount end date of the first enabled order group, if any.
+        Return the discount end date of the first enabled offer rule, if any.
         """
-        if order_group := self.enabled_order_group:
-            return order_group.end
+        if offer_rule := self.enabled_offer_rule:
+            return offer_rule.end
         return None
 
     @property
     def nb_available_seats(self) -> int | None:
         """
-        Return the number of seats available for the first enabled order group, if any.
+        Return the number of seats available for the first enabled offer rule, if any.
         """
-        if order_group := self.enabled_order_group:
-            return order_group.available_seats
+        if offer_rule := self.enabled_offer_rule:
+            return offer_rule.available_seats
         return None
 
     @property
     def nb_seats(self) -> int | None:
         """
-        Return the total number of seats for the first enabled order group, if any.
+        Return the total number of seats for the first enabled offer rule, if any.
         """
-        if order_group := self.enabled_order_group:
-            return order_group.nb_seats
+        if offer_rule := self.enabled_offer_rule:
+            return offer_rule.nb_seats
         return None
 
 
