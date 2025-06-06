@@ -34,7 +34,7 @@ class BatchOrderFlow:
         """
         A batch order can be assigned if it has an organization.
         """
-        return self.instance.organization is not None
+        return self.instance.is_assigned
 
     @state.transition(
         source=enums.BATCH_ORDER_STATE_DRAFT,
@@ -52,8 +52,8 @@ class BatchOrderFlow:
         is submitted at the signature provider.
         """
         return (
-            self.instance.contract.student_signed_on is None
-            and self.instance.contract.submitted_for_signature_on is not None
+            self.instance.is_submitted_to_signature
+            and self.instance.is_eligible_to_get_sign
         )
 
     @state.transition(
@@ -70,10 +70,7 @@ class BatchOrderFlow:
         """
         A batch order state can be set to signing when we validate that the buyer has signed.
         """
-        return (
-            self.instance.contract.submitted_for_signature_on
-            and self.instance.contract.student_signed_on
-        )
+        return self.instance.is_signed_by_owner
 
     @state.transition(
         source=enums.BATCH_ORDER_STATE_TO_SIGN,
@@ -85,12 +82,20 @@ class BatchOrderFlow:
         Mark batch order as "signing" state.
         """
 
+    def _can_be_state_pending(self):
+        """
+        A batch order can be set to pending for a payment because the contract has been
+        signed or is in state failed payment
+        """
+        return self.instance.is_ready_for_payment
+
     @state.transition(
         source=[
             enums.BATCH_ORDER_STATE_SIGNING,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
         ],
         target=enums.BATCH_ORDER_STATE_PENDING,
+        conditions=[_can_be_state_pending],
     )
     def pending(self):
         """
@@ -115,9 +120,16 @@ class BatchOrderFlow:
         Mark batch order instance as "canceled".
         """
 
+    def _can_be_state_completed(self):
+        """
+        A batch order can be in state completed because it has been fully paid
+        """
+        return self.instance.is_paid
+
     @state.transition(
         source=enums.BATCH_ORDER_STATE_PENDING,
         target=enums.BATCH_ORDER_STATE_COMPLETED,
+        conditions=[_can_be_state_completed],
     )
     def completed(self):
         """Batch order is mark as complete because it's been paid"""
@@ -126,7 +138,7 @@ class BatchOrderFlow:
         """
         Update the batch order state.
         """
-        logger.debug("Transitioning order %s", self.instance.id)
+        logger.debug("Transitioning batch order %s", self.instance.id)
         for transition in [
             self.assign,
             self.to_sign,

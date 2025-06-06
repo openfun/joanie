@@ -5,7 +5,7 @@ from http import HTTPStatus
 from django.conf import settings
 from django.test import TestCase
 
-from joanie.core import factories
+from joanie.core import enums, factories
 
 
 class BatchOrdersAdminApiListTestCase(TestCase):
@@ -35,9 +35,9 @@ class BatchOrdersAdminApiListTestCase(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        batch_orders = factories.BatchOrderFactory.create_batch(3)
-        for batch_order in batch_orders:
-            batch_order.init_flow()
+        batch_orders = factories.BatchOrderFactory.create_batch(
+            3, state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
 
         expected_return = [
             {

@@ -780,11 +780,9 @@ class BatchOrderViewSet(
         """Cancel a batch order."""
         batch_order = self.get_object()
 
-        is_completed = batch_order.state == enums.BATCH_ORDER_STATE_COMPLETED
-
         batch_order.flow.cancel()
 
-        if is_completed:
+        if batch_order.has_orders_generated:
             # Delete orders and linked vouchers
             batch_order.cancel_orders()
 
@@ -798,10 +796,7 @@ class BatchOrderViewSet(
         """
         batch_order = self.get_object()
 
-        if batch_order.state not in [
-            enums.BATCH_ORDER_STATE_ASSIGNED,
-            enums.BATCH_ORDER_STATE_TO_SIGN,
-        ]:
+        if not batch_order.is_eligible_to_get_sign:
             raise ValidationError(
                 "Batch order state should be `assigned` or `to_sign`."
             )
@@ -835,15 +830,12 @@ class BatchOrderViewSet(
         """Validates the payment for the batch order if its state is in `signing` or `pending`"""
         batch_order = self.get_object()
 
-        if batch_order.state not in [
-            enums.BATCH_ORDER_STATE_SIGNING,
-            enums.BATCH_ORDER_STATE_PENDING,
-        ]:
+        if not batch_order.is_eligible_to_validate_payment:
             raise ValidationError(
                 "Your batch order is not in a state to validate the payment"
             )
 
-        if batch_order.state == enums.BATCH_ORDER_STATE_SIGNING:
+        if batch_order.is_signed_by_owner:
             # Normally it transitions to `pending` when submitting to payment through
             # the backend payment
             batch_order.flow.update()
@@ -861,12 +853,12 @@ class BatchOrderViewSet(
         """
         batch_order = self.get_object()
 
-        if batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED:
+        if not batch_order.is_paid:
             raise ValidationError(
                 "Cannot generate orders, batch order is not in `completed` state"
             )
 
-        if batch_order.orders.exists():
+        if batch_order.has_orders_generated:
             raise ValidationError(
                 "Orders were already generated. Cannot generate twice."
             )

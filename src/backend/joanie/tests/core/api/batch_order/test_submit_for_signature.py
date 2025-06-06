@@ -2,8 +2,6 @@
 
 from http import HTTPStatus
 
-from django.utils import timezone
-
 from joanie.core import enums, factories
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import BaseAPITestCase
@@ -144,17 +142,8 @@ class BatchOrderSubmitForSignatureAPITest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         batch_order = factories.BatchOrderFactory(
             owner=user,
-            contract=factories.ContractFactory(
-                submitted_for_signature_on=timezone.now(),
-                student_signed_on=timezone.now(),
-                organization_signed_on=None,
-                context="context",
-                definition_checksum="1234",
-                signature_backend_reference="wfl_test_id",
-            ),
             state=enums.BATCH_ORDER_STATE_SIGNING,
         )
-        batch_order.init_flow()
 
         response = self.client.post(
             f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-signature/",
@@ -176,8 +165,9 @@ class BatchOrderSubmitForSignatureAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        batch_order = factories.BatchOrderFactory(owner=user, nb_seats=2)
-        batch_order.init_flow()
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED, owner=user, nb_seats=2
+        )
         expected_substring_invite_url = "https://dummysignaturebackend.fr/?reference="
 
         response = self.client.post(
