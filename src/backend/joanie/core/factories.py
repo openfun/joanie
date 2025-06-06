@@ -686,11 +686,11 @@ class ProductTargetCourseRelationFactory(
         self.course_runs.set(extracted)
 
 
-class OrderGroupFactory(DebugModelFactory, factory.django.DjangoModelFactory):
-    """A factory to create order groups."""
+class OfferRuleFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create offer rules."""
 
     class Meta:
-        model = models.OrderGroup
+        model = models.OfferRule
 
     course_product_relation = factory.SubFactory(CourseProductRelationFactory)
     nb_seats = factory.fuzzy.FuzzyInteger(1, 100)
@@ -757,12 +757,12 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
-    def order_groups(self, create, extracted, **kwargs):
+    def offer_rules(self, create, extracted, **kwargs):
         """
-        Set order groups if any
+        Set offer rules if any
         """
         if extracted:
-            self.order_groups.set(extracted)
+            self.offer_rules.set(extracted)
 
     @factory.post_generation
     def main_invoice(self, create, extracted, **kwargs):
@@ -862,12 +862,12 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
-    def order_groups(self, create, extracted, **kwargs):
+    def offer_rules(self, create, extracted, **kwargs):
         """
-        Set order groups if any
+        Set offer rules if any
         """
         if extracted:
-            self.order_groups.set(extracted)
+            self.offer_rules.set(extracted)
 
     @factory.post_generation
     def main_invoice(self, create, extracted, **kwargs):
@@ -1238,12 +1238,12 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
     @factory.post_generation
     # pylint: disable=unused-argument
-    def order_groups(self, create, extracted, **kwargs):
+    def offer_rules(self, create, extracted, **kwargs):
         """
-        Set order groups if any
+        Set offer rules if any
         """
         if extracted:
-            self.order_groups.set(extracted)
+            self.offer_rules.set(extracted)
 
 
 class AddressFactory(DebugModelFactory, factory.django.DjangoModelFactory):
@@ -1530,8 +1530,8 @@ class VoucherFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     class Meta:
         model = models.Voucher
 
-    order_group = factory.SubFactory(
-        OrderGroupFactory,
+    offer_rule = factory.SubFactory(
+        OfferRuleFactory,
         discount=factory.SubFactory(DiscountFactory, rate=0.1),
     )
     multiple_use = False

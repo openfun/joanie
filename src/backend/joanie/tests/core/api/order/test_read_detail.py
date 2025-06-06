@@ -107,7 +107,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 "enrollment": None,
                 "state": order.state,
                 "main_invoice_reference": order.main_invoice.reference,
-                "order_group_ids": [],
+                "offer_rule_ids": [],
                 "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                 "organization": {
                     "id": str(order.organization.id),

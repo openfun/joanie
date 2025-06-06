@@ -17,7 +17,7 @@ from rest_framework.generics import get_object_or_404
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
-from joanie.core.utils.batch_order import get_active_order_group
+from joanie.core.utils.batch_order import get_active_offer_rule
 from joanie.payment.models import CreditCard
 
 
@@ -1141,8 +1141,8 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Product.objects.all(), slug_field="id", source="product"
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
-    order_group_ids = serializers.SlugRelatedField(
-        source="order_groups",
+    offer_rule_ids = serializers.SlugRelatedField(
+        source="offer_rules",
         many=True,
         slug_field="id",
         required=False,
@@ -1185,7 +1185,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollment",
             "id",
             "main_invoice_reference",
-            "order_group_ids",
+            "offer_rule_ids",
             "organization",
             "owner",
             "product_id",
@@ -1236,27 +1236,27 @@ class OrderSerializer(serializers.ModelSerializer):
             filters.update({"organizations": organization_id})
         course_product_relation = models.CourseProductRelation.objects.get(**filters)
 
-        order_groups = models.OrderGroup.objects.find_actives(
+        offer_rules = models.OfferRule.objects.find_actives(
             course_product_relation_id=course_product_relation.id
         )
         seats_limitation = None
-        for order_group in order_groups:
-            if order_group.nb_seats is not None:
-                if order_group.available_seats == 0:
-                    seats_limitation = order_group
+        for offer_rule in offer_rules:
+            if offer_rule.nb_seats is not None:
+                if offer_rule.available_seats == 0:
+                    seats_limitation = offer_rule
                     continue
 
                 seats_limitation = None
 
-            if order_group.is_enabled:
-                if "order_groups" not in validated_data:
-                    validated_data["order_groups"] = []
-                validated_data["order_groups"].append(order_group)
+            if offer_rule.is_enabled:
+                if "offer_rules" not in validated_data:
+                    validated_data["offer_rules"] = []
+                validated_data["offer_rules"].append(offer_rule)
 
         if seats_limitation:
             raise serializers.ValidationError(
                 {
-                    "order_group": [
+                    "offer_rule": [
                         "Maximum number of orders reached for "
                         f"product {validated_data['product'].title:s}"
                     ]
@@ -1267,14 +1267,14 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """
-        Make the "course", "organization", "order_group_ids", "product"
+        Make the "course", "organization", "offer_rule_ids", "product"
         and "has_waived_withdrawal_right" fields read_only only on update.
         """
         validated_data.pop("course", None)
         validated_data.pop("enrollment", None)
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
-        validated_data.pop("order_group_ids", None)
+        validated_data.pop("offer_rule_ids", None)
         validated_data.pop("has_waived_withdrawal_right", None)
         return super().update(instance, validated_data)
 
@@ -1324,8 +1324,8 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         help_text="The number of seats to reserve",
     )
     trainees = serializers.JSONField(default=list)
-    order_group_ids = serializers.SlugRelatedField(
-        source="order_groups",
+    offer_rule_ids = serializers.SlugRelatedField(
+        source="offer_rules",
         many=True,
         slug_field="id",
         required=False,
@@ -1352,7 +1352,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "country",
             "nb_seats",
             "trainees",
-            "order_group_ids",
+            "offer_rule_ids",
         ]
         read_only_fields = [
             "id",
@@ -1362,7 +1362,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "organization",
             "main_invoice_reference",
             "contract_id",
-            "order_group_ids",
+            "offer_rule_ids",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
@@ -1373,7 +1373,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Verify that the number of available seats in order groups of the course product relation
+        Verify that the number of available seats in offer rules of the course product relation
         is sufficient to meet the required seats specified in the batch order.
         """
         organization_id = self.initial_data.get("organization_id")
@@ -1383,23 +1383,23 @@ class BatchOrderSerializer(serializers.ModelSerializer):
 
         course_product_relation_id = self.initial_data.get("relation_id")
         nb_seats = self.initial_data.get("nb_seats")
-        validated_data.setdefault("order_groups", [])
+        validated_data.setdefault("offer_rules", [])
 
         try:
-            order_group = get_active_order_group(course_product_relation_id, nb_seats)
+            offer_rule = get_active_offer_rule(course_product_relation_id, nb_seats)
         except ValueError as exception:
             relation = models.CourseProductRelation.objects.get(
                 id=course_product_relation_id
             )
             raise serializers.ValidationError(
                 {
-                    "order_group": [
+                    "offer_rule": [
                         "Maximum number of orders reached for "
                         f"product {relation.product.title:s}"
                     ]
                 }
             ) from exception
-        if order_group:
-            validated_data["order_groups"].append(order_group)
+        if offer_rule:
+            validated_data["offer_rules"].append(offer_rule)
 
         return super().create(validated_data)

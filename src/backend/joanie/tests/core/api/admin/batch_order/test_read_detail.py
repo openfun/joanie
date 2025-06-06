@@ -69,7 +69,7 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
                 "total": float(batch_order.total),
                 "trainees": batch_order.trainees,
                 "vouchers": [],
-                "order_groups": [],
+                "offer_rules": [],
                 "voucher": None,
             },
         )

@@ -63,7 +63,7 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "trainees": batch_order.trainees,
                 "voucher": None,
                 "vouchers": [],
-                "order_groups": [],
+                "offer_rules": [],
             }
             for batch_order in batch_orders
         ]

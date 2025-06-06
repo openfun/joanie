@@ -187,9 +187,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
 
-    def test_api_admin_batch_orders_create_order_group_limited_seats(self):
+    def test_api_admin_batch_orders_create_offer_rule_limited_seats(self):
         """
-        Authenticated admin user should not be able to create a batch order if the order group
+        Authenticated admin user should not be able to create a batch order if the offer rule
         available seats does not meet the batch order number of seats requested.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -200,7 +200,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        factories.OrderGroupFactory(
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             nb_seats=1,
@@ -214,10 +214,10 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
 
-    def test_api_admin_batch_orders_create_when_order_group_has_discount(self):
+    def test_api_admin_batch_orders_create_when_offer_rule_has_discount(self):
         """
         Authenticated user should be able to get the discounted price on the batch order when
-        there is a discount on the order group.
+        there is a discount on the offer rule.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -227,7 +227,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.1),
             course_product_relation=relation,
             is_active=True,
@@ -246,7 +246,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         self.assertEqual(batch_order.relation, relation)
         self.assertEqual(batch_order.nb_seats, 4)
-        self.assertEqual(batch_order.order_groups.first(), order_group)
+        self.assertEqual(batch_order.offer_rules.first(), offer_rule)
         self.assertEqual(batch_order.total, D("36.00"))
 
     def test_api_admin_batch_orders_create_auto_assign_organization_with_least_orders(
@@ -268,7 +268,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             product__price=10,
             organizations=[organization, expected_organization],
         )
-        factories.OrderGroupFactory(
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             nb_seats=4,
@@ -308,7 +308,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             product__price=10,
             organizations=[organization1, organization2],
         )
-        factories.OrderGroupFactory(
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             nb_seats=8,
@@ -370,7 +370,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        factories.OrderGroupFactory(
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             nb_seats=10,

@@ -70,13 +70,13 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
                     status_code=HTTPStatus.BAD_REQUEST,
                 )
 
-    def test_api_admin_batch_orders_submit_for_signature_when_no_seats_left_on_active_order_groups(
+    def test_api_admin_batch_orders_submit_for_signature_when_no_seats_left_on_active_offer_rules(
         self,
     ):
         """
         Authenticated admin user should not be able to submit for signature the contract
-        of a batch order when there are no seats available on the active order groups. This
-        situation comes when the initial order group has not enough seats available.
+        of a batch order when there are no seats available on the active offer rules. This
+        situation comes when the initial offer rule has not enough seats available.
         """
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
@@ -85,17 +85,17 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
             state=enums.BATCH_ORDER_STATE_ASSIGNED, nb_seats=10
         )
 
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             nb_seats=10, course_product_relation=batch_order.relation
         )
-        batch_order.order_groups.add(order_group)
+        batch_order.offer_rules.add(offer_rule)
 
-        # Create just 1 order into the order group to make it not enough for the batch order
+        # Create just 1 order into the offer rule to make it not enough for the batch order
         factories.OrderFactory(
             product=batch_order.relation.product,
             course=batch_order.relation.course,
             state=enums.ORDER_STATE_COMPLETED,
-            order_groups=[order_group],
+            offer_rules=[offer_rule],
         )
 
         response = self.client.post(
@@ -105,7 +105,7 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
 
         self.assertContains(
             response,
-            "Cannot submit to signature, active order groups has no seats left",
+            "Cannot submit to signature, active offer rules has no seats left",
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
@@ -114,13 +114,13 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
         "joanie.core.models.products.BatchOrder.submit_for_signature",
         return_value="https://dummmy.invitation_link.fr",
     )
-    def test_api_admin_submit_for_signature_should_update_order_group_if_initial_no_seats_left(
+    def test_api_admin_submit_for_signature_should_update_offer_rule_if_initial_no_seats_left(
         self, _mock_submit_for_signature, mock_send_mail_invitation_link
     ):
         """
         Authenticated admin user should be able to submit for signature the contract
-        of a batch order even if the initial order group has not enough seats available.
-        When there are other order groups on that relation that have seats left, it should
+        of a batch order even if the initial offer rule has not enough seats available.
+        When there are other offer rules on that relation that have seats left, it should
         replace it to a new one with the seats available. And finally, it should send the
         invitation link to the owner.
         """
@@ -134,20 +134,20 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
             with self.subTest(state=state):
                 batch_order = factories.BatchOrderFactory(state=state, nb_seats=7)
 
-                order_group_1 = factories.OrderGroupFactory(
+                offer_rule_1 = factories.OfferRuleFactory(
                     nb_seats=7, course_product_relation=batch_order.relation
                 )
-                batch_order.order_groups.add(order_group_1)
-                order_group_2 = factories.OrderGroupFactory(
+                batch_order.offer_rules.add(offer_rule_1)
+                offer_rule_2 = factories.OfferRuleFactory(
                     nb_seats=10, course_product_relation=batch_order.relation
                 )
 
-                # Create 1 order on the 1st order group to update the batch order to the 2nd one
+                # Create 1 order on the 1st offer rule to update the batch order to the 2nd one
                 factories.OrderFactory(
                     product=batch_order.relation.product,
                     course=batch_order.relation.course,
                     state=enums.ORDER_STATE_COMPLETED,
-                    order_groups=[order_group_1],
+                    offer_rules=[offer_rule_1],
                 )
 
                 response = self.client.post(
@@ -159,10 +159,10 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
 
                 self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
                 self.assertFalse(
-                    batch_order.order_groups.filter(pk=order_group_1.id).exists()
+                    batch_order.offer_rules.filter(pk=offer_rule_1.id).exists()
                 )
                 self.assertTrue(
-                    batch_order.order_groups.filter(pk=order_group_2.id).exists()
+                    batch_order.offer_rules.filter(pk=offer_rule_2.id).exists()
                 )
                 self.assertTrue(mock_send_mail_invitation_link.called)
                 mock_send_mail_invitation_link.reset_mock()

@@ -36,11 +36,11 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__certificate_definition=factories.CertificateDefinitionFactory(),
         )
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
+        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
         order = factories.OrderGeneratorFactory(
             course=relation.course,
             product=relation.product,
-            order_groups=[order_group],
+            offer_rules=[offer_rule],
             organization=relation.organizations.first(),
             state=enums.ORDER_STATE_COMPLETED,
         )
@@ -109,17 +109,17 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                     "code": order.organization.code,
                     "title": order.organization.title,
                 },
-                "order_groups": [
+                "offer_rules": [
                     {
-                        "id": str(order_group.id),
-                        "description": order_group.description,
-                        "nb_seats": order_group.nb_seats,
-                        "is_active": order_group.is_active,
-                        "is_enabled": order_group.is_enabled,
-                        "nb_available_seats": order_group.nb_seats
-                        - order_group.get_nb_binding_orders(),
-                        "created_on": format_date(order_group.created_on),
-                        "can_edit": order_group.can_edit,
+                        "id": str(offer_rule.id),
+                        "description": offer_rule.description,
+                        "nb_seats": offer_rule.nb_seats,
+                        "is_active": offer_rule.is_active,
+                        "is_enabled": offer_rule.is_enabled,
+                        "nb_available_seats": offer_rule.nb_seats
+                        - offer_rule.get_nb_binding_orders(),
+                        "created_on": format_date(offer_rule.created_on),
+                        "can_edit": offer_rule.can_edit,
                         "start": None,
                         "end": None,
                         "discount": None,
@@ -316,7 +316,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                     "code": order.organization.code,
                     "title": order.organization.title,
                 },
-                "order_groups": [],
+                "offer_rules": [],
                 "total": float(order.total),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "contract": None,

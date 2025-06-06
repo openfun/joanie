@@ -757,32 +757,32 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_course_product_relation_read_detail_with_order_groups(self):
-        """The detail of order groups related to the product should be served as expected."""
+    def test_api_course_product_relation_read_detail_with_offer_rules(self):
+        """The detail of offer rules related to the product should be served as expected."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory()
         product = relation.product
         course = relation.course
         factories.UserCourseAccessFactory(user=user, course=course)
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             nb_seats=random.randint(10, 100),
             discount=factories.DiscountFactory(amount=10),
         )
-        factories.OrderGroupFactory(course_product_relation=relation)
+        factories.OfferRuleFactory(course_product_relation=relation)
         for _ in range(3):
             factories.OrderFactory(
                 course=course,
                 product=product,
-                order_groups=[order_group],
+                offer_rules=[offer_rule],
                 state=random.choice(enums.ORDER_STATES_BINDING),
             )
         for state, _label in enums.ORDER_STATE_CHOICES:
             if state in (*enums.ORDER_STATES_BINDING, enums.ORDER_STATE_TO_OWN):
                 continue
             factories.OrderFactory(
-                course=course, product=product, order_groups=[order_group], state=state
+                course=course, product=product, offer_rules=[offer_rule], state=state
             )
 
         with self.assertNumQueries(54):
@@ -802,13 +802,13 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(content["discount_amount"], order_group.discount.amount)
-        self.assertEqual(content["discount_rate"], order_group.discount.rate)
+        self.assertEqual(content["discount_amount"], offer_rule.discount.amount)
+        self.assertEqual(content["discount_rate"], offer_rule.discount.rate)
         self.assertEqual(content["discount_start"], None)
         self.assertEqual(content["discount_end"], None)
-        self.assertEqual(content["description"], order_group.description)
-        self.assertEqual(content["nb_available_seats"], order_group.available_seats)
-        self.assertEqual(content["nb_seats"], order_group.nb_seats)
+        self.assertEqual(content["description"], offer_rule.description)
+        self.assertEqual(content["nb_available_seats"], offer_rule.available_seats)
+        self.assertEqual(content["nb_seats"], offer_rule.nb_seats)
 
     def test_api_course_product_relation_read_detail_discount(self):
         """The discounted price should be calculated as expected."""
@@ -816,7 +816,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         relation = factories.CourseProductRelationFactory()
         factories.UserCourseAccessFactory(user=user, course=relation.course)
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             nb_seats=random.randint(10, 100),
             discount=factories.DiscountFactory(amount=10),
@@ -831,28 +831,28 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             content["discounted_price"],
-            float(relation.product.price) - order_group.discount.amount,
+            float(relation.product.price) - offer_rule.discount.amount,
         )
-        self.assertEqual(content["discount_amount"], order_group.discount.amount)
+        self.assertEqual(content["discount_amount"], offer_rule.discount.amount)
         self.assertEqual(content["discount_rate"], None)
         self.assertEqual(content["discount_start"], None)
         self.assertEqual(content["discount_end"], None)
         self.assertEqual(content["description"], None)
-        self.assertEqual(content["nb_available_seats"], order_group.nb_seats)
-        self.assertEqual(content["nb_seats"], order_group.nb_seats)
+        self.assertEqual(content["nb_available_seats"], offer_rule.nb_seats)
+        self.assertEqual(content["nb_seats"], offer_rule.nb_seats)
 
-    def test_api_course_product_relation_read_detail_with_order_groups_cache(self):
+    def test_api_course_product_relation_read_detail_with_offer_rules_cache(self):
         """Cache should be reset on order submit and cancel."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         product = factories.ProductFactory(price="0.00")
         relation = factories.CourseProductRelationFactory(product=product)
         factories.UserCourseAccessFactory(user=user, course=relation.course)
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation, nb_seats=10
         )
         order = factories.OrderFactory(
-            product=product, course=relation.course, order_groups=[order_group]
+            product=product, course=relation.course, offer_rules=[offer_rule]
         )
 
         response = self.client.get(
@@ -909,9 +909,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["nb_available_seats"], 10)
         self.assertEqual(content["nb_seats"], 10)
 
-    def test_api_course_product_relation_return_only_is_active_order_groups(self):
+    def test_api_course_product_relation_return_only_is_active_offer_rules(self):
         """
-        Authenticated user should only have active order groups on the course product
+        Authenticated user should only have active offer rules on the course product
         relation.
         """
         user = factories.UserFactory()
@@ -919,12 +919,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         relation = factories.CourseProductRelationFactory()
         factories.UserCourseAccessFactory(user=user, course=relation.course)
 
-        order_group_1 = factories.OrderGroupFactory(
+        offer_rule_1 = factories.OfferRuleFactory(
             course_product_relation=relation, is_active=True
         )
-        factories.OrderGroupFactory(course_product_relation=relation, is_active=False)
-        factories.OrderGroupFactory(course_product_relation=relation, is_active=True)
-        factories.OrderGroupFactory(
+        factories.OfferRuleFactory(course_product_relation=relation, is_active=False)
+        factories.OfferRuleFactory(course_product_relation=relation, is_active=True)
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             end="2025-02-16T16:35:49.326248Z",
@@ -943,8 +943,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["discount_start"], None)
         self.assertEqual(content["discount_end"], None)
         self.assertEqual(content["description"], None)
-        self.assertEqual(content["nb_available_seats"], order_group_1.available_seats)
-        self.assertEqual(content["nb_seats"], order_group_1.nb_seats)
+        self.assertEqual(content["nb_available_seats"], offer_rule_1.available_seats)
+        self.assertEqual(content["nb_seats"], offer_rule_1.nb_seats)
 
     def test_api_course_product_relation_create_anonymous(self):
         """
@@ -1609,10 +1609,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.50),
         )
-        relation.order_groups.add(order_group)
+        relation.offer_rules.add(offer_rule)
 
         with (
             mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
@@ -1739,10 +1739,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.50),
         )
-        relation.order_groups.add(order_group)
+        relation.offer_rules.add(offer_rule)
 
         with (
             mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),

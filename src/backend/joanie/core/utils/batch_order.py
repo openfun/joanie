@@ -11,49 +11,49 @@ from joanie.payment import get_payment_backend
 from joanie.payment.models import Invoice, Transaction
 
 
-def get_active_order_group(relation_id, nb_seats: int):
+def get_active_offer_rule(relation_id, nb_seats: int):
     """
-    Responsible to seek for an active order group where the number of seats is available.
-    Otherwise, if all active order groups don't have enough seats requested, it raises an error.
-    When no order groups is found for the relation, it returns None.
+    Responsible to seek for an active offer rule where the number of seats is available.
+    Otherwise, if all active offer rules don't have enough seats requested, it raises an error.
+    When no offer rules is found for the relation, it returns None.
     """
-    order_groups = models.OrderGroup.objects.find_actives(
+    offer_rules = models.OfferRule.objects.find_actives(
         course_product_relation_id=relation_id
     )
     seats_limitation = None
-    for order_group in order_groups:
-        if order_group.nb_seats is not None:
-            if order_group.available_seats < nb_seats:
-                seats_limitation = order_group
+    for offer_rule in offer_rules:
+        if offer_rule.nb_seats is not None:
+            if offer_rule.available_seats < nb_seats:
+                seats_limitation = offer_rule
                 continue
 
             seats_limitation = None
 
-        if order_group.is_enabled:
-            return order_group
+        if offer_rule.is_enabled:
+            return offer_rule
 
     if seats_limitation:
         raise ValueError(_("Seat limitation has been reached."))
 
-    # No order groups were setted for this relation
+    # No offer rules were setted for this relation
     return None
 
 
 def assign_organization(batch_order):
     """
     Assigns an organization to a batch order with the least active orders.
-    It also add an active order group if some are declared on the course product relation.
+    It also add an active offer rule if some are declared on the course product relation.
     Finally, it initiates the flow of the batch order to state 'assigned'.
     """
     batch_order.organization = get_least_active_organization(
         batch_order.relation.product, batch_order.relation.course
     )
 
-    order_group = get_active_order_group(
+    offer_rule = get_active_offer_rule(
         relation_id=batch_order.relation.id, nb_seats=batch_order.nb_seats
     )
-    if order_group:
-        batch_order.order_groups.add(order_group)
+    if offer_rule:
+        batch_order.offer_rules.add(offer_rule)
 
     batch_order.init_flow()
 

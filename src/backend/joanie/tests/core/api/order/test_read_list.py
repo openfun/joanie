@@ -82,7 +82,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "id": str(order.id),
                         "main_invoice_reference": None,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "payment_schedule": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
@@ -157,7 +157,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
@@ -290,7 +290,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
@@ -466,7 +466,7 @@ class OrderListApiTest(BaseAPITestCase):
                         },
                         "target_enrollments": [],
                         "main_invoice_reference": None,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
@@ -576,7 +576,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
@@ -720,7 +720,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "was_created_by_order": enrollment.was_created_by_order,
                         },
                         "main_invoice_reference": None,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
@@ -936,7 +936,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
@@ -1025,7 +1025,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": order.main_invoice.reference,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),
@@ -1118,7 +1118,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "enrollment": None,
                         "target_enrollments": [],
                         "main_invoice_reference": None,
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
                         "organization": {
                             "id": str(order.organization.id),

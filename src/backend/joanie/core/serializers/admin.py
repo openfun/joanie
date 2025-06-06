@@ -20,7 +20,7 @@ from joanie.core.serializers.fields import (
     ThumbnailDetailField,
 )
 from joanie.core.utils import Echo, get_default_currency_symbol
-from joanie.core.utils.batch_order import get_active_order_group
+from joanie.core.utils.batch_order import get_active_offer_rule
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
 
@@ -448,20 +448,20 @@ class AdminDiscountSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "is_used"]
 
     def get_is_used(self, discount):
-        """Return the count of where the discount is used through order groups"""
+        """Return the count of where the discount is used through offer rules"""
         return discount.usage_count
 
 
-class AdminOrderGroupSerializer(serializers.ModelSerializer):
+class AdminOfferRuleSerializer(serializers.ModelSerializer):
     """
-    Admin Serializer for OrderGroup model
+    Admin Serializer for OfferRule model
     """
 
     nb_available_seats = serializers.SerializerMethodField(read_only=True)
     discount = AdminDiscountSerializer(read_only=False, required=False)
 
     class Meta:
-        model = models.OrderGroup
+        model = models.OfferRule
         fields = [
             "id",
             "nb_seats",
@@ -477,35 +477,35 @@ class AdminOrderGroupSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_nb_available_seats(self, order_group) -> int | None:
-        """Return the number of available seats for this order group."""
-        return order_group.available_seats
+    def get_nb_available_seats(self, offer_rule) -> int | None:
+        """Return the number of available seats for this offer rule."""
+        return offer_rule.available_seats
 
 
 @extend_schema_serializer(exclude_fields=("course_product_relation",))
-class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
+class AdminOfferRuleUpdateSerializer(AdminOfferRuleSerializer):
     """
-    Admin serializer for Order Group reserved for partial update and update actions.
+    Admin serializer for Offer Rule reserved for partial update and update actions.
 
-    It allows to update the field discount of an order group.
+    It allows to update the field discount of an offer rule.
     """
 
     nb_seats = serializers.IntegerField(
         required=False,
         allow_null=True,
-        label=models.OrderGroup._meta.get_field("nb_seats").verbose_name,
-        help_text=models.OrderGroup._meta.get_field("nb_seats").help_text,
-        default=models.OrderGroup._meta.get_field("nb_seats").default,
-        min_value=models.OrderGroup._meta.get_field("nb_seats")
+        label=models.OfferRule._meta.get_field("nb_seats").verbose_name,
+        help_text=models.OfferRule._meta.get_field("nb_seats").help_text,
+        default=models.OfferRule._meta.get_field("nb_seats").default,
+        min_value=models.OfferRule._meta.get_field("nb_seats")
         .validators[0]
         .limit_value,
-        max_value=models.OrderGroup._meta.get_field("nb_seats")
+        max_value=models.OfferRule._meta.get_field("nb_seats")
         .validators[1]
         .limit_value,
     )
     is_active = serializers.BooleanField(
         required=False,
-        default=models.OrderGroup._meta.get_field("is_active").default,
+        default=models.OfferRule._meta.get_field("is_active").default,
     )
     start = serializers.DateTimeField(required=False, allow_null=True)
     end = serializers.DateTimeField(required=False, allow_null=True)
@@ -513,8 +513,8 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
         required=False, allow_blank=True, allow_null=True
     )
 
-    class Meta(AdminOrderGroupSerializer.Meta):
-        fields = [*AdminOrderGroupSerializer.Meta.fields]
+    class Meta(AdminOfferRuleSerializer.Meta):
+        fields = [*AdminOfferRuleSerializer.Meta.fields]
 
     def to_internal_value(self, data):
         """
@@ -528,7 +528,7 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
         return super().to_internal_value(data)
 
     def update(self, instance, validated_data):
-        """Update the discount for the order group"""
+        """Update the discount for the offer rule"""
         if discount_id := self.initial_data.get("discount_id"):
             discount = get_object_or_404(models.Discount, id=discount_id)
             validated_data["discount"] = discount
@@ -538,23 +538,23 @@ class AdminOrderGroupUpdateSerializer(AdminOrderGroupSerializer):
         return super().update(instance, validated_data)
 
 
-class AdminOrderGroupCreateSerializer(AdminOrderGroupUpdateSerializer):
+class AdminOfferRuleCreateSerializer(AdminOfferRuleUpdateSerializer):
     """
-    Admin Serializer for OrderGroup model reserved to create action.
+    Admin Serializer for OfferRule model reserved to create action.
 
-    Unlike `AdminOrderGroupSerializer`, it allows to pass a product to create
-    the order group. You can also add a discount.
+    Unlike `AdminOfferRuleSerializer`, it allows to pass a product to create
+    the offer rule. You can also add a discount.
     """
 
-    class Meta(AdminOrderGroupUpdateSerializer.Meta):
+    class Meta(AdminOfferRuleUpdateSerializer.Meta):
         fields = [
-            *AdminOrderGroupUpdateSerializer.Meta.fields,
+            *AdminOfferRuleUpdateSerializer.Meta.fields,
             "course_product_relation",
         ]
 
     def create(self, validated_data):
         """
-        Attach the discount to the order group.
+        Attach the discount to the offer rule.
         """
         if discount_id := self.initial_data.get("discount_id"):
             discount = get_object_or_404(models.Discount, id=discount_id)
@@ -591,7 +591,7 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
     course = AdminCourseLightSerializer(read_only=True)
     product = AdminProductLightSerializer(read_only=True)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
-    order_groups = AdminOrderGroupSerializer(many=True, read_only=True)
+    offer_rules = AdminOfferRuleSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.CourseProductRelation
@@ -600,11 +600,11 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
             "can_edit",
             "course",
             "organizations",
-            "order_groups",
+            "offer_rules",
             "product",
             "uri",
         ]
-        read_only_fields = ["id", "can_edit", "order_groups", "uri"]
+        read_only_fields = ["id", "can_edit", "offer_rules", "uri"]
 
     def create(self, validated_data):
         """
@@ -1264,7 +1264,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     certificate = AdminCertificateSerializer()
     main_invoice = AdminInvoiceSerializer()
     organization = AdminOrganizationLightSerializer(read_only=True)
-    order_groups = AdminOrderGroupSerializer(read_only=True, many=True)
+    offer_rules = AdminOfferRuleSerializer(read_only=True, many=True)
     payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
     credit_card = AdminCreditCardSerializer(read_only=True)
     has_waived_withdrawal_right = serializers.BooleanField(read_only=True)
@@ -1280,7 +1280,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "course",
             "enrollment",
             "organization",
-            "order_groups",
+            "offer_rules",
             "total",
             "total_currency",
             "contract",
@@ -1698,7 +1698,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         help_text="The number of seats to reserve",
     )
     trainees = serializers.JSONField(default=list)
-    order_groups = AdminOrderGroupSerializer(read_only=True, many=True)
+    offer_rules = AdminOfferRuleSerializer(read_only=True, many=True)
     vouchers = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -1722,7 +1722,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "trainees",
             "voucher",
             "vouchers",
-            "order_groups",
+            "offer_rules",
         ]
         read_only_fields = [
             "id",
@@ -1730,7 +1730,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "currency",
             "main_invoice_reference",
             "contract_id",
-            "order_groups",
+            "offer_rules",
             "vouchers",
         ]
 
@@ -1748,7 +1748,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         """
         When an organization is passed, we should add it to the validated data,
         otherwise, we should set the organization with the least active orders.
-        Verify that the number of available seats in order groups of the course
+        Verify that the number of available seats in offer rules of the course
         product relation is sufficient to meet the required seats specified in
         the batch order.
         """
@@ -1766,20 +1766,20 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             ).id
 
         nb_seats = validated_data.get("nb_seats")
-        validated_data.setdefault("order_groups", [])
+        validated_data.setdefault("offer_rules", [])
         try:
-            order_group = get_active_order_group(relation.id, nb_seats)
+            offer_rule = get_active_offer_rule(relation.id, nb_seats)
         except ValueError as exception:
             raise serializers.ValidationError(
                 {
-                    "order_group": [
+                    "offer_rule": [
                         "Maximum number of orders reached for "
                         f"product {relation.product.title:s}"
                     ]
                 }
             ) from exception
-        if order_group:
-            validated_data["order_groups"].append(order_group)
+        if offer_rule:
+            validated_data["offer_rules"].append(offer_rule)
 
         return super().create(validated_data)
 
