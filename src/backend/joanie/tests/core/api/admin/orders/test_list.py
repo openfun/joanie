@@ -5,11 +5,11 @@ from datetime import date, datetime, timezone
 from http import HTTPStatus
 from unittest import mock
 
-from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, Order
+from joanie.core.utils import get_default_currency_symbol
 from joanie.tests import format_date
 
 
@@ -82,7 +82,7 @@ class OrdersAdminApiListTestCase(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(6):
             response = self.client.get("/api/v1.0/admin/orders/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -106,7 +106,8 @@ class OrdersAdminApiListTestCase(TestCase):
                     "product_title": order.product.title,
                     "state": order.state,
                     "total": float(order.total),
-                    "total_currency": settings.DEFAULT_CURRENCY,
+                    "total_currency": get_default_currency_symbol(),
+                    "discount": order.discount,
                 }
                 for order in sorted(orders, key=lambda x: x.created_on, reverse=True)
             ],

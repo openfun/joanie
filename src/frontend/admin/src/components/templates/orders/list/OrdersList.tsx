@@ -52,6 +52,16 @@ const messages = defineMessages({
     defaultMessage: "Updated on",
     description: "Label for the updated on header inside the table",
   },
+  total: {
+    id: "components.templates.orders.list.total",
+    defaultMessage: "Total",
+    description: "Label for the total header inside the table",
+  },
+  discount: {
+    id: "components.templates.orders.list.discount",
+    defaultMessage: "Discount",
+    description: "Label for the discount header inside the table",
+  },
 });
 
 type Props = DefaultTableProps<OrderListItem>;
@@ -110,6 +120,20 @@ export function OrdersList(props: Props) {
       headerName: intl.formatMessage(messages.updatedOn),
       flex: 1,
       valueGetter: (value, row) => formatShortDate(row.updated_on),
+    },
+    {
+      field: "total",
+      headerName: intl.formatMessage(messages.total),
+      flex: 1,
+      valueGetter: (value, row) => {
+        return row.total ? `${row.total} ${row.total_currency}` : "-";
+      },
+    },
+    {
+      field: "discount",
+      headerName: intl.formatMessage(messages.discount),
+      flex: 1,
+      sortable: false,
     },
   ];
 

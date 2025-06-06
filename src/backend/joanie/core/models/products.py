@@ -21,7 +21,6 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 import requests
-from babel.numbers import get_currency_symbol
 from django_countries.fields import CountryField
 from parler import models as parler_models
 from stockholm import Money
@@ -51,7 +50,11 @@ from joanie.core.models.courses import (
 from joanie.core.utils import (
     contract_definition as contract_definition_utility,
 )
-from joanie.core.utils import issuers, webhooks
+from joanie.core.utils import (
+    get_default_currency_symbol,
+    issuers,
+    webhooks,
+)
 from joanie.core.utils.billing_address import CompanyBillingAddress
 from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
@@ -1601,6 +1604,20 @@ class Order(BaseModel):
             if installment["state"] == enums.PAYMENT_STATE_REFUNDED
         )
 
+    @property
+    def discount(self):
+        """
+        Return the discount applied to the order.
+        It can be either from a voucher or an order group.
+        """
+        for order_group in self.order_groups.all():
+            if discount := order_group.discount:
+                description = order_group.description or ""
+                initial_price = f"{self.product.price} {get_default_currency_symbol()}"
+                return f"{discount} ({initial_price}) {description}"
+
+        return None
+
 
 class OrderTargetCourseRelation(BaseModel):
     """
@@ -2112,9 +2129,9 @@ class Discount(BaseModel):
     def __str__(self):
         if self.rate is not None:
             rate_as_int = int(self.rate * 100)
-            return f"{rate_as_int}%"
+            return f"-{rate_as_int}%"
 
-        return f"{self.amount} {get_currency_symbol(settings.DEFAULT_CURRENCY)}"
+        return f"-{self.amount} {get_default_currency_symbol()}"
 
     @property
     def usage_count(self):

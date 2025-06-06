@@ -7532,11 +7532,16 @@
                         "type": "string",
                         "description": "Return the code of currency used by the instance",
                         "readOnly": true
+                    },
+                    "discount": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "course_code",
                     "created_on",
+                    "discount",
                     "enrollment_id",
                     "id",
                     "organization_title",

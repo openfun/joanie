@@ -12,24 +12,24 @@ class DiscountModelsTestCase(TestCase):
     def test_models_discount_str(self):
         """str should return the amount if it exists."""
         with override_settings(DEFAULT_CURRENCY="USD"):
-            self.assertEqual(str(Discount(amount=10)), "10 $")
+            self.assertEqual(str(Discount(amount=10)), "-10 $")
 
         with override_settings(DEFAULT_CURRENCY="EUR"):
-            self.assertEqual(str(Discount(amount=10)), "10 €")
+            self.assertEqual(str(Discount(amount=10)), "-10 €")
 
     def test_models_discount_str_rate(self):
         """str should return the rate if it exists."""
         for rate, str_repr in [
-            (0.0, "0%"),
-            (0.12345678, "12%"),
-            (0.129, "12%"),
-            (0.15, "15%"),
-            (0.5, "50%"),
-            (0.75, "75%"),
-            (0.99, "99%"),
-            (0.9999999999999999, "99%"),
-            (0.99999999999999999, "100%"),
-            (1.0, "100%"),
+            (0.0, "-0%"),
+            (0.12345678, "-12%"),
+            (0.129, "-12%"),
+            (0.15, "-15%"),
+            (0.5, "-50%"),
+            (0.75, "-75%"),
+            (0.99, "-99%"),
+            (0.9999999999999999, "-99%"),
+            (0.99999999999999999, "-100%"),
+            (1.0, "-100%"),
         ]:
             with self.subTest(rate=rate, str_repr=str_repr):
                 self.assertEqual(str(Discount(rate=rate)), str_repr)

@@ -8,8 +8,10 @@ import hashlib
 import json
 import re
 
+from django.conf import settings
 from django.utils.text import slugify
 
+from babel.numbers import get_currency_symbol
 from configurations import values
 from configurations.values import ValidationMixin
 from PIL import ImageFile as PillowImageFile
@@ -104,6 +106,13 @@ def file_checksum(file, chunk_size=4096):
             sha256.update(chunk)
 
     return sha256.hexdigest()
+
+
+def get_default_currency_symbol():
+    """
+    Return the default currency symbol based on the configured default currency.
+    """
+    return get_currency_symbol(settings.DEFAULT_CURRENCY)
 
 
 class JSONValue(values.Value):
