@@ -52,9 +52,7 @@ const messages = defineMessages({
   },
 });
 
-const isOfferRule = (
-  item: OfferRule | OfferRuleDummy,
-): item is OfferRule => {
+const isOfferRule = (item: OfferRule | OfferRuleDummy): item is OfferRule => {
   if (!item) return false;
   return "id" in item;
 };

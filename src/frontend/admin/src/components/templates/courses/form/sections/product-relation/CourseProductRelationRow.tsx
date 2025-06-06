@@ -136,8 +136,9 @@ export function CourseProductRelationRow({
   const { items: offerRuleDummyList, ...dummyListMethods } =
     useList<OfferRuleDummy>([]);
 
-  const { items: offerRuleList, ...offerRuleListMethods } =
-    useList<OfferRule>(relation.offer_rules ?? []);
+  const { items: offerRuleList, ...offerRuleListMethods } = useList<OfferRule>(
+    relation.offer_rules ?? [],
+  );
 
   const offerRuleModal = useModal();
   const deleteOfferRuleModal = useModal();

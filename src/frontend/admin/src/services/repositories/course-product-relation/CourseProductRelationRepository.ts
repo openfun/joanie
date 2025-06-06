@@ -21,8 +21,7 @@ export const courseProductRelationsRoutes = {
     `/course-product-relations/${id}/${params}`,
   update: (id: string) => `/course-product-relations/${id}/`,
   delete: (id: string) => `/course-product-relations/${id}/`,
-  addOfferRule: (id: string) =>
-    `/course-product-relations/${id}/offer-rules/`,
+  addOfferRule: (id: string) => `/course-product-relations/${id}/offer-rules/`,
   editOfferRule: (id: string, offerRuleId: string) =>
     `/course-product-relations/${id}/offer-rules/${offerRuleId}/`,
   deleteOfferRule: (id: string, offerRuleId: string) =>

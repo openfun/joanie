@@ -257,9 +257,7 @@ test.describe("Course product relation", () => {
     const offerRuleLength = course.product_relations[0].offer_rules.length;
     const addedOfferRule =
       course.product_relations[0].offer_rules[offerRuleLength - 1];
-    await expect(
-      page.getByText(`Offer rule ${offerRuleLength}`),
-    ).toBeVisible();
+    await expect(page.getByText(`Offer rule ${offerRuleLength}`)).toBeVisible();
     await expect(page.getByText(`0/1919 seats`)).toBeVisible();
     await expect(
       page.getByText(`Discount: ${getDiscountLabel(store.discounts[0])}`),
@@ -274,8 +272,7 @@ test.describe("Course product relation", () => {
 
   test("Toggle is active switch on an offer rule", async ({ page }) => {
     const course = store.list[0];
-    const offerRule = course.product_relations?.[0]
-      .offer_rules[0] as OfferRule;
+    const offerRule = course.product_relations?.[0].offer_rules[0] as OfferRule;
     offerRule.can_edit = true;
     offerRule.is_active = true;
     await store.mockCourseRunsFromCourse(page, []);
@@ -303,8 +300,7 @@ test.describe("Course product relation", () => {
   test("Edit an offer rule", async ({ page }) => {
     await store.mockCourseRunsFromCourse(page, []);
     const course = store.list[0];
-    let offerRule = course.product_relations?.[0]
-      .offer_rules[0] as OfferRule;
+    let offerRule = course.product_relations?.[0].offer_rules[0] as OfferRule;
 
     offerRule.can_edit = true;
     offerRule.is_active = true;
@@ -321,9 +317,7 @@ test.describe("Course product relation", () => {
       page.getByRole("heading", { name: `Edit course: ${course.title}` }),
     ).toBeVisible();
 
-    const offerRuleRowLocator = page.getByTestId(
-      `offer-rule-${offerRule.id}`,
-    );
+    const offerRuleRowLocator = page.getByTestId(`offer-rule-${offerRule.id}`);
 
     await offerRuleRowLocator.hover();
     await offerRuleRowLocator.getByTestId("edit-row-button").click();
@@ -358,8 +352,7 @@ test.describe("Course product relation", () => {
       store.discounts,
     );
     const course = store.list[0];
-    const offerRule = course.product_relations?.[0]
-      .offer_rules[0] as OfferRule;
+    const offerRule = course.product_relations?.[0].offer_rules[0] as OfferRule;
     offerRule.can_edit = true;
     await page.goto(PATH_ADMIN.courses.list);
     await page.getByRole("link", { name: course.title }).click();
