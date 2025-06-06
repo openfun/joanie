@@ -19,7 +19,7 @@ from joanie.core.serializers.fields import (
     ISO8601DurationField,
     ThumbnailDetailField,
 )
-from joanie.core.utils import Echo
+from joanie.core.utils import Echo, get_default_currency_symbol
 from joanie.core.utils.batch_order import get_active_order_group
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
@@ -1334,12 +1334,13 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "state",
             "total",
             "total_currency",
+            "discount",
         )
         read_only_fields = fields
 
     def get_total_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
-        return settings.DEFAULT_CURRENCY
+        return get_default_currency_symbol()
 
     def get_owner_name(self, instance) -> str:
         """
