@@ -17,13 +17,12 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from babel.numbers import get_currency_symbol
 from parler.utils import get_language_settings
 from parler.utils.context import switch_language
 
 from joanie.core import enums
 from joanie.core.models.base import BaseModel
-from joanie.core.utils import merge_dict
+from joanie.core.utils import get_default_currency_symbol, merge_dict
 from joanie.payment import enums as payment_enums
 from joanie.payment import get_payment_backend
 from joanie.payment.exceptions import PaymentProviderAPIException
@@ -219,7 +218,7 @@ class Invoice(BaseModel):
         vat = D(settings.JOANIE_VAT)
         vat_amount = self.total * vat / 100
         net_amount = self.total - vat_amount
-        currency = get_currency_symbol(settings.DEFAULT_CURRENCY)
+        currency = get_default_currency_symbol()
 
         base_context = {
             "metadata": {
