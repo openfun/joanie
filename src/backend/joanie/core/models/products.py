@@ -2112,9 +2112,9 @@ class Discount(BaseModel):
     def __str__(self):
         if self.rate is not None:
             rate_as_int = int(self.rate * 100)
-            return f"{rate_as_int}%"
+            return f"-{rate_as_int}%"
 
-        return f"{self.amount} {get_currency_symbol(settings.DEFAULT_CURRENCY)}"
+        return f"-{self.amount} {get_default_currency_symbol()}"
 
     @property
     def usage_count(self):
