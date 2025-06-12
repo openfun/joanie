@@ -24,10 +24,13 @@ from joanie.core.enums import (
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
     ORDER_STATE_REFUNDING,
+    ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUNDED,
     PAYMENT_STATE_REFUSED,
+    PRODUCT_TYPE_CERTIFICATE,
+    PRODUCT_TYPE_CREDENTIAL,
 )
 from joanie.core.models import CourseState, Order
 from joanie.core.utils import payment_schedule
@@ -1539,3 +1542,77 @@ class OrderModelsTestCase(LoggingTestCase, ActivityLogMixingTestCase):
         amount_refunded = order.get_amount_installments_refunded()
 
         self.assertEqual(amount_refunded, Money("50.00"))
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            200: (30, 70),
+            500: (30, 35, 35),
+            1000: (20, 30, 30, 20),
+        },
+    )
+    def test_models_order_payment_schedule_product_type_credential(self):
+        """
+        When the product is type credential, when the product's price is set between 1 and 200,
+        there should always be at least 2 installments.
+        """
+        prices = ["1.00", "50.00", "100.00", "200.00"]
+
+        for price in prices:
+            # Orders with credentials product should always have at minimum 2 installments to pay
+            credential_product = factories.ProductFactory(
+                price=price,
+                type=PRODUCT_TYPE_CREDENTIAL,
+            )
+            order_credential = factories.OrderGeneratorFactory(
+                product=credential_product,
+                state=ORDER_STATE_PENDING_PAYMENT,
+            )
+
+            self.assertEqual(len(order_credential.payment_schedule), 2)
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            200: (30, 70),
+            1000: (20, 30, 30, 20),
+        },
+    )
+    def test_models_order_payment_schedule_product_type_certificate(self):
+        """
+        When the product is type certificate, no matter the price set, it should always be
+        1 installment to pay. We should never have more.
+        """
+        prices = ["1.00", "199.00", "499.00", "999.00"]
+        for price in prices:
+            course = factories.CourseFactory()
+            product = factories.ProductFactory(
+                courses=[course], type=PRODUCT_TYPE_CERTIFICATE, price=price
+            )
+            enrollment = factories.EnrollmentFactory(
+                course_run__course=course,
+                course_run__is_listed=True,
+                course_run__state=CourseState.FUTURE_OPEN,
+                is_active=True,
+            )
+            order = factories.OrderFactory(
+                course=None,
+                product=product,
+                enrollment=enrollment,
+                state=ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            )
+
+            self.assertEqual(order.payment_schedule, [])
+            # Generate payment schedule is triggered in order flow post transition success
+            order.flow.update()
+
+            self.assertEqual(order.state, ORDER_STATE_PENDING)
+            self.assertNotEqual(order.payment_schedule, [])
+            self.assertEqual(len(order.payment_schedule), 1)
+            self.assertEqual(
+                order.payment_schedule[0],
+                {
+                    "id": order.payment_schedule[0]["id"],
+                    "due_date": order.payment_schedule[0]["due_date"],
+                    "amount": order.total,
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            )
