@@ -4,6 +4,7 @@ Declare and configure the models for the product / order part
 
 import itertools
 import logging
+import uuid
 from collections import defaultdict
 from datetime import timedelta
 
@@ -1406,19 +1407,31 @@ class Order(BaseModel):
 
     def generate_schedule(self):
         """
-        Generate payment schedule for the order.
+        Generate payment schedule installments for the order.
+        When the order's product type is 'credential', there should always be more than 1
+        installment. Whereas, when the order's product type is 'certificate', there should always
+        be 1 installment only.
         """
-        beginning_contract_date, course_start_date, course_end_date = (
-            self.get_schedule_dates()
-        )
-        installments = generate_payment_schedule(
-            self.total, beginning_contract_date, course_start_date, course_end_date
-        )
+        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+            beginning_contract_date, course_start_date, course_end_date = (
+                self.get_schedule_dates()
+            )
+            self.payment_schedule = generate_payment_schedule(
+                self.total, beginning_contract_date, course_start_date, course_end_date
+            )
+        else:
+            self.payment_schedule = [
+                {
+                    "id": uuid.uuid4(),
+                    "due_date": timezone.now().date(),
+                    "amount": Money(self.total),
+                    "state": enums.PAYMENT_STATE_PENDING,
+                }
+            ]
 
-        self.payment_schedule = installments
         self.save()
 
-        return installments
+        return self.payment_schedule
 
     def _set_installment_state(self, installment_id, state):
         """

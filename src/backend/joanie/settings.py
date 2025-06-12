@@ -394,7 +394,7 @@ class Base(Configuration):
         ),
     }
     JOANIE_PAYMENT_SCHEDULE_LIMITS = values.DictValue(
-        {150: (100,), 200: (30, 70), 500: (30, 35, 35), 1000: (30, 25, 25, 20)},
+        {200: (30, 70), 500: (30, 35, 35), 1000: (30, 25, 25, 20)},
         environ_name="JOANIE_PAYMENT_SCHEDULE_LIMITS",
         environ_prefix=None,
     )

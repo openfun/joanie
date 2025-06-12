@@ -21,6 +21,8 @@ and this project adheres to
 
 ### Changed
 
+- Update limits for payment schedule for credential products and
+  for certificate product should always be a one-off payment
 - Upgrade `djangorestframework` to 3.16.0
 - Use discounted_price in payment_schedule
 - Replace order groups from the client API with course product relations
