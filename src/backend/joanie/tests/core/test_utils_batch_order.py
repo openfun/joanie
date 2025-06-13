@@ -12,7 +12,7 @@ from parler.utils.context import switch_language
 from joanie.core import enums, factories
 from joanie.core.utils.batch_order import (
     assign_organization,
-    get_active_order_group,
+    get_active_offer_rule,
     send_mail_invitation_link,
     send_mail_vouchers,
     validate_success_payment,
@@ -26,7 +26,7 @@ class UtilsBatchOrderTestCase(TestCase):
     def test_utils_batch_order_assign_organization(self):
         """
         The utility assign organization should assign the organization with least binding orders
-        on the relation. It should also add the active order group of the relation
+        on the relation. It should also add the active offer rule of the relation
         on the batch order and finally it should initiate the flow. After this call, the batch
         order should have : a main invoice, a contract, a total and it should be in state
         `assigned`.
@@ -38,7 +38,7 @@ class UtilsBatchOrderTestCase(TestCase):
             product__price=10,
         )
         organization_1.courses.add(relation.course)
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             nb_seats=10, course_product_relation=relation
         )
 
@@ -49,7 +49,7 @@ class UtilsBatchOrderTestCase(TestCase):
             course=relation.course,
             organization=organization_1,
         )
-        order.order_groups.add(order_group)
+        order.offer_rules.add(offer_rule)
 
         # Create the batch order
         batch_order = factories.BatchOrderFactory(
@@ -61,78 +61,78 @@ class UtilsBatchOrderTestCase(TestCase):
         batch_order.refresh_from_db()
 
         self.assertEqual(batch_order.organization, organization_2)
-        self.assertEqual(batch_order.order_groups.first(), order_group)
+        self.assertEqual(batch_order.offer_rules.first(), offer_rule)
         self.assertIsNotNone(batch_order.main_invoice)
         self.assertIsNotNone(batch_order.contract)
         self.assertEqual(batch_order.total, D("80.00"))
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_ASSIGNED)
 
-    def test_utils_batch_order_get_active_order_group_not_found(self):
+    def test_utils_batch_order_get_active_offer_rule_not_found(self):
         """
-        When no order group is setted for a course product relation, the method
-        `get_active_order_group` should return None.
+        When no offer rule is setted for a course product relation, the method
+        `get_active_offer_rule` should return None.
         """
         batch_order = factories.BatchOrderFactory()
 
         self.assertIsNone(
-            get_active_order_group(
+            get_active_offer_rule(
                 relation_id=batch_order.relation.id, nb_seats=batch_order.nb_seats
             ),
         )
 
-    def test_utils_batch_order_get_active_order_group(self):
+    def test_utils_batch_order_get_active_offer_rule(self):
         """
-        The utility method `get_active_order_group` should return an order group that is
+        The utility method `get_active_offer_rule` should return an offer rule that is
         available on the relation that corresponds to the number of seats requested by the
         batch order.
         """
         batch_order = factories.BatchOrderFactory(nb_seats=3)
-        # Create 2 order groups for the relation
-        order_group_1 = factories.OrderGroupFactory(
+        # Create 2 offer rules for the relation
+        offer_rule_1 = factories.OfferRuleFactory(
             nb_seats=1, course_product_relation=batch_order.relation
         )
-        order_group_2 = factories.OrderGroupFactory(
+        offer_rule_2 = factories.OfferRuleFactory(
             nb_seats=3, course_product_relation=batch_order.relation
         )
-        factories.OrderGroupFactory(
+        factories.OfferRuleFactory(
             nb_seats=2, course_product_relation=batch_order.relation
         )
-        # Complete the first order group with 2 active orders
+        # Complete the first offer rule with 2 active orders
         order = factories.OrderFactory(
             product=batch_order.relation.product,
             course=batch_order.relation.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
-        order.order_groups.add(order_group_1)
+        order.offer_rules.add(offer_rule_1)
 
-        found_order_group = get_active_order_group(
+        found_offer_rule = get_active_offer_rule(
             relation_id=batch_order.relation.id, nb_seats=batch_order.nb_seats
         )
 
-        # The order group found should be the one with 3 available seats
-        self.assertEqual(found_order_group, order_group_2)
+        # The offer rule found should be the one with 3 available seats
+        self.assertEqual(found_offer_rule, offer_rule_2)
 
-    def test_utils_batch_order_get_active_order_group_seat_limitation_reached(self):
+    def test_utils_batch_order_get_active_offer_rule_seat_limitation_reached(self):
         """
         Should return an error if the seat limitation has been reached on all available order
         groups that have less seats than the number of seats requested by the batch order.
         """
         batch_order = factories.BatchOrderFactory(nb_seats=2)
-        # Create 2 order groups for the relation
-        order_group = factories.OrderGroupFactory(
+        # Create 2 offer rules for the relation
+        offer_rule = factories.OfferRuleFactory(
             nb_seats=3, course_product_relation=batch_order.relation
         )
-        # Complete the first order group with 2 active orders
+        # Complete the first offer rule with 2 active orders
         for _ in range(3):
             order = factories.OrderFactory(
                 product=batch_order.relation.product,
                 course=batch_order.relation.course,
                 state=enums.ORDER_STATE_PENDING,
             )
-            order.order_groups.add(order_group)
+            order.offer_rules.add(offer_rule)
 
         with self.assertRaises(ValueError) as context:
-            get_active_order_group(
+            get_active_offer_rule(
                 relation_id=batch_order.relation.id, nb_seats=batch_order.nb_seats
             )
 
@@ -284,7 +284,7 @@ class UtilsBatchOrderTestCase(TestCase):
         )
         relation.product.save()
 
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation, nb_seats=10
         )
         batch_order = factories.BatchOrderFactory(
@@ -293,7 +293,7 @@ class UtilsBatchOrderTestCase(TestCase):
             nb_seats=2,
             relation=relation,
         )
-        batch_order.order_groups.add(order_group)
+        batch_order.offer_rules.add(offer_rule)
         batch_order.generate_orders()
 
         send_mail_vouchers(batch_order)

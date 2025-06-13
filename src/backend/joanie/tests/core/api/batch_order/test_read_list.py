@@ -93,7 +93,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                             {"last_name": "Doe", "first_name": "John"},
                             {"last_name": "Doe", "first_name": "Jane"},
                         ],
-                        "order_group_ids": [],
+                        "offer_rule_ids": [],
                     },
                 ],
             },

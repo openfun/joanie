@@ -33,7 +33,7 @@ from joanie.core.tasks import (
     update_organization_signatories_contracts_task,
 )
 from joanie.core.utils.batch_order import (
-    get_active_order_group,
+    get_active_offer_rule,
     send_mail_invitation_link,
     validate_success_payment,
 )
@@ -590,24 +590,24 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
         return JsonResponse(cache_data, status=HTTPStatus.CREATED)
 
 
-class NestedCourseProductRelationOrderGroupViewSet(
+class NestedCourseProductRelationOfferRuleViewSet(
     SerializerPerActionMixin,
     viewsets.ModelViewSet,
     NestedGenericViewSet,
 ):
     """
-    OrderGroup ViewSet
+    OfferRule ViewSet
     """
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_classes = {
-        "create": serializers.AdminOrderGroupCreateSerializer,
-        "update": serializers.AdminOrderGroupUpdateSerializer,
-        "partial_update": serializers.AdminOrderGroupUpdateSerializer,
+        "create": serializers.AdminOfferRuleCreateSerializer,
+        "update": serializers.AdminOfferRuleUpdateSerializer,
+        "partial_update": serializers.AdminOfferRuleUpdateSerializer,
     }
-    default_serializer_class = serializers.AdminOrderGroupSerializer
-    queryset = models.OrderGroup.objects.all().select_related(
+    default_serializer_class = serializers.AdminOfferRuleSerializer
+    queryset = models.OfferRule.objects.all().select_related(
         "course_product_relation", "discount"
     )
     ordering = "created_on"
@@ -616,7 +616,7 @@ class NestedCourseProductRelationOrderGroupViewSet(
 
     def create(self, request, *args, **kwargs):
         """
-        Create a new OrderGroup using the course_product_relation_id from the URL
+        Create a new OfferRule using the course_product_relation_id from the URL
         """
         data = request.data
         data["course_product_relation"] = kwargs.get("course_product_relation_id")
@@ -801,23 +801,23 @@ class BatchOrderViewSet(
                 "Batch order state should be `assigned` or `to_sign`."
             )
 
-        if batch_order.order_groups.exists():
-            # Verify if the actual order group still accepts the number of seats requested
-            if batch_order.order_groups.first().available_seats < batch_order.nb_seats:
-                initial_order_group = batch_order.order_groups.first()
-                batch_order.order_groups.remove(initial_order_group)
+        if batch_order.offer_rules.exists():
+            # Verify if the actual offer rule still accepts the number of seats requested
+            if batch_order.offer_rules.first().available_seats < batch_order.nb_seats:
+                initial_offer_rule = batch_order.offer_rules.first()
+                batch_order.offer_rules.remove(initial_offer_rule)
 
                 try:
-                    order_group = get_active_order_group(
+                    offer_rule = get_active_offer_rule(
                         relation_id=batch_order.relation.id,
                         nb_seats=batch_order.nb_seats,
                     )
                 except ValueError as exception:
                     raise ValidationError(
-                        "Cannot submit to signature, active order groups has no seats left"
+                        "Cannot submit to signature, active offer rules has no seats left"
                     ) from exception
 
-                batch_order.order_groups.add(order_group)
+                batch_order.offer_rules.add(offer_rule)
 
         invitation_link = batch_order.submit_for_signature(batch_order.owner)
 

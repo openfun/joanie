@@ -111,7 +111,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
                         "text": course.state["text"],
                     },
                 },
-                "order_groups": [],
+                "offer_rules": [],
                 "product": {
                     "price": float(product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
@@ -233,7 +233,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
                         "text": course.state["text"],
                     },
                 },
-                "order_groups": [],
+                "offer_rules": [],
                 "product": {
                     "price": float(product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
