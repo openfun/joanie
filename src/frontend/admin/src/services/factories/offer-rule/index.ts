@@ -1,8 +1,8 @@
 import { faker } from "@faker-js/faker";
-import { OrderGroup } from "@/services/api/models/OrderGroup";
+import { OfferRule } from "@/services/api/models/OfferRule";
 import { DiscountFactory } from "@/services/factories/discounts";
 
-const build = (): OrderGroup => {
+const build = (): OfferRule => {
   const nbSeat = faker.number.int({ max: 200 });
   return {
     id: faker.string.uuid(),
@@ -17,9 +17,9 @@ const build = (): OrderGroup => {
   };
 };
 
-export function OrderGroupFactory(): OrderGroup;
-export function OrderGroupFactory(count: number): OrderGroup[];
-export function OrderGroupFactory(count?: number): OrderGroup | OrderGroup[] {
+export function OfferRuleFactory(): OfferRule;
+export function OfferRuleFactory(count: number): OfferRule[];
+export function OfferRuleFactory(count?: number): OfferRule | OfferRule[] {
   if (count) return [...Array(count)].map(() => build());
   return build();
 }

@@ -10,7 +10,7 @@ import {
   CourseProductRelation,
   DTOCourseProductRelation,
 } from "@/services/api/models/Relations";
-import { DTOOrderGroup, OrderGroup } from "@/services/api/models/OrderGroup";
+import { DTOOfferRule, OfferRule } from "@/services/api/models/OfferRule";
 import { exportToFormData } from "@/utils/forms";
 import { PaginatedResponse } from "@/types/api";
 
@@ -21,12 +21,11 @@ export const courseProductRelationsRoutes = {
     `/course-product-relations/${id}/${params}`,
   update: (id: string) => `/course-product-relations/${id}/`,
   delete: (id: string) => `/course-product-relations/${id}/`,
-  addOrderGroup: (id: string) =>
-    `/course-product-relations/${id}/order-groups/`,
-  editOrderGroup: (id: string, orderGroupId: string) =>
-    `/course-product-relations/${id}/order-groups/${orderGroupId}/`,
-  deleteOrderGroup: (id: string, orderGroupId: string) =>
-    `/course-product-relations/${id}/order-groups/${orderGroupId}/`,
+  addOfferRule: (id: string) => `/course-product-relations/${id}/offer-rules/`,
+  editOfferRule: (id: string, offerRuleId: string) =>
+    `/course-product-relations/${id}/offer-rules/${offerRuleId}/`,
+  deleteOfferRule: (id: string, offerRuleId: string) =>
+    `/course-product-relations/${id}/offer-rules/${offerRuleId}/`,
   checkCertificateGeneration: (id: string) =>
     `/course-product-relations/${id}/check_certificates_generation_process/`,
 
@@ -87,35 +86,35 @@ export const CourseProductRelationRepository = class CourseProductRelationReposi
     }).then(checkStatus);
   }
 
-  static addOrderGroup(
+  static addOfferRule(
     relationId: string,
-    orderGroup: DTOOrderGroup,
-  ): Promise<OrderGroup> {
-    return fetchApi(courseProductRelationsRoutes.addOrderGroup(relationId), {
+    offerRule: DTOOfferRule,
+  ): Promise<OfferRule> {
+    return fetchApi(courseProductRelationsRoutes.addOfferRule(relationId), {
       method: "POST",
-      body: exportToFormData(orderGroup),
+      body: exportToFormData(offerRule),
     }).then(checkStatus);
   }
 
-  static editOrderGroup(
+  static editOfferRule(
     relationId: string,
-    orderGroupId: string,
-    orderGroup: DTOOrderGroup,
-  ): Promise<OrderGroup> {
+    offerRuleId: string,
+    offerRule: DTOOfferRule,
+  ): Promise<OfferRule> {
     return fetchApi(
-      courseProductRelationsRoutes.editOrderGroup(relationId, orderGroupId),
+      courseProductRelationsRoutes.editOfferRule(relationId, offerRuleId),
       {
         method: "PATCH",
-        body: exportToFormData(orderGroup),
+        body: exportToFormData(offerRule),
       },
     ).then(checkStatus);
   }
-  static deleteOrderGroup(
+  static deleteOfferRule(
     relationId: string,
-    orderGroupId: string,
-  ): Promise<OrderGroup> {
+    offerRuleId: string,
+  ): Promise<OfferRule> {
     return fetchApi(
-      courseProductRelationsRoutes.deleteOrderGroup(relationId, orderGroupId),
+      courseProductRelationsRoutes.deleteOfferRule(relationId, offerRuleId),
       {
         method: "DELETE",
       },
