@@ -379,7 +379,7 @@ class OfferRuleAdminApiTest(TestCase):
 
         relation = factories.CourseProductRelationFactory()
         offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(7):
             response = self.client.delete(
                 f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             )
@@ -395,7 +395,7 @@ class OfferRuleAdminApiTest(TestCase):
 
         relation = factories.CourseProductRelationFactory()
         offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(7):
             response = self.client.delete(
                 f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             )
