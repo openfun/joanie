@@ -968,7 +968,7 @@ class Order(BaseModel):
         null=True,
     )
     order_groups = models.ManyToManyField(
-        OfferRule,
+        OrderGroup,
         verbose_name=_("order group"),
         related_name="_orders",
         blank=True,
