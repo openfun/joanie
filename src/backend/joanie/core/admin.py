@@ -612,13 +612,14 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = (
         "id",
         "state",
-        "offering",
+        "relation",  # keep relation because admin django only takes real fields, not properties
         "organization",
         "nb_seats",
         "orders_generated",
         "owner",
         "company_name",
         "created_on",
+        "quote",
     )
     readonly_fields = (
         "state",
@@ -627,6 +628,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "invoice",
         "offering_rules",
         "orders_generated",
+        "quote",
     )
     fieldsets = (
         (
@@ -647,7 +649,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
             _("Order details"),
             {
                 "fields": (
-                    "offering",
+                    "relation",
                     "organization",
                     "voucher",
                     "nb_seats",
@@ -665,6 +667,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                     "contract",
                     "offering_rules",
                     "orders_generated",
+                    "quote",
                 )
             },
         ),
@@ -868,6 +871,32 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 "</a>"
             )
         )
+
+
+@admin.register(models.QuoteDefinition)
+class QuoteDefinitionAdmin(TranslatableAdmin):
+    """Admin class for QuoteDefinition model"""
+
+    list_display = ("title", "language")
+
+
+@admin.register(models.Quote)
+class QuoteAdmin(admin.ModelAdmin):
+    """Admin class for Quote model"""
+
+    list_display = (
+        "batch_order",
+        "organization_signed_on",
+        "buyer_signed_on",
+        "has_purchase_order",
+    )
+    readonly_fields = (
+        "batch_order",
+        "buyer_signed_on",
+        "organization_signed_on",
+        "has_purchase_order",
+        "definition",
+    )
 
 
 @admin.register(models.Enrollment)
