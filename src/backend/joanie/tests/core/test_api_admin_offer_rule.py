@@ -1,5 +1,5 @@
 """
-Test suite for OrderGroup Admin API.
+Test suite for OfferRule Admin API.
 """
 
 from datetime import timedelta
@@ -12,60 +12,60 @@ from django.utils import timezone as django_timezone
 from joanie.core import factories, models
 
 
-class OrderGroupAdminApiTest(TestCase):
+class OfferRuleAdminApiTest(TestCase):
     """
-    Test suite for OrderGroup Admin API.
+    Test suite for OfferRule Admin API.
     """
 
     base_url = "/api/v1.0/admin/course-product-relations"
 
     # list
-    def test_admin_api_order_group_list_anonymous(self):
+    def test_admin_api_offer_rule_list_anonymous(self):
         """
-        Anonymous users should not be able to list order groups.
+        Anonymous users should not be able to list offer rules.
         """
 
         relation = factories.CourseProductRelationFactory()
-        response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
+        response = self.client.get(f"{self.base_url}/{relation.id}/offer-rules/")
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
         )
 
-    def test_admin_api_order_group_list_authenticated(self):
+    def test_admin_api_offer_rule_list_authenticated(self):
         """
-        Authenticated users should be able to list order groups.
+        Authenticated users should be able to list offer rules.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
         discount = factories.DiscountFactory(rate=0.3)
-        order_groups = [
-            factories.OrderGroupFactory(
+        offer_rules = [
+            factories.OfferRuleFactory(
                 position=i, course_product_relation=relation, discount=discount
             )
             for i in range(3)
         ]
 
-        factories.OrderGroupFactory.create_batch(5)
+        factories.OfferRuleFactory.create_batch(5)
 
         with self.assertNumQueries(19):
-            response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
+            response = self.client.get(f"{self.base_url}/{relation.id}/offer-rules/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         expected_return = [
             {
-                "id": str(order_group.id),
-                "description": order_group.description,
-                "nb_seats": order_group.nb_seats,
-                "is_active": order_group.is_active,
-                "is_enabled": order_group.is_enabled,
-                "nb_available_seats": order_group.nb_seats
-                - order_group.get_nb_binding_orders(),
-                "created_on": order_group.created_on.isoformat().replace("+00:00", "Z"),
+                "id": str(offer_rule.id),
+                "description": offer_rule.description,
+                "nb_seats": offer_rule.nb_seats,
+                "is_active": offer_rule.is_active,
+                "is_enabled": offer_rule.is_enabled,
+                "nb_available_seats": offer_rule.nb_seats
+                - offer_rule.get_nb_binding_orders(),
+                "created_on": offer_rule.created_on.isoformat().replace("+00:00", "Z"),
                 "can_edit": True,
                 "start": None,
                 "end": None,
@@ -76,20 +76,20 @@ class OrderGroupAdminApiTest(TestCase):
                     "is_used": 3,
                 },
             }
-            for order_group in order_groups
+            for offer_rule in offer_rules
         ]
         self.assertEqual(content["count"], 3)
         self.assertEqual(content["results"], expected_return)
 
-    def test_admin_api_order_group_list_lambda_user(self):
+    def test_admin_api_offer_rule_list_lambda_user(self):
         """
-        Non admin user should not be able to request order groups endpoint.
+        Non admin user should not be able to request offer rules endpoint.
         """
         admin = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=admin.username, password="password")
         relation = factories.CourseProductRelationFactory()
 
-        response = self.client.get(f"{self.base_url}/{relation.id}/order-groups/")
+        response = self.client.get(f"{self.base_url}/{relation.id}/offer-rules/")
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         content = response.json()
@@ -98,16 +98,16 @@ class OrderGroupAdminApiTest(TestCase):
         )
 
     # details
-    def test_admin_api_order_group_retrieve_anonymous(self):
+    def test_admin_api_offer_rule_retrieve_anonymous(self):
         """
-        Anonymous users should not be able to request order groups details.
+        Anonymous users should not be able to request offer rules details.
         """
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
+        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
 
         response = self.client.get(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -115,40 +115,40 @@ class OrderGroupAdminApiTest(TestCase):
             content["detail"], "Authentication credentials were not provided."
         )
 
-    def test_admin_api_order_group_retrieve_authenticated(self):
+    def test_admin_api_offer_rule_retrieve_authenticated(self):
         """
-        Authenticated users should be able to request order groups details.
+        Authenticated users should be able to request offer rules details.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             discount=factories.DiscountFactory(amount=30),
         )
 
         with self.assertNumQueries(8):
             response = self.client.get(
-                f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+                f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         expected_return = {
-            "id": str(order_group.id),
-            "description": order_group.description,
-            "nb_seats": order_group.nb_seats,
-            "is_active": order_group.is_active,
-            "is_enabled": order_group.is_enabled,
-            "nb_available_seats": order_group.nb_seats
-            - order_group.get_nb_binding_orders(),
-            "created_on": order_group.created_on.isoformat().replace("+00:00", "Z"),
+            "id": str(offer_rule.id),
+            "description": offer_rule.description,
+            "nb_seats": offer_rule.nb_seats,
+            "is_active": offer_rule.is_active,
+            "is_enabled": offer_rule.is_enabled,
+            "nb_available_seats": offer_rule.nb_seats
+            - offer_rule.get_nb_binding_orders(),
+            "created_on": offer_rule.created_on.isoformat().replace("+00:00", "Z"),
             "can_edit": True,
             "start": None,
             "end": None,
             "discount": {
-                "id": str(order_group.discount.id),
+                "id": str(offer_rule.discount.id),
                 "amount": 30,
                 "rate": None,
                 "is_used": 1,
@@ -157,15 +157,15 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertEqual(content, expected_return)
 
     # create
-    def test_admin_api_order_group_create_anonymous(self):
+    def test_admin_api_offer_rule_create_anonymous(self):
         """
-        Anonymous users should not be able to create an order group.
+        Anonymous users should not be able to create an offer rule.
         """
         relation = factories.CourseProductRelationFactory()
 
         data = {"nb_seats": 5, "is_active": True}
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/order-groups/",
+            f"{self.base_url}/{relation.id}/offer-rules/",
             content_type="application/json",
             data=data,
         )
@@ -175,9 +175,9 @@ class OrderGroupAdminApiTest(TestCase):
             content["detail"], "Authentication credentials were not provided."
         )
 
-    def test_admin_api_order_group_create_authenticated_with_nb_seats_is_none(self):
+    def test_admin_api_offer_rule_create_authenticated_with_nb_seats_is_none(self):
         """
-        Authenticated users should be able to create an order group and set None for
+        Authenticated users should be able to create an offer rule and set None for
         `nb_seats`.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -189,7 +189,7 @@ class OrderGroupAdminApiTest(TestCase):
         }
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/order-groups/",
+            f"{self.base_url}/{relation.id}/offer-rules/",
             content_type="application/json",
             data=data,
         )
@@ -200,11 +200,11 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertIsNone(content["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
         self.assertTrue(content["is_enabled"])
-        self.assertEqual(models.OrderGroup.objects.filter(**data).count(), 1)
+        self.assertEqual(models.OfferRule.objects.filter(**data).count(), 1)
 
-    def test_admin_api_order_group_create_authenticated(self):
+    def test_admin_api_offer_rule_create_authenticated(self):
         """
-        Authenticated users should be able to request order groups list.
+        Authenticated users should be able to request offer rules list.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -216,7 +216,7 @@ class OrderGroupAdminApiTest(TestCase):
         }
         with self.assertNumQueries(8):
             response = self.client.post(
-                f"{self.base_url}/{relation.id}/order-groups/",
+                f"{self.base_url}/{relation.id}/offer-rules/",
                 content_type="application/json",
                 data=data,
             )
@@ -225,19 +225,19 @@ class OrderGroupAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["nb_seats"], data["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
-        self.assertEqual(models.OrderGroup.objects.filter(**data).count(), 1)
+        self.assertEqual(models.OfferRule.objects.filter(**data).count(), 1)
 
     # update
-    def test_admin_api_order_group_update_anonymous(self):
+    def test_admin_api_offer_rule_update_anonymous(self):
         """
-        Anonymous users should not be able to update order groups.
+        Anonymous users should not be able to update offer rules.
         """
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
+        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -245,22 +245,22 @@ class OrderGroupAdminApiTest(TestCase):
             content["detail"], "Authentication credentials were not provided."
         )
 
-    def test_admin_api_order_group_update_authenticated(self):
+    def test_admin_api_offer_rule_update_authenticated(self):
         """
-        Authenticated users should be able to update order groups.
+        Authenticated users should be able to update offer rules.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
+        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
         data = {
             "nb_seats": 505,
             "is_active": True,
         }
         with self.assertNumQueries(7):
             response = self.client.put(
-                f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
+                f"{self.base_url}/{relation.id}/offer-rules/{str(offer_rule.id)}/",
                 content_type="application/json",
                 data=data,
             )
@@ -268,19 +268,19 @@ class OrderGroupAdminApiTest(TestCase):
         content = response.json()
         self.assertEqual(content["nb_seats"], data["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
-        self.assertEqual(models.OrderGroup.objects.filter(**data).count(), 1)
+        self.assertEqual(models.OfferRule.objects.filter(**data).count(), 1)
 
     # patch
-    def test_admin_api_order_group_patch_anonymous(self):
+    def test_admin_api_offer_rule_patch_anonymous(self):
         """
-        Anonymous users should not be able to patch order groups.
+        Anonymous users should not be able to patch offer rules.
         """
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
+        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
 
         response = self.client.patch(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -288,15 +288,15 @@ class OrderGroupAdminApiTest(TestCase):
             content["detail"], "Authentication credentials were not provided."
         )
 
-    def test_admin_api_order_group_patch_authenticated(self):
+    def test_admin_api_offer_rule_patch_authenticated(self):
         """
-        Authenticated users should be able to patch order groups.
+        Authenticated users should be able to patch offer rules.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation, is_active=False
         )
         data = {
@@ -304,22 +304,22 @@ class OrderGroupAdminApiTest(TestCase):
         }
         with self.assertNumQueries(7):
             response = self.client.patch(
-                f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
+                f"{self.base_url}/{relation.id}/offer-rules/{str(offer_rule.id)}/",
                 content_type="application/json",
                 data=data,
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
-        self.assertEqual(content["nb_seats"], order_group.nb_seats)
+        self.assertEqual(content["nb_seats"], offer_rule.nb_seats)
         self.assertEqual(content["is_active"], data["is_active"])
         self.assertEqual(
-            models.OrderGroup.objects.filter(
-                nb_seats=order_group.nb_seats, **data
+            models.OfferRule.objects.filter(
+                nb_seats=offer_rule.nb_seats, **data
             ).count(),
             1,
         )
 
-    def test_admin_api_order_group_patch_authenticated_empty_nb_seats(self):
+    def test_admin_api_offer_rule_patch_authenticated_empty_nb_seats(self):
         """
         The frontend sends an empty string when the user wants to set the number of seats to None.
         """
@@ -327,7 +327,7 @@ class OrderGroupAdminApiTest(TestCase):
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation, is_active=False
         )
         data = {
@@ -336,7 +336,7 @@ class OrderGroupAdminApiTest(TestCase):
         }
         with self.assertNumQueries(5):
             response = self.client.patch(
-                f"{self.base_url}/{relation.id}/order-groups/{str(order_group.id)}/",
+                f"{self.base_url}/{relation.id}/offer-rules/{str(offer_rule.id)}/",
                 content_type="application/json",
                 data=data,
             )
@@ -345,23 +345,23 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertEqual(content["nb_seats"], None)
         self.assertEqual(content["is_active"], data["is_active"])
         self.assertEqual(
-            models.OrderGroup.objects.filter(
+            models.OfferRule.objects.filter(
                 nb_seats__isnull=True, is_active=data["is_active"]
             ).count(),
             1,
         )
 
     # delete
-    def test_admin_api_order_group_delete_anonymous(self):
+    def test_admin_api_offer_rule_delete_anonymous(self):
         """
-        Anonymous users should not be able to delete order groups.
+        Anonymous users should not be able to delete offer rules.
         """
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
+        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
 
         response = self.client.delete(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -370,42 +370,42 @@ class OrderGroupAdminApiTest(TestCase):
                 content["detail"], "Authentication credentials were not provided."
             )
 
-    def test_admin_api_order_group_delete_authenticated(self):
+    def test_admin_api_offer_rule_delete_authenticated(self):
         """
-        Authenticated users should not be able to delete order groups.
-        """
-        admin = factories.UserFactory(is_staff=True, is_superuser=True)
-        self.client.login(username=admin.username, password="password")
-
-        relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
-        with self.assertNumQueries(7):
-            response = self.client.delete(
-                f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
-            )
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertFalse(models.OrderGroup.objects.filter(id=order_group.id).exists())
-
-    def test_admin_api_order_group_delete_cannot_edit(self):
-        """
-        Deleting an order group that cannot be edited should fail.
+        Authenticated users should not be able to delete offer rules.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(course_product_relation=relation)
-        with self.assertNumQueries(7):
+        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        with self.assertNumQueries(8):
             response = self.client.delete(
-                f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+                f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+            )
+        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertFalse(models.OfferRule.objects.filter(id=offer_rule.id).exists())
+
+    def test_admin_api_offer_rule_delete_cannot_edit(self):
+        """
+        Deleting an offer rule that cannot be edited should fail.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        relation = factories.CourseProductRelationFactory()
+        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        with self.assertNumQueries(8):
+            response = self.client.delete(
+                f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             )
 
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
-        self.assertFalse(models.OrderGroup.objects.filter(id=order_group.id).exists())
+        self.assertFalse(models.OfferRule.objects.filter(id=offer_rule.id).exists())
 
-    def test_admin_api_order_group_create_start_date(self):
+    def test_admin_api_offer_rule_create_start_date(self):
         """
-        Authenticated admin user should be able to create an order group and set
+        Authenticated admin user should be able to create an offer rule and set
         a start and end date.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -421,7 +421,7 @@ class OrderGroupAdminApiTest(TestCase):
         }
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/order-groups/",
+            f"{self.base_url}/{relation.id}/offer-rules/",
             content_type="application/json",
             data=data,
         )
@@ -433,9 +433,9 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertEqual(content["start"], data["start"])
         self.assertFalse(content["is_active"])
 
-    def test_admin_api_order_group_create_start_and_end_date(self):
+    def test_admin_api_offer_rule_create_start_and_end_date(self):
         """
-        Authenticated admin user should be able to create an order group and set
+        Authenticated admin user should be able to create an offer rule and set
         a start and end date.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -450,7 +450,7 @@ class OrderGroupAdminApiTest(TestCase):
         }
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/order-groups/",
+            f"{self.base_url}/{relation.id}/offer-rules/",
             content_type="application/json",
             data=data,
         )
@@ -463,9 +463,9 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertEqual(content["end"], data["end"])
         self.assertFalse(content["is_active"])
 
-    def test_admin_api_order_group_create_start_date_greater_than_end_date(self):
+    def test_admin_api_offer_rule_create_start_date_greater_than_end_date(self):
         """
-        Authenticated admin user should not be able to create an order group when the
+        Authenticated admin user should not be able to create an offer rule when the
         start date is greater than the end date.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -479,21 +479,21 @@ class OrderGroupAdminApiTest(TestCase):
 
         with self.assertRaises(IntegrityError):
             self.client.post(
-                f"{self.base_url}/{relation.id}/order-groups/",
+                f"{self.base_url}/{relation.id}/offer-rules/",
                 content_type="application/json",
                 data=data,
             )
 
-    def test_admin_api_order_group_update_start_and_end_date(self):
+    def test_admin_api_offer_rule_update_start_and_end_date(self):
         """
         Authenticated admin user can update the start and end date of an existing
-        order group.
+        offer rule.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             start="2025-01-11T00:00:00Z",
             end="2025-01-20T00:00:00Z",
@@ -505,7 +505,7 @@ class OrderGroupAdminApiTest(TestCase):
         }
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data=data,
         )
@@ -516,13 +516,13 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertEqual(content["start"], data["start"])
         self.assertEqual(content["end"], data["end"])
 
-    def test_admin_api_order_group_is_enabled_and_is_active(
+    def test_admin_api_offer_rule_is_enabled_and_is_active(
         self,
     ):
         """
-        When the order group is not yet active, even if the dates qualifies for early-birds
+        When the offer rule is not yet active, even if the dates qualifies for early-birds
         or last minutes sales, the property `is_enabled` should return False. Otherwise,
-        when the order group is active, the computed value of the property `is_enabled` will
+        when the offer rule is active, the computed value of the property `is_enabled` will
         return True if the datetimes meet the conditions.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -543,7 +543,7 @@ class OrderGroupAdminApiTest(TestCase):
 
         for case in test_cases:
             with self.subTest(start=case["start"], end=case["end"]):
-                order_group = factories.OrderGroupFactory(
+                offer_rule = factories.OfferRuleFactory(
                     course_product_relation=relation,
                     is_active=False,
                     start=case["start"],
@@ -551,7 +551,7 @@ class OrderGroupAdminApiTest(TestCase):
                 )
 
                 response = self.client.get(
-                    f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+                    f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
                 )
 
                 content = response.json()
@@ -560,11 +560,11 @@ class OrderGroupAdminApiTest(TestCase):
                 self.assertFalse(content["is_active"])
                 self.assertFalse(content["is_enabled"])
 
-                order_group.is_active = True
-                order_group.save()
+                offer_rule.is_active = True
+                offer_rule.save()
 
                 response = self.client.get(
-                    f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+                    f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
                 )
 
                 content = response.json()
@@ -573,11 +573,11 @@ class OrderGroupAdminApiTest(TestCase):
                 self.assertTrue(content["is_active"])
                 self.assertTrue(content["is_enabled"])
 
-    def test_admin_api_order_group_is_not_enabled_start_end_outside_datetime_range(
+    def test_admin_api_offer_rule_is_not_enabled_start_end_outside_datetime_range(
         self,
     ):
         """
-        When the order group is active but is not yet within the datetime ranges to be enabled,
+        When the offer rule is active but is not yet within the datetime ranges to be enabled,
         it should return False.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -598,7 +598,7 @@ class OrderGroupAdminApiTest(TestCase):
 
         for case in test_cases:
             with self.subTest(start=case["start"], end=case["end"]):
-                order_group = factories.OrderGroupFactory(
+                offer_rule = factories.OfferRuleFactory(
                     course_product_relation=relation,
                     is_active=True,
                     start=case["start"],
@@ -606,7 +606,7 @@ class OrderGroupAdminApiTest(TestCase):
                 )
 
                 response = self.client.get(
-                    f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+                    f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
                 )
 
                 content = response.json()
@@ -615,9 +615,9 @@ class OrderGroupAdminApiTest(TestCase):
                 self.assertTrue(content["is_active"])
                 self.assertFalse(content["is_enabled"])
 
-    def test_admin_api_order_group_is_active_and_nb_seats_is_enabled(self):
+    def test_admin_api_offer_rule_is_active_and_nb_seats_is_enabled(self):
         """
-        When the order group is active and the number of seats is None,
+        When the offer rule is active and the number of seats is None,
         `is_enabled` should return the value True. Otherwise, it should
         return False.
         """
@@ -625,7 +625,7 @@ class OrderGroupAdminApiTest(TestCase):
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             nb_seats=None,
@@ -634,7 +634,7 @@ class OrderGroupAdminApiTest(TestCase):
         )
 
         response = self.client.get(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
         )
 
         content = response.json()
@@ -644,11 +644,11 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertIsNone(content["nb_available_seats"])
         self.assertIsNone(content["nb_seats"])
 
-        order_group.is_active = False
-        order_group.save()
+        offer_rule.is_active = False
+        offer_rule.save()
 
         response = self.client.get(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/"
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
         )
 
         content = response.json()
@@ -658,19 +658,19 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertIsNone(content["nb_available_seats"])
         self.assertIsNone(content["nb_seats"])
 
-    def test_admin_api_order_group_update_discount(self):
-        """Authenticated admin user can add a discount on the order group."""
+    def test_admin_api_offer_rule_update_discount(self):
+        """Authenticated admin user can add a discount on the offer rule."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
         discount = factories.DiscountFactory(rate=0.5)
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
         )
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"discount_id": str(discount.id)},
         )
@@ -687,20 +687,20 @@ class OrderGroupAdminApiTest(TestCase):
             },
         )
 
-    def test_admin_api_order_group_partially_update_discount(self):
-        """Authenticated admin user can partially update an existing order group's discount."""
+    def test_admin_api_offer_rule_partially_update_discount(self):
+        """Authenticated admin user can partially update an existing offer rule's discount."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             discount=factories.DiscountFactory(rate=0.5),
         )
         new_discount = factories.DiscountFactory(amount=10)
 
         response = self.client.patch(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"discount_id": str(new_discount.id)},
         )
@@ -717,19 +717,19 @@ class OrderGroupAdminApiTest(TestCase):
             },
         )
 
-    def test_admin_api_order_group_update_to_remove_discount(self):
-        """Authenticated admin user wants to remove the order group's discount."""
+    def test_admin_api_offer_rule_update_to_remove_discount(self):
+        """Authenticated admin user wants to remove the offer rule's discount."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             discount=factories.DiscountFactory(rate=0.5),
         )
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"discount_id": None},
         )
@@ -739,20 +739,20 @@ class OrderGroupAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsNone(content["discount"])
 
-    def test_admin_api_order_group_update_to_remove_start(self):
-        """Authenticated admin user wants to remove the order group's discount."""
+    def test_admin_api_offer_rule_update_to_remove_start(self):
+        """Authenticated admin user wants to remove the offer rule's discount."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
             discount=factories.DiscountFactory(rate=0.5),
             start=django_timezone.now(),
         )
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"start": ""},
         )
@@ -761,33 +761,33 @@ class OrderGroupAdminApiTest(TestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertIsNone(content["start"])
-        order_group.refresh_from_db()
-        self.assertIsNone(order_group.start)
+        offer_rule.refresh_from_db()
+        self.assertIsNone(offer_rule.start)
 
-    def test_admin_api_order_group_add_discount_that_does_not_exist(self):
+    def test_admin_api_offer_rule_add_discount_that_does_not_exist(self):
         """
-        Authenticated admin user should not be able to update an order group with a discount
+        Authenticated admin user should not be able to update an offer rule with a discount
         id that does not exist
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         relation = factories.CourseProductRelationFactory()
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             course_product_relation=relation,
         )
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/order-groups/{order_group.id}/",
+            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"discount_id": "fake_discount_id"},
         )
 
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_api_admin_order_group_create_with_discount(self):
+    def test_api_admin_offer_rule_create_with_discount(self):
         """
-        Admin authenticated user should be able to create an order group with a discount.
+        Admin authenticated user should be able to create an offer rule with a discount.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -796,7 +796,7 @@ class OrderGroupAdminApiTest(TestCase):
         discount = factories.DiscountFactory(rate=0.1)
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/order-groups/",
+            f"{self.base_url}/{relation.id}/offer-rules/",
             content_type="application/json",
             data={
                 "nb_seats": "",
@@ -819,9 +819,9 @@ class OrderGroupAdminApiTest(TestCase):
             },
         )
 
-    def test_api_admin_order_group_create_with_fake_discount(self):
+    def test_api_admin_offer_rule_create_with_fake_discount(self):
         """
-        Admin authenticated user should be able not be able to create an order group
+        Admin authenticated user should be able not be able to create an offer rule
         with a discount that does not exists.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -830,7 +830,7 @@ class OrderGroupAdminApiTest(TestCase):
         relation = factories.CourseProductRelationFactory()
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/order-groups/",
+            f"{self.base_url}/{relation.id}/offer-rules/",
             content_type="application/json",
             data={
                 "discount_id": "fake_discount_id",

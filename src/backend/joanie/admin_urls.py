@@ -94,9 +94,9 @@ admin_product_related_router.register(
 # Admin API routes nested under course product relations
 admin_course_product_relation_related_router = DefaultRouter()
 admin_course_product_relation_related_router.register(
-    "order-groups",
-    api_admin.NestedCourseProductRelationOrderGroupViewSet,
-    basename="admin_course_product_relation_order_groups",
+    "offer-rules",
+    api_admin.NestedCourseProductRelationOfferRuleViewSet,
+    basename="admin_course_product_relation_offer_rules",
 )
 
 urlpatterns = [

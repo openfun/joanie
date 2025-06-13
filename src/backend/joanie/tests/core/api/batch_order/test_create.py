@@ -199,12 +199,12 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertIsNotNone(batch_order.organization)
         self.assertEqual(batch_order.total, Decimal("240.00"))
 
-    def test_api_batch_order_create_authenticated_fails_order_group_no_more_seats_available(
+    def test_api_batch_order_create_authenticated_fails_offer_rule_no_more_seats_available(
         self,
     ):
         """
         Authenticated user should not be able to create a batch order when the requested number
-        of seats is above the order group available seats.
+        of seats is above the offer rule available seats.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -212,7 +212,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        factories.OrderGroupFactory(
+        factories.OfferRuleFactory(
             course_product_relation=relation,
             is_active=True,
             nb_seats=1,
@@ -244,7 +244,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "order_group": [
+                "offer_rule": [
                     "Maximum number of orders reached for "
                     f"product {relation.product.title}"
                 ]
@@ -282,11 +282,11 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
 
-    def test_api_batch_order_create_authenticated_when_order_group_for_relation_has_discount(
+    def test_api_batch_order_create_authenticated_when_offer_rule_for_relation_has_discount(
         self,
     ):
         """
-        When the order group has a discount and enough available seats, the batch order
+        When the offer rule has a discount and enough available seats, the batch order
         should be created with the discounted price.
         """
         user = factories.UserFactory()
@@ -295,7 +295,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        order_group = factories.OrderGroupFactory(
+        offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.1),
             course_product_relation=relation,
             is_active=True,
@@ -331,7 +331,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertEqual(batch_order.owner, user)
         self.assertEqual(batch_order.relation, relation)
         self.assertEqual(batch_order.nb_seats, 3)
-        self.assertEqual(batch_order.order_groups.first(), order_group)
+        self.assertEqual(batch_order.offer_rules.first(), offer_rule)
         self.assertEqual(batch_order.total, Decimal("27.00"))
 
     def test_api_batch_order_create_auto_assign_organization_with_least_orders(self):

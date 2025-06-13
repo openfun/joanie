@@ -179,8 +179,8 @@ class CourseProductRelationViewSet(
 
         return queryset.prefetch_related(
             Prefetch(
-                "order_groups",
-                queryset=models.OrderGroup.objects.filter(is_active=True),
+                "offer_rules",
+                queryset=models.OfferRule.objects.filter(is_active=True),
             )
         )
 

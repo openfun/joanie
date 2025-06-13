@@ -20,7 +20,7 @@ from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from joanie.core import enums, forms, models
 from joanie.core.utils.batch_order import (
     assign_organization,
-    get_active_order_group,
+    get_active_offer_rule,
     send_mail_invitation_link,
     send_mail_vouchers,
     validate_success_payment,
@@ -205,9 +205,9 @@ class CertificateAdmin(admin.ModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
 
-@admin.register(models.OrderGroup)
-class OrderGroupAdmin(admin.ModelAdmin):
-    """Admin class for the OrderGroup model"""
+@admin.register(models.OfferRule)
+class OfferRuleAdmin(admin.ModelAdmin):
+    """Admin class for the OfferRule model"""
 
     list_display = (
         "course_product_relation",
@@ -245,7 +245,7 @@ class OrderGroupAdmin(admin.ModelAdmin):
         return self.readonly_fields + self.readonly_update_fields
 
     def nb_available_seats(self, obj):  # pylint: disable=no-self-use
-        """Return the number of available seats for this order group."""
+        """Return the number of available seats for this offer rule."""
         return obj.available_seats
 
 
@@ -538,7 +538,7 @@ class DiscountAdmin(admin.ModelAdmin):
     readonly_fields = ("is_used",)
 
     def is_used(self, obj):  # pylint: disable=no-self-use
-        """Returns a counter of how many times the discount is used in order groups"""
+        """Returns a counter of how many times the discount is used in offer rules"""
         return obj.usage_count
 
     @admin.display(description="Discount")
@@ -625,7 +625,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "total",
         "contract",
         "invoice",
-        "order_groups",
+        "offer_rules",
         "orders_generated",
     )
     fieldsets = (
@@ -663,7 +663,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                     "state",
                     "invoice",
                     "contract",
-                    "order_groups",
+                    "offer_rules",
                     "orders_generated",
                 )
             },
@@ -761,16 +761,16 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 )
                 continue
 
-            if batch_order.order_groups.exists():
+            if batch_order.offer_rules.exists():
                 if (
-                    batch_order.order_groups.first().available_seats
+                    batch_order.offer_rules.first().available_seats
                     < batch_order.nb_seats
                 ):
-                    initial_order_group = batch_order.order_groups.first()
-                    batch_order.order_groups.remove(initial_order_group)
+                    initial_offer_rule = batch_order.offer_rules.first()
+                    batch_order.offer_rules.remove(initial_offer_rule)
 
                     try:
-                        order_group = get_active_order_group(
+                        offer_rule = get_active_offer_rule(
                             relation_id=batch_order.relation.id,
                             nb_seats=batch_order.nb_seats,
                         )
@@ -780,7 +780,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                             _(f"{batch_order.id} - {exception}"),
                         )
 
-                    batch_order.order_groups.add(order_group)
+                    batch_order.offer_rules.add(offer_rule)
 
             invitation_link = batch_order.submit_for_signature(batch_order.owner)
             send_mail_invitation_link(batch_order, invitation_link)
