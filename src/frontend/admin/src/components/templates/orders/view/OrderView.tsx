@@ -189,8 +189,8 @@ export function OrderView({ order }: Props) {
               <TextField
                 fullWidth={true}
                 disabled={true}
-                label={intl.formatMessage(orderViewMessages.orderGroup)}
-                value={order.order_group ? order.order_group.id : "-"}
+                label={intl.formatMessage(orderViewMessages.offerRule)}
+                value={order.offer_rule ? order.offer_rule.id : "-"}
               />
             </Grid>
 

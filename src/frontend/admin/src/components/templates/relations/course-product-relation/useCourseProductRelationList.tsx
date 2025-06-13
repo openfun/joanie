@@ -50,7 +50,7 @@ export const useCourseProductRelationList = ({
     const dummy: CourseProductRelationDummy = {
       ...formValues,
       can_edit: false,
-      order_groups: [],
+      offer_rules: [],
       dummyId: faker.string.uuid(),
     };
 

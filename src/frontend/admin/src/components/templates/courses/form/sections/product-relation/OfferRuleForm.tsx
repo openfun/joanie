@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid2 from "@mui/material/Grid2";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
-import { OrderGroup } from "@/services/api/models/OrderGroup";
+import { OfferRule } from "@/services/api/models/OfferRule";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
 import RHFSwitch from "@/components/presentational/hook-form/RHFSwitch";
 import { Maybe } from "@/types/utils";
@@ -15,38 +15,38 @@ import { RHFDateTimePicker } from "@/components/presentational/hook-form/RHFDate
 
 const messages = defineMessages({
   descriptionInputLabel: {
-    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.descriptionInputLabel",
+    id: "components.templates.products.form.sections.OfferRules.OfferRuleForm.descriptionInputLabel",
     defaultMessage: "Description",
     description: "The input label for the description",
   },
   numberOfSeatInputLabel: {
-    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.numberOfSeatInputLabel",
+    id: "components.templates.products.form.sections.OfferRules.OfferRuleForm.numberOfSeatInputLabel",
     defaultMessage: "Number of seats",
     description: "The input label for the number of seats",
   },
   startLabel: {
-    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.startLabel",
+    id: "components.templates.products.form.sections.OfferRules.OfferRuleForm.startLabel",
     defaultMessage: "Start date",
     description: "The input label for the start date",
   },
   endLabel: {
-    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.endLabel",
+    id: "components.templates.products.form.sections.OfferRules.OfferRuleForm.endLabel",
     defaultMessage: "End date",
     description: "The input label for the end date",
   },
   isActiveLabel: {
-    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.isActiveLabel",
-    defaultMessage: "Activate this order group",
+    id: "components.templates.products.form.sections.OfferRules.OfferRuleForm.isActiveLabel",
+    defaultMessage: "Activate this offer rule",
     description: "The input label for the activate switch",
   },
   discountLabel: {
-    id: "components.templates.products.form.sections.OrderGroups.OrderGroupForm.discountLabel",
+    id: "components.templates.products.form.sections.OfferRules.OfferRuleForm.discountLabel",
     defaultMessage: "Discount",
     description: "The input label for the discount select",
   },
 });
 
-export type OrderGroupFormValues = {
+export type OfferRuleFormValues = {
   description?: string | null | undefined;
   nb_seats?: number | null | undefined;
   is_active: boolean;
@@ -54,22 +54,22 @@ export type OrderGroupFormValues = {
 };
 
 type Props = {
-  orderGroup?: Maybe<OrderGroup>;
-  onSubmit?: (values: OrderGroupFormValues) => void;
+  offerRule?: Maybe<OfferRule>;
+  onSubmit?: (values: OfferRuleFormValues) => void;
 };
 
-const getMinNbSeats = (orderGroup?: OrderGroup): number => {
-  if (!orderGroup) {
+const getMinNbSeats = (offerRule?: OfferRule): number => {
+  if (!offerRule) {
     return 0;
   }
-  return (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
+  return (offerRule.nb_seats ?? 0) - (offerRule.nb_available_seats ?? 0);
 };
 
-export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
+export function OfferRuleForm({ offerRule, onSubmit }: Props) {
   const intl = useIntl();
 
   const Schema = Yup.object().shape({
-    nb_seats: Yup.number().min(getMinNbSeats(orderGroup)).nullable(),
+    nb_seats: Yup.number().min(getMinNbSeats(offerRule)).nullable(),
     start: Yup.string().nullable(),
     end: Yup.string().nullable(),
     is_active: Yup.boolean().required(),
@@ -77,11 +77,11 @@ export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
   });
 
   const getDefaultValues = () => ({
-    nb_seats: orderGroup?.nb_seats ?? null,
-    start: orderGroup?.start ?? null,
-    end: orderGroup?.end ?? null,
-    is_active: orderGroup?.is_active ?? false,
-    discount_id: orderGroup?.discount?.id ?? null,
+    nb_seats: offerRule?.nb_seats ?? null,
+    start: offerRule?.start ?? null,
+    end: offerRule?.end ?? null,
+    is_active: offerRule?.is_active ?? false,
+    discount_id: offerRule?.discount?.id ?? null,
   });
 
   const form = useForm({
@@ -91,12 +91,12 @@ export function OrderGroupForm({ orderGroup, onSubmit }: Props) {
 
   useEffect(() => {
     form.reset(getDefaultValues());
-  }, [orderGroup]);
+  }, [offerRule]);
 
   return (
     <RHFProvider
       methods={form}
-      id="order-group-form"
+      id="offer-rule-form"
       onSubmit={form.handleSubmit((values) => onSubmit?.(values))}
     >
       <Grid2 container spacing={2}>

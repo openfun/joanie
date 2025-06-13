@@ -16,7 +16,7 @@ import {
   CourseProductRelation,
   DTOCourseProductRelation,
 } from "@/services/api/models/Relations";
-import { DTOOrderGroup, OrderGroup } from "@/services/api/models/OrderGroup";
+import { DTOOfferRule, OfferRule } from "@/services/api/models/OfferRule";
 import { mockCourseRunsFromCourse } from "@/tests/mocks/course-runs/course-runs-mocks";
 import { Discount, DTODiscount } from "@/services/api/models/Discount";
 import { DiscountFactory } from "@/services/factories/discounts";
@@ -28,7 +28,7 @@ export const getCourseScenarioStore = () => {
   const products: BaseProduct[] = [];
   const productRelations: CourseProductRelation[] = [];
   const courseRuns: CourseRun[] = [];
-  let orderGroups: OrderGroup[] = [];
+  let offerRules: OfferRule[] = [];
   const discounts: Discount[] = DiscountFactory(3);
 
   list.forEach((course) => {
@@ -42,7 +42,7 @@ export const getCourseScenarioStore = () => {
       productRelations.push(relation);
       products.push(relation.product);
       organizationList.concat(relation.organizations);
-      orderGroups = orderGroups.concat(relation.order_groups);
+      offerRules = offerRules.concat(relation.offer_rules);
     });
     course.courses_runs?.forEach((courseRun) => {
       courseRuns.push(courseRun);
@@ -98,7 +98,7 @@ export const getCourseScenarioStore = () => {
         product,
         course: restCourse,
         organizations: orgs,
-        order_groups: [],
+        offer_rules: [],
         can_edit: true,
       };
       productRelations.push(result);
@@ -165,36 +165,36 @@ export const getCourseScenarioStore = () => {
     users: userList,
     products,
     courseRuns,
-    orderGroups,
+    offerRules,
     discounts,
     postUpdate,
     createOrg,
     postProductRelation,
     productRelations,
     mockCourseRunsFromCourse,
-    mockOrderGroup,
+    mockOfferRule,
     createDiscount,
   };
 };
 
-export const mockOrderGroup = async (
+export const mockOfferRule = async (
   page: Page,
   relations: CourseProductRelation[] = [],
-  orderGroupList: OrderGroup[] = [],
+  offerRuleList: OfferRule[] = [],
   discounts: Discount[] = [],
 ) => {
-  const orderGroupRegex = catchAllIdRegex(
-    `http://localhost:8071/api/v1.0/admin/course-product-relations/:uuid/order-groups/`,
+  const offerRuleRegex = catchAllIdRegex(
+    `http://localhost:8071/api/v1.0/admin/course-product-relations/:uuid/offer-rules/`,
     ":uuid",
   );
 
-  const orderGroupUpdateRegex = catchAllIdRegex(
-    `http://localhost:8071/api/v1.0/admin/course-product-relations/:uuid/order-groups/:uuid/`,
+  const offerRuleUpdateRegex = catchAllIdRegex(
+    `http://localhost:8071/api/v1.0/admin/course-product-relations/:uuid/offer-rules/:uuid/`,
     ":uuid",
   );
 
-  const orderGroupResource = mockResource<OrderGroup, DTOOrderGroup>({
-    data: orderGroupList,
+  const offerRuleResource = mockResource<OfferRule, DTOOfferRule>({
+    data: offerRuleList,
   });
 
   const relationsResource = mockResource<
@@ -208,22 +208,22 @@ export const mockOrderGroup = async (
     data: discounts,
   });
 
-  const postOrderGroup = (
-    payload: DTOOrderGroup,
+  const postOfferRule = (
+    payload: DTOOfferRule,
     relationId: string,
-    orderGroupToEdit?: OrderGroup,
+    offerRuleToEdit?: OfferRule,
   ) => {
-    let result: OrderGroup;
-    if (orderGroupToEdit) {
+    let result: OfferRule;
+    if (offerRuleToEdit) {
       result = {
-        ...orderGroupToEdit,
+        ...offerRuleToEdit,
         ...payload,
         nb_available_seats:
-          (orderGroupToEdit.nb_available_seats ?? 0) +
-          ((payload.nb_seats ?? 0) - (orderGroupToEdit.nb_seats ?? 0)),
+          (offerRuleToEdit.nb_available_seats ?? 0) +
+          ((payload.nb_seats ?? 0) - (offerRuleToEdit.nb_seats ?? 0)),
       };
-      const index = orderGroupResource.getResourceIndex(orderGroupToEdit.id);
-      orderGroupList[index] = result;
+      const index = offerRuleResource.getResourceIndex(offerRuleToEdit.id);
+      offerRuleList[index] = result;
     } else {
       result = {
         id: faker.string.uuid(),
@@ -236,9 +236,9 @@ export const mockOrderGroup = async (
         can_edit: false,
         discount: null,
       };
-      orderGroupList.push(result);
+      offerRuleList.push(result);
       const relation = relationsResource.getResource(relationId);
-      relation.order_groups = relation.order_groups.concat(result);
+      relation.offer_rules = relation.offer_rules.concat(result);
     }
 
     if (payload.discount_id) {
@@ -251,35 +251,35 @@ export const mockOrderGroup = async (
     return result;
   };
 
-  await page.unroute(orderGroupRegex);
-  await page.route(orderGroupRegex, async (route, request) => {
+  await page.unroute(offerRuleRegex);
+  await page.route(offerRuleRegex, async (route, request) => {
     const methods = request.method();
-    const resultMatch = request.url().match(orderGroupRegex);
+    const resultMatch = request.url().match(offerRuleRegex);
     const relationId = resultMatch?.[1] ?? "id";
 
     if (methods === "POST") {
-      const payload: DTOOrderGroup = request.postDataJSON();
-      const create = postOrderGroup(payload, relationId);
+      const payload: DTOOfferRule = request.postDataJSON();
+      const create = postOfferRule(payload, relationId);
       await route.fulfill({ json: create });
     }
   });
 
-  await page.unroute(orderGroupUpdateRegex);
-  await page.route(orderGroupUpdateRegex, async (route, request) => {
+  await page.unroute(offerRuleUpdateRegex);
+  await page.route(offerRuleUpdateRegex, async (route, request) => {
     const methods = request.method();
-    const resultMatch = request.url().match(orderGroupUpdateRegex);
+    const resultMatch = request.url().match(offerRuleUpdateRegex);
     const relationId = resultMatch?.[1] ?? "id";
-    const orderGroupId = resultMatch?.[2] ?? "orderGroupId";
+    const offerRuleId = resultMatch?.[2] ?? "offerRuleId";
 
     if (methods === "PATCH") {
-      const payload: DTOOrderGroup = request.postDataJSON();
-      const orderGroup = orderGroupResource.getResource(orderGroupId);
-      const update = postOrderGroup(payload, relationId, orderGroup);
+      const payload: DTOOfferRule = request.postDataJSON();
+      const offerRule = offerRuleResource.getResource(offerRuleId);
+      const update = postOfferRule(payload, relationId, offerRule);
       await route.fulfill({ json: update });
     }
     if (methods === "DELETE") {
-      const orderGroup = orderGroupResource.deleteResource(orderGroupId);
-      await route.fulfill({ json: orderGroup });
+      const offerRule = offerRuleResource.deleteResource(offerRuleId);
+      await route.fulfill({ json: offerRule });
     }
   });
 };

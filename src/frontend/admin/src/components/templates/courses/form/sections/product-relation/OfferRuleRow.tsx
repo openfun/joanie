@@ -4,19 +4,19 @@ import { defineMessages, useIntl } from "react-intl";
 import { SxProps } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
-import { OrderGroup, OrderGroupDummy } from "@/services/api/models/OrderGroup";
+import { OfferRule, OfferRuleDummy } from "@/services/api/models/OfferRule";
 import { getDiscountLabel } from "@/services/api/models/Discount";
 import { formatShortDate } from "@/utils/dates";
 
 const messages = defineMessages({
-  mainTitleOrderGroup: {
-    id: "components.templates.courses.form.productRelation.row.mainTitleOrderGroup",
-    description: "Title for the order group row",
-    defaultMessage: "Order group {number}",
+  mainTitleOfferRule: {
+    id: "components.templates.courses.form.productRelation.row.mainTitleOfferRule",
+    description: "Title for the offer rule row",
+    defaultMessage: "Offer rule {number}",
   },
-  subTitleOrderGroup: {
-    id: "components.templates.courses.form.productRelation.row.subTitleOrderGroup",
-    description: "Sub title for the order group row",
+  subTitleOfferRule: {
+    id: "components.templates.courses.form.productRelation.row.subTitleOfferRule",
+    description: "Sub title for the offer rule row",
     defaultMessage: "{reservedSeats}/{totalSeats} seats",
   },
   startLabel: {
@@ -34,94 +34,92 @@ const messages = defineMessages({
     description: "Discount label",
     defaultMessage: "Discount: ",
   },
-  addOrderGroupButton: {
-    id: "components.templates.courses.form.productRelation.row.addOrderGroupButton",
-    description: "Add order group button label",
-    defaultMessage: "Add order group",
+  addOfferRuleButton: {
+    id: "components.templates.courses.form.productRelation.row.addOfferRuleButton",
+    description: "Add offer rule button label",
+    defaultMessage: "Add offer rule",
   },
-  orderGroupIsActiveSwitchAriaLabel: {
-    id: "components.templates.courses.form.productRelation.row.orderGroupIsActiveSwitchAriaLabel",
-    description: "Aria-label for the order group is active switch",
-    defaultMessage: "Order group is active switch",
+  offerRuleIsActiveSwitchAriaLabel: {
+    id: "components.templates.courses.form.productRelation.row.offerRuleIsActiveSwitchAriaLabel",
+    description: "Aria-label for the offer rule is active switch",
+    defaultMessage: "Offer rule is active switch",
   },
-  orderGroupDisabledActionsMessage: {
-    id: "components.templates.courses.form.productRelation.row.orderGroupDisabledActionsMessage",
-    description: "Information message for order group disabled actions",
+  offerRuleDisabledActionsMessage: {
+    id: "components.templates.courses.form.productRelation.row.offerRuleDisabledActionsMessage",
+    description: "Information message for offer rule disabled actions",
     defaultMessage:
       "Seats have already been reserved, so you cannot perform this action.",
   },
 });
 
-const isOrderGroup = (
-  item: OrderGroup | OrderGroupDummy,
-): item is OrderGroup => {
+const isOfferRule = (item: OfferRule | OfferRuleDummy): item is OfferRule => {
   if (!item) return false;
   return "id" in item;
 };
 
-const isOrderGroupDummy = (
-  item: OrderGroup | OrderGroupDummy,
-): item is OrderGroupDummy => {
+const isOfferRuleDummy = (
+  item: OfferRule | OfferRuleDummy,
+): item is OfferRuleDummy => {
   if (!item) return false;
   return "dummyId" in item;
 };
 
 type Props = {
-  orderGroup: OrderGroup | OrderGroupDummy;
+  offerRule: OfferRule | OfferRuleDummy;
   orderIndex: number;
   onDelete?: () => void;
   onEdit?: () => void;
   onUpdateIsActive?: (isActive: boolean) => void;
 };
-export function OrderGroupRow({
-  orderGroup,
+export function OfferRuleRow({
+  offerRule,
   orderIndex,
   onUpdateIsActive,
   onDelete,
   onEdit,
 }: Props) {
-  const canEdit = orderGroup.can_edit;
+  const canEdit = offerRule.can_edit;
   const intl = useIntl();
-  const mainTitle = intl.formatMessage(messages.mainTitleOrderGroup, {
+  const mainTitle = intl.formatMessage(messages.mainTitleOfferRule, {
     number: orderIndex + 1,
   });
 
   function getSubTitle() {
     const rules: string[] = [];
 
-    if (orderGroup.description) {
-      rules.push(orderGroup.description);
+    if (offerRule.description) {
+      rules.push(offerRule.description);
     }
 
-    if (orderGroup.nb_available_seats !== null) {
+    if (offerRule.nb_available_seats !== null) {
       const reservedSeats =
-        (orderGroup.nb_seats ?? 0) - (orderGroup.nb_available_seats ?? 0);
-      const totalSeats = orderGroup.nb_seats;
+        (offerRule.nb_seats ?? 0) - (offerRule.nb_available_seats ?? 0);
+      const totalSeats = offerRule.nb_seats;
       rules.push(
-        intl.formatMessage(messages.subTitleOrderGroup, {
+        intl.formatMessage(messages.subTitleOfferRule, {
           reservedSeats,
           totalSeats,
         }),
       );
     }
 
-    if (orderGroup.start) {
+    if (offerRule.start) {
       rules.push(
         intl.formatMessage(messages.startLabel) +
-          formatShortDate(orderGroup.start),
+          formatShortDate(offerRule.start),
       );
     }
 
-    if (orderGroup.end) {
+    if (offerRule.end) {
       rules.push(
-        intl.formatMessage(messages.endLabel) + formatShortDate(orderGroup.end),
+        intl.formatMessage(messages.endLabel) + formatShortDate(offerRule.end),
       );
     }
 
-    if (orderGroup.discount) {
+    if (offerRule.discount) {
       rules.push(
         intl.formatMessage(messages.discountLabel) +
-          getDiscountLabel(orderGroup.discount),
+          getDiscountLabel(offerRule.discount),
       );
     }
 
@@ -138,14 +136,14 @@ export function OrderGroupRow({
 
   const sxProps: SxProps = { backgroundColor: "background" };
   const disableMessage = !canEdit
-    ? intl.formatMessage(messages.orderGroupDisabledActionsMessage)
+    ? intl.formatMessage(messages.offerRuleDisabledActionsMessage)
     : undefined;
 
-  if (isOrderGroupDummy(orderGroup)) {
+  if (isOfferRuleDummy(offerRule)) {
     return (
       <DefaultRow
-        testId={`order-group-${orderGroup.dummyId}`}
-        key={orderGroup.dummyId}
+        testId={`offer-rule-${offerRule.dummyId}`}
+        key={offerRule.dummyId}
         enableDelete={false}
         enableEdit={false}
         loading={true}
@@ -156,12 +154,12 @@ export function OrderGroupRow({
     );
   }
 
-  if (isOrderGroup(orderGroup)) {
+  if (isOfferRule(offerRule)) {
     return (
       <DefaultRow
-        testId={`order-group-${orderGroup.id}`}
-        key={orderGroup.id}
-        deleteTestId={`delete-order-group-${orderGroup.id}`}
+        testId={`offer-rule-${offerRule.id}`}
+        key={offerRule.id}
+        deleteTestId={`delete-offer-rule-${offerRule.id}`}
         enableDelete={canEdit}
         enableEdit={canEdit}
         disableEditMessage={disableMessage}
@@ -175,16 +173,16 @@ export function OrderGroupRow({
           <Switch
             inputProps={{
               "aria-label": intl.formatMessage(
-                messages.orderGroupIsActiveSwitchAriaLabel,
+                messages.offerRuleIsActiveSwitchAriaLabel,
               ),
             }}
             size="small"
-            data-testid={`is-active-switch-order-group-${orderGroup.id}`}
+            data-testid={`is-active-switch-offer-rule-${offerRule.id}`}
             disabled={!canEdit}
             onChange={(event, checked) => {
               onUpdateIsActive?.(checked);
             }}
-            checked={orderGroup.is_active}
+            checked={offerRule.is_active}
           />
         }
       />

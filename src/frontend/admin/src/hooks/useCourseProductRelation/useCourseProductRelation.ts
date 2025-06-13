@@ -9,7 +9,7 @@ import {
 import { ResourcesQuery } from "@/hooks/useResources/types";
 import { CourseProductRelationRepository } from "@/services/repositories/course-product-relation/CourseProductRelationRepository";
 import { CourseProductRelation } from "@/services/api/models/Relations";
-import { DTOOrderGroup } from "@/services/api/models/OrderGroup";
+import { DTOOfferRule } from "@/services/api/models/OfferRule";
 
 const messages = defineMessages({
   errorUpdate: {
@@ -19,12 +19,12 @@ const messages = defineMessages({
     defaultMessage:
       "An error occurred while updating the course product relation. Please retry later.",
   },
-  errorUpdateOrderGroup: {
-    id: "hooks.useCourseProductRelation.errorUpdateOrderGroup",
+  errorUpdateOfferRule: {
+    id: "hooks.useCourseProductRelation.errorUpdateOfferRule",
     description:
-      "Error message shown to the user when order group update request fails.",
+      "Error message shown to the user when offer rule update request fails.",
     defaultMessage:
-      "An error occurred while updating the order group. Please retry later.",
+      "An error occurred while updating the offer rule. Please retry later.",
   },
   errorGet: {
     id: "hooks.useCourseProductRelation.errorGet",
@@ -40,12 +40,12 @@ const messages = defineMessages({
     defaultMessage:
       "An error occurred while deleting the course product relation. Please retry later.",
   },
-  errorDeleteOrderGroup: {
-    id: "hooks.useCourseProductRelation.errorDeleteOrderGroup",
+  errorDeleteOfferRule: {
+    id: "hooks.useCourseProductRelation.errorDeleteOfferRule",
     description:
-      "Error message shown to the user when order group deletion request fails.",
+      "Error message shown to the user when offer rule deletion request fails.",
     defaultMessage:
-      "An error occurred while deleting the order group. Please retry later.",
+      "An error occurred while deleting the offer rule. Please retry later.",
   },
   errorCreate: {
     id: "hooks.useCourseProductRelation.errorCreate",
@@ -54,12 +54,12 @@ const messages = defineMessages({
     defaultMessage:
       "An error occurred while creating the course product relation. Please retry later.",
   },
-  errorCreateOrderGroup: {
-    id: "hooks.useCourseProductRelation.errorCreateOrderGroup",
+  errorCreateOfferRule: {
+    id: "hooks.useCourseProductRelation.errorCreateOfferRule",
     description:
-      "Error message shown to the user when order group creation request fails.",
+      "Error message shown to the user when offer rule creation request fails.",
     defaultMessage:
-      "An error occurred while creating the order group. Please retry later.",
+      "An error occurred while creating the offer rule. Please retry later.",
   },
   errorNotFound: {
     id: "hooks.useCourseProductRelation.errorNotFound",
@@ -108,12 +108,12 @@ export const useCourseProductRelations = (
     ...custom,
     methods: {
       ...custom.methods,
-      addOrderGroup: mutation({
+      addOfferRule: mutation({
         mutationFn: async (data: {
           relationId: string;
-          payload: DTOOrderGroup;
+          payload: DTOOfferRule;
         }) => {
-          return CourseProductRelationRepository.addOrderGroup(
+          return CourseProductRelationRepository.addOfferRule(
             data.relationId,
             data.payload,
           );
@@ -123,19 +123,19 @@ export const useCourseProductRelations = (
         },
         onError: () => {
           custom.methods.setError(
-            intl.formatMessage(messages.errorCreateOrderGroup),
+            intl.formatMessage(messages.errorCreateOfferRule),
           );
         },
       }).mutate,
-      editOrderGroup: mutation({
+      editOfferRule: mutation({
         mutationFn: async (data: {
           relationId: string;
-          orderGroupId: string;
-          payload: DTOOrderGroup;
+          offerRuleId: string;
+          payload: DTOOfferRule;
         }) => {
-          return CourseProductRelationRepository.editOrderGroup(
+          return CourseProductRelationRepository.editOfferRule(
             data.relationId,
-            data.orderGroupId,
+            data.offerRuleId,
             data.payload,
           );
         },
@@ -144,18 +144,18 @@ export const useCourseProductRelations = (
         },
         onError: () => {
           custom.methods.setError(
-            intl.formatMessage(messages.errorUpdateOrderGroup),
+            intl.formatMessage(messages.errorUpdateOfferRule),
           );
         },
       }).mutate,
-      deleteOrderGroup: mutation({
+      deleteOfferRule: mutation({
         mutationFn: async (data: {
           relationId: string;
-          orderGroupId: string;
+          offerRuleId: string;
         }) => {
-          return CourseProductRelationRepository.deleteOrderGroup(
+          return CourseProductRelationRepository.deleteOfferRule(
             data.relationId,
-            data.orderGroupId,
+            data.offerRuleId,
           );
         },
         onSuccess: () => {
@@ -163,7 +163,7 @@ export const useCourseProductRelations = (
         },
         onError: () => {
           custom.methods.setError(
-            intl.formatMessage(messages.errorDeleteOrderGroup),
+            intl.formatMessage(messages.errorDeleteOfferRule),
           );
         },
       }).mutate,

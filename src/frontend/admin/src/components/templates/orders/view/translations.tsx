@@ -62,10 +62,10 @@ export const orderViewMessages = defineMessages({
     defaultMessage: "Registered on",
     description: "Enrollment at text",
   },
-  orderGroup: {
-    id: "components.templates.orders.view.orderGroup",
-    defaultMessage: "Order group",
-    description: "Order group field",
+  offerRule: {
+    id: "components.templates.orders.view.offerRule",
+    defaultMessage: "Offer rule",
+    description: "Offer rule field",
   },
   state: {
     id: "components.templates.orders.view.state",
