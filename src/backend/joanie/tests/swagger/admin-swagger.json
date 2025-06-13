@@ -1010,10 +1010,10 @@
                 }
             }
         },
-        "/api/v1.0/admin/course-product-relations/{course_product_relation_id}/order-groups/": {
+        "/api/v1.0/admin/course-product-relations/{course_product_relation_id}/offer-rules/": {
             "get": {
-                "operationId": "course_product_relations_order_groups_list",
-                "description": "OrderGroup ViewSet",
+                "operationId": "course_product_relations_offer_rules_list",
+                "description": "OfferRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -1056,7 +1056,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedAdminOrderGroupList"
+                                    "$ref": "#/components/schemas/PaginatedAdminOfferRuleList"
                                 }
                             }
                         },
@@ -1065,8 +1065,8 @@
                 }
             },
             "post": {
-                "operationId": "course_product_relations_order_groups_create",
-                "description": "Create a new OrderGroup using the course_product_relation_id from the URL",
+                "operationId": "course_product_relations_offer_rules_create",
+                "description": "Create a new OfferRule using the course_product_relation_id from the URL",
                 "parameters": [
                     {
                         "in": "path",
@@ -1085,12 +1085,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOrderGroupCreateRequest"
+                                "$ref": "#/components/schemas/AdminOfferRuleCreateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOrderGroupCreateRequest"
+                                "$ref": "#/components/schemas/AdminOfferRuleCreateRequest"
                             }
                         }
                     }
@@ -1105,7 +1105,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOrderGroupCreate"
+                                    "$ref": "#/components/schemas/AdminOfferRuleCreate"
                                 }
                             }
                         },
@@ -1114,10 +1114,10 @@
                 }
             }
         },
-        "/api/v1.0/admin/course-product-relations/{course_product_relation_id}/order-groups/{id}/": {
+        "/api/v1.0/admin/course-product-relations/{course_product_relation_id}/offer-rules/{id}/": {
             "get": {
-                "operationId": "course_product_relations_order_groups_retrieve",
-                "description": "OrderGroup ViewSet",
+                "operationId": "course_product_relations_offer_rules_retrieve",
+                "description": "OfferRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -1152,7 +1152,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOrderGroup"
+                                    "$ref": "#/components/schemas/AdminOfferRule"
                                 }
                             }
                         },
@@ -1161,8 +1161,8 @@
                 }
             },
             "put": {
-                "operationId": "course_product_relations_order_groups_update",
-                "description": "OrderGroup ViewSet",
+                "operationId": "course_product_relations_offer_rules_update",
+                "description": "OfferRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -1191,12 +1191,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOrderGroupUpdateRequest"
+                                "$ref": "#/components/schemas/AdminOfferRuleUpdateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOrderGroupUpdateRequest"
+                                "$ref": "#/components/schemas/AdminOfferRuleUpdateRequest"
                             }
                         }
                     }
@@ -1211,7 +1211,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOrderGroupUpdate"
+                                    "$ref": "#/components/schemas/AdminOfferRuleUpdate"
                                 }
                             }
                         },
@@ -1220,8 +1220,8 @@
                 }
             },
             "patch": {
-                "operationId": "course_product_relations_order_groups_partial_update",
-                "description": "OrderGroup ViewSet",
+                "operationId": "course_product_relations_offer_rules_partial_update",
+                "description": "OfferRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -1250,12 +1250,12 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOrderGroupUpdateRequest"
+                                "$ref": "#/components/schemas/PatchedAdminOfferRuleUpdateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOrderGroupUpdateRequest"
+                                "$ref": "#/components/schemas/PatchedAdminOfferRuleUpdateRequest"
                             }
                         }
                     }
@@ -1270,7 +1270,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOrderGroupUpdate"
+                                    "$ref": "#/components/schemas/AdminOfferRuleUpdate"
                                 }
                             }
                         },
@@ -1279,8 +1279,8 @@
                 }
             },
             "delete": {
-                "operationId": "course_product_relations_order_groups_destroy",
-                "description": "OrderGroup ViewSet",
+                "operationId": "course_product_relations_offer_rules_destroy",
+                "description": "OfferRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -5760,10 +5760,10 @@
                         "description": "Return the voucher codes generated",
                         "readOnly": true
                     },
-                    "order_groups": {
+                    "offer_rules": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOrderGroup"
+                            "$ref": "#/components/schemas/AdminOfferRule"
                         },
                         "readOnly": true
                     }
@@ -5778,7 +5778,7 @@
                     "identification_number",
                     "main_invoice_reference",
                     "nb_seats",
-                    "order_groups",
+                    "offer_rules",
                     "organization",
                     "owner",
                     "postcode",
@@ -6272,10 +6272,10 @@
                         },
                         "readOnly": true
                     },
-                    "order_groups": {
+                    "offer_rules": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOrderGroup"
+                            "$ref": "#/components/schemas/AdminOfferRule"
                         },
                         "readOnly": true
                     },
@@ -6296,7 +6296,7 @@
                     "can_edit",
                     "course",
                     "id",
-                    "order_groups",
+                    "offer_rules",
                     "organizations",
                     "product",
                     "uri"
@@ -7046,10 +7046,10 @@
                         ],
                         "readOnly": true
                     },
-                    "order_groups": {
+                    "offer_rules": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOrderGroup"
+                            "$ref": "#/components/schemas/AdminOfferRule"
                         },
                         "readOnly": true
                     },
@@ -7104,7 +7104,7 @@
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice",
-                    "order_groups",
+                    "offer_rules",
                     "organization",
                     "owner",
                     "payment_schedule",
@@ -7173,9 +7173,9 @@
                     "was_created_by_order"
                 ]
             },
-            "AdminOrderGroup": {
+            "AdminOfferRule": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model",
+                "description": "Admin Serializer for OfferRule model",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -7188,7 +7188,7 @@
                         "readOnly": true,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given order group"
+                        "description": "The maximum number of orders that can be validated for a given offer rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7197,7 +7197,7 @@
                     "nb_available_seats": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "Return the number of available seats for this order group.",
+                        "description": "Return the number of available seats for this offer rule.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -7220,7 +7220,7 @@
                         "readOnly": true,
                         "nullable": true,
                         "title": "Rule starts at",
-                        "description": "Date at which the order group rule starts"
+                        "description": "Date at which the offer rule rule starts"
                     },
                     "end": {
                         "type": "string",
@@ -7228,7 +7228,7 @@
                         "readOnly": true,
                         "nullable": true,
                         "title": "Rule ends at",
-                        "description": "Date at which the order group rule ends"
+                        "description": "Date at which the offer rule rule ends"
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscount"
@@ -7237,7 +7237,7 @@
                         "type": "string",
                         "readOnly": true,
                         "nullable": true,
-                        "description": "Description of the order group"
+                        "description": "Description of the offer rule"
                     }
                 },
                 "required": [
@@ -7253,9 +7253,9 @@
                     "start"
                 ]
             },
-            "AdminOrderGroupCreate": {
+            "AdminOfferRuleCreate": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group. You can also add a discount.",
+                "description": "Admin Serializer for OfferRule model reserved to create action.\n\nUnlike `AdminOfferRuleSerializer`, it allows to pass a product to create\nthe offer rule. You can also add a discount.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -7269,7 +7269,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given order group"
+                        "description": "The maximum number of orders that can be validated for a given offer rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7278,7 +7278,7 @@
                     "nb_available_seats": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "Return the number of available seats for this order group.",
+                        "description": "Return the number of available seats for this offer rule.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -7321,9 +7321,9 @@
                     "nb_available_seats"
                 ]
             },
-            "AdminOrderGroupCreateRequest": {
+            "AdminOfferRuleCreateRequest": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model reserved to create action.\n\nUnlike `AdminOrderGroupSerializer`, it allows to pass a product to create\nthe order group. You can also add a discount.",
+                "description": "Admin Serializer for OfferRule model reserved to create action.\n\nUnlike `AdminOfferRuleSerializer`, it allows to pass a product to create\nthe offer rule. You can also add a discount.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -7331,7 +7331,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given order group"
+                        "description": "The maximum number of orders that can be validated for a given offer rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7356,18 +7356,18 @@
                     }
                 }
             },
-            "AdminOrderGroupRequest": {
+            "AdminOfferRuleRequest": {
                 "type": "object",
-                "description": "Admin Serializer for OrderGroup model",
+                "description": "Admin Serializer for OfferRule model",
                 "properties": {
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscountRequest"
                     }
                 }
             },
-            "AdminOrderGroupUpdate": {
+            "AdminOfferRuleUpdate": {
                 "type": "object",
-                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
+                "description": "Admin serializer for Offer Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offer rule.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -7381,7 +7381,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given order group"
+                        "description": "The maximum number of orders that can be validated for a given offer rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7390,7 +7390,7 @@
                     "nb_available_seats": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "Return the number of available seats for this order group.",
+                        "description": "Return the number of available seats for this offer rule.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -7433,9 +7433,9 @@
                     "nb_available_seats"
                 ]
             },
-            "AdminOrderGroupUpdateRequest": {
+            "AdminOfferRuleUpdateRequest": {
                 "type": "object",
-                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
+                "description": "Admin serializer for Offer Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offer rule.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -7443,7 +7443,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given order group"
+                        "description": "The maximum number of orders that can be validated for a given offer rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -9172,7 +9172,7 @@
                     }
                 }
             },
-            "PaginatedAdminOrderGroupList": {
+            "PaginatedAdminOfferRuleList": {
                 "type": "object",
                 "required": [
                     "count",
@@ -9198,7 +9198,7 @@
                     "results": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOrderGroup"
+                            "$ref": "#/components/schemas/AdminOfferRule"
                         }
                     }
                 }
@@ -9581,9 +9581,9 @@
                     }
                 }
             },
-            "PatchedAdminOrderGroupUpdateRequest": {
+            "PatchedAdminOfferRuleUpdateRequest": {
                 "type": "object",
-                "description": "Admin serializer for Order Group reserved for partial update and update actions.\n\nIt allows to update the field discount of an order group.",
+                "description": "Admin serializer for Offer Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offer rule.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -9591,7 +9591,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given order group"
+                        "description": "The maximum number of orders that can be validated for a given offer rule"
                     },
                     "is_active": {
                         "type": "boolean",

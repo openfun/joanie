@@ -460,9 +460,9 @@ class OrderFlow:
 
         # Reset course product relation cache if its representation is impacted by changes
         # on related orders
-        # e.g. number of remaining seats when an order group is used
-        # see test_api_course_product_relation_read_detail_with_order_groups_cache
-        if self.instance.order_groups.exists():
+        # e.g. number of remaining seats when an offer rule is used
+        # see test_api_course_product_relation_read_detail_with_offer_rules_cache
+        if self.instance.offer_rules.exists():
             course_id = (
                 self.instance.course_id or self.instance.enrollment.course_run.course_id
             )

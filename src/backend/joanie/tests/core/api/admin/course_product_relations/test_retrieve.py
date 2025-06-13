@@ -86,7 +86,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
                         "text": relation.course.state["text"],
                     },
                 },
-                "order_groups": [],
+                "offer_rules": [],
                 "product": {
                     "price": float(relation.product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,

@@ -194,7 +194,7 @@ class ProductAdminApiRetrieveTest(TestCase):
                             "id": str(relation.organizations.first().id),
                         }
                     ],
-                    "order_groups": [],
+                    "offer_rules": [],
                 }
             ],
         }
