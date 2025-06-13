@@ -78,8 +78,8 @@ test.describe("Order view", () => {
     } else if (order.enrollment) {
       await expect(page.getByLabel("Course")).toHaveValue(order.enrollment.id);
     }
-    await expect(page.getByLabel("Order group")).toHaveValue(
-      order.order_group?.id ?? "-",
+    await expect(page.getByLabel("Offer rule")).toHaveValue(
+      order.offer_rule?.id ?? "-",
     );
     await expect(page.getByLabel("Owner")).toHaveValue(
       order.owner.full_name ?? order.owner.username,
@@ -198,7 +198,7 @@ test.describe("Order view", () => {
     ).toBeVisible();
     await expect(page.getByLabel("Product")).toBeVisible();
     await expect(page.getByLabel("Course")).toBeVisible();
-    await expect(page.getByLabel("Order group")).toBeVisible();
+    await expect(page.getByLabel("Offer rule")).toBeVisible();
     await expect(page.getByLabel("Owner")).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toBeVisible();
     await expect(page.getByLabel("Price")).toBeVisible();

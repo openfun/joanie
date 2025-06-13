@@ -1,7 +1,7 @@
 import { ResourcesQuery } from "@/hooks/useResources";
 import { Course } from "@/services/api/models/Course";
 import { Organization } from "@/services/api/models/Organization";
-import { OrderGroup } from "@/services/api/models/OrderGroup";
+import { OfferRule } from "@/services/api/models/OfferRule";
 import { User } from "@/services/api/models/User";
 import { ProductSimple } from "@/services/api/models/Product";
 import { Enrollment } from "@/services/api/models/Enrollment";
@@ -51,7 +51,7 @@ export type Order = AbstractOrder & {
   owner: User;
   product: ProductSimple;
   organization?: Organization;
-  order_group?: OrderGroup;
+  offer_rule?: OfferRule;
   course: Nullable<Course>;
   enrollment: Nullable<Enrollment>;
   certificate: Nullable<GeneratedCertificate>;

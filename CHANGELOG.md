@@ -27,6 +27,7 @@ and this project adheres to
 - Use discounted_price in payment_schedule
 - Replace order groups from the client API with course product relations
   properties
+- Rename `OrderGroup` to `OfferRule`
 
 ### Fixed
 

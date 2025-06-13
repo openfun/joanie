@@ -435,7 +435,7 @@ test.describe("Product form", () => {
         ),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Add order group" }).first(),
+      page.getByRole("button", { name: "Add offer rule" }).first(),
     ).toBeVisible();
     await Promise.all(
       relations.map(async (relation) => {
