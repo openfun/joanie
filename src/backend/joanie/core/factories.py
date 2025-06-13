@@ -34,6 +34,7 @@ from joanie.core.models import (
 )
 from joanie.core.serializers import AddressSerializer
 from joanie.core.utils import contract_definition, file_checksum, payment_schedule
+from joanie.core.utils import quotes as quote_utils
 from joanie.core.utils.payment_schedule import (
     convert_amount_str_to_money_object,
     convert_date_str_to_date_object,
@@ -1302,6 +1303,71 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             )
 
         self.save()
+
+
+class QuoteDefinitionFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create a quote definition"""
+
+    class Meta:
+        model = models.QuoteDefinition
+
+    body = factory.Faker("paragraphs", nb=3)
+    description = factory.Faker("paragraph", nb_sentences=5)
+    language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
+    name = factory.fuzzy.FuzzyChoice([name[0] for name in enums.QUOTE_NAME_CHOICES])
+    title = factory.Sequence(lambda n: f"Quote definition {n}")
+
+
+class QuoteFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create a quote for a batch order"""
+
+    class Meta:
+        model = models.Quote
+
+    batch_order = factory.SubFactory(BatchOrderFactory)
+    definition = factory.SubFactory(QuoteDefinitionFactory)
+    organization_signed_on = None
+    buyer_signed_on = None
+    has_purchase_order_received = False
+
+    @factory.lazy_attribute
+    def context(self):
+        """
+        Lazily generate the quote's context from the related batch order and quote definition.
+        """
+        if self.batch_order.is_assigned:
+            logo_checksum = file_checksum(self.batch_order.organization.logo)
+            logo_image, created = DocumentImage.objects.get_or_create(
+                checksum=logo_checksum,
+                defaults={"file": self.batch_order.organization.logo},
+            )
+            if created:
+                self.definition.images.set([logo_image])
+            organization_logo_id = str(logo_image.id)
+
+            return {
+                "quote": {
+                    "name": self.definition.name,
+                    "title": self.definition.title,
+                    "description": self.definition.description,
+                    "body": self.definition.get_body_in_html(),
+                },
+                "batch_order": quote_utils.prepare_batch_order_context(quote=self),
+                "customer": quote_utils.prepare_customer_context(
+                    batch_order=self.batch_order
+                ),
+                "organization": quote_utils.prepare_organization_context(
+                    language_code=self.definition.language,
+                    organization=self.batch_order.organization,
+                    logo=organization_logo_id,
+                ),
+                "seller": settings.JOANIE_INVOICE_SELLER_ADDRESS,
+                "product": quote_utils.prepare_product_context(
+                    language_code=self.definition.language, batch_order=self.batch_order
+                ),
+            }
+
+        return None
 
 
 class AddressFactory(DebugModelFactory, factory.django.DjangoModelFactory):

@@ -8,4 +8,5 @@ from .contracts import *
 from .course_wishes import *
 from .courses import *
 from .products import *
+from .quotes import *
 from .site import *
