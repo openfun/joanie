@@ -245,7 +245,6 @@ PAYMENT_STATE_CHOICES = (
 COURSE_OFFER_PAID = "paid"
 COURSE_OFFER_FREE = "free"
 
-
 BATCH_ORDER_STATE_DRAFT = "draft"
 BATCH_ORDER_STATE_ASSIGNED = "assigned"
 BATCH_ORDER_STATE_TO_SIGN = "to_sign"
@@ -265,3 +264,7 @@ BATCH_ORDER_STATE_CHOICES = (
     (BATCH_ORDER_STATE_CANCELED, _("Canceled")),
     (BATCH_ORDER_STATE_COMPLETED, _("Completed")),
 )
+
+# For Quotes of batch orders
+QUOTE_DEFAULT = "quote_default"
+QUOTE_NAME_CHOICES = ((QUOTE_DEFAULT, _("Quote Default")),)
