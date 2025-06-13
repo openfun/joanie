@@ -34,6 +34,7 @@ from joanie.core.models import (
 )
 from joanie.core.serializers import AddressSerializer
 from joanie.core.utils import contract_definition, file_checksum, payment_schedule
+from joanie.core.utils import quotes as quote_utils
 from joanie.core.utils.payment_schedule import (
     convert_amount_str_to_money_object,
     convert_date_str_to_date_object,
@@ -1299,6 +1300,65 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             )
 
         self.save()
+
+
+class QuoteDefinitionFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create a quote definition"""
+
+    class Meta:
+        model = models.QuoteDefinition
+
+    body = factory.Faker("paragraphs", nb=3)
+    description = factory.Faker("paragraph", nb_sentences=5)
+    language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
+    name = factory.fuzzy.FuzzyChoice([name[0] for name in enums.QUOTE_NAME_CHOICES])
+    title = factory.Sequence(lambda n: f"Quote definition {n}")
+
+
+class QuoteFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create a quote"""
+
+    class Meta:
+        model = models.Quote
+
+    batch_order = factory.SubFactory(BatchOrderFactory)
+    definition = factory.SubFactory(QuoteDefinitionFactory)
+
+    @factory.lazy_attribute
+    def context(self):
+        """
+        Lazily generate the quote's context from the related batch order and the quote definition.
+        """
+        if self.batch_order.is_assigned:
+            organization_logo_id = quote_utils.prepare_organization_logo(
+                definition=self.definition, organization=self.batch_order.organization
+            )
+
+            return {
+                "quote": {
+                    "name": self.definition.name,
+                    "title": self.definition.title,
+                    "description": self.definition.description,
+                    "body": self.definition.get_body_in_html(),
+                },
+                "batch_order": {
+                    "nb_seats": self.batch_order.nb_seats,
+                },
+                "customer": quote_utils.prepare_customer_context(
+                    batch_order=self.batch_order
+                ),
+                "organization": quote_utils.prepare_organization_context(
+                    language_code=self.definition.language,
+                    organization=self.batch_order.organization,
+                    logo=organization_logo_id,
+                ),
+                "course": quote_utils.prepare_course_context(
+                    language_code=self.definition.language,
+                    batch_order=self.batch_order,
+                ),
+            }
+
+        return None
 
 
 class AddressFactory(DebugModelFactory, factory.django.DjangoModelFactory):
