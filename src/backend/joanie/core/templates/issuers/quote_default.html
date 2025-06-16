@@ -1,0 +1,144 @@
+{% load i18n %}
+{% load static %}
+{% load extra_tags %}
+
+{% comment %}
+This template aims to be used as a quote of a batch order for a training
+built by Unicamp© brand. Surely you will need to create a new quote template
+for your training, feel free to use this template as a base.
+{% endcomment %}
+<html>
+{% if debug %}
+
+<head>
+  <style>
+    {
+      {css|safe}
+    }
+  </style>
+</head>
+{% endif %}
+
+<body class="document">
+  <header class="document--header">
+    <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
+  </header>
+    <main class="document-content">
+      <header class="content--header">
+        <h1>{{ quote.title }}</h1>
+        <p>{{ quote.description|linebreaks }}</p>
+      </header>
+      <section class="content--context">
+        <p>{% translate "The current quote is formed between the University and the Company, as identified below:" %}
+        </p>
+        <dl>
+          <dt>{% translate 'University (hereinafter "the University"): '%}</dt>
+          <dd>
+            <ul>
+              <li>{% translate "Name of the University: "%}{{ organization.name }}</li>
+              {% if organization.address %}
+              <li>{% translate "Head office address: "%}{{ organization.address.address }},
+                {{ organization.address.postcode }}, {{ organization.address.city }}, ({{ organization.address.country }})</li>
+              {% endif %}
+              <li>
+                {% translate "SIRET number: "%}{{ organization.enterprise_code|default:"-" }}
+              </li>
+              <li>
+                {% translate "Activity Declaration N°: "%} {{ organization.activity_category_code|default:"-" }}
+              </li>
+              <li>
+                {% translate "Legal Representative: "%}{{ organization.representative }}
+                {% if organization.representative_profession %}
+                  {{ organization.representative_profession }}
+                {% endif %}
+              </li>
+              {% if organization.signatory_representative %}
+              <li>
+                {% translate "Delegated signatory: "%}{{ organization.signatory_representative }} -
+                  {{ organization.signatory_representative_profession }}
+              </li>
+              {% endif %}
+              <li>
+                {% translate "Administrative contact: "%}
+                  {% if organization.contact_email and organization.contact_phone %}
+                    {{ organization.contact_email }} - {{ organization.contact_phone }}
+                  {% elif not organization.contact_email and not organization.contact_phone %}
+                  -
+                  {% else %}
+                    {{ organization.contact_email|default:organization.contact_phone }}
+                  {% endif %}
+                </li>
+              </ul>
+            </dd>
+          <dt>{% translate 'Company (hereinafter "the Company"):' %}</dt>
+          <dd>
+            <ul>
+              <li>{% translate "Company representative Full name: " %}{{ customer.representative_name }}</li>
+              <li>{% translate "Representing company : " %}
+                {{ customer.company_name }}
+              </li>
+              <li>{% translate "SIRET number: "%}
+                {{ customer.identification_number }}
+              </li>
+              <li>{% translate "Postal address: " %}
+                {{ customer.address }}, {{ customer.postcode }}, {{ customer.city }}, {{ customer.country }}
+              </li>
+            </ul>
+          </dd>
+          <dt>{% translate 'Course (hereinafter "the Course"):' %}</dt>
+          <dd>
+            <ul>
+              <li>{% translate "Course number: " %}{{ course.code }}</li>
+              <li>{% translate "Name of the Course: " %}{{ course.name }}</li>
+              {% if course.effort %}
+              <li>{% translate "Total duration of the course: " %}
+                {% with duration=course.effort|iso8601_to_duration:"hours" %}
+                {% if duration %}
+                  {% blocktranslate with duration=duration count duration=duration trimmed%}
+                  {{ duration }} hour
+                {% plural %}
+                  {{ duration }} hours
+                {% endblocktranslate %}
+                {% else %}
+                  {{ course.effort|default:"-" }}
+                {% endif %}
+                {% endwith %}
+              </li>
+              {% endif %}
+              <li>{% translate "Teaching Format: Online Only" %}</li>
+              <li>{% translate "For number of seats: " %} {{ batch_order.nb_seats }}</li>
+              <li>{% translate "Price of the course: " %}
+                {% with price=course.price|floatformat:2 currency=course.currency %}
+                {% if price %}
+                  {{ price }} {{ currency }}
+                {% else %}
+                  {{ course.price|default:"-" }}
+                {% endif %}
+                {% endwith %}
+              </li>
+            </ul>
+          </dd>
+        </dl>
+      </section>
+      <article class="content-articles">
+        {% if quote %}
+          {{ quote.body|safe }}
+        {% endif %}
+        <section class="content-signatures">
+          <div class="signature_zone">
+            <p>{% translate "University representative's signature :" %}</p>
+            <div class="signature-recipient">
+              [SignatureField#1]
+            </div>
+          </div>
+          <div class="signature_zone">
+            <p>{% translate "Company representative's signature :" %}</p>
+            <div class="signature-recipient">
+              [SignatureField#2]
+            </div>
+          </div>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>
