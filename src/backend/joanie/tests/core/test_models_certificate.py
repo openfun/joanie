@@ -51,7 +51,7 @@ class CertificateModelTestCase(LoggingTestCase):
         # After creation, a DocumentImage should have been created
         # logo and signature images are the same when using OrganizationFactory
         self.assertEqual(DocumentImage.objects.count(), 1)
-        # Relation to the DocumentImage should have been set
+        # relation to the DocumentImage should have been set
         self.assertEqual(certificate.images.count(), 1)
 
         image_id = str(DocumentImage.objects.first().id)
@@ -116,7 +116,7 @@ class CertificateModelTestCase(LoggingTestCase):
             courses=[],
             title="Graded product",
         )
-        factories.CourseProductRelationFactory(course=course, product=product)
+        factories.OfferFactory(course=course, product=product)
 
         # - Add French translations
         organization.translations.create(language_code="fr-fr", title="Établissement 1")

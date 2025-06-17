@@ -95,8 +95,8 @@ class BasePaymentTestCase(TestCase):
         else:
             self.assertIn(f"Hello {fullname}", email_content)
         # Check the product title is in the correct language
-        with switch_language(batch_order.relation.product, batch_order.owner.language):
-            self.assertIn(batch_order.relation.product.title, email_content)
+        with switch_language(batch_order.offer.product, batch_order.owner.language):
+            self.assertIn(batch_order.offer.product.title, email_content)
 
         self.assertIn(str(batch_order.nb_seats), email_content)
         # emails are generated from mjml format, test rendering of email doesn't

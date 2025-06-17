@@ -26,34 +26,34 @@ class UtilsBatchOrderTestCase(TestCase):
     def test_utils_batch_order_assign_organization(self):
         """
         The utility assign organization should assign the organization with least binding orders
-        on the relation. It should also add the active offer rule of the relation
+        on the offer. It should also add the active offer rule of the offer
         on the batch order and finally it should initiate the flow. After this call, the batch
         order should have : a main invoice, a contract, a total and it should be in state
         `assigned`.
         """
         organization_1, organization_2 = factories.OrganizationFactory.create_batch(2)
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization_1, organization_2],
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        organization_1.courses.add(relation.course)
+        organization_1.courses.add(offer.course)
         offer_rule = factories.OfferRuleFactory(
-            nb_seats=10, course_product_relation=relation
+            nb_seats=10, course_product_relation=offer
         )
 
         # Create an order in completed state for organization_1
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_COMPLETED,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             organization=organization_1,
         )
         order.offer_rules.add(offer_rule)
 
         # Create the batch order
         batch_order = factories.BatchOrderFactory(
-            relation=relation, nb_seats=8, state=enums.BATCH_ORDER_STATE_DRAFT
+            offer=offer, nb_seats=8, state=enums.BATCH_ORDER_STATE_DRAFT
         )
 
         assign_organization(batch_order)
@@ -69,44 +69,44 @@ class UtilsBatchOrderTestCase(TestCase):
 
     def test_utils_batch_order_get_active_offer_rule_not_found(self):
         """
-        When no offer rule is setted for a course product relation, the method
+        When no offer rule is setted for an offer, the method
         `get_active_offer_rule` should return None.
         """
         batch_order = factories.BatchOrderFactory()
 
         self.assertIsNone(
             get_active_offer_rule(
-                relation_id=batch_order.relation.id, nb_seats=batch_order.nb_seats
+                offer_id=batch_order.offer.id, nb_seats=batch_order.nb_seats
             ),
         )
 
     def test_utils_batch_order_get_active_offer_rule(self):
         """
         The utility method `get_active_offer_rule` should return an offer rule that is
-        available on the relation that corresponds to the number of seats requested by the
+        available on the offer that corresponds to the number of seats requested by the
         batch order.
         """
         batch_order = factories.BatchOrderFactory(nb_seats=3)
-        # Create 2 offer rules for the relation
+        # Create 2 offer rules for the offer
         offer_rule_1 = factories.OfferRuleFactory(
-            nb_seats=1, course_product_relation=batch_order.relation
+            nb_seats=1, course_product_relation=batch_order.offer
         )
         offer_rule_2 = factories.OfferRuleFactory(
-            nb_seats=3, course_product_relation=batch_order.relation
+            nb_seats=3, course_product_relation=batch_order.offer
         )
         factories.OfferRuleFactory(
-            nb_seats=2, course_product_relation=batch_order.relation
+            nb_seats=2, course_product_relation=batch_order.offer
         )
         # Complete the first offer rule with 2 active orders
         order = factories.OrderFactory(
-            product=batch_order.relation.product,
-            course=batch_order.relation.course,
+            product=batch_order.offer.product,
+            course=batch_order.offer.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         order.offer_rules.add(offer_rule_1)
 
         found_offer_rule = get_active_offer_rule(
-            relation_id=batch_order.relation.id, nb_seats=batch_order.nb_seats
+            offer_id=batch_order.offer.id, nb_seats=batch_order.nb_seats
         )
 
         # The offer rule found should be the one with 3 available seats
@@ -118,22 +118,22 @@ class UtilsBatchOrderTestCase(TestCase):
         groups that have less seats than the number of seats requested by the batch order.
         """
         batch_order = factories.BatchOrderFactory(nb_seats=2)
-        # Create 2 offer rules for the relation
+        # Create 2 offer rules for the offer
         offer_rule = factories.OfferRuleFactory(
-            nb_seats=3, course_product_relation=batch_order.relation
+            nb_seats=3, course_product_relation=batch_order.offer
         )
         # Complete the first offer rule with 2 active orders
         for _ in range(3):
             order = factories.OrderFactory(
-                product=batch_order.relation.product,
-                course=batch_order.relation.course,
+                product=batch_order.offer.product,
+                course=batch_order.offer.course,
                 state=enums.ORDER_STATE_PENDING,
             )
             order.offer_rules.add(offer_rule)
 
         with self.assertRaises(ValueError) as context:
             get_active_offer_rule(
-                relation_id=batch_order.relation.id, nb_seats=batch_order.nb_seats
+                offer_id=batch_order.offer.id, nb_seats=batch_order.nb_seats
             )
 
         self.assertTrue("Seat limitation has been reached." in str(context.exception))
@@ -162,13 +162,13 @@ class UtilsBatchOrderTestCase(TestCase):
         )
         batch_order = factories.BatchOrderFactory(
             owner=user,
-            relation__product__title="Product 1",
+            offer__product__title="Product 1",
         )
-        batch_order.relation.product.translations.create(
+        batch_order.offer.product.translations.create(
             language_code="fr-fr",
             title="Produit 1",
         )
-        batch_order.relation.product.save()
+        batch_order.offer.product.save()
 
         invitation_link = mock_submit_for_signature()
 
@@ -202,7 +202,7 @@ class UtilsBatchOrderTestCase(TestCase):
         self.assertIn("https://richie.education", email_content)
 
         # If user has french language, the email should be in french
-        with switch_language(batch_order.relation.product, "fr-fr"):
+        with switch_language(batch_order.offer.product, "fr-fr"):
             mail.outbox.clear()
             user.language = "fr-fr"
             user.save()
@@ -215,7 +215,7 @@ class UtilsBatchOrderTestCase(TestCase):
             self.assertIn("Bonjour", email_content)
 
         # If the translation does not exist, it should use the fallback language
-        with switch_language(batch_order.relation.product, "de-de"):
+        with switch_language(batch_order.offer.product, "de-de"):
             mail.outbox.clear()
             user.language = "de-de"
             user.save()
@@ -273,25 +273,25 @@ class UtilsBatchOrderTestCase(TestCase):
             first_name="Jane",
             last_name="Smith",
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__price=10,
             product__title="Product 1",
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
-        relation.product.translations.create(
+        offer.product.translations.create(
             language_code="fr-fr",
             title="Produit 1",
         )
-        relation.product.save()
+        offer.product.save()
 
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation, nb_seats=10
+            course_product_relation=offer, nb_seats=10
         )
         batch_order = factories.BatchOrderFactory(
             owner=user,
             state=enums.BATCH_ORDER_STATE_COMPLETED,
             nb_seats=2,
-            relation=relation,
+            offer=offer,
         )
         batch_order.offer_rules.add(offer_rule)
         batch_order.generate_orders()
@@ -323,7 +323,7 @@ class UtilsBatchOrderTestCase(TestCase):
         self.assertIn("https://richie.education", email_content)
 
         # Switch to french should use the existing translations
-        with switch_language(relation.product, "fr-fr"):
+        with switch_language(offer.product, "fr-fr"):
             mail.outbox.clear()
             user.language = "fr-fr"
             user.save()
@@ -335,7 +335,7 @@ class UtilsBatchOrderTestCase(TestCase):
             self.assertIn("Produit 1", email_content)
 
         # When there is no translation, it should use the default language
-        with switch_language(relation.product, "de-de"):
+        with switch_language(offer.product, "de-de"):
             mail.outbox.clear()
             user.language = "de-de"
             user.save()

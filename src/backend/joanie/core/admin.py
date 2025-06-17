@@ -612,7 +612,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = (
         "id",
         "state",
-        "relation",
+        "offer",
         "organization",
         "nb_seats",
         "orders_generated",
@@ -647,7 +647,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
             _("Order details"),
             {
                 "fields": (
-                    "relation",
+                    "offer",
                     "organization",
                     "voucher",
                     "nb_seats",
@@ -771,7 +771,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
                     try:
                         offer_rule = get_active_offer_rule(
-                            relation_id=batch_order.relation.id,
+                            offer_id=batch_order.offer.id,
                             nb_seats=batch_order.nb_seats,
                         )
                     except ValueError as exception:

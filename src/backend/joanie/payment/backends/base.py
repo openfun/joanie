@@ -113,7 +113,7 @@ class BasePaymentBackend:
         has been successfully fully paid
         """
         with override(batch_order.owner.language):
-            product_title = batch_order.relation.product.safe_translation_getter(
+            product_title = batch_order.offer.product.safe_translation_getter(
                 "title", language_code=batch_order.owner.language
             )
             emails.send(

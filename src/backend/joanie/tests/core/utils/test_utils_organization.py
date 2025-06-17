@@ -15,11 +15,11 @@ class UtilsOrganizationTestCase(TestCase):
         self.organization_1, self.organization_2 = (
             factories.OrganizationFactory.create_batch(2)
         )
-        self.relation = factories.CourseProductRelationFactory(
+        self.offer = factories.OfferFactory(
             organizations=[self.organization_1, self.organization_2]
         )
-        self.course = self.relation.course
-        self.product = self.relation.product
+        self.course = self.offer.course
+        self.product = self.offer.product
 
     def test_utils_organization_get_least_active_organization_no_orders(self):
         """

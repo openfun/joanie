@@ -458,10 +458,10 @@ class OrderFlow:
             if not credit_card.orders.exists():
                 credit_card.delete()
 
-        # Reset course product relation cache if its representation is impacted by changes
+        # Reset offer cache if its representation is impacted by changes
         # on related orders
         # e.g. number of remaining seats when an offer rule is used
-        # see test_api_course_product_relation_read_detail_with_offer_rules_cache
+        # see test_api_offer_read_detail_with_offer_rules_cache
         if self.instance.offer_rules.exists():
             course_id = (
                 self.instance.course_id or self.instance.enrollment.course_run.course_id

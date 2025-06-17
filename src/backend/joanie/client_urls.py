@@ -49,9 +49,9 @@ router.register(
     "organizations", api_client.OrganizationViewSet, basename="organizations"
 )
 router.register(
-    "course-product-relations",
-    api_client.CourseProductRelationViewSet,
-    basename="course-product-relations",
+    "offers",
+    api_client.OfferViewSet,
+    basename="offers",
 )
 router.register("users", api_client.UserViewSet, basename="users")
 router.register(
@@ -77,8 +77,8 @@ course_related_router.register(
 )
 course_related_router.register(
     "products",
-    api_client.CourseProductRelationViewSet,
-    basename="course_product_relations",
+    api_client.OfferViewSet,
+    basename="offers",
 )
 course_related_router.register(
     "orders",
@@ -99,9 +99,9 @@ organization_related_router.register(
     basename="organization_contracts",
 )
 organization_related_router.register(
-    "course-product-relations",
-    api_client.CourseProductRelationViewSet,
-    basename="course_product_relations_per_organization",
+    "offers",
+    api_client.OfferViewSet,
+    basename="offers_per_organization",
 )
 organization_related_router.register(
     "courses",

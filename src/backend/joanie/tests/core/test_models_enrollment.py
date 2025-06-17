@@ -524,12 +524,12 @@ class EnrollmentModelsTestCase(TestCase):
             price="0.00",
         )
 
-        relation = factories.CourseProductRelationFactory(product=product)
+        offer = factories.OfferFactory(product=product)
 
         order = factories.OrderFactory(
             product=product,
-            course=relation.course,
-            organization=relation.organizations.first(),
+            course=offer.course,
+            organization=offer.organizations.first(),
         )
         factories.ContractFactory(
             order=order,

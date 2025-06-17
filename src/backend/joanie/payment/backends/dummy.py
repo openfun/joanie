@@ -149,7 +149,7 @@ class DummyPaymentBackend(BasePaymentBackend):
         payment_id = (
             self.get_payment_id(installment.get("id"))
             if installment
-            else str(order.relation.product.id)
+            else str(order.offer.product.id)
         )
         notification_url = self.get_notification_url()
         payment_info = {

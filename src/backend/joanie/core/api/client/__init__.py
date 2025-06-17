@@ -73,11 +73,11 @@ class CourseRunViewSet(
         return queryset
 
 
-class CourseProductRelationViewSet(
+class OfferViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
     """
-    API ViewSet for all interactions with course-product relations.
+    API ViewSet for all interactions with offers.
     Can be accessed through multiple URLs
     GET /courses/
         Return all courses the user has access to
@@ -89,8 +89,8 @@ class CourseProductRelationViewSet(
     lookup_field = "pk"
     lookup_url_kwarg = "pk_or_product_id"
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = serializers.CourseProductRelationSerializer
-    filterset_class = filters.CourseProductRelationViewSetFilter
+    serializer_class = serializers.OfferSerializer
+    filterset_class = filters.OfferViewSetFilter
     ordering = ["-created_on"]
     queryset = (
         models.CourseProductRelation.objects.filter(
@@ -122,10 +122,10 @@ class CourseProductRelationViewSet(
 
     def get_object(self):
         """
-        The retrieve action is used to get a single course product relation.
+        The retrieve action is used to get a single offer.
         There are two cases to handle :
-        1. Retrieve the relation through its id
-        2. Retrieve the relation through its course id and product id
+        1. Retrieve the offer through its id
+        2. Retrieve the offer through its course id and product id
         """
         queryset = self.filter_queryset(self.get_queryset())
 
@@ -134,14 +134,14 @@ class CourseProductRelationViewSet(
 
         if course_id := self.kwargs.get("course_id"):
             # 1. Request through a nested course route, we want to retrieve
-            # a relation through its course id and product id
+            # an offer through its course id and product id
             filter_kwargs = {
                 self.course_lookup_filter: course_id,
                 "product__id": self.kwargs[lookup_url_kwarg],
             }
         else:
-            # 2. Request through the course product relation route, we want to retrieve
-            # a relation through its id
+            # 2. Request through the offer route, we want to retrieve
+            # an offer through its id
             filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
         obj = get_object_or_404(queryset, **filter_kwargs)
 
@@ -161,8 +161,8 @@ class CourseProductRelationViewSet(
 
     def get_queryset(self):
         """
-        The queryset filter depends on the action as to list course product relation we
-        only want to list course product relation to which the user has access.
+        The queryset filter depends on the action as to list offer we
+        only want to list offer to which the user has access.
         """
         queryset = super().get_queryset()
 
@@ -185,7 +185,7 @@ class CourseProductRelationViewSet(
         )
 
     def get_permissions(self):
-        """Anonymous user should be able to retrieve a course product relation."""
+        """Anonymous user should be able to retrieve an offer."""
         if (
             self.action == "retrieve"
             and self.kwargs.get("course_id")
@@ -202,27 +202,26 @@ class CourseProductRelationViewSet(
         if self.action == "payment_schedule":
             return serializers.OrderPaymentScheduleSerializer
         if self.action == "list":
-            return serializers.CourseProductRelationLightSerializer
+            return serializers.OfferLightSerializer
         return self.serializer_class
 
     @action(detail=True, methods=["GET"], url_path="payment-schedule")
     def payment_schedule(self, *args, **kwargs):
         """
-        Return the payment schedule for a course product relation.
+        Return the payment schedule for an offer.
         """
-        course_product_relation = self.get_object()
+        offer = self.get_object()
 
-        if course_product_relation.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
-            instance = course_product_relation.course
+        if offer.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            instance = offer.course
         else:
-            instance = course_product_relation.product
+            instance = offer.product
         course_run_dates = instance.get_equivalent_course_run_dates(
             ignore_archived=True
         )
 
         payment_schedule = generate_payment_schedule(
-            course_product_relation.discounted_price
-            or course_product_relation.product.price,
+            offer.discounted_price or offer.product.price,
             timezone.now(),
             course_run_dates["start"],
             course_run_dates["end"],
@@ -251,7 +250,7 @@ class EnrollmentViewSet(
     def get_queryset(self):
         """
         Custom queryset to limit to enrollments owned by the logged-in user.
-        We retrieve product relations related to each enrollment in the same
+        We retrieve product offers related to each enrollment in the same
         query using a prefetch query.
         """
         username = (
@@ -420,7 +419,7 @@ class OrderViewSet(
 
         # - If the product is not withdrawable, user must have waived it
         try:
-            relation = CourseProductRelation.objects.get(
+            offer = CourseProductRelation.objects.get(
                 product_id=product.id, course_id=course.id
             )
         except CourseProductRelation.DoesNotExist:
@@ -442,7 +441,7 @@ class OrderViewSet(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        if not relation.is_withdrawable and not request.data.get(
+        if not offer.is_withdrawable and not request.data.get(
             "has_waived_withdrawal_right"
         ):
             return Response(
@@ -666,7 +665,7 @@ class BatchOrderViewSet(
         Return information about a batch order
 
     POST /api/batch-orders/ with expected data:
-        - relation id (course product relation)
+        - offer id (offer)
         - company required data (name, identification number, address, postcode, city, country)
         - number of seats
         - exhaustive list of trainees (should match the number of seats)
@@ -709,15 +708,15 @@ class BatchOrderViewSet(
         """Create the batch order and start the state of flows"""
         serializer = self.get_serializer(data=request.data)
 
-        relation_id = request.data.get("relation_id")
+        offer_id = request.data.get("offer_id")
         try:
-            relation = CourseProductRelation.objects.get(pk=relation_id)
+            offer = CourseProductRelation.objects.get(pk=offer_id)
         except CourseProductRelation.DoesNotExist:
             return Response(
-                f"The course product relation does not exist: {relation_id}",
+                f"The offer does not exist: {offer_id}",
                 status=HTTPStatus.BAD_REQUEST,
             )
-        organization = get_least_active_organization(relation.product, relation.course)
+        organization = get_least_active_organization(offer.product, offer.course)
         serializer.initial_data["organization_id"] = organization.id
 
         if not serializer.is_valid():
@@ -995,8 +994,8 @@ class OrganizationViewSet(
                 many=True,
             ),
             OpenApiParameter(
-                name="course_product_relation_ids",
-                description="List of course product relation ids to sign related contracts, "
+                name="offer_ids",
+                description="List of offer ids to sign related contracts, "
                 "if not provided all the available contracts will be signed.",
                 required=False,
                 type=OpenApiTypes.UUID,
@@ -1016,15 +1015,13 @@ class OrganizationViewSet(
         """
         organization = self.get_object()
         contract_ids = request.query_params.getlist("contract_ids")
-        course_product_relation_ids = request.query_params.getlist(
-            "course_product_relation_ids"
-        )
+        offer_ids = request.query_params.getlist("offer_ids")
 
         try:
             (signature_link, ids) = organization.contracts_signature_link(
                 request.user,
                 contract_ids=contract_ids,
-                course_product_relation_ids=course_product_relation_ids,
+                offer_ids=offer_ids,
             )
         except NoContractToSignError as error:
             return Response({"detail": f"{error}"}, status=HTTPStatus.BAD_REQUEST)
@@ -1469,9 +1466,9 @@ class ContractViewSet(GenericContractViewSet):
         This endpoint is exclusive to users that have access rights on a specific organization.
 
         It triggers the generation of a ZIP archive if the requesting has the correct access rights
-        on the organization. If a course product relation UUID is given from key word arguments,
+        on the organization. If an offer UUID is given from key word arguments,
         the user requires to have access to the organization that is attached to the specific
-        course product relation object.
+        offer object.
         We return in the response the URL for polling the ZIP archive once it has been generated.
 
         Notes on possible `kwargs` as input parameters :
@@ -1483,9 +1480,7 @@ class ContractViewSet(GenericContractViewSet):
         serializer.is_valid(raise_exception=True)
 
         if not contract_utility.get_signature_backend_references_exists(
-            course_product_relation=serializer.validated_data.get(
-                "course_product_relation"
-            ),
+            offer=serializer.validated_data.get("offer"),
             organization=serializer.validated_data.get("organization"),
             extra_filters={"order__organization__accesses__user_id": request.user.id},
         ):
@@ -1496,9 +1491,7 @@ class ContractViewSet(GenericContractViewSet):
         options = {
             "user": request.user.id,
             "organization_id": serializer.data.get("organization_id"),
-            "course_product_relation_id": serializer.data.get(
-                "course_product_relation_id"
-            ),
+            "offer_id": serializer.data.get("offer_id"),
             "zip": str(zip_id),
         }
 
@@ -1665,7 +1658,7 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
     """
     Nested Order Viewset inside Course's routes. It allows to list all users who made
     'validated' orders on a given course. You should add some query parameters to filter
-    the list by organization, by product or by course product relation id.
+    the list by organization, by product or by offer id.
 
     GET /api/courses/<course_id>/orders/
         Returns every users who made an order on a given course.
@@ -1679,8 +1672,8 @@ class NestedOrderCourseViewSet(NestedGenericViewSet, mixins.ListModelMixin):
     GET /api/courses/<course_id>/orders/?organization_id=<organization_id>&product_id=<product_id>
         Returns every users that is attached to a product's course and an organization.
 
-    GET /api/courses/<course_id>/orders/?course_product_relation_id=<relation_id>
-        Returns every users who made order on the course product relation object.
+    GET /api/courses/<course_id>/orders/?offer_id=<relation_id>
+        Returns every users who made order on the offer object.
     """
 
     lookup_fields = ["course__pk", "pk"]

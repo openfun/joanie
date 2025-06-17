@@ -37,7 +37,7 @@ from joanie.core.utils.batch_order import (
     send_mail_invitation_link,
     validate_success_payment,
 )
-from joanie.core.utils.course_product_relation import (
+from joanie.core.utils.offer import (
     get_generated_certificates,
     get_orders,
 )
@@ -463,14 +463,14 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
 
-class CourseProductRelationViewSet(viewsets.ModelViewSet):
+class OfferViewSet(viewsets.ModelViewSet):
     """
     CourseProductRelation ViewSet
     """
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
-    serializer_class = serializers.AdminCourseProductRelationsSerializer
+    serializer_class = serializers.AdminOfferSerializer
     queryset = models.CourseProductRelation.objects.all().select_related(
         "course", "product"
     )
@@ -514,7 +514,7 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete the relation between course_id and product_id
+        Delete the offer between course_id and product_id
         """
         try:
             return super().destroy(request, *args, **kwargs)
@@ -538,11 +538,9 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
         If cached data is found, it indicates that the generation process is ongoing. Otherwise,
         it signifies that the task has been completed or has not been requested.
         """
-        course_product_relation = self.get_object()
+        offer = self.get_object()
 
-        if cache_data := cache.get(
-            f"celery_certificate_generation_{course_product_relation.id}"
-        ):
+        if cache_data := cache.get(f"celery_certificate_generation_{offer.id}"):
             return JsonResponse(cache_data, status=HTTPStatus.OK)
 
         return JsonResponse(
@@ -560,19 +558,19 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
     @action(methods=["POST"], detail=True)
     def generate_certificates(self, request, pk=None):  # pylint:disable=unused-argument
         """
-        Generate the certificates for a course product relation when it is eligible.
+        Generate the certificates for an offer when it is eligible.
         """
-        course_product_relation = self.get_object()
-        cache_key = f"celery_certificate_generation_{course_product_relation.id}"
+        offer = self.get_object()
+        cache_key = f"celery_certificate_generation_{offer.id}"
 
         if cache_data := cache.get(cache_key):
             return JsonResponse(cache_data, status=HTTPStatus.ACCEPTED)
 
         # Prepare cache data before trigger celery's task.
-        orders_ids = get_orders(course_product_relation)
-        certificates_published = get_generated_certificates(course_product_relation)
+        orders_ids = get_orders(offer)
+        certificates_published = get_generated_certificates(offer)
         cache_data = {
-            "course_product_relation_id": str(course_product_relation.id),
+            "offer_id": str(offer.id),
             "count_certificate_to_generate": len(orders_ids),
             "count_exist_before_generation": certificates_published.count(),
         }
@@ -590,7 +588,7 @@ class CourseProductRelationViewSet(viewsets.ModelViewSet):
         return JsonResponse(cache_data, status=HTTPStatus.CREATED)
 
 
-class NestedCourseProductRelationOfferRuleViewSet(
+class NestedOfferRuleViewSet(
     SerializerPerActionMixin,
     viewsets.ModelViewSet,
     NestedGenericViewSet,
@@ -612,14 +610,14 @@ class NestedCourseProductRelationOfferRuleViewSet(
     )
     ordering = "created_on"
     lookup_fields = ["course_product_relation", "pk"]
-    lookup_url_kwargs = ["course_product_relation_id", "pk"]
+    lookup_url_kwargs = ["offer_id", "pk"]
 
     def create(self, request, *args, **kwargs):
         """
-        Create a new OfferRule using the course_product_relation_id from the URL
+        Create a new OfferRule using the offer_id from the URL
         """
         data = request.data
-        data["course_product_relation"] = kwargs.get("course_product_relation_id")
+        data["offer"] = kwargs.get("offer_id")
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -809,7 +807,7 @@ class BatchOrderViewSet(
 
                 try:
                     offer_rule = get_active_offer_rule(
-                        relation_id=batch_order.relation.id,
+                        offer_id=batch_order.offer.id,
                         nb_seats=batch_order.nb_seats,
                     )
                 except ValueError as exception:
@@ -898,7 +896,7 @@ class OrganizationAddressViewSet(
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete the address of an organization when the relation exists only.
+        Delete the address of an organization when the offer exists only.
         """
         address = self.get_object()
         organization_id = self.kwargs["organization_id"]
@@ -907,7 +905,7 @@ class OrganizationAddressViewSet(
             models.Address.objects.get(pk=address.pk, organization_id=organization_id)
         except models.Address.DoesNotExist as error:
             raise ValidationError(
-                "The relation does not exist between the address and the organization."
+                "The offer does not exist between the address and the organization."
             ) from error
 
         return super().destroy(request, *args, **kwargs)

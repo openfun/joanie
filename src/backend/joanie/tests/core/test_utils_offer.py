@@ -1,21 +1,21 @@
-"""Test suite utility methods for course product relation to get orders and certificates"""
+"""Test suite utility methods for offer to get orders and certificates"""
 
 from django.test import TestCase
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseProductRelation, CourseState
-from joanie.core.utils.course_product_relation import (
+from joanie.core.utils.offer import (
     get_generated_certificates,
     get_orders,
 )
 
 
 class UtilsCourseProductRelationTestCase(TestCase):
-    """Test suite utility methods for course product relation to get orders and certificates"""
+    """Test suite utility methods for offer to get orders and certificates"""
 
-    def test_utils_course_product_relation_get_orders_for_product_type_credential(self):
+    def test_utils_offer_get_orders_for_product_type_credential(self):
         """
-        It should return the list of orders ids that are completed for this course product relation
+        It should return the list of orders ids that are completed for this offer
         with a product of type credential where the certificate has not been published yet.
         """
         course = factories.CourseFactory()
@@ -30,27 +30,25 @@ class UtilsCourseProductRelationTestCase(TestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             courses=[course],
         )
-        course_product_relation = CourseProductRelation.objects.get(
-            product=product, course=course
-        )
-        # Generate orders for the course product relation with the course
+        offer = CourseProductRelation.objects.get(product=product, course=course)
+        # Generate orders for the offer with the course
         factories.OrderFactory.create_batch(
             10,
-            product=course_product_relation.product,
-            course=course_product_relation.course,
+            product=offer.product,
+            course=offer.course,
             enrollment=None,
             state=enums.ORDER_STATE_COMPLETED,
         )
 
-        result = get_orders(course_product_relation=course_product_relation)
+        result = get_orders(offer=offer)
 
         self.assertEqual(len(result), 10)
 
-    def test_utils_course_product_relation_get_orders_for_product_type_certificate(
+    def test_utils_offer_get_orders_for_product_type_certificate(
         self,
     ):
         """
-        It should return the list of orders ids that are completed for the course product relation
+        It should return the list of orders ids that are completed for the offer
         with a product of type certificate where the certificate has not been published yet.
         """
         course_run = factories.CourseRunFactory(
@@ -61,33 +59,33 @@ class UtilsCourseProductRelationTestCase(TestCase):
             price=0,
             type=enums.PRODUCT_TYPE_CERTIFICATE,
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product=product, course=enrollments[0].course_run.course
         )
 
-        orders = get_orders(course_product_relation=relation)
+        orders = get_orders(offer=offer)
 
         self.assertEqual(len(orders), 0)
 
-        # Generate orders for the course product relation with the enrollments
+        # Generate orders for the offer with the enrollments
         for enrollment in enrollments:
             factories.OrderFactory(
-                product=relation.product,
+                product=offer.product,
                 enrollment=enrollment,
                 course=None,
                 state=enums.ORDER_STATE_COMPLETED,
             )
 
-        orders = get_orders(course_product_relation=relation)
+        orders = get_orders(offer=offer)
 
         self.assertEqual(len(orders), 5)
 
-    def test_utils_course_product_relation_get_generated_certificates_for_product_type_credential(
+    def test_utils_offer_get_generated_certificates_for_product_type_credential(
         self,
     ):
         """
         It should return the amount of certificates that were published for this course product
-        relation with a product of type credential.
+        offer with a product of type credential.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -101,39 +99,33 @@ class UtilsCourseProductRelationTestCase(TestCase):
             is_listed=True,
             is_gradable=True,
         )
-        course_product_relation = CourseProductRelation.objects.get(
-            product=product, course=course
-        )
+        offer = CourseProductRelation.objects.get(product=product, course=course)
 
-        generated_certificates_queryset = get_generated_certificates(
-            course_product_relation=course_product_relation
-        )
+        generated_certificates_queryset = get_generated_certificates(offer=offer)
 
         self.assertEqual(generated_certificates_queryset.count(), 0)
 
-        # Generate certificates for the course product relation
+        # Generate certificates for the offer
         orders = factories.OrderFactory.create_batch(
             5,
-            product=course_product_relation.product,
-            course=course_product_relation.course,
+            product=offer.product,
+            course=offer.course,
             enrollment=None,
             state=enums.ORDER_STATE_COMPLETED,
         )
         for order in orders:
             factories.OrderCertificateFactory(order=order)
 
-        generated_certificates_queryset = get_generated_certificates(
-            course_product_relation=course_product_relation
-        )
+        generated_certificates_queryset = get_generated_certificates(offer=offer)
 
         self.assertEqual(generated_certificates_queryset.count(), 5)
 
-    def test_utils_course_product_relation_get_generated_certificated_for_product_type_certificate(
+    def test_utils_offer_get_generated_certificated_for_product_type_certificate(
         self,
     ):
         """
         It should return the amount of certificates that were published for this course product
-        relation with a product of type certificate.
+        offer with a product of type certificate.
         """
         course_run = factories.CourseRunFactory(
             is_gradable=True, is_listed=True, state=CourseState.ONGOING_OPEN
@@ -142,29 +134,25 @@ class UtilsCourseProductRelationTestCase(TestCase):
             10, course_run=course_run
         )
         product = factories.ProductFactory(price=0, type=enums.PRODUCT_TYPE_CERTIFICATE)
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product=product, course=enrollments[0].course_run.course
         )
 
-        generated_certificates_queryset = get_generated_certificates(
-            course_product_relation=relation
-        )
+        generated_certificates_queryset = get_generated_certificates(offer=offer)
 
         self.assertEqual(generated_certificates_queryset.count(), 0)
 
-        # Generate certificates for the course product relation
+        # Generate certificates for the offer
         for enrollment in enrollments:
             factories.OrderCertificateFactory(
                 order=factories.OrderFactory(
-                    product=relation.product,
+                    product=offer.product,
                     enrollment=enrollment,
                     course=None,
                     state=enums.ORDER_STATE_COMPLETED,
                 )
             )
 
-        generated_certificates_queryset = get_generated_certificates(
-            course_product_relation=relation
-        )
+        generated_certificates_queryset = get_generated_certificates(offer=offer)
 
         self.assertEqual(generated_certificates_queryset.count(), 10)

@@ -11,13 +11,13 @@ from joanie.core import enums, factories, models
 class BatchOrdersAdminApiCreateTestCase(TestCase):
     """Test suite for the admin batch orders API create endpoint."""
 
-    def create_payload_batch_order(self, owner, relation, nb_seats):
+    def create_payload_batch_order(self, owner, offer, nb_seats):
         """
         Create batch order required payload data.
         """
         return {
             "owner": owner.id if owner else None,
-            "relation": relation.id if relation else None,
+            "offer": offer.id if offer else None,
             "nb_seats": nb_seats,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -63,12 +63,12 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         owner = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
 
-        data = self.create_payload_batch_order(owner, relation, 2)
+        data = self.create_payload_batch_order(owner, offer, 2)
         data.update(nb_seats=1)
 
         response = self.client.post(
@@ -86,7 +86,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         owner = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
@@ -100,7 +100,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         ]
 
         for company_key in company_keys:
-            data = self.create_payload_batch_order(owner, relation, 2)
+            data = self.create_payload_batch_order(owner, offer, 2)
             data[company_key] = ""
 
             response = self.client.post(
@@ -122,7 +122,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
                 )
 
         for company_key in company_keys:
-            data = self.create_payload_batch_order(owner, relation, 2)
+            data = self.create_payload_batch_order(owner, offer, 2)
             del data[company_key]
 
             response = self.client.post(
@@ -148,7 +148,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
     def test_api_admin_batch_orders_create_relation_does_not_exist(self):
         """
-        Authenticated admin user should not be able to create a batch order if the relation does
+        Authenticated admin user should not be able to create a batch order if the offer does
         not exist.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -173,11 +173,11 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        data = self.create_payload_batch_order(None, relation, 2)
+        data = self.create_payload_batch_order(None, offer, 2)
 
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
@@ -196,12 +196,12 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         owner = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
         factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             nb_seats=1,
         )
@@ -209,7 +209,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
             content_type="application/json",
-            data=self.create_payload_batch_order(owner, relation, 2),
+            data=self.create_payload_batch_order(owner, offer, 2),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
@@ -223,13 +223,13 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         owner = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
         offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.1),
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             nb_seats=4,
         )
@@ -237,14 +237,14 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
             content_type="application/json",
-            data=self.create_payload_batch_order(owner, relation, 4),
+            data=self.create_payload_batch_order(owner, offer, 4),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
 
         batch_order = models.BatchOrder.objects.get(owner=owner)
 
-        self.assertEqual(batch_order.relation, relation)
+        self.assertEqual(batch_order.relation, offer)
         self.assertEqual(batch_order.nb_seats, 4)
         self.assertEqual(batch_order.offer_rules.first(), offer_rule)
         self.assertEqual(batch_order.total, D("36.00"))
@@ -263,28 +263,28 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         organization, expected_organization = (
             factories.OrganizationFactory.create_batch(2)
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
             organizations=[organization, expected_organization],
         )
         factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             nb_seats=4,
         )
         # Create one pending order for organization 1
         factories.OrderFactory(
             organization=organization,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             state=enums.ORDER_STATE_PENDING,
         )
 
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
             content_type="application/json",
-            data=self.create_payload_batch_order(owner, relation, 3),
+            data=self.create_payload_batch_order(owner, offer, 3),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
@@ -303,17 +303,17 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         owner = factories.UserFactory()
         organization1, organization2 = factories.OrganizationFactory.create_batch(2)
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
             organizations=[organization1, organization2],
         )
         factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             nb_seats=8,
         )
-        data = self.create_payload_batch_order(owner, relation, 3)
+        data = self.create_payload_batch_order(owner, offer, 3)
         data["organization"] = organization1.id
 
         response = self.client.post(
@@ -336,7 +336,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         owner = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=123,
         )
@@ -346,7 +346,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             multiple_users=False,
         )
 
-        data = self.create_payload_batch_order(owner, relation, 2)
+        data = self.create_payload_batch_order(owner, offer, 2)
         data["voucher"] = voucher.code
 
         response = self.client.post(
@@ -366,12 +366,12 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         owner = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
         factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             nb_seats=10,
         )
@@ -379,7 +379,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
             content_type="application/json",
-            data=self.create_payload_batch_order(owner, relation, 2),
+            data=self.create_payload_batch_order(owner, offer, 2),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())

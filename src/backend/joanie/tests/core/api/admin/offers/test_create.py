@@ -19,15 +19,15 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
 
     maxDiff = None
 
-    def test_admin_api_course_products_relation_create_anonymous(self):
+    def test_admin_api_offer_create_anonymous(self):
         """
-        Anonymous users should not be able to create a course product relation.
+        Anonymous users should not be able to create an offer.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory()
         organization = factories.OrganizationFactory()
         response = self.client.post(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
             {
                 "course_id": course.id,
                 "product_id": product.id,
@@ -41,9 +41,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_admin_api_course_products_relation_create_authenticated(self):
+    def test_admin_api_offer_create_authenticated(self):
         """
-        Authenticated users should not be able to create a course product relation.
+        Authenticated users should not be able to create an offer.
         """
         user = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=user.username, password="password")
@@ -51,7 +51,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
         product = factories.ProductFactory()
         organization = factories.OrganizationFactory()
         response = self.client.post(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
             {
                 "course_id": course.id,
                 "product_id": product.id,
@@ -66,9 +66,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             {"detail": "You do not have permission to perform this action."},
         )
 
-    def test_admin_api_course_products_relation_create_superuser(self):
+    def test_admin_api_offer_create_superuser(self):
         """
-        Super admin user should be able to create a course product relation.
+        Super admin user should be able to create an offer.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -78,7 +78,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
         )
         organization = factories.OrganizationFactory()
         response = self.client.post(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
             {
                 "course_id": course.id,
                 "product_id": product.id,
@@ -88,14 +88,14 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
-        relation = models.CourseProductRelation.objects.get(id=response.json()["id"])
+        offer = models.CourseProductRelation.objects.get(id=response.json()["id"])
 
         self.assertDictEqual(
             response.json(),
             {
-                "id": str(relation.id),
-                "uri": relation.uri,
-                "can_edit": relation.can_edit,
+                "id": str(offer.id),
+                "uri": offer.uri,
+                "can_edit": offer.can_edit,
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -139,9 +139,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             },
         )
 
-    def test_admin_api_course_products_relation_create_no_course_id(self):
+    def test_admin_api_offer_create_no_course_id(self):
         """
-        Create a course product relation without course id should fail.
+        Create an offer without course id should fail.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -151,7 +151,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
         organization = factories.OrganizationFactory()
 
         response = self.client.post(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
             {
                 "product_id": product.id,
                 "organization_ids": [organization.id],
@@ -165,9 +165,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             {"course_id": "This field is required."},
         )
 
-    def test_admin_api_course_products_relation_create_no_product_id(self):
+    def test_admin_api_offer_create_no_product_id(self):
         """
-        Create a course product relation without product id should fail.
+        Create an offer without product id should fail.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -175,7 +175,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
         organization = factories.OrganizationFactory()
 
         response = self.client.post(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
             {
                 "course_id": course.id,
                 "organization_ids": [organization.id],
@@ -189,9 +189,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             {"product_id": "This field is required."},
         )
 
-    def test_admin_api_course_products_relation_create_no_organization_id(self):
+    def test_admin_api_offer_create_no_organization_id(self):
         """
-        Super admin user should be able to create a course product relation
+        Super admin user should be able to create an offer
         without organization id.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -201,7 +201,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
         )
         response = self.client.post(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
             {
                 "course_id": course.id,
                 "product_id": product.id,
@@ -210,14 +210,14 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
 
-        relation = models.CourseProductRelation.objects.get(id=response.json()["id"])
+        offer = models.CourseProductRelation.objects.get(id=response.json()["id"])
 
         self.assertDictEqual(
             response.json(),
             {
-                "id": str(relation.id),
-                "uri": relation.uri,
-                "can_edit": relation.can_edit,
+                "id": str(offer.id),
+                "uri": offer.uri,
+                "can_edit": offer.can_edit,
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -255,15 +255,15 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             },
         )
 
-    def test_admin_api_course_products_relation_create_no_payload(self):
+    def test_admin_api_offer_create_no_payload(self):
         """
-        Super admin user should be able to create a course product relation
+        Super admin user should be able to create an offer
         without payload.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         response = self.client.post(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
@@ -275,9 +275,9 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             },
         )
 
-    def test_admin_api_course_products_relation_create_unknown_organization(self):
+    def test_admin_api_offer_create_unknown_organization(self):
         """
-        Creating a relation with unknown organization ids should fail.
+        Creating a offer with unknown organization ids should fail.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -289,7 +289,7 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
         )
         response = self.client.post(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
             {
                 "course_id": course.id,
                 "product_id": product.id,

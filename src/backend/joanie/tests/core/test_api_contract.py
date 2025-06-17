@@ -49,21 +49,21 @@ class ContractApiTest(BaseAPITestCase):
             role=random.choice([enums.ADMIN, enums.OWNER]),
         )
 
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory.create_batch(
             5,
-            order__product=relation.product,
-            order__course=relation.course,
+            order__product=offer.product,
+            order__course=offer.course,
             order__organization=organization,
         )
         # Canceled orders should be excluded
         factories.ContractFactory.create_batch(
             2,
-            order__product=relation.product,
-            order__course=relation.course,
+            order__product=offer.product,
+            order__course=offer.course,
             order__organization=organization,
             order__state=enums.ORDER_STATE_CANCELED,
         )
@@ -295,24 +295,24 @@ class ContractApiTest(BaseAPITestCase):
 
         [org1, org2] = factories.OrganizationFactory.create_batch(2)
 
-        cpr1 = factories.CourseProductRelationFactory(
+        offer_1 = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=[org1],
         )
         org1_contract = factories.ContractFactory(
             order__owner=user,
-            order__product=cpr1.product,
-            order__course=cpr1.course,
+            order__product=offer_1.product,
+            order__course=offer_1.course,
         )
 
-        cpr2 = factories.CourseProductRelationFactory(
+        offer_2 = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=[org2],
         )
         org2_contract = factories.ContractFactory(
             order__owner=user,
-            order__product=cpr2.product,
-            order__course=cpr2.course,
+            order__product=offer_2.product,
+            order__course=offer_2.course,
         )
 
         # Create random contracts that should not be returned
@@ -366,24 +366,24 @@ class ContractApiTest(BaseAPITestCase):
 
         [c1, c2] = factories.CourseFactory.create_batch(2)
 
-        cpr1 = factories.CourseProductRelationFactory(
+        offer_1 = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             course=c1,
         )
         c1_contract = factories.ContractFactory(
             order__owner=user,
-            order__product=cpr1.product,
-            order__course=cpr1.course,
+            order__product=offer_1.product,
+            order__course=offer_1.course,
         )
 
-        cpr2 = factories.CourseProductRelationFactory(
+        offer_2 = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             course=c2,
         )
         c2_contract = factories.ContractFactory(
             order__owner=user,
-            order__product=cpr2.product,
-            order__course=cpr2.course,
+            order__product=offer_2.product,
+            order__course=offer_2.course,
         )
 
         # Create random contracts that should not be returned
@@ -439,18 +439,18 @@ class ContractApiTest(BaseAPITestCase):
             2, contract_definition=factories.ContractDefinitionFactory()
         )
 
-        cpr1 = factories.CourseProductRelationFactory(product=p1)
+        offer_1 = factories.OfferFactory(product=p1)
         p1_contract = factories.ContractFactory(
             order__owner=user,
-            order__product=cpr1.product,
-            order__course=cpr1.course,
+            order__product=offer_1.product,
+            order__course=offer_1.course,
         )
 
-        cpr2 = factories.CourseProductRelationFactory(product=p2)
+        offer_2 = factories.OfferFactory(product=p2)
         p2_contract = factories.ContractFactory(
             order__owner=user,
-            order__product=cpr2.product,
-            order__course=cpr2.course,
+            order__product=offer_2.product,
+            order__course=offer_2.course,
         )
 
         # Create random contracts that should not be returned
@@ -495,45 +495,45 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(count, 1)
         self.assertCountEqual(result_ids, [str(p2_contract.id)])
 
-    def test_api_contracts_list_filter_by_course_product_relation_id(self):
+    def test_api_contracts_list_filter_by_offer(self):
         """
         Authenticated user can query owned contracts and filter them
-        by course product relation.
+        by offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        relation_1 = factories.CourseProductRelationFactory(
+        offer_1 = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
         contract_1 = factories.ContractFactory.create(
-            order__product=relation_1.product,
-            order__course=relation_1.course,
-            order__organization=relation_1.organizations.first(),
+            order__product=offer_1.product,
+            order__course=offer_1.course,
+            order__organization=offer_1.organizations.first(),
             order__owner=user,
         )
 
-        relation_2 = factories.CourseProductRelationFactory(
+        offer_2 = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
         contract_2 = factories.ContractFactory.create(
-            order__product=relation_2.product,
-            order__course=relation_2.course,
-            order__organization=relation_2.organizations.first(),
+            order__product=offer_2.product,
+            order__course=offer_2.course,
+            order__organization=offer_2.organizations.first(),
             order__owner=user,
         )
 
         # Create random contracts that should not be returned
-        other_relation = factories.CourseProductRelationFactory(
+        other_offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory.create(
-            order__product=other_relation.product,
-            order__course=other_relation.course,
-            order__organization=other_relation.organizations.first(),
+            order__product=other_offer.product,
+            order__course=other_offer.course,
+            order__organization=other_offer.organizations.first(),
         )
 
         factories.ContractFactory.create_batch(8)
@@ -550,10 +550,10 @@ class ContractApiTest(BaseAPITestCase):
 
         self.assertEqual(content["count"], 2)
 
-        # - Filter by the first relation should return 5 contracts
+        # - Filter by the first offer should return 5 contracts
         with self.assertNumQueries(7):
             response = self.client.get(
-                f"/api/v1.0/contracts/?course_product_relation_id={relation_1.id}",
+                f"/api/v1.0/contracts/?offer_id={offer_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -564,10 +564,10 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(count, 1)
         self.assertCountEqual(result_ids, [str(contract_1.id)])
 
-        # - Filter by the second relation should return 3 contracts
+        # - Filter by the second offer should return 3 contracts
         with self.assertNumQueries(7):
             response = self.client.get(
-                f"/api/v1.0/contracts/?course_product_relation_id={relation_2.id}",
+                f"/api/v1.0/contracts/?offer_id={offer_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -578,10 +578,10 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(count, 1)
         self.assertCountEqual(result_ids, [str(contract_2.id)])
 
-        # - Filter by the unknown relation should return no contracts
+        # - Filter by the unknown offer should return no contracts
         with self.assertNumQueries(2):
             response = self.client.get(
-                f"/api/v1.0/contracts/?course_product_relation_id={uuid4()}",
+                f"/api/v1.0/contracts/?offer_id={uuid4()}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -590,10 +590,10 @@ class ContractApiTest(BaseAPITestCase):
         count = content["count"]
         self.assertEqual(count, 0)
 
-        # - Filter by relation with unowned order should return no contracts
+        # - Filter by offer with unowned order should return no contracts
         with self.assertNumQueries(3):
             response = self.client.get(
-                f"/api/v1.0/contracts/?course_product_relation_id={other_relation.id}",
+                f"/api/v1.0/contracts/?offer_id={other_offer.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -691,13 +691,13 @@ class ContractApiTest(BaseAPITestCase):
             role=random.choice([enums.ADMIN, enums.OWNER]),
         )
 
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
-            order__product=relation.product,
-            order__course=relation.course,
+            order__product=offer.product,
+            order__course=offer.course,
             order__organization=organization,
         )
 
@@ -1292,7 +1292,7 @@ class ContractApiTest(BaseAPITestCase):
         """
         Authenticated user should be able to use POST method on the viewset to generate ZIP
         archive but it will raise an error if both parsing arguments are missing : an existing
-        Organization UUID or a Course Product Relation. You need to set one at least.
+        Organization UUID or an offer. You need to set one at least.
         """
         user = factories.UserFactory()
         organization = factories.OrganizationFactory()
@@ -1312,7 +1312,7 @@ class ContractApiTest(BaseAPITestCase):
                 "non_field_errors": [
                     (
                         "You must set at least one parameter for the method."
-                        "You must choose between an Organization UUID or a Course Product Relation"
+                        "You must choose between an Organization UUID or an Offer"
                         " UUID."
                     ),
                 ]
@@ -1349,7 +1349,7 @@ class ContractApiTest(BaseAPITestCase):
         """
         If the user has access to two organizations and he wants to create an archive of contracts
         for the first organization only, he should be able to do it by passing both parameters of
-        Course Product Relation UUID and the Organization UUID.
+        Offer UUID and the Organization UUID.
         """
         storage = storages["contracts"]
         # Create user
@@ -1363,8 +1363,8 @@ class ContractApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(
             user=user, organization=organizations[1]
         )
-        # Create our Course Product Relation shared by the 2 organizations above
-        relation = factories.CourseProductRelationFactory(
+        # Create our Offer shared by the 2 organizations above
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=0,
             organizations=[organizations[0], organizations[1]],
@@ -1375,8 +1375,8 @@ class ContractApiTest(BaseAPITestCase):
         for index, reference in enumerate(signature_reference_choices):
             order = factories.OrderFactory(
                 owner=learners[index],
-                product=relation.product,
-                course=relation.course,
+                product=offer.product,
+                course=offer.course,
                 organization=organizations[index],
                 main_invoice=InvoiceFactory(),
                 payment_schedule=[
@@ -1402,12 +1402,12 @@ class ContractApiTest(BaseAPITestCase):
 
         # Create token for only one organization accessor
         token = self.get_user_token(user.username)
-        # Passing both ids (organization and course product relation) in the payload of the request
+        # Passing both ids (organization and offer) in the payload of the request
         response = self.client.post(
             "/api/v1.0/contracts/zip-archive/",
             data={
                 "organization_id": str(organizations[0].id),
-                "course_product_relation_id": str(relation.id),
+                "offer_id": str(offer.id),
             },
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
@@ -1455,7 +1455,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=0,
             organizations=[organization],
@@ -1468,8 +1468,8 @@ class ContractApiTest(BaseAPITestCase):
             user = learners[index]
             order = factories.OrderFactory(
                 owner=user,
-                product=relation.product,
-                course=relation.course,
+                product=offer.product,
+                course=offer.course,
                 main_invoice=InvoiceFactory(),
                 payment_schedule=[
                     {

@@ -30,18 +30,18 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
 
         # Create a "completed" order linked to a credential product with a certificate
         # definition
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__price=100,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__certificate_definition=factories.CertificateDefinitionFactory(),
         )
-        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
         order = factories.OrderGeneratorFactory(
-            course=relation.course,
-            product=relation.product,
+            course=offer.course,
+            product=offer.product,
             offer_rules=[offer_rule],
-            organization=relation.organizations.first(),
+            organization=offer.organizations.first(),
             state=enums.ORDER_STATE_COMPLETED,
         )
         order.freeze_total()
@@ -81,15 +81,15 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                 "product": {
                     "call_to_action": "let's go!",
                     "certificate_definition": str(
-                        relation.product.certificate_definition.id
+                        offer.product.certificate_definition.id
                     ),
-                    "contract_definition": str(relation.product.contract_definition.id),
-                    "description": relation.product.description,
-                    "id": str(relation.product.id),
-                    "price": float(relation.product.price),
+                    "contract_definition": str(offer.product.contract_definition.id),
+                    "description": offer.product.description,
+                    "id": str(offer.product.id),
+                    "price": float(offer.product.price),
                     "price_currency": "EUR",
                     "target_courses": [str(order.course.id)],
-                    "title": relation.product.title,
+                    "title": offer.product.title,
                     "type": "credential",
                 },
                 "enrollment": None,
@@ -225,7 +225,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
         # Create a "completed" order linked to a certificate product with a certificate
         # definition
         course = factories.CourseFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
             product__certificate_definition=factories.CertificateDefinitionFactory(),
             course=course,
@@ -235,8 +235,8 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
         order = factories.OrderFactory(
             enrollment=enrollment,
             course=None,
-            product=relation.product,
-            organization=relation.organizations.first(),
+            product=offer.product,
+            organization=offer.organizations.first(),
             state=enums.ORDER_STATE_COMPLETED,
         )
 
@@ -264,15 +264,15 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                 "product": {
                     "call_to_action": "let's go!",
                     "certificate_definition": str(
-                        relation.product.certificate_definition.id
+                        offer.product.certificate_definition.id
                     ),
                     "contract_definition": None,
-                    "description": relation.product.description,
-                    "id": str(relation.product.id),
-                    "price": float(relation.product.price),
+                    "description": offer.product.description,
+                    "id": str(offer.product.id),
+                    "price": float(offer.product.price),
                     "price_currency": "EUR",
                     "target_courses": [],
-                    "title": relation.product.title,
+                    "title": offer.product.title,
                     "type": "certificate",
                 },
                 "enrollment": {

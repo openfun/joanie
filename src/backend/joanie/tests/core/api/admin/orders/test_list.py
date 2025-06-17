@@ -432,7 +432,7 @@ class OrdersAdminApiListTestCase(TestCase):
         )
         organization.translations.create(language_code="fr-fr", title="Université Acme")
 
-        factories.CourseProductRelationFactory(
+        factories.OfferFactory(
             organizations=[organization],
             course=course,
             product=product,

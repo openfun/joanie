@@ -313,7 +313,7 @@ class CourseAdminApiTest(TestCase):
                 ).isoformat(),
                 "title": course.title,
                 "organizations": [],
-                "product_relations": [],
+                "offers": [],
                 "state": {
                     "priority": course.state["priority"],
                     "datetime": format_date(course.state["datetime"]),
@@ -348,7 +348,7 @@ class CourseAdminApiTest(TestCase):
             "code": "00001",
             "title": "Course 001",
             "organization_ids": [str(organization.id)],
-            "product_relations": [
+            "offers": [
                 {
                     "product_id": str(product.id),
                     "organization_ids": [str(organization.id)],
@@ -375,7 +375,7 @@ class CourseAdminApiTest(TestCase):
                 }
             ],
         )
-        self.assertEqual(len(content["product_relations"]), 1)
+        self.assertEqual(len(content["offers"]), 1)
 
     def test_admin_api_course_update(self):
         """
@@ -437,7 +437,7 @@ class CourseAdminApiTest(TestCase):
             data={
                 "title": "Updated Course 00001",
                 "organization_ids": [str(organization.id)],
-                "product_relations": [
+                "offers": [
                     {
                         "product_id": str(product.id),
                         "organization_ids": [str(organization.id)],
@@ -451,7 +451,7 @@ class CourseAdminApiTest(TestCase):
         self.assertEqual(content["id"], str(course.id))
         self.assertEqual(content["title"], "Updated Course 00001")
         self.assertEqual(content["organizations"][0]["code"], "ORG-002")
-        self.assertEqual(len(content["product_relations"]), 1)
+        self.assertEqual(len(content["offers"]), 1)
 
     def test_admin_api_course_delete(self):
         """
@@ -480,7 +480,7 @@ class CourseAdminApiTest(TestCase):
             "code": "00001",
             "title": "Course 001",
             "organization_ids": [str(organization.id)],
-            "product_relations": [
+            "offers": [
                 {
                     "product_id": str(product.id),
                     "organization_ids": [str(organization.id)],
@@ -517,7 +517,7 @@ class CourseAdminApiTest(TestCase):
             "code": "00001",
             "title": "Course 001",
             "organization_ids": [str(organization.id)],
-            "product_relations": [
+            "offers": [
                 {
                     "product_id": str(product.id),
                     "organization_ids": [str(organization.id)],

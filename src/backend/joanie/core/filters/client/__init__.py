@@ -124,13 +124,11 @@ class ContractViewSetFilter(filters.FilterSet):
     course_id = filters.UUIDFilter(field_name="order__course__id")
     product_id = filters.UUIDFilter(field_name="order__product__id")
     organization_id = filters.UUIDFilter(field_name="order__organization__id")
-    course_product_relation_id = filters.UUIDFilter(
-        method="filter_course_product_relation_id"
-    )
+    offer_id = filters.UUIDFilter(method="filter_offer_id")
 
     class Meta:
         model = models.Contract
-        fields: List[str] = ["id", "signature_state", "course_product_relation_id"]
+        fields: List[str] = ["id", "signature_state", "offer_id"]
 
     def filter_signature_state(self, queryset, _name, value):
         """
@@ -145,16 +143,16 @@ class ContractViewSetFilter(filters.FilterSet):
             organization_signed_on__isnull=is_unsigned | is_half_signed,
         )
 
-    def filter_course_product_relation_id(self, queryset, _name, value):
+    def filter_offer_id(self, queryset, _name, value):
         """
-        Try to retrieve a course product relation from the given id and filter
+        Try to retrieve an offer from the given id and filter
         contracts accordingly.
         """
 
         url_kwargs = self.request.parser_context.get("kwargs", {})
 
         # This filter can be used into nested routes (courses or organizations) so we need to
-        # check if the relation is related to the current resource.
+        # check if the offer is related to the current resource.
         queryset_filters = {"id": value}
         if course_id := url_kwargs.get("course_id"):
             queryset_filters["course_id"] = course_id
@@ -162,14 +160,14 @@ class ContractViewSetFilter(filters.FilterSet):
             queryset_filters["organizations__in"] = [organization_id]
 
         try:
-            relation = models.CourseProductRelation.objects.get(**queryset_filters)
+            offer = models.CourseProductRelation.objects.get(**queryset_filters)
         except models.CourseProductRelation.DoesNotExist:
             return queryset.none()
 
         return queryset.filter(
-            order__course_id=relation.course_id,
-            order__product_id=relation.product_id,
-            order__organization__in=relation.organizations.only("pk").values_list(
+            order__course_id=offer.course_id,
+            order__product_id=offer.product_id,
+            order__organization__in=offer.organizations.only("pk").values_list(
                 "pk", flat=True
             ),
         )
@@ -178,41 +176,41 @@ class ContractViewSetFilter(filters.FilterSet):
 class NestedOrderCourseViewSetFilter(filters.FilterSet):
     """
     OrderCourseFilter that allows to filter this resource with a product's 'id', an
-    organization's 'id' or a course product relation's 'id'.
+    organization's 'id' or an offer's 'id'.
     """
 
-    course_product_relation_id = filters.UUIDFilter(
-        method="filter_course_product_relation_id",
+    offer_id = filters.UUIDFilter(
+        method="filter_offer_id",
     )
     organization_id = filters.UUIDFilter(field_name="organization__id")
     product_id = filters.UUIDFilter(field_name="product__id")
 
     class Meta:
         model = models.Order
-        fields: List[str] = ["course_product_relation_id"]
+        fields: List[str] = ["offer_id"]
 
-    def filter_course_product_relation_id(self, queryset, _name, value):
+    def filter_offer_id(self, queryset, _name, value):
         """
-        Get the course product relation linked to an order by its 'id'.
+        Get the offer linked to an order by its 'id'.
         """
         try:
-            relation = models.CourseProductRelation.objects.get(
+            offer = models.CourseProductRelation.objects.get(
                 id=value, course_id=self.request.resolver_match.kwargs.get("course_id")
             )
         except models.CourseProductRelation.DoesNotExist:
             return queryset.none()
 
         return queryset.filter(
-            product_id=relation.product_id,
-            organization__in=relation.organizations.only("pk").values_list(
+            product_id=offer.product_id,
+            organization__in=offer.organizations.only("pk").values_list(
                 "pk", flat=True
             ),
         )
 
 
-class CourseProductRelationViewSetFilter(filters.FilterSet):
+class OfferViewSetFilter(filters.FilterSet):
     """
-    Filter course product relations by product type.
+    Filter offers by product type.
     """
 
     product_type = filters.MultipleChoiceFilter(
@@ -232,7 +230,7 @@ class CourseProductRelationViewSetFilter(filters.FilterSet):
 
     def filter_by_query(self, queryset, _name, value):
         """
-        Filter course product relation by looking for product title | course code | organization
+        Filter offer by looking for product title | course code | organization
         title.
         """
         product_title_query = Q(product__translations__title__icontains=value)
@@ -253,10 +251,10 @@ class CourseProductRelationViewSetFilter(filters.FilterSet):
 
 class OrganizationViewSetFilter(filters.FilterSet):
     """
-    Filter organizations by course product relation.
+    Filter organizations by offer.
     """
 
-    course_product_relation_id = filters.UUIDFilter(field_name="product_relations__id")
+    offer_id = filters.UUIDFilter(field_name="product_relations__id")
 
     class Meta:
         model = models.Organization

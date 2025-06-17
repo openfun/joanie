@@ -15,7 +15,7 @@ from joanie.core import enums
 from joanie.core.factories import (
     BatchOrderFactory,
     ContractDefinitionFactory,
-    CourseProductRelationFactory,
+    OfferFactory,
     OrderFactory,
     ProductFactory,
     UserAddressFactory,
@@ -1335,18 +1335,18 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         """
         backend = TestBasePaymentBackend()
         owner = UserFactory(email="johndoe@example.fr", language="fr-fr")
-        relation = CourseProductRelationFactory(
+        offer = OfferFactory(
             product=ProductFactory(
                 price=Decimal("200.00"),
                 title="Product 1",
                 contract_definition=ContractDefinitionFactory(),
             )
         )
-        relation.product.translations.create(language_code="fr-fr", title="Produit 1")
+        offer.product.translations.create(language_code="fr-fr", title="Produit 1")
         batch_order = BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_PENDING,
             owner=owner,
-            relation=relation,
+            offer=offer,
         )
 
         payment = {

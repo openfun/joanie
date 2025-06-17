@@ -56,7 +56,7 @@ class ProductModelsTestCase(TestCase):
         self.assertEqual(relation, other_relation)
 
     def test_models_product_course_runs_relation_sorted_by_position(self):
-        """The product/course relation should be sorted by position."""
+        """The product/course offer should be sorted by position."""
         product = factories.ProductFactory()
         factories.ProductTargetCourseRelationFactory.create_batch(5, product=product)
 

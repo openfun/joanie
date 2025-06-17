@@ -207,7 +207,7 @@ def create_demo(stdout):
         queue.flush()
         del ids_of_courses_with_runs
 
-    with Timeit(stdout, "Creating course product relations"):
+    with Timeit(stdout, "Creating offers"):
         course_ids = models.Course.objects.filter(course_runs__isnull=True).values_list(
             "id", flat=True
         )
@@ -221,12 +221,12 @@ def create_demo(stdout):
         del course_ids
         del product_ids
 
-    with Timeit(stdout, "Creating organization course product relations"):
+    with Timeit(stdout, "Creating organization offers"):
         organization_ids = list(
             models.Organization.objects.values_list("id", flat=True)
         )
-        for course_product_relation in models.CourseProductRelation.objects.iterator():
-            course_product_relation.organizations.set(
+        for offer in models.CourseProductRelation.objects.iterator():
+            offer.organizations.set(
                 random.sample(organization_ids, random.randint(1, 3))
             )
         del organization_ids
@@ -235,8 +235,8 @@ def create_demo(stdout):
         users_ids = list(models.User.objects.values_list("id", flat=True))
         for product in models.Product.objects.iterator():
             course_dict = {}
-            for relation in product.course_relations.all():
-                course_dict[relation.course_id] = relation.organizations.values_list(
+            for offer in product.course_relations.all():
+                course_dict[offer.course_id] = offer.organizations.values_list(
                     "id", flat=True
                 )
 
@@ -270,7 +270,7 @@ def create_demo(stdout):
         for product in models.Product.objects.iterator():
             target_course_relations = product.target_course_relations.all()
             for order in models.Order.objects.filter(product=product).iterator():
-                for relation in target_course_relations:
+                for offer in target_course_relations:
                     queue.push(
                         models.OrderTargetCourseRelation(
                             course_id=relation.course_id,
