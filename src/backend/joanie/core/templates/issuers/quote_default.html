@@ -59,8 +59,8 @@ for your training, feel free to use this template as a base.
                     <dd>
                         <ul>
                             <li>{% translate "Full name: " %}{{ student.name }}</li>
-                            <li>{% translated "Representing company : %}
-                                {% customer.company_name %}
+                            <li>{% translate "Representing company : " %}
+                                {{ customer.company_name }}
                             </li>
                             <li>{% translate "SIRET number: "%}
                                 {{ customer.identification_number }}
@@ -101,7 +101,7 @@ for your training, feel free to use this template as a base.
                             {% endwith %}
                         </li>
                         <li>
-                            {% translate "For number of seats : %}
+                            {% translate "For number of seats :" %}
                             {{ batch_order.nb_seats }}
                         </li>
                     </ul>
