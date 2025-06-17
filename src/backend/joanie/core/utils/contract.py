@@ -17,12 +17,12 @@ logger = getLogger(__name__)
 
 
 def _get_base_signature_backend_references(
-    course_product_relation=None, organization=None, extra_filters=None
+    offer=None, organization=None, extra_filters=None
 ):
     """
-    Build the base query to get signature backend references from a Course Product Relation
+    Build the base query to get signature backend references from an Offer
     object or an Organization object when the contract is signed. You can pass both parameters if
-    you need to filter out by organization when the course product relation is shared between
+    you need to filter out by organization when the offer is shared between
     many organizations.
 
     You may use an additional parameter `extra_filters` if you need to filter out even more the
@@ -41,13 +41,11 @@ def _get_base_signature_backend_references(
         .select_related("order")
     )
 
-    if course_product_relation:
+    if offer:
         base_query = base_query.filter(
-            Q(order__course_id=course_product_relation.course_id)
-            | Q(
-                order__enrollment__course_run__course_id=course_product_relation.course_id
-            ),
-            order__product_id=course_product_relation.product_id,
+            Q(order__course_id=offer.course_id)
+            | Q(order__enrollment__course_run__course_id=offer.course_id),
+            order__product_id=offer.product_id,
         )
 
     if organization:
@@ -57,17 +55,17 @@ def _get_base_signature_backend_references(
 
 
 def get_signature_backend_references_exists(
-    course_product_relation=None, organization=None, extra_filters=None
+    offer=None, organization=None, extra_filters=None
 ):
     """
-    Check if signature backend references exist from either a Course Product Relation
+    Check if signature backend references exist from either an Offer
     object or an Organization object when the contract is signed.
 
     You may use an additional parameter `extra_filters` if you need to filter out even more the
     base queryset of the Contract (check if the user has access to the organization for example).
     """
     base_query = _get_base_signature_backend_references(
-        course_product_relation=course_product_relation,
+        offer=offer,
         organization=organization,
         extra_filters=extra_filters,
     )
@@ -75,11 +73,9 @@ def get_signature_backend_references_exists(
     return base_query.distinct().exists()
 
 
-def get_signature_backend_references(
-    course_product_relation=None, organization=None, extra_filters=None
-):
+def get_signature_backend_references(offer=None, organization=None, extra_filters=None):
     """
-    Get a generator object with signature backend references from either a Course Product Relation
+    Get a generator object with signature backend references from either an Offer
     object or an Organization object when the contract is signed. Otherwise, it returns an empty
     generator if there are no signed contracts yet.
 
@@ -91,7 +87,7 @@ def get_signature_backend_references(
     loading the entire QuerySet into memory all at once.
     """
     base_query = _get_base_signature_backend_references(
-        course_product_relation=course_product_relation,
+        offer=offer,
         organization=organization,
         extra_filters=extra_filters,
     )

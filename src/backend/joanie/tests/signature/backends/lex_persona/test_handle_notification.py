@@ -600,10 +600,10 @@ class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         batch_order = factories.BatchOrderFactory(
             owner=user,
-            relation__product__contract_definition=factories.ContractDefinitionFactory(),
+            offer__product__contract_definition=factories.ContractDefinitionFactory(),
         )
         batch_order.contract = factories.ContractFactory(
-            definition=batch_order.relation.product.contract_definition,
+            definition=batch_order.offer.product.contract_definition,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",

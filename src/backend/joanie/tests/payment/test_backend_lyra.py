@@ -1920,7 +1920,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
         backend = LyraBackend(self.configuration)
         batch_order = BatchOrderFactory(
             state=BATCH_ORDER_STATE_PENDING,
-            relation__product__price=D("120.00"),
+            offer__product__price=D("120.00"),
             nb_seats=2,
         )
         billing_address = batch_order.create_billing_address()

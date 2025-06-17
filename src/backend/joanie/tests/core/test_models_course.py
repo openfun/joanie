@@ -356,7 +356,7 @@ class CourseStateModelsTestCase(TestCase):
 
         course = factories.CourseFactory()
         organization = factories.OrganizationFactory()
-        factories.CourseProductRelationFactory.create_batch(
+        factories.OfferFactory.create_batch(
             2, course=course, organizations=[organization]
         )
 
@@ -373,11 +373,11 @@ class CourseStateModelsTestCase(TestCase):
 
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        factories.CourseProductRelationFactory(
+        factories.OfferFactory(
             course=course,
             organizations=factories.OrganizationFactory.create_batch(1),
         )
-        factories.CourseProductRelationFactory(
+        factories.OfferFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),

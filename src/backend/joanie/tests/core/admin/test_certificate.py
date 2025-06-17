@@ -11,8 +11,8 @@ from django.urls import reverse
 
 from joanie.core.enums import ORDER_STATE_COMPLETED
 from joanie.core.factories import (
-    CourseProductRelationFactory,
     EnrollmentCertificateFactory,
+    OfferFactory,
     OrderCertificateFactory,
     OrderFactory,
     OrganizationFactory,
@@ -42,11 +42,11 @@ class CertificateAdminTestCase(TestCase):
             username="John_Doe", first_name="John Doe", email="user1@example.com"
         )
         self.organization_1 = OrganizationFactory()
-        cpr = CourseProductRelationFactory(organizations=[self.organization_1])
+        offer = OfferFactory(organizations=[self.organization_1])
         order = OrderFactory(
             owner=self.learner_1,
-            product=cpr.product,
-            course=cpr.course,
+            product=offer.product,
+            course=offer.course,
             state=ORDER_STATE_COMPLETED,
         )
         self.certificate_order = OrderCertificateFactory(order=order)

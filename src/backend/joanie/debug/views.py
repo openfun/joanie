@@ -108,7 +108,7 @@ class DebugInvitationSignatureLink(TemplateView):
         context["title"] = "👨‍💻Development email preview"
         context["email"] = batch_order.owner.email
         context["fullname"] = batch_order.owner.name
-        context["product_title"] = batch_order.relation.product.title
+        context["product_title"] = batch_order.offer.product.title
         context["invitation_link"] = "http://localhost:8071/"
         context["site"] = {
             "name": settings.JOANIE_CATALOG_NAME,
@@ -164,7 +164,7 @@ class DebugMailSuccessPaymentViewBatchOrderHtml(TemplateView):
         )
         current_language = translation.get_language()
         with translation.override(current_language):
-            product_title = batch_order.relation.product.safe_translation_getter(
+            product_title = batch_order.offer.product.safe_translation_getter(
                 "title", language_code=current_language
             )
             return super().get_context_data(

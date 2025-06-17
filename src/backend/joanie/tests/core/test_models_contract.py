@@ -628,13 +628,13 @@ class ContractModelTestCase(TestCase):
             organization=organization,
             role=enums.OWNER,
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
-            order__product=relation.product,
-            order__course=relation.course,
+            order__product=offer.product,
+            order__course=offer.course,
             order__organization=organization,
         )
 
@@ -649,13 +649,13 @@ class ContractModelTestCase(TestCase):
             organization=organization,
             role=enums.ADMIN,
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
-            order__product=relation.product,
-            order__course=relation.course,
+            order__product=offer.product,
+            order__course=offer.course,
             order__organization=organization,
         )
 
@@ -670,13 +670,13 @@ class ContractModelTestCase(TestCase):
             organization=organization,
             role=enums.MEMBER,
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
-            order__product=relation.product,
-            order__course=relation.course,
+            order__product=offer.product,
+            order__course=offer.course,
             order__organization=organization,
         )
 

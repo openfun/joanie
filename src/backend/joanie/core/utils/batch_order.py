@@ -11,15 +11,13 @@ from joanie.payment import get_payment_backend
 from joanie.payment.models import Invoice, Transaction
 
 
-def get_active_offer_rule(relation_id, nb_seats: int):
+def get_active_offer_rule(offer_id, nb_seats: int):
     """
     Responsible to seek for an active offer rule where the number of seats is available.
     Otherwise, if all active offer rules don't have enough seats requested, it raises an error.
-    When no offer rules is found for the relation, it returns None.
+    When no offer rules is found for the offer, it returns None.
     """
-    offer_rules = models.OfferRule.objects.find_actives(
-        course_product_relation_id=relation_id
-    )
+    offer_rules = models.OfferRule.objects.find_actives(offer_id=offer_id)
     seats_limitation = None
     for offer_rule in offer_rules:
         if offer_rule.nb_seats is not None:
@@ -35,22 +33,22 @@ def get_active_offer_rule(relation_id, nb_seats: int):
     if seats_limitation:
         raise ValueError(_("Seat limitation has been reached."))
 
-    # No offer rules were setted for this relation
+    # No offer rules were set for this offer
     return None
 
 
 def assign_organization(batch_order):
     """
     Assigns an organization to a batch order with the least active orders.
-    It also add an active offer rule if some are declared on the course product relation.
+    It also adds an active offer rule if some are declared on the offer.
     Finally, it initiates the flow of the batch order to state 'assigned'.
     """
     batch_order.organization = get_least_active_organization(
-        batch_order.relation.product, batch_order.relation.course
+        batch_order.offer.product, batch_order.offer.course
     )
 
     offer_rule = get_active_offer_rule(
-        relation_id=batch_order.relation.id, nb_seats=batch_order.nb_seats
+        offer_id=batch_order.offer.id, nb_seats=batch_order.nb_seats
     )
     if offer_rule:
         batch_order.offer_rules.add(offer_rule)
@@ -64,7 +62,7 @@ def send_mail_invitation_link(batch_order, invitation_link: str):
     into the owner's language.
     """
     with override(batch_order.owner.language):
-        product_title = batch_order.relation.product.safe_translation_getter(
+        product_title = batch_order.offer.product.safe_translation_getter(
             "title", language_code=batch_order.owner.language
         )
         send(

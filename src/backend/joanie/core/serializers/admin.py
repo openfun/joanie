@@ -258,7 +258,7 @@ class AdminOrganizationAddressSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """
-        Update the address object if the relation exists between the address and the
+        Update the address object if the offer exists between the address and the
         provided organization.
         """
         if organization_id := self.context.get("organization_id", None):
@@ -270,7 +270,7 @@ class AdminOrganizationAddressSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {
                         "detail": (
-                            "The relation does not exist between the address and the organization."
+                            "The offer does not exist between the address and the organization."
                         )
                     }
                 ) from exception
@@ -524,6 +524,8 @@ class AdminOfferRuleUpdateSerializer(AdminOfferRuleSerializer):
         for key in list(data.keys()):
             if data[key] == "":
                 data[key] = None
+            elif key == "offer":
+                data["course_product_relation"] = data.pop("offer")
 
         return super().to_internal_value(data)
 
@@ -583,9 +585,9 @@ class AdminCourseNestedSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "state"]
 
 
-class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
+class AdminOfferSerializer(serializers.ModelSerializer):
     """
-    Serialize all information about a course relation nested in a product.
+    Serialize all information about a course offer nested in a product.
     """
 
     course = AdminCourseLightSerializer(read_only=True)
@@ -608,7 +610,7 @@ class AdminCourseProductRelationsSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Create a new course relation and attach provided organizations to it
+        Create a new course offer and attach provided organizations to it
         """
         validation_error = {}
         course_id = self.initial_data.get("course_id")
@@ -720,7 +722,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     cover = ThumbnailDetailField(required=False)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
-    product_relations = AdminCourseProductRelationsSerializer(many=True, read_only=True)
+    offers = AdminOfferSerializer(many=True, read_only=True)
     accesses = AdminCourseAccessSerializer(many=True, read_only=True)
     course_runs = AdminCourseRunLightSerializer(many=True, read_only=True)
     effort = ISO8601DurationField(allow_null=True, required=False)
@@ -734,7 +736,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
             "course_runs",
             "id",
             "organizations",
-            "product_relations",
+            "offers",
             "state",
             "title",
             "effort",
@@ -745,7 +747,7 @@ class AdminCourseSerializer(serializers.ModelSerializer):
             "id",
             "state",
             "organizations",
-            "product_relations",
+            "offers",
         )
 
     def validate(self, attrs):
@@ -756,25 +758,21 @@ class AdminCourseSerializer(serializers.ModelSerializer):
         """
         validated_data = super().validate(attrs)
         validated_data["organizations"] = self.initial_data.get("organization_ids", [])
-        product_relations = self.initial_data.get("product_relations")
+        offer = self.initial_data.get("offers")
 
-        if product_relations is not None:
-            validated_data["product_relations"] = []
+        if offer is not None:
+            validated_data["offers"] = []
             products = models.Product.objects.filter(
-                id__in=[p["product_id"] for p in product_relations]
+                id__in=[p["product_id"] for p in offer]
             )
             for product in products:
-                relation = next(
-                    (
-                        p
-                        for p in product_relations
-                        if p["product_id"] == str(product.id)
-                    ),
+                offer = next(
+                    (p for p in offer if p["product_id"] == str(product.id)),
                     None,
                 )
-                if relation is not None:
-                    relation["product"] = product
-                    validated_data["product_relations"].append(relation)
+                if offer is not None:
+                    offer["product"] = product
+                    validated_data["offers"].append(offer)
 
         if self.partial is False and len(validated_data["organizations"]) == 0:
             raise serializers.ValidationError("Organizations are required.")
@@ -786,16 +784,16 @@ class AdminCourseSerializer(serializers.ModelSerializer):
         Create a new course and attach provided organizations to it
         """
         organization_ids = validated_data.pop("organizations")
-        product_relations = validated_data.pop("product_relations", [])
+        offers = validated_data.pop("offers", [])
         course = super().create(validated_data)
         course.organizations.set(organization_ids)
 
-        if len(product_relations) > 0:
-            for product_relation in product_relations:
-                relation = course.product_relations.create(
-                    product=product_relation["product"]
+        if len(offers) > 0:
+            for offer in offers:
+                offer = course.product_relations.create(
+                    product=offer["product"]
                 )
-                relation.organizations.set(product_relation["organization_ids"])
+                offer.organizations.set(organization_ids)
 
         return course
 
@@ -807,17 +805,17 @@ class AdminCourseSerializer(serializers.ModelSerializer):
             organizations_ids = validated_data.pop("organizations")
             instance.organizations.set(organizations_ids)
 
-        if validated_data.get("product_relations") is not None:
-            product_relations = validated_data.pop("product_relations")
-            if len(product_relations) == 0:
+        if validated_data.get("offers") is not None:
+            offers = validated_data.pop("offers")
+            if len(offers) == 0:
                 instance.product_relations.all().delete()
 
             else:
-                for product_relation in product_relations:
+                for offer in offers:
                     (relation, _) = instance.product_relations.get_or_create(
-                        product=product_relation["product"]
+                        product=offer["product"]
                     )
-                    relation.organizations.set(product_relation["organization_ids"])
+                    relation.organizations.set(offer["organization_ids"])
 
         return super().update(instance, validated_data)
 
@@ -909,7 +907,7 @@ class AdminTargetCourseSerializer(serializers.ModelSerializer):
 
     def get_target_course_relation(self, target_course):
         """
-        Return the relevant target course relation depending on whether the resource context
+        Return the relevant target course offer depending on whether the resource context
         is a product or an order.
         """
         if isinstance(self.context_resource, models.Order):
@@ -924,19 +922,19 @@ class AdminTargetCourseSerializer(serializers.ModelSerializer):
 
     def get_position(self, target_course):
         """
-        Retrieve the position of the course related to its product/order relation
+        Retrieve the position of the course related to its product/order offer
         """
-        relation = self.get_target_course_relation(target_course)
+        offer = self.get_target_course_relation(target_course)
 
-        return relation.position
+        return offer.position
 
     def get_is_graded(self, target_course):
         """
-        Retrieve the `is_graded` state of the course related to its product/order relation
+        Retrieve the `is_graded` state of the course related to its product/order offer
         """
-        relation = self.get_target_course_relation(target_course)
+        offer = self.get_target_course_relation(target_course)
 
-        return relation.is_graded
+        return offer.is_graded
 
     def get_course_runs(self, target_course) -> list[dict]:
         """
@@ -1043,7 +1041,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
-    course_relations = AdminCourseProductRelationsSerializer(read_only=True, many=True)
+    course_relations = AdminOfferSerializer(read_only=True, many=True)
     price_currency = serializers.SerializerMethodField(read_only=True)
     certification_level = serializers.IntegerField(read_only=True)
     skills = AdminSkillSerializer(many=True, read_only=True)
@@ -1075,12 +1073,12 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
         context = self.context.copy()
         context["resource"] = product
 
-        relations = models.ProductTargetCourseRelation.objects.filter(
+        offers = models.ProductTargetCourseRelation.objects.filter(
             product=product
         ).order_by("position")
 
         return AdminProductTargetCourseRelationNestedSerializer(
-            instance=relations, many=True, context=context
+            instance=offers, many=True, context=context
         ).data
 
     def get_price_currency(self, *args, **kwargs) -> str:
@@ -1744,12 +1742,29 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         """Return the voucher codes generated"""
         return instance.vouchers
 
+    def to_internal_value(self, data):
+        """
+        Override to ensure that the 'offer' field is renamed to 'relation'
+        for consistency with the model field.
+        """
+        data["relation"] = data.pop("offer", None)
+        return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        """
+        Override to ensure that the 'relation' field is renamed to 'offer'
+        for consistency with the model field.
+        """
+        representation = super().to_representation(instance)
+        representation["offer"] = representation.pop("relation", None)
+        return representation
+
     def create(self, validated_data):
         """
         When an organization is passed, we should add it to the validated data,
         otherwise, we should set the organization with the least active orders.
         Verify that the number of available seats in offer rules of the course
-        product relation is sufficient to meet the required seats specified in
+        product offer is sufficient to meet the required seats specified in
         the batch order.
         """
         relation = validated_data.get("relation")

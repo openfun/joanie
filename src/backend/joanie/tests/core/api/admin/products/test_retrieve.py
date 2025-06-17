@@ -32,27 +32,27 @@ class ProductAdminApiRetrieveTest(TestCase):
             teachers=[teacher],
             certification_level=3,
         )
-        relation = models.CourseProductRelation.objects.get(product=product)
+        offer = models.CourseProductRelation.objects.get(product=product)
         courses = factories.CourseFactory.create_batch(3)
-        relations = []
-        relations.append(
+        offers = []
+        offers.append(
             models.ProductTargetCourseRelation(
                 course=courses[0], product=product, position=2
             )
         )
-        relations[0].save()
-        relations.append(
+        offers[0].save()
+        offers.append(
             models.ProductTargetCourseRelation(
                 course=courses[1], product=product, position=0
             )
         )
-        relations[1].save()
-        relations.append(
+        offers[1].save()
+        offers.append(
             models.ProductTargetCourseRelation(
                 course=courses[2], product=product, position=1
             )
         )
-        relations[2].save()
+        offers[2].save()
 
         response = self.client.get(f"/api/v1.0/admin/products/{product.id}/")
 
@@ -99,7 +99,7 @@ class ProductAdminApiRetrieveTest(TestCase):
             },
             "target_courses": [
                 {
-                    "id": str(relations[1].id),
+                    "id": str(offers[1].id),
                     "course": {
                         "id": str(courses[1].id),
                         "code": courses[1].code,
@@ -112,11 +112,11 @@ class ProductAdminApiRetrieveTest(TestCase):
                         },
                     },
                     "course_runs": [],
-                    "is_graded": relations[1].is_graded,
-                    "position": relations[1].position,
+                    "is_graded": offers[1].is_graded,
+                    "position": offers[1].position,
                 },
                 {
-                    "id": str(relations[2].id),
+                    "id": str(offers[2].id),
                     "course": {
                         "id": str(courses[2].id),
                         "code": courses[2].code,
@@ -129,11 +129,11 @@ class ProductAdminApiRetrieveTest(TestCase):
                         },
                     },
                     "course_runs": [],
-                    "is_graded": relations[2].is_graded,
-                    "position": relations[2].position,
+                    "is_graded": offers[2].is_graded,
+                    "position": offers[2].position,
                 },
                 {
-                    "id": str(relations[0].id),
+                    "id": str(offers[0].id),
                     "course": {
                         "id": str(courses[0].id),
                         "code": courses[0].code,
@@ -146,52 +146,52 @@ class ProductAdminApiRetrieveTest(TestCase):
                         },
                     },
                     "course_runs": [],
-                    "is_graded": relations[0].is_graded,
-                    "position": relations[0].position,
+                    "is_graded": offers[0].is_graded,
+                    "position": offers[0].position,
                 },
             ],
             "instructions": "",
             "course_relations": [
                 {
-                    "id": str(relation.id),
-                    "uri": relation.uri,
-                    "can_edit": relation.can_edit,
+                    "id": str(offer.id),
+                    "uri": offer.uri,
+                    "can_edit": offer.can_edit,
                     "course": {
-                        "id": str(relation.course.id),
-                        "code": relation.course.code,
-                        "title": relation.course.title,
+                        "id": str(offer.course.id),
+                        "code": offer.course.code,
+                        "title": offer.course.title,
                         "state": {
-                            "priority": relation.course.state["priority"],
-                            "datetime": relation.course.state["datetime"],
-                            "call_to_action": relation.course.state["call_to_action"],
-                            "text": relation.course.state["text"],
+                            "priority": offer.course.state["priority"],
+                            "datetime": offer.course.state["datetime"],
+                            "call_to_action": offer.course.state["call_to_action"],
+                            "text": offer.course.state["text"],
                         },
                     },
                     "product": {
-                        "price": float(relation.product.price),
+                        "price": float(offer.product.price),
                         "price_currency": settings.DEFAULT_CURRENCY,
-                        "id": str(relation.product.id),
-                        "title": relation.product.title,
-                        "description": relation.product.description,
-                        "call_to_action": relation.product.call_to_action,
-                        "type": relation.product.type,
+                        "id": str(offer.product.id),
+                        "title": offer.product.title,
+                        "description": offer.product.description,
+                        "call_to_action": offer.product.call_to_action,
+                        "type": offer.product.type,
                         "certificate_definition": str(
-                            relation.product.certificate_definition.id
+                            offer.product.certificate_definition.id
                         ),
                         "contract_definition": str(
-                            relation.product.contract_definition.id
+                            offer.product.contract_definition.id
                         ),
                         "target_courses": [
-                            str(relations[0].course.id),
-                            str(relations[1].course.id),
-                            str(relations[2].course.id),
+                            str(offers[0].course.id),
+                            str(offers[1].course.id),
+                            str(offers[2].course.id),
                         ],
                     },
                     "organizations": [
                         {
-                            "code": relation.organizations.first().code,
-                            "title": relation.organizations.first().title,
-                            "id": str(relation.organizations.first().id),
+                            "code": offer.organizations.first().code,
+                            "title": offer.organizations.first().title,
+                            "id": str(offer.organizations.first().id),
                         }
                     ],
                     "offer_rules": [],

@@ -150,6 +150,20 @@ class Product(parler_models.TranslatableModel, BaseModel):
         blank=True,
     )
 
+    @property
+    def offers(self):
+        """
+        Return the course product relation associated with the product.
+        """
+        return self.course_relations
+
+    @offers.setter
+    def set_offers(self, value):
+        """
+        Set the course product relation associated with the product.
+        """
+        self.course_relations = value
+
     class Meta:
         db_table = "joanie_product"
         verbose_name = _("Product")
@@ -643,9 +657,9 @@ class OrderGroup(BaseModel):
 class OfferRuleManager(models.Manager):
     """Custom manager for the OfferRule model."""
 
-    def find_actives(self, course_product_relation_id):
+    def find_actives(self, offer_id):
         """
-        Retrieve all active offer rules for a given course product relation,
+        Retrieve all active offer rules for a given offer,
         ordered by position.
         """
         return (
@@ -653,7 +667,7 @@ class OfferRuleManager(models.Manager):
             .get_queryset()
             .filter(
                 is_active=True,
-                course_product_relation_id=course_product_relation_id,
+                course_product_relation_id=offer_id,
             )
             .order_by("position")
         )
@@ -682,6 +696,21 @@ class OfferRule(BaseModel):
         related_name="offer_rules",
         on_delete=models.CASCADE,
     )
+
+    @property
+    def offer(self):
+        """
+        Return the course product relation associated with the batch order.
+        """
+        return self.course_product_relation
+
+    @offer.setter
+    def set_offer(self, value):
+        """
+        Set the course product relation associated with the batch order.
+        """
+        self.course_product_relation = value
+
     is_active = models.BooleanField(_("is active"), default=True)
     position = models.PositiveSmallIntegerField(
         _("priority"),
@@ -1929,6 +1958,21 @@ class BatchOrder(BaseModel):
         related_name="batch_orders",
         on_delete=models.CASCADE,
     )
+
+    @property
+    def offer(self):
+        """
+        Return the course product relation associated with the batch order.
+        """
+        return self.relation
+
+    @offer.setter
+    def set_offer(self, value):
+        """
+        Set the course product relation associated with the batch order.
+        """
+        self.relation = value
+
     organization = models.ForeignKey(
         to=Organization,
         verbose_name=_("organization"),
@@ -2037,6 +2081,8 @@ class BatchOrder(BaseModel):
 
     def __init__(self, *args, **kwargs):
         """Initiate Batch Order object"""
+        if offer := kwargs.pop("offer", None):
+            kwargs["relation"] = offer
         super().__init__(*args, **kwargs)
         self.flow = BatchOrderFlow(self)
 

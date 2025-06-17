@@ -19,17 +19,17 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
 
     maxDiff = None
 
-    def test_admin_api_course_products_relation_update_anonymous(self):
+    def test_admin_api_offer_update_anonymous(self):
         """
-        Anonymous users should not be able to update a course product relation.
+        Anonymous users should not be able to update an offer.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
         )
         response = self.client.put(
-            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+            f"/api/v1.0/admin/offers/{offer.id}/",
             content_type="application/json",
             data={
                 "course_id": course.id,
@@ -42,19 +42,19 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_admin_api_course_products_relation_update_authenticated(self):
+    def test_admin_api_offer_update_authenticated(self):
         """
-        Authenticated users should not be able to update a course product relation.
+        Authenticated users should not be able to update an offer.
         """
         user = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=user.username, password="password")
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
         )
         response = self.client.put(
-            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+            f"/api/v1.0/admin/offers/{offer.id}/",
             content_type="application/json",
             data={
                 "course_id": course.id,
@@ -68,13 +68,13 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             {"detail": "You do not have permission to perform this action."},
         )
 
-    def test_admin_api_course_products_relation_update_superuser(self):
+    def test_admin_api_offer_update_superuser(self):
         """
-        Super admin user should be able to update a course product relation.
+        Super admin user should be able to update an offer.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__courses=[],
         )
@@ -83,7 +83,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
         )
         response = self.client.put(
-            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+            f"/api/v1.0/admin/offers/{offer.id}/",
             content_type="application/json",
             data={
                 "course_id": course.id,
@@ -92,14 +92,14 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        relation.refresh_from_db()
+        offer.refresh_from_db()
 
         self.assertEqual(
             response.json(),
             {
-                "id": str(relation.id),
-                "uri": relation.uri,
-                "can_edit": relation.can_edit,
+                "id": str(offer.id),
+                "uri": offer.uri,
+                "can_edit": offer.can_edit,
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -117,20 +117,20 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                 },
                 "offer_rules": [],
                 "product": {
-                    "price": float(relation.product.price),
+                    "price": float(offer.product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
-                    "id": str(relation.product.id),
-                    "title": relation.product.title,
-                    "description": relation.product.description,
-                    "call_to_action": relation.product.call_to_action,
-                    "type": relation.product.type,
+                    "id": str(offer.product.id),
+                    "title": offer.product.title,
+                    "description": offer.product.description,
+                    "call_to_action": offer.product.call_to_action,
+                    "type": offer.product.type,
                     "certificate_definition": str(
-                        relation.product.certificate_definition.id
+                        offer.product.certificate_definition.id
                     ),
                     "contract_definition": None,
                     "target_courses": [
                         str(target_course.id)
-                        for target_course in relation.product.target_courses.all().order_by(
+                        for target_course in offer.product.target_courses.all().order_by(
                             "product_target_relations__position"
                         )
                     ],
@@ -141,21 +141,19 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                         "id": str(organization.id),
                         "title": organization.title,
                     }
-                    for organization in relation.organizations.all().order_by(
-                        "created_on"
-                    )
+                    for organization in offer.organizations.all().order_by("created_on")
                 ],
             },
         )
 
-    def test_admin_api_course_products_relation_partially_update_anonymous(self):
+    def test_admin_api_offer_partially_update_anonymous(self):
         """
-        Anonymous users should not be able to partially update a course product relation.
+        Anonymous users should not be able to partially update an offer.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         course = factories.CourseFactory()
         response = self.client.patch(
-            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+            f"/api/v1.0/admin/offers/{offer.id}/",
             content_type="application/json",
             data={
                 "course_id": course.id,
@@ -167,16 +165,16 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_admin_api_course_products_relation_partially_update_authenticated(self):
+    def test_admin_api_offer_partially_update_authenticated(self):
         """
-        Authenticated users should not be able to partially update a course product relation.
+        Authenticated users should not be able to partially update an offer.
         """
         user = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=user.username, password="password")
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         course = factories.CourseFactory()
         response = self.client.patch(
-            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+            f"/api/v1.0/admin/offers/{offer.id}/",
             content_type="application/json",
             data={
                 "course_id": course.id,
@@ -189,19 +187,19 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             {"detail": "You do not have permission to perform this action."},
         )
 
-    def test_admin_api_course_products_relation_partially_update_superuser(self):
+    def test_admin_api_offer_partially_update_superuser(self):
         """
-        Super admin user should be able to partially update a course product relation.
+        Super admin user should be able to partially update an offer.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__courses=[],
         )
         course = factories.CourseFactory()
         response = self.client.patch(
-            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+            f"/api/v1.0/admin/offers/{offer.id}/",
             content_type="application/json",
             data={
                 "course_id": course.id,
@@ -209,13 +207,13 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        relation.refresh_from_db()
+        offer.refresh_from_db()
         self.assertEqual(
             response.json(),
             {
-                "id": str(relation.id),
-                "uri": relation.uri,
-                "can_edit": relation.can_edit,
+                "id": str(offer.id),
+                "uri": offer.uri,
+                "can_edit": offer.can_edit,
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -233,20 +231,20 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                 },
                 "offer_rules": [],
                 "product": {
-                    "price": float(relation.product.price),
+                    "price": float(offer.product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
-                    "id": str(relation.product.id),
-                    "title": relation.product.title,
-                    "description": relation.product.description,
-                    "call_to_action": relation.product.call_to_action,
-                    "type": relation.product.type,
+                    "id": str(offer.product.id),
+                    "title": offer.product.title,
+                    "description": offer.product.description,
+                    "call_to_action": offer.product.call_to_action,
+                    "type": offer.product.type,
                     "certificate_definition": str(
-                        relation.product.certificate_definition.id
+                        offer.product.certificate_definition.id
                     ),
                     "contract_definition": None,
                     "target_courses": [
                         str(target_course.id)
-                        for target_course in relation.product.target_courses.all().order_by(
+                        for target_course in offer.product.target_courses.all().order_by(
                             "product_target_relations__position"
                         )
                     ],
@@ -257,31 +255,29 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                         "id": str(organization.id),
                         "title": organization.title,
                     }
-                    for organization in relation.organizations.all().order_by(
-                        "created_on"
-                    )
+                    for organization in offer.organizations.all().order_by("created_on")
                 ],
             },
         )
 
-    def test_admin_api_course_products_relation_partially_update_organizations(self):
+    def test_admin_api_offer_partially_update_organizations(self):
         """
-        Super admin user should be able to partially update a course product relation.
+        Super admin user should be able to partially update an offer.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         organization = factories.OrganizationFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__courses=[],
         )
-        related_organizations = list(relation.organizations.all()) + [organization]
+        related_organizations = list(offer.organizations.all()) + [organization]
         response = self.client.patch(
-            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+            f"/api/v1.0/admin/offers/{offer.id}/",
             content_type="application/json",
             data={
                 "organization_ids": list(
-                    relation.organizations.all().values_list("id", flat=True)
+                    offer.organizations.all().values_list("id", flat=True)
                 )
                 + [organization.id],
             },
@@ -290,40 +286,38 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         assert response.json() == {
-            "id": str(relation.id),
-            "uri": relation.uri,
-            "can_edit": relation.can_edit,
+            "id": str(offer.id),
+            "uri": offer.uri,
+            "can_edit": offer.can_edit,
             "course": {
-                "code": relation.course.code,
-                "id": str(relation.course.id),
-                "title": relation.course.title,
+                "code": offer.course.code,
+                "id": str(offer.course.id),
+                "title": offer.course.title,
                 "state": {
-                    "priority": relation.course.state["priority"],
-                    "datetime": relation.course.state["datetime"]
+                    "priority": offer.course.state["priority"],
+                    "datetime": offer.course.state["datetime"]
                     .isoformat()
                     .replace("+00:00", "Z")
-                    if relation.course.state["datetime"]
+                    if offer.course.state["datetime"]
                     else None,
-                    "call_to_action": relation.course.state["call_to_action"],
-                    "text": relation.course.state["text"],
+                    "call_to_action": offer.course.state["call_to_action"],
+                    "text": offer.course.state["text"],
                 },
             },
             "offer_rules": [],
             "product": {
-                "price": float(relation.product.price),
+                "price": float(offer.product.price),
                 "price_currency": settings.DEFAULT_CURRENCY,
-                "id": str(relation.product.id),
-                "title": relation.product.title,
-                "description": relation.product.description,
-                "call_to_action": relation.product.call_to_action,
-                "type": relation.product.type,
-                "certificate_definition": str(
-                    relation.product.certificate_definition.id
-                ),
+                "id": str(offer.product.id),
+                "title": offer.product.title,
+                "description": offer.product.description,
+                "call_to_action": offer.product.call_to_action,
+                "type": offer.product.type,
+                "certificate_definition": str(offer.product.certificate_definition.id),
                 "contract_definition": None,
                 "target_courses": [
                     str(target_course.id)
-                    for target_course in relation.product.target_courses.all().order_by(
+                    for target_course in offer.product.target_courses.all().order_by(
                         "product_target_relations__position"
                     )
                 ],
@@ -338,23 +332,23 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             ],
         }
 
-    def test_admin_api_course_products_relation_partially_update_unknown_organizations(
+    def test_admin_api_offer_partially_update_unknown_organizations(
         self,
     ):
         """
-        Updating a relation with unknown organization ids should fail.
+        Updating a offer with unknown organization ids should fail.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         organization = factories.OrganizationFactory()
         unknown_id_1 = uuid.uuid4()
         unknown_id_2 = uuid.uuid4()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__courses=[],
         )
         response = self.client.patch(
-            f"/api/v1.0/admin/course-product-relations/{relation.id}/",
+            f"/api/v1.0/admin/offers/{offer.id}/",
             content_type="application/json",
             data={
                 "organization_ids": [unknown_id_1, unknown_id_2, organization.id],
@@ -369,7 +363,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                 f"{unknown_id_2} does not exist.",
             ]
         }
-        relation.refresh_from_db()
-        self.assertNotIn(unknown_id_1, relation.organizations.all())
-        self.assertNotIn(unknown_id_2, relation.organizations.all())
-        self.assertNotIn(organization, relation.organizations.all())
+        offer.refresh_from_db()
+        self.assertNotIn(unknown_id_1, offer.organizations.all())
+        self.assertNotIn(unknown_id_2, offer.organizations.all())
+        self.assertNotIn(organization, offer.organizations.all())

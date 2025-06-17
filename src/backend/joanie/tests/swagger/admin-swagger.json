@@ -909,716 +909,6 @@
                 }
             }
         },
-        "/api/v1.0/admin/course-product-relations/": {
-            "get": {
-                "operationId": "course_product_relations_list",
-                "description": "CourseProductRelation ViewSet",
-                "parameters": [
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "A page number within the paginated result set.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "page_size",
-                        "required": false,
-                        "in": "query",
-                        "description": "Number of results to return per page.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedAdminCourseProductRelationsList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "course_product_relations_create",
-                "description": "CourseProductRelation ViewSet",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "course_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "organization_ids",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "format": "uuid"
-                            }
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "product_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AdminCourseProductRelations"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/admin/course-product-relations/{course_product_relation_id}/offer-rules/": {
-            "get": {
-                "operationId": "course_product_relations_offer_rules_list",
-                "description": "OfferRule ViewSet",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "required": true
-                    },
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "A page number within the paginated result set.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "page_size",
-                        "required": false,
-                        "in": "query",
-                        "description": "Number of results to return per page.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedAdminOfferRuleList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "course_product_relations_offer_rules_create",
-                "description": "Create a new OfferRule using the course_product_relation_id from the URL",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AdminOfferRuleCreateRequest"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AdminOfferRuleCreateRequest"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AdminOfferRuleCreate"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/admin/course-product-relations/{course_product_relation_id}/offer-rules/{id}/": {
-            "get": {
-                "operationId": "course_product_relations_offer_rules_retrieve",
-                "description": "OfferRule ViewSet",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AdminOfferRule"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "put": {
-                "operationId": "course_product_relations_offer_rules_update",
-                "description": "OfferRule ViewSet",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AdminOfferRuleUpdateRequest"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AdminOfferRuleUpdateRequest"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AdminOfferRuleUpdate"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "course_product_relations_offer_rules_partial_update",
-                "description": "OfferRule ViewSet",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOfferRuleUpdateRequest"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOfferRuleUpdateRequest"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AdminOfferRuleUpdate"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "course_product_relations_offer_rules_destroy",
-                "description": "OfferRule ViewSet",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        },
-        "/api/v1.0/admin/course-product-relations/{id}/": {
-            "get": {
-                "operationId": "course_product_relations_retrieve",
-                "description": "CourseProductRelation ViewSet",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AdminCourseProductRelations"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "put": {
-                "operationId": "course_product_relations_update",
-                "description": "CourseProductRelation ViewSet",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "course_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "organization_ids",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "format": "uuid"
-                            }
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "product_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AdminCourseProductRelations"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "course_product_relations_partial_update",
-                "description": "CourseProductRelation ViewSet",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "course_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "organization_ids",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "format": "uuid"
-                            }
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "product_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AdminCourseProductRelations"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "course_product_relations_destroy",
-                "description": "Delete the relation between course_id and product_id",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        },
-        "/api/v1.0/admin/course-product-relations/{id}/check_certificates_generation_process/": {
-            "get": {
-                "operationId": "course_product_relations_check_certificates_generation_process_retrieve",
-                "description": "Checks whether the Celery task for generating certificates is in progress or completed.\nIf cached data is found, it indicates that the generation process is ongoing. Otherwise,\nit signifies that the task has been completed or has not been requested.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                }
-                            }
-                        },
-                        "description": ""
-                    },
-                    "404": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/admin/course-product-relations/{id}/generate_certificates/": {
-            "post": {
-                "operationId": "course_product_relations_generate_certificates_create",
-                "description": "Generate the certificates for a course product relation when it is eligible.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                }
-                            }
-                        },
-                        "description": ""
-                    },
-                    "202": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                }
-                            }
-                        },
-                        "description": ""
-                    },
-                    "400": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/api/v1.0/admin/course-runs/": {
             "get": {
                 "operationId": "course_runs_list",
@@ -3355,6 +2645,716 @@
                 }
             }
         },
+        "/api/v1.0/admin/offers/": {
+            "get": {
+                "operationId": "offers_list",
+                "description": "CourseProductRelation ViewSet",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminOfferList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "offers_create",
+                "description": "CourseProductRelation ViewSet",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOffer"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/offers/{offer_id}/offer-rules/": {
+            "get": {
+                "operationId": "offers_offer_rules_list",
+                "description": "OfferRule ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminOfferRuleList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "offers_offer_rules_create",
+                "description": "Create a new OfferRule using the offer_id from the URL",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOfferRuleCreateRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOfferRuleCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOfferRuleCreate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/offers/{offer_id}/offer-rules/{id}/": {
+            "get": {
+                "operationId": "offers_offer_rules_retrieve",
+                "description": "OfferRule ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOfferRule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "offers_offer_rules_update",
+                "description": "OfferRule ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOfferRuleUpdateRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOfferRuleUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOfferRuleUpdate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "offers_offer_rules_partial_update",
+                "description": "OfferRule ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminOfferRuleUpdateRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminOfferRuleUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOfferRuleUpdate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "offers_offer_rules_destroy",
+                "description": "OfferRule ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/offers/{id}/": {
+            "get": {
+                "operationId": "offers_retrieve",
+                "description": "CourseProductRelation ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOffer"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "offers_update",
+                "description": "CourseProductRelation ViewSet",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOffer"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "offers_partial_update",
+                "description": "CourseProductRelation ViewSet",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOffer"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "offers_destroy",
+                "description": "Delete the offer between course_id and product_id",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/offers/{id}/check_certificates_generation_process/": {
+            "get": {
+                "operationId": "offers_check_certificates_generation_process_retrieve",
+                "description": "Checks whether the Celery task for generating certificates is in progress or completed.\nIf cached data is found, it indicates that the generation process is ongoing. Otherwise,\nit signifies that the task has been completed or has not been requested.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/offers/{id}/generate_certificates/": {
+            "post": {
+                "operationId": "offers_generate_certificates_create",
+                "description": "Generate the certificates for an offer when it is eligible.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "202": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/orders/": {
             "get": {
                 "operationId": "orders_list",
@@ -4266,7 +4266,7 @@
             },
             "delete": {
                 "operationId": "organizations_addresses_destroy",
-                "description": "Delete the address of an organization when the relation exists only.",
+                "description": "Delete the address of an organization when the offer exists only.",
                 "parameters": [
                     {
                         "in": "path",
@@ -6134,10 +6134,10 @@
                         },
                         "readOnly": true
                     },
-                    "product_relations": {
+                    "offers": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminCourseProductRelations"
+                            "$ref": "#/components/schemas/AdminOffer"
                         },
                         "readOnly": true
                     },
@@ -6160,8 +6160,8 @@
                     "code",
                     "course_runs",
                     "id",
+                    "offers",
                     "organizations",
-                    "product_relations",
                     "state",
                     "title"
                 ]
@@ -6241,65 +6241,6 @@
                     "id",
                     "state",
                     "title"
-                ]
-            },
-            "AdminCourseProductRelations": {
-                "type": "object",
-                "description": "Serialize all information about a course relation nested in a product.",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
-                    "can_edit": {
-                        "type": "string",
-                        "readOnly": true
-                    },
-                    "course": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminCourseLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "organizations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AdminOrganizationLight"
-                        },
-                        "readOnly": true
-                    },
-                    "offer_rules": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AdminOfferRule"
-                        },
-                        "readOnly": true
-                    },
-                    "product": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminProductLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "uri": {
-                        "type": "string",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "can_edit",
-                    "course",
-                    "id",
-                    "offer_rules",
-                    "organizations",
-                    "product",
-                    "uri"
                 ]
             },
             "AdminCourseRequest": {
@@ -6981,9 +6922,9 @@
                     "total"
                 ]
             },
-            "AdminOrder": {
+            "AdminOffer": {
                 "type": "object",
-                "description": "Read only Serializer for Order model.",
+                "description": "Serialize all information about a course offer nested in a product.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -6991,35 +6932,8 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "created_on": {
+                    "can_edit": {
                         "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was created"
-                    },
-                    "state": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/OrderStateEnum"
-                            }
-                        ],
-                        "readOnly": true,
-                        "default": "draft"
-                    },
-                    "owner": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminUser"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "product": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminProductLight"
-                            }
-                        ],
                         "readOnly": true
                     },
                     "course": {
@@ -7030,20 +6944,11 @@
                         ],
                         "readOnly": true
                     },
-                    "enrollment": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminOrderEnrollment"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "organization": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminOrganizationLight"
-                            }
-                        ],
+                    "organizations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrganizationLight"
+                        },
                         "readOnly": true
                     },
                     "offer_rules": {
@@ -7053,124 +6958,27 @@
                         },
                         "readOnly": true
                     },
-                    "total": {
-                        "type": "number",
-                        "format": "double",
-                        "maximum": 10000000,
-                        "minimum": 0.0,
-                        "exclusiveMaximum": true
-                    },
-                    "total_currency": {
-                        "type": "string",
-                        "description": "Return the code of currency used by the instance",
-                        "readOnly": true
-                    },
-                    "contract": {
-                        "$ref": "#/components/schemas/AdminContract"
-                    },
-                    "certificate": {
-                        "$ref": "#/components/schemas/AdminCertificate"
-                    },
-                    "main_invoice": {
-                        "$ref": "#/components/schemas/AdminInvoice"
-                    },
-                    "payment_schedule": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AdminOrderPayment"
-                        },
-                        "readOnly": true
-                    },
-                    "credit_card": {
+                    "product": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/AdminCreditCard"
+                                "$ref": "#/components/schemas/AdminProductLight"
                             }
                         ],
                         "readOnly": true
                     },
-                    "has_waived_withdrawal_right": {
-                        "type": "boolean",
+                    "uri": {
+                        "type": "string",
                         "readOnly": true
                     }
                 },
                 "required": [
-                    "certificate",
-                    "contract",
+                    "can_edit",
                     "course",
-                    "created_on",
-                    "credit_card",
-                    "enrollment",
-                    "has_waived_withdrawal_right",
                     "id",
-                    "main_invoice",
                     "offer_rules",
-                    "organization",
-                    "owner",
-                    "payment_schedule",
+                    "organizations",
                     "product",
-                    "state",
-                    "total",
-                    "total_currency"
-                ]
-            },
-            "AdminOrderEnrollment": {
-                "type": "object",
-                "description": "Serializer for Enrollment Order model",
-                "properties": {
-                    "course_run": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminCourseRunLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "created_on": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was created"
-                    },
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
-                    "is_active": {
-                        "type": "boolean",
-                        "readOnly": true,
-                        "description": "Ticked if the user is enrolled to the course run."
-                    },
-                    "state": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/EnrollmentStateEnum"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "updated_on": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was last updated"
-                    },
-                    "was_created_by_order": {
-                        "type": "boolean",
-                        "readOnly": true,
-                        "description": "Ticked if the enrollment has been initially created in the scope of an order."
-                    }
-                },
-                "required": [
-                    "course_run",
-                    "created_on",
-                    "id",
-                    "is_active",
-                    "state",
-                    "updated_on",
-                    "was_created_by_order"
+                    "uri"
                 ]
             },
             "AdminOfferRule": {
@@ -7467,6 +7275,198 @@
                         "nullable": true
                     }
                 }
+            },
+            "AdminOrder": {
+                "type": "object",
+                "description": "Read only Serializer for Order model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrderStateEnum"
+                            }
+                        ],
+                        "readOnly": true,
+                        "default": "draft"
+                    },
+                    "owner": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminUser"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "product": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminProductLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "course": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCourseLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "enrollment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminOrderEnrollment"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "organization": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminOrganizationLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "offer_rules": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOfferRule"
+                        },
+                        "readOnly": true
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
+                    },
+                    "total_currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
+                        "readOnly": true
+                    },
+                    "contract": {
+                        "$ref": "#/components/schemas/AdminContract"
+                    },
+                    "certificate": {
+                        "$ref": "#/components/schemas/AdminCertificate"
+                    },
+                    "main_invoice": {
+                        "$ref": "#/components/schemas/AdminInvoice"
+                    },
+                    "payment_schedule": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderPayment"
+                        },
+                        "readOnly": true
+                    },
+                    "credit_card": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCreditCard"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "has_waived_withdrawal_right": {
+                        "type": "boolean",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "certificate",
+                    "contract",
+                    "course",
+                    "created_on",
+                    "credit_card",
+                    "enrollment",
+                    "has_waived_withdrawal_right",
+                    "id",
+                    "main_invoice",
+                    "offer_rules",
+                    "organization",
+                    "owner",
+                    "payment_schedule",
+                    "product",
+                    "state",
+                    "total",
+                    "total_currency"
+                ]
+            },
+            "AdminOrderEnrollment": {
+                "type": "object",
+                "description": "Serializer for Enrollment Order model",
+                "properties": {
+                    "course_run": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminCourseRunLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Ticked if the user is enrolled to the course run."
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EnrollmentStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
+                    "was_created_by_order": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Ticked if the enrollment has been initially created in the scope of an order."
+                    }
+                },
+                "required": [
+                    "course_run",
+                    "created_on",
+                    "id",
+                    "is_active",
+                    "state",
+                    "updated_on",
+                    "was_created_by_order"
+                ]
             },
             "AdminOrderLight": {
                 "type": "object",
@@ -9048,37 +9048,6 @@
                     }
                 }
             },
-            "PaginatedAdminCourseProductRelationsList": {
-                "type": "object",
-                "required": [
-                    "count",
-                    "results"
-                ],
-                "properties": {
-                    "count": {
-                        "type": "integer",
-                        "example": 123
-                    },
-                    "next": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=4"
-                    },
-                    "previous": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=2"
-                    },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AdminCourseProductRelations"
-                        }
-                    }
-                }
-            },
             "PaginatedAdminCourseRunList": {
                 "type": "object",
                 "required": [
@@ -9168,6 +9137,37 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/AdminEnrollmentLight"
+                        }
+                    }
+                }
+            },
+            "PaginatedAdminOfferList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOffer"
                         }
                     }
                 }

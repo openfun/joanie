@@ -18,13 +18,13 @@ class CourseProductRelationListAdminApiTest(TestCase):
 
     maxDiff = None
 
-    def test_admin_api_course_products_relation_list_anonymous(self):
+    def test_admin_api_offer_list_anonymous(self):
         """
-        Anonymous users should not be able to list a course product relation.
+        Anonymous users should not be able to list an offer.
         """
-        factories.CourseProductRelationFactory.create_batch(3)
+        factories.OfferFactory.create_batch(3)
         response = self.client.get(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -32,15 +32,15 @@ class CourseProductRelationListAdminApiTest(TestCase):
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_admin_api_course_products_relation_list_authenticated(self):
+    def test_admin_api_offer_list_authenticated(self):
         """
-        Authenticated users should not be able to list a course product relation.
+        Authenticated users should not be able to list an offer.
         """
         user = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=user.username, password="password")
-        factories.CourseProductRelationFactory.create_batch(3)
+        factories.OfferFactory.create_batch(3)
         response = self.client.get(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
@@ -49,19 +49,19 @@ class CourseProductRelationListAdminApiTest(TestCase):
             {"detail": "You do not have permission to perform this action."},
         )
 
-    def test_admin_api_course_products_relation_list_superuser(self):
+    def test_admin_api_offer_list_superuser(self):
         """
-        Super admin user should be able to list a course product relation.
+        Super admin user should be able to list an offer.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        relations = factories.CourseProductRelationFactory.create_batch(
+        offers = factories.OfferFactory.create_batch(
             3,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__courses=[],
         )
         response = self.client.get(
-            "/api/v1.0/admin/course-product-relations/",
+            "/api/v1.0/admin/offers/",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -74,42 +74,40 @@ class CourseProductRelationListAdminApiTest(TestCase):
                 "previous": None,
                 "results": [
                     {
-                        "id": str(relation.id),
-                        "uri": relation.uri,
-                        "can_edit": relation.can_edit,
+                        "id": str(offer.id),
+                        "uri": offer.uri,
+                        "can_edit": offer.can_edit,
                         "course": {
-                            "code": relation.course.code,
-                            "id": str(relation.course.id),
-                            "title": relation.course.title,
+                            "code": offer.course.code,
+                            "id": str(offer.course.id),
+                            "title": offer.course.title,
                             "state": {
-                                "priority": relation.course.state["priority"],
-                                "datetime": relation.course.state["datetime"]
+                                "priority": offer.course.state["priority"],
+                                "datetime": offer.course.state["datetime"]
                                 .isoformat()
                                 .replace("+00:00", "Z")
-                                if relation.course.state["datetime"]
+                                if offer.course.state["datetime"]
                                 else None,
-                                "call_to_action": relation.course.state[
-                                    "call_to_action"
-                                ],
-                                "text": relation.course.state["text"],
+                                "call_to_action": offer.course.state["call_to_action"],
+                                "text": offer.course.state["text"],
                             },
                         },
                         "offer_rules": [],
                         "product": {
-                            "price": float(relation.product.price),
+                            "price": float(offer.product.price),
                             "price_currency": settings.DEFAULT_CURRENCY,
-                            "id": str(relation.product.id),
-                            "title": relation.product.title,
-                            "description": relation.product.description,
-                            "call_to_action": relation.product.call_to_action,
-                            "type": relation.product.type,
+                            "id": str(offer.product.id),
+                            "title": offer.product.title,
+                            "description": offer.product.description,
+                            "call_to_action": offer.product.call_to_action,
+                            "type": offer.product.type,
                             "certificate_definition": str(
-                                relation.product.certificate_definition.id
+                                offer.product.certificate_definition.id
                             ),
                             "contract_definition": None,
                             "target_courses": [
                                 str(target_course.id)
-                                for target_course in relation.product.target_courses.all().order_by(
+                                for target_course in offer.product.target_courses.all().order_by(
                                     "product_target_relations__position"
                                 )
                             ],
@@ -120,12 +118,12 @@ class CourseProductRelationListAdminApiTest(TestCase):
                                 "id": str(organization.id),
                                 "title": organization.title,
                             }
-                            for organization in relation.organizations.all().order_by(
+                            for organization in offer.organizations.all().order_by(
                                 "created_on"
                             )
                         ],
                     }
-                    for relation in reversed(relations)
+                    for offer in reversed(offers)
                 ],
             },
         )

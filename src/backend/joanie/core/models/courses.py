@@ -238,6 +238,20 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         blank=True,
     )
 
+    @property
+    def offers(self):
+        """
+        Return the course product relation associated with the organization.
+        """
+        return self.product_relations
+
+    @offers.setter
+    def set_offers(self, value):
+        """
+        Set the course product relation associated with the organization.
+        """
+        self.product_relations = value
+
     class Meta:
         db_table = "joanie_organization"
         verbose_name = _("Organization")
@@ -318,7 +332,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         filters = Q()
         if contract_ids := kwargs.get("contract_ids"):
             filters &= Q(id__in=contract_ids)
-        if relation_ids := kwargs.get("course_product_relation_ids"):
+        if relation_ids := kwargs.get("offer_ids"):
             filters &= Q(order__product__course_relations__id__in=relation_ids)
 
         contracts_to_sign = list(
@@ -495,6 +509,20 @@ class Course(parler_models.TranslatableModel, BaseModel):
         null=True,
         help_text="The duration effort required in seconds",
     )
+
+    @property
+    def offers(self):
+        """
+        Return the course product relation associated with the course.
+        """
+        return self.product_relations
+
+    @offers.setter
+    def set_offers(self, value):
+        """
+        Set the course product relation associated with the course.
+        """
+        self.product_relations = value
 
     class Meta:
         db_table = "joanie_course"
@@ -756,7 +784,7 @@ class CourseProductRelation(BaseModel):
     def delete(self, using=None, keep_parents=False):
         """Delete the relation if it can be edited, raise a ValidationError otherwise."""
         if not self.can_edit:
-            raise ValidationError(_("You cannot delete this course product relation."))
+            raise ValidationError(_("You cannot delete this offer."))
         return super().delete(using=using, keep_parents=keep_parents)
 
     @property
@@ -766,7 +794,7 @@ class CourseProductRelation(BaseModel):
         """
         site = Site.objects.get_current()
         resource_path = reverse(
-            "course_product_relations-detail",
+            "offers-detail",
             kwargs={
                 "course_id": self.course.code,  # pylint: disable=no-member
                 "pk_or_product_id": self.product_id,  # pylint: disable=no-member

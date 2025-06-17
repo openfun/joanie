@@ -18,7 +18,7 @@ class Command(BaseCommand):
     This command is exclusive to users who have access rights on a specific organization.
     It generates a ZIP archive of signed contracts of PDF.
     First, you must provide an existing User UUID who has the right access to an organization.
-    Then, it gets all signed Contracts from either an existing Course Product Relation object UUID
+    Then, it gets all signed Contracts from either an existing offer object UUID
     or an Organization object UUID.
     If you parse a ZIP UUID into the command parameters, we will use it for the filename, else we
     will generate one in the command
@@ -31,7 +31,7 @@ class Command(BaseCommand):
         The command awaits of 2 required parameters at minimum to be executable.
         First, you should provide an existing User UUID who has the correct access rights to an
         organization, which is primordial. Then, you need to provide either an existing Course
-        Product Relation UUID, or an Organization UUID in order to get signed Contracts that are
+        Product offer UUID, or an Organization UUID in order to get signed Contracts that are
         attached. You may give a ZIP UUID parameter if you desire, else we generate one for
         the filename.
         """
@@ -42,9 +42,9 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
-            "-cpr",
-            "--course_product_relation_id",
-            help=("Accept a single UUID of Course Product Relation object."),
+            "-offer",
+            "--offer_id",
+            help=("Accept a single UUID of offer object."),
         )
 
         parser.add_argument(
@@ -62,7 +62,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         The command is exclusive to users who have access rights on a specific organization.
-        Get all signed contracts from an existing Course Product Relation UUID OR from an
+        Get all signed contracts from an existing Offer UUID OR from an
         Organization UUID and generate a ZIP archive into the file system storage.
         """
         zip_uuid = None
@@ -100,9 +100,7 @@ class Command(BaseCommand):
             raise CommandError(error_message)
 
         signature_references = contract_utility.get_signature_backend_references(
-            course_product_relation=serializer.validated_data.get(
-                "course_product_relation"
-            ),
+            offer=serializer.validated_data.get("offer"),
             organization=serializer.validated_data.get("organization"),
             extra_filters={"order__organization__accesses__user_id": user_id},
         )  # extra filter to check the access of a user on an organization.

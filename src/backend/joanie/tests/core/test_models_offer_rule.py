@@ -18,7 +18,7 @@ class OfferRuleModelTestCase(TestCase):
     def test_models_offer_rule_can_edit(self):
         """
         OfferRule can_edit property should return True if the
-        relation is not linked to any order, False otherwise.
+        offer is not linked to any order, False otherwise.
         """
         offer_rule = factories.OfferRuleFactory()
         self.assertTrue(offer_rule.can_edit)
@@ -167,24 +167,24 @@ class OfferRuleModelTestCase(TestCase):
 
     def test_models_offer_rule_position_default(self):
         """
-        The position value should be set to the first available position for the given relation
+        The position value should be set to the first available position for the given offer
         if not set.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             position=None,
         )
         self.assertEqual(offer_rule_1.position, 0)
 
         offer_rule_2 = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             position=None,
         )
         self.assertEqual(offer_rule_2.position, 1)
 
         offer_rule_3 = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             position=0,
         )
         self.assertEqual(offer_rule_3.position, 0)
@@ -192,11 +192,11 @@ class OfferRuleModelTestCase(TestCase):
     def test_model_offer_rule_set_position(self):
         """
         Should update the position of the offer rule and reorder the other offer rules
-        linked to the same relation.
+        linked to the same offer.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         order_1, order_2, order_3 = factories.OfferRuleFactory.create_batch(
-            3, course_product_relation=relation
+            3, course_product_relation=offer
         )
         self.assertEqual(order_1.position, 0)
         self.assertEqual(order_2.position, 1)
@@ -224,9 +224,9 @@ class OfferRuleModelTestCase(TestCase):
         """
         Should return None if no offer rule is found for the given course and product.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
 
-        assignable_offer_rules = OfferRule.objects.find_actives(relation.id)
+        assignable_offer_rules = OfferRule.objects.find_actives(offer.id)
 
         self.assertQuerysetEqual(assignable_offer_rules, [])
 
@@ -234,12 +234,12 @@ class OfferRuleModelTestCase(TestCase):
         """
         Should return the offer rule linked to the given course and product.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
         )
 
-        assignable_offer_rules = OfferRule.objects.find_actives(relation.id)
+        assignable_offer_rules = OfferRule.objects.find_actives(offer.id)
 
         self.assertQuerysetEqual(assignable_offer_rules, [offer_rule])
 
@@ -248,15 +248,15 @@ class OfferRuleModelTestCase(TestCase):
         Should return the offer rule linked to the given course and product
         ordered by position.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
         )
         offer_rule_2 = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
         )
 
-        assignable_offer_rules = OfferRule.objects.find_actives(relation.id)
+        assignable_offer_rules = OfferRule.objects.find_actives(offer.id)
 
         self.assertQuerysetEqual(assignable_offer_rules, [offer_rule_1, offer_rule_2])
 
@@ -265,7 +265,7 @@ class OfferRuleModelTestCase(TestCase):
         offer_rule_2.position = 0
         offer_rule_2.save()
 
-        assignable_offer_rules = OfferRule.objects.find_actives(relation.id)
+        assignable_offer_rules = OfferRule.objects.find_actives(offer.id)
 
         self.assertQuerysetEqual(assignable_offer_rules, [offer_rule_2, offer_rule_1])
 
@@ -273,12 +273,12 @@ class OfferRuleModelTestCase(TestCase):
         """
         Should return the offer rules linked to the given course and product.
         """
-        relation = factories.CourseProductRelationFactory()
-        offer_rule_1 = factories.OfferRuleFactory(course_product_relation=relation)
-        offer_rule_2 = factories.OfferRuleFactory(course_product_relation=relation)
-        offer_rule_3 = factories.OfferRuleFactory(course_product_relation=relation)
+        offer = factories.OfferFactory()
+        offer_rule_1 = factories.OfferRuleFactory(course_product_relation=offer)
+        offer_rule_2 = factories.OfferRuleFactory(course_product_relation=offer)
+        offer_rule_3 = factories.OfferRuleFactory(course_product_relation=offer)
 
-        assignable_offer_rules = OfferRule.objects.find_actives(relation.id)
+        assignable_offer_rules = OfferRule.objects.find_actives(offer.id)
 
         self.assertQuerysetEqual(
             assignable_offer_rules,
@@ -294,9 +294,9 @@ class OfferRuleModelTestCase(TestCase):
         The property `available_seats` should return the count of seats available on the order
         group. It should take in account the orders in binding states and the state `to_own`.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation, nb_seats=10
+            course_product_relation=offer, nb_seats=10
         )
 
         ignored_states = [
@@ -307,8 +307,8 @@ class OfferRuleModelTestCase(TestCase):
         for state in ignored_states:
             factories.OrderFactory(
                 state=state,
-                product=relation.product,
-                course=relation.course,
+                product=offer.product,
+                course=offer.course,
                 offer_rules=[offer_rule],
             )
 
@@ -316,16 +316,16 @@ class OfferRuleModelTestCase(TestCase):
         for state in enums.ORDER_STATES_BINDING:
             factories.OrderFactory(
                 state=state,
-                product=relation.product,
-                course=relation.course,
+                product=offer.product,
+                course=offer.course,
                 offer_rules=[offer_rule],
             )
 
         # Add 1 order in state 'to_own'
         factories.OrderFactory(
             state=enums.ORDER_STATE_TO_OWN,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             offer_rules=[offer_rule],
         )
 

@@ -67,7 +67,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                         "owner": user.username,
                         "total": float(bo.total),
                         "currency": settings.DEFAULT_CURRENCY,
-                        "relation_id": str(bo.relation.id),
+                        "offer_id": str(bo.offer.id),
                         "organization": {
                             "id": str(bo.organization.id),
                             "code": bo.organization.code,

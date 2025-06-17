@@ -50,11 +50,9 @@ class OrderCreateApiTest(BaseAPITestCase):
 
     def _get_fee_enrollment_order_data(self, user, **kwargs):
         """Return a fee order linked to an enrollment."""
-        relation = factories.CourseProductRelationFactory(
-            product__type=enums.PRODUCT_TYPE_CERTIFICATE
-        )
+        offer = factories.OfferFactory(product__type=enums.PRODUCT_TYPE_CERTIFICATE)
         enrollment = factories.EnrollmentFactory(
-            user=user, course_run__course=relation.course
+            user=user, course_run__course=offer.course
         )
         billing_address = BillingAddressDictFactory()
 
@@ -62,7 +60,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             **kwargs,
             "has_waived_withdrawal_right": True,
             "enrollment_id": str(enrollment.id),
-            "product_id": str(relation.product.id),
+            "product_id": str(offer.product.id),
             "billing_address": billing_address,
         }
 
@@ -446,9 +444,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             courses=[], target_courses=[target_course], price=0.00
         )
-        factories.CourseProductRelationFactory(
-            course=course, product=product, organizations=[]
-        )
+        factories.OfferFactory(course=course, product=product, organizations=[])
 
         data = {
             "course_code": course.code,
@@ -522,15 +518,15 @@ class OrderCreateApiTest(BaseAPITestCase):
         organization, expected_organization = (
             factories.OrganizationFactory.create_batch(2)
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__price=0.00, organizations=[organization, expected_organization]
         )
 
         for state in enums.ORDER_STATES_BINDING:
             factories.OrderFactory(
                 organization=organization,
-                course=relation.course,
-                product=relation.product,
+                course=offer.course,
+                product=offer.product,
                 state=state,
             )
 
@@ -542,14 +538,14 @@ class OrderCreateApiTest(BaseAPITestCase):
         for state in ignored_states:
             factories.OrderFactory(
                 organization=expected_organization,
-                course=relation.course,
-                product=relation.product,
+                course=offer.course,
+                product=offer.product,
                 state=state,
             )
 
         data = {
-            "course_code": relation.course.code,
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "product_id": str(offer.product.id),
             "has_waived_withdrawal_right": True,
         }
 
@@ -650,7 +646,7 @@ class OrderCreateApiTest(BaseAPITestCase):
     def test_api_order_create_auto_assign_organization_with_least_orders(self):
         """
         Order auto-assignment logic should always return the organization with the least
-        active orders count for the given product course relation.
+        active orders count for the given product course offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -659,7 +655,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             factories.OrganizationFactory.create_batch(2)
         )
 
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization, expected_organization]
         )
 
@@ -673,14 +669,14 @@ class OrderCreateApiTest(BaseAPITestCase):
         for state in ignored_states:
             factories.OrderFactory(
                 organization=organization,
-                product=relation.product,
-                course=relation.course,
+                product=offer.product,
+                course=offer.course,
                 state=state,
             )
         factories.OrderFactory(
             organization=organization,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             state=enums.ORDER_STATE_PENDING,
         )
 
@@ -688,15 +684,15 @@ class OrderCreateApiTest(BaseAPITestCase):
         for state in ignored_states:
             factories.OrderFactory(
                 organization=expected_organization,
-                product=relation.product,
-                course=relation.course,
+                product=offer.product,
+                course=offer.course,
                 state=state,
             )
 
         # Then create an order without organization
         data = {
-            "course_code": relation.course.code,
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
         }
@@ -715,12 +711,12 @@ class OrderCreateApiTest(BaseAPITestCase):
     def test_api_order_create_organization_with_least_orders_is_consistent(self):
         """
         Ensure that the organization auto assignation is consistent no matter
-        if organizations are implied in other course product relations. In some case, it
+        if organizations are implied in other offers. In some case, it
         appears that the organization with the least orders count is not the one assigned.
         This test aims to reproduce the issue and ensure it is fixed.
 
         We set up a test case with 2 organizations. The organizations[0] should be the one
-        with the least orders, but by creating several other course product relations where
+        with the least orders, but by creating several other offers where
         the organizations are implied and are sometimes authors, we get the wrong behavior.
 
         Useful resource : https://stackoverflow.com/a/69969582
@@ -730,10 +726,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         organizations = factories.OrganizationFactory.create_batch(2)
 
         # Create noisy data to reproduce the issue
-        # We create more relations with organizations[0] as author
-        for r in factories.CourseProductRelationFactory.create_batch(
-            3, organizations=organizations
-        ):
+        # We create more offers with organizations[0] as author
+        for r in factories.OfferFactory.create_batch(3, organizations=organizations):
             r.course.organizations.add(organizations[0])
             factories.OrderFactory.create(
                 product=r.product,
@@ -747,9 +741,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 organization=organizations[1],
                 state=enums.ORDER_STATE_COMPLETED,
             )
-        for r in factories.CourseProductRelationFactory.create_batch(
-            1, organizations=organizations
-        ):
+        for r in factories.OfferFactory.create_batch(1, organizations=organizations):
             r.course.organizations.add(organizations[1])
             factories.OrderFactory.create(
                 product=r.product,
@@ -764,8 +756,8 @@ class OrderCreateApiTest(BaseAPITestCase):
                 state=enums.ORDER_STATE_COMPLETED,
             )
 
-        # Now we create a course product relation
-        course_relation = factories.CourseProductRelationFactory(
+        # Now we create an offer
+        course_relation = factories.OfferFactory(
             course=course, product=product, organizations=organizations
         )
         # Then create 1 active order for the organizations[0]
@@ -823,50 +815,50 @@ class OrderCreateApiTest(BaseAPITestCase):
             factories.OrganizationFactory.create_batch(2)
         )
 
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization, expected_organization]
         )
 
-        relation.course.organizations.set([expected_organization])
+        offer.course.organizations.set([expected_organization])
 
         # Create 3 orders for the first organization (1 draft, 1 pending, 1 canceled)
         factories.OrderFactory(
             organization=organization,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             state=enums.ORDER_STATE_PENDING,
         )
         factories.OrderFactory(
             organization=organization,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             state=enums.ORDER_STATE_CANCELED,
         )
 
         # 3 ignored orders for the second organization (1 draft, 1 assigned, 1 canceled)
         factories.OrderFactory(
             organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             state=enums.ORDER_STATE_DRAFT,
         )
         factories.OrderFactory(
             organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             state=enums.ORDER_STATE_ASSIGNED,
         )
         factories.OrderFactory(
             organization=expected_organization,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             state=enums.ORDER_STATE_CANCELED,
         )
 
         # Then create an order without organization
         data = {
-            "course_code": relation.course.code,
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
         }
@@ -1040,7 +1032,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         """The course and product passed in payload to create an order should match."""
         organization = factories.OrganizationFactory(title="fun")
         product = factories.ProductFactory(title="balançoire", price=0.00)
-        cp_relation = factories.CourseProductRelationFactory(
+        cp_relation = factories.OfferFactory(
             product=product, organizations=[organization]
         )
         course = factories.CourseFactory(title="mathématiques")
@@ -1376,13 +1368,13 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
         offer_rule = models.OfferRule.objects.create(
-            course_product_relation=relation, nb_seats=1
+            course_product_relation=offer, nb_seats=1
         )
         billing_address = BillingAddressDictFactory()
         factories.OrderFactory(
@@ -1393,7 +1385,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
         data = {
             "course_code": course.code,
-            "organization_id": str(relation.organizations.first().id),
+            "organization_id": str(offer.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
             "has_waived_withdrawal_right": True,
@@ -1428,18 +1420,18 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
         models.OfferRule.objects.create(
-            course_product_relation=relation, is_active=True, nb_seats=0
+            course_product_relation=offer, is_active=True, nb_seats=0
         )
         billing_address = BillingAddressDictFactory()
         data = {
             "course_code": course.code,
-            "organization_id": str(relation.organizations.first().id),
+            "organization_id": str(offer.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
             "has_waived_withdrawal_right": True,
@@ -1459,7 +1451,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             response.json(),
             {
                 "offer_rule": [
-                    f"Maximum number of orders reached for product {relation.product.title}"
+                    f"Maximum number of orders reached for product {offer.product.title}"
                 ]
             },
         )
@@ -1475,22 +1467,22 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=factories.OrganizationFactory.create_batch(2),
         )
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation, nb_seats=None, is_active=True
+            course_product_relation=offer, nb_seats=None, is_active=True
         )
         factories.OrderFactory.create_batch(
             10,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             offer_rules=[offer_rule],
         )
         data = {
-            "course_code": relation.course.code,
-            "organization_id": str(relation.organizations.first().id),
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "organization_id": str(offer.organizations.first().id),
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
         }
@@ -1505,7 +1497,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
             models.Order.objects.filter(
-                product=relation.product, course=relation.course
+                product=offer.product, course=offer.course
             ).count(),
             11,
         )
@@ -1578,7 +1570,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         organization = factories.OrganizationFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization],
         )
         billing_address = BillingAddressDictFactory()
@@ -1587,9 +1579,9 @@ class OrderCreateApiTest(BaseAPITestCase):
         factories.OfferRuleFactory()
 
         data = {
-            "course_code": relation.course.code,
+            "course_code": offer.course.code,
             "organization_id": str(organization.id),
-            "product_id": str(relation.product.id),
+            "product_id": str(offer.product.id),
             "billing_address": billing_address,
             "has_waived_withdrawal_right": True,
         }
@@ -1603,7 +1595,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertEqual(
             models.Order.objects.filter(
-                course=relation.course, product=relation.product
+                course=offer.course, product=offer.product
             ).count(),
             1,
         )
@@ -1613,13 +1605,13 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
         offer_rule1 = models.OfferRule.objects.create(
-            course_product_relation=relation, nb_seats=1
+            course_product_relation=offer, nb_seats=1
         )
         billing_address = BillingAddressDictFactory()
         factories.OrderFactory(
@@ -1632,7 +1624,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
         data = {
             "course_code": course.code,
-            "organization_id": str(relation.organizations.first().id),
+            "organization_id": str(offer.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
             "has_waived_withdrawal_right": True,
@@ -1660,7 +1652,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         offer_rule2 = models.OfferRule.objects.create(
-            course_product_relation=relation, nb_seats=1
+            course_product_relation=offer, nb_seats=1
         )
         # Offer rule 2 should be assigned
         response = self.client.post(
@@ -1682,18 +1674,18 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
         models.OfferRule.objects.create(
-            course_product_relation=relation, nb_seats=1, is_active=False
+            course_product_relation=offer, nb_seats=1, is_active=False
         )
         billing_address = BillingAddressDictFactory()
         data = {
             "course_code": course.code,
-            "organization_id": str(relation.organizations.first().id),
+            "organization_id": str(offer.organizations.first().id),
             "product_id": str(product.id),
             "billing_address": billing_address,
             "has_waived_withdrawal_right": True,
@@ -1722,12 +1714,12 @@ class OrderCreateApiTest(BaseAPITestCase):
         mock_is_withdrawable.__get__ = mock.Mock(return_value=False)
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         billing_address = BillingAddressDictFactory()
 
         data = {
-            "course_code": relation.course.code,
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "product_id": str(offer.product.id),
             "billing_address": billing_address,
             "has_waived_withdrawal_right": False,
         }
@@ -1877,24 +1869,24 @@ class OrderCreateApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             nb_seats=None,
         )
         factories.OrderFactory.create_batch(
             2,
-            course=relation.course,
-            product=relation.product,
+            course=offer.course,
+            product=offer.product,
             offer_rules=[offer_rule],
             state=enums.ORDER_STATE_PENDING,
         )
 
         data = {
-            "course_code": relation.course.code,
-            "organization_id": str(relation.organizations.first().id),
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "organization_id": str(offer.organizations.first().id),
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
         }
@@ -1920,17 +1912,17 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=False,
             nb_seats=0,
         )
 
         data = {
-            "course_code": relation.course.code,
-            "organization_id": str(relation.organizations.first().id),
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "organization_id": str(offer.organizations.first().id),
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
         }
@@ -1954,28 +1946,28 @@ class OrderCreateApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         # This offer rule will be enabled tomorrow
         factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             start=timezone.now() + timedelta(days=1),
         )
         # This offer rule has expired in time
         factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=False,
             end=timezone.now() - timedelta(days=1),
         )
         # This offer rule is active and enabled
         offer_rule_enabled = factories.OfferRuleFactory(
-            course_product_relation=relation, is_active=True, start=timezone.now()
+            course_product_relation=offer, is_active=True, start=timezone.now()
         )
 
         data = {
-            "course_code": relation.course.code,
-            "organization_id": str(relation.organizations.first().id),
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "organization_id": str(offer.organizations.first().id),
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
         }
@@ -2015,19 +2007,19 @@ class OrderCreateApiTest(BaseAPITestCase):
         ]
         for case in cases_inside_date_range:
             with self.subTest(start=case["start"], end=case["end"]):
-                relation = factories.CourseProductRelationFactory(product__price=100)
+                offer = factories.OfferFactory(product__price=100)
                 offer_rule = factories.OfferRuleFactory(
                     discount=factories.DiscountFactory(rate=0.1),
-                    course_product_relation=relation,
+                    course_product_relation=offer,
                     is_active=True,
                     start=case["start"],
                     end=case["end"],
                 )
 
                 data = {
-                    "course_code": relation.course.code,
-                    "organization_id": str(relation.organizations.first().id),
-                    "product_id": str(relation.product.id),
+                    "course_code": offer.course.code,
+                    "organization_id": str(offer.organizations.first().id),
+                    "product_id": str(offer.product.id),
                     "billing_address": BillingAddressDictFactory(),
                     "has_waived_withdrawal_right": True,
                 }
@@ -2067,19 +2059,19 @@ class OrderCreateApiTest(BaseAPITestCase):
         ]
         for case in cases_outside_date_range:
             with self.subTest(start=case["start"], end=case["end"]):
-                relation = factories.CourseProductRelationFactory(product__price=100)
+                offer = factories.OfferFactory(product__price=100)
                 factories.OfferRuleFactory(
                     discount=factories.DiscountFactory(rate=0.1),
-                    course_product_relation=relation,
+                    course_product_relation=offer,
                     is_active=True,
                     start=case["start"],
                     end=case["end"],
                 )
 
                 data = {
-                    "course_code": relation.course.code,
-                    "organization_id": str(relation.organizations.first().id),
-                    "product_id": str(relation.product.id),
+                    "course_code": offer.course.code,
+                    "organization_id": str(offer.organizations.first().id),
+                    "product_id": str(offer.product.id),
                     "billing_address": BillingAddressDictFactory(),
                     "has_waived_withdrawal_right": True,
                 }
@@ -2121,20 +2113,20 @@ class OrderCreateApiTest(BaseAPITestCase):
         ]
         for case in cases_inside_date_range:
             with self.subTest(start=case["start"], end=case["end"]):
-                relation = factories.CourseProductRelationFactory(product__price=100)
+                offer = factories.OfferFactory(product__price=100)
                 offer_rule = factories.OfferRuleFactory(
                     discount=factories.DiscountFactory(amount=20),
-                    course_product_relation=relation,
+                    course_product_relation=offer,
                     is_active=True,
                     start=case["start"],
                     end=case["end"],
                 )
 
                 data = {
-                    "course_code": relation.course.code,
-                    "organization_id": str(relation.organizations.first().id),
+                    "course_code": offer.course.code,
+                    "organization_id": str(offer.organizations.first().id),
                     "offer_rule_id": str(offer_rule.id),
-                    "product_id": str(relation.product.id),
+                    "product_id": str(offer.product.id),
                     "billing_address": BillingAddressDictFactory(),
                     "has_waived_withdrawal_right": True,
                 }
@@ -2160,27 +2152,27 @@ class OrderCreateApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.1),
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             nb_seats=1,
         )
         factories.OrderFactory(
             offer_rules=[offer_rule],
-            course=relation.course,
-            product=relation.product,
+            course=offer.course,
+            product=offer.product,
             state=random.choice(
                 [enums.ORDER_STATE_COMPLETED, enums.ORDER_STATE_PENDING]
             ),
         )
 
         data = {
-            "course_code": relation.course.code,
-            "organization_id": str(relation.organizations.first().id),
+            "course_code": offer.course.code,
+            "organization_id": str(offer.organizations.first().id),
             "offer_rule_id": str(offer_rule.id),
-            "product_id": str(relation.product.id),
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
         }
@@ -2197,7 +2189,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             response.json(),
             {
                 "offer_rule": [
-                    f"Maximum number of orders reached for product {relation.product.title}"
+                    f"Maximum number of orders reached for product {offer.product.title}"
                 ]
             },
         )
@@ -2208,19 +2200,19 @@ class OrderCreateApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory(product__price=100)
+        offer = factories.OfferFactory(product__price=100)
         voucher = factories.VoucherFactory(
             offer_rule__discount=factories.DiscountFactory(rate=0.1),
-            offer_rule__course_product_relation=relation,
+            offer_rule__course_product_relation=offer,
             offer_rule__nb_seats=1,
             multiple_use=False,
             multiple_users=False,
         )
 
         data = {
-            "course_code": relation.course.code,
-            "organization_id": str(relation.organizations.first().id),
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "organization_id": str(offer.organizations.first().id),
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
             "voucher_code": voucher.code,
@@ -2247,24 +2239,24 @@ class OrderCreateApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory(product__price=100)
+        offer = factories.OfferFactory(product__price=100)
         voucher = factories.VoucherFactory(
             offer_rule__discount=factories.DiscountFactory(rate=0.1),
-            offer_rule__course_product_relation=relation,
+            offer_rule__course_product_relation=offer,
             offer_rule__nb_seats=1,
             multiple_use=False,
             multiple_users=False,
         )
         factories.OrderFactory(
-            course=relation.course,
-            product=relation.product,
+            course=offer.course,
+            product=offer.product,
             voucher=voucher,
         )
 
         data = {
-            "course_code": relation.course.code,
-            "organization_id": str(relation.organizations.first().id),
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "organization_id": str(offer.organizations.first().id),
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
             "voucher_code": voucher.code,
@@ -2306,8 +2298,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         # Prepare the data where he attempts to use his voucher code a second time
         data = {
             "organization_id": batch_order.organization.id,
-            "product_id": batch_order.relation.product.id,
-            "course_code": batch_order.relation.course.code,
+            "product_id": batch_order.offer.product.id,
+            "course_code": batch_order.offer.course.code,
             "voucher_code": voucher_codes[0],
         }
 
@@ -2351,8 +2343,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         # Let's now simulate that the second owner uses the wrong voucher code to claim an order
         data = {
             "organization_id": batch_order.organization.id,
-            "product_id": batch_order.relation.product.id,
-            "course_code": batch_order.relation.course.code,
+            "product_id": batch_order.offer.product.id,
+            "course_code": batch_order.offer.course.code,
             "voucher_code": voucher_codes[0],
         }
 
@@ -2409,8 +2401,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         data = {
             "organization_id": batch_order.organization.id,
-            "product_id": batch_order.relation.product.id,
-            "course_code": batch_order.relation.course.code,
+            "product_id": batch_order.offer.product.id,
+            "course_code": batch_order.offer.course.code,
             "voucher_code": voucher_codes[0],
         }
 
@@ -2438,15 +2430,15 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         batch_order = factories.BatchOrderFactory(
-            relation__product__price=100,
+            offer__product__price=100,
             nb_seats=2,
             state=enums.BATCH_ORDER_STATE_COMPLETED,
         )
 
         data = {
             "organization_id": batch_order.organization.id,
-            "product_id": batch_order.relation.product.id,
-            "course_code": batch_order.relation.course.code,
+            "product_id": batch_order.offer.product.id,
+            "course_code": batch_order.offer.course.code,
             "voucher_code": "fake_voucher_code",
         }
 
@@ -2473,7 +2465,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         batch_order = factories.BatchOrderFactory(
-            relation__product__price=100,
+            offer__product__price=100,
             nb_seats=2,
             state=enums.BATCH_ORDER_STATE_COMPLETED,
         )
@@ -2482,8 +2474,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         data = {
             "organization_id": batch_order.organization.id,
-            "product_id": batch_order.relation.product.id,
-            "course_code": batch_order.relation.course.code,
+            "product_id": batch_order.offer.product.id,
+            "course_code": batch_order.offer.course.code,
             "voucher_code": voucher_codes[0],
         }
 

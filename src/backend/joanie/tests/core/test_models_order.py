@@ -428,7 +428,7 @@ class OrderModelsTestCase(LoggingTestCase):
     def test_models_order_freeze_target_courses_course_runs_relation_sorted_by_position(
         self,
     ):
-        """The product/course relation should be sorted by position."""
+        """The product/course relation target courses should be sorted by position."""
         courses = factories.CourseFactory.create_batch(5)
         product = factories.ProductFactory(target_courses=courses)
 
@@ -548,8 +548,8 @@ class OrderModelsTestCase(LoggingTestCase):
         product = factories.ProductFactory(target_courses=[course1, course2], price=0)
 
         # - Link cr3 to the product course relations
-        relation = product.target_course_relations.get(course=course2)
-        relation.course_runs.add(cr3)
+        offer = product.target_course_relations.get(course=course2)
+        offer.course_runs.add(cr3)
 
         # - Create an order link to the product
         order = factories.OrderFactory(product=product)
@@ -1071,7 +1071,7 @@ class OrderModelsTestCase(LoggingTestCase):
         user_address = factories.UserAddressFactory(owner=user)
         organization = factories.OrganizationFactory()
         factories.OrganizationAddressFactory(organization=organization)
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[organization],
             product=factories.ProductFactory(
                 contract_definition=factories.ContractDefinitionFactory(),
@@ -1097,8 +1097,8 @@ class OrderModelsTestCase(LoggingTestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            product=relation.product,
-            course=relation.course,
+            product=offer.product,
+            course=offer.course,
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -1112,7 +1112,7 @@ class OrderModelsTestCase(LoggingTestCase):
         billing_address.pop("owner")
         order.init_flow(billing_address=billing_address)
         factories.OrderTargetCourseRelationFactory(
-            course=relation.course, order=order, position=1
+            course=offer.course, order=order, position=1
         )
 
         order.submit_for_signature(user=user)
@@ -1398,10 +1398,10 @@ class OrderModelsTestCase(LoggingTestCase):
         When the offer rule that has a discount rate, is active and is enabled then the order
         total should be the discounted price.
         """
-        relation = factories.CourseProductRelationFactory(product__price=100)
+        offer = factories.OfferFactory(product__price=100)
         discount = factories.DiscountFactory(rate=0.2)
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             start=django_timezone.now() - timedelta(seconds=30),
             end=None,
@@ -1410,7 +1410,7 @@ class OrderModelsTestCase(LoggingTestCase):
         )
 
         order = factories.OrderFactory(
-            course=relation.course, product=relation.product, offer_rules=[offer_rule]
+            course=offer.course, product=offer.product, offer_rules=[offer_rule]
         )
         order.freeze_total()
 
@@ -1421,10 +1421,10 @@ class OrderModelsTestCase(LoggingTestCase):
         When the offer rule that has a discount amount, is active and is enabled then the order
         total should be the discounted price.
         """
-        relation = factories.CourseProductRelationFactory(product__price=100)
+        offer = factories.OfferFactory(product__price=100)
         discount = factories.DiscountFactory(amount=10)
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             start=django_timezone.now() - timedelta(days=1),
             end=None,
@@ -1433,7 +1433,7 @@ class OrderModelsTestCase(LoggingTestCase):
         )
 
         order = factories.OrderFactory(
-            course=relation.course, product=relation.product, offer_rules=[offer_rule]
+            course=offer.course, product=offer.product, offer_rules=[offer_rule]
         )
         order.freeze_total()
 

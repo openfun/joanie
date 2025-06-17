@@ -348,7 +348,7 @@
         "/api/v1.0/batch-orders/": {
             "get": {
                 "operationId": "batch_orders_list",
-                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - relation id (course product relation)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
+                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offer id (offer)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
                 "parameters": [
                     {
                         "name": "page",
@@ -433,7 +433,7 @@
         "/api/v1.0/batch-orders/{id}/": {
             "get": {
                 "operationId": "batch_orders_retrieve",
-                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - relation id (course product relation)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
+                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offer id (offer)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
                 "parameters": [
                     {
                         "in": "path",
@@ -795,14 +795,6 @@
                     },
                     {
                         "in": "query",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "in": "query",
                         "name": "id",
                         "schema": {
                             "type": "array",
@@ -814,6 +806,14 @@
                         "description": "primary key for the record as UUID",
                         "explode": true,
                         "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
                     },
                     {
                         "in": "query",
@@ -985,7 +985,7 @@
         "/api/v1.0/contracts/zip-archive/": {
             "post": {
                 "operationId": "contracts_zip_archive_create",
-                "description": "This endpoint is exclusive to users that have access rights on a specific organization.\n\nIt triggers the generation of a ZIP archive if the requesting has the correct access rights\non the organization. If a course product relation UUID is given from key word arguments,\nthe user requires to have access to the organization that is attached to the specific\ncourse product relation object.\nWe return in the response the URL for polling the ZIP archive once it has been generated.\n\nNotes on possible `kwargs` as input parameters :\n    - string of an Organization UUID alone\n    - string of an CourseProductRelation UUID alone\n    - string of both Organization UUID & CourseProductRelation UUID",
+                "description": "This endpoint is exclusive to users that have access rights on a specific organization.\n\nIt triggers the generation of a ZIP archive if the requesting has the correct access rights\non the organization. If an offer UUID is given from key word arguments,\nthe user requires to have access to the organization that is attached to the specific\noffer object.\nWe return in the response the URL for polling the ZIP archive once it has been generated.\n\nNotes on possible `kwargs` as input parameters :\n    - string of an Organization UUID alone\n    - string of an CourseProductRelation UUID alone\n    - string of both Organization UUID & CourseProductRelation UUID",
                 "tags": [
                     "contracts"
                 ],
@@ -1037,172 +1037,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Contract"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/course-product-relations/": {
-            "get": {
-                "operationId": "course_product_relations_list",
-                "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
-                "parameters": [
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "A page number within the paginated result set.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "page_size",
-                        "required": false,
-                        "in": "query",
-                        "description": "Number of results to return per page.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "product_type",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "enum": [
-                                    "certificate",
-                                    "credential",
-                                    "enrollment"
-                                ]
-                            }
-                        },
-                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
-                        "explode": true,
-                        "style": "form"
-                    },
-                    {
-                        "in": "query",
-                        "name": "product_type_exclude",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "enum": [
-                                    "certificate",
-                                    "credential",
-                                    "enrollment"
-                                ]
-                            }
-                        },
-                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
-                        "explode": true,
-                        "style": "form"
-                    },
-                    {
-                        "in": "query",
-                        "name": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "DelegatedJWTAuthentication": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedCourseProductRelationLightList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/course-product-relations/{pk_or_product_id}/": {
-            "get": {
-                "operationId": "course_product_relations_retrieve",
-                "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "pk_or_product_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "DelegatedJWTAuthentication": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CourseProductRelation"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/course-product-relations/{pk_or_product_id}/payment-schedule/": {
-            "get": {
-                "operationId": "course_product_relations_payment_schedule_retrieve",
-                "description": "Return the payment schedule for a course product relation.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "pk_or_product_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "course-product-relations"
-                ],
-                "security": [
-                    {
-                        "DelegatedJWTAuthentication": []
-                    },
-                    {}
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/OrderPaymentSchedule"
                                 }
                             }
                         },
@@ -1723,14 +1557,6 @@
                     },
                     {
                         "in": "query",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "in": "query",
                         "name": "id",
                         "schema": {
                             "type": "array",
@@ -1742,6 +1568,14 @@
                         "description": "primary key for the record as UUID",
                         "explode": true,
                         "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
                     },
                     {
                         "in": "query",
@@ -1967,7 +1801,7 @@
         "/api/v1.0/courses/{course_id}/orders/": {
             "get": {
                 "operationId": "courses_orders_list",
-                "description": "Nested Order Viewset inside Course's routes. It allows to list all users who made\n'validated' orders on a given course. You should add some query parameters to filter\nthe list by organization, by product or by course product relation id.\n\nGET /api/courses/<course_id>/orders/\n    Returns every users who made an order on a given course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>>\n    Returns every users who made an order on a course from a specific organization.\n\nGET /api/courses/<course_id>/orders/?product_id=<product_id>\n    Returns every users who made an order on the product's course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>&product_id=<product_id>\n    Returns every users that is attached to a product's course and an organization.\n\nGET /api/courses/<course_id>/orders/?course_product_relation_id=<relation_id>\n    Returns every users who made order on the course product relation object.",
+                "description": "Nested Order Viewset inside Course's routes. It allows to list all users who made\n'validated' orders on a given course. You should add some query parameters to filter\nthe list by organization, by product or by offer id.\n\nGET /api/courses/<course_id>/orders/\n    Returns every users who made an order on a given course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>>\n    Returns every users who made an order on a course from a specific organization.\n\nGET /api/courses/<course_id>/orders/?product_id=<product_id>\n    Returns every users who made an order on the product's course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>&product_id=<product_id>\n    Returns every users that is attached to a product's course and an organization.\n\nGET /api/courses/<course_id>/orders/?offer_id=<relation_id>\n    Returns every users who made order on the offer object.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1980,7 +1814,7 @@
                     },
                     {
                         "in": "query",
-                        "name": "course_product_relation_id",
+                        "name": "offer_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -2046,7 +1880,7 @@
         "/api/v1.0/courses/{course_id}/products/": {
             "get": {
                 "operationId": "courses_products_list",
-                "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
                 "parameters": [
                     {
                         "in": "path",
@@ -2132,7 +1966,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedCourseProductRelationLightList"
+                                    "$ref": "#/components/schemas/PaginatedOfferLightList"
                                 }
                             }
                         },
@@ -2144,7 +1978,7 @@
         "/api/v1.0/courses/{course_id}/products/{pk_or_product_id}/": {
             "get": {
                 "operationId": "courses_products_retrieve",
-                "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
                 "parameters": [
                     {
                         "in": "path",
@@ -2179,7 +2013,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/CourseProductRelation"
+                                    "$ref": "#/components/schemas/Offer"
                                 }
                             }
                         },
@@ -2191,7 +2025,7 @@
         "/api/v1.0/courses/{course_id}/products/{pk_or_product_id}/payment-schedule/": {
             "get": {
                 "operationId": "courses_products_payment_schedule_retrieve",
-                "description": "Return the payment schedule for a course product relation.",
+                "description": "Return the payment schedule for an offer.",
                 "parameters": [
                     {
                         "in": "path",
@@ -2946,6 +2780,172 @@
                 }
             }
         },
+        "/api/v1.0/offers/": {
+            "get": {
+                "operationId": "offers_list",
+                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type_exclude",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedOfferLightList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/offers/{pk_or_product_id}/": {
+            "get": {
+                "operationId": "offers_retrieve",
+                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pk_or_product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Offer"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/offers/{pk_or_product_id}/payment-schedule/": {
+            "get": {
+                "operationId": "offers_payment_schedule_retrieve",
+                "description": "Return the payment schedule for an offer.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pk_or_product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offers"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderPaymentSchedule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/orders/": {
             "get": {
                 "operationId": "orders_list",
@@ -3503,7 +3503,7 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "course_product_relation_id",
+                        "name": "offer_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -3874,14 +3874,6 @@
                     },
                     {
                         "in": "query",
-                        "name": "course_product_relation_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "in": "query",
                         "name": "id",
                         "schema": {
                             "type": "array",
@@ -3893,6 +3885,14 @@
                         "description": "primary key for the record as UUID",
                         "explode": true,
                         "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "offer_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
                     },
                     {
                         "in": "path",
@@ -4012,199 +4012,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Contract"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/organizations/{organization_id}/course-product-relations/": {
-            "get": {
-                "operationId": "organizations_course_product_relations_list",
-                "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "organization_id",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^[a-zA-Z0-9-_]+$"
-                        },
-                        "required": true
-                    },
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "A page number within the paginated result set.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "page_size",
-                        "required": false,
-                        "in": "query",
-                        "description": "Number of results to return per page.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "product_type",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "enum": [
-                                    "certificate",
-                                    "credential",
-                                    "enrollment"
-                                ]
-                            }
-                        },
-                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
-                        "explode": true,
-                        "style": "form"
-                    },
-                    {
-                        "in": "query",
-                        "name": "product_type_exclude",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "enum": [
-                                    "certificate",
-                                    "credential",
-                                    "enrollment"
-                                ]
-                            }
-                        },
-                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
-                        "explode": true,
-                        "style": "form"
-                    },
-                    {
-                        "in": "query",
-                        "name": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "security": [
-                    {
-                        "DelegatedJWTAuthentication": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedCourseProductRelationLightList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/organizations/{organization_id}/course-product-relations/{pk_or_product_id}/": {
-            "get": {
-                "operationId": "organizations_course_product_relations_retrieve",
-                "description": "API ViewSet for all interactions with course-product relations.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "organization_id",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^[a-zA-Z0-9-_]+$"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "pk_or_product_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "security": [
-                    {
-                        "DelegatedJWTAuthentication": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CourseProductRelation"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/v1.0/organizations/{organization_id}/course-product-relations/{pk_or_product_id}/payment-schedule/": {
-            "get": {
-                "operationId": "organizations_course_product_relations_payment_schedule_retrieve",
-                "description": "Return the payment schedule for a course product relation.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "organization_id",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^[a-zA-Z0-9-_]+$"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "pk_or_product_id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "organizations"
-                ],
-                "security": [
-                    {
-                        "DelegatedJWTAuthentication": []
-                    },
-                    {}
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/OrderPaymentSchedule"
                                 }
                             }
                         },
@@ -4483,6 +4290,199 @@
                 }
             }
         },
+        "/api/v1.0/organizations/{organization_id}/offers/": {
+            "get": {
+                "operationId": "organizations_offers_list",
+                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_type_exclude",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "certificate",
+                                    "credential",
+                                    "enrollment"
+                                ]
+                            }
+                        },
+                        "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedOfferLightList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/organizations/{organization_id}/offers/{pk_or_product_id}/": {
+            "get": {
+                "operationId": "organizations_offers_retrieve",
+                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "pk_or_product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Offer"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/organizations/{organization_id}/offers/{pk_or_product_id}/payment-schedule/": {
+            "get": {
+                "operationId": "organizations_offers_payment_schedule_retrieve",
+                "description": "Return the payment schedule for an offer.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "pk_or_product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderPaymentSchedule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/organizations/{id}/": {
             "get": {
                 "operationId": "organizations_retrieve",
@@ -4539,18 +4539,6 @@
                         "description": "List of contract ids to sign, if not provided all the available contracts will be signed."
                     },
                     {
-                        "in": "query",
-                        "name": "course_product_relation_ids",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "format": "uuid"
-                            }
-                        },
-                        "description": "List of course product relation ids to sign related contracts, if not provided all the available contracts will be signed."
-                    },
-                    {
                         "in": "path",
                         "name": "id",
                         "schema": {
@@ -4559,6 +4547,18 @@
                             "description": "primary key for the record as UUID"
                         },
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "offer_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "List of offer ids to sign related contracts, if not provided all the available contracts will be signed."
                     }
                 ],
                 "tags": [
@@ -5702,173 +5702,6 @@
                     "cover"
                 ]
             },
-            "CourseProductRelation": {
-                "type": "object",
-                "description": "Serialize a course product relation.",
-                "properties": {
-                    "course": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/CourseLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "created_on": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was created"
-                    },
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
-                    "organizations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Organization"
-                        },
-                        "readOnly": true
-                    },
-                    "product": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/Product"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "is_withdrawable": {
-                        "type": "boolean",
-                        "readOnly": true
-                    },
-                    "discounted_price": {
-                        "type": "number",
-                        "format": "double",
-                        "nullable": true,
-                        "description": "Return the discounted price of the product, if any.",
-                        "readOnly": true
-                    },
-                    "discount_rate": {
-                        "type": "number",
-                        "format": "double",
-                        "nullable": true,
-                        "description": "Return the discount rate of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "discount_amount": {
-                        "type": "number",
-                        "format": "double",
-                        "nullable": true,
-                        "description": "Return the discount amount of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "discount_start": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "description": "Return the discount start date of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "discount_end": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "description": "Return the discount end date of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "description": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "Return the description of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "nb_available_seats": {
-                        "type": "integer",
-                        "nullable": true,
-                        "description": "Return the number of seats available for the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "nb_seats": {
-                        "type": "integer",
-                        "nullable": true,
-                        "description": "Return the total number of seats for the first enabled offer rule, if any.",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "course",
-                    "created_on",
-                    "description",
-                    "discount_amount",
-                    "discount_end",
-                    "discount_rate",
-                    "discount_start",
-                    "discounted_price",
-                    "id",
-                    "is_withdrawable",
-                    "nb_available_seats",
-                    "nb_seats",
-                    "organizations",
-                    "product"
-                ]
-            },
-            "CourseProductRelationLight": {
-                "type": "object",
-                "description": "Serialize a course product relation in its minimal format.",
-                "properties": {
-                    "course": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/CourseLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "created_on": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was created"
-                    },
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
-                    "organizations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Organization"
-                        },
-                        "readOnly": true
-                    },
-                    "product": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/Product"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "is_withdrawable": {
-                        "type": "string",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "course",
-                    "created_on",
-                    "id",
-                    "is_withdrawable",
-                    "organizations",
-                    "product"
-                ]
-            },
             "CourseRequest": {
                 "type": "object",
                 "description": "Serialize all non-sensitive course information. This serializer is read only.",
@@ -6117,7 +5950,7 @@
                         "description": "Get orders pointing to the enrollment.",
                         "readOnly": true
                     },
-                    "product_relations": {
+                    "offers": {
                         "type": "array",
                         "items": {
                             "type": "object",
@@ -6144,8 +5977,8 @@
                     "created_on",
                     "id",
                     "is_active",
+                    "offers",
                     "orders",
-                    "product_relations",
                     "state",
                     "was_created_by_order"
                 ]
@@ -6513,6 +6346,173 @@
                     "owner",
                     "product",
                     "state"
+                ]
+            },
+            "Offer": {
+                "type": "object",
+                "description": "Serialize an offer.",
+                "properties": {
+                    "course": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "organizations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Organization"
+                        },
+                        "readOnly": true
+                    },
+                    "product": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Product"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "is_withdrawable": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "discounted_price": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true,
+                        "description": "Return the discounted price of the product, if any.",
+                        "readOnly": true
+                    },
+                    "discount_rate": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true,
+                        "description": "Return the discount rate of the first enabled offer rule, if any.",
+                        "readOnly": true
+                    },
+                    "discount_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true,
+                        "description": "Return the discount amount of the first enabled offer rule, if any.",
+                        "readOnly": true
+                    },
+                    "discount_start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "Return the discount start date of the first enabled offer rule, if any.",
+                        "readOnly": true
+                    },
+                    "discount_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "Return the discount end date of the first enabled offer rule, if any.",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Return the description of the first enabled offer rule, if any.",
+                        "readOnly": true
+                    },
+                    "nb_available_seats": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Return the number of seats available for the first enabled offer rule, if any.",
+                        "readOnly": true
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "nullable": true,
+                        "description": "Return the total number of seats for the first enabled offer rule, if any.",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "course",
+                    "created_on",
+                    "description",
+                    "discount_amount",
+                    "discount_end",
+                    "discount_rate",
+                    "discount_start",
+                    "discounted_price",
+                    "id",
+                    "is_withdrawable",
+                    "nb_available_seats",
+                    "nb_seats",
+                    "organizations",
+                    "product"
+                ]
+            },
+            "OfferLight": {
+                "type": "object",
+                "description": "Serialize an offer in its minimal format.",
+                "properties": {
+                    "course": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "organizations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Organization"
+                        },
+                        "readOnly": true
+                    },
+                    "product": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Product"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "is_withdrawable": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "course",
+                    "created_on",
+                    "id",
+                    "is_withdrawable",
+                    "organizations",
+                    "product"
                 ]
             },
             "Order": {
@@ -7205,37 +7205,6 @@
                     }
                 }
             },
-            "PaginatedCourseProductRelationLightList": {
-                "type": "object",
-                "required": [
-                    "count",
-                    "results"
-                ],
-                "properties": {
-                    "count": {
-                        "type": "integer",
-                        "example": 123
-                    },
-                    "next": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=4"
-                    },
-                    "previous": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?page=2"
-                    },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/CourseProductRelationLight"
-                        }
-                    }
-                }
-            },
             "PaginatedCourseRunList": {
                 "type": "object",
                 "required": [
@@ -7356,6 +7325,37 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/NestedOrderCourse"
+                        }
+                    }
+                }
+            },
+            "PaginatedOfferLightList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OfferLight"
                         }
                     }
                 }

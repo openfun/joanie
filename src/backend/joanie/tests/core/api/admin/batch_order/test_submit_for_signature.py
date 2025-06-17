@@ -86,14 +86,14 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
         )
 
         offer_rule = factories.OfferRuleFactory(
-            nb_seats=10, course_product_relation=batch_order.relation
+            nb_seats=10, course_product_relation=batch_order.offer
         )
         batch_order.offer_rules.add(offer_rule)
 
         # Create just 1 order into the offer rule to make it not enough for the batch order
         factories.OrderFactory(
-            product=batch_order.relation.product,
-            course=batch_order.relation.course,
+            product=batch_order.offer.product,
+            course=batch_order.offer.course,
             state=enums.ORDER_STATE_COMPLETED,
             offer_rules=[offer_rule],
         )
@@ -120,7 +120,7 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
         """
         Authenticated admin user should be able to submit for signature the contract
         of a batch order even if the initial offer rule has not enough seats available.
-        When there are other offer rules on that relation that have seats left, it should
+        When there are other offer rules on that offer that have seats left, it should
         replace it to a new one with the seats available. And finally, it should send the
         invitation link to the owner.
         """
@@ -135,17 +135,17 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
                 batch_order = factories.BatchOrderFactory(state=state, nb_seats=7)
 
                 offer_rule_1 = factories.OfferRuleFactory(
-                    nb_seats=7, course_product_relation=batch_order.relation
+                    nb_seats=7, course_product_relation=batch_order.offer
                 )
                 batch_order.offer_rules.add(offer_rule_1)
                 offer_rule_2 = factories.OfferRuleFactory(
-                    nb_seats=10, course_product_relation=batch_order.relation
+                    nb_seats=10, course_product_relation=batch_order.offer
                 )
 
                 # Create 1 order on the 1st offer rule to update the batch order to the 2nd one
                 factories.OrderFactory(
-                    product=batch_order.relation.product,
-                    course=batch_order.relation.course,
+                    product=batch_order.offer.product,
+                    course=batch_order.offer.course,
                     state=enums.ORDER_STATE_COMPLETED,
                     offer_rules=[offer_rule_1],
                 )

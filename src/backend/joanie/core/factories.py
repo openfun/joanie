@@ -236,7 +236,7 @@ class CourseFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             return
 
         for product in extracted:
-            CourseProductRelationFactory(course=self, product=product)
+            OfferFactory(course=self, product=product)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -551,12 +551,12 @@ class ProductFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """
         if extracted is None:
             if create:
-                CourseProductRelationFactory(product=self, course=CourseFactory())
+                OfferFactory(product=self, course=CourseFactory())
             return
 
         for course in extracted:
             course__organizations = course.organizations.all()
-            CourseProductRelationFactory(
+            OfferFactory(
                 product=self,
                 course=course,
                 organizations=course__organizations
@@ -636,9 +636,7 @@ class DiscountFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         return super()._create(model_class, *args, **kwargs)
 
 
-class CourseProductRelationFactory(
-    DebugModelFactory, factory.django.DjangoModelFactory
-):
+class OfferFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create CourseProductRelation object"""
 
     class Meta:
@@ -652,7 +650,7 @@ class CourseProductRelationFactory(
     # pylint: disable=unused-argument,no-member
     def organizations(self, create, extracted, **kwargs):
         """
-        Link organizations to the course/product relation after its creation
+        Link organizations to the course/product offer after its creation
         """
         if extracted is None:
             extracted = [OrganizationFactory()]
@@ -678,7 +676,7 @@ class ProductTargetCourseRelationFactory(
     # pylint: disable=unused-argument,no-member
     def course_runs(self, create, extracted, **kwargs):
         """
-        Link course runs to the product/target course relation after its creation
+        Link course runs to the product/target course offer after its creation
         """
         if not extracted:
             return
@@ -692,7 +690,7 @@ class OfferRuleFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     class Meta:
         model = models.OfferRule
 
-    course_product_relation = factory.SubFactory(CourseProductRelationFactory)
+    course_product_relation = factory.SubFactory(OfferFactory)
     nb_seats = factory.fuzzy.FuzzyInteger(1, 100)
 
 
@@ -716,7 +714,7 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
     @factory.lazy_attribute
     def organization(self):
-        """Retrieve the organization from the product/course relation."""
+        """Retrieve the organization from the product/course offer."""
         course_relations = self.product.course_relations
         if self.course:
             course_relations = course_relations.filter(course=self.course)
@@ -851,7 +849,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
 
     @factory.lazy_attribute
     def organization(self):
-        """Retrieve the organization from the product/course relation."""
+        """Retrieve the organization from the product/course offer."""
         if self.state == enums.ORDER_STATE_DRAFT:
             return None
 
@@ -1203,8 +1201,8 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     class Meta:
         model = models.BatchOrder
 
-    relation = factory.SubFactory(
-        CourseProductRelationFactory,
+    offer = factory.SubFactory(
+        OfferFactory,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
     )
@@ -1221,13 +1219,13 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     # pylint: disable=method-hidden
     def organization(self):
         """Set organization based on the course relations"""
-        course_relations = self.relation.product.course_relations
+        course_relations = self.offer.product.course_relations
         return course_relations.first().organizations.order_by("?").first()
 
     @factory.lazy_attribute
     def total(self):
         """Calculate total based on seats and product price"""
-        return self.nb_seats * self.relation.product.price
+        return self.nb_seats * self.offer.product.price
 
     @factory.lazy_attribute
     def trainees(self):

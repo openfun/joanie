@@ -43,10 +43,10 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         should fail and raise an error.
         """
         user = factories.UserFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=None,
         )
-        batch_order = factories.BatchOrderFactory(owner=user, relation=relation)
+        batch_order = factories.BatchOrderFactory(owner=user, offer=offer)
 
         with (
             self.assertRaises(ValidationError) as context,
@@ -151,20 +151,20 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         'submitted_for_signature_on', 'context', 'definition_checksum',
         and 'signature_backend_reference'.
         """
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product__contract_definition=factories.ContractDefinitionFactory()
         )
         batch_order = factories.BatchOrderFactory(
-            relation=relation, state=enums.BATCH_ORDER_STATE_TO_SIGN
+            offer=offer, state=enums.BATCH_ORDER_STATE_TO_SIGN
         )
 
         context = contract_definition.generate_document_context(
-            contract_definition=relation.product.contract_definition,
+            contract_definition=offer.product.contract_definition,
             user=batch_order.owner,
             batch_order=batch_order,
         )
         contract = factories.ContractFactory(
-            definition=batch_order.relation.product.contract_definition,
+            definition=batch_order.offer.product.contract_definition,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="fake_test_file_hash",
             context=context,
@@ -220,8 +220,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
         # Force change the product title so it modifies the contract's context when compared
         # before submitting a newer version
-        batch_order.relation.product.title = "Product 123"
-        batch_order.relation.product.save()
+        batch_order.offer.product.title = "Product 123"
+        batch_order.offer.product.save()
 
         invitation_url = batch_order.submit_for_signature(user=batch_order.owner)
 
@@ -269,7 +269,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         # Check that the title is correctly formatted
         self.assertEqual(
             _mock_submit_for_signature.call_args[1]["title"],
-            f"{now.strftime('%Y-%m-%d')}_{batch_order.relation.course.code}_{batch_order.pk}",
+            f"{now.strftime('%Y-%m-%d')}_{batch_order.offer.course.code}_{batch_order.pk}",
         )
         self.assertEqual(_mock_submit_for_signature.call_args[1]["order"], batch_order)
         self.assertIsInstance(
@@ -345,7 +345,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         """
         batch_order = factories.BatchOrderFactory(
             nb_seats=2,
-            relation__product__price=100,
+            offer__product__price=100,
             state=enums.BATCH_ORDER_STATE_DRAFT,
         )
 

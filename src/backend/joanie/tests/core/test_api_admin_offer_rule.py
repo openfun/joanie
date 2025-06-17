@@ -17,7 +17,7 @@ class OfferRuleAdminApiTest(TestCase):
     Test suite for OfferRule Admin API.
     """
 
-    base_url = "/api/v1.0/admin/course-product-relations"
+    base_url = "/api/v1.0/admin/offers"
 
     # list
     def test_admin_api_offer_rule_list_anonymous(self):
@@ -25,8 +25,8 @@ class OfferRuleAdminApiTest(TestCase):
         Anonymous users should not be able to list offer rules.
         """
 
-        relation = factories.CourseProductRelationFactory()
-        response = self.client.get(f"{self.base_url}/{relation.id}/offer-rules/")
+        offer = factories.OfferFactory()
+        response = self.client.get(f"{self.base_url}/{offer.id}/offer-rules/")
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
@@ -40,11 +40,11 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         discount = factories.DiscountFactory(rate=0.3)
         offer_rules = [
             factories.OfferRuleFactory(
-                position=i, course_product_relation=relation, discount=discount
+                position=i, course_product_relation=offer, discount=discount
             )
             for i in range(3)
         ]
@@ -52,7 +52,7 @@ class OfferRuleAdminApiTest(TestCase):
         factories.OfferRuleFactory.create_batch(5)
 
         with self.assertNumQueries(19):
-            response = self.client.get(f"{self.base_url}/{relation.id}/offer-rules/")
+            response = self.client.get(f"{self.base_url}/{offer.id}/offer-rules/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
@@ -87,9 +87,9 @@ class OfferRuleAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=admin.username, password="password")
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
 
-        response = self.client.get(f"{self.base_url}/{relation.id}/offer-rules/")
+        response = self.client.get(f"{self.base_url}/{offer.id}/offer-rules/")
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
         content = response.json()
@@ -103,11 +103,11 @@ class OfferRuleAdminApiTest(TestCase):
         Anonymous users should not be able to request offer rules details.
         """
 
-        relation = factories.CourseProductRelationFactory()
-        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        offer = factories.OfferFactory()
+        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
 
         response = self.client.get(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -122,15 +122,15 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             discount=factories.DiscountFactory(amount=30),
         )
 
         with self.assertNumQueries(8):
             response = self.client.get(
-                f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+                f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -161,11 +161,11 @@ class OfferRuleAdminApiTest(TestCase):
         """
         Anonymous users should not be able to create an offer rule.
         """
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
 
         data = {"nb_seats": 5, "is_active": True}
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/offer-rules/",
+            f"{self.base_url}/{offer.id}/offer-rules/",
             content_type="application/json",
             data=data,
         )
@@ -182,14 +182,14 @@ class OfferRuleAdminApiTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         data = {
             "nb_seats": None,
             "is_active": True,
         }
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/offer-rules/",
+            f"{self.base_url}/{offer.id}/offer-rules/",
             content_type="application/json",
             data=data,
         )
@@ -209,14 +209,14 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         data = {
             "nb_seats": 5,
             "is_active": True,
         }
         with self.assertNumQueries(8):
             response = self.client.post(
-                f"{self.base_url}/{relation.id}/offer-rules/",
+                f"{self.base_url}/{offer.id}/offer-rules/",
                 content_type="application/json",
                 data=data,
             )
@@ -233,11 +233,11 @@ class OfferRuleAdminApiTest(TestCase):
         Anonymous users should not be able to update offer rules.
         """
 
-        relation = factories.CourseProductRelationFactory()
-        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        offer = factories.OfferFactory()
+        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -252,15 +252,15 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
-        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        offer = factories.OfferFactory()
+        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
         data = {
             "nb_seats": 505,
             "is_active": True,
         }
         with self.assertNumQueries(7):
             response = self.client.put(
-                f"{self.base_url}/{relation.id}/offer-rules/{str(offer_rule.id)}/",
+                f"{self.base_url}/{offer.id}/offer-rules/{str(offer_rule.id)}/",
                 content_type="application/json",
                 data=data,
             )
@@ -276,11 +276,11 @@ class OfferRuleAdminApiTest(TestCase):
         Anonymous users should not be able to patch offer rules.
         """
 
-        relation = factories.CourseProductRelationFactory()
-        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        offer = factories.OfferFactory()
+        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
 
         response = self.client.patch(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -295,16 +295,16 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation, is_active=False
+            course_product_relation=offer, is_active=False
         )
         data = {
             "is_active": True,
         }
         with self.assertNumQueries(7):
             response = self.client.patch(
-                f"{self.base_url}/{relation.id}/offer-rules/{str(offer_rule.id)}/",
+                f"{self.base_url}/{offer.id}/offer-rules/{str(offer_rule.id)}/",
                 content_type="application/json",
                 data=data,
             )
@@ -326,9 +326,9 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation, is_active=False
+            course_product_relation=offer, is_active=False
         )
         data = {
             "nb_seats": "",
@@ -336,7 +336,7 @@ class OfferRuleAdminApiTest(TestCase):
         }
         with self.assertNumQueries(5):
             response = self.client.patch(
-                f"{self.base_url}/{relation.id}/offer-rules/{str(offer_rule.id)}/",
+                f"{self.base_url}/{offer.id}/offer-rules/{str(offer_rule.id)}/",
                 content_type="application/json",
                 data=data,
             )
@@ -357,11 +357,11 @@ class OfferRuleAdminApiTest(TestCase):
         Anonymous users should not be able to delete offer rules.
         """
 
-        relation = factories.CourseProductRelationFactory()
-        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        offer = factories.OfferFactory()
+        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
 
         response = self.client.delete(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -377,11 +377,11 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
-        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        offer = factories.OfferFactory()
+        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
         with self.assertNumQueries(7):
             response = self.client.delete(
-                f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+                f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/",
             )
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
         self.assertFalse(models.OfferRule.objects.filter(id=offer_rule.id).exists())
@@ -393,11 +393,11 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
-        offer_rule = factories.OfferRuleFactory(course_product_relation=relation)
+        offer = factories.OfferFactory()
+        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
         with self.assertNumQueries(7):
             response = self.client.delete(
-                f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+                f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/",
             )
 
         self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
@@ -411,7 +411,7 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         data = {
             "start": "2025-06-01T00:00:00Z",
             "end": "",
@@ -421,7 +421,7 @@ class OfferRuleAdminApiTest(TestCase):
         }
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/offer-rules/",
+            f"{self.base_url}/{offer.id}/offer-rules/",
             content_type="application/json",
             data=data,
         )
@@ -441,7 +441,7 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         data = {
             "start": "2025-06-01T00:00:00Z",
             "end": "2025-06-20T00:00:00Z",
@@ -450,7 +450,7 @@ class OfferRuleAdminApiTest(TestCase):
         }
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/offer-rules/",
+            f"{self.base_url}/{offer.id}/offer-rules/",
             content_type="application/json",
             data=data,
         )
@@ -471,7 +471,7 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         data = {
             "start": "2025-01-20T00:00:00Z",
             "end": "2025-01-01T00:00:00Z",
@@ -479,7 +479,7 @@ class OfferRuleAdminApiTest(TestCase):
 
         with self.assertRaises(IntegrityError):
             self.client.post(
-                f"{self.base_url}/{relation.id}/offer-rules/",
+                f"{self.base_url}/{offer.id}/offer-rules/",
                 content_type="application/json",
                 data=data,
             )
@@ -492,9 +492,9 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             start="2025-01-11T00:00:00Z",
             end="2025-01-20T00:00:00Z",
         )
@@ -505,7 +505,7 @@ class OfferRuleAdminApiTest(TestCase):
         }
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data=data,
         )
@@ -528,7 +528,7 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         test_cases = [
             {
                 "start": None,
@@ -544,14 +544,14 @@ class OfferRuleAdminApiTest(TestCase):
         for case in test_cases:
             with self.subTest(start=case["start"], end=case["end"]):
                 offer_rule = factories.OfferRuleFactory(
-                    course_product_relation=relation,
+                    course_product_relation=offer,
                     is_active=False,
                     start=case["start"],
                     end=case["end"],
                 )
 
                 response = self.client.get(
-                    f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+                    f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
                 )
 
                 content = response.json()
@@ -564,7 +564,7 @@ class OfferRuleAdminApiTest(TestCase):
                 offer_rule.save()
 
                 response = self.client.get(
-                    f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+                    f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
                 )
 
                 content = response.json()
@@ -583,7 +583,7 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         test_cases = [
             {
                 "start": None,
@@ -599,14 +599,14 @@ class OfferRuleAdminApiTest(TestCase):
         for case in test_cases:
             with self.subTest(start=case["start"], end=case["end"]):
                 offer_rule = factories.OfferRuleFactory(
-                    course_product_relation=relation,
+                    course_product_relation=offer,
                     is_active=True,
                     start=case["start"],
                     end=case["end"],
                 )
 
                 response = self.client.get(
-                    f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+                    f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
                 )
 
                 content = response.json()
@@ -624,9 +624,9 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             nb_seats=None,
             start=None,
@@ -634,7 +634,7 @@ class OfferRuleAdminApiTest(TestCase):
         )
 
         response = self.client.get(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
         )
 
         content = response.json()
@@ -648,7 +648,7 @@ class OfferRuleAdminApiTest(TestCase):
         offer_rule.save()
 
         response = self.client.get(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/"
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/"
         )
 
         content = response.json()
@@ -663,14 +663,14 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         discount = factories.DiscountFactory(rate=0.5)
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
         )
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"discount_id": str(discount.id)},
         )
@@ -692,15 +692,15 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             discount=factories.DiscountFactory(rate=0.5),
         )
         new_discount = factories.DiscountFactory(amount=10)
 
         response = self.client.patch(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"discount_id": str(new_discount.id)},
         )
@@ -722,14 +722,14 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             discount=factories.DiscountFactory(rate=0.5),
         )
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"discount_id": None},
         )
@@ -744,15 +744,15 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             discount=factories.DiscountFactory(rate=0.5),
             start=django_timezone.now(),
         )
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"start": ""},
         )
@@ -772,13 +772,13 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
         )
 
         response = self.client.put(
-            f"{self.base_url}/{relation.id}/offer-rules/{offer_rule.id}/",
+            f"{self.base_url}/{offer.id}/offer-rules/{offer_rule.id}/",
             content_type="application/json",
             data={"discount_id": "fake_discount_id"},
         )
@@ -792,17 +792,17 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
         discount = factories.DiscountFactory(rate=0.1)
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/offer-rules/",
+            f"{self.base_url}/{offer.id}/offer-rules/",
             content_type="application/json",
             data={
                 "nb_seats": "",
                 "is_active": True,
                 "discount_id": str(discount.id),
-                "course_product_relation": str(relation.id),
+                "offer": str(offer.id),
             },
         )
 
@@ -827,10 +827,10 @@ class OfferRuleAdminApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        relation = factories.CourseProductRelationFactory()
+        offer = factories.OfferFactory()
 
         response = self.client.post(
-            f"{self.base_url}/{relation.id}/offer-rules/",
+            f"{self.base_url}/{offer.id}/offer-rules/",
             content_type="application/json",
             data={
                 "discount_id": "fake_discount_id",

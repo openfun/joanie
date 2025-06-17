@@ -581,7 +581,7 @@ class CreditCardAPITestCase(BaseAPITestCase):
     def test_api_credit_card_delete_but_credit_card_is_shared_by_3_users(self):
         """
         When an authenticated user decides to delete a shared credit card, it will remove
-        his relation to the credit card if he does not have any pending payment on his orders.
+        their relation to the credit card if they do not have any pending payment on their orders.
         This action will not delete the credit card for the 2 other owners.
         For example, if user_2 attempts to delete the credit card on his side and he still
         has pending payment on an order, he will be blocked.

@@ -1,5 +1,5 @@
 # pylint: disable=too-many-lines
-"""Test suite for the Course Product Relation API."""
+"""Test suite for the offer API."""
 
 import random
 import uuid
@@ -16,17 +16,17 @@ from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
 
-class CourseProductRelationApiTest(BaseAPITestCase):
+class OfferApiTest(BaseAPITestCase):
     """Test the API of the CourseProductRelation resource."""
 
     maxDiff = None
 
-    def test_api_course_product_relation_read_list_anonymous(self):
+    def test_api_offer_read_list_anonymous(self):
         """
-        It should not be possible to retrieve the list of course product relations for
+        It should not be possible to retrieve the list of offers for
         anonymous users.
         """
-        response = self.client.get("/api/v1.0/course-product-relations/")
+        response = self.client.get("/api/v1.0/offers/")
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -34,9 +34,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_course_product_relation_read_list_without_accesses(self):
+    def test_api_offer_read_list_without_accesses(self):
         """
-        It should not be possible to retrieve the list of course product relations for
+        It should not be possible to retrieve the list of offers for
         authenticated users without accesses.
         """
         factories.ProductFactory()
@@ -44,7 +44,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
-            "/api/v1.0/course-product-relations/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/offers/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
@@ -63,9 +63,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_course_product_relation_read_list_with_accesses(self, _):
+    def test_api_offer_read_list_with_accesses(self, _):
         """
-        An authenticated user should be able to list all course product relations
+        An authenticated user should be able to list all offers
         related to courses for which it has accesses.
         """
         user = factories.UserFactory()
@@ -91,7 +91,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         product.save()
         course = courses[0]
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -99,7 +99,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         factories.ProductFactory.create_batch(2)
 
         response = self.client.get(
-            "/api/v1.0/course-product-relations/",
+            "/api/v1.0/offers/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -109,8 +109,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(
             content["results"][0],
             {
-                "id": str(relation.id),
-                "created_on": relation.created_on.isoformat().replace("+00:00", "Z"),
+                "id": str(offer.id),
+                "created_on": offer.created_on.isoformat().replace("+00:00", "Z"),
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -134,11 +134,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "<li>second item</li>\n"
                         "</ol>"
                     ),
-                    "call_to_action": relation.product.call_to_action,
+                    "call_to_action": offer.product.call_to_action,
                     "certificate_definition": {
-                        "description": relation.product.certificate_definition.description,
-                        "name": relation.product.certificate_definition.name,
-                        "title": relation.product.certificate_definition.title,
+                        "description": offer.product.certificate_definition.description,
+                        "name": offer.product.certificate_definition.name,
+                        "title": offer.product.certificate_definition.title,
                     },
                     "contract_definition": {
                         "id": str(product.contract_definition.id),
@@ -156,8 +156,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "call_to_action": product.state["call_to_action"],
                         "text": product.state["text"],
                     },
-                    "id": str(relation.product.id),
-                    "price": float(relation.product.price),
+                    "id": str(offer.product.id),
+                    "price": float(offer.product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
                     "target_courses": [
                         {
@@ -203,19 +203,19 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                                 )
                             ],
                             "position": target_course.product_relations.get(
-                                product=relation.product
+                                product=offer.product
                             ).position,
                             "is_graded": target_course.product_relations.get(
-                                product=relation.product
+                                product=offer.product
                             ).is_graded,
                             "title": target_course.title,
                         }
-                        for target_course in relation.product.target_courses.all().order_by(
+                        for target_course in offer.product.target_courses.all().order_by(
                             "product_target_relations__position"
                         )
                     ],
-                    "title": relation.product.title,
-                    "type": relation.product.type,
+                    "title": offer.product.title,
+                    "type": offer.product.type,
                 },
                 "organizations": [
                     {
@@ -230,14 +230,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "contact_phone": organization.contact_phone,
                         "dpo_email": organization.dpo_email,
                     }
-                    for organization in relation.organizations.all()
+                    for organization in offer.organizations.all()
                 ],
             },
         )
 
-    def test_api_course_product_relation_read_list_filtered_by_course_anonymous(self):
+    def test_api_offer_read_list_filtered_by_course_anonymous(self):
         """
-        It should not be possible to list course's product relations for
+        It should not be possible to list course's product offers for
         anonymous users.
         """
         course = factories.CourseFactory()
@@ -254,11 +254,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_course_product_relation_read_list_filtered_by_course_with_accesses(
-        self, _
-    ):
+    def test_api_offer_read_list_filtered_by_course_with_accesses(self, _):
         """
-        An authenticated user should be able to list all course's product relations
+        An authenticated user should be able to list all course's product offers
         for which it has accesses
         """
         user = factories.UserFactory()
@@ -266,7 +264,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         courses = factories.CourseFactory.create_batch(2)
         for course in courses:
             factories.UserCourseAccessFactory(user=user, course=course)
-        factories.CourseProductRelationFactory(
+        factories.OfferFactory(
             product=factories.ProductFactory(
                 type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
             ),
@@ -284,11 +282,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
 
-    def test_api_course_product_relation_read_list_filtered_by_course_without_accesses(
+    def test_api_offer_read_list_filtered_by_course_without_accesses(
         self,
     ):
         """
-        It should not be possible to list course's product relations for
+        It should not be possible to list course's product offers for
         authenticated users without accesses.
         """
         factories.ProductFactory()
@@ -312,9 +310,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_course_product_relation_read_list_filtered_by_product_type(self):
+    def test_api_offer_read_list_filtered_by_product_type(self):
         """
-        An authenticated user should be able to list all course's product relations
+        An authenticated user should be able to list all course's product offers
         filtered by product type.
         """
         user = factories.UserFactory()
@@ -322,7 +320,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         access = factories.UserCourseAccessFactory(user=user)
 
         for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
-            factories.CourseProductRelationFactory(
+            factories.OfferFactory(
                 product=factories.ProductFactory(type=product_type, courses=[]),
                 course=access.course,
                 organizations=factories.OrganizationFactory.create_batch(1),
@@ -358,11 +356,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 2)
 
-    def test_api_course_product_relation_read_list_filtered_by_invalid_product_type(
+    def test_api_offer_read_list_filtered_by_invalid_product_type(
         self,
     ):
         """
-        An authenticated user should be able to list all course's product relations
+        An authenticated user should be able to list all course's product offers
         filtered by product type but if the type is invalid, it should
         return a 400.
         """
@@ -383,11 +381,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
-    def test_api_course_product_relation_read_list_filtered_by_excluded_product_type(
+    def test_api_offer_read_list_filtered_by_excluded_product_type(
         self,
     ):
         """
-        An authenticated user should be able to list all course's product relations
+        An authenticated user should be able to list all course's product offers
         filtered by excluding product type.
         """
         user = factories.UserFactory()
@@ -395,7 +393,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         access = factories.UserCourseAccessFactory(user=user)
 
         for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
-            factories.CourseProductRelationFactory(
+            factories.OfferFactory(
                 product=factories.ProductFactory(type=product_type, courses=[]),
                 course=access.course,
                 organizations=factories.OrganizationFactory.create_batch(1),
@@ -432,11 +430,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
 
-    def test_api_course_product_relation_read_list_filtered_by_invalid_excluded_product_type(
+    def test_api_offer_read_list_filtered_by_invalid_excluded_product_type(
         self,
     ):
         """
-        An authenticated user should be able to list all course's product relations
+        An authenticated user should be able to list all course's product offers
         filtered by excluded product type but if the type is invalid, it should
         return a 400.
         """
@@ -457,24 +455,24 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
-    def test_api_course_product_relation_read_detail_anonymous(self):
+    def test_api_offer_read_detail_anonymous(self):
         """
-        Anonymous users should not be able to retrieve a single relation through its id.
+        Anonymous users should not be able to retrieve a single offer through its id.
         """
         courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL, courses=courses
         )
-        relation = models.CourseProductRelation.objects.get(
+        offer = models.CourseProductRelation.objects.get(
             course=courses[0], product=product
         )
 
-        response = self.client.get(f"/api/v1.0/course-product-relations/{relation.id}/")
+        response = self.client.get(f"/api/v1.0/offers/{offer.id}/")
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
-    def test_api_course_product_relation_read_detail_anonymous_with_course_id(self):
+    def test_api_offer_read_detail_anonymous_with_course_id(self):
         """
-        Anonymous users should get a 404 when trying to retrieve a single relation
+        Anonymous users should get a 404 when trying to retrieve a single offer
         through a course id and a product id that does not exist.
         """
         response = self.client.get(
@@ -482,9 +480,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_api_course_product_relation_read_detail_with_product_id_anonymous(self):
+    def test_api_offer_read_detail_with_product_id_anonymous(self):
         """
-        Anonymous users should be able to retrieve a single course product relation
+        Anonymous users should be able to retrieve a single offer
         if a product id is provided.
         """
         course = factories.CourseFactory(code="00000")
@@ -492,7 +490,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             target_courses=factories.CourseFactory.create_batch(2),
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -510,7 +508,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(content["id"], str(relation.id))
+        self.assertEqual(content["id"], str(offer.id))
         self.assertEqual(content["course"]["code"], "00000")
         self.assertEqual(content["product"]["id"], str(product.id))
 
@@ -535,17 +533,17 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
 
-    def test_api_course_product_relation_read_detail_no_organization(self):
+    def test_api_offer_read_detail_no_organization(self):
         """
-        A course product relation without organizations should not be returned.
+        An Offer without organizations should not be returned.
         """
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             organizations=[],
         )
 
-        # Anonymous user should not be able to retrieve this relation
+        # Anonymous user should not be able to retrieve this offer
         response = self.client.get(
-            f"/api/v1.0/courses/{relation.course.id}/products/{relation.product.id}/",
+            f"/api/v1.0/courses/{offer.course.id}/products/{offer.product.id}/",
         )
         self.assertContains(
             response,
@@ -554,16 +552,16 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
 
         # Authenticated user with course access should not be able
-        # to retrieve this relation
+        # to retrieve this offer
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         factories.UserCourseAccessFactory(
             user=user,
-            course=relation.course,
+            course=offer.course,
         )
 
         response = self.client.get(
-            f"/api/v1.0/courses/{relation.course.id}/products/{relation.product.id}/",
+            f"/api/v1.0/courses/{offer.course.id}/products/{offer.product.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -574,7 +572,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
+            f"/api/v1.0/offers/{offer.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -584,21 +582,19 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.NOT_FOUND,
         )
 
-    def test_api_course_product_relation_read_detail_without_accesses(self):
+    def test_api_offer_read_detail_without_accesses(self):
         """
         Authenticated users without course access should not be able to retrieve
-        a single course product relation through its id.
+        a single offer through its id.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
-        relation = factories.CourseProductRelationFactory(
-            course=course, product=product
-        )
+        offer = factories.OfferFactory(course=course, product=product)
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
+            f"/api/v1.0/offers/{offer.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -609,15 +605,15 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_course_product_relation_read_detail_with_accesses(self, _):
+    def test_api_offer_read_detail_with_accesses(self, _):
         """
         Authenticated users with course access should be able to retrieve
-        a single course product relation through its id.
+        a single offer through its id.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -626,14 +622,14 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         with self.assertNumQueries(7):
             self.client.get(
-                f"/api/v1.0/course-product-relations/{relation.id}/",
+                f"/api/v1.0/offers/{offer.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         # A second call to the url should benefit from caching on the product serializer
         with self.assertNumQueries(3):
             response = self.client.get(
-                f"/api/v1.0/course-product-relations/{relation.id}/",
+                f"/api/v1.0/offers/{offer.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -643,8 +639,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "id": str(relation.id),
-                "created_on": relation.created_on.isoformat().replace("+00:00", "Z"),
+                "id": str(offer.id),
+                "created_on": offer.created_on.isoformat().replace("+00:00", "Z"),
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -654,30 +650,30 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 "is_withdrawable": True,
                 "product": {
                     "instructions": "",
-                    "call_to_action": relation.product.call_to_action,
+                    "call_to_action": offer.product.call_to_action,
                     "certificate_definition": {
-                        "description": relation.product.certificate_definition.description,
-                        "name": relation.product.certificate_definition.name,
-                        "title": relation.product.certificate_definition.title,
+                        "description": offer.product.certificate_definition.description,
+                        "name": offer.product.certificate_definition.name,
+                        "title": offer.product.certificate_definition.title,
                     },
                     "contract_definition": {
-                        "id": str(relation.product.contract_definition.id),
-                        "description": relation.product.contract_definition.description,
-                        "language": relation.product.contract_definition.language,
-                        "title": relation.product.contract_definition.title,
+                        "id": str(offer.product.contract_definition.id),
+                        "description": offer.product.contract_definition.description,
+                        "language": offer.product.contract_definition.language,
+                        "title": offer.product.contract_definition.title,
                     },
                     "state": {
-                        "priority": relation.product.state["priority"],
-                        "datetime": relation.product.state["datetime"]
+                        "priority": offer.product.state["priority"],
+                        "datetime": offer.product.state["datetime"]
                         .isoformat()
                         .replace("+00:00", "Z")
-                        if relation.product.state["datetime"]
+                        if offer.product.state["datetime"]
                         else None,
-                        "call_to_action": relation.product.state["call_to_action"],
-                        "text": relation.product.state["text"],
+                        "call_to_action": offer.product.state["call_to_action"],
+                        "text": offer.product.state["text"],
                     },
-                    "id": str(relation.product.id),
-                    "price": float(relation.product.price),
+                    "id": str(offer.product.id),
+                    "price": float(offer.product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
                     "target_courses": [
                         {
@@ -717,19 +713,19 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                                 )
                             ],
                             "position": target_course.product_relations.get(
-                                product=relation.product
+                                product=offer.product
                             ).position,
                             "is_graded": target_course.product_relations.get(
-                                product=relation.product
+                                product=offer.product
                             ).is_graded,
                             "title": target_course.title,
                         }
-                        for target_course in relation.product.target_courses.all().order_by(
+                        for target_course in offer.product.target_courses.all().order_by(
                             "product_target_relations__position"
                         )
                     ],
-                    "title": relation.product.title,
-                    "type": relation.product.type,
+                    "title": offer.product.title,
+                    "type": offer.product.type,
                 },
                 "organizations": [
                     {
@@ -744,7 +740,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                         "contact_phone": organization.contact_phone,
                         "dpo_email": organization.dpo_email,
                     }
-                    for organization in relation.organizations.all()
+                    for organization in offer.organizations.all()
                 ],
                 "discounted_price": None,
                 "discount_rate": None,
@@ -757,20 +753,20 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_course_product_relation_read_detail_with_offer_rules(self):
+    def test_api_offer_read_detail_with_offer_rules(self):
         """The detail of offer rules related to the product should be served as expected."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory()
-        product = relation.product
-        course = relation.course
+        offer = factories.OfferFactory()
+        product = offer.product
+        course = offer.course
         factories.UserCourseAccessFactory(user=user, course=course)
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             nb_seats=random.randint(10, 100),
             discount=factories.DiscountFactory(amount=10),
         )
-        factories.OfferRuleFactory(course_product_relation=relation)
+        factories.OfferRuleFactory(course_product_relation=offer)
         for _ in range(3):
             factories.OrderFactory(
                 course=course,
@@ -787,15 +783,15 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         with self.assertNumQueries(54):
             self.client.get(
-                f"/api/v1.0/course-product-relations/{relation.id}/",
+                f"/api/v1.0/offers/{offer.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         # A second call to the url should benefit from caching on
-        # the course product relation serializer
+        # the offer serializer
         with self.assertNumQueries(3):
             response = self.client.get(
-                f"/api/v1.0/course-product-relations/{relation.id}/",
+                f"/api/v1.0/offers/{offer.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -810,20 +806,20 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["nb_available_seats"], offer_rule.available_seats)
         self.assertEqual(content["nb_seats"], offer_rule.nb_seats)
 
-    def test_api_course_product_relation_read_detail_discount(self):
+    def test_api_offer_read_detail_discount(self):
         """The discounted price should be calculated as expected."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory()
-        factories.UserCourseAccessFactory(user=user, course=relation.course)
+        offer = factories.OfferFactory()
+        factories.UserCourseAccessFactory(user=user, course=offer.course)
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             nb_seats=random.randint(10, 100),
             discount=factories.DiscountFactory(amount=10),
         )
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
+            f"/api/v1.0/offers/{offer.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -831,7 +827,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             content["discounted_price"],
-            float(relation.product.price) - offer_rule.discount.amount,
+            float(offer.product.price) - offer_rule.discount.amount,
         )
         self.assertEqual(content["discount_amount"], offer_rule.discount.amount)
         self.assertEqual(content["discount_rate"], None)
@@ -841,22 +837,22 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["nb_available_seats"], offer_rule.nb_seats)
         self.assertEqual(content["nb_seats"], offer_rule.nb_seats)
 
-    def test_api_course_product_relation_read_detail_with_offer_rules_cache(self):
+    def test_api_offer_read_detail_with_offer_rules_cache(self):
         """Cache should be reset on order submit and cancel."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         product = factories.ProductFactory(price="0.00")
-        relation = factories.CourseProductRelationFactory(product=product)
-        factories.UserCourseAccessFactory(user=user, course=relation.course)
+        offer = factories.OfferFactory(product=product)
+        factories.UserCourseAccessFactory(user=user, course=offer.course)
         offer_rule = factories.OfferRuleFactory(
-            course_product_relation=relation, nb_seats=10
+            course_product_relation=offer, nb_seats=10
         )
         order = factories.OrderFactory(
-            product=product, course=relation.course, offer_rules=[offer_rule]
+            product=product, course=offer.course, offer_rules=[offer_rule]
         )
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
+            f"/api/v1.0/offers/{offer.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -875,7 +871,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         order.init_flow()
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
+            f"/api/v1.0/offers/{offer.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -895,7 +891,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         order.flow.cancel()
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
+            f"/api/v1.0/offers/{offer.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -909,29 +905,29 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["nb_available_seats"], 10)
         self.assertEqual(content["nb_seats"], 10)
 
-    def test_api_course_product_relation_return_only_is_active_offer_rules(self):
+    def test_api_offer_return_only_is_active_offer_rules(self):
         """
         Authenticated user should only have active offer rules on the course product
-        relation.
+        offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory()
-        factories.UserCourseAccessFactory(user=user, course=relation.course)
+        offer = factories.OfferFactory()
+        factories.UserCourseAccessFactory(user=user, course=offer.course)
 
         offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=relation, is_active=True
+            course_product_relation=offer, is_active=True
         )
-        factories.OfferRuleFactory(course_product_relation=relation, is_active=False)
-        factories.OfferRuleFactory(course_product_relation=relation, is_active=True)
+        factories.OfferRuleFactory(course_product_relation=offer, is_active=False)
+        factories.OfferRuleFactory(course_product_relation=offer, is_active=True)
         factories.OfferRuleFactory(
-            course_product_relation=relation,
+            course_product_relation=offer,
             is_active=True,
             end="2025-02-16T16:35:49.326248Z",
         )
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
+            f"/api/v1.0/offers/{offer.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -946,9 +942,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         self.assertEqual(content["nb_available_seats"], offer_rule_1.available_seats)
         self.assertEqual(content["nb_seats"], offer_rule_1.nb_seats)
 
-    def test_api_course_product_relation_create_anonymous(self):
+    def test_api_offer_create_anonymous(self):
         """
-        Anonymous users should not be able to create a course product relation.
+        Anonymous users should not be able to create an offer.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -970,10 +966,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 0)
 
-    def test_api_course_product_relation_create_authenticated(self):
+    def test_api_offer_create_authenticated(self):
         """
         Authenticated users should not be able to
-        create a course product relation.
+        create an offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -998,10 +994,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 0)
 
-    def test_api_course_product_relation_create_with_accesses(self):
+    def test_api_offer_create_with_accesses(self):
         """
         Authenticated users with course access should not be able
-        to create a course product relation.
+        to create an offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1026,9 +1022,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_course_product_relation_update_anonymous(self):
+    def test_api_offer_update_anonymous(self):
         """
-        Anonymous users should not be able to update a course product relation.
+        Anonymous users should not be able to update an offer.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -1049,10 +1045,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.UNAUTHORIZED,
         )
 
-    def test_api_course_product_relation_update_authenticated(self):
+    def test_api_offer_update_authenticated(self):
         """
         Authenticated users without course access should not be able to
-        update a course product relation.
+        update an offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1076,10 +1072,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_course_product_relation_update_with_accesses(self):
+    def test_api_offer_update_with_accesses(self):
         """
         Authenticated users with course access should not be able
-        to update a course product relation.
+        to update an offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1104,9 +1100,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_course_product_relation_partially_update_anonymous(self):
+    def test_api_offer_partially_update_anonymous(self):
         """
-        Anonymous users should not be able to partially update a course product relation.
+        Anonymous users should not be able to partially update an offer.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -1126,10 +1122,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.UNAUTHORIZED,
         )
 
-    def test_api_course_product_relation_partially_update_authenticated(self):
+    def test_api_offer_partially_update_authenticated(self):
         """
         Authenticated users without course access should not be able to
-        partially update a course product relation.
+        partially update an offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1152,10 +1148,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_course_product_relation_partially_update_with_accesses(self):
+    def test_api_offer_partially_update_with_accesses(self):
         """
         Authenticated users with course access should not be able to
-        partially update a course product relation.
+        partially update an offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1179,9 +1175,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_course_product_relation_delete_anonymous(self):
+    def test_api_offer_delete_anonymous(self):
         """
-        Anonymous users should not be able to delete a course product relation.
+        Anonymous users should not be able to delete an offer.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -1199,10 +1195,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
-    def test_api_course_product_relation_delete_authenticated(self):
+    def test_api_offer_delete_authenticated(self):
         """
         Authenticated users without course access should not be able to
-        delete a course product relation.
+        delete an offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1223,10 +1219,10 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
-    def test_api_course_product_relation_delete_with_access(self):
+    def test_api_offer_delete_with_access(self):
         """
         Authenticated users with course access should not be able to
-        delete a course product relation.
+        delete an offer.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1248,9 +1244,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
-    def test_api_course_product_relation_read_list_filtered_by_product_title(self):
+    def test_api_offer_read_list_filtered_by_product_title(self):
         """
-        An authenticated user should be able to filter course product relation by
+        An authenticated user should be able to filter offer by
         product title.
         """
         user = factories.UserFactory()
@@ -1277,11 +1273,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             language_code="fr-fr", title="Gestion d'une gomme sur une monoplace"
         )
         for product in [product_1, product_3]:
-            factories.CourseProductRelationFactory(
-                organizations=[organization], product=product
-            )
+            factories.OfferFactory(organizations=[organization], product=product)
 
-        course_product_relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             product=product_2,
             course=access.course,
             organizations=[organization],
@@ -1310,20 +1304,18 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         for query in queries:
             response = self.client.get(
-                f"/api/v1.0/course-product-relations/?query={query}",
+                f"/api/v1.0/offers/?query={query}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
             self.assertEqual(response.status_code, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(len(content["results"]), 1)
-            self.assertEqual(
-                content["results"][0].get("id"), str(course_product_relation.id)
-            )
+            self.assertEqual(content["results"][0].get("id"), str(offer.id))
 
         # without parsing a query in parameter
         response = self.client.get(
-            "/api/v1.0/course-product-relations/?query=",
+            "/api/v1.0/offers/?query=",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1331,13 +1323,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["count"], 1)
-        self.assertEqual(
-            content["results"][0].get("id"), str(course_product_relation.id)
-        )
+        self.assertEqual(content["results"][0].get("id"), str(offer.id))
 
         # with parsing a fake product title as query parameter
         response = self.client.get(
-            "/api/v1.0/course-product-relations/?query=veryFakeProductTitle",
+            "/api/v1.0/offers/?query=veryFakeProductTitle",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1345,9 +1335,9 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 0)
 
-    def test_api_course_product_relation_read_list_filtered_by_course_code(self):
+    def test_api_offer_read_list_filtered_by_course_code(self):
         """
-        An authenticated user should be able to filter course product relation by
+        An authenticated user should be able to filter offer by
         course code.
         """
         user = factories.UserFactory()
@@ -1363,64 +1353,56 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             title="Rubber management on a single-seater", code="MYCODE-0992"
         )
         access = factories.UserCourseAccessFactory(user=user, course=course_2)
-        course_product_relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=access.course,
             organizations=[organization],
         )
         for course in [course_1, course_3]:
-            factories.CourseProductRelationFactory(
-                organizations=[organization], course=course
-            )
+            factories.OfferFactory(organizations=[organization], course=course)
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/?query={access.course.code}",
+            f"/api/v1.0/offers/?query={access.course.code}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
-        self.assertEqual(
-            content["results"][0].get("id"), str(course_product_relation.id)
-        )
+        self.assertEqual(content["results"][0].get("id"), str(offer.id))
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/?query={access.course.code[:1]}",
+            f"/api/v1.0/offers/?query={access.course.code[:1]}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
-        self.assertEqual(
-            content["results"][0].get("id"), str(course_product_relation.id)
-        )
+        self.assertEqual(content["results"][0].get("id"), str(offer.id))
 
-        # without parsing a query parameter I should see my course product relation
+        # without parsing a query parameter I should see my offer
         response = self.client.get(
-            "/api/v1.0/course-product-relations/?query=",
+            "/api/v1.0/offers/?query=",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
-        self.assertEqual(
-            content["results"][0].get("id"), str(course_product_relation.id)
-        )
+        self.assertEqual(content["results"][0].get("id"), str(offer.id))
 
         # with parsing a fake product title as query parameter
         response = self.client.get(
-            "/api/v1.0/course-product-relations/?query=veryFakeCourseCode",
+            "/api/v1.0/offers/?query=veryFakeCourseCode",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
-    def test_api_course_product_relation_read_list_filtered_by_organization_title(self):
+    def test_api_offer_read_list_filtered_by_organization_title(self):
         """
-        An authenticated user should be able to filter course product relation by
+        An authenticated user should be able to filter offer by
         organization title when they have access to the course.
         """
         user = factories.UserFactory()
@@ -1431,8 +1413,8 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         organization_3 = factories.OrganizationFactory(title="Organization kappa 03")
         organization_4 = factories.OrganizationFactory(title="Organization gamma 04")
         for organization in [organization_1, organization_2, organization_3]:
-            factories.CourseProductRelationFactory(organizations=[organization])
-        course_product_relation = factories.CourseProductRelationFactory(
+            factories.OfferFactory(organizations=[organization])
+        offer = factories.OfferFactory(
             course=access.course,
             organizations=[organization_4],
         )
@@ -1454,20 +1436,18 @@ class CourseProductRelationApiTest(BaseAPITestCase):
 
         for query in queries:
             response = self.client.get(
-                f"/api/v1.0/course-product-relations/?query={query}",
+                f"/api/v1.0/offers/?query={query}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
             self.assertEqual(response.status_code, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(len(content["results"]), 1)
-            self.assertEqual(
-                content["results"][0].get("id"), str(course_product_relation.id)
-            )
+            self.assertEqual(content["results"][0].get("id"), str(offer.id))
 
         # without parsing a query in parameter
         response = self.client.get(
-            "/api/v1.0/course-product-relations/?query=",
+            "/api/v1.0/offers/?query=",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1475,13 +1455,11 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["count"], 1)
-        self.assertEqual(
-            content["results"][0].get("id"), str(course_product_relation.id)
-        )
+        self.assertEqual(content["results"][0].get("id"), str(offer.id))
 
         # with parsing a fake product title as query parameter
         response = self.client.get(
-            "/api/v1.0/course-product-relations/?query=veryFakeOrganizationTitle",
+            "/api/v1.0/offers/?query=veryFakeOrganizationTitle",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1497,12 +1475,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_course_product_relation_payment_schedule_with_product_id(
+    def test_api_offer_payment_schedule_with_product_id(
         self,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule for
-        a single course product relation if a product id is provided
+        a single offer if a product id is provided
         and the product is a credential. If there are archived course runs, they should be ignored.
         """
         mocked_now = datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
@@ -1525,7 +1503,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             target_courses=[course_run.course],
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course_run.course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -1540,7 +1518,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 f"products/{product.id}/payment-schedule/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+                f"/api/v1.0/offers/{offer.id}/payment-schedule/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1575,12 +1553,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_course_product_relation_payment_schedule_with_product_id_discount(
+    def test_api_offer_payment_schedule_with_product_id_discount(
         self,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule
-        with applied discount for a single course product relation
+        with applied discount for a single offer
         if a product id is provided and the product is a credential.
         If there are archived course runs, they should be ignored.
         """
@@ -1604,7 +1582,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             target_courses=[course_run.course],
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course_run.course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -1612,7 +1590,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.50),
         )
-        relation.offer_rules.add(offer_rule)
+        offer.offer_rules.add(offer_rule)
 
         with (
             mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
@@ -1623,7 +1601,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 f"products/{product.id}/payment-schedule/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+                f"/api/v1.0/offers/{offer.id}/payment-schedule/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1656,12 +1634,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_course_product_relation_payment_schedule_with_certificate_product_id(
+    def test_api_offer_payment_schedule_with_certificate_product_id(
         self,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule for
-        a single course product relation if a product id is provided
+        a single offer if a product id is provided
         and the product is a certificate.
         """
         course_run = factories.CourseRunFactory(
@@ -1673,7 +1651,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             price=3,
             type=enums.PRODUCT_TYPE_CERTIFICATE,
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course_run.course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -1691,7 +1669,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 f"products/{product.id}/payment-schedule/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+                f"/api/v1.0/offers/{offer.id}/payment-schedule/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1717,12 +1695,12 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_course_product_relation_payment_schedule_with_certificate_product_id_discount(
+    def test_api_offer_payment_schedule_with_certificate_product_id_discount(
         self,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule
-        with applied discount for a single course product relation
+        with applied discount for a single offer
         if a product id is provided and the product is a certificate.
         """
         course_run = factories.CourseRunFactory(
@@ -1734,7 +1712,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
             price=3,
             type=enums.PRODUCT_TYPE_CERTIFICATE,
         )
-        relation = factories.CourseProductRelationFactory(
+        offer = factories.OfferFactory(
             course=course_run.course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -1742,7 +1720,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
         offer_rule = factories.OfferRuleFactory(
             discount=factories.DiscountFactory(rate=0.50),
         )
-        relation.offer_rules.add(offer_rule)
+        offer.offer_rules.add(offer_rule)
 
         with (
             mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
@@ -1756,7 +1734,7 @@ class CourseProductRelationApiTest(BaseAPITestCase):
                 f"products/{product.id}/payment-schedule/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/course-product-relations/{relation.id}/payment-schedule/"
+                f"/api/v1.0/offers/{offer.id}/payment-schedule/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)

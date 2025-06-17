@@ -12,18 +12,18 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
     maxDiff = None
 
-    def create_order(self, voucher, user=None, relation=None):
+    def create_order(self, voucher, user=None, offer=None):
         """Make a POST request to the endpoint."""
         if not user:
             user = factories.UserFactory()
 
-        if not relation:
-            relation = voucher.offer_rule.course_product_relation
+        if not offer:
+            offer = voucher.offer_rule.course_product_relation
 
         data = {
-            "course_code": relation.course.code,
-            "organization_id": str(relation.organizations.first().id),
-            "product_id": str(relation.product.id),
+            "course_code": offer.course.code,
+            "organization_id": str(offer.organizations.first().id),
+            "product_id": str(offer.product.id),
             "billing_address": BillingAddressDictFactory(),
             "has_waived_withdrawal_right": True,
             "voucher_code": voucher.code,
@@ -93,9 +93,9 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
             discount=factories.DiscountFactory(rate=0.1),
         )
         user_1 = factories.UserFactory()
-        relation_1 = factories.CourseProductRelationFactory()
+        offer_1 = factories.OfferFactory()
 
-        response = self.create_order(voucher, user=user_1, relation=relation_1)
+        response = self.create_order(voucher, user=user_1, offer=offer_1)
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         order = models.Order.objects.get(id=response.json().get("id"))
@@ -103,9 +103,9 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         voucher.refresh_from_db()
         self.assertTrue(voucher.is_usable_by(order.owner))
 
-        relation_2 = factories.CourseProductRelationFactory()
+        offer_2 = factories.OfferFactory()
 
-        response = self.create_order(voucher, user=user_1, relation=relation_2)
+        response = self.create_order(voucher, user=user_1, offer=offer_2)
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         order = models.Order.objects.get(id=response.json().get("id"))
@@ -114,7 +114,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         self.assertTrue(voucher.is_usable_by(order.owner))
 
         user_2 = factories.UserFactory()
-        response = self.create_order(voucher, user=user_2, relation=relation_1)
+        response = self.create_order(voucher, user=user_2, offer=offer_1)
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
 
@@ -129,9 +129,9 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
             discount=factories.DiscountFactory(rate=0.1),
         )
         user_1 = factories.UserFactory()
-        relation_1 = factories.CourseProductRelationFactory()
+        offer_1 = factories.OfferFactory()
 
-        response = self.create_order(voucher, user=user_1, relation=relation_1)
+        response = self.create_order(voucher, user=user_1, offer=offer_1)
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         order = models.Order.objects.get(id=response.json().get("id"))
@@ -139,14 +139,14 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         voucher.refresh_from_db()
         self.assertFalse(voucher.is_usable_by(order.owner))
 
-        relation_2 = factories.CourseProductRelationFactory()
+        offer_2 = factories.OfferFactory()
 
-        response = self.create_order(voucher, user=user_1, relation=relation_2)
+        response = self.create_order(voucher, user=user_1, offer=offer_2)
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
 
         user_2 = factories.UserFactory()
-        response = self.create_order(voucher, user=user_2, relation=relation_1)
+        response = self.create_order(voucher, user=user_2, offer=offer_1)
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         order = models.Order.objects.get(id=response.json().get("id"))
@@ -166,9 +166,9 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
             discount=factories.DiscountFactory(rate=0.1),
         )
         user_1 = factories.UserFactory()
-        relation_1 = factories.CourseProductRelationFactory()
+        offer_1 = factories.OfferFactory()
 
-        response = self.create_order(voucher, user=user_1, relation=relation_1)
+        response = self.create_order(voucher, user=user_1, offer=offer_1)
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         order = models.Order.objects.get(id=response.json().get("id"))
@@ -176,9 +176,9 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         voucher.refresh_from_db()
         self.assertTrue(voucher.is_usable_by(order.owner))
 
-        relation_2 = factories.CourseProductRelationFactory()
+        offer_2 = factories.OfferFactory()
 
-        response = self.create_order(voucher, user=user_1, relation=relation_2)
+        response = self.create_order(voucher, user=user_1, offer=offer_2)
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         order = models.Order.objects.get(id=response.json().get("id"))
@@ -187,7 +187,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         self.assertTrue(voucher.is_usable_by(order.owner))
 
         user_2 = factories.UserFactory()
-        response = self.create_order(voucher, user=user_2, relation=relation_1)
+        response = self.create_order(voucher, user=user_2, offer=offer_1)
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         order = models.Order.objects.get(id=response.json().get("id"))
