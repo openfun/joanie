@@ -28,6 +28,7 @@ and this project adheres to
 - Replace order groups from the client API with course product relations
   properties
 - Rename `OrderGroup` to `OfferRule`
+- Rename `CourseProductRelation` to `Offer`
 
 ### Fixed
 

@@ -5,24 +5,21 @@ import {
   CustomModal,
   CustomModalProps,
 } from "@/components/presentational/modal/Modal";
+import { Offer, DTOOffer } from "@/services/api/models/Offers";
 import {
-  CourseProductRelation,
-  DTOCourseProductRelation,
-} from "@/services/api/models/Relations";
-import {
-  CourseProductRelationForm,
-  CourseProductRelationFormValues,
-} from "@/components/templates/courses/form/product-relation/CourseProductRelationForm";
+  OfferForm,
+  OfferFormValues,
+} from "@/components/templates/courses/form/offer/OfferForm";
 
 const messages = defineMessages({
   addModalTitle: {
     id: "components.templates.courses.form.productRelationModal.addModalTitle",
-    defaultMessage: "Add the relation",
+    defaultMessage: "Add offer",
     description: "Title for productRelationModal in add mode ",
   },
   editModalTitle: {
     id: "components.templates.courses.form.productRelationModal.editModalTitle",
-    defaultMessage: "Edit the relation",
+    defaultMessage: "Edit offer",
     description: "Title for productRelationModal in edit mode ",
   },
   addButton: {
@@ -45,18 +42,15 @@ enum Mode {
 interface Props extends Omit<CustomModalProps, "title"> {
   courseId?: string;
   productId?: string;
-  relation?: CourseProductRelation;
-  onSubmitForm?: (
-    payload: DTOCourseProductRelation,
-    formValues: CourseProductRelationFormValues,
-  ) => void;
+  offer?: Offer;
+  onSubmitForm?: (payload: DTOOffer, formValues: OfferFormValues) => void;
 }
 
-export function CourseFormProductRelationModal(props: Props) {
+export function OfferFormModal(props: Props) {
   const intl = useIntl();
   const mode: Mode = useMemo(() => {
-    return props.relation !== undefined ? Mode.EDIT : Mode.ADD;
-  }, [props.relation]);
+    return props.offer !== undefined ? Mode.EDIT : Mode.ADD;
+  }, [props.offer]);
 
   return (
     <CustomModal
@@ -66,11 +60,11 @@ export function CourseFormProductRelationModal(props: Props) {
       open={props.open}
       handleClose={props.handleClose}
     >
-      <CourseProductRelationForm
+      <OfferForm
         productId={props.productId}
         courseId={props.courseId}
-        defaultProduct={props.relation?.product}
-        defaultCourse={props.relation?.course}
+        defaultProduct={props.offer?.product}
+        defaultCourse={props.offer?.course}
         onSubmit={props.onSubmitForm}
       />
     </CustomModal>

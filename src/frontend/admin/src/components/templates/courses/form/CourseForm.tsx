@@ -5,7 +5,7 @@ import { Course } from "@/services/api/models/Course";
 import { useCourses } from "@/hooks/useCourses/useCourses";
 import { CourseFormTargetCourseRunsSection } from "@/components/templates/courses/form/sections/target-course-runs/CourseFormTargetCourseRunsSection";
 import { CourseFormAccessesSection } from "@/components/templates/courses/form/sections/accesses/CourseFormAccessesSection";
-import { CourseProductRelationsSection } from "@/components/templates/courses/form/sections/product-relation/CourseProductRelationsSection";
+import { OffersSection } from "@/components/templates/courses/form/sections/offer/OffersSection";
 import { CourseGeneralForm } from "@/components/templates/courses/form/general/GeneralCourseForm";
 import { courseFormMessages } from "@/components/templates/courses/form/translations";
 import {
@@ -62,7 +62,7 @@ export function CourseForm({ course, shortcutMode = false, ...props }: Props) {
           show: !!course && !shortcutMode,
           tabInfo: intl.formatMessage(courseFormMessages.productsTabInfo),
           component: (
-            <CourseProductRelationsSection
+            <OffersSection
               invalidateCourse={() => coursesQuery.methods.invalidate()}
               course={course}
             />

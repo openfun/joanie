@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { IntlProvider } from "react-intl";
-import { OfferRuleRow } from "@/components/templates/courses/form/sections/product-relation/OfferRuleRow";
+import { OfferRuleRow } from "@/components/templates/courses/form/sections/offer/OfferRuleRow";
 
 describe("<OfferRuleRow />", () => {
   it("renders available seats", async () => {

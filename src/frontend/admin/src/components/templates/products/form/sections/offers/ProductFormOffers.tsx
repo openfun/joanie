@@ -1,18 +1,18 @@
 import * as React from "react";
 import { Product } from "@/services/api/models/Product";
-import { CourseProductRelationList } from "@/components/templates/relations/course-product-relation/CourseProductRelationList";
+import { OfferList } from "@/components/templates/offers/offer/OfferList";
 import { useProducts } from "@/hooks/useProducts/useProducts";
 
 type Props = {
   product: Product;
 };
-export function ProductFormCourseProductRelations({ product }: Props) {
+export function ProductFormOffers({ product }: Props) {
   const productRepository = useProducts({}, { enabled: false });
 
   return (
-    <CourseProductRelationList
+    <OfferList
       productId={product.id}
-      relations={product.course_relations ?? []}
+      offers={product.offers ?? []}
       invalidate={productRepository.methods.invalidate}
     />
   );

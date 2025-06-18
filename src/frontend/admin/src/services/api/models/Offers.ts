@@ -10,7 +10,7 @@ import { ProductFactoryLight } from "@/services/factories/product";
 import { Nullable } from "@/types/utils";
 import { OfferRuleFactory } from "@/services/factories/offer-rule";
 
-export type CourseProductRelation = {
+export type Offer = {
   can_edit: boolean;
   id: string;
   organizations: Organization[];
@@ -20,22 +20,19 @@ export type CourseProductRelation = {
   course: Course;
 };
 
-export type CourseProductRelationDummy = Omit<
-  CourseProductRelation,
-  "id" | "product" | "course"
-> & {
+export type OfferDummy = Omit<Offer, "id" | "product" | "course"> & {
   dummyId?: string;
   product?: Nullable<Product>;
   course?: Nullable<Course>;
 };
 
-export type DTOCourseProductRelation = {
+export type DTOOffer = {
   product_id: string;
   course_id: string;
   organization_ids: string[];
 };
 
-const buildCourseProductRelation = (): CourseProductRelation => {
+const buildOffer = (): Offer => {
   return {
     id: faker.string.uuid(),
     can_edit: faker.datatype.boolean(),
@@ -47,13 +44,9 @@ const buildCourseProductRelation = (): CourseProductRelation => {
   };
 };
 
-export function CourseProductRelationFactory(): CourseProductRelation;
-export function CourseProductRelationFactory(
-  count: number,
-): CourseProductRelation[];
-export function CourseProductRelationFactory(
-  count?: number,
-): CourseProductRelation | CourseProductRelation[] {
-  if (count) return [...Array(count)].map(buildCourseProductRelation);
-  return buildCourseProductRelation();
+export function OfferFactory(): Offer;
+export function OfferFactory(count: number): Offer[];
+export function OfferFactory(count?: number): Offer | Offer[] {
+  if (count) return [...Array(count)].map(buildOffer);
+  return buildOffer();
 }

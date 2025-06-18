@@ -7,7 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
-import { DTOCourseProductRelation } from "@/services/api/models/Relations";
+import { DTOOffer } from "@/services/api/models/Offers";
 import { Organization } from "@/services/api/models/Organization";
 import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
 import { ProductSearch } from "@/components/templates/products/inputs/search/ProductSearch";
@@ -44,17 +44,14 @@ const messages = defineMessages({
   },
 });
 
-export interface CourseProductRelationFormValues {
+export interface OfferFormValues {
   product: Product | null;
   course: Course | null;
   organizations: Organization[];
 }
 
 interface BaseProps {
-  onSubmit?: (
-    payload: DTOCourseProductRelation,
-    formValues: CourseProductRelationFormValues,
-  ) => void;
+  onSubmit?: (payload: DTOOffer, formValues: OfferFormValues) => void;
   defaultProduct?: BaseProduct;
   defaultCourse?: Course;
   organizations?: Organization[];
@@ -64,13 +61,13 @@ interface BaseProps {
 
 type Props = BaseProps;
 
-export const CourseProductRelationFormSchema = Yup.object().shape({
+export const OfferFormSchema = Yup.object().shape({
   product: Yup.mixed<Product>().required().nullable(),
   course: Yup.mixed<Course>().required().nullable(),
   organizations: Yup.array().required(),
 });
 
-export function CourseProductRelationForm({
+export function OfferForm({
   defaultProduct,
   defaultCourse,
   organizations,
@@ -80,8 +77,8 @@ export function CourseProductRelationForm({
 }: Props) {
   const intl = useIntl();
 
-  const methods = useForm<CourseProductRelationFormValues>({
-    resolver: yupResolver(CourseProductRelationFormSchema) as any,
+  const methods = useForm<OfferFormValues>({
+    resolver: yupResolver(OfferFormSchema) as any,
     defaultValues: {
       product: defaultProduct ?? null,
       course: defaultCourse ?? null,
@@ -97,9 +94,9 @@ export function CourseProductRelationForm({
   return (
     <RHFProvider
       methods={methods}
-      id="course-relation-to-products-form"
+      id="offer-form"
       onSubmit={methods.handleSubmit((values) => {
-        let payload: DTOCourseProductRelation;
+        let payload: DTOOffer;
 
         if (courseId) {
           payload = {
