@@ -12,10 +12,7 @@ import { DTOProduct, Product } from "@/services/api/models/Product";
 import { User } from "@/services/api/models/User";
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
 import { PATH_ADMIN } from "@/utils/routes/path";
-import {
-  CourseProductRelation,
-  DTOCourseProductRelation,
-} from "@/services/api/models/Relations";
+import { Offer, DTOOffer } from "@/services/api/models/Offers";
 import { OfferRule } from "@/services/api/models/OfferRule";
 import {
   expectHaveClasses,
@@ -29,7 +26,7 @@ import {
 } from "@/services/api/models/Discount";
 
 const coursesApiUrl = "http://localhost:8071/api/v1.0/admin/courses/";
-test.describe("Course product relation", () => {
+test.describe("Offer", () => {
   let store = getCourseScenarioStore();
   test.beforeEach(async ({ page }) => {
     store = getCourseScenarioStore();
@@ -51,13 +48,12 @@ test.describe("Course product relation", () => {
       page,
     });
 
-    await mockPlaywrightCrud<CourseProductRelation, DTOCourseProductRelation>({
-      data: store.productRelations,
-      routeUrl:
-        "http://localhost:8071/api/v1.0/admin/course-product-relations/",
+    await mockPlaywrightCrud<Offer, DTOOffer>({
+      data: store.offers,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/offers/",
       page,
-      updateCallback: store.postProductRelation,
-      createCallback: store.postProductRelation,
+      updateCallback: store.postOffer,
+      createCallback: store.postOffer,
     });
 
     await mockPlaywrightCrud<Organization, DTOOrganization>({
@@ -88,7 +84,7 @@ test.describe("Course product relation", () => {
 
   test("Check of the presence of all elements.", async ({ page }) => {
     const course = store.list[0];
-    const relations = course.product_relations ?? [];
+    const offers = course.offers ?? [];
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
@@ -97,21 +93,19 @@ test.describe("Course product relation", () => {
     await expect(
       page.locator('[id="__next"]').getByRole("alert"),
     ).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Relation to products" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
 
     await Promise.all(
-      relations.map(async (relation) => {
+      offers.map(async (offer) => {
         // Check if product title and organizations are shown
         await expect(
-          page.getByRole("heading", { name: relation.product.title }),
+          page.getByRole("heading", { name: offer.product.title }),
         ).toHaveCount(1);
-        const orgsTitle = relation.organizations.map((org) => org.title);
+        const orgsTitle = offer.organizations.map((org) => org.title);
         await expect(page.getByText(orgsTitle.join(","))).toBeVisible();
 
-        // Check if all offer rules for this relation are present
-        const offerRules = relation.offer_rules ?? [];
+        // Check if all offer rules for this offer are present
+        const offerRules = offer.offer_rules ?? [];
         await Promise.all(
           offerRules.map(async (offerRule, index) => {
             const usedSeats =
@@ -134,43 +128,39 @@ test.describe("Course product relation", () => {
     );
 
     await expect(
-      page.getByRole("button", { name: "Add relation" }),
+      page.getByRole("button", { name: "Add offer", exact: true }),
     ).toBeVisible();
 
-    await page.getByRole("button", { name: "Add relation" }).click();
+    await page.getByRole("button", { name: "Add offer", exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "Add the relation" }),
+      page.getByRole("heading", { name: "Add offer" }),
     ).toBeVisible();
     await expect(page.getByLabel("Choose your product")).toBeVisible();
     await expect(page.getByLabel("Search organization")).toBeVisible();
-    await expect(
-      page.getByTestId("submit-button-course-relation-to-products-form"),
-    ).toBeVisible();
+    await expect(page.getByTestId("submit-button-offer-form")).toBeVisible();
   });
 
-  test("Render course form without relations", async ({ page }) => {
+  test("Render course form without offers", async ({ page }) => {
     const course = store.list[0];
-    course.product_relations = [];
+    course.offers = [];
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
     await page.getByRole("tab", { name: "Products" }).click();
     await expect(
-      page.getByText(
-        "No product relationships have been created for this course",
-      ),
+      page.getByText("No offer have been created for this course"),
     ).toBeVisible();
   });
 
-  test("Create a new course product relation", async ({ page }) => {
+  test("Create a new offer", async ({ page }) => {
     const course = store.list[0];
-    course.product_relations = [];
+    course.offers = [];
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
     await page.getByRole("tab", { name: "Products" }).click();
 
-    await page.getByRole("button", { name: "Add relation" }).click();
+    await page.getByRole("button", { name: "Add offer" }).click();
     await page.getByLabel("Choose your product").click();
     await page.getByLabel("Choose your product").fill(store.products[0].title);
     await page.getByRole("option", { name: store.products[0].title }).click();
@@ -185,9 +175,7 @@ test.describe("Course product relation", () => {
       page.getByRole("heading", { name: store.organizations[0].title }),
     ).toBeVisible();
 
-    await page
-      .getByTestId("submit-button-course-relation-to-products-form")
-      .click();
+    await page.getByTestId("submit-button-offer-form").click();
 
     await expect(
       page.getByRole("heading", { name: store.products[0].title }),
@@ -198,14 +186,12 @@ test.describe("Course product relation", () => {
   test("Copy url inside the clipboard", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     const course = store.list[0];
-    const relation = course.product_relations![0];
+    const offer = course.offers![0];
     await page.goto(PATH_ADMIN.courses.list);
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
     await page.getByRole("tab", { name: "Products" }).click();
-    await page
-      .getByTestId(`course-product-relation-actions-${relation.id}`)
-      .click();
+    await page.getByTestId(`offer-actions-${offer.id}`).click();
     await page.getByRole("menuitem", { name: "Copy url" }).click();
     await expect(
       page.getByRole("alert").getByText("Link added to your clipboard"),
@@ -214,26 +200,26 @@ test.describe("Course product relation", () => {
       navigator.clipboard.readText(),
     );
     const clipboardContent = await handle.jsonValue();
-    expect(clipboardContent).toEqual(relation.uri);
+    expect(clipboardContent).toEqual(offer.uri);
   });
 
-  test("Add offer rule on course product relation", async ({ page }) => {
+  test("Add offer rule on offer", async ({ page }) => {
     await store.mockOfferRule(
       page,
-      store.productRelations,
+      store.offers,
       store.offerRules,
       store.discounts,
     );
     const course = store.list[0];
     await page.goto(PATH_ADMIN.courses.list);
-    course.product_relations = course.product_relations ?? [];
+    course.offers = course.offers ?? [];
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
     await page.getByRole("tab", { name: "Products" }).click();
     await Promise.all(
-      course.product_relations.map(async (relation) => {
+      course.offers.map(async (offer) => {
         await expect(
-          page.getByRole("heading", { name: relation.product.title }),
+          page.getByRole("heading", { name: offer.product.title }),
         ).toBeVisible();
       }),
     );
@@ -254,9 +240,8 @@ test.describe("Course product relation", () => {
 
     await page.getByLabel("Activate this offer rule").check();
     await page.getByTestId("submit-button-offer-rule-form").click();
-    const offerRuleLength = course.product_relations[0].offer_rules.length;
-    const addedOfferRule =
-      course.product_relations[0].offer_rules[offerRuleLength - 1];
+    const offerRuleLength = course.offers[0].offer_rules.length;
+    const addedOfferRule = course.offers[0].offer_rules[offerRuleLength - 1];
     await expect(page.getByText(`Offer rule ${offerRuleLength}`)).toBeVisible();
     await expect(page.getByText(`0/1919 seats`)).toBeVisible();
     await expect(
@@ -272,13 +257,13 @@ test.describe("Course product relation", () => {
 
   test("Toggle is active switch on an offer rule", async ({ page }) => {
     const course = store.list[0];
-    const offerRule = course.product_relations?.[0].offer_rules[0] as OfferRule;
+    const offerRule = course.offers?.[0].offer_rules[0] as OfferRule;
     offerRule.can_edit = true;
     offerRule.is_active = true;
     await store.mockCourseRunsFromCourse(page, []);
     await store.mockOfferRule(
       page,
-      store.productRelations,
+      store.offers,
       store.offerRules,
       store.discounts,
     );
@@ -300,13 +285,13 @@ test.describe("Course product relation", () => {
   test("Edit an offer rule", async ({ page }) => {
     await store.mockCourseRunsFromCourse(page, []);
     const course = store.list[0];
-    let offerRule = course.product_relations?.[0].offer_rules[0] as OfferRule;
+    let offerRule = course.offers?.[0].offer_rules[0] as OfferRule;
 
     offerRule.can_edit = true;
     offerRule.is_active = true;
     await store.mockOfferRule(
       page,
-      store.productRelations,
+      store.offers,
       store.offerRules,
       store.discounts,
     );
@@ -326,7 +311,7 @@ test.describe("Course product relation", () => {
     await page.getByLabel("Number of seats").click();
     await page.getByLabel("Number of seats").fill("999999");
     await page.getByTestId("submit-button-offer-rule-form").click();
-    offerRule = course.product_relations?.[0].offer_rules[0] as OfferRule;
+    offerRule = course.offers?.[0].offer_rules[0] as OfferRule;
 
     const usedSeats =
       (offerRule.nb_seats ?? 0) - (offerRule.nb_available_seats ?? 0);
@@ -347,12 +332,12 @@ test.describe("Course product relation", () => {
     await store.mockCourseRunsFromCourse(page, []);
     await store.mockOfferRule(
       page,
-      store.productRelations,
+      store.offers,
       store.offerRules,
       store.discounts,
     );
     const course = store.list[0];
-    const offerRule = course.product_relations?.[0].offer_rules[0] as OfferRule;
+    const offerRule = course.offers?.[0].offer_rules[0] as OfferRule;
     offerRule.can_edit = true;
     await page.goto(PATH_ADMIN.courses.list);
     await page.getByRole("link", { name: course.title }).click();
@@ -390,20 +375,20 @@ test.describe("Course product relation", () => {
   test("Create discount", async ({ page }) => {
     await store.mockOfferRule(
       page,
-      store.productRelations,
+      store.offers,
       store.offerRules,
       store.discounts,
     );
     const course = store.list[0];
     await page.goto(PATH_ADMIN.courses.list);
-    course.product_relations = course.product_relations ?? [];
+    course.offers = course.offers ?? [];
     await store.mockCourseRunsFromCourse(page, []);
     await page.getByRole("link", { name: course.title }).click();
     await page.getByRole("tab", { name: "Products" }).click();
     await Promise.all(
-      course.product_relations.map(async (relation) => {
+      course.offers.map(async (offer) => {
         await expect(
-          page.getByRole("heading", { name: relation.product.title }),
+          page.getByRole("heading", { name: offer.product.title }),
         ).toBeVisible();
       }),
     );

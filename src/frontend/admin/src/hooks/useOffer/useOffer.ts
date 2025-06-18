@@ -7,8 +7,8 @@ import {
   UseResourcesProps,
 } from "@/hooks/useResources";
 import { ResourcesQuery } from "@/hooks/useResources/types";
-import { CourseProductRelationRepository } from "@/services/repositories/course-product-relation/CourseProductRelationRepository";
-import { CourseProductRelation } from "@/services/api/models/Relations";
+import { OfferRepository } from "@/services/repositories/offer/OfferRepository";
+import { Offer } from "@/services/api/models/Offers";
 import { DTOOfferRule } from "@/services/api/models/OfferRule";
 
 const messages = defineMessages({
@@ -73,32 +73,32 @@ const messages = defineMessages({
  * Joanie Api hook to retrieve/create/update/delete course product relations
  * owned by the authenticated user.
  */
-const props: UseResourcesProps<CourseProductRelation, ResourcesQuery> = {
-  queryKey: ["course-product-relation"],
+const props: UseResourcesProps<Offer, ResourcesQuery> = {
+  queryKey: ["offer"],
   apiInterface: () => ({
     get: async (filters) => {
       if (filters?.id) {
         const { id, ...otherFilters } = filters;
-        return CourseProductRelationRepository.get(id, otherFilters);
+        return OfferRepository.get(id, otherFilters);
       }
 
-      return CourseProductRelationRepository.getAll(filters);
+      return OfferRepository.getAll(filters);
     },
-    create: CourseProductRelationRepository.create,
+    create: OfferRepository.create,
     update: async ({ id, ...payload }) => {
-      return CourseProductRelationRepository.update(id, payload);
+      return OfferRepository.update(id, payload);
     },
     delete: async (id: string) => {
-      return CourseProductRelationRepository.delete(id);
+      return OfferRepository.delete(id);
     },
   }),
   session: true,
   messages,
 };
 
-export const useCourseProductRelations = (
+export const useOffers = (
   filters?: ResourcesQuery,
-  queryOptions?: QueryOptions<CourseProductRelation>,
+  queryOptions?: QueryOptions<Offer>,
 ) => {
   const intl = useIntl();
   const custom = useResourcesCustom({ ...props, filters, queryOptions });
@@ -110,13 +110,10 @@ export const useCourseProductRelations = (
       ...custom.methods,
       addOfferRule: mutation({
         mutationFn: async (data: {
-          relationId: string;
+          offerId: string;
           payload: DTOOfferRule;
         }) => {
-          return CourseProductRelationRepository.addOfferRule(
-            data.relationId,
-            data.payload,
-          );
+          return OfferRepository.addOfferRule(data.offerId, data.payload);
         },
         onSuccess: () => {
           custom.methods.invalidate();
@@ -129,12 +126,12 @@ export const useCourseProductRelations = (
       }).mutate,
       editOfferRule: mutation({
         mutationFn: async (data: {
-          relationId: string;
+          offerId: string;
           offerRuleId: string;
           payload: DTOOfferRule;
         }) => {
-          return CourseProductRelationRepository.editOfferRule(
-            data.relationId,
+          return OfferRepository.editOfferRule(
+            data.offerId,
             data.offerRuleId,
             data.payload,
           );
@@ -149,12 +146,9 @@ export const useCourseProductRelations = (
         },
       }).mutate,
       deleteOfferRule: mutation({
-        mutationFn: async (data: {
-          relationId: string;
-          offerRuleId: string;
-        }) => {
-          return CourseProductRelationRepository.deleteOfferRule(
-            data.relationId,
+        mutationFn: async (data: { offerId: string; offerRuleId: string }) => {
+          return OfferRepository.deleteOfferRule(
+            data.offerId,
             data.offerRuleId,
           );
         },
@@ -172,4 +166,4 @@ export const useCourseProductRelations = (
 };
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
-export const useCourseProductRelation = useResource(props);
+export const useOffer = useResource(props);

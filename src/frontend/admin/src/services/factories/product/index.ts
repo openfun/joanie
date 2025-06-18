@@ -10,7 +10,7 @@ import {
 import { CertificateDefinitionFactory } from "@/services/factories/certificate-definition";
 import { randomNumber } from "@/utils/numbers";
 import { ProductTargetCourseRelationFactory } from "@/services/api/models/ProductTargetCourseRelation";
-import { CourseProductRelationFactory } from "@/services/api/models/Relations";
+import { OfferFactory } from "@/services/api/models/Offers";
 import { ContractDefinitionFactory } from "@/services/factories/contract-definition";
 
 const build = (): Product => {
@@ -24,7 +24,7 @@ const build = (): Product => {
     price_currency: "EUR",
     certificate_definition: CertificateDefinitionFactory(),
     target_courses: ProductTargetCourseRelationFactory(randomNumber(2)),
-    course_relations: CourseProductRelationFactory(2),
+    offers: OfferFactory(2),
     contract_definition: ContractDefinitionFactory(),
     certification_level: faker.number.int({ min: 1, max: 8 }),
     teachers: TeacherFactory(faker.number.int({ min: 1, max: 5 })),
@@ -71,7 +71,7 @@ const buildProductSimple = (): ProductSimple => {
     price_currency: "EUR",
     certificate_definition: faker.string.uuid(),
     target_courses: [faker.string.uuid()],
-    course_relations: [faker.string.uuid(), faker.string.uuid()],
+    offers: [faker.string.uuid(), faker.string.uuid()],
     contract_definition: faker.string.uuid(),
   };
 };

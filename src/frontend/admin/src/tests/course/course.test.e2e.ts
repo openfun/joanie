@@ -365,18 +365,18 @@ test.describe("Course product tab", () => {
     });
   });
 
-  test("Generate certificate on course product relation", async ({ page }) => {
+  test("Generate certificate on offer", async ({ page }) => {
     const course = store.list[0];
-    const relation = course.product_relations![0];
+    const offer = course.offers![0];
 
     await page.route(
-      `http://localhost:8071/api/v1.0/admin/course-product-relations/${relation.id}/generate_certificates/`,
+      `http://localhost:8071/api/v1.0/admin/offers/${offer.id}/generate_certificates/`,
       async (route, request) => {
         const methods = request.method();
         if (methods === "POST") {
           await route.fulfill({
             json: {
-              course_product_relation_id: relation.id,
+              offer_id: offer.id,
               count_certificate_to_generate: 0,
               count_exist_before_generation: 0,
             },
@@ -393,18 +393,16 @@ test.describe("Course product tab", () => {
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Products" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Relation to products" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
 
     await page.route(
-      `http://localhost:8071/api/v1.0/admin/course-product-relations/${relation.id}/check_certificates_generation_process/`,
+      `http://localhost:8071/api/v1.0/admin/offers/${offer.id}/check_certificates_generation_process/`,
       async (route, request) => {
         const methods = request.method();
         if (methods === "GET") {
           await route.fulfill({
             json: {
-              course_product_relation_id: relation.id,
+              offer_id: offer.id,
               count_certificate_to_generate: 0,
               count_exist_before_generation: 0,
             },
@@ -413,15 +411,13 @@ test.describe("Course product tab", () => {
       },
     );
 
-    await page
-      .getByTestId(`course-product-relation-actions-${relation.id}`)
-      .click();
+    await page.getByTestId(`offer-actions-${offer.id}`).click();
     await expect(
       page.getByRole("menuitem", { name: "Generate certificate" }),
     ).toBeVisible();
     await page.getByRole("menuitem", { name: "Generate certificate" }).click();
     await expect(
-      page.getByTestId(`already-generate-job-${relation.id}`),
+      page.getByTestId(`already-generate-job-${offer.id}`),
     ).toBeVisible();
   });
 
@@ -429,15 +425,15 @@ test.describe("Course product tab", () => {
     page,
   }) => {
     const course = store.list[0];
-    const relation = course.product_relations![0];
+    const offer = course.offers![0];
     await page.route(
-      `http://localhost:8071/api/v1.0/admin/course-product-relations/${relation.id}/check_certificates_generation_process/`,
+      `http://localhost:8071/api/v1.0/admin/offers/${offer.id}/check_certificates_generation_process/`,
       async (route, request) => {
         const methods = request.method();
         if (methods === "GET") {
           await route.fulfill({
             json: {
-              course_product_relation_id: relation.id,
+              offer_id: offer.id,
               count_certificate_to_generate: 0,
               count_exist_before_generation: 0,
             },
@@ -454,13 +450,9 @@ test.describe("Course product tab", () => {
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Products" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Relation to products" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
 
-    await page
-      .getByTestId(`course-product-relation-actions-${relation.id}`)
-      .click();
+    await page.getByTestId(`offer-actions-${offer.id}`).click();
     await page.getByTestId("Generate certificates").hover();
     await delay(200);
 
@@ -469,12 +461,10 @@ test.describe("Course product tab", () => {
     ).toBeVisible();
 
     await page
-      .locator(
-        `#course-product-relation-actions-${relation.id} > .MuiBackdrop-root`,
-      )
+      .locator(`#offer-actions-${offer.id} > .MuiBackdrop-root`)
       .click();
 
-    await page.getByTestId(`already-generate-job-${relation.id}`).hover();
+    await page.getByTestId(`already-generate-job-${offer.id}`).hover();
     await delay(200);
 
     await expect(

@@ -3,7 +3,7 @@ import {
   DTOProductTargetCourseRelation,
   ProductTargetCourseRelation,
 } from "./ProductTargetCourseRelation";
-import { CourseProductRelation } from "./Relations";
+import { Offer } from "./Offers";
 import { Maybe, Nullable, Optional, ToFormValues } from "@/types/utils";
 import { ProductFormMainValues } from "@/components/templates/products/form/sections/main/ProductFormMain";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
@@ -23,7 +23,7 @@ export type BaseProduct = {
 
 export type Product = BaseProduct & {
   target_courses?: ProductTargetCourseRelation[];
-  course_relations?: CourseProductRelation[];
+  offers?: Offer[];
   contract_definition: Nullable<ContractDefinition>;
   certificate_definition: Nullable<CertificateDefinition>;
   certification_level: Nullable<number>;
@@ -34,7 +34,7 @@ export type Product = BaseProduct & {
 export type ProductSimple = BaseProduct & {
   target_courses?: string[];
   certificate_definition: Nullable<string>;
-  course_relations?: string[];
+  offers?: string[];
   contract_definition: Nullable<string>;
 };
 

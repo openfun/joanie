@@ -1,4 +1,4 @@
-import { CourseProductRelation } from "@/services/api/models/Relations";
+import { Offer } from "@/services/api/models/Offers";
 import { Discount } from "@/services/api/models/Discount";
 
 export type OfferRule = {
@@ -23,6 +23,6 @@ export type DTOOfferRule = {
   start?: OfferRule["start"];
   end?: OfferRule["end"];
   is_active: OfferRule["is_active"];
-  course_product_relation: CourseProductRelation["id"];
+  offer: Offer["id"];
   discount_id?: Discount["id"] | null;
 };
