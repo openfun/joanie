@@ -113,7 +113,7 @@ class OrderModelsTestCase(LoggingTestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course], type="certificate")
-        organization = product.course_relations.get().organizations.first()
+        organization = product.offers.get().organizations.first()
         enrollment = factories.EnrollmentFactory(
             course_run__state=CourseState.FUTURE_OPEN,
             course_run__is_listed=True,
@@ -162,7 +162,7 @@ class OrderModelsTestCase(LoggingTestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course], type=product_type)
-        organization = product.course_relations.get().organizations.first()
+        organization = product.offers.get().organizations.first()
         enrollment = factories.EnrollmentFactory(
             course_run__state=CourseState.FUTURE_OPEN,
             course_run__is_listed=True,
@@ -548,8 +548,8 @@ class OrderModelsTestCase(LoggingTestCase):
         product = factories.ProductFactory(target_courses=[course1, course2], price=0)
 
         # - Link cr3 to the product course relations
-        offer = product.target_course_relations.get(course=course2)
-        offer.course_runs.add(cr3)
+        relation = product.target_course_relations.get(course=course2)
+        relation.course_runs.add(cr3)
 
         # - Create an order link to the product
         order = factories.OrderFactory(product=product)

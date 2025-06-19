@@ -658,7 +658,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         # call originates from a viewset (the viewset annotates the query to minimize database
         # calls) and default to querying the database ourselves
         try:
-            offers = instance.course_run.course.certificate_product_relations
+            offers = instance.course_run.course.certificate_offers
         except AttributeError:
             offers = models.CourseProductRelation.objects.filter(
                 product__type=enums.PRODUCT_TYPE_CERTIFICATE,
@@ -1145,7 +1145,7 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     target_courses = OrderTargetCourseRelationSerializer(
-        read_only=True, many=True, source="course_relations"
+        read_only=True, many=True, source="offers"
     )
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"

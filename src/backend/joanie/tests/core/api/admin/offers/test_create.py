@@ -306,4 +306,4 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
             ]
         }
         organization.refresh_from_db()
-        self.assertEqual(organization.product_relations.count(), 0)
+        self.assertEqual(organization.offers.count(), 0)

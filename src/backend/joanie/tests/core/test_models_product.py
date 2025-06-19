@@ -356,7 +356,7 @@ class ProductModelsTestCase(TestCase):
             target_courses=[course_run.course],
             courses=[course],
         )
-        relation = product.course_relations.first()
+        relation = product.offers.first()
 
         self.assertEqual(
             product.get_equivalent_serialized_course_runs_for_products([product]),
@@ -399,7 +399,7 @@ class ProductModelsTestCase(TestCase):
         product = factories.ProductFactory(
             target_courses=[course_run.course], courses=[course], price="50.00"
         )
-        relation = product.course_relations.first()
+        relation = product.offers.first()
 
         self.assertEqual(
             product.get_equivalent_serialized_course_runs_for_products(
@@ -425,7 +425,7 @@ class ProductModelsTestCase(TestCase):
             ],
         )
 
-    def test_models_product_get_equivalent_serialized_course_runs_for_products_without_course_relations(  # pylint: disable=line-too-long
+    def test_models_product_get_equivalent_serialized_course_runs_for_products_without_offers(  # pylint: disable=line-too-long
         self,
     ):
         """

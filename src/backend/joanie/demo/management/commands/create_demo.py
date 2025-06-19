@@ -235,7 +235,7 @@ def create_demo(stdout):
         users_ids = list(models.User.objects.values_list("id", flat=True))
         for product in models.Product.objects.iterator():
             course_dict = {}
-            for offer in product.course_relations.all():
+            for offer in product.offers.all():
                 course_dict[offer.course_id] = offer.organizations.values_list(
                     "id", flat=True
                 )
@@ -270,7 +270,7 @@ def create_demo(stdout):
         for product in models.Product.objects.iterator():
             target_course_relations = product.target_course_relations.all()
             for order in models.Order.objects.filter(product=product).iterator():
-                for offer in target_course_relations:
+                for relation in target_course_relations:
                     queue.push(
                         models.OrderTargetCourseRelation(
                             course_id=relation.course_id,

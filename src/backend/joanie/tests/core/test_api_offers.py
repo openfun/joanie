@@ -202,10 +202,10 @@ class OfferApiTest(BaseAPITestCase):
                                     "start"
                                 )
                             ],
-                            "position": target_course.product_relations.get(
+                            "position": target_course.offers.get(
                                 product=offer.product
                             ).position,
-                            "is_graded": target_course.product_relations.get(
+                            "is_graded": target_course.offers.get(
                                 product=offer.product
                             ).is_graded,
                             "title": target_course.title,
@@ -712,10 +712,10 @@ class OfferApiTest(BaseAPITestCase):
                                     "start"
                                 )
                             ],
-                            "position": target_course.product_relations.get(
+                            "position": target_course.offers.get(
                                 product=offer.product
                             ).position,
-                            "is_graded": target_course.product_relations.get(
+                            "is_graded": target_course.offers.get(
                                 product=offer.product
                             ).is_graded,
                             "title": target_course.title,

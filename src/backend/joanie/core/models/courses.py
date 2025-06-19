@@ -243,14 +243,14 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         """
         Return the course product relation associated with the organization.
         """
-        return self.product_relations
+        return self.offers
 
     @offers.setter
     def set_offers(self, value):
         """
         Set the course product relation associated with the organization.
         """
-        self.product_relations = value
+        self.offers = value
 
     class Meta:
         db_table = "joanie_organization"
@@ -333,7 +333,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         if contract_ids := kwargs.get("contract_ids"):
             filters &= Q(id__in=contract_ids)
         if relation_ids := kwargs.get("offer_ids"):
-            filters &= Q(order__product__course_relations__id__in=relation_ids)
+            filters &= Q(order__product__offers__id__in=relation_ids)
 
         contracts_to_sign = list(
             Contract.objects.filter(
@@ -515,14 +515,14 @@ class Course(parler_models.TranslatableModel, BaseModel):
         """
         Return the course product relation associated with the course.
         """
-        return self.product_relations
+        return self.offers
 
     @offers.setter
     def set_offers(self, value):
         """
         Set the course product relation associated with the course.
         """
-        self.product_relations = value
+        self.offers = value
 
     class Meta:
         db_table = "joanie_course"
@@ -590,9 +590,9 @@ class Course(parler_models.TranslatableModel, BaseModel):
         """
 
         if product is None:
-            qs = self.product_relations.all()
+            qs = self.offers.all()
         else:
-            qs = self.product_relations.filter(product=product)
+            qs = self.offers.filter(product=product)
 
         return Organization.objects.filter(
             id__in=qs.distinct()
@@ -751,18 +751,18 @@ class CourseProductRelation(BaseModel):
     course = models.ForeignKey(
         to=Course,
         verbose_name=_("course"),
-        related_name="product_relations",
+        related_name="offers",
         on_delete=models.RESTRICT,
     )
     product = models.ForeignKey(
         to="Product",
         verbose_name=_("product"),
-        related_name="course_relations",
+        related_name="offers",
         on_delete=models.CASCADE,
     )
     organizations = models.ManyToManyField(
         to=Organization,
-        related_name="product_relations",
+        related_name="offers",
         verbose_name=_("organizations"),
     )
 
@@ -1289,10 +1289,10 @@ class Enrollment(BaseModel):
                 validated_user_orders = self.user.orders.filter(
                     (
                         models.Q(
-                            course_relations__course_runs__isnull=True,
+                            offers__course_runs__isnull=True,
                             target_courses__course_runs=self.course_run,
                         )
-                        | models.Q(course_relations__course_runs=self.course_run)
+                        | models.Q(offers__course_runs=self.course_run)
                     ),
                     (
                         models.Q(

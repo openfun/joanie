@@ -319,8 +319,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             content["results"][2]["offers"],
             [
                 {
-                    "id": str(product2.course_relations.last().id),
-                    "is_withdrawable": product2.course_relations.last().is_withdrawable,
+                    "id": str(product2.offers.last().id),
+                    "is_withdrawable": product2.offers.last().is_withdrawable,
                     "product": {
                         "instructions": "",
                         "call_to_action": "let's go!",
@@ -349,8 +349,8 @@ class EnrollmentApiTest(BaseAPITestCase):
                     },
                 },
                 {
-                    "id": str(product1.course_relations.last().id),
-                    "is_withdrawable": product1.course_relations.last().is_withdrawable,
+                    "id": str(product1.offers.last().id),
+                    "is_withdrawable": product1.offers.last().is_withdrawable,
                     "product": {
                         "instructions": "",
                         "call_to_action": "let's go!",
@@ -804,8 +804,8 @@ class EnrollmentApiTest(BaseAPITestCase):
             content["offers"],
             [
                 {
-                    "id": str(product.course_relations.first().id),
-                    "is_withdrawable": product.course_relations.first().is_withdrawable,
+                    "id": str(product.offers.first().id),
+                    "is_withdrawable": product.offers.first().is_withdrawable,
                     "product": {
                         "call_to_action": "let's go!",
                         "certificate_definition": {

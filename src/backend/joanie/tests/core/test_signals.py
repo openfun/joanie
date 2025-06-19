@@ -116,7 +116,7 @@ class SignalsTestCase(TestCase):
             course=course_run.course, is_listed=True
         )
         product = factories.ProductFactory()
-        offer = product.course_relations.first()
+        offer = product.offers.first()
         factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course, course_runs=[course_run]
         )
@@ -264,7 +264,7 @@ class SignalsTestCase(TestCase):
         """
         course_run = factories.CourseRunFactory()
         product, other_product = factories.ProductFactory.create_batch(2)
-        offer = product.course_relations.first()
+        offer = product.offers.first()
         ptcr = factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course
         )
@@ -301,7 +301,7 @@ class SignalsTestCase(TestCase):
         """
         course_run = factories.CourseRunFactory()
         product, other_product = factories.ProductFactory.create_batch(2)
-        offer = product.course_relations.first()
+        offer = product.offers.first()
         ptcr = factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course
         )
@@ -557,7 +557,7 @@ class SignalsTestCase(TestCase):
         product, _other_product = factories.ProductFactory.create_batch(
             2, courses=[course1], target_courses=[course_run.course]
         )
-        offers = product.course_relations.all()
+        offers = product.offers.all()
         mock_sync.reset_mock()
 
         product.courses.add(course2)
@@ -670,7 +670,7 @@ class SignalsTestCase(TestCase):
         mock_sync.reset_mock()
 
         product.courses.create(code="123")
-        offers = product.course_relations.all()
+        offers = product.offers.all()
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
@@ -744,7 +744,7 @@ class SignalsTestCase(TestCase):
         mock_sync.reset_mock()
 
         old_relations = list(
-            product.course_relations.values_list("course__code", "product__id").all()
+            product.offers.values_list("course__code", "product__id").all()
         )
         product.courses.clear()
 
@@ -870,7 +870,7 @@ class SignalsTestCase(TestCase):
                 [product1]
             ),
         )
-        product_relation = product1.course_relations.first()
+        product_relation = product1.offers.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
@@ -925,7 +925,7 @@ class SignalsTestCase(TestCase):
 
         # Removing
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product.course_relations.all()
+        offers = product.offers.all()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
@@ -1009,7 +1009,7 @@ class SignalsTestCase(TestCase):
         # 2- a second time when the course run is attached to the product/target course offer
         self.assertEqual(mock_sync.call_args_list[1][1], {})
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
-        offers = product.course_relations.all()
+        offers = product.offers.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -1070,7 +1070,7 @@ class SignalsTestCase(TestCase):
                 [product]
             ),
         )
-        offer = product.course_relations.first()
+        offer = product.offers.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
@@ -1125,7 +1125,7 @@ class SignalsTestCase(TestCase):
                 [product]
             ),
         )
-        offer = product.course_relations.first()
+        offer = product.offers.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
@@ -1173,7 +1173,7 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product1.course_relations.all()
+        offers = product1.offers.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -1233,7 +1233,7 @@ class SignalsTestCase(TestCase):
 
         # Removing
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product1.course_relations.all()
+        offers = product1.offers.all()
         self.assertCountEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -1323,7 +1323,7 @@ class SignalsTestCase(TestCase):
         # 2- a second time when the course run is attached to the product/target course offer
         self.assertEqual(mock_sync.call_count, 2)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product2.course_relations.all()
+        offers = product2.offers.all()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
@@ -1398,7 +1398,7 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product1.course_relations.all()
+        offers = product1.offers.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(

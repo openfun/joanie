@@ -254,7 +254,7 @@ class OrganizationViewSetFilter(filters.FilterSet):
     Filter organizations by offer.
     """
 
-    offer_id = filters.UUIDFilter(field_name="product_relations__id")
+    offer_id = filters.UUIDFilter(field_name="offers__id")
 
     class Meta:
         model = models.Organization
