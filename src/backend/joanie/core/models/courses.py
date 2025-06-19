@@ -7,7 +7,6 @@ import logging
 from collections.abc import Mapping
 from datetime import MAXYEAR, datetime
 from datetime import timezone as tz
-from decimal import Decimal
 from typing import TypedDict
 
 from django.apps import apps
@@ -836,90 +835,60 @@ class CourseProductRelation(BaseModel):
         )
 
     @property
-    def enabled_offer_rule(self) -> "OfferRule | None":
+    def rules(self):
         """
-        Return the first enabled offer rule for the course product relation.
-        Cache the result to avoid redundant queries.
+        Compute the current offer rules for the course product relation.
         """
+        offer_rule_found = None
+        offer_rule_is_blocking = False
         for offer_rule in self.offer_rules.all():
             if offer_rule.is_enabled:
-                return offer_rule
-        return None
+                offer_rule_is_blocking = (
+                    not offer_rule.is_assignable and not offer_rule.discount
+                )
+                offer_rule_found = offer_rule
 
-    @property
-    def discounted_price(self) -> Decimal | None:
-        """
-        Return the discounted price of the product, if any.
-        """
-        if offer_rule := self.enabled_offer_rule:
-            if discount := offer_rule.discount:
-                return calculate_price(self.product.price, discount)  # pylint: disable=no-member
-        return None
+        discounted_price = None
+        discount_amount = None
+        discount_rate = None
+        description = None
+        discount_start = None
+        discount_end = None
+        nb_available_seats = None
+        has_seat_limit = False
+        has_seats_left = True
 
-    @property
-    def discount_amount(self) -> float | None:
-        """
-        Return the discount amount of the first enabled offer rule, if any.
-        """
-        if offer_rule := self.enabled_offer_rule:
-            if discount := offer_rule.discount:
-                return discount.amount
-        return None
+        if offer_rule := offer_rule_found:
+            description = offer_rule.description
+            discount_start = offer_rule.start
+            discount_end = offer_rule.end
+            if not offer_rule.discount or offer_rule.available_seats:
+                nb_available_seats = offer_rule.available_seats
+                has_seat_limit = (
+                    offer_rule.nb_seats is not None and nb_available_seats is not None
+                )
+                has_seats_left = not has_seat_limit or (
+                    has_seat_limit and nb_available_seats > 0
+                )
+            if offer_rule.discount and offer_rule.is_assignable:
+                discounted_price = calculate_price(
+                    self.product.price,  # pylint: disable=no-member
+                    offer_rule.discount,
+                )
+                discount_amount = offer_rule.discount.amount
+                discount_rate = offer_rule.discount.rate
 
-    @property
-    def discount_rate(self) -> float | None:
-        """
-        Return the discount rate of the first enabled offer rule, if any.
-        """
-        if offer_rule := self.enabled_offer_rule:
-            if discount := offer_rule.discount:
-                return discount.rate
-        return None
-
-    @property
-    def description(self) -> str | None:
-        """
-        Return the description of the first enabled offer rule, if any.
-        """
-        if offer_rule := self.enabled_offer_rule:
-            return offer_rule.description
-        return None
-
-    @property
-    def discount_start(self) -> datetime | None:
-        """
-        Return the discount start date of the first enabled offer rule, if any.
-        """
-        if offer_rule := self.enabled_offer_rule:
-            return offer_rule.start
-        return None
-
-    @property
-    def discount_end(self) -> datetime | None:
-        """
-        Return the discount end date of the first enabled offer rule, if any.
-        """
-        if offer_rule := self.enabled_offer_rule:
-            return offer_rule.end
-        return None
-
-    @property
-    def nb_available_seats(self) -> int | None:
-        """
-        Return the number of seats available for the first enabled offer rule, if any.
-        """
-        if offer_rule := self.enabled_offer_rule:
-            return offer_rule.available_seats
-        return None
-
-    @property
-    def nb_seats(self) -> int | None:
-        """
-        Return the total number of seats for the first enabled offer rule, if any.
-        """
-        if offer_rule := self.enabled_offer_rule:
-            return offer_rule.nb_seats
-        return None
+        return {
+            "discounted_price": discounted_price,
+            "discount_amount": discount_amount,
+            "discount_rate": discount_rate,
+            "description": description,
+            "discount_start": discount_start,
+            "discount_end": discount_end,
+            "nb_available_seats": nb_available_seats,
+            "has_seat_limit": has_seat_limit,
+            "has_seats_left": has_seats_left or not offer_rule_is_blocking,
+        }
 
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):

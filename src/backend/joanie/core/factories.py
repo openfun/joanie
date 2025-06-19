@@ -691,7 +691,6 @@ class OfferRuleFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         model = models.OfferRule
 
     course_product_relation = factory.SubFactory(OfferFactory)
-    nb_seats = factory.fuzzy.FuzzyInteger(1, 100)
 
 
 class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):

@@ -868,6 +868,68 @@ class CourseSerializer(AbilitiesModelSerializer):
         read_only_fields = fields
 
 
+class OfferRulePropertySerializer(serializers.Serializer):
+    """
+    Serializer for the rules property of an offer.
+    """
+
+    discounted_price = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        help_text=_("Discounted price of the offer."),
+    )
+    discount_rate = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        max_value=D(100.00),
+        read_only=True,
+        help_text=_("Discount rate of the offer."),
+    )
+    discount_amount = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        help_text=_("Discount amount of the offer."),
+    )
+    discount_start = serializers.DateTimeField(
+        read_only=True,
+        help_text=_("Start date of the discount period for the offer."),
+    )
+    discount_end = serializers.DateTimeField(
+        read_only=True,
+        help_text=_("End date of the discount period for the offer."),
+    )
+    description = serializers.CharField(
+        read_only=True,
+        help_text=_("Description of the offer rule."),
+    )
+    nb_available_seats = serializers.IntegerField(
+        read_only=True,
+        help_text=_("Number of available seats for the offer."),
+    )
+    has_seat_limit = serializers.BooleanField(
+        read_only=True,
+        help_text=_("Indicates if the offer has a seat limit."),
+    )
+    has_seats_left = serializers.BooleanField(
+        read_only=True,
+        help_text=_("Indicates if there are seats left for the offer."),
+    )
+
+    def create(self, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+    def update(self, instance, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+
 class OfferLightSerializer(CachedModelSerializer):
     """
     Serialize an offer in its minimal format.
@@ -898,18 +960,15 @@ class OfferSerializer(OfferLightSerializer):
     """
 
     is_withdrawable = serializers.BooleanField(read_only=True)
+    rules = OfferRulePropertySerializer(
+        read_only=True,
+        help_text=_("Offer rules applied to this offer."),
+    )
 
     class Meta(OfferLightSerializer.Meta):
         fields = OfferLightSerializer.Meta.fields + [
             "is_withdrawable",
-            "discounted_price",
-            "discount_rate",
-            "discount_amount",
-            "discount_start",
-            "discount_end",
-            "description",
-            "nb_available_seats",
-            "nb_seats",
+            "rules",
         ]
         read_only_fields = fields
 
