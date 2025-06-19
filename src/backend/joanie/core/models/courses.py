@@ -836,13 +836,12 @@ class CourseProductRelation(BaseModel):
         )
 
     @property
-    def enabled_offer_rule(self) -> "OfferRule | None":
+    def assignable_offer_rule(self) -> "OfferRule | None":
         """
-        Return the first enabled offer rule for the course product relation.
-        Cache the result to avoid redundant queries.
+        Return the first assignable offer rule for the course product relation.
         """
         for offer_rule in self.offer_rules.all():
-            if offer_rule.is_enabled:
+            if offer_rule.is_assignable:
                 return offer_rule
         return None
 
@@ -851,7 +850,7 @@ class CourseProductRelation(BaseModel):
         """
         Return the discounted price of the product, if any.
         """
-        if offer_rule := self.enabled_offer_rule:
+        if offer_rule := self.assignable_offer_rule:
             if discount := offer_rule.discount:
                 return calculate_price(self.product.price, discount)  # pylint: disable=no-member
         return None
@@ -861,7 +860,7 @@ class CourseProductRelation(BaseModel):
         """
         Return the discount amount of the first enabled offer rule, if any.
         """
-        if offer_rule := self.enabled_offer_rule:
+        if offer_rule := self.assignable_offer_rule:
             if discount := offer_rule.discount:
                 return discount.amount
         return None
@@ -871,7 +870,7 @@ class CourseProductRelation(BaseModel):
         """
         Return the discount rate of the first enabled offer rule, if any.
         """
-        if offer_rule := self.enabled_offer_rule:
+        if offer_rule := self.assignable_offer_rule:
             if discount := offer_rule.discount:
                 return discount.rate
         return None
@@ -881,7 +880,7 @@ class CourseProductRelation(BaseModel):
         """
         Return the description of the first enabled offer rule, if any.
         """
-        if offer_rule := self.enabled_offer_rule:
+        if offer_rule := self.assignable_offer_rule:
             return offer_rule.description
         return None
 
@@ -890,7 +889,7 @@ class CourseProductRelation(BaseModel):
         """
         Return the discount start date of the first enabled offer rule, if any.
         """
-        if offer_rule := self.enabled_offer_rule:
+        if offer_rule := self.assignable_offer_rule:
             return offer_rule.start
         return None
 
@@ -899,7 +898,7 @@ class CourseProductRelation(BaseModel):
         """
         Return the discount end date of the first enabled offer rule, if any.
         """
-        if offer_rule := self.enabled_offer_rule:
+        if offer_rule := self.assignable_offer_rule:
             return offer_rule.end
         return None
 
@@ -908,7 +907,7 @@ class CourseProductRelation(BaseModel):
         """
         Return the number of seats available for the first enabled offer rule, if any.
         """
-        if offer_rule := self.enabled_offer_rule:
+        if offer_rule := self.assignable_offer_rule:
             return offer_rule.available_seats
         return None
 
@@ -917,7 +916,7 @@ class CourseProductRelation(BaseModel):
         """
         Return the total number of seats for the first enabled offer rule, if any.
         """
-        if offer_rule := self.enabled_offer_rule:
+        if offer_rule := self.assignable_offer_rule:
             return offer_rule.nb_seats
         return None
 
