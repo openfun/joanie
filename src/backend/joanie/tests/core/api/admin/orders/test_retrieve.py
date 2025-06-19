@@ -36,7 +36,10 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__certificate_definition=factories.CertificateDefinitionFactory(),
         )
-        offer_rule = factories.OfferRuleFactory(course_product_relation=offer)
+        offer_rule = factories.OfferRuleFactory(
+            course_product_relation=offer,
+            nb_seats=10,
+        )
         order = factories.OrderGeneratorFactory(
             course=offer.course,
             product=offer.product,

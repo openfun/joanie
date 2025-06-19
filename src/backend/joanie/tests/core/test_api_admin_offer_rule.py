@@ -44,7 +44,10 @@ class OfferRuleAdminApiTest(TestCase):
         discount = factories.DiscountFactory(rate=0.3)
         offer_rules = [
             factories.OfferRuleFactory(
-                position=i, course_product_relation=offer, discount=discount
+                position=i,
+                course_product_relation=offer,
+                discount=discount,
+                nb_seats=10,
             )
             for i in range(3)
         ]
@@ -126,6 +129,7 @@ class OfferRuleAdminApiTest(TestCase):
         offer_rule = factories.OfferRuleFactory(
             course_product_relation=offer,
             discount=factories.DiscountFactory(amount=30),
+            nb_seats=10,
         )
 
         with self.assertNumQueries(8):
@@ -302,7 +306,7 @@ class OfferRuleAdminApiTest(TestCase):
         data = {
             "is_active": True,
         }
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(5):
             response = self.client.patch(
                 f"{self.base_url}/{offer.id}/offer-rules/{str(offer_rule.id)}/",
                 content_type="application/json",

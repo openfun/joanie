@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.core.enums import (
     PRODUCT_TYPE_CERTIFICATE,
     PRODUCT_TYPE_CHOICES,
@@ -18,7 +18,9 @@ from joanie.core.enums import (
 
 
 class CourseProductRelationModelTestCase(TestCase):
-    """Test suite for the CourseProductRelation model."""
+    """Test suite for the CourseProductRelation (offer) model."""
+
+    maxDiff = None
 
     def test_model_offer_uri(self):
         """
@@ -138,3 +140,171 @@ class CourseProductRelationModelTestCase(TestCase):
                     ),
                 ):
                     self.assertEqual(offer.is_withdrawable, True)
+
+    def create_order(self, offer, offer_rules=None):
+        """
+        Helper method to create an order linked to the given offer.
+        """
+        return factories.OrderFactory(
+            course=offer.course,
+            product=offer.product,
+            offer_rules=offer_rules or [],
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+        )
+
+    def test_model_offer_rules_0(self):
+        """Without rules"""
+        offer = factories.OfferFactory()
+
+        self.assertEqual(
+            offer.rules,
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": None,
+                "has_seat_limit": False,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_model_offer_rules_1(self):
+        """
+        With rules:
+        - rule 1: 1 seat available
+        And orders:
+        - order 1: rule 1
+        Then:
+        - has_seats_left: False
+        """
+        offer = factories.OfferFactory()
+        offer_rule_1 = factories.OfferRuleFactory(
+            course_product_relation=offer, is_active=True, nb_seats=1
+        )
+        self.create_order(offer, [offer_rule_1])
+
+        self.assertEqual(
+            offer.rules,
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": 0,
+                "has_seat_limit": True,
+                "has_seats_left": False,
+            },
+        )
+
+    def test_model_offer_rules_2(self):
+        """
+        With rules:
+        - rule 1: 1 seat available 1 discount
+        Then:
+        - has_seats_left: True
+        """
+        offer = factories.OfferFactory(product__price=100)
+        factories.OfferRuleFactory(
+            course_product_relation=offer,
+            is_active=True,
+            nb_seats=1,
+            discount=factories.DiscountFactory(
+                rate=0.1,
+            ),
+        )
+
+        self.assertEqual(
+            offer.rules,
+            {
+                "discounted_price": 90,
+                "discount_amount": None,
+                "discount_rate": 0.1,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": 1,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_model_offer_rules_3(self):
+        """
+        With rules:
+        - rule 1: 1 seat available 1 discount
+        And orders:
+        - order 1: rule 1
+        Then:
+        - has_seats_left: True
+        """
+        offer = factories.OfferFactory(product__price=100)
+        offer_rule_1 = factories.OfferRuleFactory(
+            course_product_relation=offer,
+            is_active=True,
+            nb_seats=1,
+            discount=factories.DiscountFactory(
+                rate=0.1,
+            ),
+        )
+        self.create_order(offer, [offer_rule_1])
+
+        self.assertEqual(
+            offer.rules,
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": None,
+                "has_seat_limit": False,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_model_offer_rules_4(self):
+        """
+        With rules:
+        - rule 1: 1 seat available 1 discount
+        - rule 2: 1 seat available
+        And orders:
+        - order 1: rule 1
+        - order 2: rule 2
+        Then:
+        - has_seats_left: False
+        """
+        offer = factories.OfferFactory(product__price=100)
+        offer_rule_1 = factories.OfferRuleFactory(
+            course_product_relation=offer,
+            is_active=True,
+            nb_seats=1,
+            discount=factories.DiscountFactory(
+                rate=0.1,
+            ),
+        )
+        offer_rule_2 = factories.OfferRuleFactory(
+            course_product_relation=offer, is_active=True, nb_seats=1
+        )
+        self.create_order(offer, [offer_rule_1])
+        self.create_order(offer, [offer_rule_2])
+
+        self.assertEqual(
+            offer.rules,
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": 0,
+                "has_seat_limit": True,
+                "has_seats_left": False,
+            },
+        )

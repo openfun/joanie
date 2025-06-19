@@ -36,6 +36,7 @@ and this project adheres to
 ### Fixed
 
 - Invalidate course product relation cache on order group update
+- Compute offer rule properties instead of returning the first one
 
 ## [2.18.1] - 2025-05-28
 

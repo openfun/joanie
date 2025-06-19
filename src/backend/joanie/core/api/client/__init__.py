@@ -221,7 +221,7 @@ class OfferViewSet(
         )
 
         payment_schedule = generate_payment_schedule(
-            offer.discounted_price or offer.product.price,
+            offer.rules.get("discounted_price") or offer.product.price,
             timezone.now(),
             course_run_dates["start"],
             course_run_dates["end"],

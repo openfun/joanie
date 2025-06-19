@@ -742,22 +742,25 @@ class OfferApiTest(BaseAPITestCase):
                     }
                     for organization in offer.organizations.all()
                 ],
-                "discounted_price": None,
-                "discount_rate": None,
-                "discount_amount": None,
-                "discount_start": None,
-                "discount_end": None,
-                "description": None,
-                "nb_available_seats": None,
-                "nb_seats": None,
+                "rules": {
+                    "discounted_price": None,
+                    "discount_rate": None,
+                    "discount_amount": None,
+                    "discount_start": None,
+                    "discount_end": None,
+                    "description": None,
+                    "nb_available_seats": None,
+                    "has_seat_limit": False,
+                    "has_seats_left": True,
+                },
             },
         )
 
-    def test_api_offer_read_detail_with_offer_rules(self):
+    def test_api_offer_read_offer_rules(self):
         """The detail of offer rules related to the product should be served as expected."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory()
+        offer = factories.OfferFactory(product__price=100)
         product = offer.product
         course = offer.course
         factories.UserCourseAccessFactory(user=user, course=course)
@@ -766,7 +769,6 @@ class OfferApiTest(BaseAPITestCase):
             nb_seats=random.randint(10, 100),
             discount=factories.DiscountFactory(amount=10),
         )
-        factories.OfferRuleFactory(course_product_relation=offer)
         for _ in range(3):
             factories.OrderFactory(
                 course=course,
@@ -781,7 +783,7 @@ class OfferApiTest(BaseAPITestCase):
                 course=course, product=product, offer_rules=[offer_rule], state=state
             )
 
-        with self.assertNumQueries(54):
+        with self.assertNumQueries(60):
             self.client.get(
                 f"/api/v1.0/offers/{offer.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -798,19 +800,26 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(content["discount_amount"], offer_rule.discount.amount)
-        self.assertEqual(content["discount_rate"], offer_rule.discount.rate)
-        self.assertEqual(content["discount_start"], None)
-        self.assertEqual(content["discount_end"], None)
-        self.assertEqual(content["description"], offer_rule.description)
-        self.assertEqual(content["nb_available_seats"], offer_rule.available_seats)
-        self.assertEqual(content["nb_seats"], offer_rule.nb_seats)
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": 90,
+                "discount_amount": offer_rule.discount.amount,
+                "discount_rate": offer_rule.discount.rate,
+                "description": offer_rule.description,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": offer_rule.available_seats,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
 
-    def test_api_offer_read_detail_discount(self):
+    def test_api_offer_read_offer_rules_discount(self):
         """The discounted price should be calculated as expected."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory()
+        offer = factories.OfferFactory(product__price=100)
         factories.UserCourseAccessFactory(user=user, course=offer.course)
         offer_rule = factories.OfferRuleFactory(
             course_product_relation=offer,
@@ -825,19 +834,23 @@ class OfferApiTest(BaseAPITestCase):
 
         content = response.json()
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(
-            content["discounted_price"],
-            float(offer.product.price) - offer_rule.discount.amount,
-        )
-        self.assertEqual(content["discount_amount"], offer_rule.discount.amount)
-        self.assertEqual(content["discount_rate"], None)
-        self.assertEqual(content["discount_start"], None)
-        self.assertEqual(content["discount_end"], None)
-        self.assertEqual(content["description"], None)
-        self.assertEqual(content["nb_available_seats"], offer_rule.nb_seats)
-        self.assertEqual(content["nb_seats"], offer_rule.nb_seats)
 
-    def test_api_offer_read_detail_with_offer_rules_cache(self):
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": 90,
+                "discount_amount": offer_rule.discount.amount,
+                "discount_rate": offer_rule.discount.rate,
+                "description": offer_rule.description,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": offer_rule.available_seats,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_api_offer_read_offer_rules_cache(self):
         """Cache should be reset on order submit and cancel."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -858,13 +871,21 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(content["discount_amount"], None)
-        self.assertEqual(content["discount_rate"], None)
-        self.assertEqual(content["discount_start"], None)
-        self.assertEqual(content["discount_end"], None)
-        self.assertEqual(content["description"], None)
-        self.assertEqual(content["nb_available_seats"], 10)
-        self.assertEqual(content["nb_seats"], 10)
+
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": 10,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
 
         # Starting order state flow should impact the number of seat availabilities in the
         # representation of the product
@@ -878,13 +899,20 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(content["discount_amount"], None)
-        self.assertEqual(content["discount_rate"], None)
-        self.assertEqual(content["discount_start"], None)
-        self.assertEqual(content["discount_end"], None)
-        self.assertEqual(content["description"], None)
-        self.assertEqual(content["nb_available_seats"], 9)
-        self.assertEqual(content["nb_seats"], 10)
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": 9,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
 
         # Cancelling order should re-credit the number of seat availabilities in the
         # representation of the product
@@ -897,15 +925,22 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(content["discount_amount"], None)
-        self.assertEqual(content["discount_rate"], None)
-        self.assertEqual(content["discount_start"], None)
-        self.assertEqual(content["discount_end"], None)
-        self.assertEqual(content["description"], None)
-        self.assertEqual(content["nb_available_seats"], 10)
-        self.assertEqual(content["nb_seats"], 10)
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": 10,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
 
-    def test_api_offer_return_only_is_active_offer_rules(self):
+    def test_api_offer_read_offer_rules_is_active(self):
         """
         Authenticated user should only have active offer rules on the course product
         offer.
@@ -934,13 +969,110 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(content["discount_amount"], None)
-        self.assertEqual(content["discount_rate"], None)
-        self.assertEqual(content["discount_start"], None)
-        self.assertEqual(content["discount_end"], None)
-        self.assertEqual(content["description"], None)
-        self.assertEqual(content["nb_available_seats"], offer_rule_1.available_seats)
-        self.assertEqual(content["nb_seats"], offer_rule_1.nb_seats)
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": offer_rule_1.available_seats,
+                "has_seat_limit": False,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_api_offer_read_offer_rules_assignable(self):
+        """
+        Authenticated user should only have assignable offer rules on the course product
+        relation.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offer = factories.OfferFactory()
+        factories.UserCourseAccessFactory(user=user, course=offer.course)
+
+        offer_rule = factories.OfferRuleFactory(
+            course_product_relation=offer, is_active=True, nb_seats=1
+        )
+        factories.OfferRuleFactory(is_active=True, nb_seats=1)
+        factories.OrderFactory(
+            course=offer.course,
+            product=offer.product,
+            offer_rules=[offer_rule],
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/offers/{offer.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": 0,
+                "has_seat_limit": True,
+                "has_seats_left": False,
+            },
+        )
+
+    def test_api_offer_read_offer_rules_no_seats_left(self):
+        """
+        Authenticated user should only have assignable offer rules when on the course product
+        relation it has 2 offers rules but one of them has no seat left.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offer = factories.OfferFactory()
+        factories.UserCourseAccessFactory(user=user, course=offer.course)
+
+        offer_rule_1 = factories.OfferRuleFactory(
+            course_product_relation=offer, is_active=True, nb_seats=1
+        )
+        offer_rule_2 = factories.OfferRuleFactory(
+            course_product_relation=offer, is_active=True, nb_seats=3
+        )
+        factories.OrderFactory(
+            course=offer.course,
+            product=offer.product,
+            offer_rules=[offer_rule_1],
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/offers/{offer.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": offer_rule_2.available_seats,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
 
     def test_api_offer_create_anonymous(self):
         """

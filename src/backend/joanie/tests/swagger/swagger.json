@@ -6391,75 +6391,24 @@
                         "type": "boolean",
                         "readOnly": true
                     },
-                    "discounted_price": {
-                        "type": "number",
-                        "format": "double",
-                        "nullable": true,
-                        "description": "Return the discounted price of the product, if any.",
-                        "readOnly": true
-                    },
-                    "discount_rate": {
-                        "type": "number",
-                        "format": "double",
-                        "nullable": true,
-                        "description": "Return the discount rate of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "discount_amount": {
-                        "type": "number",
-                        "format": "double",
-                        "nullable": true,
-                        "description": "Return the discount amount of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "discount_start": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "description": "Return the discount start date of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "discount_end": {
-                        "type": "string",
-                        "format": "date-time",
-                        "nullable": true,
-                        "description": "Return the discount end date of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "description": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "Return the description of the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "nb_available_seats": {
-                        "type": "integer",
-                        "nullable": true,
-                        "description": "Return the number of seats available for the first enabled offer rule, if any.",
-                        "readOnly": true
-                    },
-                    "nb_seats": {
-                        "type": "integer",
-                        "nullable": true,
-                        "description": "Return the total number of seats for the first enabled offer rule, if any.",
-                        "readOnly": true
+                    "rules": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OfferRuleProperty"
+                            }
+                        ],
+                        "readOnly": true,
+                        "description": "Offer rules applied to this offer."
                     }
                 },
                 "required": [
                     "course",
                     "created_on",
-                    "description",
-                    "discount_amount",
-                    "discount_end",
-                    "discount_rate",
-                    "discount_start",
-                    "discounted_price",
                     "id",
                     "is_withdrawable",
-                    "nb_available_seats",
-                    "nb_seats",
                     "organizations",
-                    "product"
+                    "product",
+                    "rules"
                 ]
             },
             "OfferLight": {
@@ -6513,6 +6462,81 @@
                     "is_withdrawable",
                     "organizations",
                     "product"
+                ]
+            },
+            "OfferRuleProperty": {
+                "type": "object",
+                "description": "Serializer for the rules property of an offer.",
+                "properties": {
+                    "discounted_price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true,
+                        "readOnly": true,
+                        "description": "Discounted price of the offer."
+                    },
+                    "discount_rate": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 100.0,
+                        "minimum": 0.0,
+                        "readOnly": true,
+                        "description": "Discount rate of the offer."
+                    },
+                    "discount_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true,
+                        "readOnly": true,
+                        "description": "Discount amount of the offer."
+                    },
+                    "discount_start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "Start date of the discount period for the offer."
+                    },
+                    "discount_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "End date of the discount period for the offer."
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Description of the offer rule."
+                    },
+                    "nb_available_seats": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "description": "Number of available seats for the offer."
+                    },
+                    "has_seat_limit": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Indicates if the offer has a seat limit."
+                    },
+                    "has_seats_left": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "description": "Indicates if there are seats left for the offer."
+                    }
+                },
+                "required": [
+                    "description",
+                    "discount_amount",
+                    "discount_end",
+                    "discount_rate",
+                    "discount_start",
+                    "discounted_price",
+                    "has_seat_limit",
+                    "has_seats_left",
+                    "nb_available_seats"
                 ]
             },
             "Order": {
