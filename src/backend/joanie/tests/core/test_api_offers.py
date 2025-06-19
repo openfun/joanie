@@ -949,21 +949,21 @@ class OfferApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        relation = factories.CourseProductRelationFactory()
-        factories.UserCourseAccessFactory(user=user, course=relation.course)
+        offer = factories.OfferFactory()
+        factories.UserCourseAccessFactory(user=user, course=offer.course)
 
         offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=relation, is_active=True, nb_seats=1
+            course_product_relation=offer, is_active=True, nb_seats=1
         )
         factories.OrderFactory(
-            course=relation.course,
-            product=relation.product,
+            course=offer.course,
+            product=offer.product,
             offer_rules=[offer_rule_1],
             state=enums.ORDER_STATE_PENDING_PAYMENT,
         )
 
         response = self.client.get(
-            f"/api/v1.0/course-product-relations/{relation.id}/",
+            f"/api/v1.0/offers/{offer.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
