@@ -351,7 +351,7 @@ class CourseStateModelsTestCase(TestCase):
     def test_models_course_get_selling_organizations_all(self):
         """
         The method `get_selling_organizations` should return all organizations
-        included in product_relations of the course.
+        included in offers of the course.
         """
 
         course = factories.CourseFactory()
@@ -368,7 +368,7 @@ class CourseStateModelsTestCase(TestCase):
     def test_models_course_get_selling_organizations_with_product(self):
         """
         The method `get_selling_organizations` should return all organizations
-        included in product_relations of the course and a provided product.
+        included in offers of the course and a provided product.
         """
 
         course = factories.CourseFactory()

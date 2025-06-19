@@ -151,7 +151,7 @@ class ProductAdminApiRetrieveTest(TestCase):
                 },
             ],
             "instructions": "",
-            "course_relations": [
+            "offers": [
                 {
                     "id": str(offer.id),
                     "uri": offer.uri,

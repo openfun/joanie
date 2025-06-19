@@ -155,14 +155,14 @@ class Product(parler_models.TranslatableModel, BaseModel):
         """
         Return the course product relation associated with the product.
         """
-        return self.course_relations
+        return self.offers
 
     @offers.setter
     def set_offers(self, value):
         """
         Set the course product relation associated with the product.
         """
-        self.course_relations = value
+        self.offers = value
 
     class Meta:
         db_table = "joanie_product"
@@ -304,11 +304,11 @@ class Product(parler_models.TranslatableModel, BaseModel):
             if course_run_data is None:
                 continue
 
-            course_relations = product.course_relations.select_related("course")
+            offers = product.offers.select_related("course")
             if courses:
-                course_relations = course_relations.filter(course__in=courses)
+                offers = offers.filter(course__in=courses)
 
-            for relation in course_relations.iterator():
+            for relation in offers.iterator():
                 equivalent_course_runs.append(
                     {
                         **course_run_data,
@@ -1147,15 +1147,15 @@ class Order(BaseModel):
         if self.enrollment:
             return CourseRun.objects.filter(enrollments=self.enrollment)
 
-        course_relations_with_course_runs = self.course_relations.filter(
-            course_runs__isnull=False
-        ).only("pk")
+        offers_with_course_runs = self.offers.filter(course_runs__isnull=False).only(
+            "pk"
+        )
         target_courses_without_course_runs_subset = self.target_courses.exclude(
-            order_relations__in=course_relations_with_course_runs
+            order_relations__in=offers_with_course_runs
         )
 
         return CourseRun.objects.filter(
-            models.Q(order_relations__in=course_relations_with_course_runs)
+            models.Q(order_relations__in=offers_with_course_runs)
             | models.Q(course__in=target_courses_without_course_runs_subset)
         ).distinct()
 
@@ -1377,7 +1377,7 @@ class Order(BaseModel):
         )
 
         # Main query
-        course_relations_with_one_course_run = self.course_relations.annotate(
+        offers_with_one_course_run = self.offers.annotate(
             nb_open_course_runs=open_course_runs_count,
             nb_open_specific_course_runs=open_specific_course_runs_count,
             nb_specific_course_runs=models.Count("course_runs", distinct=True),
@@ -1388,7 +1388,7 @@ class Order(BaseModel):
             | models.Q(nb_specific_course_runs=0, nb_open_course_runs=1)
         )
 
-        for course_relation in course_relations_with_one_course_run:
+        for course_relation in offers_with_one_course_run:
             open_course_run_id = (
                 course_relation.open_specific_course_run_id
                 if course_relation.nb_open_specific_course_runs == 1
@@ -1900,7 +1900,7 @@ class OrderTargetCourseRelation(BaseModel):
     order = models.ForeignKey(
         to=Order,
         verbose_name=_("order"),
-        related_name="course_relations",
+        related_name="offers",
         on_delete=models.CASCADE,
     )
     position = models.PositiveSmallIntegerField(_("position in order"))

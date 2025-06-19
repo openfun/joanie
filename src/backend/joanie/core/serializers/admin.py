@@ -790,10 +790,8 @@ class AdminCourseSerializer(serializers.ModelSerializer):
 
         if len(offers) > 0:
             for offer in offers:
-                offer = course.product_relations.create(
-                    product=offer["product"]
-                )
-                offer.organizations.set(organization_ids)
+                course_offer = course.offers.create(product=offer["product"])
+                course_offer.organizations.set(organization_ids)
 
         return course
 
@@ -808,11 +806,11 @@ class AdminCourseSerializer(serializers.ModelSerializer):
         if validated_data.get("offers") is not None:
             offers = validated_data.pop("offers")
             if len(offers) == 0:
-                instance.product_relations.all().delete()
+                instance.offers.all().delete()
 
             else:
                 for offer in offers:
-                    (relation, _) = instance.product_relations.get_or_create(
+                    (relation, _) = instance.offers.get_or_create(
                         product=offer["product"]
                     )
                     relation.organizations.set(offer["organization_ids"])
@@ -1041,7 +1039,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
-    course_relations = AdminOfferSerializer(read_only=True, many=True)
+    offers = AdminOfferSerializer(read_only=True, many=True)
     price_currency = serializers.SerializerMethodField(read_only=True)
     certification_level = serializers.IntegerField(read_only=True)
     skills = AdminSkillSerializer(many=True, read_only=True)
@@ -1060,7 +1058,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "certificate_definition",
             "contract_definition",
             "target_courses",
-            "course_relations",
+            "offers",
             "certification_level",
             "instructions",
             "teachers",

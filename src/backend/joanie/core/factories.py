@@ -715,10 +715,10 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     @factory.lazy_attribute
     def organization(self):
         """Retrieve the organization from the product/course offer."""
-        course_relations = self.product.course_relations
+        offers = self.product.offers
         if self.course:
-            course_relations = course_relations.filter(course=self.course)
-        return course_relations.first().organizations.order_by("?").first()
+            offers = offers.filter(course=self.course)
+        return offers.first().organizations.order_by("?").first()
 
     @factory.lazy_attribute
     def credit_card(self):
@@ -853,10 +853,10 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         if self.state == enums.ORDER_STATE_DRAFT:
             return None
 
-        course_relations = self.product.course_relations
+        offers = self.product.offers
         if self.course:
-            course_relations = course_relations.filter(course=self.course)
-        return course_relations.first().organizations.order_by("?").first()
+            offers = offers.filter(course=self.course)
+        return offers.first().organizations.order_by("?").first()
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -1219,8 +1219,8 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     # pylint: disable=method-hidden
     def organization(self):
         """Set organization based on the course relations"""
-        course_relations = self.offer.product.course_relations
-        return course_relations.first().organizations.order_by("?").first()
+        offers = self.offer.product.offers
+        return offers.first().organizations.order_by("?").first()
 
     @factory.lazy_attribute
     def total(self):
