@@ -781,7 +781,7 @@ class OfferApiTest(BaseAPITestCase):
                 course=course, product=product, offer_rules=[offer_rule], state=state
             )
 
-        with self.assertNumQueries(54):
+        with self.assertNumQueries(70):
             self.client.get(
                 f"/api/v1.0/offers/{offer.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -941,6 +941,42 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(content["description"], None)
         self.assertEqual(content["nb_available_seats"], offer_rule_1.available_seats)
         self.assertEqual(content["nb_seats"], offer_rule_1.nb_seats)
+
+    def test_api_offer_return_only_assignable_offer_rules(self):
+        """
+        Authenticated user should only have assignable offer rules on the course product
+        relation.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        relation = factories.CourseProductRelationFactory()
+        factories.UserCourseAccessFactory(user=user, course=relation.course)
+
+        offer_rule_1 = factories.OfferRuleFactory(
+            course_product_relation=relation, is_active=True, nb_seats=1
+        )
+        factories.OrderFactory(
+            course=relation.course,
+            product=relation.product,
+            offer_rules=[offer_rule_1],
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/course-product-relations/{relation.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        self.assertEqual(content["discount_amount"], None)
+        self.assertEqual(content["discount_rate"], None)
+        self.assertEqual(content["discount_start"], None)
+        self.assertEqual(content["discount_end"], None)
+        self.assertEqual(content["description"], None)
+        self.assertEqual(content["nb_available_seats"], None)
+        self.assertEqual(content["nb_seats"], None)
 
     def test_api_offer_create_anonymous(self):
         """

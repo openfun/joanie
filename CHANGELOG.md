@@ -33,6 +33,7 @@ and this project adheres to
 ### Fixed
 
 - Invalidate course product relation cache on order group update
+- Select assignable offer rule instead of enabled only
 
 ## [2.18.1] - 2025-05-28
 
