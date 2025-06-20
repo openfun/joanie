@@ -67,58 +67,56 @@ this template as a base.
                           <li>{% translate "Telephone number: " %}{{ student.phone_number|default:"-" }}</li>
                       </ul>
                   </dd>
-                  <dt>{% translate 'Course (hereinafter "the Course"):' %}</dt>
-                  <dd>
-                      <ul>
-                          <li>{% translate "Course number: " %}{{ course.code }}</li>
-                          <li>{% translate "Name of the Course: " %}{{ course.name }}</li>
-                          <li>{% translate "Session start date: " %}
-                              {% with start=course.start|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
-                                {% if start %}
-                                {{ start }}
-                                {% else %}
-                                {{ course.start|default:"-" }}
-                                {% endif %}
-                              {% endwith %}
-                          </li>
-                          <li>{% translate "Session end date: " %}
-                              {% with end=course.end|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
-                                {% if end %}
-                                {{ end }}
-                                {% else %}
-                                {{ course.end|default:"-" }}
-                                {% endif %}
-                              {% endwith %}
-                          </li>
-                          {% if course.effort %}
-                            <li>{% translate "Total duration of the course: " %}
-                                {% with duration=course.effort|iso8601_to_duration:"hours" %}
-                                {% if duration %}
-                                {% blocktranslate with duration=duration count duration=duration trimmed%}
-                                {{ duration }} hour
-                                {% plural %}
-                                {{ duration }} hours
-                                {% endblocktranslate %}
-                                {% else %}
-                                {{ course.effort|default:"-" }}
-                                {% endif %}
-                                {% endwith %}
-                            </li>
-                          {% endif %}
-                          <li>{% translate "Price of the course: " %}
-                              {% with price=course.price|floatformat:2 currency=course.currency %}
-                                {% if price %}
-                                {{ price }} {{ currency }}
-                                {% else %}
-                                {{ course.price|default:"-" }}
-                                {% endif %}
-                              {% endwith %}
-                          </li>
-                      </ul>
-                  </dd>
               </dl>
           </section>
           <article class="content-articles">
+              <h3>{% translate "Article 1 : Training Description" %}</h3>
+              <ul>
+                <li>{% translate "Course number: " %}{{ course.code }}</li>
+                <li>{% translate "Name of the Course: " %}{{ course.name }}</li>
+                <li>{% translate "Session start date: " %}
+                    {% with start=course.start|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
+                    {% if start %}
+                    {{ start }}
+                    {% else %}
+                    {{ course.start|default:"-" }}
+                    {% endif %}
+                    {% endwith %}
+                </li>
+                <li>{% translate "Session end date: " %}
+                    {% with end=course.end|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
+                    {% if end %}
+                    {{ end }}
+                    {% else %}
+                    {{ course.end|default:"-" }}
+                    {% endif %}
+                    {% endwith %}
+                </li>
+                {% if course.effort %}
+                <li>{% translate "Total duration of the course: " %}
+                    {% with duration=course.effort|iso8601_to_duration:"hours" %}
+                    {% if duration %}
+                    {% blocktranslate with duration=duration count duration=duration trimmed%}
+                    {{ duration }} hour
+                    {% plural %}
+                    {{ duration }} hours
+                    {% endblocktranslate %}
+                    {% else %}
+                    {{ course.effort|default:"-" }}
+                    {% endif %}
+                    {% endwith %}
+                </li>
+                {% endif %}
+                <li>{% translate "Price of the course: " %}
+                    {% with price=course.price|floatformat:2 currency=course.currency %}
+                    {% if price %}
+                    {{ price }} {{ currency }}
+                    {% else %}
+                    {{ course.price|default:"-" }}
+                    {% endif %}
+                    {% endwith %}
+                </li>
+              </ul>
               {% if contract %}
                   {{ contract.body|safe }}
               {% endif %}
