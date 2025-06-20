@@ -28,6 +28,7 @@ from joanie.core.enums import (
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
+    QUOTE_DEFAULT,
     UNICAMP_DEGREE,
 )
 from joanie.core.factories import (
@@ -40,8 +41,8 @@ from joanie.core.factories import (
     ProductTargetCourseRelationFactory,
     UserFactory,
 )
-from joanie.core.models import Certificate, Contract, CourseState
-from joanie.core.utils import contract_definition, issuers
+from joanie.core.models import Certificate, Contract, CourseState, Quote
+from joanie.core.utils import contract_definition, issuers, quotes
 from joanie.core.utils.sentry import decrypt_data
 from joanie.payment import get_payment_backend
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
@@ -508,6 +509,24 @@ class DebugContractTemplateView(DebugPdfTemplateView):
         contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
 
         return contract.context
+
+
+class DebugQuoteTemplateView(DebugPdfTemplateView):
+    """Debug view to check the layout of the quote_definition_default template of a Quote"""
+
+    model = Quote
+    issuer_document = QUOTE_DEFAULT
+
+    def get_document_context(self, pk=None):
+        """
+        Base method to prepare the document to render in the debug view in base64.
+        """
+        if not pk:
+            return quotes.generate_document_context()
+
+        quote = Quote.objects.get(pk=pk, definition__name=self.issuer_document)
+
+        return quote.context
 
 
 class DebugInvoiceTemplateView(DebugPdfTemplateView):
