@@ -35,6 +35,7 @@ def expected_csv_content(order):
         "Enrolled on": "",
         "Price": str(order.total),
         "Currency": settings.DEFAULT_CURRENCY,
+        "Discount": "",
         "Waived withdrawal right": yes_no(order.has_waived_withdrawal_right),
         "Certificate generated for this order": yes_no(hasattr(order, "certificate")),
         "Contract": "",
@@ -79,6 +80,9 @@ def expected_csv_content(order):
         content["Total (on invoice)"] = str(order.main_invoice.total)
         content["Balance (on invoice)"] = str(order.main_invoice.balance)
         content["Billing state"] = order.main_invoice.state
+
+    if order.discount:
+        content["Discount"] = order.discount
 
     for i, installment in enumerate(order.payment_schedule, start=1):
         content[f"Installment date {i}"] = format_date_export(
@@ -135,9 +139,11 @@ class OrdersAdminApiExportTestCase(TestCase):
             response["Content-Disposition"],
             f'attachment; filename="orders_{now.strftime("%d-%m-%Y_%H-%M-%S")}.csv"',
         )
+
         csv_content = response.getvalue().decode().splitlines()
         csv_header = csv_content.pop(0)
         expected_headers = expected_csv_content(orders[0]).keys()
+
         self.assertEqual(csv_header.split(","), list(expected_headers))
 
         for order, csv_line in zip(orders, csv_content, strict=False):
