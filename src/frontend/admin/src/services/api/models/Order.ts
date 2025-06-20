@@ -121,6 +121,7 @@ export enum OrderStatesEnum {
   ORDER_STATE_PENDING = "pending", // payment has failed but can be retried
   ORDER_STATE_CANCELED = "canceled", // has been canceled
   ORDER_STATE_PENDING_PAYMENT = "pending_payment", // payment is pending
+  ORDER_STATE_TO_OWN = "to_own", // order is paid but is awaiting owner to claim it
   ORDER_STATE_FAILED_PAYMENT = "failed_payment", // last payment has failed
   ORDER_STATE_NO_PAYMENT = "no_payment", // no payment has been made
   ORDER_STATE_COMPLETED = "completed", // is completed
