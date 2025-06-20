@@ -242,6 +242,29 @@ class Demo:
         )
         return factories.OrderCertificateFactory(order=order)
 
+    def add_discount(
+        self,
+        order,
+        discount_amount=None,
+        discount_rate=None,
+    ):
+        """
+        Add a discount (rate or amount) on an order
+        """
+        discount = factories.DiscountFactory(amount=discount_amount, rate=discount_rate)
+        offer_rule = factories.OfferRuleFactory(
+            nb_seats=None,
+            course_product_relation=order.product.offers.first(),
+            discount=discount,
+        )
+        order.offer_rules.add(offer_rule)
+        order.freeze_total()
+
+        if order.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            factories.OrderCertificateFactory(order=order)
+
+        return order
+
     def create_order_with_installment_payment_failed(
         self, user, course_user, organization
     ):
@@ -489,6 +512,37 @@ class Demo:
         self.log(
             "Successfully create an order for a PRODUCT_CREDENTIAL "
             "with an installment payment failed"
+        )
+        # Order for PRODUCT_CERTIFICATE with voucher discount rate of 10%
+        order_certificate = self.create_product_purchased(
+            student_user,
+            organization_owner,
+            organization,
+            enums.PRODUCT_TYPE_CERTIFICATE,
+            enums.ORDER_STATE_COMPLETED,
+        )
+        self.add_discount(order_certificate, discount_rate=0.1)
+        self.log(
+            "Successfully created an order for a PRODUCT_CERTIFICATE"
+            "with a voucher discount rate or 10%"
+        )
+
+        # Order for PRODUCT_CREDENTIAL with voucher discount amount of 20 €
+        order_credential = self.create_product_purchased(
+            student_user,
+            organization_owner,
+            organization,
+            enums.PRODUCT_TYPE_CREDENTIAL,
+            enums.ORDER_STATE_COMPLETED,
+            factories.ContractDefinitionFactory(),
+        )
+        self.add_discount(
+            order_credential,
+            discount_amount=20,
+        )
+        self.log(
+            "Successfully created an order for a PRODUCT_CREDENTIAL"
+            "with a voucher discount amount or 20 €"
         )
 
         # Order for a PRODUCT_CREDENTIAL with a unsigned contract
