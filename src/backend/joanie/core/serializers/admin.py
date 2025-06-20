@@ -1492,9 +1492,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         Return the discount when available on the order,
         otherwise return an empty string
         """
-        if not instance.discount:
-            return ""
-        return instance.discount
+        return instance.discount or ""
 
     def get_has_waived_withdrawal_right(self, instance) -> str:
         """
