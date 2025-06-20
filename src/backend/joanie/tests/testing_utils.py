@@ -183,6 +183,24 @@ class Demo:
             state=enums.ENROLLMENT_STATE_SET,
         )
 
+    def add_discount(
+        self,
+        order,
+        discount,
+    ):
+        """
+        Add a discount (rate or amount) on an order
+        """
+        offer_rule = factories.OfferRuleFactory(
+            nb_seats=None,
+            course_product_relation=order.product.offers.first(),
+            discount=discount,
+        )
+        order.offer_rules.add(offer_rule)
+        order.freeze_total()
+
+        return order
+
     def create_product_purchased(
         self,
         user,
@@ -192,6 +210,8 @@ class Demo:
         order_status=enums.ORDER_STATE_COMPLETED,
         contract_definition=None,
         product=None,
+        discount_amount=None,
+        discount_rate=None,
     ):  # pylint: disable=too-many-arguments, too-many-positional-arguments
         """Create a product, it's enrollment and it's order."""
         if not product:
@@ -220,12 +240,23 @@ class Demo:
             product=product,
             state=order_status,
         )
+        if discount_amount or discount_rate:
+            discount = factories.DiscountFactory(
+                amount=discount_amount, rate=discount_rate
+            )
+            order = self.add_discount(order, discount)
 
         return order
 
     def create_product_purchased_with_certificate(
-        self, user, course_user, organization, options
-    ):
+        self,
+        user,
+        course_user,
+        organization,
+        options,
+        discount_amount=None,
+        discount_rate=None,
+    ):  # pylint: disable=too-many-arguments, too-many-positional-arguments
         """
         Create a product, it's enrollment and it's order.
         Also create the order's linked certificate.
@@ -239,7 +270,10 @@ class Demo:
             options["contract_definition"]
             if "contract_definition" in options
             else None,
+            discount_amount=discount_amount,
+            discount_rate=discount_rate,
         )
+
         return factories.OrderCertificateFactory(order=order)
 
     def create_order_with_installment_payment_failed(
@@ -489,6 +523,35 @@ class Demo:
         self.log(
             "Successfully create an order for a PRODUCT_CREDENTIAL "
             "with an installment payment failed"
+        )
+        # Order for PRODUCT_CERTIFICATE with discount rate of 10%
+        self.create_product_purchased_with_certificate(
+            student_user,
+            organization_owner,
+            organization,
+            options={
+                "product_type": enums.PRODUCT_TYPE_CERTIFICATE,
+            },
+            discount_rate=0.1,
+        )
+        self.log(
+            "Successfully created an order for a PRODUCT_CERTIFICATE"
+            "with a discount rate or 10%"
+        )
+
+        # Order for PRODUCT_CREDENTIAL with discount amount of 20 €
+        self.create_product_purchased(
+            student_user,
+            organization_owner,
+            organization,
+            enums.PRODUCT_TYPE_CREDENTIAL,
+            enums.ORDER_STATE_COMPLETED,
+            factories.ContractDefinitionFactory(),
+            discount_amount=20,
+        )
+        self.log(
+            "Successfully created an order for a PRODUCT_CREDENTIAL"
+            "with a discount amount or 20 €"
         )
 
         # Order for a PRODUCT_CREDENTIAL with a unsigned contract

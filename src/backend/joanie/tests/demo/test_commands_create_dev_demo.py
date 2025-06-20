@@ -51,9 +51,10 @@ class CreateDevDemoTestCase(TestCase):
             1  # create_product_credential_purchased with installment payment failed
         )
         nb_product_credential += 14  # one order of each state
-
+        nb_product_credential += 1  # create_product_credential_purchased with voucher
         nb_product = nb_product_credential + nb_product_certificate
         nb_product += 1  # Become a certified botanist gradeo
+        nb_product += 1  # Another product type credential
         self.assertEqual(models.Product.objects.count(), nb_product)
 
         nb_organization = 1  # The school of glory
@@ -68,15 +69,18 @@ class CreateDevDemoTestCase(TestCase):
         # product certificate 1 course and no target courses
         nb_courses += nb_product_certificate * 1
         nb_courses += 1  # enrollment_certificate
+        nb_courses += 1  # enrollment_certificate
         self.assertEqual(models.Course.objects.count(), nb_courses)
 
         nb_enrollment = 1  # product_certificate_enrollment
         nb_enrollment += 1  # product_certificate_order
         nb_enrollment += 1  # product_certificate_order_certificate
         nb_enrollment += 1  # enrollment_certificate
+        nb_enrollment += 1  # product_certificate_order_certificate
         self.assertEqual(models.Enrollment.objects.count(), nb_enrollment)
 
         nb_certificate = 1  # enrollment_certificate
         nb_certificate += 1  # product_certificate_order_certificate
         nb_certificate += 1  # create_product_credential_purchased_with_certificate
+        nb_certificate += 1  # product_certificate_order_certificate
         self.assertEqual(models.Certificate.objects.count(), nb_certificate)
