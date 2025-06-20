@@ -268,6 +268,11 @@ export const orderStatesMessages = defineMessages<OrderStatesEnum>({
     defaultMessage: "Pending payment",
     description: "Text for pending payment order state",
   },
+  to_own: {
+    id: "components.templates.orders.view.orderStatesMessages.to_own",
+    defaultMessage: "To own",
+    description: "Text for to own order state",
+  },
   failed_payment: {
     id: "components.templates.orders.view.orderStatesMessages.failed_payment",
     defaultMessage: "Failed payment",
