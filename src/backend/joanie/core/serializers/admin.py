@@ -1368,6 +1368,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("enrollment_created_on", _("Enrolled on")),
             ("total", _("Price")),
             ("total_currency", _("Currency")),
+            ("discount", _("Discount")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
@@ -1421,6 +1422,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     )
     enrollment_created_on = serializers.SerializerMethodField(read_only=True)
     total_currency = serializers.SerializerMethodField(read_only=True)
+    discount = serializers.SerializerMethodField(read_only=True)
     has_waived_withdrawal_right = serializers.SerializerMethodField(read_only=True)
     certificate = serializers.SerializerMethodField(read_only=True)
 
@@ -1484,6 +1486,13 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     def get_total_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
+
+    def get_discount(self, instance) -> str:
+        """
+        Return the discount when available on the order,
+        otherwise return an empty string
+        """
+        return instance.discount or ""
 
     def get_has_waived_withdrawal_right(self, instance) -> str:
         """
