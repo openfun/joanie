@@ -164,6 +164,10 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             "the University and the Learner, as identified below:",
             document_text,
         )
+        self.assertIn("Article 1 : Training Description", document_text)
+        self.assertIn("Session start date", document_text)
+        self.assertIn("Total duration of the course", document_text)
+        self.assertIn("Price of the course", document_text)
         self.assertIn("Terms and conditions", document_text)
         self.assertIn("Learner's signature", document_text)
         self.assertIn("[SignatureField#1]", document_text)
