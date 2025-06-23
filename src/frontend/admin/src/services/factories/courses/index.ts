@@ -6,7 +6,7 @@ import {
   Priority,
 } from "@/services/api/models/Course";
 import { OrganizationFactory } from "@/services/factories/organizations";
-import { OfferFactory } from "@/services/api/models/Offers";
+import { OfferingFactory } from "@/services/api/models/Offerings";
 import { AccessesFactory } from "@/services/factories/accesses";
 import { CourseRunFactory } from "@/services/factories/courses-runs";
 
@@ -17,7 +17,7 @@ const build = (): Course => {
     code: faker.color.rgb(),
     is_graded: true,
     organizations: OrganizationFactory(2),
-    offers: OfferFactory(1),
+    offerings: OfferingFactory(1),
     state: CourseStateFactory(),
     accesses: AccessesFactory(Object.values(CourseRoles), 3),
   };

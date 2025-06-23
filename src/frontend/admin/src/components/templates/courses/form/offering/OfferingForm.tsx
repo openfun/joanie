@@ -7,7 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
-import { DTOOffer } from "@/services/api/models/Offers";
+import { DTOOffering } from "@/services/api/models/Offerings";
 import { Organization } from "@/services/api/models/Organization";
 import { DndDefaultRow } from "@/components/presentational/dnd/DndDefaultRow";
 import { ProductSearch } from "@/components/templates/products/inputs/search/ProductSearch";
@@ -44,14 +44,14 @@ const messages = defineMessages({
   },
 });
 
-export interface OfferFormValues {
+export interface OfferingFormValues {
   product: Product | null;
   course: Course | null;
   organizations: Organization[];
 }
 
 interface BaseProps {
-  onSubmit?: (payload: DTOOffer, formValues: OfferFormValues) => void;
+  onSubmit?: (payload: DTOOffering, formValues: OfferingFormValues) => void;
   defaultProduct?: BaseProduct;
   defaultCourse?: Course;
   organizations?: Organization[];
@@ -61,13 +61,13 @@ interface BaseProps {
 
 type Props = BaseProps;
 
-export const OfferFormSchema = Yup.object().shape({
+export const OfferingFormSchema = Yup.object().shape({
   product: Yup.mixed<Product>().required().nullable(),
   course: Yup.mixed<Course>().required().nullable(),
   organizations: Yup.array().required(),
 });
 
-export function OfferForm({
+export function OfferingForm({
   defaultProduct,
   defaultCourse,
   organizations,
@@ -77,8 +77,8 @@ export function OfferForm({
 }: Props) {
   const intl = useIntl();
 
-  const methods = useForm<OfferFormValues>({
-    resolver: yupResolver(OfferFormSchema) as any,
+  const methods = useForm<OfferingFormValues>({
+    resolver: yupResolver(OfferingFormSchema) as any,
     defaultValues: {
       product: defaultProduct ?? null,
       course: defaultCourse ?? null,
@@ -94,9 +94,9 @@ export function OfferForm({
   return (
     <RHFProvider
       methods={methods}
-      id="offer-form"
+      id="offering-form"
       onSubmit={methods.handleSubmit((values) => {
-        let payload: DTOOffer;
+        let payload: DTOOffering;
 
         if (courseId) {
           payload = {

@@ -194,7 +194,7 @@ export function DiscountSelect(
       >
         <RHFProvider
           methods={form}
-          id="offer-rule-form"
+          id="offering-rule-form"
           onSubmit={form.handleSubmit(async (values: DTODiscount) => {
             await handleCreateDiscount(values);
           })}

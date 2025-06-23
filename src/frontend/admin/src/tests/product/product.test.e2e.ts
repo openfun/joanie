@@ -408,13 +408,13 @@ test.describe("Product form", () => {
     ).toBeVisible();
   });
 
-  test("Check all offers", async ({ page }) => {
+  test("Check all offerings", async ({ page }) => {
     const product = store.products[0];
     product.target_courses = [];
-    const offers = product.offers!;
+    const offerings = product.offerings!;
 
     await mockPlaywrightCrud<Course, DTOCourse>({
-      data: [offers[0].course],
+      data: [offerings[0].course],
       routeUrl: "http://localhost:8071/api/v1.0/admin/courses/",
       page,
       optionsResult: COURSE_OPTIONS_REQUEST_RESULT,
@@ -424,7 +424,9 @@ test.describe("Product form", () => {
     await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
     await page.getByRole("link", { name: product.title }).click();
     await page.getByRole("tab", { name: "Syllabus" }).click();
-    await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Offerings" }),
+    ).toBeVisible();
     await expect(
       page
         .getByRole("alert")
@@ -433,37 +435,39 @@ test.describe("Product form", () => {
         ),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Add offer rule" }).first(),
+      page.getByRole("button", { name: "Add offering rule" }).first(),
     ).toBeVisible();
     await Promise.all(
-      offers.map(async (offer) => {
+      offerings.map(async (offering) => {
         await expect(
-          page.getByRole("heading", { name: offer.course.title }),
+          page.getByRole("heading", { name: offering.course.title }),
         ).toBeVisible();
         await expect(
-          page.getByRole("link", { name: offer.course.title }),
+          page.getByRole("link", { name: offering.course.title }),
         ).toBeVisible();
         await expect(
-          page.getByText(offer.organizations.map((org) => org.title).join(",")),
+          page.getByText(
+            offering.organizations.map((org) => org.title).join(","),
+          ),
         ).toBeVisible();
       }),
     );
 
     // Test click on course title and open another tab
-    await page.getByRole("link", { name: offers[0].course.title }).click();
+    await page.getByRole("link", { name: offerings[0].course.title }).click();
     await page.route(
-      `http://localhost:8071/api/v1.0/admin/courses/${offers[0].course.id}/?`,
+      `http://localhost:8071/api/v1.0/admin/courses/${offerings[0].course.id}/?`,
       async (route, request) => {
         const methods = request.method();
         if (methods === "GET") {
-          await route.fulfill({ json: offers[0].course });
+          await route.fulfill({ json: offerings[0].course });
         }
       },
     );
 
     await expect(
       page.getByRole("heading", {
-        name: `Edit course: ${offers[0].course.title}`,
+        name: `Edit course: ${offerings[0].course.title}`,
       }),
     ).toBeVisible();
   });
@@ -472,10 +476,10 @@ test.describe("Product form", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     const product = store.products[0];
     product.target_courses = [];
-    const offers = product.offers!;
+    const offerings = product.offerings!;
 
     await mockPlaywrightCrud<Course, DTOCourse>({
-      data: [offers[0].course],
+      data: [offerings[0].course],
       routeUrl: "http://localhost:8071/api/v1.0/admin/courses/",
       page,
       optionsResult: COURSE_OPTIONS_REQUEST_RESULT,
@@ -486,7 +490,7 @@ test.describe("Product form", () => {
     await page.getByRole("link", { name: product.title }).click();
     await page.getByRole("tab", { name: "Syllabus" }).click();
 
-    await page.getByTestId(`offer-actions-${offers[0].id}`).click();
+    await page.getByTestId(`offering-actions-${offerings[0].id}`).click();
 
     await page.getByRole("menuitem", { name: "Copy url" }).click();
     await expect(
@@ -496,7 +500,7 @@ test.describe("Product form", () => {
       navigator.clipboard.readText(),
     );
     const clipboardContent = await handle.jsonValue();
-    expect(clipboardContent).toEqual(offers[0].uri);
+    expect(clipboardContent).toEqual(offerings[0].uri);
   });
 
   test("Edit certification information", async ({ page }) => {

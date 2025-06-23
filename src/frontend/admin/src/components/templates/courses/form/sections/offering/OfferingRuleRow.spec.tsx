@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { IntlProvider } from "react-intl";
-import { OfferRuleRow } from "@/components/templates/courses/form/sections/offer/OfferRuleRow";
+import { OfferingRuleRow } from "@/components/templates/courses/form/sections/offering/OfferingRuleRow";
 
-describe("<OfferRuleRow />", () => {
+describe("<OfferingRuleRow />", () => {
   it("renders available seats", async () => {
-    const offerRule = {
+    const offeringRule = {
       id: "1",
       can_edit: true,
       nb_seats: 10,
@@ -17,16 +17,16 @@ describe("<OfferRuleRow />", () => {
 
     render(
       <IntlProvider locale="en">
-        <OfferRuleRow offerRule={offerRule} orderIndex={0} />
+        <OfferingRuleRow offeringRule={offeringRule} orderIndex={0} />
       </IntlProvider>,
     );
 
-    screen.getByRole("heading", { name: /offer rule 1/i });
+    screen.getByRole("heading", { name: /offering rule 1/i });
     screen.getByText("5/10 seats");
   });
 
   it("renders amount discount", async () => {
-    const offerRule = {
+    const offeringRule = {
       id: "1",
       can_edit: true,
       nb_seats: null,
@@ -39,16 +39,16 @@ describe("<OfferRuleRow />", () => {
 
     render(
       <IntlProvider locale="en">
-        <OfferRuleRow offerRule={offerRule} orderIndex={0} />
+        <OfferingRuleRow offeringRule={offeringRule} orderIndex={0} />
       </IntlProvider>,
     );
 
-    screen.getByRole("heading", { name: /offer rule 1/i });
+    screen.getByRole("heading", { name: /offering rule 1/i });
     screen.getByText("Discount: 10 €");
   });
 
   it("renders rate discount", async () => {
-    const offerRule = {
+    const offeringRule = {
       id: "1",
       can_edit: true,
       nb_seats: null,
@@ -61,16 +61,16 @@ describe("<OfferRuleRow />", () => {
 
     render(
       <IntlProvider locale="en">
-        <OfferRuleRow offerRule={offerRule} orderIndex={0} />
+        <OfferingRuleRow offeringRule={offeringRule} orderIndex={0} />
       </IntlProvider>,
     );
 
-    screen.getByRole("heading", { name: /offer rule 1/i });
+    screen.getByRole("heading", { name: /offering rule 1/i });
     screen.getByText("Discount: 10%");
   });
 
   it("renders start date", async () => {
-    const offerRule = {
+    const offeringRule = {
       id: "1",
       can_edit: true,
       nb_seats: null,
@@ -83,16 +83,16 @@ describe("<OfferRuleRow />", () => {
 
     render(
       <IntlProvider locale="en">
-        <OfferRuleRow offerRule={offerRule} orderIndex={0} />
+        <OfferingRuleRow offeringRule={offeringRule} orderIndex={0} />
       </IntlProvider>,
     );
 
-    screen.getByRole("heading", { name: /offer rule 1/i });
+    screen.getByRole("heading", { name: /offering rule 1/i });
     screen.getByText("From: 4/1/25, 2:00 AM");
   });
 
   it("renders end date", async () => {
-    const offerRule = {
+    const offeringRule = {
       id: "1",
       can_edit: true,
       nb_seats: null,
@@ -105,11 +105,11 @@ describe("<OfferRuleRow />", () => {
 
     render(
       <IntlProvider locale="en">
-        <OfferRuleRow offerRule={offerRule} orderIndex={0} />
+        <OfferingRuleRow offeringRule={offeringRule} orderIndex={0} />
       </IntlProvider>,
     );
 
-    screen.getByRole("heading", { name: /offer rule 1/i });
+    screen.getByRole("heading", { name: /offering rule 1/i });
     screen.getByText("To: 4/10/25, 12:00 AM");
   });
 });

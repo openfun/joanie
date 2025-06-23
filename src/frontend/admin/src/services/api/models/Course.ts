@@ -1,6 +1,6 @@
 import moment from "moment";
 import { Organization } from "./Organization";
-import { Offer } from "./Offers";
+import { Offering } from "./Offerings";
 import { Accesses } from "@/services/api/models/Accesses";
 import { CourseRun } from "@/services/api/models/CourseRun";
 import { ThumbnailDetailField } from "@/services/api/models/Image";
@@ -11,7 +11,7 @@ export type Course = {
   title: string;
   organizations: Organization[];
   is_graded: boolean;
-  offers?: Offer[];
+  offerings?: Offering[];
   state?: CourseState;
   courses_runs?: CourseRun[];
   cover?: ThumbnailDetailField;
@@ -35,7 +35,7 @@ export type CourseFormValues = Omit<
   | "courses_runs"
   | "effort"
   | "is_graded"
-  | "offers"
+  | "offerings"
 > & {
   cover: File[] | undefined;
   effort?: number;

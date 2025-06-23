@@ -1,8 +1,8 @@
 import { faker } from "@faker-js/faker";
-import { OfferRule } from "@/services/api/models/OfferRule";
+import { OfferingRule } from "@/services/api/models/OfferingRule";
 import { DiscountFactory } from "@/services/factories/discounts";
 
-const build = (): OfferRule => {
+const build = (): OfferingRule => {
   const nbSeat = faker.number.int({ max: 200 });
   return {
     id: faker.string.uuid(),
@@ -17,9 +17,11 @@ const build = (): OfferRule => {
   };
 };
 
-export function OfferRuleFactory(): OfferRule;
-export function OfferRuleFactory(count: number): OfferRule[];
-export function OfferRuleFactory(count?: number): OfferRule | OfferRule[] {
+export function OfferingRuleFactory(): OfferingRule;
+export function OfferingRuleFactory(count: number): OfferingRule[];
+export function OfferingRuleFactory(
+  count?: number,
+): OfferingRule | OfferingRule[] {
   if (count) return [...Array(count)].map(() => build());
   return build();
 }

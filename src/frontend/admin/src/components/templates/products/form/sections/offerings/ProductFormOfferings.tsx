@@ -1,18 +1,18 @@
 import * as React from "react";
 import { Product } from "@/services/api/models/Product";
-import { OfferList } from "@/components/templates/offers/offer/OfferList";
+import { OfferingList } from "@/components/templates/offerings/offering/OfferingList";
 import { useProducts } from "@/hooks/useProducts/useProducts";
 
 type Props = {
   product: Product;
 };
-export function ProductFormOffers({ product }: Props) {
+export function ProductFormOfferings({ product }: Props) {
   const productRepository = useProducts({}, { enabled: false });
 
   return (
-    <OfferList
+    <OfferingList
       productId={product.id}
-      offers={product.offers ?? []}
+      offerings={product.offerings ?? []}
       invalidate={productRepository.methods.invalidate}
     />
   );

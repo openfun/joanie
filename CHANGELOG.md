@@ -32,6 +32,7 @@ and this project adheres to
   properties
 - Rename `OrderGroup` to `OfferRule`
 - Rename `CourseProductRelation` to `Offer`
+- Rename `Offer` to `Offering` and `OfferRule` to `OfferingRule`
 
 ### Fixed
 
