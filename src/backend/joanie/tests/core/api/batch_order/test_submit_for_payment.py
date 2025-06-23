@@ -220,7 +220,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
                 self.assertEqual(
                     response.json(),
                     {
-                        "payment_id": str(batch_order.offer.product.id),
+                        "payment_id": str(batch_order.offering.product.id),
                         "provider_name": "dummy",
                         "url": "https://example.com/api/v1.0/payments/notifications",
                     },

@@ -236,7 +236,7 @@ class CourseFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             return
 
         for product in extracted:
-            OfferFactory(course=self, product=product)
+            OfferingFactory(course=self, product=product)
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
@@ -551,12 +551,12 @@ class ProductFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """
         if extracted is None:
             if create:
-                OfferFactory(product=self, course=CourseFactory())
+                OfferingFactory(product=self, course=CourseFactory())
             return
 
         for course in extracted:
             course__organizations = course.organizations.all()
-            OfferFactory(
+            OfferingFactory(
                 product=self,
                 course=course,
                 organizations=course__organizations
@@ -636,7 +636,7 @@ class DiscountFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         return super()._create(model_class, *args, **kwargs)
 
 
-class OfferFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+class OfferingFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create CourseProductRelation object"""
 
     class Meta:
@@ -650,7 +650,7 @@ class OfferFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     # pylint: disable=unused-argument,no-member
     def organizations(self, create, extracted, **kwargs):
         """
-        Link organizations to the course/product offer after its creation
+        Link organizations to the course/product offering after its creation
         """
         if extracted is None:
             extracted = [OrganizationFactory()]
@@ -676,7 +676,7 @@ class ProductTargetCourseRelationFactory(
     # pylint: disable=unused-argument,no-member
     def course_runs(self, create, extracted, **kwargs):
         """
-        Link course runs to the product/target course offer after its creation
+        Link course runs to the product/target course offering after its creation
         """
         if not extracted:
             return
@@ -684,13 +684,13 @@ class ProductTargetCourseRelationFactory(
         self.course_runs.set(extracted)
 
 
-class OfferRuleFactory(DebugModelFactory, factory.django.DjangoModelFactory):
-    """A factory to create offer rules."""
+class OfferingRuleFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create offering rules."""
 
     class Meta:
-        model = models.OfferRule
+        model = models.OfferingRule
 
-    course_product_relation = factory.SubFactory(OfferFactory)
+    course_product_relation = factory.SubFactory(OfferingFactory)
 
 
 class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
@@ -713,11 +713,11 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
     @factory.lazy_attribute
     def organization(self):
-        """Retrieve the organization from the product/course offer."""
-        offers = self.product.offers
+        """Retrieve the organization from the product/course offering."""
+        offerings = self.product.offerings
         if self.course:
-            offers = offers.filter(course=self.course)
-        return offers.first().organizations.order_by("?").first()
+            offerings = offerings.filter(course=self.course)
+        return offerings.first().organizations.order_by("?").first()
 
     @factory.lazy_attribute
     def credit_card(self):
@@ -754,12 +754,12 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
-    def offer_rules(self, create, extracted, **kwargs):
+    def offering_rules(self, create, extracted, **kwargs):
         """
-        Set offer rules if any
+        Set offering rules if any
         """
         if extracted:
-            self.offer_rules.set(extracted)
+            self.offering_rules.set(extracted)
 
     @factory.post_generation
     def main_invoice(self, create, extracted, **kwargs):
@@ -848,23 +848,23 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
 
     @factory.lazy_attribute
     def organization(self):
-        """Retrieve the organization from the product/course offer."""
+        """Retrieve the organization from the product/course offering."""
         if self.state == enums.ORDER_STATE_DRAFT:
             return None
 
-        offers = self.product.offers
+        offerings = self.product.offerings
         if self.course:
-            offers = offers.filter(course=self.course)
-        return offers.first().organizations.order_by("?").first()
+            offerings = offerings.filter(course=self.course)
+        return offerings.first().organizations.order_by("?").first()
 
     @factory.post_generation
     # pylint: disable=unused-argument,no-member
-    def offer_rules(self, create, extracted, **kwargs):
+    def offering_rules(self, create, extracted, **kwargs):
         """
-        Set offer rules if any
+        Set offering rules if any
         """
         if extracted:
-            self.offer_rules.set(extracted)
+            self.offering_rules.set(extracted)
 
     @factory.post_generation
     def main_invoice(self, create, extracted, **kwargs):
@@ -1200,8 +1200,8 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     class Meta:
         model = models.BatchOrder
 
-    offer = factory.SubFactory(
-        OfferFactory,
+    offering = factory.SubFactory(
+        OfferingFactory,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
     )
@@ -1218,13 +1218,13 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     # pylint: disable=method-hidden
     def organization(self):
         """Set organization based on the course relations"""
-        offers = self.offer.product.offers
-        return offers.first().organizations.order_by("?").first()
+        offerings = self.offering.product.offerings
+        return offerings.first().organizations.order_by("?").first()
 
     @factory.lazy_attribute
     def total(self):
         """Calculate total based on seats and product price"""
-        return self.nb_seats * self.offer.product.price
+        return self.nb_seats * self.offering.product.price
 
     @factory.lazy_attribute
     def trainees(self):
@@ -1585,8 +1585,8 @@ class VoucherFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     class Meta:
         model = models.Voucher
 
-    offer_rule = factory.SubFactory(
-        OfferRuleFactory,
+    offering_rule = factory.SubFactory(
+        OfferingRuleFactory,
         discount=factory.SubFactory(DiscountFactory, rate=0.1),
     )
     multiple_use = False

@@ -79,7 +79,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             is_reusable=True,
         )
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
                 contract_definition=factories.ContractDefinitionFactory(
@@ -100,8 +100,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         )
         order = factories.OrderGeneratorFactory(
             owner=user,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(recipient_address=user_address),
         )
@@ -124,7 +124,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             },
             "course": {
                 "name": order.product.title,
-                "code": offer.course.code,
+                "code": offering.course.code,
                 "start": run.start.isoformat(),
                 "end": run.end.isoformat(),
                 "effort": "P0DT10H30M12S",
@@ -481,7 +481,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             is_main=True,
             is_reusable=True,
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
                 contract_definition=factories.ContractDefinitionFactory(
@@ -513,13 +513,13 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
 
         order = factories.OrderFactory(
             owner=user,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(recipient_address=user_address),
         )
         factories.OrderTargetCourseRelationFactory(
-            course=offer.course, order=order, position=1
+            course=offering.course, order=order, position=1
         )
         course_dates = order.get_equivalent_course_run_dates()
 
@@ -618,7 +618,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             is_main=True,
             is_reusable=True,
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
                 contract_definition=factories.ContractDefinitionFactory(
@@ -653,14 +653,14 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             state=enums.ORDER_STATE_ASSIGNED,
             main_invoice=InvoiceFactory(recipient_address=user_address),
         )
         factories.ContractFactory(order=order)
         factories.OrderTargetCourseRelationFactory(
-            course=offer.course, order=order, position=1
+            course=offering.course, order=order, position=1
         )
         context = contract_definition.generate_document_context(
             contract_definition=order.contract.definition,
@@ -679,7 +679,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertEqual(
             context["extra"],
             {
-                "course_code": offer.course.code,
+                "course_code": offering.course.code,
                 "language_code": "fr-fr",
                 "is_for_test": True,
             },

@@ -29,9 +29,9 @@ admin_router.register(
     "organizations", api_admin.OrganizationViewSet, basename="admin_organizations"
 )
 admin_router.register(
-    "offers",
-    api_admin.OfferViewSet,
-    basename="admin_offers",
+    "offerings",
+    api_admin.OfferingViewSet,
+    basename="admin_offerings",
 )
 admin_router.register("products", api_admin.ProductViewSet, basename="admin_products")
 admin_router.register("courses", api_admin.CourseViewSet, basename="admin_courses")
@@ -91,12 +91,12 @@ admin_product_related_router.register(
     basename="admin_product_target_courses",
 )
 
-# Admin API routes nested under offers
-admin_offer_related_router = DefaultRouter()
-admin_offer_related_router.register(
-    "offer-rules",
-    api_admin.NestedOfferRuleViewSet,
-    basename="admin_offer_rules",
+# Admin API routes nested under offerings
+admin_offering_related_router = DefaultRouter()
+admin_offering_related_router.register(
+    "offering-rules",
+    api_admin.NestedOfferingRuleViewSet,
+    basename="admin_offering_rules",
 )
 
 urlpatterns = [
@@ -117,7 +117,7 @@ urlpatterns = [
         include(admin_product_related_router.urls),
     ),
     path(
-        f"api/{API_VERSION}/admin/offers/<uuid:offer_id>/",
-        include(admin_offer_related_router.urls),
+        f"api/{API_VERSION}/admin/offerings/<uuid:offering_id>/",
+        include(admin_offering_related_router.urls),
     ),
 ]

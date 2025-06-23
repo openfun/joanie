@@ -114,14 +114,14 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         only the contracts with these ids should be signed.
         """
         organization = factories.OrganizationFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         orders = factories.OrderFactory.create_batch(
             2,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             organization=organization,
             product__contract_definition=factories.ContractDefinitionFactory(),
             payment_schedule=[
@@ -206,22 +206,22 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
-    def test_api_organization_contracts_signature_link_specified_offer_ids(
+    def test_api_organization_contracts_signature_link_specified_offering_ids(
         self,
     ):
         """
-        When passing a list of offer ids,
-        only the contracts relying on those offers should be signed.
+        When passing a list of offering ids,
+        only the contracts relying on those offerings should be signed.
         """
         [organization, other_organization] = factories.OrganizationFactory.create_batch(
             2
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization, other_organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=0,
         )
-        offer_2 = factories.OfferFactory(
+        offering_2 = factories.OfferingFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=0,
@@ -232,8 +232,8 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
 
         orders = factories.OrderFactory.create_batch(
             3,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             organization=organization,
             payment_schedule=[
                 {
@@ -256,12 +256,12 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             )
             order.init_flow()
 
-        # Create a contract linked to the same offer
+        # Create a contract linked to the same offering
         # but for another organization
         factories.ContractFactory.create(
             order=factories.OrderFactory.create(
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 organization=other_organization,
                 state=enums.ORDER_STATE_COMPLETED,
             ),
@@ -271,11 +271,11 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         )
 
         # Create other orders and contracts for the same organization
-        # but for another offer
+        # but for another offering
         other_orders = factories.OrderFactory.create_batch(
             3,
-            product=offer_2.product,
-            course=offer_2.course,
+            product=offering_2.product,
+            course=offering_2.course,
             organization=organization,
             payment_schedule=[
                 {
@@ -300,7 +300,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
-            data={"offer_ids": [offer.id]},
+            data={"offering_ids": [offering.id]},
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -316,11 +316,11 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
 
     def test_api_organization_contracts_signature_link_cumulative_filters(self):
         """
-        When filter by both a list of offer ids and a list of contract ids,
+        When filter by both a list of offering ids and a list of contract ids,
         those filter should be combined.
         """
         organization = factories.OrganizationFactory.create()
-        [offer, offer_2] = factories.OfferFactory.create_batch(
+        [offering, offering_2] = factories.OfferingFactory.create_batch(
             2,
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -329,11 +329,11 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         access = factories.UserOrganizationAccessFactory(
             organization=organization, role="owner"
         )
-        # Create two contracts for the same organization and offer
+        # Create two contracts for the same organization and offering
         orders = factories.OrderFactory.create_batch(
             2,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             organization=organization,
             payment_schedule=[
                 {
@@ -360,7 +360,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
                 "contract_ids": [contract.id],
-                "offer_ids": [offer.id],
+                "offering_ids": [offering.id],
             },
         )
 
@@ -378,7 +378,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={
                 "contract_ids": [contract.id],
-                "offer_ids": [offer_2.id],
+                "offering_ids": [offering_2.id],
             },
         )
 

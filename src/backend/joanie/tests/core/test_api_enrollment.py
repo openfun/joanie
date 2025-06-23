@@ -175,7 +175,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         ),
                         "is_active": enrollment.is_active,
                         "orders": [],
-                        "offers": [],
+                        "offerings": [],
                         "state": enrollment.state,
                         "was_created_by_order": enrollment.was_created_by_order,
                     }
@@ -252,7 +252,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         ),
                         "is_active": other_enrollment.is_active,
                         "orders": [],
-                        "offers": [],
+                        "offerings": [],
                         "state": other_enrollment.state,
                         "was_created_by_order": other_enrollment.was_created_by_order,
                     }
@@ -316,11 +316,11 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(len(content["results"]), 3)
 
         self.assertListEqual(
-            content["results"][2]["offers"],
+            content["results"][2]["offerings"],
             [
                 {
-                    "id": str(product2.offers.last().id),
-                    "is_withdrawable": product2.offers.last().is_withdrawable,
+                    "id": str(product2.offerings.last().id),
+                    "is_withdrawable": product2.offerings.last().is_withdrawable,
                     "product": {
                         "instructions": "",
                         "call_to_action": "let's go!",
@@ -349,8 +349,8 @@ class EnrollmentApiTest(BaseAPITestCase):
                     },
                 },
                 {
-                    "id": str(product1.offers.last().id),
-                    "is_withdrawable": product1.offers.last().is_withdrawable,
+                    "id": str(product1.offerings.last().id),
+                    "is_withdrawable": product1.offerings.last().is_withdrawable,
                     "product": {
                         "instructions": "",
                         "call_to_action": "let's go!",
@@ -545,7 +545,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                         ),
                         "is_active": enrollment_1.is_active,
                         "orders": [],
-                        "offers": [],
+                        "offerings": [],
                         "state": enrollment_1.state,
                         "was_created_by_order": enrollment_1.was_created_by_order,
                     }
@@ -743,7 +743,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": enrollment.is_active,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": enrollment.state,
                 "was_created_by_order": enrollment.was_created_by_order,
             },
@@ -801,11 +801,11 @@ class EnrollmentApiTest(BaseAPITestCase):
             ],
         )
         self.assertListEqual(
-            content["offers"],
+            content["offerings"],
             [
                 {
-                    "id": str(product.offers.first().id),
-                    "is_withdrawable": product.offers.first().is_withdrawable,
+                    "id": str(product.offerings.first().id),
+                    "is_withdrawable": product.offerings.first().is_withdrawable,
                     "product": {
                         "call_to_action": "let's go!",
                         "certificate_definition": {
@@ -943,7 +943,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "set" if is_active else "",
                 "was_created_by_order": False,
             },
@@ -1075,7 +1075,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "failed",
                 "was_created_by_order": False,
             },
@@ -1168,7 +1168,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "failed",
                 "was_created_by_order": False,
             },
@@ -1418,7 +1418,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": is_active,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "set" if is_active else "",
                 "was_created_by_order": False,
             },
@@ -1718,7 +1718,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ),
                     "is_active": is_active_new,
                     "orders": [],
-                    "offers": [],
+                    "offerings": [],
                     "state": ""
                     if is_active_old is False and is_active_new is False
                     else "set",
@@ -1932,7 +1932,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -2017,7 +2017,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": False,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "set",
                 "was_created_by_order": False,
             },
@@ -2100,7 +2100,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "set",
                 "was_created_by_order": True,
             },
@@ -2195,7 +2195,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "set",
                 "was_created_by_order": True,
             },
@@ -2261,7 +2261,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
                 "is_active": True,
                 "orders": [],
-                "offers": [],
+                "offerings": [],
                 "state": "set",
                 "was_created_by_order": True,
             },

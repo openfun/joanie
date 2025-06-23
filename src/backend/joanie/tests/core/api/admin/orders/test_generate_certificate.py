@@ -230,7 +230,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             type=enums.PRODUCT_TYPE_CERTIFICATE,
             certificate_definition=factories.CertificateDefinitionFactory(),
         )
-        factories.OfferFactory(
+        factories.OfferingFactory(
             product=product,
             course=course,
         )
@@ -407,7 +407,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             type=enums.PRODUCT_TYPE_CERTIFICATE,
             certificate_definition=factories.CertificateDefinitionFactory(),
         )
-        factories.OfferFactory(
+        factories.OfferingFactory(
             product=product,
             course=course,
         )

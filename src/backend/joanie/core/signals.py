@@ -106,8 +106,8 @@ def on_save_product_target_course_relation(instance, **kwargs):
 
 # pylint: disable=too-many-branches
 # ruff: noqa: PLR0912
-def on_change_offer(action, instance, pk_set, **kwargs):
-    """Synchronize products related to the course/product offer being changed."""
+def on_change_offering(action, instance, pk_set, **kwargs):
+    """Synchronize products related to the course/product offering being changed."""
     if isinstance(instance, models.Course):
         if action == "post_add":
             serialized_course_runs = (

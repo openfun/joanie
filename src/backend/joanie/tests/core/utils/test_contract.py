@@ -27,7 +27,7 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an Offer object, we should be able to find the
+        From an Offering object, we should be able to find the
         contract's signature backend references that are attached to the validated
         orders only for a specific course and product. It should return an iterator with
         signature backend references.
@@ -35,13 +35,13 @@ class UtilsContractTestCase(TestCase):
         """
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
-                offer = factories.OfferFactory(
+                offering = factories.OfferingFactory(
                     product__contract_definition=factories.ContractDefinitionFactory()
                 )
                 contract = factories.ContractFactory(
                     # order__owner=users[index],
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__state=state,
                     definition_checksum="1234",
                     context={"foo": "bar"},
@@ -51,7 +51,7 @@ class UtilsContractTestCase(TestCase):
 
                 signature_backend_references_generator = (
                     contract_utility.get_signature_backend_references(
-                        offer=offer, organization=None
+                        offering=offering, organization=None
                     )
                 )
                 signature_backend_references_list = list(
@@ -72,13 +72,13 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an Offer object, we should be able to find the contract's
+        From an Offering object, we should be able to find the contract's
         signature backend references that are attached to the 'validated' orders only for a
         specific course and product. If all orders found do not have the state validated, it should
         return an empty generator.
         """
         users = factories.UserFactory.create_batch(3)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory()
         )
         signature_reference_choices = [
@@ -89,8 +89,8 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             factories.ContractFactory(
                 order__owner=users[index],
-                order__product=offer.product,
-                order__course=offer.course,
+                order__product=offering.product,
+                order__course=offering.course,
                 order__state=random.choice(
                     [
                         enums.ORDER_STATE_CANCELED,
@@ -107,7 +107,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=offer, organization=None
+                offering=offering, organization=None
             )
         )
         signature_backend_references_list = list(signature_backend_references_generator)
@@ -119,13 +119,13 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an Offer object, we should be able to find the
+        From an Offering object, we should be able to find the
         contract's signature backend references that are attached to the validated
         orders only for a specific course and product. It should return an iterator with
         signature backend references.
         """
         users = factories.UserFactory.create_batch(3)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory()
         )
         signature_reference_choices = [
@@ -136,8 +136,8 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             factories.ContractFactory(
                 order__owner=users[index],
-                order__product=offer.product,
-                order__course=offer.course,
+                order__product=offering.product,
+                order__course=offering.course,
                 order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
@@ -148,7 +148,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=offer, organization=None
+                offering=offering, organization=None
             )
         )
         signature_backend_references_list = list(signature_backend_references_generator)
@@ -167,10 +167,10 @@ class UtilsContractTestCase(TestCase):
         organization, it should return an empty iterator.
         """
         users = factories.UserFactory.create_batch(3)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory()
         )
-        organization = offer.organizations.first()
+        organization = offering.organizations.first()
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
@@ -179,8 +179,8 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             factories.ContractFactory(
                 order__owner=users[index],
-                order__product=offer.product,
-                order__course=offer.course,
+                order__product=offering.product,
+                order__course=offering.course,
                 order__state=random.choice(
                     [
                         enums.ORDER_STATE_CANCELED,
@@ -197,7 +197,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=None, organization=organization
+                offering=None, organization=organization
             )
         )
         signature_backend_references_list = list(signature_backend_references_generator)
@@ -214,10 +214,10 @@ class UtilsContractTestCase(TestCase):
         signature backend references.
         """
         users = factories.UserFactory.create_batch(3)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory()
         )
-        organization = offer.organizations.first()
+        organization = offering.organizations.first()
         signature_reference_choices = [
             "wfl_fake_dummy_1",
             "wfl_fake_dummy_2",
@@ -226,8 +226,8 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             factories.ContractFactory(
                 order__owner=users[index],
-                order__product=offer.product,
-                order__course=offer.course,
+                order__product=offering.product,
+                order__course=offering.course,
                 order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
@@ -238,7 +238,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=None, organization=organization
+                offering=None, organization=organization
             )
         )
         signature_backend_references_list = list(signature_backend_references_generator)
@@ -253,12 +253,12 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an Offer object where it has an Enrollment but there are no
+        From an Offering object where it has an Enrollment but there are no
         signed contracts yet, we should be not able to find the contract's signature backend
         reference and get an empty iterator in return.
         """
         users = factories.UserFactory.create_batch(3)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
@@ -270,13 +270,13 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             enrollment = factories.EnrollmentFactory(
                 user=users[index],
-                course_run__course=offer.course,
+                course_run__course=offering.course,
                 course_run__state=models.CourseState.ONGOING_OPEN,
                 course_run__is_listed=True,
             )
             factories.ContractFactory(
                 order__owner=users[index],
-                order__product=offer.product,
+                order__product=offering.product,
                 order__course=None,
                 order__enrollment=enrollment,
                 order__state=random.choice(
@@ -295,7 +295,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=offer, organization=None
+                offering=offering, organization=None
             )
         )
         signature_backend_references_list = list(signature_backend_references_generator)
@@ -307,12 +307,12 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an Offer object, we should be able to find the
+        From an Offering object, we should be able to find the
         signed contract signature backend references that are attached to the
         'validated' Orders of a specific Enrollment.
         """
         users = factories.UserFactory.create_batch(3)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
@@ -324,13 +324,13 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             enrollment = factories.EnrollmentFactory(
                 user=users[index],
-                course_run__course=offer.course,
+                course_run__course=offering.course,
                 course_run__state=models.CourseState.ONGOING_OPEN,
                 course_run__is_listed=True,
             )
             factories.ContractFactory(
                 order__owner=users[index],
-                order__product=offer.product,
+                order__product=offering.product,
                 order__course=None,
                 order__enrollment=enrollment,
                 order__state=enums.ORDER_STATE_COMPLETED,
@@ -343,7 +343,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=offer, organization=None
+                offering=offering, organization=None
             )
         )
         signature_backend_references_list = list(signature_backend_references_generator)
@@ -359,7 +359,7 @@ class UtilsContractTestCase(TestCase):
     ):
         """
         When we add the extra filters parameter where we want to filter if the requesting user has
-        the rights on the Organization that is attached to an existing Offer
+        the rights on the Organization that is attached to an existing Offering
         object in the get signature backend reference method, we should be able to find the signed
         contract signature backend references.
         """
@@ -368,7 +368,7 @@ class UtilsContractTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
             product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=[organization],
@@ -382,13 +382,13 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             enrollment = factories.EnrollmentFactory(
                 user=users[index],
-                course_run__course=offer.course,
+                course_run__course=offering.course,
                 course_run__state=models.CourseState.ONGOING_OPEN,
                 course_run__is_listed=True,
             )
             factories.ContractFactory(
                 order__owner=users[index],
-                order__product=offer.product,
+                order__product=offering.product,
                 order__course=None,
                 order__enrollment=enrollment,
                 order__state=enums.ORDER_STATE_COMPLETED,
@@ -402,7 +402,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=offer,
+                offering=offering,
                 organization=None,
                 extra_filters=extra_filters,
             )
@@ -419,7 +419,7 @@ class UtilsContractTestCase(TestCase):
         self,
     ):
         """
-        From an Offer object, we should not be able to find signature
+        From an Offering object, we should not be able to find signature
         backend references if the user has no access to the organization when we add an extra
         filter in the queryset. It should return an empty iterator.
         """
@@ -428,7 +428,7 @@ class UtilsContractTestCase(TestCase):
             organization=factories.OrganizationFactory(), user=requesting_user
         )
         organization_course_supplier = factories.OrganizationFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
             product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=[organization_course_supplier],
@@ -442,13 +442,13 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             enrollment = factories.EnrollmentFactory(
                 user=users[index],
-                course_run__course=offer.course,
+                course_run__course=offering.course,
                 course_run__state=models.CourseState.ONGOING_OPEN,
                 course_run__is_listed=True,
             )
             factories.ContractFactory(
                 order__owner=users[index],
-                order__product=offer.product,
+                order__product=offering.product,
                 order__course=None,
                 order__enrollment=enrollment,
                 order__state=enums.ORDER_STATE_COMPLETED,
@@ -462,7 +462,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=offer,
+                offering=offering,
                 organization=None,
                 extra_filters=extra_filters,
             )
@@ -567,7 +567,7 @@ class UtilsContractTestCase(TestCase):
         storage = storages["contracts"]
         users = factories.UserFactory.create_batch(3)
         requesting_user = factories.UserFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(
                 title="Contract definition title"
             )
@@ -581,8 +581,8 @@ class UtilsContractTestCase(TestCase):
         for index, signature_reference in enumerate(signature_reference_choices):
             order = factories.OrderFactory(
                 owner=users[index],
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=InvoiceFactory(
                     recipient_address__address="1 Rue de L'Exemple",
@@ -641,17 +641,17 @@ class UtilsContractTestCase(TestCase):
         # Clear file zip archive in storages
         storage.delete(generated_zip_archive_name)
 
-    def test_utils_contract_get_signature_backend_references_with_offer_and_org(
+    def test_utils_contract_get_signature_backend_references_with_offering_and_org(
         self,
     ):
         """
-        If the Offer is shared accross 2 organizations, when passing the offer UUID
+        If the Offering is shared accross 2 organizations, when passing the offering UUID
         and the organization UUID, we should be able to retrieve only the
         contract that is attached to the organization parsed in parameters.
         """
         learners = factories.UserFactory.create_batch(2)
         organizations = factories.OrganizationFactory.create_batch(2)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=organizations,
         )
@@ -663,8 +663,8 @@ class UtilsContractTestCase(TestCase):
             factories.ContractFactory(
                 order__organization=organizations[index],
                 order__owner=learners[index],
-                order__product=offer.product,
-                order__course=offer.course,
+                order__product=offering.product,
+                order__course=offering.course,
                 order__state=enums.ORDER_STATE_COMPLETED,
                 signature_backend_reference=signature_reference,
                 definition_checksum="1234",
@@ -675,7 +675,7 @@ class UtilsContractTestCase(TestCase):
 
         signature_backend_references_generator = (
             contract_utility.get_signature_backend_references(
-                offer=offer, organization=organizations[0]
+                offering=offering, organization=organizations[0]
             )
         )
         signature_backend_references_list = list(signature_backend_references_generator)
@@ -846,13 +846,13 @@ class UtilsContractTestCase(TestCase):
         Should return an empty list because there is no contract to sign for the organization.
         """
         organization = factories.OrganizationFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=[organization],
         )
         order = factories.OrderFactory(
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             state=enums.ORDER_STATE_COMPLETED,
             organization=organization,
         )
@@ -888,7 +888,7 @@ class UtilsContractTestCase(TestCase):
         organization only and got updated successfully.
         """
         organization = factories.OrganizationFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=[organization],
         )
@@ -897,8 +897,8 @@ class UtilsContractTestCase(TestCase):
         for index, reference in enumerate(signature_reference_choices):
             order = factories.OrderFactory(
                 owner=learners[index],
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=enums.ORDER_STATE_COMPLETED,
                 organization=organization,
             )
@@ -913,8 +913,8 @@ class UtilsContractTestCase(TestCase):
             )
         order = factories.OrderFactory(
             owner=learners[2],
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             state=enums.ORDER_STATE_COMPLETED,
             organization=organization,
         )

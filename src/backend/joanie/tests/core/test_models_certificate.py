@@ -116,7 +116,7 @@ class CertificateModelTestCase(LoggingTestCase):
             courses=[],
             title="Graded product",
         )
-        factories.OfferFactory(course=course, product=product)
+        factories.OfferingFactory(course=course, product=product)
 
         # - Add French translations
         organization.translations.create(language_code="fr-fr", title="Établissement 1")

@@ -154,14 +154,14 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             with self.subTest(state=state):
                 now = timezone.now()
                 organization = factories.OrganizationFactory()
-                offer = factories.OfferFactory(
+                offering = factories.OfferingFactory(
                     organizations=[organization],
                     product__contract_definition=factories.ContractDefinitionFactory(),
                 )
                 contract = factories.ContractFactory(
                     order__state=state,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=factory.Sequence(
                         lambda n: f"wfl_fake_dummy_id_{n!s}"
@@ -188,7 +188,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         """Should return a list of references to sign."""
         now = timezone.now()
         organization = factories.OrganizationFactory()
-        offers = factories.OfferFactory.create_batch(
+        offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -196,12 +196,12 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts_to_sign = []
         other_contracts = []
         signed_contracts = []
-        for offer in offers:
+        for offering in offerings:
             contracts_to_sign.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=factory.Sequence(
                         lambda n: f"wfl_fake_dummy_id_{n!s}"
@@ -213,8 +213,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             other_contracts.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=None,
                     submitted_for_signature_on=None,
@@ -224,8 +224,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             signed_contracts.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=factory.Sequence(
                         lambda n: f"wfl_fake_dummy_id_{n!s}"
@@ -253,7 +253,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         """Should return a list of references to sign for specified contract ids."""
         now = timezone.now()
         organization = factories.OrganizationFactory()
-        offers = factories.OfferFactory.create_batch(
+        offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -261,12 +261,12 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts_to_sign = []
         other_contracts = []
         signed_contracts = []
-        for offer in offers:
+        for offering in offerings:
             contracts_to_sign.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=factory.Sequence(
                         lambda n: f"wfl_fake_dummy_id_{n!s}"
@@ -278,8 +278,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             other_contracts.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=None,
                     submitted_for_signature_on=None,
@@ -289,8 +289,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             signed_contracts.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=factory.Sequence(
                         lambda n: f"wfl_fake_dummy_id_{n!s}"
@@ -323,7 +323,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         """Should raise an error if a specified contract id does not exist."""
         now = timezone.now()
         organization = factories.OrganizationFactory()
-        offers = factories.OfferFactory.create_batch(
+        offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -331,12 +331,12 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts_to_sign = []
         other_contracts = []
         signed_contracts = []
-        for offer in offers:
+        for offering in offerings:
             contracts_to_sign.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=factory.Sequence(
                         lambda n: f"wfl_fake_dummy_id_{n!s}"
@@ -348,8 +348,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             other_contracts.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=None,
                     submitted_for_signature_on=None,
@@ -359,8 +359,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             signed_contracts.append(
                 factories.ContractFactory(
                     order__state=enums.ORDER_STATE_COMPLETED,
-                    order__product=offer.product,
-                    order__course=offer.course,
+                    order__product=offering.product,
+                    order__course=offering.course,
                     order__organization=organization,
                     signature_backend_reference=factory.Sequence(
                         lambda n: f"wfl_fake_dummy_id_{n!s}"
@@ -394,17 +394,17 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         """Should return a signature link."""
         now = timezone.now()
         organization = factories.OrganizationFactory()
-        offers = factories.OfferFactory.create_batch(
+        offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contracts = []
-        for offer in offers:
+        for offering in offerings:
             contract = factories.ContractFactory(
                 order__state=enums.ORDER_STATE_COMPLETED,
-                order__product=offer.product,
-                order__course=offer.course,
+                order__product=offering.product,
+                order__course=offering.course,
                 order__organization=organization,
                 signature_backend_reference=factory.Sequence(
                     lambda n: f"wfl_fake_dummy_id_{n!s}"
@@ -426,17 +426,17 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         """Should return a signature link for specified contract ids."""
         now = timezone.now()
         organization = factories.OrganizationFactory()
-        offers = factories.OfferFactory.create_batch(
+        offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
         contracts = []
-        for offer in offers:
+        for offering in offerings:
             contract = factories.ContractFactory(
                 order__state=enums.ORDER_STATE_COMPLETED,
-                order__product=offer.product,
-                order__course=offer.course,
+                order__product=offering.product,
+                order__course=offering.course,
                 order__organization=organization,
                 signature_backend_reference=factory.Sequence(
                     lambda n: f"wfl_fake_dummy_id_{n!s}"

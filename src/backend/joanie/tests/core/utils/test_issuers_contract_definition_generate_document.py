@@ -105,14 +105,14 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
 
         course = factories.CourseFactory(code="UX-00001", effort=timedelta(hours=404))
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product=product, course=course, organizations=[organization]
         )
 
         order = factories.OrderFactory(
             owner=user,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             organization=organization,
             state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(

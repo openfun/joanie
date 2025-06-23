@@ -157,21 +157,21 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         organization = factories.OrganizationFactory()
         wrong_organization = factories.OrganizationFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
         )
         factories.OrderFactory(
             organization=organization,
             owner=user_learner,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         token = self.get_user_token(user.username)
 
         with self.assertNumQueries(3):
             response = self.client.get(
-                f"/api/v1.0/courses/{offer.course.id}/orders/"
+                f"/api/v1.0/courses/{offering.course.id}/orders/"
                 f"?organization_id={wrong_organization.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
@@ -203,11 +203,11 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             response.json(), {"count": 0, "next": None, "previous": None, "results": []}
         )
 
-    def test_api_courses_order_get_list_learners_filter_not_existing_offer_id(
+    def test_api_courses_order_get_list_learners_filter_not_existing_offering_id(
         self,
     ):
         """
-        When an authenticated user passes an offer that does not exist in
+        When an authenticated user passes an offering that does not exist in
         the query params of the URL, it should return an empty list in return.
         """
         user = factories.UserFactory()
@@ -215,7 +215,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         response = self.client.get(
-            f"/api/v1.0/courses/{course.id}/orders/?offer_id={uuid4()}",
+            f"/api/v1.0/courses/{course.id}/orders/?offering_id={uuid4()}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -253,42 +253,42 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         organizations = factories.OrganizationFactory.create_batch(3)
         product = factories.ProductFactory()
         courses = factories.CourseFactory.create_batch(3)
-        offer_1 = factories.OfferFactory(
+        offering_1 = factories.OfferingFactory(
             product=product,
             course=courses[0],
             organizations=[organizations[0]],
         )
-        offer_2 = factories.OfferFactory(
+        offering_2 = factories.OfferingFactory(
             product=product, course=courses[1], organizations=[organizations[1]]
         )
-        offer_3 = factories.OfferFactory(
+        offering_3 = factories.OfferingFactory(
             product=product, course=courses[2], organizations=[organizations[2]]
         )
         order = factories.OrderFactory(
             owner=user_learners[0],
             product=product,
-            course=offer_1.course,
+            course=offering_1.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[1],
             owner=user_learners[1],
             product=product,
-            course=offer_2.course,
+            course=offering_2.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[1],
             owner=user_learners[2],
             product=product,
-            course=offer_2.course,
+            course=offering_2.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[2],
             owner=user_learners[3],
             product=product,
-            course=offer_3.course,
+            course=offering_3.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.UserOrganizationAccessFactory(
@@ -299,7 +299,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(28):
             response = self.client.get(
-                f"/api/v1.0/courses/{offer_1.course.id}/orders/",
+                f"/api/v1.0/courses/{offering_1.course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -332,7 +332,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             ),
         ]
         organizations = factories.OrganizationFactory.create_batch(2)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__certificate_definition=factories.CertificateDefinitionFactory(),
             product__contract_definition=factories.ContractDefinitionFactory(),
             organizations=organizations,
@@ -342,8 +342,8 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             order = factories.OrderFactory(
                 organization=organizations[i],
                 owner=user_learners[i],
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=enums.ORDER_STATE_COMPLETED,
             )
             factories.ContractFactory(order=order)
@@ -357,7 +357,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(29):
             response = self.client.get(
-                f"/api/v1.0/courses/{offer.course.id}/orders/"
+                f"/api/v1.0/courses/{offering.course.id}/orders/"
                 f"?organization_id={organizations[1].id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
@@ -416,15 +416,15 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                             "full_name": user_learners[1].get_full_name(),
                             "email": str(user_learners[1].email),
                         },
-                        "course_id": str(offer.course.id),
+                        "course_id": str(offering.course.id),
                         "enrollment_id": None,
                         "product": {
-                            "id": str(offer.product.id),
+                            "id": str(offering.product.id),
                             "contract_definition_id": str(
-                                offer.product.contract_definition_id
+                                offering.product.contract_definition_id
                             ),
                             "certificate_definition_id": str(
-                                offer.product.certificate_definition_id
+                                offering.product.certificate_definition_id
                             ),
                         },
                         "state": str(orders[1].state),
@@ -457,7 +457,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory()
         for course in courses:
-            factories.OfferFactory(
+            factories.OfferingFactory(
                 product=product, course=course, organizations=[organization]
             )
         # Two orders with the same product and course
@@ -549,7 +549,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             ),
         ]
         for index, course in enumerate(courses, start=0):
-            factories.OfferFactory(
+            factories.OfferingFactory(
                 product=product, course=course, organizations=[organizations[index]]
             )
         # Make Orders with product number 1 and with the common course
@@ -629,12 +629,12 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             str(organizations[1].id),
         )
 
-    def test_api_courses_order_get_list_learners_filter_by_offer_id_query_params(
+    def test_api_courses_order_get_list_learners_filter_by_offering_id_query_params(
         self,
     ):
         """
-        When an authenticated user passes an offer 'id' in the query params,
-        he should get the list of the leaners that are attached to this offer and where
+        When an authenticated user passes an offering 'id' in the query params,
+        he should get the list of the leaners that are attached to this offering and where
         the authenticated user has organization access to.
         """
         user = factories.UserFactory()
@@ -642,10 +642,10 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         course_1 = factories.CourseFactory()
         course_2 = factories.CourseFactory()
         organizations = factories.OrganizationFactory.create_batch(2)
-        offer_1 = factories.OfferFactory(
+        offering_1 = factories.OfferingFactory(
             product=product, course=course_1, organizations=[organizations[0]]
         )
-        offer_2 = factories.OfferFactory(
+        offering_2 = factories.OfferingFactory(
             product=product, course=course_2, organizations=[organizations[1]]
         )
         user_learners = [
@@ -663,21 +663,21 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             organization=organizations[0],
             owner=user_learners[0],
             product=product,
-            course=offer_1.course,
+            course=offering_1.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[0],
             owner=user_learners[1],
             product=product,
-            course=offer_1.course,
+            course=offering_1.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[1],
             owner=user_learners[2],
             product=product,
-            course=offer_2.course,
+            course=offering_2.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.UserOrganizationAccessFactory(
@@ -688,7 +688,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         # should return 2 out of 3 learners
         with self.assertNumQueries(31):
             response = self.client.get(
-                f"/api/v1.0/courses/{course_1.id}/orders/?offer_id={offer_1.id}",
+                f"/api/v1.0/courses/{course_1.id}/orders/?offering_id={offering_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -706,7 +706,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         # should not get results because the user has not yet access to the organization
         with self.assertNumQueries(3):
             response = self.client.get(
-                f"/api/v1.0/courses/{course_2.id}/orders/?offer_id={offer_2.id}",
+                f"/api/v1.0/courses/{course_2.id}/orders/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -718,7 +718,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         with self.assertNumQueries(28):
             response = self.client.get(
-                f"/api/v1.0/courses/{course_2.id}/orders/?offer_id={offer_2.id}",
+                f"/api/v1.0/courses/{course_2.id}/orders/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -729,23 +729,23 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         self.assertEqual(response.json()["results"][0]["course_id"], str(course_2.id))
 
-    def test_api_courses_order_get_list_with_course_id_not_related_to_offer_id(
+    def test_api_courses_order_get_list_with_course_id_not_related_to_offering_id(
         self,
     ):
         """
         When an authenticated user passes a course 'id' that is not related to the course
-        product offer object (vice versa) he should get an empty list in return. In this case
-        'course_1' is related to 'offer_1', and 'course_2' is related to 'offer_2'.
+        product offering object (vice versa) he should get an empty list in return. In this case
+        'course_1' is related to 'offering_1', and 'course_2' is related to 'offering_2'.
         """
         user = factories.UserFactory()
         product = factories.ProductFactory()
         course_1 = factories.CourseFactory()
         course_2 = factories.CourseFactory()
         organizations = factories.OrganizationFactory.create_batch(2)
-        offer_1 = factories.OfferFactory(
+        offering_1 = factories.OfferingFactory(
             product=product, course=course_1, organizations=[organizations[0]]
         )
-        offer_2 = factories.OfferFactory(
+        offering_2 = factories.OfferingFactory(
             product=product, course=course_2, organizations=[organizations[1]]
         )
         user_learners = [
@@ -763,21 +763,21 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             organization=organizations[0],
             owner=user_learners[0],
             product=product,
-            course=offer_1.course,
+            course=offering_1.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[0],
             owner=user_learners[1],
             product=product,
-            course=offer_1.course,
+            course=offering_1.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.OrderFactory(
             organization=organizations[1],
             owner=user_learners[2],
             product=product,
-            course=offer_2.course,
+            course=offering_2.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
         for organization in organizations:
@@ -789,7 +789,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(3):
             response = self.client.get(
-                f"/api/v1.0/courses/{course_1.id}/orders/?offer_id={offer_2.id}",
+                f"/api/v1.0/courses/{course_1.id}/orders/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -797,7 +797,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(2):
             response = self.client.get(
-                f"/api/v1.0/courses/{course_2.id}/orders/?offer_id={offer_1.id}",
+                f"/api/v1.0/courses/{course_2.id}/orders/?offering_id={offering_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -814,7 +814,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         organization = factories.OrganizationFactory()
         product = factories.ProductFactory()
         course = factories.CourseFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product=product, course=course, organizations=[organization]
         )
         user_learner = factories.UserFactory(
@@ -824,7 +824,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             organization=organization,
             owner=user_learner,
             product=product,
-            course=offer.course,
+            course=offering.course,
             state=enums.ORDER_STATE_COMPLETED,
         )
 
@@ -832,7 +832,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(4):
             response = self.client.get(
-                f"/api/v1.0/courses/{course.id}/orders/?offer_id={offer.id}",
+                f"/api/v1.0/courses/{course.id}/orders/?offering_id={offering.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -860,7 +860,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         with self.assertNumQueries(28):
             response = self.client.get(
-                f"/api/v1.0/courses/{course.id}/orders/?offer_id={offer.id}",
+                f"/api/v1.0/courses/{course.id}/orders/?offering_id={offering.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -903,10 +903,10 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
                 user = factories.UserFactory()
-                offer = factories.OfferFactory()
-                organization = offer.organizations.first()
-                product = offer.product
-                course = offer.course
+                offering = factories.OfferingFactory()
+                organization = offering.organizations.first()
+                product = offering.product
+                course = offering.course
                 order = factories.OrderFactory(
                     organization=organization,
                     product=product,

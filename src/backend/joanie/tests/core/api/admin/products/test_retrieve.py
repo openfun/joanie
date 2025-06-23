@@ -32,27 +32,27 @@ class ProductAdminApiRetrieveTest(TestCase):
             teachers=[teacher],
             certification_level=3,
         )
-        offer = models.CourseProductRelation.objects.get(product=product)
+        offering = models.CourseProductRelation.objects.get(product=product)
         courses = factories.CourseFactory.create_batch(3)
-        offers = []
-        offers.append(
+        offerings = []
+        offerings.append(
             models.ProductTargetCourseRelation(
                 course=courses[0], product=product, position=2
             )
         )
-        offers[0].save()
-        offers.append(
+        offerings[0].save()
+        offerings.append(
             models.ProductTargetCourseRelation(
                 course=courses[1], product=product, position=0
             )
         )
-        offers[1].save()
-        offers.append(
+        offerings[1].save()
+        offerings.append(
             models.ProductTargetCourseRelation(
                 course=courses[2], product=product, position=1
             )
         )
-        offers[2].save()
+        offerings[2].save()
 
         response = self.client.get(f"/api/v1.0/admin/products/{product.id}/")
 
@@ -99,7 +99,7 @@ class ProductAdminApiRetrieveTest(TestCase):
             },
             "target_courses": [
                 {
-                    "id": str(offers[1].id),
+                    "id": str(offerings[1].id),
                     "course": {
                         "id": str(courses[1].id),
                         "code": courses[1].code,
@@ -112,11 +112,11 @@ class ProductAdminApiRetrieveTest(TestCase):
                         },
                     },
                     "course_runs": [],
-                    "is_graded": offers[1].is_graded,
-                    "position": offers[1].position,
+                    "is_graded": offerings[1].is_graded,
+                    "position": offerings[1].position,
                 },
                 {
-                    "id": str(offers[2].id),
+                    "id": str(offerings[2].id),
                     "course": {
                         "id": str(courses[2].id),
                         "code": courses[2].code,
@@ -129,11 +129,11 @@ class ProductAdminApiRetrieveTest(TestCase):
                         },
                     },
                     "course_runs": [],
-                    "is_graded": offers[2].is_graded,
-                    "position": offers[2].position,
+                    "is_graded": offerings[2].is_graded,
+                    "position": offerings[2].position,
                 },
                 {
-                    "id": str(offers[0].id),
+                    "id": str(offerings[0].id),
                     "course": {
                         "id": str(courses[0].id),
                         "code": courses[0].code,
@@ -146,55 +146,55 @@ class ProductAdminApiRetrieveTest(TestCase):
                         },
                     },
                     "course_runs": [],
-                    "is_graded": offers[0].is_graded,
-                    "position": offers[0].position,
+                    "is_graded": offerings[0].is_graded,
+                    "position": offerings[0].position,
                 },
             ],
             "instructions": "",
-            "offers": [
+            "offerings": [
                 {
-                    "id": str(offer.id),
-                    "uri": offer.uri,
-                    "can_edit": offer.can_edit,
+                    "id": str(offering.id),
+                    "uri": offering.uri,
+                    "can_edit": offering.can_edit,
                     "course": {
-                        "id": str(offer.course.id),
-                        "code": offer.course.code,
-                        "title": offer.course.title,
+                        "id": str(offering.course.id),
+                        "code": offering.course.code,
+                        "title": offering.course.title,
                         "state": {
-                            "priority": offer.course.state["priority"],
-                            "datetime": offer.course.state["datetime"],
-                            "call_to_action": offer.course.state["call_to_action"],
-                            "text": offer.course.state["text"],
+                            "priority": offering.course.state["priority"],
+                            "datetime": offering.course.state["datetime"],
+                            "call_to_action": offering.course.state["call_to_action"],
+                            "text": offering.course.state["text"],
                         },
                     },
                     "product": {
-                        "price": float(offer.product.price),
+                        "price": float(offering.product.price),
                         "price_currency": settings.DEFAULT_CURRENCY,
-                        "id": str(offer.product.id),
-                        "title": offer.product.title,
-                        "description": offer.product.description,
-                        "call_to_action": offer.product.call_to_action,
-                        "type": offer.product.type,
+                        "id": str(offering.product.id),
+                        "title": offering.product.title,
+                        "description": offering.product.description,
+                        "call_to_action": offering.product.call_to_action,
+                        "type": offering.product.type,
                         "certificate_definition": str(
-                            offer.product.certificate_definition.id
+                            offering.product.certificate_definition.id
                         ),
                         "contract_definition": str(
-                            offer.product.contract_definition.id
+                            offering.product.contract_definition.id
                         ),
                         "target_courses": [
-                            str(offers[0].course.id),
-                            str(offers[1].course.id),
-                            str(offers[2].course.id),
+                            str(offerings[0].course.id),
+                            str(offerings[1].course.id),
+                            str(offerings[2].course.id),
                         ],
                     },
                     "organizations": [
                         {
-                            "code": offer.organizations.first().code,
-                            "title": offer.organizations.first().title,
-                            "id": str(offer.organizations.first().id),
+                            "code": offering.organizations.first().code,
+                            "title": offering.organizations.first().title,
+                            "id": str(offering.organizations.first().id),
                         }
                     ],
-                    "offer_rules": [],
+                    "offering_rules": [],
                 }
             ],
         }

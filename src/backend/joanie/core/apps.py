@@ -32,9 +32,9 @@ class CoreConfig(AppConfig):
             dispatch_uid="save_product",
         )
         m2m_changed.connect(
-            signals.on_change_offer,
+            signals.on_change_offering,
             sender=models.Course.products.through,
-            dispatch_uid="m2m_changed_offer",
+            dispatch_uid="m2m_changed_offering",
         )
         m2m_changed.connect(
             signals.on_change_course_runs_to_product_target_course_relation,

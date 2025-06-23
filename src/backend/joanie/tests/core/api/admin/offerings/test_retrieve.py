@@ -18,13 +18,13 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
 
     maxDiff = None
 
-    def test_admin_api_offer_retrieve_anonymous(self):
+    def test_admin_api_offering_retrieve_anonymous(self):
         """
-        Anonymous users should not be able to retrieve an offer.
+        Anonymous users should not be able to retrieve an offering.
         """
-        offer = factories.OfferFactory()
+        offering = factories.OfferingFactory()
         response = self.client.get(
-            f"/api/v1.0/admin/offers/{offer.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -32,15 +32,15 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_admin_api_offer_retrieve_authenticated(self):
+    def test_admin_api_offering_retrieve_authenticated(self):
         """
-        Authenticated users should not be able to retrieve an offer.
+        Authenticated users should not be able to retrieve an offering.
         """
         user = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=user.username, password="password")
-        offer = factories.OfferFactory()
+        offering = factories.OfferingFactory()
         response = self.client.get(
-            f"/api/v1.0/admin/offers/{offer.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
@@ -49,18 +49,18 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             {"detail": "You do not have permission to perform this action."},
         )
 
-    def test_admin_api_offer_retrieve_superuser(self):
+    def test_admin_api_offering_retrieve_superuser(self):
         """
-        Super admin user should be able to retrieve an offer.
+        Super admin user should be able to retrieve an offering.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__courses=[],
         )
         response = self.client.get(
-            f"/api/v1.0/admin/offers/{offer.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -68,40 +68,40 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
         self.assertEqual(
             response.json(),
             {
-                "id": str(offer.id),
-                "uri": offer.uri,
-                "can_edit": offer.can_edit,
+                "id": str(offering.id),
+                "uri": offering.uri,
+                "can_edit": offering.can_edit,
                 "course": {
-                    "code": offer.course.code,
-                    "id": str(offer.course.id),
-                    "title": offer.course.title,
+                    "code": offering.course.code,
+                    "id": str(offering.course.id),
+                    "title": offering.course.title,
                     "state": {
-                        "priority": offer.course.state["priority"],
-                        "datetime": offer.course.state["datetime"]
+                        "priority": offering.course.state["priority"],
+                        "datetime": offering.course.state["datetime"]
                         .isoformat()
                         .replace("+00:00", "Z")
-                        if offer.course.state["datetime"]
+                        if offering.course.state["datetime"]
                         else None,
-                        "call_to_action": offer.course.state["call_to_action"],
-                        "text": offer.course.state["text"],
+                        "call_to_action": offering.course.state["call_to_action"],
+                        "text": offering.course.state["text"],
                     },
                 },
-                "offer_rules": [],
+                "offering_rules": [],
                 "product": {
-                    "price": float(offer.product.price),
+                    "price": float(offering.product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
-                    "id": str(offer.product.id),
-                    "title": offer.product.title,
-                    "description": offer.product.description,
-                    "call_to_action": offer.product.call_to_action,
-                    "type": offer.product.type,
+                    "id": str(offering.product.id),
+                    "title": offering.product.title,
+                    "description": offering.product.description,
+                    "call_to_action": offering.product.call_to_action,
+                    "type": offering.product.type,
                     "certificate_definition": str(
-                        offer.product.certificate_definition.id
+                        offering.product.certificate_definition.id
                     ),
                     "contract_definition": None,
                     "target_courses": [
                         str(target_course.id)
-                        for target_course in offer.product.target_courses.all().order_by(
+                        for target_course in offering.product.target_courses.all().order_by(
                             "product_target_relations__position"
                         )
                     ],
@@ -112,7 +112,9 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
                         "id": str(organization.id),
                         "title": organization.title,
                     }
-                    for organization in offer.organizations.all().order_by("created_on")
+                    for organization in offering.organizations.all().order_by(
+                        "created_on"
+                    )
                 ],
             },
         )

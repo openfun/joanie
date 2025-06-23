@@ -1,5 +1,5 @@
 # pylint: disable=too-many-lines
-"""Test suite for the offer API."""
+"""Test suite for the offering API."""
 
 import random
 import uuid
@@ -16,17 +16,17 @@ from joanie.core.serializers import fields
 from joanie.tests.base import BaseAPITestCase
 
 
-class OfferApiTest(BaseAPITestCase):
+class OfferingApiTest(BaseAPITestCase):
     """Test the API of the CourseProductRelation resource."""
 
     maxDiff = None
 
-    def test_api_offer_read_list_anonymous(self):
+    def test_api_offering_read_list_anonymous(self):
         """
-        It should not be possible to retrieve the list of offers for
+        It should not be possible to retrieve the list of offerings for
         anonymous users.
         """
-        response = self.client.get("/api/v1.0/offers/")
+        response = self.client.get("/api/v1.0/offerings/")
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
@@ -34,9 +34,9 @@ class OfferApiTest(BaseAPITestCase):
             content, {"detail": "Authentication credentials were not provided."}
         )
 
-    def test_api_offer_read_list_without_accesses(self):
+    def test_api_offering_read_list_without_accesses(self):
         """
-        It should not be possible to retrieve the list of offers for
+        It should not be possible to retrieve the list of offerings for
         authenticated users without accesses.
         """
         factories.ProductFactory()
@@ -44,7 +44,7 @@ class OfferApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         response = self.client.get(
-            "/api/v1.0/offers/", HTTP_AUTHORIZATION=f"Bearer {token}"
+            "/api/v1.0/offerings/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
@@ -63,9 +63,9 @@ class OfferApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_offer_read_list_with_accesses(self, _):
+    def test_api_offering_read_list_with_accesses(self, _):
         """
-        An authenticated user should be able to list all offers
+        An authenticated user should be able to list all offerings
         related to courses for which it has accesses.
         """
         user = factories.UserFactory()
@@ -91,7 +91,7 @@ class OfferApiTest(BaseAPITestCase):
         )
         product.save()
         course = courses[0]
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -99,7 +99,7 @@ class OfferApiTest(BaseAPITestCase):
         factories.ProductFactory.create_batch(2)
 
         response = self.client.get(
-            "/api/v1.0/offers/",
+            "/api/v1.0/offerings/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -109,8 +109,8 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(
             content["results"][0],
             {
-                "id": str(offer.id),
-                "created_on": offer.created_on.isoformat().replace("+00:00", "Z"),
+                "id": str(offering.id),
+                "created_on": offering.created_on.isoformat().replace("+00:00", "Z"),
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -134,11 +134,11 @@ class OfferApiTest(BaseAPITestCase):
                         "<li>second item</li>\n"
                         "</ol>"
                     ),
-                    "call_to_action": offer.product.call_to_action,
+                    "call_to_action": offering.product.call_to_action,
                     "certificate_definition": {
-                        "description": offer.product.certificate_definition.description,
-                        "name": offer.product.certificate_definition.name,
-                        "title": offer.product.certificate_definition.title,
+                        "description": offering.product.certificate_definition.description,
+                        "name": offering.product.certificate_definition.name,
+                        "title": offering.product.certificate_definition.title,
                     },
                     "contract_definition": {
                         "id": str(product.contract_definition.id),
@@ -156,8 +156,8 @@ class OfferApiTest(BaseAPITestCase):
                         "call_to_action": product.state["call_to_action"],
                         "text": product.state["text"],
                     },
-                    "id": str(offer.product.id),
-                    "price": float(offer.product.price),
+                    "id": str(offering.product.id),
+                    "price": float(offering.product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
                     "target_courses": [
                         {
@@ -202,20 +202,20 @@ class OfferApiTest(BaseAPITestCase):
                                     "start"
                                 )
                             ],
-                            "position": target_course.offers.get(
-                                product=offer.product
+                            "position": target_course.offerings.get(
+                                product=offering.product
                             ).position,
-                            "is_graded": target_course.offers.get(
-                                product=offer.product
+                            "is_graded": target_course.offerings.get(
+                                product=offering.product
                             ).is_graded,
                             "title": target_course.title,
                         }
-                        for target_course in offer.product.target_courses.all().order_by(
+                        for target_course in offering.product.target_courses.all().order_by(
                             "product_target_relations__position"
                         )
                     ],
-                    "title": offer.product.title,
-                    "type": offer.product.type,
+                    "title": offering.product.title,
+                    "type": offering.product.type,
                 },
                 "organizations": [
                     {
@@ -230,14 +230,14 @@ class OfferApiTest(BaseAPITestCase):
                         "contact_phone": organization.contact_phone,
                         "dpo_email": organization.dpo_email,
                     }
-                    for organization in offer.organizations.all()
+                    for organization in offering.organizations.all()
                 ],
             },
         )
 
-    def test_api_offer_read_list_filtered_by_course_anonymous(self):
+    def test_api_offering_read_list_filtered_by_course_anonymous(self):
         """
-        It should not be possible to list course's product offers for
+        It should not be possible to list course's product offerings for
         anonymous users.
         """
         course = factories.CourseFactory()
@@ -254,9 +254,9 @@ class OfferApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_offer_read_list_filtered_by_course_with_accesses(self, _):
+    def test_api_offering_read_list_filtered_by_course_with_accesses(self, _):
         """
-        An authenticated user should be able to list all course's product offers
+        An authenticated user should be able to list all course's product offerings
         for which it has accesses
         """
         user = factories.UserFactory()
@@ -264,7 +264,7 @@ class OfferApiTest(BaseAPITestCase):
         courses = factories.CourseFactory.create_batch(2)
         for course in courses:
             factories.UserCourseAccessFactory(user=user, course=course)
-        factories.OfferFactory(
+        factories.OfferingFactory(
             product=factories.ProductFactory(
                 type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
             ),
@@ -282,11 +282,11 @@ class OfferApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
 
-    def test_api_offer_read_list_filtered_by_course_without_accesses(
+    def test_api_offering_read_list_filtered_by_course_without_accesses(
         self,
     ):
         """
-        It should not be possible to list course's product offers for
+        It should not be possible to list course's product offerings for
         authenticated users without accesses.
         """
         factories.ProductFactory()
@@ -310,9 +310,9 @@ class OfferApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_offer_read_list_filtered_by_product_type(self):
+    def test_api_offering_read_list_filtered_by_product_type(self):
         """
-        An authenticated user should be able to list all course's product offers
+        An authenticated user should be able to list all course's product offerings
         filtered by product type.
         """
         user = factories.UserFactory()
@@ -320,7 +320,7 @@ class OfferApiTest(BaseAPITestCase):
         access = factories.UserCourseAccessFactory(user=user)
 
         for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
-            factories.OfferFactory(
+            factories.OfferingFactory(
                 product=factories.ProductFactory(type=product_type, courses=[]),
                 course=access.course,
                 organizations=factories.OrganizationFactory.create_batch(1),
@@ -356,11 +356,11 @@ class OfferApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 2)
 
-    def test_api_offer_read_list_filtered_by_invalid_product_type(
+    def test_api_offering_read_list_filtered_by_invalid_product_type(
         self,
     ):
         """
-        An authenticated user should be able to list all course's product offers
+        An authenticated user should be able to list all course's product offerings
         filtered by product type but if the type is invalid, it should
         return a 400.
         """
@@ -381,11 +381,11 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
-    def test_api_offer_read_list_filtered_by_excluded_product_type(
+    def test_api_offering_read_list_filtered_by_excluded_product_type(
         self,
     ):
         """
-        An authenticated user should be able to list all course's product offers
+        An authenticated user should be able to list all course's product offerings
         filtered by excluding product type.
         """
         user = factories.UserFactory()
@@ -393,7 +393,7 @@ class OfferApiTest(BaseAPITestCase):
         access = factories.UserCourseAccessFactory(user=user)
 
         for [product_type, _] in enums.PRODUCT_TYPE_CHOICES:
-            factories.OfferFactory(
+            factories.OfferingFactory(
                 product=factories.ProductFactory(type=product_type, courses=[]),
                 course=access.course,
                 organizations=factories.OrganizationFactory.create_batch(1),
@@ -430,11 +430,11 @@ class OfferApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
 
-    def test_api_offer_read_list_filtered_by_invalid_excluded_product_type(
+    def test_api_offering_read_list_filtered_by_invalid_excluded_product_type(
         self,
     ):
         """
-        An authenticated user should be able to list all course's product offers
+        An authenticated user should be able to list all course's product offerings
         filtered by excluded product type but if the type is invalid, it should
         return a 400.
         """
@@ -455,24 +455,24 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
-    def test_api_offer_read_detail_anonymous(self):
+    def test_api_offering_read_detail_anonymous(self):
         """
-        Anonymous users should not be able to retrieve a single offer through its id.
+        Anonymous users should not be able to retrieve a single offering through its id.
         """
         courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL, courses=courses
         )
-        offer = models.CourseProductRelation.objects.get(
+        offering = models.CourseProductRelation.objects.get(
             course=courses[0], product=product
         )
 
-        response = self.client.get(f"/api/v1.0/offers/{offer.id}/")
+        response = self.client.get(f"/api/v1.0/offerings/{offering.id}/")
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
-    def test_api_offer_read_detail_anonymous_with_course_id(self):
+    def test_api_offering_read_detail_anonymous_with_course_id(self):
         """
-        Anonymous users should get a 404 when trying to retrieve a single offer
+        Anonymous users should get a 404 when trying to retrieve a single offering
         through a course id and a product id that does not exist.
         """
         response = self.client.get(
@@ -480,9 +480,9 @@ class OfferApiTest(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_api_offer_read_detail_with_product_id_anonymous(self):
+    def test_api_offering_read_detail_with_product_id_anonymous(self):
         """
-        Anonymous users should be able to retrieve a single offer
+        Anonymous users should be able to retrieve a single offering
         if a product id is provided.
         """
         course = factories.CourseFactory(code="00000")
@@ -490,7 +490,7 @@ class OfferApiTest(BaseAPITestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             target_courses=factories.CourseFactory.create_batch(2),
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -508,7 +508,7 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         content = response.json()
-        self.assertEqual(content["id"], str(offer.id))
+        self.assertEqual(content["id"], str(offering.id))
         self.assertEqual(content["course"]["code"], "00000")
         self.assertEqual(content["product"]["id"], str(product.id))
 
@@ -533,17 +533,17 @@ class OfferApiTest(BaseAPITestCase):
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
 
-    def test_api_offer_read_detail_no_organization(self):
+    def test_api_offering_read_detail_no_organization(self):
         """
-        An Offer without organizations should not be returned.
+        An Offering without organizations should not be returned.
         """
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[],
         )
 
-        # Anonymous user should not be able to retrieve this offer
+        # Anonymous user should not be able to retrieve this offering
         response = self.client.get(
-            f"/api/v1.0/courses/{offer.course.id}/products/{offer.product.id}/",
+            f"/api/v1.0/courses/{offering.course.id}/products/{offering.product.id}/",
         )
         self.assertContains(
             response,
@@ -552,16 +552,16 @@ class OfferApiTest(BaseAPITestCase):
         )
 
         # Authenticated user with course access should not be able
-        # to retrieve this offer
+        # to retrieve this offering
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         factories.UserCourseAccessFactory(
             user=user,
-            course=offer.course,
+            course=offering.course,
         )
 
         response = self.client.get(
-            f"/api/v1.0/courses/{offer.course.id}/products/{offer.product.id}/",
+            f"/api/v1.0/courses/{offering.course.id}/products/{offering.product.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -572,7 +572,7 @@ class OfferApiTest(BaseAPITestCase):
         )
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -582,19 +582,19 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.NOT_FOUND,
         )
 
-    def test_api_offer_read_detail_without_accesses(self):
+    def test_api_offering_read_detail_without_accesses(self):
         """
         Authenticated users without course access should not be able to retrieve
-        a single offer through its id.
+        a single offering through its id.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
         product = factories.ProductFactory(type=enums.PRODUCT_TYPE_CREDENTIAL)
-        offer = factories.OfferFactory(course=course, product=product)
+        offering = factories.OfferingFactory(course=course, product=product)
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -605,15 +605,15 @@ class OfferApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_offer_read_detail_with_accesses(self, _):
+    def test_api_offering_read_detail_with_accesses(self, _):
         """
         Authenticated users with course access should be able to retrieve
-        a single offer through its id.
+        a single offering through its id.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=course,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__contract_definition=factories.ContractDefinitionFactory(),
@@ -622,14 +622,14 @@ class OfferApiTest(BaseAPITestCase):
 
         with self.assertNumQueries(7):
             self.client.get(
-                f"/api/v1.0/offers/{offer.id}/",
+                f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         # A second call to the url should benefit from caching on the product serializer
         with self.assertNumQueries(3):
             response = self.client.get(
-                f"/api/v1.0/offers/{offer.id}/",
+                f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -639,8 +639,8 @@ class OfferApiTest(BaseAPITestCase):
         self.assertEqual(
             content,
             {
-                "id": str(offer.id),
-                "created_on": offer.created_on.isoformat().replace("+00:00", "Z"),
+                "id": str(offering.id),
+                "created_on": offering.created_on.isoformat().replace("+00:00", "Z"),
                 "course": {
                     "code": course.code,
                     "id": str(course.id),
@@ -650,30 +650,30 @@ class OfferApiTest(BaseAPITestCase):
                 "is_withdrawable": True,
                 "product": {
                     "instructions": "",
-                    "call_to_action": offer.product.call_to_action,
+                    "call_to_action": offering.product.call_to_action,
                     "certificate_definition": {
-                        "description": offer.product.certificate_definition.description,
-                        "name": offer.product.certificate_definition.name,
-                        "title": offer.product.certificate_definition.title,
+                        "description": offering.product.certificate_definition.description,
+                        "name": offering.product.certificate_definition.name,
+                        "title": offering.product.certificate_definition.title,
                     },
                     "contract_definition": {
-                        "id": str(offer.product.contract_definition.id),
-                        "description": offer.product.contract_definition.description,
-                        "language": offer.product.contract_definition.language,
-                        "title": offer.product.contract_definition.title,
+                        "id": str(offering.product.contract_definition.id),
+                        "description": offering.product.contract_definition.description,
+                        "language": offering.product.contract_definition.language,
+                        "title": offering.product.contract_definition.title,
                     },
                     "state": {
-                        "priority": offer.product.state["priority"],
-                        "datetime": offer.product.state["datetime"]
+                        "priority": offering.product.state["priority"],
+                        "datetime": offering.product.state["datetime"]
                         .isoformat()
                         .replace("+00:00", "Z")
-                        if offer.product.state["datetime"]
+                        if offering.product.state["datetime"]
                         else None,
-                        "call_to_action": offer.product.state["call_to_action"],
-                        "text": offer.product.state["text"],
+                        "call_to_action": offering.product.state["call_to_action"],
+                        "text": offering.product.state["text"],
                     },
-                    "id": str(offer.product.id),
-                    "price": float(offer.product.price),
+                    "id": str(offering.product.id),
+                    "price": float(offering.product.price),
                     "price_currency": settings.DEFAULT_CURRENCY,
                     "target_courses": [
                         {
@@ -712,20 +712,20 @@ class OfferApiTest(BaseAPITestCase):
                                     "start"
                                 )
                             ],
-                            "position": target_course.offers.get(
-                                product=offer.product
+                            "position": target_course.offerings.get(
+                                product=offering.product
                             ).position,
-                            "is_graded": target_course.offers.get(
-                                product=offer.product
+                            "is_graded": target_course.offerings.get(
+                                product=offering.product
                             ).is_graded,
                             "title": target_course.title,
                         }
-                        for target_course in offer.product.target_courses.all().order_by(
+                        for target_course in offering.product.target_courses.all().order_by(
                             "product_target_relations__position"
                         )
                     ],
-                    "title": offer.product.title,
-                    "type": offer.product.type,
+                    "title": offering.product.title,
+                    "type": offering.product.type,
                 },
                 "organizations": [
                     {
@@ -740,7 +740,7 @@ class OfferApiTest(BaseAPITestCase):
                         "contact_phone": organization.contact_phone,
                         "dpo_email": organization.dpo_email,
                     }
-                    for organization in offer.organizations.all()
+                    for organization in offering.organizations.all()
                 ],
                 "rules": {
                     "discounted_price": None,
@@ -756,16 +756,16 @@ class OfferApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_offer_read_offer_rules(self):
+    def test_api_offering_read_offering_rules(self):
         """The detail of offer rules related to the product should be served as expected."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory(product__price=100)
-        product = offer.product
-        course = offer.course
+        offering = factories.OfferingFactory(product__price=100)
+        product = offering.product
+        course = offering.course
         factories.UserCourseAccessFactory(user=user, course=course)
-        offer_rule = factories.OfferRuleFactory(
-            course_product_relation=offer,
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
             nb_seats=random.randint(10, 100),
             discount=factories.DiscountFactory(amount=10),
         )
@@ -773,27 +773,30 @@ class OfferApiTest(BaseAPITestCase):
             factories.OrderFactory(
                 course=course,
                 product=product,
-                offer_rules=[offer_rule],
+                offering_rules=[offering_rule],
                 state=random.choice(enums.ORDER_STATES_BINDING),
             )
         for state, _label in enums.ORDER_STATE_CHOICES:
             if state in (*enums.ORDER_STATES_BINDING, enums.ORDER_STATE_TO_OWN):
                 continue
             factories.OrderFactory(
-                course=course, product=product, offer_rules=[offer_rule], state=state
+                course=course,
+                product=product,
+                offering_rules=[offering_rule],
+                state=state,
             )
 
         with self.assertNumQueries(60):
             self.client.get(
-                f"/api/v1.0/offers/{offer.id}/",
+                f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         # A second call to the url should benefit from caching on
-        # the offer serializer
+        # the offering serializer
         with self.assertNumQueries(3):
             response = self.client.get(
-                f"/api/v1.0/offers/{offer.id}/",
+                f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
@@ -804,31 +807,31 @@ class OfferApiTest(BaseAPITestCase):
             content["rules"],
             {
                 "discounted_price": 90,
-                "discount_amount": offer_rule.discount.amount,
-                "discount_rate": offer_rule.discount.rate,
-                "description": offer_rule.description,
+                "discount_amount": offering_rule.discount.amount,
+                "discount_rate": offering_rule.discount.rate,
+                "description": offering_rule.description,
                 "discount_start": None,
                 "discount_end": None,
-                "nb_available_seats": offer_rule.available_seats,
+                "nb_available_seats": offering_rule.available_seats,
                 "has_seat_limit": True,
                 "has_seats_left": True,
             },
         )
 
-    def test_api_offer_read_offer_rules_discount(self):
+    def test_api_offering_read_offering_rules_discount(self):
         """The discounted price should be calculated as expected."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory(product__price=100)
-        factories.UserCourseAccessFactory(user=user, course=offer.course)
-        offer_rule = factories.OfferRuleFactory(
-            course_product_relation=offer,
+        offering = factories.OfferingFactory(product__price=100)
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
             nb_seats=random.randint(10, 100),
             discount=factories.DiscountFactory(amount=10),
         )
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -839,33 +842,33 @@ class OfferApiTest(BaseAPITestCase):
             content["rules"],
             {
                 "discounted_price": 90,
-                "discount_amount": offer_rule.discount.amount,
-                "discount_rate": offer_rule.discount.rate,
-                "description": offer_rule.description,
+                "discount_amount": offering_rule.discount.amount,
+                "discount_rate": offering_rule.discount.rate,
+                "description": offering_rule.description,
                 "discount_start": None,
                 "discount_end": None,
-                "nb_available_seats": offer_rule.available_seats,
+                "nb_available_seats": offering_rule.available_seats,
                 "has_seat_limit": True,
                 "has_seats_left": True,
             },
         )
 
-    def test_api_offer_read_offer_rules_cache(self):
+    def test_api_offering_read_offering_rules_cache(self):
         """Cache should be reset on order submit and cancel."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         product = factories.ProductFactory(price="0.00")
-        offer = factories.OfferFactory(product=product)
-        factories.UserCourseAccessFactory(user=user, course=offer.course)
-        offer_rule = factories.OfferRuleFactory(
-            course_product_relation=offer, nb_seats=10
+        offering = factories.OfferingFactory(product=product)
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering, nb_seats=10
         )
         order = factories.OrderFactory(
-            product=product, course=offer.course, offer_rules=[offer_rule]
+            product=product, course=offering.course, offering_rules=[offering_rule]
         )
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -892,7 +895,7 @@ class OfferApiTest(BaseAPITestCase):
         order.init_flow()
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -919,7 +922,7 @@ class OfferApiTest(BaseAPITestCase):
         order.flow.cancel()
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -940,29 +943,29 @@ class OfferApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_offer_read_offer_rules_is_active(self):
+    def test_api_offering_read_offering_rules_is_active(self):
         """
-        Authenticated user should only have active offer rules on the course product
-        offer.
+        Authenticated user should only have active offering rules on the course product
+        offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory()
-        factories.UserCourseAccessFactory(user=user, course=offer.course)
+        offering = factories.OfferingFactory()
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
 
-        offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=offer, is_active=True
+        offering_rule_1 = factories.OfferingRuleFactory(
+            course_product_relation=offering, is_active=True
         )
-        factories.OfferRuleFactory(course_product_relation=offer, is_active=False)
-        factories.OfferRuleFactory(course_product_relation=offer, is_active=True)
-        factories.OfferRuleFactory(
-            course_product_relation=offer,
+        factories.OfferingRuleFactory(course_product_relation=offering, is_active=False)
+        factories.OfferingRuleFactory(course_product_relation=offering, is_active=True)
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
             is_active=True,
             end="2025-02-16T16:35:49.326248Z",
         )
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -978,35 +981,35 @@ class OfferApiTest(BaseAPITestCase):
                 "description": None,
                 "discount_start": None,
                 "discount_end": None,
-                "nb_available_seats": offer_rule_1.available_seats,
+                "nb_available_seats": offering_rule_1.available_seats,
                 "has_seat_limit": False,
                 "has_seats_left": True,
             },
         )
 
-    def test_api_offer_read_offer_rules_assignable(self):
+    def test_api_offering_read_offering_rules_assignable(self):
         """
         Authenticated user should only have assignable offer rules on the course product
         relation.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory()
-        factories.UserCourseAccessFactory(user=user, course=offer.course)
+        offering = factories.OfferingFactory()
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
 
-        offer_rule = factories.OfferRuleFactory(
-            course_product_relation=offer, is_active=True, nb_seats=1
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering, is_active=True, nb_seats=1
         )
-        factories.OfferRuleFactory(is_active=True, nb_seats=1)
+        factories.OfferingRuleFactory(is_active=True, nb_seats=1)
         factories.OrderFactory(
-            course=offer.course,
-            product=offer.product,
-            offer_rules=[offer_rule],
+            course=offering.course,
+            product=offering.product,
+            offering_rules=[offering_rule],
             state=enums.ORDER_STATE_PENDING_PAYMENT,
         )
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1028,31 +1031,31 @@ class OfferApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_offer_read_offer_rules_no_seats_left(self):
+    def test_api_offering_read_offering_rules_no_seats_left(self):
         """
         Authenticated user should only have assignable offer rules when on the course product
         relation it has 2 offers rules but one of them has no seat left.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory()
-        factories.UserCourseAccessFactory(user=user, course=offer.course)
+        offering = factories.OfferingFactory()
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
 
-        offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=offer, is_active=True, nb_seats=1
+        offering_rule_1 = factories.OfferingRuleFactory(
+            course_product_relation=offering, is_active=True, nb_seats=1
         )
-        offer_rule_2 = factories.OfferRuleFactory(
-            course_product_relation=offer, is_active=True, nb_seats=3
+        offering_rule_2 = factories.OfferingRuleFactory(
+            course_product_relation=offering, is_active=True, nb_seats=3
         )
         factories.OrderFactory(
-            course=offer.course,
-            product=offer.product,
-            offer_rules=[offer_rule_1],
+            course=offering.course,
+            product=offering.product,
+            offering_rules=[offering_rule_1],
             state=enums.ORDER_STATE_PENDING_PAYMENT,
         )
 
         response = self.client.get(
-            f"/api/v1.0/offers/{offer.id}/",
+            f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1068,15 +1071,15 @@ class OfferApiTest(BaseAPITestCase):
                 "description": None,
                 "discount_start": None,
                 "discount_end": None,
-                "nb_available_seats": offer_rule_2.available_seats,
+                "nb_available_seats": offering_rule_2.available_seats,
                 "has_seat_limit": True,
                 "has_seats_left": True,
             },
         )
 
-    def test_api_offer_create_anonymous(self):
+    def test_api_offering_create_anonymous(self):
         """
-        Anonymous users should not be able to create an offer.
+        Anonymous users should not be able to create an offering.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -1098,10 +1101,10 @@ class OfferApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 0)
 
-    def test_api_offer_create_authenticated(self):
+    def test_api_offering_create_authenticated(self):
         """
         Authenticated users should not be able to
-        create an offer.
+        create an offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1126,10 +1129,10 @@ class OfferApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 0)
 
-    def test_api_offer_create_with_accesses(self):
+    def test_api_offering_create_with_accesses(self):
         """
         Authenticated users with course access should not be able
-        to create an offer.
+        to create an offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1154,9 +1157,9 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_offer_update_anonymous(self):
+    def test_api_offering_update_anonymous(self):
         """
-        Anonymous users should not be able to update an offer.
+        Anonymous users should not be able to update an offering.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -1177,10 +1180,10 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.UNAUTHORIZED,
         )
 
-    def test_api_offer_update_authenticated(self):
+    def test_api_offering_update_authenticated(self):
         """
         Authenticated users without course access should not be able to
-        update an offer.
+        update an offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1204,10 +1207,10 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_offer_update_with_accesses(self):
+    def test_api_offering_update_with_accesses(self):
         """
         Authenticated users with course access should not be able
-        to update an offer.
+        to update an offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1232,9 +1235,9 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_offer_partially_update_anonymous(self):
+    def test_api_offering_partially_update_anonymous(self):
         """
-        Anonymous users should not be able to partially update an offer.
+        Anonymous users should not be able to partially update an offering.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -1254,10 +1257,10 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.UNAUTHORIZED,
         )
 
-    def test_api_offer_partially_update_authenticated(self):
+    def test_api_offering_partially_update_authenticated(self):
         """
         Authenticated users without course access should not be able to
-        partially update an offer.
+        partially update an offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1280,10 +1283,10 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_offer_partially_update_with_accesses(self):
+    def test_api_offering_partially_update_with_accesses(self):
         """
         Authenticated users with course access should not be able to
-        partially update an offer.
+        partially update an offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1307,9 +1310,9 @@ class OfferApiTest(BaseAPITestCase):
             status_code=HTTPStatus.METHOD_NOT_ALLOWED,
         )
 
-    def test_api_offer_delete_anonymous(self):
+    def test_api_offering_delete_anonymous(self):
         """
-        Anonymous users should not be able to delete an offer.
+        Anonymous users should not be able to delete an offering.
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(
@@ -1327,10 +1330,10 @@ class OfferApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
-    def test_api_offer_delete_authenticated(self):
+    def test_api_offering_delete_authenticated(self):
         """
         Authenticated users without course access should not be able to
-        delete an offer.
+        delete an offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1351,10 +1354,10 @@ class OfferApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
-    def test_api_offer_delete_with_access(self):
+    def test_api_offering_delete_with_access(self):
         """
         Authenticated users with course access should not be able to
-        delete an offer.
+        delete an offering.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1376,9 +1379,9 @@ class OfferApiTest(BaseAPITestCase):
         )
         self.assertEqual(models.CourseProductRelation.objects.count(), 1)
 
-    def test_api_offer_read_list_filtered_by_product_title(self):
+    def test_api_offering_read_list_filtered_by_product_title(self):
         """
-        An authenticated user should be able to filter offer by
+        An authenticated user should be able to filter offering by
         product title.
         """
         user = factories.UserFactory()
@@ -1405,9 +1408,9 @@ class OfferApiTest(BaseAPITestCase):
             language_code="fr-fr", title="Gestion d'une gomme sur une monoplace"
         )
         for product in [product_1, product_3]:
-            factories.OfferFactory(organizations=[organization], product=product)
+            factories.OfferingFactory(organizations=[organization], product=product)
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product=product_2,
             course=access.course,
             organizations=[organization],
@@ -1436,18 +1439,18 @@ class OfferApiTest(BaseAPITestCase):
 
         for query in queries:
             response = self.client.get(
-                f"/api/v1.0/offers/?query={query}",
+                f"/api/v1.0/offerings/?query={query}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
             self.assertEqual(response.status_code, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(len(content["results"]), 1)
-            self.assertEqual(content["results"][0].get("id"), str(offer.id))
+            self.assertEqual(content["results"][0].get("id"), str(offering.id))
 
         # without parsing a query in parameter
         response = self.client.get(
-            "/api/v1.0/offers/?query=",
+            "/api/v1.0/offerings/?query=",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1455,11 +1458,11 @@ class OfferApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["count"], 1)
-        self.assertEqual(content["results"][0].get("id"), str(offer.id))
+        self.assertEqual(content["results"][0].get("id"), str(offering.id))
 
         # with parsing a fake product title as query parameter
         response = self.client.get(
-            "/api/v1.0/offers/?query=veryFakeProductTitle",
+            "/api/v1.0/offerings/?query=veryFakeProductTitle",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1467,9 +1470,9 @@ class OfferApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 0)
 
-    def test_api_offer_read_list_filtered_by_course_code(self):
+    def test_api_offering_read_list_filtered_by_course_code(self):
         """
-        An authenticated user should be able to filter offer by
+        An authenticated user should be able to filter offering by
         course code.
         """
         user = factories.UserFactory()
@@ -1485,56 +1488,56 @@ class OfferApiTest(BaseAPITestCase):
             title="Rubber management on a single-seater", code="MYCODE-0992"
         )
         access = factories.UserCourseAccessFactory(user=user, course=course_2)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=access.course,
             organizations=[organization],
         )
         for course in [course_1, course_3]:
-            factories.OfferFactory(organizations=[organization], course=course)
+            factories.OfferingFactory(organizations=[organization], course=course)
 
         response = self.client.get(
-            f"/api/v1.0/offers/?query={access.course.code}",
+            f"/api/v1.0/offerings/?query={access.course.code}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
-        self.assertEqual(content["results"][0].get("id"), str(offer.id))
+        self.assertEqual(content["results"][0].get("id"), str(offering.id))
 
         response = self.client.get(
-            f"/api/v1.0/offers/?query={access.course.code[:1]}",
+            f"/api/v1.0/offerings/?query={access.course.code[:1]}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
-        self.assertEqual(content["results"][0].get("id"), str(offer.id))
+        self.assertEqual(content["results"][0].get("id"), str(offering.id))
 
-        # without parsing a query parameter I should see my offer
+        # without parsing a query parameter I should see my offering
         response = self.client.get(
-            "/api/v1.0/offers/?query=",
+            "/api/v1.0/offerings/?query=",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
-        self.assertEqual(content["results"][0].get("id"), str(offer.id))
+        self.assertEqual(content["results"][0].get("id"), str(offering.id))
 
         # with parsing a fake product title as query parameter
         response = self.client.get(
-            "/api/v1.0/offers/?query=veryFakeCourseCode",
+            "/api/v1.0/offerings/?query=veryFakeCourseCode",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
-    def test_api_offer_read_list_filtered_by_organization_title(self):
+    def test_api_offering_read_list_filtered_by_organization_title(self):
         """
-        An authenticated user should be able to filter offer by
+        An authenticated user should be able to filter offering by
         organization title when they have access to the course.
         """
         user = factories.UserFactory()
@@ -1545,8 +1548,8 @@ class OfferApiTest(BaseAPITestCase):
         organization_3 = factories.OrganizationFactory(title="Organization kappa 03")
         organization_4 = factories.OrganizationFactory(title="Organization gamma 04")
         for organization in [organization_1, organization_2, organization_3]:
-            factories.OfferFactory(organizations=[organization])
-        offer = factories.OfferFactory(
+            factories.OfferingFactory(organizations=[organization])
+        offering = factories.OfferingFactory(
             course=access.course,
             organizations=[organization_4],
         )
@@ -1568,18 +1571,18 @@ class OfferApiTest(BaseAPITestCase):
 
         for query in queries:
             response = self.client.get(
-                f"/api/v1.0/offers/?query={query}",
+                f"/api/v1.0/offerings/?query={query}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
             self.assertEqual(response.status_code, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(len(content["results"]), 1)
-            self.assertEqual(content["results"][0].get("id"), str(offer.id))
+            self.assertEqual(content["results"][0].get("id"), str(offering.id))
 
         # without parsing a query in parameter
         response = self.client.get(
-            "/api/v1.0/offers/?query=",
+            "/api/v1.0/offerings/?query=",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1587,11 +1590,11 @@ class OfferApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["count"], 1)
-        self.assertEqual(content["results"][0].get("id"), str(offer.id))
+        self.assertEqual(content["results"][0].get("id"), str(offering.id))
 
         # with parsing a fake product title as query parameter
         response = self.client.get(
-            "/api/v1.0/offers/?query=veryFakeOrganizationTitle",
+            "/api/v1.0/offerings/?query=veryFakeOrganizationTitle",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1607,12 +1610,12 @@ class OfferApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offer_payment_schedule_with_product_id(
+    def test_api_offering_payment_schedule_with_product_id(
         self,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule for
-        a single offer if a product id is provided
+        a single offering if a product id is provided
         and the product is a credential. If there are archived course runs, they should be ignored.
         """
         mocked_now = datetime(2024, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
@@ -1635,7 +1638,7 @@ class OfferApiTest(BaseAPITestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             target_courses=[course_run.course],
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=course_run.course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -1650,7 +1653,7 @@ class OfferApiTest(BaseAPITestCase):
                 f"products/{product.id}/payment-schedule/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offers/{offer.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1685,12 +1688,12 @@ class OfferApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offer_payment_schedule_with_product_id_discount(
+    def test_api_offering_payment_schedule_with_product_id_discount(
         self,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule
-        with applied discount for a single offer
+        with applied discount for a single offering
         if a product id is provided and the product is a credential.
         If there are archived course runs, they should be ignored.
         """
@@ -1714,15 +1717,15 @@ class OfferApiTest(BaseAPITestCase):
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             target_courses=[course_run.course],
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=course_run.course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        offer_rule = factories.OfferRuleFactory(
+        offering_rule = factories.OfferingRuleFactory(
             discount=factories.DiscountFactory(rate=0.50),
         )
-        offer.offer_rules.add(offer_rule)
+        offering.offering_rules.add(offering_rule)
 
         with (
             mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
@@ -1733,7 +1736,7 @@ class OfferApiTest(BaseAPITestCase):
                 f"products/{product.id}/payment-schedule/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offers/{offer.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1766,12 +1769,12 @@ class OfferApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offer_payment_schedule_with_certificate_product_id(
+    def test_api_offering_payment_schedule_with_certificate_product_id(
         self,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule for
-        a single offer if a product id is provided
+        a single offering if a product id is provided
         and the product is a certificate.
         """
         course_run = factories.CourseRunFactory(
@@ -1783,7 +1786,7 @@ class OfferApiTest(BaseAPITestCase):
             price=3,
             type=enums.PRODUCT_TYPE_CERTIFICATE,
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=course_run.course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -1801,7 +1804,7 @@ class OfferApiTest(BaseAPITestCase):
                 f"products/{product.id}/payment-schedule/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offers/{offer.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1827,12 +1830,12 @@ class OfferApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offer_payment_schedule_with_certificate_product_id_discount(
+    def test_api_offering_payment_schedule_with_certificate_product_id_discount(
         self,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule
-        with applied discount for a single offer
+        with applied discount for a single offering
         if a product id is provided and the product is a certificate.
         """
         course_run = factories.CourseRunFactory(
@@ -1844,15 +1847,15 @@ class OfferApiTest(BaseAPITestCase):
             price=3,
             type=enums.PRODUCT_TYPE_CERTIFICATE,
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=course_run.course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),
         )
-        offer_rule = factories.OfferRuleFactory(
+        offering_rule = factories.OfferingRuleFactory(
             discount=factories.DiscountFactory(rate=0.50),
         )
-        offer.offer_rules.add(offer_rule)
+        offering.offering_rules.add(offering_rule)
 
         with (
             mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
@@ -1866,7 +1869,7 @@ class OfferApiTest(BaseAPITestCase):
                 f"products/{product.id}/payment-schedule/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offers/{offer.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)

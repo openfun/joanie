@@ -18,54 +18,54 @@ from joanie.core.enums import (
 
 
 class CourseProductRelationModelTestCase(TestCase):
-    """Test suite for the CourseProductRelation (offer) model."""
+    """Test suite for the CourseProductRelation (offering) model."""
 
     maxDiff = None
 
-    def test_model_offer_uri(self):
+    def test_model_offering_uri(self):
         """
         CourseProductRelation instance should have a property `uri`
         that returns the API url to get instance detail.
         """
-        offer = factories.OfferFactory(course__code="C_0001-2")
+        offering = factories.OfferingFactory(course__code="C_0001-2")
 
         self.assertEqual(
-            offer.uri,
+            offering.uri,
             (
                 "https://example.com/api/v1.0/"
-                f"courses/{offer.course.code}/products/{offer.product.id}/"
+                f"courses/{offering.course.code}/products/{offering.product.id}/"
             ),
         )
 
-    def test_model_offer_can_edit(self):
+    def test_model_offering_can_edit(self):
         """
         CourseProductRelation can_edit property should return True if the
-        offer is not linked to any order, False otherwise.
+        offering is not linked to any order, False otherwise.
         """
-        offer = factories.OfferFactory()
-        self.assertTrue(offer.can_edit)
+        offering = factories.OfferingFactory()
+        self.assertTrue(offering.can_edit)
 
         factories.OrderFactory(
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
         )
-        self.assertFalse(offer.can_edit)
+        self.assertFalse(offering.can_edit)
 
     @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=7)
-    def test_model_offer_is_withdrawable_credential(self):
+    def test_model_offering_is_withdrawable_credential(self):
         """
-        Offer linked to a credential product should be withdrawable or
+        Offering linked to a credential product should be withdrawable or
         not according to the product start date and the withdrawal period (7 days for this test)
         """
         withdrawal_period = timedelta(days=7)
 
         for priority in range(8):
             course_run = factories.CourseRunFactory(state=priority)
-            offer = factories.OfferFactory(
+            offering = factories.OfferingFactory(
                 product__type=PRODUCT_TYPE_CREDENTIAL,
                 product__target_courses=[course_run.course],
             )
-            product_dates = offer.product.get_equivalent_course_run_dates(
+            product_dates = offering.product.get_equivalent_course_run_dates(
                 ignore_archived=True
             )
             start_date = (
@@ -75,24 +75,24 @@ class CourseProductRelationModelTestCase(TestCase):
             with self.subTest(f"CourseState {priority}", start_date=start_date):
                 withdrawal_date = timezone.localdate() + withdrawal_period
                 self.assertEqual(
-                    offer.is_withdrawable,
+                    offering.is_withdrawable,
                     withdrawal_date < start_date if start_date else True,
                 )
 
     @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=7)
-    def test_model_offer_is_withdrawable_certificate(self):
+    def test_model_offering_is_withdrawable_certificate(self):
         """
-        Offer linked to a certificate product should be withdrawable or
+        Offering linked to a certificate product should be withdrawable or
         not according to the course start date and the withdrawal period (7 days for this test)
         """
         withdrawal_period = timedelta(days=7)
 
         for priority in range(8):
             course_run = factories.CourseRunFactory(state=priority)
-            offer = factories.OfferFactory(
+            offering = factories.OfferingFactory(
                 product__type=PRODUCT_TYPE_CERTIFICATE, course=course_run.course
             )
-            course_dates = offer.course.get_equivalent_course_run_dates(
+            course_dates = offering.course.get_equivalent_course_run_dates(
                 ignore_archived=True
             )
             start_date = course_dates["start"].date() if course_dates["start"] else None
@@ -100,14 +100,14 @@ class CourseProductRelationModelTestCase(TestCase):
             with self.subTest(f"CourseState {priority}", start_date=start_date):
                 withdrawal_date = timezone.localdate() + withdrawal_period
                 self.assertEqual(
-                    offer.is_withdrawable,
+                    offering.is_withdrawable,
                     withdrawal_date < start_date if start_date else True,
                 )
 
     @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=7)
-    def test_model_offer_is_withdrawable_ignore_archived(self):
+    def test_model_offering_is_withdrawable_ignore_archived(self):
         """
-        Archived course runs should not be taken into account when checking if a offer is
+        Archived course runs should not be taken into account when checking if a offering is
         withdrawable.
         """
         mocked_now = datetime(2024, 12, 1, tzinfo=ZoneInfo("UTC"))
@@ -123,7 +123,7 @@ class CourseProductRelationModelTestCase(TestCase):
         course = factories.CourseFactory(course_runs=[archived_run, future_run])
 
         for product_type, _ in PRODUCT_TYPE_CHOICES:
-            offer = factories.OfferFactory(
+            offering = factories.OfferingFactory(
                 product__type=product_type,
                 course=course,
                 product__target_courses=[course]
@@ -139,25 +139,25 @@ class CourseProductRelationModelTestCase(TestCase):
                         return_value=mocked_now.date(),
                     ),
                 ):
-                    self.assertEqual(offer.is_withdrawable, True)
+                    self.assertEqual(offering.is_withdrawable, True)
 
-    def create_order(self, offer, offer_rules=None):
+    def create_order(self, offering, offering_rules=None):
         """
-        Helper method to create an order linked to the given offer.
+        Helper method to create an order linked to the given offering.
         """
         return factories.OrderFactory(
-            course=offer.course,
-            product=offer.product,
-            offer_rules=offer_rules or [],
+            course=offering.course,
+            product=offering.product,
+            offering_rules=offering_rules or [],
             state=enums.ORDER_STATE_PENDING_PAYMENT,
         )
 
-    def test_model_offer_rules_0(self):
+    def test_model_offering_rules_0(self):
         """Without rules"""
-        offer = factories.OfferFactory()
+        offering = factories.OfferingFactory()
 
         self.assertEqual(
-            offer.rules,
+            offering.rules,
             {
                 "discounted_price": None,
                 "discount_amount": None,
@@ -171,7 +171,7 @@ class CourseProductRelationModelTestCase(TestCase):
             },
         )
 
-    def test_model_offer_rules_1(self):
+    def test_model_offering_rules_1(self):
         """
         With rules:
         - rule 1: 1 seat available
@@ -180,14 +180,14 @@ class CourseProductRelationModelTestCase(TestCase):
         Then:
         - has_seats_left: False
         """
-        offer = factories.OfferFactory()
-        offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=offer, is_active=True, nb_seats=1
+        offering = factories.OfferingFactory()
+        offering_rule_1 = factories.OfferingRuleFactory(
+            course_product_relation=offering, is_active=True, nb_seats=1
         )
-        self.create_order(offer, [offer_rule_1])
+        self.create_order(offering, [offering_rule_1])
 
         self.assertEqual(
-            offer.rules,
+            offering.rules,
             {
                 "discounted_price": None,
                 "discount_amount": None,
@@ -201,16 +201,16 @@ class CourseProductRelationModelTestCase(TestCase):
             },
         )
 
-    def test_model_offer_rules_2(self):
+    def test_model_offering_rules_2(self):
         """
         With rules:
         - rule 1: 1 seat available 1 discount
         Then:
         - has_seats_left: True
         """
-        offer = factories.OfferFactory(product__price=100)
-        factories.OfferRuleFactory(
-            course_product_relation=offer,
+        offering = factories.OfferingFactory(product__price=100)
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
             is_active=True,
             nb_seats=1,
             discount=factories.DiscountFactory(
@@ -219,7 +219,7 @@ class CourseProductRelationModelTestCase(TestCase):
         )
 
         self.assertEqual(
-            offer.rules,
+            offering.rules,
             {
                 "discounted_price": 90,
                 "discount_amount": None,
@@ -233,7 +233,7 @@ class CourseProductRelationModelTestCase(TestCase):
             },
         )
 
-    def test_model_offer_rules_3(self):
+    def test_model_offering_rules_3(self):
         """
         With rules:
         - rule 1: 1 seat available 1 discount
@@ -242,19 +242,19 @@ class CourseProductRelationModelTestCase(TestCase):
         Then:
         - has_seats_left: True
         """
-        offer = factories.OfferFactory(product__price=100)
-        offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=offer,
+        offering = factories.OfferingFactory(product__price=100)
+        offering_rule_1 = factories.OfferingRuleFactory(
+            course_product_relation=offering,
             is_active=True,
             nb_seats=1,
             discount=factories.DiscountFactory(
                 rate=0.1,
             ),
         )
-        self.create_order(offer, [offer_rule_1])
+        self.create_order(offering, [offering_rule_1])
 
         self.assertEqual(
-            offer.rules,
+            offering.rules,
             {
                 "discounted_price": None,
                 "discount_amount": None,
@@ -268,7 +268,7 @@ class CourseProductRelationModelTestCase(TestCase):
             },
         )
 
-    def test_model_offer_rules_4(self):
+    def test_model_offering_rules_4(self):
         """
         With rules:
         - rule 1: 1 seat available 1 discount
@@ -279,23 +279,23 @@ class CourseProductRelationModelTestCase(TestCase):
         Then:
         - has_seats_left: False
         """
-        offer = factories.OfferFactory(product__price=100)
-        offer_rule_1 = factories.OfferRuleFactory(
-            course_product_relation=offer,
+        offering = factories.OfferingFactory(product__price=100)
+        offering_rule_1 = factories.OfferingRuleFactory(
+            course_product_relation=offering,
             is_active=True,
             nb_seats=1,
             discount=factories.DiscountFactory(
                 rate=0.1,
             ),
         )
-        offer_rule_2 = factories.OfferRuleFactory(
-            course_product_relation=offer, is_active=True, nb_seats=1
+        offering_rule_2 = factories.OfferingRuleFactory(
+            course_product_relation=offering, is_active=True, nb_seats=1
         )
-        self.create_order(offer, [offer_rule_1])
-        self.create_order(offer, [offer_rule_2])
+        self.create_order(offering, [offering_rule_1])
+        self.create_order(offering, [offering_rule_2])
 
         self.assertEqual(
-            offer.rules,
+            offering.rules,
             {
                 "discounted_price": None,
                 "discount_amount": None,

@@ -113,7 +113,7 @@ class OrderModelsTestCase(LoggingTestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course], type="certificate")
-        organization = product.offers.get().organizations.first()
+        organization = product.offerings.get().organizations.first()
         enrollment = factories.EnrollmentFactory(
             course_run__state=CourseState.FUTURE_OPEN,
             course_run__is_listed=True,
@@ -162,7 +162,7 @@ class OrderModelsTestCase(LoggingTestCase):
         """
         course = factories.CourseFactory()
         product = factories.ProductFactory(courses=[course], type=product_type)
-        organization = product.offers.get().organizations.first()
+        organization = product.offerings.get().organizations.first()
         enrollment = factories.EnrollmentFactory(
             course_run__state=CourseState.FUTURE_OPEN,
             course_run__is_listed=True,
@@ -1071,7 +1071,7 @@ class OrderModelsTestCase(LoggingTestCase):
         user_address = factories.UserAddressFactory(owner=user)
         organization = factories.OrganizationFactory()
         factories.OrganizationAddressFactory(organization=organization)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
                 contract_definition=factories.ContractDefinitionFactory(),
@@ -1097,8 +1097,8 @@ class OrderModelsTestCase(LoggingTestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -1112,7 +1112,7 @@ class OrderModelsTestCase(LoggingTestCase):
         billing_address.pop("owner")
         order.init_flow(billing_address=billing_address)
         factories.OrderTargetCourseRelationFactory(
-            course=offer.course, order=order, position=1
+            course=offering.course, order=order, position=1
         )
 
         order.submit_for_signature(user=user)
@@ -1393,15 +1393,15 @@ class OrderModelsTestCase(LoggingTestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
         self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_PAID)
 
-    def test_models_order_and_offer_rule_discounted_rate_get_discounted_price(self):
+    def test_models_order_and_offering_rule_discounted_rate_get_discounted_price(self):
         """
-        When the offer rule that has a discount rate, is active and is enabled then the order
+        When the offering rule that has a discount rate, is active and is enabled then the order
         total should be the discounted price.
         """
-        offer = factories.OfferFactory(product__price=100)
+        offering = factories.OfferingFactory(product__price=100)
         discount = factories.DiscountFactory(rate=0.2)
-        offer_rule = factories.OfferRuleFactory(
-            course_product_relation=offer,
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
             is_active=True,
             start=django_timezone.now() - timedelta(seconds=30),
             end=None,
@@ -1410,21 +1410,23 @@ class OrderModelsTestCase(LoggingTestCase):
         )
 
         order = factories.OrderFactory(
-            course=offer.course, product=offer.product, offer_rules=[offer_rule]
+            course=offering.course,
+            product=offering.product,
+            offering_rules=[offering_rule],
         )
         order.freeze_total()
 
         self.assertEqual(order.total, Decimal("80.00"))
 
-    def test_models_order_and_offer_rule_discount_amount_get_discounted_price(self):
+    def test_models_order_and_offering_rule_discount_amount_get_discounted_price(self):
         """
-        When the offer rule that has a discount amount, is active and is enabled then the order
+        When the offering rule that has a discount amount, is active and is enabled then the order
         total should be the discounted price.
         """
-        offer = factories.OfferFactory(product__price=100)
+        offering = factories.OfferingFactory(product__price=100)
         discount = factories.DiscountFactory(amount=10)
-        offer_rule = factories.OfferRuleFactory(
-            course_product_relation=offer,
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
             is_active=True,
             start=django_timezone.now() - timedelta(days=1),
             end=None,
@@ -1433,7 +1435,9 @@ class OrderModelsTestCase(LoggingTestCase):
         )
 
         order = factories.OrderFactory(
-            course=offer.course, product=offer.product, offer_rules=[offer_rule]
+            course=offering.course,
+            product=offering.product,
+            offering_rules=[offering_rule],
         )
         order.freeze_total()
 

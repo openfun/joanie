@@ -28,7 +28,7 @@ class OrderLifecycle(BaseAPITestCase):
             target_courses=target_courses,
             contract_definition=factories.ContractDefinitionFactory(),
         )
-        organization = product.offers.first().organizations.first()
+        organization = product.offerings.first().organizations.first()
 
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)

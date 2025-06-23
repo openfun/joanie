@@ -56,7 +56,7 @@ class ProductModelsTestCase(TestCase):
         self.assertEqual(relation, other_relation)
 
     def test_models_product_course_runs_relation_sorted_by_position(self):
-        """The product/course offer should be sorted by position."""
+        """The product/course offering should be sorted by position."""
         product = factories.ProductFactory()
         factories.ProductTargetCourseRelationFactory.create_batch(5, product=product)
 
@@ -356,7 +356,7 @@ class ProductModelsTestCase(TestCase):
             target_courses=[course_run.course],
             courses=[course],
         )
-        relation = product.offers.first()
+        offering = product.offerings.first()
 
         self.assertEqual(
             product.get_equivalent_serialized_course_runs_for_products([product]),
@@ -374,7 +374,7 @@ class ProductModelsTestCase(TestCase):
                     "course": "00000",
                     "resource_link": (
                         "https://example.com/api/v1.0/"
-                        f"courses/{relation.course.code}/products/{relation.product.id}/"
+                        f"courses/{offering.course.code}/products/{offering.product.id}/"
                     ),
                 }
             ],
@@ -399,7 +399,7 @@ class ProductModelsTestCase(TestCase):
         product = factories.ProductFactory(
             target_courses=[course_run.course], courses=[course], price="50.00"
         )
-        relation = product.offers.first()
+        offering = product.offerings.first()
 
         self.assertEqual(
             product.get_equivalent_serialized_course_runs_for_products(
@@ -416,7 +416,7 @@ class ProductModelsTestCase(TestCase):
                     "course": "00000",
                     "resource_link": (
                         "https://example.com/api/v1.0/"
-                        f"courses/{relation.course.code}/products/{relation.product.id}/"
+                        f"courses/{offering.course.code}/products/{offering.product.id}/"
                     ),
                     "offer": "paid",
                     "price": D("50.00"),
@@ -425,7 +425,7 @@ class ProductModelsTestCase(TestCase):
             ],
         )
 
-    def test_models_product_get_equivalent_serialized_course_runs_for_products_without_offers(  # pylint: disable=line-too-long
+    def test_models_product_get_equivalent_serialized_course_runs_for_products_without_offerings(  # pylint: disable=line-too-long
         self,
     ):
         """

@@ -11,47 +11,47 @@ from joanie.payment import get_payment_backend
 from joanie.payment.models import Invoice, Transaction
 
 
-def get_active_offer_rule(offer_id, nb_seats: int):
+def get_active_offering_rule(offering_id, nb_seats: int):
     """
-    Responsible to seek for an active offer rule where the number of seats is available.
-    Otherwise, if all active offer rules don't have enough seats requested, it raises an error.
-    When no offer rules is found for the offer, it returns None.
+    Responsible to seek for an active offering rule where the number of seats is available.
+    Otherwise, if all active offering rules don't have enough seats requested, it raises an error.
+    When no offering rules is found for the offering, it returns None.
     """
-    offer_rules = models.OfferRule.objects.find_actives(offer_id=offer_id)
+    offering_rules = models.OfferingRule.objects.find_actives(offering_id=offering_id)
     seats_limitation = None
-    for offer_rule in offer_rules:
-        if offer_rule.nb_seats is not None:
-            if offer_rule.available_seats < nb_seats:
-                seats_limitation = offer_rule
+    for offering_rule in offering_rules:
+        if offering_rule.nb_seats is not None:
+            if offering_rule.available_seats < nb_seats:
+                seats_limitation = offering_rule
                 continue
 
             seats_limitation = None
 
-        if offer_rule.is_enabled:
-            return offer_rule
+        if offering_rule.is_enabled:
+            return offering_rule
 
     if seats_limitation:
         raise ValueError(_("Seat limitation has been reached."))
 
-    # No offer rules were set for this offer
+    # No offering rules were set for this offering
     return None
 
 
 def assign_organization(batch_order):
     """
     Assigns an organization to a batch order with the least active orders.
-    It also adds an active offer rule if some are declared on the offer.
+    It also adds an active offering rule if some are declared on the offering.
     Finally, it initiates the flow of the batch order to state 'assigned'.
     """
     batch_order.organization = get_least_active_organization(
-        batch_order.offer.product, batch_order.offer.course
+        batch_order.offering.product, batch_order.offering.course
     )
 
-    offer_rule = get_active_offer_rule(
-        offer_id=batch_order.offer.id, nb_seats=batch_order.nb_seats
+    offering_rule = get_active_offering_rule(
+        offering_id=batch_order.offering.id, nb_seats=batch_order.nb_seats
     )
-    if offer_rule:
-        batch_order.offer_rules.add(offer_rule)
+    if offering_rule:
+        batch_order.offering_rules.add(offering_rule)
 
     batch_order.init_flow()
 
@@ -62,7 +62,7 @@ def send_mail_invitation_link(batch_order, invitation_link: str):
     into the owner's language.
     """
     with override(batch_order.owner.language):
-        product_title = batch_order.offer.product.safe_translation_getter(
+        product_title = batch_order.offering.product.safe_translation_getter(
             "title", language_code=batch_order.owner.language
         )
         send(

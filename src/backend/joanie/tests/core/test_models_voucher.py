@@ -17,11 +17,11 @@ class VoucherModelTestCase(TestCase):
 
         # Uniqueness is case-insensitive
         with self.assertRaises(ValidationError) as error:
-            VoucherFactory(code="isunique", offer_rule=voucher.offer_rule)
+            VoucherFactory(code="isunique", offering_rule=voucher.offering_rule)
 
         self.assertEqual(
             error.exception.messages[0],
-            "Voucher with this Code and Offer rule already exists.",
+            "Voucher with this Code and Offering rule already exists.",
         )
 
     def test_models_voucher_code_length(self):
@@ -63,6 +63,6 @@ class VoucherModelTestCase(TestCase):
                 voucher.code,
                 "new_code",
             ]
-            new_voucher = VoucherFactory(offer_rule=voucher.offer_rule)
+            new_voucher = VoucherFactory(offering_rule=voucher.offering_rule)
 
         self.assertEqual(new_voucher.code, "new_code")

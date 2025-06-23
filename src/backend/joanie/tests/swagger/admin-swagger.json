@@ -2645,9 +2645,9 @@
                 }
             }
         },
-        "/api/v1.0/admin/offers/": {
+        "/api/v1.0/admin/offerings/": {
             "get": {
-                "operationId": "offers_list",
+                "operationId": "offerings_list",
                 "description": "CourseProductRelation ViewSet",
                 "parameters": [
                     {
@@ -2670,7 +2670,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -2682,7 +2682,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedAdminOfferList"
+                                    "$ref": "#/components/schemas/PaginatedAdminOfferingList"
                                 }
                             }
                         },
@@ -2691,7 +2691,7 @@
                 }
             },
             "post": {
-                "operationId": "offers_create",
+                "operationId": "offerings_create",
                 "description": "CourseProductRelation ViewSet",
                 "parameters": [
                     {
@@ -2725,7 +2725,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -2737,7 +2737,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOffer"
+                                    "$ref": "#/components/schemas/AdminOffering"
                                 }
                             }
                         },
@@ -2746,14 +2746,14 @@
                 }
             }
         },
-        "/api/v1.0/admin/offers/{offer_id}/offer-rules/": {
+        "/api/v1.0/admin/offerings/{offering_id}/offering-rules/": {
             "get": {
-                "operationId": "offers_offer_rules_list",
-                "description": "OfferRule ViewSet",
+                "operationId": "offerings_offering_rules_list",
+                "description": "OfferingRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -2780,7 +2780,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -2792,7 +2792,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedAdminOfferRuleList"
+                                    "$ref": "#/components/schemas/PaginatedAdminOfferingRuleList"
                                 }
                             }
                         },
@@ -2801,12 +2801,12 @@
                 }
             },
             "post": {
-                "operationId": "offers_offer_rules_create",
-                "description": "Create a new OfferRule using the offer_id from the URL",
+                "operationId": "offerings_offering_rules_create",
+                "description": "Create a new OfferingRule using the offering_id from the URL",
                 "parameters": [
                     {
                         "in": "path",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -2815,18 +2815,18 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOfferRuleCreateRequest"
+                                "$ref": "#/components/schemas/AdminOfferingRuleCreateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOfferRuleCreateRequest"
+                                "$ref": "#/components/schemas/AdminOfferingRuleCreateRequest"
                             }
                         }
                     }
@@ -2841,7 +2841,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOfferRuleCreate"
+                                    "$ref": "#/components/schemas/AdminOfferingRuleCreate"
                                 }
                             }
                         },
@@ -2850,10 +2850,10 @@
                 }
             }
         },
-        "/api/v1.0/admin/offers/{offer_id}/offer-rules/{id}/": {
+        "/api/v1.0/admin/offerings/{offering_id}/offering-rules/{id}/": {
             "get": {
-                "operationId": "offers_offer_rules_retrieve",
-                "description": "OfferRule ViewSet",
+                "operationId": "offerings_offering_rules_retrieve",
+                "description": "OfferingRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -2867,7 +2867,7 @@
                     },
                     {
                         "in": "path",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -2876,7 +2876,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -2888,7 +2888,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOfferRule"
+                                    "$ref": "#/components/schemas/AdminOfferingRule"
                                 }
                             }
                         },
@@ -2897,8 +2897,8 @@
                 }
             },
             "put": {
-                "operationId": "offers_offer_rules_update",
-                "description": "OfferRule ViewSet",
+                "operationId": "offerings_offering_rules_update",
+                "description": "OfferingRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -2912,7 +2912,7 @@
                     },
                     {
                         "in": "path",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -2921,18 +2921,18 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOfferRuleUpdateRequest"
+                                "$ref": "#/components/schemas/AdminOfferingRuleUpdateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/AdminOfferRuleUpdateRequest"
+                                "$ref": "#/components/schemas/AdminOfferingRuleUpdateRequest"
                             }
                         }
                     }
@@ -2947,7 +2947,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOfferRuleUpdate"
+                                    "$ref": "#/components/schemas/AdminOfferingRuleUpdate"
                                 }
                             }
                         },
@@ -2956,8 +2956,8 @@
                 }
             },
             "patch": {
-                "operationId": "offers_offer_rules_partial_update",
-                "description": "OfferRule ViewSet",
+                "operationId": "offerings_offering_rules_partial_update",
+                "description": "OfferingRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -2971,7 +2971,7 @@
                     },
                     {
                         "in": "path",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -2980,18 +2980,18 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOfferRuleUpdateRequest"
+                                "$ref": "#/components/schemas/PatchedAdminOfferingRuleUpdateRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/PatchedAdminOfferRuleUpdateRequest"
+                                "$ref": "#/components/schemas/PatchedAdminOfferingRuleUpdateRequest"
                             }
                         }
                     }
@@ -3006,7 +3006,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOfferRuleUpdate"
+                                    "$ref": "#/components/schemas/AdminOfferingRuleUpdate"
                                 }
                             }
                         },
@@ -3015,8 +3015,8 @@
                 }
             },
             "delete": {
-                "operationId": "offers_offer_rules_destroy",
-                "description": "OfferRule ViewSet",
+                "operationId": "offerings_offering_rules_destroy",
+                "description": "OfferingRule ViewSet",
                 "parameters": [
                     {
                         "in": "path",
@@ -3030,7 +3030,7 @@
                     },
                     {
                         "in": "path",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -3039,7 +3039,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -3053,9 +3053,9 @@
                 }
             }
         },
-        "/api/v1.0/admin/offers/{id}/": {
+        "/api/v1.0/admin/offerings/{id}/": {
             "get": {
-                "operationId": "offers_retrieve",
+                "operationId": "offerings_retrieve",
                 "description": "CourseProductRelation ViewSet",
                 "parameters": [
                     {
@@ -3070,7 +3070,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -3082,7 +3082,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOffer"
+                                    "$ref": "#/components/schemas/AdminOffering"
                                 }
                             }
                         },
@@ -3091,7 +3091,7 @@
                 }
             },
             "put": {
-                "operationId": "offers_update",
+                "operationId": "offerings_update",
                 "description": "CourseProductRelation ViewSet",
                 "parameters": [
                     {
@@ -3133,7 +3133,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -3145,7 +3145,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOffer"
+                                    "$ref": "#/components/schemas/AdminOffering"
                                 }
                             }
                         },
@@ -3154,7 +3154,7 @@
                 }
             },
             "patch": {
-                "operationId": "offers_partial_update",
+                "operationId": "offerings_partial_update",
                 "description": "CourseProductRelation ViewSet",
                 "parameters": [
                     {
@@ -3196,7 +3196,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -3208,7 +3208,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/AdminOffer"
+                                    "$ref": "#/components/schemas/AdminOffering"
                                 }
                             }
                         },
@@ -3217,8 +3217,8 @@
                 }
             },
             "delete": {
-                "operationId": "offers_destroy",
-                "description": "Delete the offer between course_id and product_id",
+                "operationId": "offerings_destroy",
+                "description": "Delete the offering between course_id and product_id",
                 "parameters": [
                     {
                         "in": "path",
@@ -3232,7 +3232,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -3246,9 +3246,9 @@
                 }
             }
         },
-        "/api/v1.0/admin/offers/{id}/check_certificates_generation_process/": {
+        "/api/v1.0/admin/offerings/{id}/check_certificates_generation_process/": {
             "get": {
-                "operationId": "offers_check_certificates_generation_process_retrieve",
+                "operationId": "offerings_check_certificates_generation_process_retrieve",
                 "description": "Checks whether the Celery task for generating certificates is in progress or completed.\nIf cached data is found, it indicates that the generation process is ongoing. Otherwise,\nit signifies that the task has been completed or has not been requested.",
                 "parameters": [
                     {
@@ -3263,7 +3263,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -3295,10 +3295,10 @@
                 }
             }
         },
-        "/api/v1.0/admin/offers/{id}/generate_certificates/": {
+        "/api/v1.0/admin/offerings/{id}/generate_certificates/": {
             "post": {
-                "operationId": "offers_generate_certificates_create",
-                "description": "Generate the certificates for an offer when it is eligible.",
+                "operationId": "offerings_generate_certificates_create",
+                "description": "Generate the certificates for an offering when it is eligible.",
                 "parameters": [
                     {
                         "in": "path",
@@ -3312,7 +3312,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -4266,7 +4266,7 @@
             },
             "delete": {
                 "operationId": "organizations_addresses_destroy",
-                "description": "Delete the address of an organization when the offer exists only.",
+                "description": "Delete the address of an organization when the relation exists only.",
                 "parameters": [
                     {
                         "in": "path",
@@ -5760,10 +5760,10 @@
                         "description": "Return the voucher codes generated",
                         "readOnly": true
                     },
-                    "offer_rules": {
+                    "offering_rules": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOfferRule"
+                            "$ref": "#/components/schemas/AdminOfferingRule"
                         },
                         "readOnly": true
                     }
@@ -5778,7 +5778,7 @@
                     "identification_number",
                     "main_invoice_reference",
                     "nb_seats",
-                    "offer_rules",
+                    "offering_rules",
                     "organization",
                     "owner",
                     "postcode",
@@ -6134,10 +6134,10 @@
                         },
                         "readOnly": true
                     },
-                    "offers": {
+                    "offerings": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOffer"
+                            "$ref": "#/components/schemas/AdminOffering"
                         },
                         "readOnly": true
                     },
@@ -6160,7 +6160,7 @@
                     "code",
                     "course_runs",
                     "id",
-                    "offers",
+                    "offerings",
                     "organizations",
                     "state",
                     "title"
@@ -6922,9 +6922,9 @@
                     "total"
                 ]
             },
-            "AdminOffer": {
+            "AdminOffering": {
                 "type": "object",
-                "description": "Serialize all information about a course offer nested in a product.",
+                "description": "Serialize all information about a course offering nested in a product.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -6951,10 +6951,10 @@
                         },
                         "readOnly": true
                     },
-                    "offer_rules": {
+                    "offering_rules": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOfferRule"
+                            "$ref": "#/components/schemas/AdminOfferingRule"
                         },
                         "readOnly": true
                     },
@@ -6975,15 +6975,15 @@
                     "can_edit",
                     "course",
                     "id",
-                    "offer_rules",
+                    "offering_rules",
                     "organizations",
                     "product",
                     "uri"
                 ]
             },
-            "AdminOfferRule": {
+            "AdminOfferingRule": {
                 "type": "object",
-                "description": "Admin Serializer for OfferRule model",
+                "description": "Admin Serializer for OfferingRule model",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -6996,7 +6996,7 @@
                         "readOnly": true,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given offer rule"
+                        "description": "The maximum number of orders that can be validated for a given offering rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7005,7 +7005,7 @@
                     "nb_available_seats": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "Return the number of available seats for this offer rule.",
+                        "description": "Return the number of available seats for this offering rule.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -7028,7 +7028,7 @@
                         "readOnly": true,
                         "nullable": true,
                         "title": "Rule starts at",
-                        "description": "Date at which the offer rule rule starts"
+                        "description": "Date at which the offering rule rule starts"
                     },
                     "end": {
                         "type": "string",
@@ -7036,7 +7036,7 @@
                         "readOnly": true,
                         "nullable": true,
                         "title": "Rule ends at",
-                        "description": "Date at which the offer rule rule ends"
+                        "description": "Date at which the offering rule rule ends"
                     },
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscount"
@@ -7045,7 +7045,7 @@
                         "type": "string",
                         "readOnly": true,
                         "nullable": true,
-                        "description": "Description of the offer rule"
+                        "description": "Description of the offering rule"
                     }
                 },
                 "required": [
@@ -7061,9 +7061,9 @@
                     "start"
                 ]
             },
-            "AdminOfferRuleCreate": {
+            "AdminOfferingRuleCreate": {
                 "type": "object",
-                "description": "Admin Serializer for OfferRule model reserved to create action.\n\nUnlike `AdminOfferRuleSerializer`, it allows to pass a product to create\nthe offer rule. You can also add a discount.",
+                "description": "Admin Serializer for OfferingRule model reserved to create action.\n\nUnlike `AdminOfferingRuleSerializer`, it allows to pass a product to create\nthe offering rule. You can also add a discount.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -7077,7 +7077,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given offer rule"
+                        "description": "The maximum number of orders that can be validated for a given offering rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7086,7 +7086,7 @@
                     "nb_available_seats": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "Return the number of available seats for this offer rule.",
+                        "description": "Return the number of available seats for this offering rule.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -7129,9 +7129,9 @@
                     "nb_available_seats"
                 ]
             },
-            "AdminOfferRuleCreateRequest": {
+            "AdminOfferingRuleCreateRequest": {
                 "type": "object",
-                "description": "Admin Serializer for OfferRule model reserved to create action.\n\nUnlike `AdminOfferRuleSerializer`, it allows to pass a product to create\nthe offer rule. You can also add a discount.",
+                "description": "Admin Serializer for OfferingRule model reserved to create action.\n\nUnlike `AdminOfferingRuleSerializer`, it allows to pass a product to create\nthe offering rule. You can also add a discount.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -7139,7 +7139,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given offer rule"
+                        "description": "The maximum number of orders that can be validated for a given offering rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7164,18 +7164,18 @@
                     }
                 }
             },
-            "AdminOfferRuleRequest": {
+            "AdminOfferingRuleRequest": {
                 "type": "object",
-                "description": "Admin Serializer for OfferRule model",
+                "description": "Admin Serializer for OfferingRule model",
                 "properties": {
                     "discount": {
                         "$ref": "#/components/schemas/AdminDiscountRequest"
                     }
                 }
             },
-            "AdminOfferRuleUpdate": {
+            "AdminOfferingRuleUpdate": {
                 "type": "object",
-                "description": "Admin serializer for Offer Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offer rule.",
+                "description": "Admin serializer for Offering Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offering rule.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -7189,7 +7189,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given offer rule"
+                        "description": "The maximum number of orders that can be validated for a given offering rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7198,7 +7198,7 @@
                     "nb_available_seats": {
                         "type": "integer",
                         "nullable": true,
-                        "description": "Return the number of available seats for this offer rule.",
+                        "description": "Return the number of available seats for this offering rule.",
                         "readOnly": true
                     },
                     "created_on": {
@@ -7241,9 +7241,9 @@
                     "nb_available_seats"
                 ]
             },
-            "AdminOfferRuleUpdateRequest": {
+            "AdminOfferingRuleUpdateRequest": {
                 "type": "object",
-                "description": "Admin serializer for Offer Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offer rule.",
+                "description": "Admin serializer for Offering Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offering rule.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -7251,7 +7251,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given offer rule"
+                        "description": "The maximum number of orders that can be validated for a given offering rule"
                     },
                     "is_active": {
                         "type": "boolean",
@@ -7341,10 +7341,10 @@
                         ],
                         "readOnly": true
                     },
-                    "offer_rules": {
+                    "offering_rules": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOfferRule"
+                            "$ref": "#/components/schemas/AdminOfferingRule"
                         },
                         "readOnly": true
                     },
@@ -7399,7 +7399,7 @@
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice",
-                    "offer_rules",
+                    "offering_rules",
                     "organization",
                     "owner",
                     "payment_schedule",
@@ -9141,7 +9141,7 @@
                     }
                 }
             },
-            "PaginatedAdminOfferList": {
+            "PaginatedAdminOfferingList": {
                 "type": "object",
                 "required": [
                     "count",
@@ -9167,12 +9167,12 @@
                     "results": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOffer"
+                            "$ref": "#/components/schemas/AdminOffering"
                         }
                     }
                 }
             },
-            "PaginatedAdminOfferRuleList": {
+            "PaginatedAdminOfferingRuleList": {
                 "type": "object",
                 "required": [
                     "count",
@@ -9198,7 +9198,7 @@
                     "results": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminOfferRule"
+                            "$ref": "#/components/schemas/AdminOfferingRule"
                         }
                     }
                 }
@@ -9581,9 +9581,9 @@
                     }
                 }
             },
-            "PatchedAdminOfferRuleUpdateRequest": {
+            "PatchedAdminOfferingRuleUpdateRequest": {
                 "type": "object",
-                "description": "Admin serializer for Offer Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offer rule.",
+                "description": "Admin serializer for Offering Rule reserved for partial update and update actions.\n\nIt allows to update the field discount of an offering rule.",
                 "properties": {
                     "nb_seats": {
                         "type": "integer",
@@ -9591,7 +9591,7 @@
                         "minimum": 0,
                         "nullable": true,
                         "title": "Number of seats",
-                        "description": "The maximum number of orders that can be validated for a given offer rule"
+                        "description": "The maximum number of orders that can be validated for a given offering rule"
                     },
                     "is_active": {
                         "type": "boolean",

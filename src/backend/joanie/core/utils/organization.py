@@ -13,7 +13,7 @@ def get_least_active_organization(product, course, enrollment=None):
     course_id = course.id if course else enrollment.course_run.course_id
 
     try:
-        course_relation = product.offers.get(course_id=course_id)
+        course_relation = product.offerings.get(course_id=course_id)
     except models.CourseProductRelation.DoesNotExist:
         return None
 

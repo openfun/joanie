@@ -27,13 +27,13 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=123,
         )
 
         data = {
-            "offer_id": offer.id,
+            "offering_id": offering.id,
             "nb_seats": 3,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -67,13 +67,13 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=456,
         )
 
         data = {
-            "offer_id": offer.id,
+            "offering_id": offering.id,
             "nb_seats": 2,
             "trainees": [
                 {"first_name": "John", "last_name": "Doe"},
@@ -107,13 +107,13 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
 
         data = {
-            "offer_id": offer.id,
+            "offering_id": offering.id,
             "nb_seats": 2,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -139,7 +139,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         batch_order = models.BatchOrder.objects.get(owner=user)
 
         self.assertEqual(batch_order.owner, user)
-        self.assertEqual(batch_order.offer, offer)
+        self.assertEqual(batch_order.offering, offering)
         self.assertEqual(batch_order.nb_seats, 2)
         self.assertEqual(batch_order.trainees, data["trainees"])
         self.assertEqual(batch_order.company_name, data["company_name"])
@@ -153,7 +153,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=100,
         )
@@ -164,7 +164,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         )
 
         data = {
-            "offer_id": offer.id,
+            "offering_id": offering.id,
             "nb_seats": 3,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -192,34 +192,34 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         batch_order = models.BatchOrder.objects.get(owner=user)
 
         self.assertEqual(batch_order.owner, user)
-        self.assertEqual(batch_order.offer, offer)
+        self.assertEqual(batch_order.offering, offering)
         self.assertEqual(batch_order.nb_seats, 3)
         self.assertEqual(batch_order.trainees, data["trainees"])
         self.assertEqual(batch_order.company_name, data["company_name"])
         self.assertIsNotNone(batch_order.organization)
         self.assertEqual(batch_order.total, Decimal("240.00"))
 
-    def test_api_batch_order_create_authenticated_fails_offer_rule_no_more_seats_available(
+    def test_api_batch_order_create_authenticated_fails_offering_rule_no_more_seats_available(
         self,
     ):
         """
         Authenticated user should not be able to create a batch order when the requested number
-        of seats is above the offer rule available seats.
+        of seats is above the offering rule available seats.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        factories.OfferRuleFactory(
-            course_product_relation=offer,
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
             is_active=True,
             nb_seats=1,
         )
 
         data = {
-            "offer_id": offer.id,
+            "offering_id": offering.id,
             "nb_seats": 2,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -244,23 +244,23 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "offer_rule": [
+                "offering_rule": [
                     "Maximum number of orders reached for "
-                    f"product {offer.product.title}"
+                    f"product {offering.product.title}"
                 ]
             },
         )
 
     def test_api_batch_order_create_relation_does_not_exist(self):
         """
-        Authenticated user passing a offer id that does not exist should get an error and
+        Authenticated user passing a offering id that does not exist should get an error and
         the batch order should not be created.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
         data = {
-            "offer_id": "fake_relation_id",
+            "offering_id": "fake_relation_id",
             "nb_seats": 1,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -282,27 +282,27 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
 
-    def test_api_batch_order_create_authenticated_when_offer_rule_for_relation_has_discount(
+    def test_api_batch_order_create_authenticated_when_offering_rule_for_relation_has_discount(
         self,
     ):
         """
-        When the offer rule has a discount and enough available seats, the batch order
+        When the offering rule has a discount and enough available seats, the batch order
         should be created with the discounted price.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        offer_rule = factories.OfferRuleFactory(
+        offering_rule = factories.OfferingRuleFactory(
             discount=factories.DiscountFactory(rate=0.1),
-            course_product_relation=offer,
+            course_product_relation=offering,
             is_active=True,
             nb_seats=4,
         )
         data = {
-            "offer_id": offer.id,
+            "offering_id": offering.id,
             "nb_seats": 3,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -329,15 +329,15 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         batch_order = models.BatchOrder.objects.get(owner=user)
 
         self.assertEqual(batch_order.owner, user)
-        self.assertEqual(batch_order.offer, offer)
+        self.assertEqual(batch_order.offering, offering)
         self.assertEqual(batch_order.nb_seats, 3)
-        self.assertEqual(batch_order.offer_rules.first(), offer_rule)
+        self.assertEqual(batch_order.offering_rules.first(), offering_rule)
         self.assertEqual(batch_order.total, Decimal("27.00"))
 
     def test_api_batch_order_create_auto_assign_organization_with_least_orders(self):
         """
         The order auto-assignment logic should always return the organization with the least
-        active orders count for the given product course offer when we create a batch order.
+        active orders count for the given product course offering when we create a batch order.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -345,7 +345,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         organization, expected_organization = (
             factories.OrganizationFactory.create_batch(2)
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization, expected_organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
@@ -360,14 +360,14 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         for state in ignored_states:
             factories.OrderFactory(
                 organization=organization,
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=state,
             )
         factories.OrderFactory(
             organization=organization,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             state=enums.ORDER_STATE_PENDING,
         )
 
@@ -375,13 +375,13 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         for state in ignored_states:
             factories.OrderFactory(
                 organization=expected_organization,
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=state,
             )
 
         data = {
-            "offer_id": offer.id,
+            "offering_id": offering.id,
             "nb_seats": 1,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -403,6 +403,6 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
 
-        batch_order = models.BatchOrder.objects.get(relation=offer)
+        batch_order = models.BatchOrder.objects.get(relation=offering)
 
         self.assertEqual(batch_order.organization, expected_organization)

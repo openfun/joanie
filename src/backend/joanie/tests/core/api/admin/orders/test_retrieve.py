@@ -30,21 +30,21 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
 
         # Create a "completed" order linked to a credential product with a certificate
         # definition
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__price=100,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__certificate_definition=factories.CertificateDefinitionFactory(),
         )
-        offer_rule = factories.OfferRuleFactory(
-            course_product_relation=offer,
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
             nb_seats=10,
         )
         order = factories.OrderGeneratorFactory(
-            course=offer.course,
-            product=offer.product,
-            offer_rules=[offer_rule],
-            organization=offer.organizations.first(),
+            course=offering.course,
+            product=offering.product,
+            offering_rules=[offering_rule],
+            organization=offering.organizations.first(),
             state=enums.ORDER_STATE_COMPLETED,
         )
         order.freeze_total()
@@ -84,15 +84,15 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                 "product": {
                     "call_to_action": "let's go!",
                     "certificate_definition": str(
-                        offer.product.certificate_definition.id
+                        offering.product.certificate_definition.id
                     ),
-                    "contract_definition": str(offer.product.contract_definition.id),
-                    "description": offer.product.description,
-                    "id": str(offer.product.id),
-                    "price": float(offer.product.price),
+                    "contract_definition": str(offering.product.contract_definition.id),
+                    "description": offering.product.description,
+                    "id": str(offering.product.id),
+                    "price": float(offering.product.price),
                     "price_currency": "EUR",
                     "target_courses": [str(order.course.id)],
-                    "title": offer.product.title,
+                    "title": offering.product.title,
                     "type": "credential",
                 },
                 "enrollment": None,
@@ -112,17 +112,17 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                     "code": order.organization.code,
                     "title": order.organization.title,
                 },
-                "offer_rules": [
+                "offering_rules": [
                     {
-                        "id": str(offer_rule.id),
-                        "description": offer_rule.description,
-                        "nb_seats": offer_rule.nb_seats,
-                        "is_active": offer_rule.is_active,
-                        "is_enabled": offer_rule.is_enabled,
-                        "nb_available_seats": offer_rule.nb_seats
-                        - offer_rule.get_nb_binding_orders(),
-                        "created_on": format_date(offer_rule.created_on),
-                        "can_edit": offer_rule.can_edit,
+                        "id": str(offering_rule.id),
+                        "description": offering_rule.description,
+                        "nb_seats": offering_rule.nb_seats,
+                        "is_active": offering_rule.is_active,
+                        "is_enabled": offering_rule.is_enabled,
+                        "nb_available_seats": offering_rule.nb_seats
+                        - offering_rule.get_nb_binding_orders(),
+                        "created_on": format_date(offering_rule.created_on),
+                        "can_edit": offering_rule.can_edit,
                         "start": None,
                         "end": None,
                         "discount": None,
@@ -228,7 +228,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
         # Create a "completed" order linked to a certificate product with a certificate
         # definition
         course = factories.CourseFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
             product__certificate_definition=factories.CertificateDefinitionFactory(),
             course=course,
@@ -238,8 +238,8 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
         order = factories.OrderFactory(
             enrollment=enrollment,
             course=None,
-            product=offer.product,
-            organization=offer.organizations.first(),
+            product=offering.product,
+            organization=offering.organizations.first(),
             state=enums.ORDER_STATE_COMPLETED,
         )
 
@@ -267,15 +267,15 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                 "product": {
                     "call_to_action": "let's go!",
                     "certificate_definition": str(
-                        offer.product.certificate_definition.id
+                        offering.product.certificate_definition.id
                     ),
                     "contract_definition": None,
-                    "description": offer.product.description,
-                    "id": str(offer.product.id),
-                    "price": float(offer.product.price),
+                    "description": offering.product.description,
+                    "id": str(offering.product.id),
+                    "price": float(offering.product.price),
                     "price_currency": "EUR",
                     "target_courses": [],
-                    "title": offer.product.title,
+                    "title": offering.product.title,
                     "type": "certificate",
                 },
                 "enrollment": {
@@ -319,7 +319,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
                     "code": order.organization.code,
                     "title": order.organization.title,
                 },
-                "offer_rules": [],
+                "offering_rules": [],
                 "total": float(order.total),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "contract": None,
