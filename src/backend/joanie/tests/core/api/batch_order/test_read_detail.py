@@ -82,7 +82,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                 "owner": user.username,
                 "total": float(batch_order.total),
                 "currency": settings.DEFAULT_CURRENCY,
-                "offer_id": str(batch_order.offer.id),
+                "offering_id": str(batch_order.offering.id),
                 "organization": {
                     "id": str(batch_order.organization.id),
                     "code": batch_order.organization.code,
@@ -108,6 +108,6 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                     {"last_name": "Doe", "first_name": "John"},
                     {"last_name": "Doe", "first_name": "Jane"},
                 ],
-                "offer_rule_ids": [],
+                "offering_rule_ids": [],
             },
         )

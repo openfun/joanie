@@ -351,12 +351,12 @@ class CourseStateModelsTestCase(TestCase):
     def test_models_course_get_selling_organizations_all(self):
         """
         The method `get_selling_organizations` should return all organizations
-        included in offers of the course.
+        included in offerings of the course.
         """
 
         course = factories.CourseFactory()
         organization = factories.OrganizationFactory()
-        factories.OfferFactory.create_batch(
+        factories.OfferingFactory.create_batch(
             2, course=course, organizations=[organization]
         )
 
@@ -368,16 +368,16 @@ class CourseStateModelsTestCase(TestCase):
     def test_models_course_get_selling_organizations_with_product(self):
         """
         The method `get_selling_organizations` should return all organizations
-        included in offers of the course and a provided product.
+        included in offerings of the course and a provided product.
         """
 
         course = factories.CourseFactory()
         product = factories.ProductFactory()
-        factories.OfferFactory(
+        factories.OfferingFactory(
             course=course,
             organizations=factories.OrganizationFactory.create_batch(1),
         )
-        factories.OfferFactory(
+        factories.OfferingFactory(
             course=course,
             product=product,
             organizations=factories.OrganizationFactory.create_batch(2),

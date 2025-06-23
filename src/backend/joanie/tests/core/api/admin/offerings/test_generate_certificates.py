@@ -1,5 +1,5 @@
 """
-Test suite for offer Admin API endpoints to generate certificates.
+Test suite for offering Admin API endpoints to generate certificates.
 """
 
 import datetime
@@ -15,19 +15,19 @@ from joanie.core.models import Certificate, CourseProductRelation, CourseState
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 
 
-class AdminOfferApiTest(TestCase):
+class AdminOfferingApiTest(TestCase):
     """
-    Test suite for Admin Offer API endpoints to generate certificates.
+    Test suite for Admin Offering API endpoints to generate certificates.
     """
 
     maxDiff = None
 
-    def test_admin_api_offer_generate_certificates_anonymous(self):
+    def test_admin_api_offering_generate_certificates_anonymous(self):
         """
         Anonymous user should not be able to trigger the generation of certificates
-        for an offer (offer).
+        for an offering (offering).
         """
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -37,21 +37,21 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.post(
-            f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+            f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
-    def test_admin_api_offer_generate_certificates_lambda_user(self):
+    def test_admin_api_offering_generate_certificates_lambda_user(self):
         """
         Lambda user should not be able to trigger the generation of certificates
-        for an offer (offer).
+        for an offering (offering).
         """
         admin = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -61,13 +61,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.post(
-            f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+            f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
-    def test_admin_api_offer_generate_certificates_authenticated_get_method(
+    def test_admin_api_offering_generate_certificates_authenticated_get_method(
         self,
     ):
         """
@@ -77,7 +77,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -87,13 +87,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.get(
-            f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+            f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
-    def test_admin_api_offer_generate_certificates_authenticated_partially_update(
+    def test_admin_api_offering_generate_certificates_authenticated_partially_update(
         self,
     ):
         """
@@ -103,7 +103,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -113,7 +113,7 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.patch(
-            f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+            f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
             content_type="application/json",
         )
 
@@ -129,7 +129,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -139,13 +139,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.put(
-            f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+            f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
-    def test_admin_api_offer_generate_certificates_authenticated_delete(
+    def test_admin_api_offering_generate_certificates_authenticated_delete(
         self,
     ):
         """
@@ -155,7 +155,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -165,13 +165,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.delete(
-            f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+            f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
-    def test_admin_api_offer_generate_certificates_authenticated_create_status(
+    def test_admin_api_offering_generate_certificates_authenticated_create_status(
         self,
     ):
         """
@@ -202,11 +202,11 @@ class AdminOfferApiTest(TestCase):
             course=course,
             is_graded=True,
         )
-        offer = CourseProductRelation.objects.get(product=product, course=course)
+        offering = CourseProductRelation.objects.get(product=product, course=course)
         orders = factories.OrderFactory.create_batch(
             10,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
         )
         for order in orders:
             order.init_flow()
@@ -217,7 +217,7 @@ class AdminOfferApiTest(TestCase):
             mock_get_grades.return_value = {"passed": True}
 
             response = self.client.post(
-                f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+                f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
                 content_type="application/json",
             )
 
@@ -225,7 +225,7 @@ class AdminOfferApiTest(TestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "offer_id": str(offer.id),
+                "offering_id": str(offering.id),
                 "count_certificate_to_generate": len(orders),
                 "count_exist_before_generation": 0,
             },
@@ -235,10 +235,10 @@ class AdminOfferApiTest(TestCase):
             order.refresh_from_db()
             self.assertTrue(Certificate.objects.filter(order=order).exists())
 
-        self.assertIsNone(cache.get(f"celery_certificate_generation_{offer.id}"))
+        self.assertIsNone(cache.get(f"celery_certificate_generation_{offering.id}"))
 
     @mock.patch("joanie.core.api.admin.generate_certificates_task")
-    def test_admin_api_offer_generate_certificates_authenticated_triggered_twice(
+    def test_admin_api_offering_generate_certificates_authenticated_triggered_twice(
         self, mock_generate_certificates_task
     ):
         """
@@ -269,13 +269,13 @@ class AdminOfferApiTest(TestCase):
             is_graded=True,
         )
 
-        offer = CourseProductRelation.objects.get(product=product, course=course)
+        offering = CourseProductRelation.objects.get(product=product, course=course)
 
         # Create some certificates that are already generated
         orders_in_past = factories.OrderFactory.create_batch(
             5,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
         )
         for order in orders_in_past:
             order.init_flow()
@@ -286,8 +286,8 @@ class AdminOfferApiTest(TestCase):
         # Create orders where we will generate certificates
         orders = factories.OrderFactory.create_batch(
             10,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
         )
         for order in orders:
             order.init_flow()
@@ -298,13 +298,13 @@ class AdminOfferApiTest(TestCase):
             mock_get_grades.return_value = {"passed": True}
 
             response = self.client.post(
-                f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+                f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
                 content_type="application/json",
             )
             self.assertTrue(mock_generate_certificates_task.delay.called)
 
         expected_cache_data_response = {
-            "offer_id": str(offer.id),
+            "offering_id": str(offering.id),
             "count_certificate_to_generate": len(orders),
             "count_exist_before_generation": 5,
         }
@@ -312,21 +312,21 @@ class AdminOfferApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertDictEqual(response.json(), expected_cache_data_response)
 
-        # When the endpoint is requested again with the same offer id
+        # When the endpoint is requested again with the same offering id
         second_response = self.client.post(
-            f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+            f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
             content_type="application/json",
         )
 
         self.assertEqual(second_response.status_code, HTTPStatus.ACCEPTED)
         self.assertDictEqual(second_response.json(), expected_cache_data_response)
 
-        cache_key = f"celery_certificate_generation_{offer.id}"
+        cache_key = f"celery_certificate_generation_{offering.id}"
         cache_data = cache.get(cache_key)
         self.assertDictEqual(cache_data, expected_cache_data_response)
 
     @mock.patch("joanie.core.api.admin.generate_certificates_task")
-    def test_api_admin_offer_generate_certificates_exception_by_celery(
+    def test_api_admin_offering_generate_certificates_exception_by_celery(
         self, mock_generate_certificates_task
     ):
         """
@@ -356,11 +356,11 @@ class AdminOfferApiTest(TestCase):
             course=course,
             is_graded=True,
         )
-        offer = CourseProductRelation.objects.get(product=product, course=course)
+        offering = CourseProductRelation.objects.get(product=product, course=course)
         orders = factories.OrderFactory.create_batch(
             4,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
         )
         for order in orders:
             order.init_flow()
@@ -373,7 +373,7 @@ class AdminOfferApiTest(TestCase):
             mock_get_grades.return_value = {"passed": True}
 
             response = self.client.post(
-                f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+                f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
                 content_type="application/json",
             )
             self.assertTrue(mock_generate_certificates_task.delay.called)
@@ -382,16 +382,16 @@ class AdminOfferApiTest(TestCase):
         self.assertDictEqual(
             response.json(), {"details": "Some error occured with Celery"}
         )
-        cache_data = cache.get(f"celery_certificate_generation_{offer.id}")
+        cache_data = cache.get(f"celery_certificate_generation_{offering.id}")
         self.assertIsNone(cache_data)
 
-    def test_api_admin_offer_check_certificates_generation_process_anonymous(
+    def test_api_admin_offering_check_certificates_generation_process_anonymous(
         self,
     ):
         """
         Anonymous user should not be able to request the state of the certificate generation.
         """
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -401,13 +401,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.get(
-            f"/api/v1.0/admin/offers/{offer.id}/check_certificates_generation_process/",
+            f"/api/v1.0/admin/offerings/{offering.id}/check_certificates_generation_process/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
-    def test_api_admin_offer_check_certificates_generation_process_lambda(
+    def test_api_admin_offering_check_certificates_generation_process_lambda(
         self,
     ):
         """
@@ -416,7 +416,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -426,13 +426,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.get(
-            f"/api/v1.0/admin/offers/{offer.id}/check_certificates_generation_process/",
+            f"/api/v1.0/admin/offerings/{offering.id}/check_certificates_generation_process/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
-    def test_api_admin_offer_check_certificates_generation_process_post_method(
+    def test_api_admin_offering_check_certificates_generation_process_post_method(
         self,
     ):
         """
@@ -442,7 +442,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -452,13 +452,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.post(
-            f"/api/v1.0/admin/offers/{offer.id}/check_certificates_generation_process/",
+            f"/api/v1.0/admin/offerings/{offering.id}/check_certificates_generation_process/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
-    def test_api_admin_offer_check_certificates_generation_process_patch_method(
+    def test_api_admin_offering_check_certificates_generation_process_patch_method(
         self,
     ):
         """
@@ -468,7 +468,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -478,13 +478,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.patch(
-            f"/api/v1.0/admin/offers/{offer.id}/check_certificates_generation_process/",
+            f"/api/v1.0/admin/offerings/{offering.id}/check_certificates_generation_process/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
-    def test_api_admin_offer_check_certificates_generation_process_put_method(
+    def test_api_admin_offering_check_certificates_generation_process_put_method(
         self,
     ):
         """
@@ -494,7 +494,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -504,13 +504,13 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.put(
-            f"/api/v1.0/admin/offers/{offer.id}/check_certificates_generation_process/",
+            f"/api/v1.0/admin/offerings/{offering.id}/check_certificates_generation_process/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
-    def test_api_admin_offer_check_certificates_generation_process_delete_method(
+    def test_api_admin_offering_check_certificates_generation_process_delete_method(
         self,
     ):
         """
@@ -520,7 +520,7 @@ class AdminOfferApiTest(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             course=factories.CourseFactory(),
             product=factories.ProductFactory(
                 price="0.00",
@@ -530,14 +530,14 @@ class AdminOfferApiTest(TestCase):
         )
 
         response = self.client.delete(
-            f"/api/v1.0/admin/offers/{offer.id}/check_certificates_generation_process/",
+            f"/api/v1.0/admin/offerings/{offering.id}/check_certificates_generation_process/",
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     @mock.patch("joanie.core.api.admin.generate_certificates_task")
-    def test_api_admin_offer_check_certificates_generation_process_is_ongoing(
+    def test_api_admin_offering_check_certificates_generation_process_is_ongoing(
         self, mock_generate_certificates_task
     ):
         """
@@ -566,11 +566,11 @@ class AdminOfferApiTest(TestCase):
             course=course,
             is_graded=True,
         )
-        offer = CourseProductRelation.objects.get(product=product, course=course)
+        offering = CourseProductRelation.objects.get(product=product, course=course)
         orders = factories.OrderFactory.create_batch(
             10,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
         )
         for order in orders:
             order.init_flow()
@@ -583,12 +583,12 @@ class AdminOfferApiTest(TestCase):
             mock_get_grades.return_value = {"passed": True}
 
             response = self.client.post(
-                f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+                f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
                 content_type="application/json",
             )
 
         expected_cache_data_response = {
-            "offer_id": str(offer.id),
+            "offering_id": str(offering.id),
             "count_certificate_to_generate": len(orders),
             "count_exist_before_generation": 0,
         }
@@ -598,16 +598,16 @@ class AdminOfferApiTest(TestCase):
         self.assertDictEqual(response.json(), expected_cache_data_response)
 
         second_response = self.client.get(
-            f"/api/v1.0/admin/offers/{offer.id}/check_certificates_generation_process/",
+            f"/api/v1.0/admin/offerings/{offering.id}/check_certificates_generation_process/",
             content_type="application/json",
         )
 
         self.assertEqual(second_response.status_code, HTTPStatus.OK)
-        cache_data = cache.get(f"celery_certificate_generation_{offer.id}")
+        cache_data = cache.get(f"celery_certificate_generation_{offering.id}")
         self.assertIsNotNone(cache_data)
         self.assertDictEqual(cache_data, expected_cache_data_response)
 
-    def test_api_admin_offer_check_certificates_generation_completed(
+    def test_api_admin_offering_check_certificates_generation_completed(
         self,
     ):
         """
@@ -636,11 +636,11 @@ class AdminOfferApiTest(TestCase):
             course=course,
             is_graded=True,
         )
-        offer = CourseProductRelation.objects.get(product=product, course=course)
+        offering = CourseProductRelation.objects.get(product=product, course=course)
         orders = factories.OrderFactory.create_batch(
             10,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
         )
         for order in orders:
             order.init_flow()
@@ -651,7 +651,7 @@ class AdminOfferApiTest(TestCase):
             mock_get_grades.return_value = {"passed": True}
 
             response = self.client.post(
-                f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+                f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
                 content_type="application/json",
             )
 
@@ -659,19 +659,19 @@ class AdminOfferApiTest(TestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "offer_id": str(offer.id),
+                "offering_id": str(offering.id),
                 "count_certificate_to_generate": len(orders),
                 "count_exist_before_generation": 0,
             },
         )
 
         second_response = self.client.get(
-            f"/api/v1.0/admin/offers/{offer.id}/check_certificates_generation_process/",
+            f"/api/v1.0/admin/offerings/{offering.id}/check_certificates_generation_process/",
             content_type="application/json",
         )
 
         self.assertEqual(second_response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertIsNone(cache.get(f"celery_certificate_generation_{offer.id}"))
+        self.assertIsNone(cache.get(f"celery_certificate_generation_{offering.id}"))
         # Verify that certificates were generated
         for order in orders:
             self.assertTrue(Certificate.objects.filter(order=order).exists())
@@ -681,7 +681,7 @@ class AdminOfferApiTest(TestCase):
         "joanie.lms_handler.backends.dummy.DummyLMSBackend.get_grades",
         return_value={"passed": True},
     )
-    def test_api_admin_offer_generate_certificate_product_certificate(
+    def test_api_admin_offering_generate_certificate_product_certificate(
         self, _mock_get_grades, mock_generate_certificates_task
     ):
         """
@@ -700,7 +700,7 @@ class AdminOfferApiTest(TestCase):
             price=0,
             type=enums.PRODUCT_TYPE_CERTIFICATE,
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product=product, course=enrollments[0].course_run.course
         )
 
@@ -709,7 +709,7 @@ class AdminOfferApiTest(TestCase):
         for enrollment in enrollments[:3]:
             order_ids.append(
                 factories.OrderFactory(
-                    product=offer.product,
+                    product=offering.product,
                     enrollment=enrollment,
                     course=None,
                     state=enums.ORDER_STATE_COMPLETED,
@@ -719,7 +719,7 @@ class AdminOfferApiTest(TestCase):
         for enrollment in enrollments[3:]:
             factories.OrderCertificateFactory(
                 order=factories.OrderFactory(
-                    product=offer.product,
+                    product=offering.product,
                     course=None,
                     enrollment=enrollment,
                     state=enums.ORDER_STATE_COMPLETED,
@@ -727,7 +727,7 @@ class AdminOfferApiTest(TestCase):
             )
 
         response = self.client.post(
-            f"/api/v1.0/admin/offers/{offer.id}/generate_certificates/",
+            f"/api/v1.0/admin/offerings/{offering.id}/generate_certificates/",
             content_type="application/json",
         )
 
@@ -735,7 +735,7 @@ class AdminOfferApiTest(TestCase):
         self.assertDictEqual(
             response.json(),
             {
-                "offer_id": str(offer.id),
+                "offering_id": str(offering.id),
                 "count_certificate_to_generate": 3,
                 "count_exist_before_generation": 4,
             },
@@ -744,6 +744,6 @@ class AdminOfferApiTest(TestCase):
         self.assertTrue(
             mock_generate_certificates_task.delay.called_with(
                 order_ids=order_ids,
-                cache_key=f"celery_certificate_generation_{offer.id}",
+                cache_key=f"celery_certificate_generation_{offering.id}",
             )
         )

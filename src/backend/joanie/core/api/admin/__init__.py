@@ -33,11 +33,11 @@ from joanie.core.tasks import (
     update_organization_signatories_contracts_task,
 )
 from joanie.core.utils.batch_order import (
-    get_active_offer_rule,
+    get_active_offering_rule,
     send_mail_invitation_link,
     validate_success_payment,
 )
-from joanie.core.utils.offer import (
+from joanie.core.utils.offering import (
     get_generated_certificates,
     get_orders,
 )
@@ -463,14 +463,14 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
 
-class OfferViewSet(viewsets.ModelViewSet):
+class OfferingViewSet(viewsets.ModelViewSet):
     """
     CourseProductRelation ViewSet
     """
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
-    serializer_class = serializers.AdminOfferSerializer
+    serializer_class = serializers.AdminOfferingSerializer
     queryset = models.CourseProductRelation.objects.all().select_related(
         "course", "product"
     )
@@ -514,7 +514,7 @@ class OfferViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete the offer between course_id and product_id
+        Delete the offering between course_id and product_id
         """
         try:
             return super().destroy(request, *args, **kwargs)
@@ -538,9 +538,9 @@ class OfferViewSet(viewsets.ModelViewSet):
         If cached data is found, it indicates that the generation process is ongoing. Otherwise,
         it signifies that the task has been completed or has not been requested.
         """
-        offer = self.get_object()
+        offering = self.get_object()
 
-        if cache_data := cache.get(f"celery_certificate_generation_{offer.id}"):
+        if cache_data := cache.get(f"celery_certificate_generation_{offering.id}"):
             return JsonResponse(cache_data, status=HTTPStatus.OK)
 
         return JsonResponse(
@@ -558,19 +558,19 @@ class OfferViewSet(viewsets.ModelViewSet):
     @action(methods=["POST"], detail=True)
     def generate_certificates(self, request, pk=None):  # pylint:disable=unused-argument
         """
-        Generate the certificates for an offer when it is eligible.
+        Generate the certificates for an offering when it is eligible.
         """
-        offer = self.get_object()
-        cache_key = f"celery_certificate_generation_{offer.id}"
+        offering = self.get_object()
+        cache_key = f"celery_certificate_generation_{offering.id}"
 
         if cache_data := cache.get(cache_key):
             return JsonResponse(cache_data, status=HTTPStatus.ACCEPTED)
 
         # Prepare cache data before trigger celery's task.
-        orders_ids = get_orders(offer)
-        certificates_published = get_generated_certificates(offer)
+        orders_ids = get_orders(offering)
+        certificates_published = get_generated_certificates(offering)
         cache_data = {
-            "offer_id": str(offer.id),
+            "offering_id": str(offering.id),
             "count_certificate_to_generate": len(orders_ids),
             "count_exist_before_generation": certificates_published.count(),
         }
@@ -588,36 +588,36 @@ class OfferViewSet(viewsets.ModelViewSet):
         return JsonResponse(cache_data, status=HTTPStatus.CREATED)
 
 
-class NestedOfferRuleViewSet(
+class NestedOfferingRuleViewSet(
     SerializerPerActionMixin,
     viewsets.ModelViewSet,
     NestedGenericViewSet,
 ):
     """
-    OfferRule ViewSet
+    OfferingRule ViewSet
     """
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_classes = {
-        "create": serializers.AdminOfferRuleCreateSerializer,
-        "update": serializers.AdminOfferRuleUpdateSerializer,
-        "partial_update": serializers.AdminOfferRuleUpdateSerializer,
+        "create": serializers.AdminOfferingRuleCreateSerializer,
+        "update": serializers.AdminOfferingRuleUpdateSerializer,
+        "partial_update": serializers.AdminOfferingRuleUpdateSerializer,
     }
-    default_serializer_class = serializers.AdminOfferRuleSerializer
-    queryset = models.OfferRule.objects.all().select_related(
+    default_serializer_class = serializers.AdminOfferingRuleSerializer
+    queryset = models.OfferingRule.objects.all().select_related(
         "course_product_relation", "discount"
     )
     ordering = "created_on"
     lookup_fields = ["course_product_relation", "pk"]
-    lookup_url_kwargs = ["offer_id", "pk"]
+    lookup_url_kwargs = ["offering_id", "pk"]
 
     def create(self, request, *args, **kwargs):
         """
-        Create a new OfferRule using the offer_id from the URL
+        Create a new OfferingRule using the offering_id from the URL
         """
         data = request.data
-        data["offer"] = kwargs.get("offer_id")
+        data["offering"] = kwargs.get("offering_id")
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -799,23 +799,26 @@ class BatchOrderViewSet(
                 "Batch order state should be `assigned` or `to_sign`."
             )
 
-        if batch_order.offer_rules.exists():
-            # Verify if the actual offer rule still accepts the number of seats requested
-            if batch_order.offer_rules.first().available_seats < batch_order.nb_seats:
-                initial_offer_rule = batch_order.offer_rules.first()
-                batch_order.offer_rules.remove(initial_offer_rule)
+        if batch_order.offering_rules.exists():
+            # Verify if the actual offering rule still accepts the number of seats requested
+            if (
+                batch_order.offering_rules.first().available_seats
+                < batch_order.nb_seats
+            ):
+                initial_offering_rule = batch_order.offering_rules.first()
+                batch_order.offering_rules.remove(initial_offering_rule)
 
                 try:
-                    offer_rule = get_active_offer_rule(
-                        offer_id=batch_order.offer.id,
+                    offering_rule = get_active_offering_rule(
+                        offering_id=batch_order.offering.id,
                         nb_seats=batch_order.nb_seats,
                     )
                 except ValueError as exception:
                     raise ValidationError(
-                        "Cannot submit to signature, active offer rules has no seats left"
+                        "Cannot submit to signature, active offering rules has no seats left"
                     ) from exception
 
-                batch_order.offer_rules.add(offer_rule)
+                batch_order.offering_rules.add(offering_rule)
 
         invitation_link = batch_order.submit_for_signature(batch_order.owner)
 
@@ -896,7 +899,7 @@ class OrganizationAddressViewSet(
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete the address of an organization when the offer exists only.
+        Delete the address of an organization when the relation exists only.
         """
         address = self.get_object()
         organization_id = self.kwargs["organization_id"]
@@ -905,7 +908,7 @@ class OrganizationAddressViewSet(
             models.Address.objects.get(pk=address.pk, organization_id=organization_id)
         except models.Address.DoesNotExist as error:
             raise ValidationError(
-                "The offer does not exist between the address and the organization."
+                "The relation does not exist between the address and the organization."
             ) from error
 
         return super().destroy(request, *args, **kwargs)

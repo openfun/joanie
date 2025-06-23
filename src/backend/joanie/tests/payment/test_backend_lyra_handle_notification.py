@@ -772,7 +772,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             state=BATCH_ORDER_STATE_PENDING,
             id="758c2570-a7af-4335-b091-340d0cc6e694",
             owner__email="john.doe@acme.org",
-            offer__product__price=D("123.45"),
+            offering__product__price=D("123.45"),
         )
 
         with self.open("lyra/requests/payment_refused.json") as file:
@@ -803,7 +803,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             id="514070fe-c12c-48b8-97cf-5262708673a3",
             owner__email="john.doe@acme.org",
             state=BATCH_ORDER_STATE_PENDING,
-            offer__product__price=D("123.45"),
+            offering__product__price=D("123.45"),
             nb_seats=1,
         )
 

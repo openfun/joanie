@@ -348,7 +348,7 @@
         "/api/v1.0/batch-orders/": {
             "get": {
                 "operationId": "batch_orders_list",
-                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offer id (offer)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
+                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offering id (offering)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
                 "parameters": [
                     {
                         "name": "page",
@@ -433,7 +433,7 @@
         "/api/v1.0/batch-orders/{id}/": {
             "get": {
                 "operationId": "batch_orders_retrieve",
-                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offer id (offer)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
+                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offering id (offering)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
                 "parameters": [
                     {
                         "in": "path",
@@ -809,7 +809,7 @@
                     },
                     {
                         "in": "query",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -985,7 +985,7 @@
         "/api/v1.0/contracts/zip-archive/": {
             "post": {
                 "operationId": "contracts_zip_archive_create",
-                "description": "This endpoint is exclusive to users that have access rights on a specific organization.\n\nIt triggers the generation of a ZIP archive if the requesting has the correct access rights\non the organization. If an offer UUID is given from key word arguments,\nthe user requires to have access to the organization that is attached to the specific\noffer object.\nWe return in the response the URL for polling the ZIP archive once it has been generated.\n\nNotes on possible `kwargs` as input parameters :\n    - string of an Organization UUID alone\n    - string of an CourseProductRelation UUID alone\n    - string of both Organization UUID & CourseProductRelation UUID",
+                "description": "This endpoint is exclusive to users that have access rights on a specific organization.\n\nIt triggers the generation of a ZIP archive if the requesting has the correct access rights\non the organization. If an offering UUID is given from key word arguments,\nthe user requires to have access to the organization that is attached to the specific\noffering object.\nWe return in the response the URL for polling the ZIP archive once it has been generated.\n\nNotes on possible `kwargs` as input parameters :\n    - string of an Organization UUID alone\n    - string of an CourseProductRelation UUID alone\n    - string of both Organization UUID & CourseProductRelation UUID",
                 "tags": [
                     "contracts"
                 ],
@@ -1571,7 +1571,7 @@
                     },
                     {
                         "in": "query",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -1801,7 +1801,7 @@
         "/api/v1.0/courses/{course_id}/orders/": {
             "get": {
                 "operationId": "courses_orders_list",
-                "description": "Nested Order Viewset inside Course's routes. It allows to list all users who made\n'validated' orders on a given course. You should add some query parameters to filter\nthe list by organization, by product or by offer id.\n\nGET /api/courses/<course_id>/orders/\n    Returns every users who made an order on a given course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>>\n    Returns every users who made an order on a course from a specific organization.\n\nGET /api/courses/<course_id>/orders/?product_id=<product_id>\n    Returns every users who made an order on the product's course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>&product_id=<product_id>\n    Returns every users that is attached to a product's course and an organization.\n\nGET /api/courses/<course_id>/orders/?offer_id=<relation_id>\n    Returns every users who made order on the offer object.",
+                "description": "Nested Order Viewset inside Course's routes. It allows to list all users who made\n'validated' orders on a given course. You should add some query parameters to filter\nthe list by organization, by product or by offering id.\n\nGET /api/courses/<course_id>/orders/\n    Returns every users who made an order on a given course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>>\n    Returns every users who made an order on a course from a specific organization.\n\nGET /api/courses/<course_id>/orders/?product_id=<product_id>\n    Returns every users who made an order on the product's course.\n\nGET /api/courses/<course_id>/orders/?organization_id=<organization_id>&product_id=<product_id>\n    Returns every users that is attached to a product's course and an organization.\n\nGET /api/courses/<course_id>/orders/?offering_id=<relation_id>\n    Returns every users who made order on the offering object.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1814,7 +1814,7 @@
                     },
                     {
                         "in": "query",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -1880,7 +1880,7 @@
         "/api/v1.0/courses/{course_id}/products/": {
             "get": {
                 "operationId": "courses_products_list",
-                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "description": "API ViewSet for all interactions with offerings.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
                 "parameters": [
                     {
                         "in": "path",
@@ -1966,7 +1966,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedOfferLightList"
+                                    "$ref": "#/components/schemas/PaginatedOfferingLightList"
                                 }
                             }
                         },
@@ -1978,7 +1978,7 @@
         "/api/v1.0/courses/{course_id}/products/{pk_or_product_id}/": {
             "get": {
                 "operationId": "courses_products_retrieve",
-                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "description": "API ViewSet for all interactions with offerings.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
                 "parameters": [
                     {
                         "in": "path",
@@ -2013,7 +2013,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Offer"
+                                    "$ref": "#/components/schemas/Offering"
                                 }
                             }
                         },
@@ -2025,7 +2025,7 @@
         "/api/v1.0/courses/{course_id}/products/{pk_or_product_id}/payment-schedule/": {
             "get": {
                 "operationId": "courses_products_payment_schedule_retrieve",
-                "description": "Return the payment schedule for an offer.",
+                "description": "Return the payment schedule for an offering.",
                 "parameters": [
                     {
                         "in": "path",
@@ -2780,10 +2780,10 @@
                 }
             }
         },
-        "/api/v1.0/offers/": {
+        "/api/v1.0/offerings/": {
             "get": {
-                "operationId": "offers_list",
-                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "operationId": "offerings_list",
+                "description": "API ViewSet for all interactions with offerings.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
                 "parameters": [
                     {
                         "name": "page",
@@ -2848,7 +2848,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -2860,7 +2860,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedOfferLightList"
+                                    "$ref": "#/components/schemas/PaginatedOfferingLightList"
                                 }
                             }
                         },
@@ -2869,10 +2869,10 @@
                 }
             }
         },
-        "/api/v1.0/offers/{pk_or_product_id}/": {
+        "/api/v1.0/offerings/{pk_or_product_id}/": {
             "get": {
-                "operationId": "offers_retrieve",
-                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "operationId": "offerings_retrieve",
+                "description": "API ViewSet for all interactions with offerings.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
                 "parameters": [
                     {
                         "in": "path",
@@ -2886,7 +2886,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -2898,7 +2898,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Offer"
+                                    "$ref": "#/components/schemas/Offering"
                                 }
                             }
                         },
@@ -2907,10 +2907,10 @@
                 }
             }
         },
-        "/api/v1.0/offers/{pk_or_product_id}/payment-schedule/": {
+        "/api/v1.0/offerings/{pk_or_product_id}/payment-schedule/": {
             "get": {
-                "operationId": "offers_payment_schedule_retrieve",
-                "description": "Return the payment schedule for an offer.",
+                "operationId": "offerings_payment_schedule_retrieve",
+                "description": "Return the payment schedule for an offering.",
                 "parameters": [
                     {
                         "in": "path",
@@ -2924,7 +2924,7 @@
                     }
                 ],
                 "tags": [
-                    "offers"
+                    "offerings"
                 ],
                 "security": [
                     {
@@ -3503,7 +3503,7 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -3888,7 +3888,7 @@
                     },
                     {
                         "in": "query",
-                        "name": "offer_id",
+                        "name": "offering_id",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -4290,10 +4290,10 @@
                 }
             }
         },
-        "/api/v1.0/organizations/{organization_id}/offers/": {
+        "/api/v1.0/organizations/{organization_id}/offerings/": {
             "get": {
-                "operationId": "organizations_offers_list",
-                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "operationId": "organizations_offerings_list",
+                "description": "API ViewSet for all interactions with offerings.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
                 "parameters": [
                     {
                         "in": "path",
@@ -4379,7 +4379,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedOfferLightList"
+                                    "$ref": "#/components/schemas/PaginatedOfferingLightList"
                                 }
                             }
                         },
@@ -4388,10 +4388,10 @@
                 }
             }
         },
-        "/api/v1.0/organizations/{organization_id}/offers/{pk_or_product_id}/": {
+        "/api/v1.0/organizations/{organization_id}/offerings/{pk_or_product_id}/": {
             "get": {
-                "operationId": "organizations_offers_retrieve",
-                "description": "API ViewSet for all interactions with offers.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
+                "operationId": "organizations_offerings_retrieve",
+                "description": "API ViewSet for all interactions with offerings.\nCan be accessed through multiple URLs\nGET /courses/\n    Return all courses the user has access to\nGET /organizations/<organization_id>/courses/\n    Return all courses from the specified organization if user\n    has access to the organization",
                 "parameters": [
                     {
                         "in": "path",
@@ -4426,7 +4426,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Offer"
+                                    "$ref": "#/components/schemas/Offering"
                                 }
                             }
                         },
@@ -4435,10 +4435,10 @@
                 }
             }
         },
-        "/api/v1.0/organizations/{organization_id}/offers/{pk_or_product_id}/payment-schedule/": {
+        "/api/v1.0/organizations/{organization_id}/offerings/{pk_or_product_id}/payment-schedule/": {
             "get": {
-                "operationId": "organizations_offers_payment_schedule_retrieve",
-                "description": "Return the payment schedule for an offer.",
+                "operationId": "organizations_offerings_payment_schedule_retrieve",
+                "description": "Return the payment schedule for an offering.",
                 "parameters": [
                     {
                         "in": "path",
@@ -4550,7 +4550,7 @@
                     },
                     {
                         "in": "query",
-                        "name": "offer_ids",
+                        "name": "offering_ids",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -4558,7 +4558,7 @@
                                 "format": "uuid"
                             }
                         },
-                        "description": "List of offer ids to sign related contracts, if not provided all the available contracts will be signed."
+                        "description": "List of offering ids to sign related contracts, if not provided all the available contracts will be signed."
                     }
                 ],
                 "tags": [
@@ -4986,7 +4986,7 @@
                         "description": "The number of seats to reserve"
                     },
                     "trainees": {},
-                    "offer_rule_ids": {
+                    "offering_rule_ids": {
                         "type": "array",
                         "items": {
                             "type": "string",
@@ -5006,7 +5006,7 @@
                     "identification_number",
                     "main_invoice_reference",
                     "nb_seats",
-                    "offer_rule_ids",
+                    "offering_rule_ids",
                     "organization",
                     "owner",
                     "postcode",
@@ -5950,7 +5950,7 @@
                         "description": "Get orders pointing to the enrollment.",
                         "readOnly": true
                     },
-                    "offers": {
+                    "offerings": {
                         "type": "array",
                         "items": {
                             "type": "object",
@@ -5977,7 +5977,7 @@
                     "created_on",
                     "id",
                     "is_active",
-                    "offers",
+                    "offerings",
                     "orders",
                     "state",
                     "was_created_by_order"
@@ -6348,9 +6348,9 @@
                     "state"
                 ]
             },
-            "Offer": {
+            "Offering": {
                 "type": "object",
-                "description": "Serialize an offer.",
+                "description": "Serialize an offering.",
                 "properties": {
                     "course": {
                         "allOf": [
@@ -6394,11 +6394,11 @@
                     "rules": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/OfferRuleProperty"
+                                "$ref": "#/components/schemas/OfferingRuleProperty"
                             }
                         ],
                         "readOnly": true,
-                        "description": "Offer rules applied to this offer."
+                        "description": "Offering rules applied to this offering."
                     }
                 },
                 "required": [
@@ -6411,9 +6411,9 @@
                     "rules"
                 ]
             },
-            "OfferLight": {
+            "OfferingLight": {
                 "type": "object",
-                "description": "Serialize an offer in its minimal format.",
+                "description": "Serialize an offering in its minimal format.",
                 "properties": {
                     "course": {
                         "allOf": [
@@ -6464,7 +6464,7 @@
                     "product"
                 ]
             },
-            "OfferRuleProperty": {
+            "OfferingRuleProperty": {
                 "type": "object",
                 "description": "Serializer for the rules property of an offer.",
                 "properties": {
@@ -6592,7 +6592,7 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "offer_rule_ids": {
+                    "offering_rule_ids": {
                         "type": "array",
                         "items": {
                             "type": "string",
@@ -6675,7 +6675,7 @@
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice_reference",
-                    "offer_rule_ids",
+                    "offering_rule_ids",
                     "organization",
                     "owner",
                     "payment_schedule",
@@ -7353,7 +7353,7 @@
                     }
                 }
             },
-            "PaginatedOfferLightList": {
+            "PaginatedOfferingLightList": {
                 "type": "object",
                 "required": [
                     "count",
@@ -7379,7 +7379,7 @@
                     "results": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/OfferLight"
+                            "$ref": "#/components/schemas/OfferingLight"
                         }
                     }
                 }

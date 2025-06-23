@@ -66,11 +66,11 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
                 },
                 "owner": str(batch_order.owner.id),
                 "postcode": batch_order.postcode,
-                "offer": str(batch_order.offer.id),
+                "offering": str(batch_order.offering.id),
                 "total": float(batch_order.total),
                 "trainees": batch_order.trainees,
                 "vouchers": [],
-                "offer_rules": [],
+                "offering_rules": [],
                 "voucher": None,
             },
         )

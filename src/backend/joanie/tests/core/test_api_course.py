@@ -278,7 +278,7 @@ class CourseApiTest(BaseAPITestCase):
 
         course = factories.CourseFactory()
         factories.UserCourseAccessFactory(user=user, course=course)
-        factories.OfferFactory(
+        factories.OfferingFactory(
             course=course,
             product=factories.ProductFactory(),
             organizations=factories.OrganizationFactory.create_batch(2),
@@ -336,7 +336,7 @@ class CourseApiTest(BaseAPITestCase):
 
         course = factories.CourseFactory(code="MYCODE-0088")
         factories.UserCourseAccessFactory(user=user, course=course)
-        factories.OfferFactory(
+        factories.OfferingFactory(
             course=course,
             product=factories.ProductFactory(),
             organizations=[factories.OrganizationFactory()],

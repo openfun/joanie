@@ -238,18 +238,18 @@ class Organization(parler_models.TranslatableModel, BaseModel):
     )
 
     @property
-    def offers(self):
+    def offerings(self):
         """
         Return the course product relation associated with the organization.
         """
-        return self.offers
+        return self.offerings
 
-    @offers.setter
-    def set_offers(self, value):
+    @offerings.setter
+    def set_offerings(self, value):
         """
         Set the course product relation associated with the organization.
         """
-        self.offers = value
+        self.offerings = value
 
     class Meta:
         db_table = "joanie_organization"
@@ -331,8 +331,8 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         filters = Q()
         if contract_ids := kwargs.get("contract_ids"):
             filters &= Q(id__in=contract_ids)
-        if relation_ids := kwargs.get("offer_ids"):
-            filters &= Q(order__product__offers__id__in=relation_ids)
+        if relation_ids := kwargs.get("offering_ids"):
+            filters &= Q(order__product__offerings__id__in=relation_ids)
 
         contracts_to_sign = list(
             Contract.objects.filter(
@@ -510,18 +510,18 @@ class Course(parler_models.TranslatableModel, BaseModel):
     )
 
     @property
-    def offers(self):
+    def offerings(self):
         """
         Return the course product relation associated with the course.
         """
-        return self.offers
+        return self.offerings
 
-    @offers.setter
-    def set_offers(self, value):
+    @offerings.setter
+    def set_offerings(self, value):
         """
         Set the course product relation associated with the course.
         """
-        self.offers = value
+        self.offerings = value
 
     class Meta:
         db_table = "joanie_course"
@@ -589,9 +589,9 @@ class Course(parler_models.TranslatableModel, BaseModel):
         """
 
         if product is None:
-            qs = self.offers.all()
+            qs = self.offerings.all()
         else:
-            qs = self.offers.filter(product=product)
+            qs = self.offerings.filter(product=product)
 
         return Organization.objects.filter(
             id__in=qs.distinct()
@@ -750,18 +750,18 @@ class CourseProductRelation(BaseModel):
     course = models.ForeignKey(
         to=Course,
         verbose_name=_("course"),
-        related_name="offers",
+        related_name="offerings",
         on_delete=models.RESTRICT,
     )
     product = models.ForeignKey(
         to="Product",
         verbose_name=_("product"),
-        related_name="offers",
+        related_name="offerings",
         on_delete=models.CASCADE,
     )
     organizations = models.ManyToManyField(
         to=Organization,
-        related_name="offers",
+        related_name="offerings",
         verbose_name=_("organizations"),
     )
 
@@ -783,7 +783,7 @@ class CourseProductRelation(BaseModel):
     def delete(self, using=None, keep_parents=False):
         """Delete the relation if it can be edited, raise a ValidationError otherwise."""
         if not self.can_edit:
-            raise ValidationError(_("You cannot delete this offer."))
+            raise ValidationError(_("You cannot delete this offering."))
         return super().delete(using=using, keep_parents=keep_parents)
 
     @property
@@ -793,7 +793,7 @@ class CourseProductRelation(BaseModel):
         """
         site = Site.objects.get_current()
         resource_path = reverse(
-            "offers-detail",
+            "offerings-detail",
             kwargs={
                 "course_id": self.course.code,  # pylint: disable=no-member
                 "pk_or_product_id": self.product_id,  # pylint: disable=no-member
@@ -837,16 +837,16 @@ class CourseProductRelation(BaseModel):
     @property
     def rules(self):
         """
-        Compute the current offer rules for the course product relation.
+        Compute the current offering rules for the course product relation.
         """
-        offer_rule_found = None
-        offer_rule_is_blocking = False
-        for offer_rule in self.offer_rules.all():
-            if offer_rule.is_enabled:
-                offer_rule_is_blocking = (
-                    not offer_rule.is_assignable and not offer_rule.discount
+        offering_rule_found = None
+        offering_rule_is_blocking = False
+        for offering_rule in self.offering_rules.all():
+            if offering_rule.is_enabled:
+                offering_rule_is_blocking = (
+                    not offering_rule.is_assignable and not offering_rule.discount
                 )
-                offer_rule_found = offer_rule
+                offering_rule_found = offering_rule
 
         discounted_price = None
         discount_amount = None
@@ -858,25 +858,26 @@ class CourseProductRelation(BaseModel):
         has_seat_limit = False
         has_seats_left = True
 
-        if offer_rule := offer_rule_found:
-            description = offer_rule.description
-            discount_start = offer_rule.start
-            discount_end = offer_rule.end
-            if not offer_rule.discount or offer_rule.available_seats:
-                nb_available_seats = offer_rule.available_seats
+        if offering_rule := offering_rule_found:
+            description = offering_rule.description
+            discount_start = offering_rule.start
+            discount_end = offering_rule.end
+            if not offering_rule.discount or offering_rule.available_seats:
+                nb_available_seats = offering_rule.available_seats
                 has_seat_limit = (
-                    offer_rule.nb_seats is not None and nb_available_seats is not None
+                    offering_rule.nb_seats is not None
+                    and nb_available_seats is not None
                 )
                 has_seats_left = not has_seat_limit or (
                     has_seat_limit and nb_available_seats > 0
                 )
-            if offer_rule.discount and offer_rule.is_assignable:
+            if offering_rule.discount and offering_rule.is_assignable:
                 discounted_price = calculate_price(
                     self.product.price,  # pylint: disable=no-member
-                    offer_rule.discount,
+                    offering_rule.discount,
                 )
-                discount_amount = offer_rule.discount.amount
-                discount_rate = offer_rule.discount.rate
+                discount_amount = offering_rule.discount.amount
+                discount_rate = offering_rule.discount.rate
 
         return {
             "discounted_price": discounted_price,
@@ -887,7 +888,7 @@ class CourseProductRelation(BaseModel):
             "discount_end": discount_end,
             "nb_available_seats": nb_available_seats,
             "has_seat_limit": has_seat_limit,
-            "has_seats_left": has_seats_left or not offer_rule_is_blocking,
+            "has_seats_left": has_seats_left or not offering_rule_is_blocking,
         }
 
 
@@ -1258,10 +1259,10 @@ class Enrollment(BaseModel):
                 validated_user_orders = self.user.orders.filter(
                     (
                         models.Q(
-                            offers__course_runs__isnull=True,
+                            offerings__course_runs__isnull=True,
                             target_courses__course_runs=self.course_run,
                         )
-                        | models.Q(offers__course_runs=self.course_run)
+                        | models.Q(offerings__course_runs=self.course_run)
                     ),
                     (
                         models.Q(

@@ -39,7 +39,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
     ):
         """
         If the command has no User UUID as input parameter but has one of both optional parameters
-        (offer UUID or an organization UUID) set, it should raise an error.
+        (offering UUID or an organization UUID) set, it should raise an error.
         """
         random_organization_uuid = uuid4()
         options = {
@@ -59,7 +59,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
     ):
         """
         The command should accept one out of the two required parameters which are:
-        an offer UUID or an Organition UUID. When the user is declared but
+        an offering UUID or an Organition UUID. When the user is declared but
         both optional parameters are missing, the command should raise an error.
         """
         user = factories.UserFactory()
@@ -74,7 +74,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 {
                     "non_field_errors": (
                         "You must set at least one parameter for the method."
-                        "You must choose between an Organization UUID or an Offer UUID."
+                        "You must choose between an Organization UUID or an Offering UUID."
                     )
                 }
             ),
@@ -84,14 +84,14 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         self,
     ):
         """
-        Generating a ZIP archive of contract from an unknown offer UUID should
+        Generating a ZIP archive of contract from an unknown offering UUID should
         raise an error.
         """
         user = factories.UserFactory()
-        random_offer_uuid = uuid4()
+        random_offering_uuid = uuid4()
         options = {
             "user": user.pk,
-            "offer_id": random_offer_uuid,
+            "offering_id": random_offering_uuid,
         }
         with self.assertRaises(CommandError) as context:
             call_command("generate_zip_archive_of_contracts", **options)
@@ -100,10 +100,10 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             str(context.exception),
             str(
                 {
-                    "offer_id": (
-                        "Make sure to give an existing offer UUID. "
+                    "offering_id": (
+                        "Make sure to give an existing offering UUID. "
                         "No CourseProductRelation was found with the given "
-                        f"UUID : {random_offer_uuid}."
+                        f"UUID : {random_offering_uuid}."
                     ),
                 }
             ),
@@ -144,7 +144,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
     ):
         """
         Generating a ZIP archive of contracts for a User who does not have access rights
-        to the Organization that is providing the offer, it should raise
+        to the Organization that is providing the offering, it should raise
         an error.
         """
         users = factories.UserFactory.create_batch(3)
@@ -152,7 +152,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         # Organization that is not a the course or product supplier
         factories.UserOrganizationAccessFactory(user=requesting_user)
         organization_course_provider = factories.OrganizationFactory()
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization_course_provider],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
@@ -160,11 +160,11 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             [
                 {
                     "user": requesting_user.pk,
-                    "offer_id": offer.pk,
+                    "offering_id": offering.pk,
                 },
                 {
                     "user": requesting_user.pk,
-                    "organization_id": offer.organizations.first().pk,
+                    "organization_id": offering.organizations.first().pk,
                 },
             ]
         )
@@ -176,8 +176,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             user = users[index]
             order = factories.OrderFactory(
                 owner=user,
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=payment_factories.InvoiceFactory(),
             )
@@ -206,7 +206,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         self,
     ):
         """
-        From an existing offer UUID and a User who has the access rights on the
+        From an existing offering UUID and a User who has the access rights on the
         organization, when there are no signed contracts yet, it should raise an error mentionning
         that it has to abort in generating the ZIP archive.
         """
@@ -216,7 +216,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
@@ -224,11 +224,11 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             [
                 {
                     "user": requesting_user.pk,
-                    "offer_id": offer.pk,
+                    "offering_id": offering.pk,
                 },
                 {
                     "user": requesting_user.pk,
-                    "organization_id": offer.organizations.first().pk,
+                    "organization_id": offering.organizations.first().pk,
                 },
             ]
         )
@@ -241,8 +241,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             user = users[index]
             order = factories.OrderFactory(
                 owner=user,
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=payment_factories.InvoiceFactory(),
             )
@@ -270,7 +270,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         self,
     ):  # pylint: disable=too-many-locals
         """
-        From an existing offer UUID paired with an existing User UUID who has
+        From an existing offering UUID paired with an existing User UUID who has
         the correct access right on the organization, we should be able to fetch signed contracts
         that are attached to generate a ZIP archive.
         Then, the ZIP archive is saved into the file system storage. After, we make sure the ZIP
@@ -285,7 +285,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(
                 title="Contract definition 0"
@@ -294,7 +294,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         zip_uuid = uuid4()
         options = {
             "user": requesting_user.pk,
-            "offer_id": offer.pk,
+            "offering_id": offering.pk,
             "zip": zip_uuid,
         }
         signature_reference_choices = [
@@ -306,8 +306,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             user = users[index]
             order = factories.OrderFactory(
                 owner=user,
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=payment_factories.InvoiceFactory(
                     recipient_address__address="1 Rue de L'Exemple",
@@ -379,7 +379,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(
                 title="Contract definition 0"
@@ -400,8 +400,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             user = users[index]
             order = factories.OrderFactory(
                 owner=user,
-                product=offer.product,
-                course=offer.course,
+                product=offering.product,
+                course=offering.course,
                 state=enums.ORDER_STATE_COMPLETED,
                 main_invoice=payment_factories.InvoiceFactory(
                     recipient_address__address="1 Rue de L'Exemple",
@@ -470,7 +470,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         factories.UserOrganizationAccessFactory(
             organization=organization, user=requesting_user
         )
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             organizations=[organization],
             product__contract_definition=factories.ContractDefinitionFactory(),
         )
@@ -491,15 +491,15 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 },
                 {
                     "user": requesting_user.pk,
-                    "offer_id": offer.pk,
+                    "offering_id": offering.pk,
                     "zip": zip_uuid,
                 },
             ]
         )
         order = factories.OrderFactory(
             owner=user,
-            product=offer.product,
-            course=offer.course,
+            product=offering.product,
+            course=offering.course,
             state=enums.ORDER_STATE_COMPLETED,
             main_invoice=payment_factories.InvoiceFactory(),
         )

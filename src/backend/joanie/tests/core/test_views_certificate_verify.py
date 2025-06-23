@@ -71,13 +71,13 @@ class CertificateVerificationViewTestCase(TestCase):
         owner = factories.UserFactory(first_name="John Doe")
         organization = factories.OrganizationFactory(title="Test Organization")
         degree_definition = factories.CertificateDefinitionFactory(template=template)
-        offer = factories.OfferFactory(
+        offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__certificate_definition=degree_definition,
             course__organizations=[organization],
         )
         order = factories.OrderFactory(
-            product=offer.product, course=offer.course, owner=owner
+            product=offering.product, course=offering.course, owner=owner
         )
         certificate = factories.OrderCertificateFactory(order=order)
         self.assertEqual(certificate.certificate_definition.template, template)

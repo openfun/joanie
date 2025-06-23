@@ -191,12 +191,12 @@ class Demo:
         """
         Add a discount (rate or amount) on an order
         """
-        offer_rule = factories.OfferRuleFactory(
+        offering_rule = factories.OfferingRuleFactory(
             nb_seats=None,
-            course_product_relation=order.product.offers.first(),
+            course_product_relation=order.product.offerings.first(),
             discount=discount,
         )
-        order.offer_rules.add(offer_rule)
+        order.offering_rules.add(offering_rule)
         order.freeze_total()
 
         return order

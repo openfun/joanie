@@ -69,7 +69,7 @@ class SignalsTestCase(TestCase):
         products = factories.ProductFactory.create_batch(
             2, target_courses=[course_run.course]
         )
-        offers = models.CourseProductRelation.objects.filter(product__in=products)
+        offerings = models.CourseProductRelation.objects.filter(product__in=products)
         mock_sync.reset_mock()
 
         course_run.save()
@@ -82,11 +82,11 @@ class SignalsTestCase(TestCase):
                 f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -94,8 +94,8 @@ class SignalsTestCase(TestCase):
             [course_run["course"] for course_run in synchronized_course_runs],
             [
                 course_run.course.code,
-                offers[0].course.code,
-                offers[1].course.code,
+                offerings[0].course.code,
+                offerings[1].course.code,
             ],
         )
         self.assertEqual(
@@ -116,7 +116,7 @@ class SignalsTestCase(TestCase):
             course=course_run.course, is_listed=True
         )
         product = factories.ProductFactory()
-        offer = product.offers.first()
+        offering = product.offerings.first()
         factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course, course_runs=[course_run]
         )
@@ -142,7 +142,7 @@ class SignalsTestCase(TestCase):
                 f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offer.course.code}/products/{offer.product.id}/"
+                    f"courses/{offering.course.code}/products/{offering.product.id}/"
                 ),
             ],
         )
@@ -150,7 +150,7 @@ class SignalsTestCase(TestCase):
             [course_run["course"] for course_run in synchronized_course_runs],
             [
                 course_run.course.code,
-                offer.course.code,
+                offering.course.code,
             ],
         )
         for course_run_dict in synchronized_course_runs:
@@ -200,7 +200,7 @@ class SignalsTestCase(TestCase):
         products = factories.ProductFactory.create_batch(
             2, target_courses=[course_run.course]
         )
-        offers = models.CourseProductRelation.objects.filter(product__in=products)
+        offerings = models.CourseProductRelation.objects.filter(product__in=products)
         mock_sync.reset_mock()
 
         course_run.delete()
@@ -215,11 +215,11 @@ class SignalsTestCase(TestCase):
                 f"https://example.com/api/v1.0/course-runs/{cr_id:s}/",
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -254,7 +254,7 @@ class SignalsTestCase(TestCase):
 
         self.assertFalse(mock_sync.called)
 
-    # Product target course offer
+    # Product target course offering
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_save_product_target_course_relation(self, mock_sync):
@@ -264,7 +264,7 @@ class SignalsTestCase(TestCase):
         """
         course_run = factories.CourseRunFactory()
         product, other_product = factories.ProductFactory.create_batch(2)
-        offer = product.offers.first()
+        offering = product.offerings.first()
         ptcr = factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course
         )
@@ -282,11 +282,11 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offer.course.code}/products/{offer.product.id}/"
+                    f"courses/{offering.course.code}/products/{offering.product.id}/"
                 )
             ],
         )
-        self.assertEqual(synchronized_course_runs[0]["course"], offer.course.code)
+        self.assertEqual(synchronized_course_runs[0]["course"], offering.course.code)
         self.assertIsNotNone(synchronized_course_runs[0]["start"])
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"],
@@ -301,7 +301,7 @@ class SignalsTestCase(TestCase):
         """
         course_run = factories.CourseRunFactory()
         product, other_product = factories.ProductFactory.create_batch(2)
-        offer = product.offers.first()
+        offering = product.offerings.first()
         ptcr = factories.ProductTargetCourseRelationFactory(
             product=product, course=course_run.course
         )
@@ -319,18 +319,18 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offer.course.code}/products/{offer.product.id}/"
+                    f"courses/{offering.course.code}/products/{offering.product.id}/"
                 )
             ],
         )
         self.assertIsNone(synchronized_course_runs[0]["start"])
-        self.assertEqual(synchronized_course_runs[0]["course"], offer.course.code)
+        self.assertEqual(synchronized_course_runs[0]["course"], offering.course.code)
         self.assertEqual(synchronized_course_runs[0]["catalog_visibility"], "hidden")
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_delete_product_target_course_relation_query(self, mock_sync):
         """
-        Product synchronization should not be triggered when product target course offers
+        Product synchronization should not be triggered when product target course offerings
         are deleted via a query. This case should be handled manually by the developer.
         """
         course_run = factories.CourseRunFactory()
@@ -347,10 +347,10 @@ class SignalsTestCase(TestCase):
 
         self.assertFalse(mock_sync.called)
 
-    # offer
+    # offering
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offer_add(self, mock_sync):
+    def test_signals_on_change_offering_add(self, mock_sync):
         """
         Product synchronization should be triggered when a product is added to a course.
         Only the impacted product should be re-synchronized.
@@ -363,7 +363,7 @@ class SignalsTestCase(TestCase):
         mock_sync.reset_mock()
 
         course.products.add(product2)
-        offer = models.CourseProductRelation.objects.get(
+        offering = models.CourseProductRelation.objects.get(
             course=course, product=product2
         )
 
@@ -374,7 +374,7 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offer.course.code}/products/{offer.product.id}/"
+                    f"courses/{offering.course.code}/products/{offering.product.id}/"
                 )
             ],
         )
@@ -384,10 +384,10 @@ class SignalsTestCase(TestCase):
             self.assertEqual(course_run["catalog_visibility"], "course_and_search")
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offer_set(self, mock_sync):
+    def test_signals_on_change_offering_set(self, mock_sync):
         """
         Product synchronization should be triggered when products are added to a course in bulk.
-        It is equivalent to removing existing offers before creating the new ones.
+        It is equivalent to removing existing offerings before creating the new ones.
         """
         course_run = factories.CourseRunFactory()
         previous_product, *products = factories.ProductFactory.create_batch(
@@ -423,7 +423,7 @@ class SignalsTestCase(TestCase):
 
         # added
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
-        offers = models.CourseProductRelation.objects.filter(
+        offerings = models.CourseProductRelation.objects.filter(
             course=course, product__in=[products[0], products[1]]
         )
         self.assertCountEqual(
@@ -431,11 +431,11 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -445,7 +445,7 @@ class SignalsTestCase(TestCase):
             self.assertEqual(course_run["catalog_visibility"], "course_and_search")
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offer_create(self, mock_sync):
+    def test_signals_on_change_offering_create(self, mock_sync):
         """Product synchronization should be triggered when a product is created for a course."""
         course_run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         product = factories.ProductFactory(target_courses=[course_run.course])
@@ -464,7 +464,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(mock_sync.call_count, 1)
 
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offer = models.CourseProductRelation.objects.get(
+        offering = models.CourseProductRelation.objects.get(
             course=course, product=new_product
         )
         self.assertCountEqual(
@@ -472,7 +472,7 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offer.course.code}/products/{offer.product.id}/"
+                    f"courses/{offering.course.code}/products/{offering.product.id}/"
                 ),
             ],
         )
@@ -484,7 +484,7 @@ class SignalsTestCase(TestCase):
             self.assertEqual(course_run["catalog_visibility"], "hidden")
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offer_remove(self, mock_sync):
+    def test_signals_on_change_offering_remove(self, mock_sync):
         """Product synchronization should be triggered when a product is removed from a course."""
         course_run = factories.CourseRunFactory()
         course = factories.CourseFactory()
@@ -493,7 +493,7 @@ class SignalsTestCase(TestCase):
         )
         mock_sync.reset_mock()
 
-        offer = models.CourseProductRelation.objects.get(
+        offering = models.CourseProductRelation.objects.get(
             course=course, product=products[0]
         )
         course.products.remove(products[0])
@@ -505,7 +505,7 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offer.course.code}/products/{offer.product.id}/"
+                    f"courses/{offering.course.code}/products/{offering.product.id}/"
                 )
             ],
         )
@@ -514,7 +514,7 @@ class SignalsTestCase(TestCase):
             self.assertEqual(course_run["course"], course.code)
             self.assertEqual(course_run["catalog_visibility"], "hidden")
 
-    def test_signals_on_change_offer_clear(self):
+    def test_signals_on_change_offering_clear(self):
         """Product synchronization should be triggered when course's products are cleared."""
         course_run1, course_run2 = factories.CourseRunFactory.create_batch(2)
         product1 = factories.ProductFactory(target_courses=[course_run1.course])
@@ -557,7 +557,7 @@ class SignalsTestCase(TestCase):
         product, _other_product = factories.ProductFactory.create_batch(
             2, courses=[course1], target_courses=[course_run.course]
         )
-        offers = product.offers.all()
+        offerings = product.offerings.all()
         mock_sync.reset_mock()
 
         product.courses.add(course2)
@@ -575,11 +575,11 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -595,7 +595,7 @@ class SignalsTestCase(TestCase):
     def test_signals_on_change_product_course_relation_set(self, mock_sync):
         """
         Product synchronization should be triggered when courses are added to a product in bulk.
-        It is equivalent to removing existing offers before creating the new ones.
+        It is equivalent to removing existing offerings before creating the new ones.
         """
         course_run = factories.CourseRunFactory()
         course1, course2, old_course = factories.CourseFactory.create_batch(3)
@@ -670,7 +670,7 @@ class SignalsTestCase(TestCase):
         mock_sync.reset_mock()
 
         product.courses.create(code="123")
-        offers = product.offers.all()
+        offerings = product.offerings.all()
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
@@ -685,11 +685,11 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -744,7 +744,7 @@ class SignalsTestCase(TestCase):
         mock_sync.reset_mock()
 
         old_relations = list(
-            product.offers.values_list("course__code", "product__id").all()
+            product.offerings.values_list("course__code", "product__id").all()
         )
         product.courses.clear()
 
@@ -771,7 +771,7 @@ class SignalsTestCase(TestCase):
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["catalog_visibility"], "hidden")
 
-    # Edit certificate product offer
+    # Edit certificate product offering
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_certificate_product_course_relation_create(
@@ -831,7 +831,7 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["certificate_offer"], None)
 
-    # Product course run restrict offer
+    # Product course run restrict offering
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_run_restrict_relation_add(
@@ -839,7 +839,7 @@ class SignalsTestCase(TestCase):
     ):
         """
         Product synchronization should be triggered when a course run restriction is added to
-        a product target course offer.
+        a product target course offering.
         """
         product1, product2 = factories.ProductFactory.create_batch(2)
         target_course = factories.CourseFactory()
@@ -870,7 +870,7 @@ class SignalsTestCase(TestCase):
                 [product1]
             ),
         )
-        product_relation = product1.offers.first()
+        product_relation = product1.offerings.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
@@ -897,8 +897,8 @@ class SignalsTestCase(TestCase):
     ):
         """
         Product synchronization should be triggered when course run restrictions are added to a
-        product target course offer in bulk.
-        It is equivalent to removing existing offers before creating the new ones.
+        product target course offering in bulk.
+        It is equivalent to removing existing offerings before creating the new ones.
         """
         courses = factories.CourseFactory.create_batch(2)
         product, _other_product = factories.ProductFactory.create_batch(
@@ -925,17 +925,17 @@ class SignalsTestCase(TestCase):
 
         # Removing
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product.offers.all()
+        offerings = product.offerings.all()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -954,11 +954,11 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -976,7 +976,7 @@ class SignalsTestCase(TestCase):
     ):
         """
         Product synchronization should be triggered when a course run restriction is
-        created for a product target course offer.
+        created for a product target course offering.
         """
         product, _other_product = factories.ProductFactory.create_batch(2)
         target_course = factories.CourseFactory()
@@ -1006,10 +1006,10 @@ class SignalsTestCase(TestCase):
             [course_run.get_serialized()],
         )
 
-        # 2- a second time when the course run is attached to the product/target course offer
+        # 2- a second time when the course run is attached to the product/target course offering
         self.assertEqual(mock_sync.call_args_list[1][1], {})
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
-        offers = product.offers.all()
+        offerings = product.offerings.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -1021,7 +1021,7 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
             ],
         )
@@ -1041,7 +1041,7 @@ class SignalsTestCase(TestCase):
     ):
         """
         Product synchronization should be triggered when a course run restriction is removed
-        from a product target course offer.
+        from a product target course offering.
         """
         product, _other_product = factories.ProductFactory.create_batch(2)
         target_course = factories.CourseFactory()
@@ -1070,13 +1070,13 @@ class SignalsTestCase(TestCase):
                 [product]
             ),
         )
-        offer = product.offers.first()
+        offering = product.offerings.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offer.course.code}/products/{offer.product.id}/"
+                    f"courses/{offering.course.code}/products/{offering.product.id}/"
                 ),
             ],
         )
@@ -1096,7 +1096,7 @@ class SignalsTestCase(TestCase):
     ):
         """
         Product synchronization should be triggered when course run restrictions are clear from
-        a product target course offer.
+        a product target course offering.
         """
         product, _other_product = factories.ProductFactory.create_batch(2)
         target_course = factories.CourseFactory()
@@ -1125,17 +1125,17 @@ class SignalsTestCase(TestCase):
                 [product]
             ),
         )
-        offer = product.offers.first()
+        offering = product.offerings.first()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offer.course.code}/products/{offer.product.id}/"
+                    f"courses/{offering.course.code}/products/{offering.product.id}/"
                 ),
             ],
         )
-        self.assertEqual(synchronized_course_runs[0]["course"], offer.course.code)
+        self.assertEqual(synchronized_course_runs[0]["course"], offering.course.code)
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
@@ -1148,7 +1148,7 @@ class SignalsTestCase(TestCase):
         self, mock_sync
     ):
         """
-        Product synchronization should be triggered when a product target course offer is
+        Product synchronization should be triggered when a product target course offering is
         added to a course run.
         """
         product1, product2 = factories.ProductFactory.create_batch(2)
@@ -1173,7 +1173,7 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product1.offers.all()
+        offerings = product1.offerings.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -1185,11 +1185,13 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
             ],
         )
-        self.assertEqual(synchronized_course_runs[0]["course"], offers[0].course.code)
+        self.assertEqual(
+            synchronized_course_runs[0]["course"], offerings[0].course.code
+        )
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-08-08T08:00:00+00:00"
         )
@@ -1202,9 +1204,9 @@ class SignalsTestCase(TestCase):
         self, mock_sync
     ):
         """
-        Product synchronization should be triggered when product target course offers are
+        Product synchronization should be triggered when product target course offerings are
         added to a course run in bulk.
-        It is equivalent to removing existing offers before creating the new ones.
+        It is equivalent to removing existing offerings before creating the new ones.
         """
         product1, product2, product3 = factories.ProductFactory.create_batch(3)
         target_course = factories.CourseFactory()
@@ -1233,7 +1235,7 @@ class SignalsTestCase(TestCase):
 
         # Removing
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product1.offers.all()
+        offerings = product1.offerings.all()
         self.assertCountEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -1245,11 +1247,13 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
             ],
         )
-        self.assertEqual(synchronized_course_runs[0]["course"], offers[0].course.code)
+        self.assertEqual(
+            synchronized_course_runs[0]["course"], offerings[0].course.code
+        )
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
@@ -1259,7 +1263,7 @@ class SignalsTestCase(TestCase):
 
         # Adding
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
-        offers = models.CourseProductRelation.objects.filter(
+        offerings = models.CourseProductRelation.objects.filter(
             product__in=[product2, product3]
         )
         self.assertCountEqual(
@@ -1273,11 +1277,11 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -1294,7 +1298,7 @@ class SignalsTestCase(TestCase):
         self, mock_sync
     ):
         """
-        Product synchronization should be triggered when a product target course offer is
+        Product synchronization should be triggered when a product target course offering is
         created for a course run.
         """
         product1, product2 = factories.ProductFactory.create_batch(2)
@@ -1318,18 +1322,18 @@ class SignalsTestCase(TestCase):
         )
 
         # In this particular case, the product is synchronized twice:
-        # 1- once when the offer is created (it is already linked to its course so
+        # 1- once when the offering is created (it is already linked to its course so
         #   may impact the product)
-        # 2- a second time when the course run is attached to the product/target course offer
+        # 2- a second time when the course run is attached to the product/target course offering
         self.assertEqual(mock_sync.call_count, 2)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product2.offers.all()
+        offerings = product2.offerings.all()
         self.assertCountEqual(
             [course_run["resource_link"] for course_run in synchronized_course_runs],
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
             ],
         )
@@ -1355,11 +1359,13 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
             ],
         )
-        self.assertEqual(synchronized_course_runs[0]["course"], offers[0].course.code)
+        self.assertEqual(
+            synchronized_course_runs[0]["course"], offerings[0].course.code
+        )
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-08-08T08:00:00+00:00"
         )
@@ -1372,7 +1378,7 @@ class SignalsTestCase(TestCase):
         self, mock_sync
     ):
         """
-        Product synchronization should be triggered when a product target course offer is
+        Product synchronization should be triggered when a product target course offering is
         removed from a course run.
         """
         product1, product2 = factories.ProductFactory.create_batch(2)
@@ -1398,7 +1404,7 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = product1.offers.all()
+        offerings = product1.offerings.all()
         self.assertEqual(
             synchronized_course_runs,
             models.Product.get_equivalent_serialized_course_runs_for_products(
@@ -1410,11 +1416,13 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
             ],
         )
-        self.assertEqual(synchronized_course_runs[0]["course"], offers[0].course.code)
+        self.assertEqual(
+            synchronized_course_runs[0]["course"], offerings[0].course.code
+        )
         self.assertEqual(
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
@@ -1426,7 +1434,7 @@ class SignalsTestCase(TestCase):
     def test_signals_on_change_course_run_restrict_product_relation_clear(
         self, mock_sync
     ):
-        """Product synchronization should be triggered when product target course offers are
+        """Product synchronization should be triggered when product target course offerings are
         cleared for a course run.
         """
         product1, product2, product3 = factories.ProductFactory.create_batch(3)
@@ -1453,7 +1461,7 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        offers = models.CourseProductRelation.objects.filter(
+        offerings = models.CourseProductRelation.objects.filter(
             product__in=[product1, product2]
         )
         # product2 is also targeted because we are not able to
@@ -1469,11 +1477,11 @@ class SignalsTestCase(TestCase):
             [
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[0].course.code}/products/{offers[0].product.id}/"
+                    f"courses/{offerings[0].course.code}/products/{offerings[0].product.id}/"
                 ),
                 (
                     "https://example.com/api/v1.0/"
-                    f"courses/{offers[1].course.code}/products/{offers[1].product.id}/"
+                    f"courses/{offerings[1].course.code}/products/{offerings[1].product.id}/"
                 ),
             ],
         )
@@ -1514,9 +1522,9 @@ class SignalsTestCase(TestCase):
 
         mock_sync.reset_mock()
 
-        factories.OfferFactory(product=product, course=cr1.course)
-        factories.OfferFactory(product=product, course=cr2.course)
-        factories.OfferFactory(product=product, course=cr3.course)
+        factories.OfferingFactory(product=product, course=cr1.course)
+        factories.OfferingFactory(product=product, course=cr2.course)
+        factories.OfferingFactory(product=product, course=cr3.course)
 
         # Update the product price
         product.price = "52.00"
@@ -1539,7 +1547,7 @@ class SignalsTestCase(TestCase):
         """
         Product synchronization should be triggered when product data change.
         If the product is different from certificate,
-        all offer should be synchronized.
+        all offering should be synchronized.
         """
 
         cr1 = factories.CourseRunFactory(

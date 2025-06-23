@@ -29,7 +29,7 @@ class DiscountAdminApiTest(TestCase):
         self.client.login(username=admin.username, password="password")
 
         discounts = factories.DiscountFactory.create_batch(2)
-        factories.OfferRuleFactory.create_batch(2, discount=discounts[0])
+        factories.OfferingRuleFactory.create_batch(2, discount=discounts[0])
 
         response = self.client.get("/api/v1.0/admin/discounts/")
 

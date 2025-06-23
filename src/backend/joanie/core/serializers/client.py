@@ -17,7 +17,7 @@ from rest_framework.generics import get_object_or_404
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
-from joanie.core.utils.batch_order import get_active_offer_rule
+from joanie.core.utils.batch_order import get_active_offering_rule
 from joanie.payment.models import CreditCard
 
 
@@ -513,21 +513,21 @@ class ProductTargetCourseRelationSerializer(serializers.ModelSerializer):
         fields = ("code", "course_runs", "is_graded", "position", "title")
         read_only_fields = fields
 
-    def get_course_runs(self, offer) -> list[dict]:
+    def get_course_runs(self, offering) -> list[dict]:
         """Return all course runs for courses targeted by the product."""
-        queryset = offer.product.target_course_runs.filter(
-            course=offer.course
+        queryset = offering.product.target_course_runs.filter(
+            course=offering.course
         ).order_by("start")
 
         return CourseRunLightSerializer(queryset, many=True).data
 
-    def get_code(self, offer) -> str:
+    def get_code(self, offering) -> str:
         """Return the code of the targeted course"""
-        return offer.course.code
+        return offering.course.code
 
-    def get_title(self, offer) -> str:
+    def get_title(self, offering) -> str:
         """Return the title of the targeted course"""
-        return offer.course.title
+        return offering.course.title
 
 
 class OrderTargetCourseRelationSerializer(serializers.ModelSerializer):
@@ -546,21 +546,21 @@ class OrderTargetCourseRelationSerializer(serializers.ModelSerializer):
         fields = ("code", "course_runs", "is_graded", "position", "title")
         read_only_fields = fields
 
-    def get_course_runs(self, offer) -> list[dict]:
+    def get_course_runs(self, offering) -> list[dict]:
         """Return all course runs targeted by the order."""
-        queryset = offer.order.target_course_runs.filter(course=offer.course).order_by(
-            "start"
-        )
+        queryset = offering.order.target_course_runs.filter(
+            course=offering.course
+        ).order_by("start")
 
         return CourseRunLightSerializer(queryset, many=True).data
 
-    def get_code(self, offer) -> str:
+    def get_code(self, offering) -> str:
         """Return the code of the targeted course"""
-        return offer.course.code
+        return offering.course.code
 
-    def get_title(self, offer) -> str:
+    def get_title(self, offering) -> str:
         """Return the title of the targeted course"""
-        return offer.course.title
+        return offering.course.title
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
@@ -573,7 +573,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         read_only=True, slug_field="id", source="certificate"
     )
     course_run = CourseRunSerializer(read_only=True)
-    offers = serializers.SerializerMethodField(read_only=True)
+    offerings = serializers.SerializerMethodField(read_only=True)
     orders = serializers.SerializerMethodField(read_only=True)
     was_created_by_order = serializers.BooleanField(required=True)
 
@@ -586,7 +586,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             "id",
             "is_active",
             "orders",
-            "offers",
+            "offerings",
             "state",
             "was_created_by_order",
         ]
@@ -647,7 +647,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-    def get_offers(self, instance) -> list[dict]:
+    def get_offerings(self, instance) -> list[dict]:
         """
         Get products related to the enrollment's course run.
         """
@@ -658,15 +658,15 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         # call originates from a viewset (the viewset annotates the query to minimize database
         # calls) and default to querying the database ourselves
         try:
-            offers = instance.course_run.course.certificate_offers
+            offerings = instance.course_run.course.certificate_offerings
         except AttributeError:
-            offers = models.CourseProductRelation.objects.filter(
+            offerings = models.CourseProductRelation.objects.filter(
                 product__type=enums.PRODUCT_TYPE_CERTIFICATE,
                 course=instance.course_run.course,
             )
 
         return ProductRelationSerializer(
-            offers,
+            offerings,
             many=True,
         ).data
 
@@ -868,7 +868,7 @@ class CourseSerializer(AbilitiesModelSerializer):
         read_only_fields = fields
 
 
-class OfferRulePropertySerializer(serializers.Serializer):
+class OfferingRulePropertySerializer(serializers.Serializer):
     """
     Serializer for the rules property of an offer.
     """
@@ -930,9 +930,9 @@ class OfferRulePropertySerializer(serializers.Serializer):
         """Only there to avoid a NotImplementedError"""
 
 
-class OfferLightSerializer(CachedModelSerializer):
+class OfferingLightSerializer(CachedModelSerializer):
     """
-    Serialize an offer in its minimal format.
+    Serialize an offering in its minimal format.
     """
 
     course = CourseLightSerializer(read_only=True, exclude_abilities=True)
@@ -954,19 +954,19 @@ class OfferLightSerializer(CachedModelSerializer):
         read_only_fields = fields
 
 
-class OfferSerializer(OfferLightSerializer):
+class OfferingSerializer(OfferingLightSerializer):
     """
-    Serialize an offer.
+    Serialize an offering.
     """
 
     is_withdrawable = serializers.BooleanField(read_only=True)
-    rules = OfferRulePropertySerializer(
+    rules = OfferingRulePropertySerializer(
         read_only=True,
-        help_text=_("Offer rules applied to this offer."),
+        help_text=_("Offering rules applied to this offering."),
     )
 
-    class Meta(OfferLightSerializer.Meta):
-        fields = OfferLightSerializer.Meta.fields + [
+    class Meta(OfferingLightSerializer.Meta):
+        fields = OfferingLightSerializer.Meta.fields + [
             "is_withdrawable",
             "rules",
         ]
@@ -975,7 +975,7 @@ class OfferSerializer(OfferLightSerializer):
 
 class ProductRelationSerializer(CachedModelSerializer):
     """
-    Serialize an offer.
+    Serialize an offering.
     """
 
     product = ProductSerializer(read_only=True)
@@ -995,34 +995,36 @@ class GenerateSignedContractsZipSerializer(serializers.Serializer):
     Serializer used by both view and command generating a zip containing signed contracts
     """
 
-    offer_id = serializers.UUIDField(allow_null=True, required=False)
+    offering_id = serializers.UUIDField(allow_null=True, required=False)
     organization_id = serializers.UUIDField(allow_null=True, required=False)
 
     def validate(self, attrs):
         """
-        Validate that offer_id and organization_id are mutually exclusive
+        Validate that offering_id and organization_id are mutually exclusive
         but at least one is required.
 
         Also, it fetch in database the corresponding object to add them in the validated data.
         """
-        offer_id = attrs.get("offer_id")
+        offering_id = attrs.get("offering_id")
         organization_id = attrs.get("organization_id")
 
-        if not offer_id and not organization_id:
+        if not offering_id and not organization_id:
             raise serializers.ValidationError(
                 "You must set at least one parameter for the method."
-                "You must choose between an Organization UUID or an Offer UUID."
+                "You must choose between an Organization UUID or an Offering UUID."
             )
 
         errors = {}
-        if offer_id:
+        if offering_id:
             try:
-                attrs["offer"] = models.CourseProductRelation.objects.get(pk=offer_id)
+                attrs["offering"] = models.CourseProductRelation.objects.get(
+                    pk=offering_id
+                )
             except models.CourseProductRelation.DoesNotExist:
-                errors["offer_id"] = (
-                    "Make sure to give an existing offer UUID. "
+                errors["offering_id"] = (
+                    "Make sure to give an existing offering UUID. "
                     "No CourseProductRelation was found with the given "
-                    f"UUID : {attrs.get('offer_id')}."
+                    f"UUID : {attrs.get('offering_id')}."
                 )
 
         if organization_id:
@@ -1196,15 +1198,15 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=models.Product.objects.all(), slug_field="id", source="product"
     )
     target_enrollments = serializers.SerializerMethodField(read_only=True)
-    offer_rule_ids = serializers.SlugRelatedField(
-        source="offer_rules",
+    offering_rule_ids = serializers.SlugRelatedField(
+        source="offering_rules",
         many=True,
         slug_field="id",
         required=False,
         read_only=True,
     )
     target_courses = OrderTargetCourseRelationSerializer(
-        read_only=True, many=True, source="offers"
+        read_only=True, many=True, source="offerings"
     )
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
@@ -1240,7 +1242,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "enrollment",
             "id",
             "main_invoice_reference",
-            "offer_rule_ids",
+            "offering_rule_ids",
             "organization",
             "owner",
             "product_id",
@@ -1289,27 +1291,29 @@ class OrderSerializer(serializers.ModelSerializer):
         filters = {"product": product_id, "course": course_id}
         if organization_id:
             filters.update({"organizations": organization_id})
-        offer = models.CourseProductRelation.objects.get(**filters)
+        offering = models.CourseProductRelation.objects.get(**filters)
 
-        offer_rules = models.OfferRule.objects.find_actives(offer_id=offer.id)
+        offering_rules = models.OfferingRule.objects.find_actives(
+            offering_id=offering.id
+        )
         seats_limitation = None
-        for offer_rule in offer_rules:
-            if offer_rule.nb_seats is not None:
-                if offer_rule.available_seats == 0:
-                    seats_limitation = offer_rule
+        for offering_rule in offering_rules:
+            if offering_rule.nb_seats is not None:
+                if offering_rule.available_seats == 0:
+                    seats_limitation = offering_rule
                     continue
 
                 seats_limitation = None
 
-            if offer_rule.is_enabled:
-                if "offer_rules" not in validated_data:
-                    validated_data["offer_rules"] = []
-                validated_data["offer_rules"].append(offer_rule)
+            if offering_rule.is_enabled:
+                if "offering_rules" not in validated_data:
+                    validated_data["offering_rules"] = []
+                validated_data["offering_rules"].append(offering_rule)
 
         if seats_limitation:
             raise serializers.ValidationError(
                 {
-                    "offer_rule": [
+                    "offering_rule": [
                         "Maximum number of orders reached for "
                         f"product {validated_data['product'].title:s}"
                     ]
@@ -1320,14 +1324,14 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """
-        Make the "course", "organization", "offer_rule_ids", "product"
+        Make the "course", "organization", "offering_rule_ids", "product"
         and "has_waived_withdrawal_right" fields read_only only on update.
         """
         validated_data.pop("course", None)
         validated_data.pop("enrollment", None)
         validated_data.pop("organization", None)
         validated_data.pop("product", None)
-        validated_data.pop("offer_rule_ids", None)
+        validated_data.pop("offering_rule_ids", None)
         validated_data.pop("has_waived_withdrawal_right", None)
         return super().update(instance, validated_data)
 
@@ -1377,8 +1381,8 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         help_text="The number of seats to reserve",
     )
     trainees = serializers.JSONField(default=list)
-    offer_rule_ids = serializers.SlugRelatedField(
-        source="offer_rules",
+    offering_rule_ids = serializers.SlugRelatedField(
+        source="offering_rules",
         many=True,
         slug_field="id",
         required=False,
@@ -1405,7 +1409,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "country",
             "nb_seats",
             "trainees",
-            "offer_rule_ids",
+            "offering_rule_ids",
         ]
         read_only_fields = [
             "id",
@@ -1415,7 +1419,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "organization",
             "main_invoice_reference",
             "contract_id",
-            "offer_rule_ids",
+            "offering_rule_ids",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
@@ -1426,24 +1430,24 @@ class BatchOrderSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         """
-        Override to ensure that the 'offer' field is renamed to 'relation'
+        Override to ensure that the 'offering' field is renamed to 'relation'
         for consistency with the model field.
         """
-        data["relation_id"] = data.pop("offer_id", None)
+        data["relation_id"] = data.pop("offering_id", None)
         return super().to_internal_value(data)
 
     def to_representation(self, instance):
         """
-        Override to ensure that the 'relation' field is renamed to 'offer'
+        Override to ensure that the 'relation' field is renamed to 'offering'
         for consistency with the model field.
         """
         representation = super().to_representation(instance)
-        representation["offer_id"] = representation.pop("relation_id", None)
+        representation["offering_id"] = representation.pop("relation_id", None)
         return representation
 
     def create(self, validated_data):
         """
-        Verify that the number of available seats in offer rules of the offer
+        Verify that the number of available seats in offering rules of the offering
         is sufficient to meet the required seats specified in the batch order.
         """
         organization_id = self.initial_data.get("organization_id")
@@ -1451,23 +1455,23 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             organization = get_object_or_404(models.Organization, id=organization_id)
             validated_data["organization"] = organization
 
-        offer_id = self.initial_data.get("relation_id")
+        offering_id = self.initial_data.get("relation_id")
         nb_seats = self.initial_data.get("nb_seats")
-        validated_data.setdefault("offer_rules", [])
+        validated_data.setdefault("offering_rules", [])
 
         try:
-            offer_rule = get_active_offer_rule(offer_id, nb_seats)
+            offering_rule = get_active_offering_rule(offering_id, nb_seats)
         except ValueError as exception:
-            relation = models.CourseProductRelation.objects.get(id=offer_id)
+            relation = models.CourseProductRelation.objects.get(id=offering_id)
             raise serializers.ValidationError(
                 {
-                    "offer_rule": [
+                    "offering_rule": [
                         "Maximum number of orders reached for "
                         f"product {relation.product.title:s}"
                     ]
                 }
             ) from exception
-        if offer_rule:
-            validated_data["offer_rules"].append(offer_rule)
+        if offering_rule:
+            validated_data["offering_rules"].append(offering_rule)
 
         return super().create(validated_data)

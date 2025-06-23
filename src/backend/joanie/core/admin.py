@@ -20,7 +20,7 @@ from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from joanie.core import enums, forms, models
 from joanie.core.utils.batch_order import (
     assign_organization,
-    get_active_offer_rule,
+    get_active_offering_rule,
     send_mail_invitation_link,
     send_mail_vouchers,
     validate_success_payment,
@@ -205,9 +205,9 @@ class CertificateAdmin(admin.ModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
 
-@admin.register(models.OfferRule)
-class OfferRuleAdmin(admin.ModelAdmin):
-    """Admin class for the OfferRule model"""
+@admin.register(models.OfferingRule)
+class OfferingRuleAdmin(admin.ModelAdmin):
+    """Admin class for the OfferingRule model"""
 
     list_display = (
         "course_product_relation",
@@ -245,7 +245,7 @@ class OfferRuleAdmin(admin.ModelAdmin):
         return self.readonly_fields + self.readonly_update_fields
 
     def nb_available_seats(self, obj):  # pylint: disable=no-self-use
-        """Return the number of available seats for this offer rule."""
+        """Return the number of available seats for this offering rule."""
         return obj.available_seats
 
 
@@ -538,7 +538,7 @@ class DiscountAdmin(admin.ModelAdmin):
     readonly_fields = ("is_used",)
 
     def is_used(self, obj):  # pylint: disable=no-self-use
-        """Returns a counter of how many times the discount is used in offer rules"""
+        """Returns a counter of how many times the discount is used in offering rules"""
         return obj.usage_count
 
     @admin.display(description="Discount")
@@ -612,7 +612,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = (
         "id",
         "state",
-        "offer",
+        "offering",
         "organization",
         "nb_seats",
         "orders_generated",
@@ -625,7 +625,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "total",
         "contract",
         "invoice",
-        "offer_rules",
+        "offering_rules",
         "orders_generated",
     )
     fieldsets = (
@@ -647,7 +647,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
             _("Order details"),
             {
                 "fields": (
-                    "offer",
+                    "offering",
                     "organization",
                     "voucher",
                     "nb_seats",
@@ -663,7 +663,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                     "state",
                     "invoice",
                     "contract",
-                    "offer_rules",
+                    "offering_rules",
                     "orders_generated",
                 )
             },
@@ -761,17 +761,17 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 )
                 continue
 
-            if batch_order.offer_rules.exists():
+            if batch_order.offering_rules.exists():
                 if (
-                    batch_order.offer_rules.first().available_seats
+                    batch_order.offering_rules.first().available_seats
                     < batch_order.nb_seats
                 ):
-                    initial_offer_rule = batch_order.offer_rules.first()
-                    batch_order.offer_rules.remove(initial_offer_rule)
+                    initial_offering_rule = batch_order.offering_rules.first()
+                    batch_order.offering_rules.remove(initial_offering_rule)
 
                     try:
-                        offer_rule = get_active_offer_rule(
-                            offer_id=batch_order.offer.id,
+                        offering_rule = get_active_offering_rule(
+                            offering_id=batch_order.offering.id,
                             nb_seats=batch_order.nb_seats,
                         )
                     except ValueError as exception:
@@ -780,7 +780,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                             _(f"{batch_order.id} - {exception}"),
                         )
 
-                    batch_order.offer_rules.add(offer_rule)
+                    batch_order.offering_rules.add(offering_rule)
 
             invitation_link = batch_order.submit_for_signature(batch_order.owner)
             send_mail_invitation_link(batch_order, invitation_link)
