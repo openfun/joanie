@@ -13,7 +13,7 @@ import {
   ProductSimpleFactory,
 } from "@/services/factories/product";
 import { OrganizationFactory } from "@/services/factories/organizations";
-import { OfferRuleFactory } from "@/services/factories/offer-rule";
+import { OfferingRuleFactory } from "@/services/factories/offering-rule";
 import { CourseFactory } from "@/services/factories/courses";
 import { UsersFactory } from "@/services/factories/users";
 import { CreditCardFactory } from "@/services/factories/credit-cards";
@@ -42,7 +42,7 @@ const build = (state?: OrderStatesEnum): Order => {
     owner: UsersFactory(),
     product: ProductSimpleFactory(),
     organization: OrganizationFactory(),
-    offer_rule: OfferRuleFactory(),
+    offering_rule: OfferingRuleFactory(),
     enrollment: null,
     total: totalOrder,
     total_currency: "EUR",

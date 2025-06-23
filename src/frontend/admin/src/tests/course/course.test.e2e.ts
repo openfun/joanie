@@ -365,18 +365,18 @@ test.describe("Course product tab", () => {
     });
   });
 
-  test("Generate certificate on offer", async ({ page }) => {
+  test("Generate certificate on offering", async ({ page }) => {
     const course = store.list[0];
-    const offer = course.offers![0];
+    const offering = course.offerings![0];
 
     await page.route(
-      `http://localhost:8071/api/v1.0/admin/offers/${offer.id}/generate_certificates/`,
+      `http://localhost:8071/api/v1.0/admin/offerings/${offering.id}/generate_certificates/`,
       async (route, request) => {
         const methods = request.method();
         if (methods === "POST") {
           await route.fulfill({
             json: {
-              offer_id: offer.id,
+              offering_id: offering.id,
               count_certificate_to_generate: 0,
               count_exist_before_generation: 0,
             },
@@ -393,16 +393,18 @@ test.describe("Course product tab", () => {
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Products" }).click();
-    await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Offerings" }),
+    ).toBeVisible();
 
     await page.route(
-      `http://localhost:8071/api/v1.0/admin/offers/${offer.id}/check_certificates_generation_process/`,
+      `http://localhost:8071/api/v1.0/admin/offerings/${offering.id}/check_certificates_generation_process/`,
       async (route, request) => {
         const methods = request.method();
         if (methods === "GET") {
           await route.fulfill({
             json: {
-              offer_id: offer.id,
+              offering_id: offering.id,
               count_certificate_to_generate: 0,
               count_exist_before_generation: 0,
             },
@@ -411,13 +413,13 @@ test.describe("Course product tab", () => {
       },
     );
 
-    await page.getByTestId(`offer-actions-${offer.id}`).click();
+    await page.getByTestId(`offering-actions-${offering.id}`).click();
     await expect(
       page.getByRole("menuitem", { name: "Generate certificate" }),
     ).toBeVisible();
     await page.getByRole("menuitem", { name: "Generate certificate" }).click();
     await expect(
-      page.getByTestId(`already-generate-job-${offer.id}`),
+      page.getByTestId(`already-generate-job-${offering.id}`),
     ).toBeVisible();
   });
 
@@ -425,15 +427,15 @@ test.describe("Course product tab", () => {
     page,
   }) => {
     const course = store.list[0];
-    const offer = course.offers![0];
+    const offering = course.offerings![0];
     await page.route(
-      `http://localhost:8071/api/v1.0/admin/offers/${offer.id}/check_certificates_generation_process/`,
+      `http://localhost:8071/api/v1.0/admin/offerings/${offering.id}/check_certificates_generation_process/`,
       async (route, request) => {
         const methods = request.method();
         if (methods === "GET") {
           await route.fulfill({
             json: {
-              offer_id: offer.id,
+              offering_id: offering.id,
               count_certificate_to_generate: 0,
               count_exist_before_generation: 0,
             },
@@ -450,9 +452,11 @@ test.describe("Course product tab", () => {
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Products" }).click();
-    await expect(page.getByRole("heading", { name: "Offers" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Offerings" }),
+    ).toBeVisible();
 
-    await page.getByTestId(`offer-actions-${offer.id}`).click();
+    await page.getByTestId(`offering-actions-${offering.id}`).click();
     await page.getByTestId("Generate certificates").hover();
     await delay(200);
 
@@ -461,10 +465,10 @@ test.describe("Course product tab", () => {
     ).toBeVisible();
 
     await page
-      .locator(`#offer-actions-${offer.id} > .MuiBackdrop-root`)
+      .locator(`#offering-actions-${offering.id} > .MuiBackdrop-root`)
       .click();
 
-    await page.getByTestId(`already-generate-job-${offer.id}`).hover();
+    await page.getByTestId(`already-generate-job-${offering.id}`).hover();
     await delay(200);
 
     await expect(

@@ -182,12 +182,12 @@ export const mockTargetCourses = async (
   courses: Course[] = [],
   courseRuns: CourseRun[] = [],
 ) => {
-  const offerRuleRegex = catchAllIdRegex(
+  const offeringRuleRegex = catchAllIdRegex(
     `http://localhost:8071/api/v1.0/admin/products/:uuid/target-courses/`,
     ":uuid",
   );
 
-  const offerRuleUpdateRegex = catchAllIdRegex(
+  const offeringRuleUpdateRegex = catchAllIdRegex(
     `http://localhost:8071/api/v1.0/admin/products/:uuid/target-courses/:uuid/`,
     ":uuid",
   );
@@ -252,10 +252,10 @@ export const mockTargetCourses = async (
     return result;
   };
 
-  await page.unroute(offerRuleRegex);
-  await page.route(offerRuleRegex, async (route, request) => {
+  await page.unroute(offeringRuleRegex);
+  await page.route(offeringRuleRegex, async (route, request) => {
     const methods = request.method();
-    const resultMatch = request.url().match(offerRuleRegex);
+    const resultMatch = request.url().match(offeringRuleRegex);
     const productId = resultMatch?.[1] ?? "id";
 
     if (methods === "POST") {
@@ -265,10 +265,10 @@ export const mockTargetCourses = async (
     }
   });
 
-  await page.unroute(offerRuleUpdateRegex);
-  await page.route(offerRuleUpdateRegex, async (route, request) => {
+  await page.unroute(offeringRuleUpdateRegex);
+  await page.route(offeringRuleUpdateRegex, async (route, request) => {
     const methods = request.method();
-    const resultMatch = request.url().match(offerRuleUpdateRegex);
+    const resultMatch = request.url().match(offeringRuleUpdateRegex);
     const productId = resultMatch?.[1] ?? "productId";
     const targetCourseId = resultMatch?.[2] ?? "targetCourseId";
 

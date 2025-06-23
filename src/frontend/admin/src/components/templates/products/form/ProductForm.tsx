@@ -14,7 +14,7 @@ import {
   TabsComponent,
   TabValue,
 } from "@/components/presentational/tabs/TabsComponent";
-import { ProductFormOffers } from "@/components/templates/products/form/sections/offers/ProductFormOffers";
+import { ProductFormOfferings } from "@/components/templates/products/form/sections/offerings/ProductFormOfferings";
 
 const messages = defineMessages({
   syllabusTabTitle: {
@@ -116,7 +116,7 @@ export function ProductForm({ product, fromProduct, afterSubmit }: Props) {
         label: intl.formatMessage(messages.syllabusTabTitle),
         show: !!product,
         tabInfo: intl.formatMessage(messages.linkedCourseTabInfo),
-        component: <ProductFormOffers product={product!} />,
+        component: <ProductFormOfferings product={product!} />,
       });
     }
     return result;

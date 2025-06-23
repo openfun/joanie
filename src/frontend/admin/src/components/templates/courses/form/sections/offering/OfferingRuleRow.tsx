@@ -4,19 +4,22 @@ import { defineMessages, useIntl } from "react-intl";
 import { SxProps } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { DefaultRow } from "@/components/presentational/list/DefaultRow";
-import { OfferRule, OfferRuleDummy } from "@/services/api/models/OfferRule";
+import {
+  OfferingRule,
+  OfferingRuleDummy,
+} from "@/services/api/models/OfferingRule";
 import { getDiscountLabel } from "@/services/api/models/Discount";
 import { formatShortDate } from "@/utils/dates";
 
 const messages = defineMessages({
-  mainTitleOfferRule: {
-    id: "components.templates.courses.form.productRelation.row.mainTitleOfferRule",
-    description: "Title for the offer rule row",
-    defaultMessage: "Offer rule {number}",
+  mainTitleOfferingRule: {
+    id: "components.templates.courses.form.productRelation.row.mainTitleOfferingRule",
+    description: "Title for the offering rule row",
+    defaultMessage: "Offering rule {number}",
   },
-  subTitleOfferRule: {
-    id: "components.templates.courses.form.productRelation.row.subTitleOfferRule",
-    description: "Sub title for the offer rule row",
+  subTitleOfferingRule: {
+    id: "components.templates.courses.form.productRelation.row.subTitleOfferingRule",
+    description: "Sub title for the offering rule row",
     defaultMessage: "{reservedSeats}/{totalSeats} seats",
   },
   startLabel: {
@@ -34,92 +37,95 @@ const messages = defineMessages({
     description: "Discount label",
     defaultMessage: "Discount: ",
   },
-  addOfferRuleButton: {
-    id: "components.templates.courses.form.productRelation.row.addOfferRuleButton",
-    description: "Add offer rule button label",
-    defaultMessage: "Add offer rule",
+  addOfferingRuleButton: {
+    id: "components.templates.courses.form.productRelation.row.addOfferingRuleButton",
+    description: "Add offering rule button label",
+    defaultMessage: "Add offering rule",
   },
-  offerRuleIsActiveSwitchAriaLabel: {
-    id: "components.templates.courses.form.productRelation.row.offerRuleIsActiveSwitchAriaLabel",
-    description: "Aria-label for the offer rule is active switch",
-    defaultMessage: "Offer rule is active switch",
+  offeringRuleIsActiveSwitchAriaLabel: {
+    id: "components.templates.courses.form.productRelation.row.offeringRuleIsActiveSwitchAriaLabel",
+    description: "Aria-label for the offering rule is active switch",
+    defaultMessage: "Offering rule is active switch",
   },
-  offerRuleDisabledActionsMessage: {
-    id: "components.templates.courses.form.productRelation.row.offerRuleDisabledActionsMessage",
-    description: "Information message for offer rule disabled actions",
+  offeringRuleDisabledActionsMessage: {
+    id: "components.templates.courses.form.productRelation.row.offeringRuleDisabledActionsMessage",
+    description: "Information message for offering rule disabled actions",
     defaultMessage:
       "Seats have already been reserved, so you cannot perform this action.",
   },
 });
 
-const isOfferRule = (item: OfferRule | OfferRuleDummy): item is OfferRule => {
+const isOfferingRule = (
+  item: OfferingRule | OfferingRuleDummy,
+): item is OfferingRule => {
   if (!item) return false;
   return "id" in item;
 };
 
-const isOfferRuleDummy = (
-  item: OfferRule | OfferRuleDummy,
-): item is OfferRuleDummy => {
+const isOfferingRuleDummy = (
+  item: OfferingRule | OfferingRuleDummy,
+): item is OfferingRuleDummy => {
   if (!item) return false;
   return "dummyId" in item;
 };
 
 type Props = {
-  offerRule: OfferRule | OfferRuleDummy;
+  offeringRule: OfferingRule | OfferingRuleDummy;
   orderIndex: number;
   onDelete?: () => void;
   onEdit?: () => void;
   onUpdateIsActive?: (isActive: boolean) => void;
 };
-export function OfferRuleRow({
-  offerRule,
+export function OfferingRuleRow({
+  offeringRule,
   orderIndex,
   onUpdateIsActive,
   onDelete,
   onEdit,
 }: Props) {
-  const canEdit = offerRule.can_edit;
+  const canEdit = offeringRule.can_edit;
   const intl = useIntl();
-  const mainTitle = intl.formatMessage(messages.mainTitleOfferRule, {
+  const mainTitle = intl.formatMessage(messages.mainTitleOfferingRule, {
     number: orderIndex + 1,
   });
 
   function getSubTitle() {
     const rules: string[] = [];
 
-    if (offerRule.description) {
-      rules.push(offerRule.description);
+    if (offeringRule.description) {
+      rules.push(offeringRule.description);
     }
 
-    if (offerRule.nb_available_seats !== null) {
+    if (offeringRule.nb_available_seats !== null) {
       const reservedSeats =
-        (offerRule.nb_seats ?? 0) - (offerRule.nb_available_seats ?? 0);
-      const totalSeats = offerRule.nb_seats;
+        (offeringRule.nb_seats ?? 0) - (offeringRule.nb_available_seats ?? 0);
+      const totalSeats = offeringRule.nb_seats;
       rules.push(
-        intl.formatMessage(messages.subTitleOfferRule, {
+        intl.formatMessage(messages.subTitleOfferingRule, {
           reservedSeats,
           totalSeats,
         }),
       );
     }
 
-    if (offerRule.start) {
+    if (offeringRule.start) {
       rules.push(
         intl.formatMessage(messages.startLabel) +
-          formatShortDate(offerRule.start),
+          formatShortDate(offeringRule.start),
       );
     }
 
-    if (offerRule.end) {
+    if (offeringRule.end) {
       rules.push(
-        intl.formatMessage(messages.endLabel) + formatShortDate(offerRule.end),
+        intl.formatMessage(messages.endLabel) +
+          formatShortDate(offeringRule.end),
       );
     }
 
-    if (offerRule.discount) {
+    if (offeringRule.discount) {
       rules.push(
         intl.formatMessage(messages.discountLabel) +
-          getDiscountLabel(offerRule.discount),
+          getDiscountLabel(offeringRule.discount),
       );
     }
 
@@ -136,14 +142,14 @@ export function OfferRuleRow({
 
   const sxProps: SxProps = { backgroundColor: "background" };
   const disableMessage = !canEdit
-    ? intl.formatMessage(messages.offerRuleDisabledActionsMessage)
+    ? intl.formatMessage(messages.offeringRuleDisabledActionsMessage)
     : undefined;
 
-  if (isOfferRuleDummy(offerRule)) {
+  if (isOfferingRuleDummy(offeringRule)) {
     return (
       <DefaultRow
-        testId={`offer-rule-${offerRule.dummyId}`}
-        key={offerRule.dummyId}
+        testId={`offering-rule-${offeringRule.dummyId}`}
+        key={offeringRule.dummyId}
         enableDelete={false}
         enableEdit={false}
         loading={true}
@@ -154,12 +160,12 @@ export function OfferRuleRow({
     );
   }
 
-  if (isOfferRule(offerRule)) {
+  if (isOfferingRule(offeringRule)) {
     return (
       <DefaultRow
-        testId={`offer-rule-${offerRule.id}`}
-        key={offerRule.id}
-        deleteTestId={`delete-offer-rule-${offerRule.id}`}
+        testId={`offering-rule-${offeringRule.id}`}
+        key={offeringRule.id}
+        deleteTestId={`delete-offering-rule-${offeringRule.id}`}
         enableDelete={canEdit}
         enableEdit={canEdit}
         disableEditMessage={disableMessage}
@@ -173,16 +179,16 @@ export function OfferRuleRow({
           <Switch
             inputProps={{
               "aria-label": intl.formatMessage(
-                messages.offerRuleIsActiveSwitchAriaLabel,
+                messages.offeringRuleIsActiveSwitchAriaLabel,
               ),
             }}
             size="small"
-            data-testid={`is-active-switch-offer-rule-${offerRule.id}`}
+            data-testid={`is-active-switch-offering-rule-${offeringRule.id}`}
             disabled={!canEdit}
             onChange={(event, checked) => {
               onUpdateIsActive?.(checked);
             }}
-            checked={offerRule.is_active}
+            checked={offeringRule.is_active}
           />
         }
       />

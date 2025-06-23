@@ -1,17 +1,17 @@
 import * as React from "react";
 import { Course } from "@/services/api/models/Course";
-import { OfferList } from "@/components/templates/offers/offer/OfferList";
+import { OfferingList } from "@/components/templates/offerings/offering/OfferingList";
 
 type Props = {
   course: Course;
   invalidateCourse: () => void;
 };
 
-export function OffersSection({ course, invalidateCourse }: Props) {
+export function OfferingsSection({ course, invalidateCourse }: Props) {
   return (
-    <OfferList
+    <OfferingList
       courseId={course.id}
-      offers={course.offers ?? []}
+      offerings={course.offerings ?? []}
       invalidate={invalidateCourse}
     />
   );

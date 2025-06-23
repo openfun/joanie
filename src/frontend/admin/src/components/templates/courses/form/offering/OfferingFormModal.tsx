@@ -5,21 +5,21 @@ import {
   CustomModal,
   CustomModalProps,
 } from "@/components/presentational/modal/Modal";
-import { Offer, DTOOffer } from "@/services/api/models/Offers";
+import { Offering, DTOOffering } from "@/services/api/models/Offerings";
 import {
-  OfferForm,
-  OfferFormValues,
-} from "@/components/templates/courses/form/offer/OfferForm";
+  OfferingForm,
+  OfferingFormValues,
+} from "@/components/templates/courses/form/offering/OfferingForm";
 
 const messages = defineMessages({
   addModalTitle: {
     id: "components.templates.courses.form.productRelationModal.addModalTitle",
-    defaultMessage: "Add offer",
+    defaultMessage: "Add offering",
     description: "Title for productRelationModal in add mode ",
   },
   editModalTitle: {
     id: "components.templates.courses.form.productRelationModal.editModalTitle",
-    defaultMessage: "Edit offer",
+    defaultMessage: "Edit offering",
     description: "Title for productRelationModal in edit mode ",
   },
   addButton: {
@@ -42,15 +42,15 @@ enum Mode {
 interface Props extends Omit<CustomModalProps, "title"> {
   courseId?: string;
   productId?: string;
-  offer?: Offer;
-  onSubmitForm?: (payload: DTOOffer, formValues: OfferFormValues) => void;
+  offering?: Offering;
+  onSubmitForm?: (payload: DTOOffering, formValues: OfferingFormValues) => void;
 }
 
-export function OfferFormModal(props: Props) {
+export function OfferingFormModal(props: Props) {
   const intl = useIntl();
   const mode: Mode = useMemo(() => {
-    return props.offer !== undefined ? Mode.EDIT : Mode.ADD;
-  }, [props.offer]);
+    return props.offering !== undefined ? Mode.EDIT : Mode.ADD;
+  }, [props.offering]);
 
   return (
     <CustomModal
@@ -60,11 +60,11 @@ export function OfferFormModal(props: Props) {
       open={props.open}
       handleClose={props.handleClose}
     >
-      <OfferForm
+      <OfferingForm
         productId={props.productId}
         courseId={props.courseId}
-        defaultProduct={props.offer?.product}
-        defaultCourse={props.offer?.course}
+        defaultProduct={props.offering?.product}
+        defaultCourse={props.offering?.course}
         onSubmit={props.onSubmitForm}
       />
     </CustomModal>

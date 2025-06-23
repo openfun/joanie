@@ -68,10 +68,10 @@ export const courseFormMessages = defineMessages({
     defaultMessage: "Relation to products",
     description: "Label for the product relation subheader form",
   },
-  addOfferButtonLabel: {
-    id: "components.templates.course.form.translations.addOfferButtonLabel",
-    defaultMessage: "Add offer",
-    description: "Label for the offer subheader form",
+  addOfferingButtonLabel: {
+    id: "components.templates.course.form.translations.addOfferingButtonLabel",
+    defaultMessage: "Add offering",
+    description: "Label for the offering subheader form",
   },
   membersSectionInfo: {
     id: "components.templates.course.form.translations.membersSectionInfo",
