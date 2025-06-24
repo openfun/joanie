@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Add offering rules properties into the ProductRelationSerializer
+  to render discounted price for the purchase of a certificate product
 - Added discount column to csv order export
 - Added actions in admin api endpoints `BatchOrder` to validate payment,
   generate orders and send voucher codes, and send invitation signature link
