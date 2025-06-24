@@ -979,6 +979,9 @@ class ProductRelationSerializer(CachedModelSerializer):
     """
 
     product = ProductSerializer(read_only=True)
+    rules = OfferingRulePropertySerializer(
+        read_only=True, help_text=_("Offer rules applied to this offer.")
+    )
 
     class Meta:
         model = models.CourseProductRelation
@@ -986,6 +989,7 @@ class ProductRelationSerializer(CachedModelSerializer):
             "id",
             "product",
             "is_withdrawable",
+            "rules",
         ]
         read_only_fields = fields
 

@@ -266,6 +266,87 @@ class EnrollmentApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
+    def test_api_enrollment_read_list_authenticated_certificate_products_with_discounted_price(
+        self, *_
+    ):
+        """
+        When the related course run has certificate products with a discounted price,
+        they should be included in the response.
+        """
+        course_run = self.create_opened_course_run(is_listed=True)
+        enrollment = factories.EnrollmentFactory(course_run=course_run)
+        product = factories.ProductFactory(
+            type="certificate", courses=[course_run.course], price="100.00"
+        )
+        factories.OfferingRuleFactory(
+            course_product_relation=product.offerings.last(),
+            nb_seats=2,
+            discount=factories.DiscountFactory(rate=0.1),
+        )
+
+        token = self.generate_token_from_user(enrollment.user)
+
+        with self.assertNumQueries(19):
+            response = self.client.get(
+                "/api/v1.0/enrollments/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        content = response.json()
+
+        self.assertListEqual(
+            content["results"][0]["offerings"],
+            [
+                {
+                    "id": str(product.offerings.last().id),
+                    "is_withdrawable": product.offerings.last().is_withdrawable,
+                    "product": {
+                        "instructions": "",
+                        "call_to_action": "let's go!",
+                        "certificate_definition": {
+                            "description": "",
+                            "name": str(product.certificate_definition.name),
+                            "title": str(product.certificate_definition.title),
+                        },
+                        "contract_definition": None,
+                        "state": {
+                            "priority": product.state["priority"],
+                            "datetime": product.state["datetime"]
+                            .isoformat()
+                            .replace("+00:00", "Z")
+                            if product.state["datetime"]
+                            else None,
+                            "call_to_action": product.state["call_to_action"],
+                            "text": product.state["text"],
+                        },
+                        "id": str(product.id),
+                        "price": float(product.price),
+                        "price_currency": "EUR",
+                        "target_courses": [],
+                        "title": product.title,
+                        "type": "certificate",
+                    },
+                    "rules": {
+                        "description": None,
+                        "discount_amount": None,
+                        "discount_end": None,
+                        "discount_rate": 0.1,
+                        "discount_start": None,
+                        "discounted_price": 90.00,
+                        "has_seat_limit": True,
+                        "has_seats_left": True,
+                        "nb_available_seats": 2,
+                    },
+                },
+            ],
+        )
+
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
     def test_api_enrollment_read_list_authenticated_with_certificate_products(self, *_):
         """
         When the related course run has certificate products they should be
@@ -298,7 +379,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(20):
             self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -347,6 +428,17 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "title": product2.title,
                         "type": "certificate",
                     },
+                    "rules": {
+                        "description": None,
+                        "discount_amount": None,
+                        "discount_end": None,
+                        "discount_rate": None,
+                        "discount_start": None,
+                        "discounted_price": None,
+                        "has_seat_limit": False,
+                        "has_seats_left": True,
+                        "nb_available_seats": None,
+                    },
                 },
                 {
                     "id": str(product1.offerings.last().id),
@@ -376,6 +468,17 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product1.title,
                         "type": "certificate",
+                    },
+                    "rules": {
+                        "description": None,
+                        "discount_amount": None,
+                        "discount_end": None,
+                        "discount_rate": None,
+                        "discount_start": None,
+                        "discounted_price": None,
+                        "has_seat_limit": False,
+                        "has_seats_left": True,
+                        "nb_available_seats": None,
                     },
                 },
             ],
@@ -768,7 +871,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         certificate = factories.OrderCertificateFactory(order=order)
         token = self.generate_token_from_user(order.owner)
 
-        with self.assertNumQueries(32):
+        with self.assertNumQueries(33):
             response = self.client.get(
                 f"/api/v1.0/enrollments/{enrollment.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -827,6 +930,17 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product.title,
                         "type": "certificate",
+                    },
+                    "rules": {
+                        "description": None,
+                        "discount_amount": None,
+                        "discount_end": None,
+                        "discount_rate": None,
+                        "discount_start": None,
+                        "discounted_price": None,
+                        "has_seat_limit": False,
+                        "has_seats_left": True,
+                        "nb_available_seats": None,
                     },
                 },
             ],
