@@ -684,13 +684,13 @@ class ProductTargetCourseRelationFactory(
         self.course_runs.set(extracted)
 
 
-class OfferingRuleFactory(DebugModelFactory, factory.django.DjangoModelFactory):
-    """A factory to create offering rules."""
-
-    class Meta:
-        model = models.OfferingRule
-
-    course_product_relation = factory.SubFactory(OfferingFactory)
+# class OfferingRuleFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+#     """A factory to create offering rules."""
+#
+#     class Meta:
+#         model = models.OfferingRule
+#
+#     course_product_relation = factory.SubFactory(OfferingFactory)
 
 
 class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
@@ -1585,9 +1585,9 @@ class VoucherFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     class Meta:
         model = models.Voucher
 
-    offering_rule = factory.SubFactory(
-        OfferingRuleFactory,
-        discount=factory.SubFactory(DiscountFactory, rate=0.1),
-    )
+    # offering_rule = factory.SubFactory(
+    #     OfferingRuleFactory,
+    #     discount=factory.SubFactory(DiscountFactory, rate=0.1),
+    # )
     multiple_use = False
     multiple_users = False
