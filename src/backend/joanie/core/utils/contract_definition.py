@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import date, timedelta
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -145,18 +146,21 @@ def prepare_course_context(language_code, order=None):
     }
 
     if order:
+        timezone = ZoneInfo(settings.TIME_ZONE)
+
         course_dates = order.get_equivalent_course_run_dates()
         course_start = course_dates["start"]
         course_end = course_dates["end"]
         course_effort = order.course.effort
+
         # Transform duration value to ISO 8601 format
         if isinstance(course_effort, timedelta):
             course_effort = duration_iso_string(course_effort)
         # Transform date value to ISO 8601 format
         if isinstance(course_start, date):
-            course_start = course_start.isoformat()
+            course_start = course_start.astimezone(timezone).isoformat()
         if isinstance(course_end, date):
-            course_end = course_end.isoformat()
+            course_end = course_end.astimezone(timezone).isoformat()
 
         course_context.update(
             {
