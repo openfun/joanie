@@ -599,15 +599,15 @@ class NestedOfferingRuleViewSet(
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
-    serializer_classes = {
-        "create": serializers.AdminOfferingRuleCreateSerializer,
-        "update": serializers.AdminOfferingRuleUpdateSerializer,
-        "partial_update": serializers.AdminOfferingRuleUpdateSerializer,
-    }
-    default_serializer_class = serializers.AdminOfferingRuleSerializer
-    queryset = models.OfferingRule.objects.all().select_related(
-        "course_product_relation", "discount"
-    )
+    # serializer_classes = {
+    #     "create": serializers.AdminOfferingRuleCreateSerializer,
+    #     "update": serializers.AdminOfferingRuleUpdateSerializer,
+    #     "partial_update": serializers.AdminOfferingRuleUpdateSerializer,
+    # }
+    # default_serializer_class = serializers.AdminOfferingRuleSerializer
+    # queryset = models.OfferingRule.objects.all().select_related(
+    #     "course_product_relation", "discount"
+    # )
     ordering = "created_on"
     lookup_fields = ["course_product_relation", "pk"]
     lookup_url_kwargs = ["offering_id", "pk"]
