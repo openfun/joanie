@@ -345,7 +345,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
 
             serialized_course_runs.extend(
                 [
-                    course_run.get_serialized(certifying=certifying)
+                    course_run.get_serialized(certifying=certifying, product=product)
                     for course_run in course_runs
                 ]
             )
