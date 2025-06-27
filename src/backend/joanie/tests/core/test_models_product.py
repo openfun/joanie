@@ -20,6 +20,8 @@ from joanie.core.models import CourseState
 class ProductModelsTestCase(TestCase):
     """Test suite for the Product model."""
 
+    maxDiff = None
+
     def test_models_product_price_format(self):
         """
         The price field should be a money object with an amount property
@@ -479,13 +481,15 @@ class ProductModelsTestCase(TestCase):
 
         result = models.Product.get_serialized_certificated_course_runs(products)
         # Only course run linked to the certificate product should be returned
-        self.assertCountEqual(result, [runs[0].get_serialized()])
+        self.assertCountEqual(result, [runs[0].get_serialized(product=products[0])])
         self.assertEqual(result[0]["certificate_offer"], "paid")
+        self.assertEqual(result[0]["certificate_price"], products[0].price)
 
     def test_models_product_get_serialized_certificated_course_runs_certifying(self):
         """
         The get_serialized_certificated_course_runs accepts a `certifying` parameter
-        when it is sets to `False`, the certificate_offer should be set to None.
+        when it is sets to `False`, the certificate_offer and the certificate_price
+        should be set to None.
         """
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         products = [
@@ -498,7 +502,9 @@ class ProductModelsTestCase(TestCase):
             products, certifying=True
         )
         # Only course run linked to the certificate product should be returned
-        self.assertCountEqual(result, [run.get_serialized(certifying=True)])
+        self.assertCountEqual(
+            result, [run.get_serialized(certifying=True, product=products[0])]
+        )
         self.assertEqual(result[0]["certificate_offer"], "paid")
 
         result = models.Product.get_serialized_certificated_course_runs(
@@ -507,3 +513,4 @@ class ProductModelsTestCase(TestCase):
         # Only course run linked to the certificate product should be returned
         self.assertCountEqual(result, [run.get_serialized(certifying=False)])
         self.assertEqual(result[0]["certificate_offer"], None)
+        self.assertEqual(result[0]["certificate_price"], None)

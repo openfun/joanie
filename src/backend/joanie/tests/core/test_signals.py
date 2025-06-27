@@ -18,6 +18,8 @@ from joanie.core.utils import webhooks
 class SignalsTestCase(TestCase):
     """Joanie core helpers tests case"""
 
+    maxDiff = None
+
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_certificate_type_product(self, mock_sync):
         """
@@ -794,10 +796,13 @@ class SignalsTestCase(TestCase):
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
 
-        self.assertCountEqual(synchronized_course_runs, [course_run.get_serialized()])
+        self.assertCountEqual(
+            synchronized_course_runs, [course_run.get_serialized(product=product)]
+        )
 
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["certificate_offer"], "paid")
+            self.assertEqual(course_run["certificate_price"], D(50.00))
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_certificate_product_course_relation_clear(
@@ -830,6 +835,7 @@ class SignalsTestCase(TestCase):
         )
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["certificate_offer"], None)
+            self.assertEqual(course_run["certificate_price"], None)
 
     # Product course run restrict offering
 
@@ -1536,11 +1542,14 @@ class SignalsTestCase(TestCase):
         # Only cr1 and cr2 should have been synchronized
         # cr3 has been ignored because it is archived
         # The fourth course run has been ignored it does offer the certificate product
-        serialized_course_runs = [cr.get_serialized() for cr in [cr1, cr2]]
+        serialized_course_runs = [
+            cr.get_serialized(product=product) for cr in [cr1, cr2]
+        ]
         self.assertCountEqual(synchronized_course_runs, serialized_course_runs)
 
         for entry in serialized_course_runs:
             self.assertEqual(entry["certificate_offer"], "paid")
+            self.assertEqual(entry["certificate_price"], D(52.00))
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_type_credential(self, mock_sync):

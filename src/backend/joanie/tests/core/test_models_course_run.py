@@ -453,6 +453,7 @@ class CourseRunModelsTestCase(TestCase):
                 "languages": course_run.languages,
                 "catalog_visibility": "course_and_search",
                 "certificate_offer": None,
+                "certificate_price": None,
             },
         )
         course_run.is_listed = False
@@ -469,6 +470,7 @@ class CourseRunModelsTestCase(TestCase):
                 "languages": course_run.languages,
                 "catalog_visibility": "hidden",
                 "certificate_offer": None,
+                "certificate_price": None,
             },
         )
 
@@ -496,6 +498,7 @@ class CourseRunModelsTestCase(TestCase):
                 "languages": course_run.languages,
                 "catalog_visibility": "hidden",
                 "certificate_offer": None,
+                "certificate_price": None,
             },
         )
 
