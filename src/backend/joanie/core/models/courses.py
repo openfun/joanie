@@ -955,7 +955,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
 
         return f"https://{site.domain:s}{resource_path:s}"
 
-    def get_serialized(self, visibility=None, certifying=True):
+    def get_serialized(self, visibility=None, certifying=True, product=None):
         """
         Return data for the course run that will be sent to the remote web hooks.
         Course run visibility can be forced via the eponym argument.
@@ -982,6 +982,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             if self.enrollment_end
             else None,
             "certificate_offer": self.get_certificate_offer() if certifying else None,
+            "certificate_price": product.price if (certifying and product) else None,
             "languages": self.languages,
             "resource_link": self.uri,
             "start": self.start.isoformat() if self.start else None,
