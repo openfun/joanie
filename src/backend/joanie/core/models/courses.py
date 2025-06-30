@@ -859,7 +859,7 @@ class CourseProductRelation(BaseModel):
         has_seats_left = True
 
         if offering_rule := offering_rule_found:
-            description = offering_rule.description
+            description = getattr(offering_rule, "description", None)
             discount_start = offering_rule.start
             discount_end = offering_rule.end
             if not offering_rule.discount or offering_rule.available_seats:

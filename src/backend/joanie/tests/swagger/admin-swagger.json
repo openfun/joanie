@@ -7043,9 +7043,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "readOnly": true,
-                        "nullable": true,
-                        "description": "Description of the offering rule"
+                        "readOnly": true
                     }
                 },
                 "required": [

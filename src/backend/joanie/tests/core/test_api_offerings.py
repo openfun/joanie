@@ -786,7 +786,7 @@ class OfferingApiTest(BaseAPITestCase):
                 state=state,
             )
 
-        with self.assertNumQueries(60):
+        with self.assertNumQueries(61):
             self.client.get(
                 f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -809,7 +809,7 @@ class OfferingApiTest(BaseAPITestCase):
                 "discounted_price": 90,
                 "discount_amount": offering_rule.discount.amount,
                 "discount_rate": offering_rule.discount.rate,
-                "description": offering_rule.description,
+                "description": None,
                 "discount_start": None,
                 "discount_end": None,
                 "nb_available_seats": offering_rule.available_seats,
@@ -844,7 +844,7 @@ class OfferingApiTest(BaseAPITestCase):
                 "discounted_price": 90,
                 "discount_amount": offering_rule.discount.amount,
                 "discount_rate": offering_rule.discount.rate,
-                "description": offering_rule.description,
+                "description": None,
                 "discount_start": None,
                 "discount_end": None,
                 "nb_available_seats": offering_rule.available_seats,

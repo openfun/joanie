@@ -24,6 +24,7 @@ from django.utils.translation import gettext_lazy as _
 import requests
 from django_countries.fields import CountryField
 from parler import models as parler_models
+from parler.managers import TranslatableManager
 from stockholm import Money
 from urllib3.util import Retry
 
@@ -654,225 +655,235 @@ class OrderGroup(BaseModel):
             self.save(update_fields=["position"])
 
 
-# class OfferingRuleManager(models.Manager):
-#     """Custom manager for the OfferingRule model."""
-#
-#     def find_actives(self, offering_id):
-#         """
-#         Retrieve all active offering rules for a given offering,
-#         ordered by position.
-#         """
-#         return (
-#             super()
-#             .get_queryset()
-#             .filter(
-#                 is_active=True,
-#                 course_product_relation_id=offering_id,
-#             )
-#             .order_by("position")
-#         )
-#
-#
-# class OfferingRule(BaseModel):
-#     """
-#     Offering rule to define a maximum number of seats for a product
-#     and periods of enabled discount
-#     """
-#
-#     objects = OfferingRuleManager()
-#
-#     nb_seats = models.PositiveSmallIntegerField(
-#         default=None,
-#         verbose_name=_("Number of seats"),
-#         help_text=_(
-#             "The maximum number of orders that can be validated for a given offering rule"
-#         ),
-#         null=True,
-#         blank=True,
-#     )
-#     course_product_relation = models.ForeignKey(
-#         to=CourseProductRelation,
-#         verbose_name=_("course product relation"),
-#         related_name="offering_rules",
-#         on_delete=models.CASCADE,
-#     )
-#
-#     @property
-#     def offering(self):
-#         """
-#         Return the course product relation associated with the batch order.
-#         """
-#         return self.course_product_relation
-#
-#     @offering.setter
-#     def set_offering(self, value):
-#         """
-#         Set the course product relation associated with the batch order.
-#         """
-#         self.course_product_relation = value
-#
-#     is_active = models.BooleanField(_("is active"), default=True)
-#     position = models.PositiveSmallIntegerField(
-#         _("priority"),
-#         help_text=_("Priority"),
-#         default=None,
-#         null=True,
-#         blank=True,
-#     )
-#     start = models.DateTimeField(
-#         help_text=_("Date at which the offering rule rule starts"),
-#         verbose_name=_("rule starts at"),
-#         blank=True,
-#         null=True,
-#     )
-#     end = models.DateTimeField(
-#         help_text=_("Date at which the offering rule rule ends"),
-#         verbose_name=_("rule ends at"),
-#         blank=True,
-#         null=True,
-#     )
-#     discount = models.ForeignKey(
-#         to="Discount",
-#         verbose_name=_("Product price discount"),
-#         related_name="offering_rules",
-#         on_delete=models.CASCADE,
-#         null=True,
-#         blank=True,
-#     )
-#
-#
-#     class Meta:
-#         verbose_name = _("Offering rule")
-#         verbose_name_plural = _("Offering rules")
-#         ordering = ["course_product_relation", "position"]
-#         constraints = [
-#             models.CheckConstraint(
-#                 check=models.Q(start__lte=models.F("end")),
-#                 name="offering_check_start_before_end",
-#                 violation_error_message=_("Start date cannot be greater than end date"),
-#             ),
-#         ]
-#
-#     def get_nb_binding_orders(self):
-#         """Query the number of binding orders related to this offering rule."""
-#         product_id = self.course_product_relation.product_id
-#         course_id = self.course_product_relation.course_id
-#
-#         return self.orders.filter(
-#             models.Q(course_id=course_id)
-#             | models.Q(enrollment__course_run__course_id=course_id),
-#             product_id=product_id,
-#             state__in=enums.ORDER_STATES_BINDING,
-#         ).count()
-#
-#     def get_nb_to_own_orders(self):
-#         """Query the number of orders that are in `to_own` state related to this offering rule."""
-#         return self.orders.filter(
-#             course_id=self.course_product_relation.course_id,
-#             product_id=self.course_product_relation.product_id,
-#             state=enums.ORDER_STATE_TO_OWN,
-#         ).count()
-#
-#     @property
-#     def can_edit(self):
-#         """Return True if the offering rule can be edited."""
-#         return not self.orders.exists()
-#
-#     @property
-#     def available_seats(self) -> int | None:
-#         """Return the number of available seats on the offering rule, or None if unlimited."""
-#         if self.nb_seats is None:
-#             return None
-#
-#         used_seats = self.get_nb_binding_orders() + self.get_nb_to_own_orders()
-#         return self.nb_seats - used_seats
-#
-#     @property
-#     def is_enabled(self):
-#         """
-#         Returns boolean whether the offering rule is enabled based on its activation status
-#         and time constraints.
-#         """
-#         if not self.is_active:
-#             return False
-#
-#         now = timezone.now()
-#         start = self.start or now
-#         end = self.end or now
-#
-#         return start <= now <= end
-#
-#     @property
-#     def is_assignable(self):
-#         """
-#         Returns boolean whether the offering rule is enabled, and have available seats.
-#         """
-#         return self.is_enabled and self.available_seats != 0
-#
-#     def save(self, *args, **kwargs):
-#         """
-#         Override save method to assign the next available position number
-#         within its course product relation if not already set.
-#         """
-#         if not self.created_on and self.position is None:
-#             self.position = self.course_product_relation.offering_rules.count()
-#
-#         # clear product relation cache
-#         logger.debug(
-#             "Clearing caches from offering rule for course product relation %s",
-#             self.course_product_relation_id,
-#         )
-#         self.course_product_relation.clear_cache()
-#         return super().save(*args, **kwargs)
-#
-#     def delete(self, using=None, keep_parents=False):
-#         """
-#         Override delete method to clear the cache of the course product relation
-#         and to synchronize with webhooks.
-#         """
-#         # clear product relation cache
-#         logger.debug(
-#             "Clearing caches from offering rule for course product relation %s",
-#             self.course_product_relation_id,
-#         )
-#         self.course_product_relation.clear_cache()
-#         super().delete(using=using, keep_parents=keep_parents)
-#
-#     def set_position(self, position):
-#         """
-#         Set the position of the offering rule and update the positions of other offering rules
-#         in the same course product relation accordingly.
-#         """
-#         if position == self.position:
-#             return  # Nothing to do
-#
-#         # Get count and normalize position within valid range (0 to count-1)
-#         count = OfferingRule.objects.filter(
-#             course_product_relation_id=self.course_product_relation_id
-#         ).count()
-#         position = max(0, min(position, count - 1))
-#
-#         old_position = self.position
-#
-#         with transaction.atomic():
-#             if old_position < position:
-#                 # Moving down - shift intermediate items up
-#                 OfferingRule.objects.filter(
-#                     course_product_relation_id=self.course_product_relation_id,
-#                     position__gt=old_position,
-#                     position__lte=position,
-#                 ).update(position=models.F("position") - 1)
-#             else:
-#                 # Moving up - shift intermediate items down
-#                 OfferingRule.objects.filter(
-#                     course_product_relation_id=self.course_product_relation_id,
-#                     position__lt=old_position,
-#                     position__gte=position,
-#                 ).update(position=models.F("position") + 1)
-#
-#             # Update this offering rule's position
-#             self.position = position
-#             self.save(update_fields=["position"])
+class OfferingRuleManager(TranslatableManager):
+    """Custom manager for the OfferingRule model."""
+
+    def find_actives(self, offering_id):
+        """
+        Retrieve all active offering rules for a given offering,
+        ordered by position.
+        """
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                is_active=True,
+                course_product_relation_id=offering_id,
+            )
+            .order_by("position")
+        )
+
+
+class OfferingRule(parler_models.TranslatableModel, BaseModel):
+    """
+    Offering rule to define a maximum number of seats for a product
+    and periods of enabled discount
+    """
+
+    objects = OfferingRuleManager()
+
+    nb_seats = models.PositiveSmallIntegerField(
+        default=None,
+        verbose_name=_("Number of seats"),
+        help_text=_(
+            "The maximum number of orders that can be validated for a given offering rule"
+        ),
+        null=True,
+        blank=True,
+    )
+    course_product_relation = models.ForeignKey(
+        to=CourseProductRelation,
+        verbose_name=_("course product relation"),
+        related_name="offering_rules",
+        on_delete=models.CASCADE,
+    )
+
+    @property
+    def offering(self):
+        """
+        Return the course product relation associated with the batch order.
+        """
+        return self.course_product_relation
+
+    @offering.setter
+    def set_offering(self, value):
+        """
+        Set the course product relation associated with the batch order.
+        """
+        self.course_product_relation = value
+
+    is_active = models.BooleanField(_("is active"), default=True)
+    position = models.PositiveSmallIntegerField(
+        _("priority"),
+        help_text=_("Priority"),
+        default=None,
+        null=True,
+        blank=True,
+    )
+    start = models.DateTimeField(
+        help_text=_("Date at which the offering rule rule starts"),
+        verbose_name=_("rule starts at"),
+        blank=True,
+        null=True,
+    )
+    end = models.DateTimeField(
+        help_text=_("Date at which the offering rule rule ends"),
+        verbose_name=_("rule ends at"),
+        blank=True,
+        null=True,
+    )
+    discount = models.ForeignKey(
+        to="Discount",
+        verbose_name=_("Product price discount"),
+        related_name="offering_rules",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    translations = parler_models.TranslatedFields(
+        description=models.CharField(
+            _("description"),
+            help_text=_("Description of the offering rule"),
+            max_length=255,
+            blank=True,
+            null=True,
+            default=None,
+        ),
+    )
+
+    class Meta:
+        db_table = "joanie_offeringrule"
+        verbose_name = _("Offering rule")
+        verbose_name_plural = _("Offering rules")
+        ordering = ["course_product_relation", "position"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(start__lte=models.F("end")),
+                name="offering_check_start_before_end",
+                violation_error_message=_("Start date cannot be greater than end date"),
+            ),
+        ]
+
+    def get_nb_binding_orders(self):
+        """Query the number of binding orders related to this offering rule."""
+        product_id = self.course_product_relation.product_id
+        course_id = self.course_product_relation.course_id
+
+        return self.orders.filter(
+            models.Q(course_id=course_id)
+            | models.Q(enrollment__course_run__course_id=course_id),
+            product_id=product_id,
+            state__in=enums.ORDER_STATES_BINDING,
+        ).count()
+
+    def get_nb_to_own_orders(self):
+        """Query the number of orders that are in `to_own` state related to this offering rule."""
+        return self.orders.filter(
+            course_id=self.course_product_relation.course_id,
+            product_id=self.course_product_relation.product_id,
+            state=enums.ORDER_STATE_TO_OWN,
+        ).count()
+
+    @property
+    def can_edit(self):
+        """Return True if the offering rule can be edited."""
+        return not self.orders.exists()
+
+    @property
+    def available_seats(self) -> int | None:
+        """Return the number of available seats on the offering rule, or None if unlimited."""
+        if self.nb_seats is None:
+            return None
+
+        used_seats = self.get_nb_binding_orders() + self.get_nb_to_own_orders()
+        return self.nb_seats - used_seats
+
+    @property
+    def is_enabled(self):
+        """
+        Returns boolean whether the offering rule is enabled based on its activation status
+        and time constraints.
+        """
+        if not self.is_active:
+            return False
+
+        now = timezone.now()
+        start = self.start or now
+        end = self.end or now
+
+        return start <= now <= end
+
+    @property
+    def is_assignable(self):
+        """
+        Returns boolean whether the offering rule is enabled, and have available seats.
+        """
+        return self.is_enabled and self.available_seats != 0
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to assign the next available position number
+        within its course product relation if not already set.
+        """
+        if not self.created_on and self.position is None:
+            self.position = self.course_product_relation.offering_rules.count()
+
+        # clear product relation cache
+        logger.debug(
+            "Clearing caches from offering rule for course product relation %s",
+            self.course_product_relation_id,
+        )
+        self.course_product_relation.clear_cache()
+        return super().save(*args, **kwargs)
+
+    def delete(self, using=None):
+        """
+        Override delete method to clear the cache of the course product relation
+        and to synchronize with webhooks.
+        """
+        # clear product relation cache
+        logger.debug(
+            "Clearing caches from offering rule for course product relation %s",
+            self.course_product_relation_id,
+        )
+        self.course_product_relation.clear_cache()
+        super().delete(using=using)
+
+    def set_position(self, position):
+        """
+        Set the position of the offering rule and update the positions of other offering rules
+        in the same course product relation accordingly.
+        """
+        if position == self.position:
+            return  # Nothing to do
+
+        # Get count and normalize position within valid range (0 to count-1)
+        count = OfferingRule.objects.filter(
+            course_product_relation_id=self.course_product_relation_id
+        ).count()
+        position = max(0, min(position, count - 1))
+
+        old_position = self.position
+
+        with transaction.atomic():
+            if old_position < position:
+                # Moving down - shift intermediate items up
+                OfferingRule.objects.filter(
+                    course_product_relation_id=self.course_product_relation_id,
+                    position__gt=old_position,
+                    position__lte=position,
+                ).update(position=models.F("position") - 1)
+            else:
+                # Moving up - shift intermediate items down
+                OfferingRule.objects.filter(
+                    course_product_relation_id=self.course_product_relation_id,
+                    position__lt=old_position,
+                    position__gte=position,
+                ).update(position=models.F("position") + 1)
+
+            # Update this offering rule's position
+            self.position = position
+            self.save(update_fields=["position"])
 
 
 class OrderManager(models.Manager):
@@ -996,12 +1007,12 @@ class Order(BaseModel):
         related_name="_orders",
         blank=True,
     )
-    # offering_rules = models.ManyToManyField(
-    #     OfferingRule,
-    #     verbose_name=_("offering rule"),
-    #     related_name="orders",
-    #     blank=True,
-    # )
+    offering_rules = models.ManyToManyField(
+        OfferingRule,
+        verbose_name=_("offering rule"),
+        related_name="orders",
+        blank=True,
+    )
     target_courses = models.ManyToManyField(
         Course,
         related_name="target_orders",
@@ -1276,7 +1287,7 @@ class Order(BaseModel):
         there is no offering rule, the total price should be the full product price.
         """
         if self.voucher:
-            discount = self.voucher.discount  # or self.voucher.offering_rule.discount
+            discount = self.voucher.discount or self.voucher.offering_rule.discount
             if discount:
                 return calculate_price(self.product.price, discount)
 
@@ -1866,7 +1877,7 @@ class Order(BaseModel):
         """
         for offering_rule in self.offering_rules.all():
             if discount := offering_rule.discount:
-                description = offering_rule.description or ""
+                description = getattr(offering_rule, "description", None)
                 initial_price = f"{self.product.price} {get_default_currency_symbol()}"
                 return f"{discount} ({initial_price}) {description}"
 
@@ -2048,12 +2059,12 @@ class BatchOrder(BaseModel):
         choices=enums.BATCH_ORDER_STATE_CHOICES,
         db_index=True,
     )
-    # offering_rules = models.ManyToManyField(
-    #     OfferingRule,
-    #     verbose_name=_("offering rule"),
-    #     related_name="batch_orders",
-    #     blank=True,
-    # )
+    offering_rules = models.ManyToManyField(
+        OfferingRule,
+        verbose_name=_("offering rule"),
+        related_name="batch_orders",
+        blank=True,
+    )
 
     # pylint:disable=no-member
     def clean(self):
@@ -2521,14 +2532,14 @@ class Voucher(BaseModel):
         max_length=255,
         default=generate_random_code,
     )
-    # offering_rule = models.ForeignKey(
-    #     to=OfferingRule,
-    #     verbose_name=_("offering rule"),
-    #     related_name="vouchers",
-    #     on_delete=models.CASCADE,
-    #     blank=True,
-    #     null=True,
-    # )
+    offering_rule = models.ForeignKey(
+        to=OfferingRule,
+        verbose_name=_("offering rule"),
+        related_name="vouchers",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
     discount = models.ForeignKey(
         to=Discount,
         verbose_name=_("discount"),
@@ -2554,7 +2565,7 @@ class Voucher(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.code  # or str(self.offering_rule)
+        return self.code or str(self.offering_rule)
 
     def is_usable_by(self, user_id):
         """

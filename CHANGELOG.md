@@ -33,6 +33,7 @@ and this project adheres to
 - Rename `OrderGroup` to `OfferRule`
 - Rename `CourseProductRelation` to `Offer`
 - Rename `Offer` to `Offering` and `OfferRule` to `OfferingRule`
+- Update `description` field of `OfferingRule` to be translatable
 
 ### Fixed
 

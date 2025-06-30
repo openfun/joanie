@@ -205,48 +205,48 @@ class CertificateAdmin(admin.ModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
 
-# @admin.register(models.OfferingRule)
-# class OfferingRuleAdmin(admin.ModelAdmin):
-#     """Admin class for the OfferingRule model"""
-#
-#     list_display = (
-#         "course_product_relation",
-#         "position",
-#         "description",
-#         "is_active",
-#         "is_enabled",
-#         "nb_available_seats",
-#         "start",
-#         "end",
-#         "discount",
-#     )
-#     search_fields = ("course_product_relation", "start", "end")
-#     fields = (
-#         "course_product_relation",
-#         "position",
-#         "description",
-#         "is_enabled",
-#         "is_active",
-#         "nb_seats",
-#         "start",
-#         "end",
-#         "discount",
-#     )
-#     readonly_fields = ("nb_available_seats", "is_enabled")
-#     readonly_update_fields = ("course_product_relation", "nb_seats")
-#
-#     def get_readonly_fields(self, request, obj=None):
-#         """
-#         Make some fields readonly on update to avoid changing them by mistake
-#         """
-#         if obj is None:
-#             return self.readonly_fields
-#
-#         return self.readonly_fields + self.readonly_update_fields
-#
-#     def nb_available_seats(self, obj):  # pylint: disable=no-self-use
-#         """Return the number of available seats for this offering rule."""
-#         return obj.available_seats
+@admin.register(models.OfferingRule)
+class OfferingRuleAdmin(TranslatableAdmin):
+    """Admin class for the OfferingRule model"""
+
+    list_display = (
+        "course_product_relation",
+        "position",
+        "description",
+        "is_active",
+        "is_enabled",
+        "nb_available_seats",
+        "start",
+        "end",
+        "discount",
+    )
+    search_fields = ("course_product_relation", "start", "end")
+    fields = (
+        "course_product_relation",
+        "position",
+        "description",
+        "is_enabled",
+        "is_active",
+        "nb_seats",
+        "start",
+        "end",
+        "discount",
+    )
+    readonly_fields = ("nb_available_seats", "is_enabled")
+    readonly_update_fields = ("course_product_relation", "nb_seats")
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Make some fields readonly on update to avoid changing them by mistake
+        """
+        if obj is None:
+            return self.readonly_fields
+
+        return self.readonly_fields + self.readonly_update_fields
+
+    def nb_available_seats(self, obj):  # pylint: disable=no-self-use
+        """Return the number of available seats for this offering rule."""
+        return obj.available_seats
 
 
 class CourseProductRelationInline(admin.StackedInline):
@@ -625,7 +625,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "total",
         "contract",
         "invoice",
-        # "offering_rules",
+        "offering_rules",
         "orders_generated",
     )
     fieldsets = (
