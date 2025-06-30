@@ -54,7 +54,7 @@ class OfferingRuleAdminApiTest(TestCase):
 
         factories.OfferingRuleFactory.create_batch(5)
 
-        with self.assertNumQueries(19):
+        with self.assertNumQueries(22):
             response = self.client.get(f"{self.base_url}/{offering.id}/offering-rules/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -62,7 +62,7 @@ class OfferingRuleAdminApiTest(TestCase):
         expected_return = [
             {
                 "id": str(offering_rule.id),
-                "description": offering_rule.description,
+                "description": None,
                 "nb_seats": offering_rule.nb_seats,
                 "is_active": offering_rule.is_active,
                 "is_enabled": offering_rule.is_enabled,
@@ -132,6 +132,7 @@ class OfferingRuleAdminApiTest(TestCase):
             course_product_relation=offering,
             discount=factories.DiscountFactory(amount=30),
             nb_seats=10,
+            description="Sales",
         )
 
         with self.assertNumQueries(8):
@@ -208,6 +209,29 @@ class OfferingRuleAdminApiTest(TestCase):
         self.assertTrue(content["is_enabled"])
         self.assertEqual(models.OfferingRule.objects.filter(**data).count(), 1)
 
+    def test_admin_api_offering_rule_create_with_none_value_for_description(self):
+        """
+        Frontend authenticated users should be able to create an offering rule by passing
+        None value for the field description.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering = factories.OfferingFactory()
+        data = {
+            "description": None,
+        }
+
+        response = self.client.post(
+            f"{self.base_url}/{offering.id}/offering-rules/",
+            content_type="application/json",
+            data=data,
+        )
+
+        content = response.json()
+
+        self.assertIsNone(content["description"])
+
     def test_admin_api_offering_rule_create_authenticated(self):
         """
         Authenticated users should be able to request offering rules list.
@@ -220,7 +244,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": 5,
             "is_active": True,
         }
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.post(
                 f"{self.base_url}/{offering.id}/offering-rules/",
                 content_type="application/json",
@@ -264,7 +288,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": 505,
             "is_active": True,
         }
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             response = self.client.put(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -275,6 +299,34 @@ class OfferingRuleAdminApiTest(TestCase):
         self.assertEqual(content["nb_seats"], data["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
         self.assertEqual(models.OfferingRule.objects.filter(**data).count(), 1)
+
+    def test_admin_api_offering_rule_update_description_authenticated(self):
+        """
+        The frontend authenticated user should be able to put the value None
+        for the field description to reset its value to None.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering = factories.OfferingFactory()
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering, description="Sales 1"
+        )
+        data = {
+            "description": None,
+        }
+
+        with self.assertNumQueries(6):
+            response = self.client.put(
+                f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
+                content_type="application/json",
+                data=data,
+            )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIsNone(content["description"])
 
     # patch
     def test_admin_api_offering_rule_patch_anonymous(self):
@@ -308,7 +360,7 @@ class OfferingRuleAdminApiTest(TestCase):
         data = {
             "is_active": True,
         }
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.patch(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -325,6 +377,36 @@ class OfferingRuleAdminApiTest(TestCase):
             1,
         )
 
+    def test_admin_api_offering_rule_patch_authenticated_passing_none_for_description(
+        self,
+    ):
+        """
+        Frontend authenticated users should be able to patch offering rules by sending
+        `None` value for the field description to make reset its value.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering = factories.OfferingFactory()
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering, description="Sales 1"
+        )
+        data = {
+            "description": None,
+        }
+
+        with self.assertNumQueries(6):
+            response = self.client.patch(
+                f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
+                content_type="application/json",
+                data=data,
+            )
+
+        content = response.json()
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIsNone(content["description"])
+
     def test_admin_api_offering_rule_patch_authenticated_empty_nb_seats(self):
         """
         The frontend sends an empty string when the user wants to set the number of seats to None.
@@ -340,7 +422,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": "",
             "is_active": True,
         }
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.client.patch(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -385,7 +467,7 @@ class OfferingRuleAdminApiTest(TestCase):
 
         offering = factories.OfferingFactory()
         offering_rule = factories.OfferingRuleFactory(course_product_relation=offering)
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(9):
             response = self.client.delete(
                 f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
             )
@@ -403,7 +485,7 @@ class OfferingRuleAdminApiTest(TestCase):
 
         offering = factories.OfferingFactory()
         offering_rule = factories.OfferingRuleFactory(course_product_relation=offering)
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(9):
             response = self.client.delete(
                 f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
             )

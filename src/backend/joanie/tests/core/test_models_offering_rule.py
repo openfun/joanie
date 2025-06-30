@@ -8,6 +8,8 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
+from parler.utils.context import switch_language
+
 from joanie.core import enums, factories
 from joanie.core.models import OfferingRule
 
@@ -41,7 +43,7 @@ class OfferingRuleModelTestCase(TestCase):
             factories.OfferingRuleFactory(start=start, end=end)
 
         self.assertTrue(
-            'new row for relation "core_offeringrule" violates'
+            'new row for relation "joanie_offeringrule" violates'
             ' check constraint "offering_check_start_before_end"'
             in str(context.exception)
         )
@@ -346,3 +348,29 @@ class OfferingRuleModelTestCase(TestCase):
         self.assertEqual(offering_rule.available_seats, 4)
         self.assertEqual(offering_rule.get_nb_binding_orders(), 5)
         self.assertEqual(offering_rule.get_nb_to_own_orders(), 1)
+
+    def test_model_offering_rule_translatable_description_field(self):
+        """
+        Simple test to check if the translatable description field works as expected.
+        When the translation exists in the language code, we should have it output,
+        otherwise it should use the fallback language.
+        """
+        offering_rule = factories.OfferingRuleFactory(
+            description="Offering rule description"
+        )
+        # Add French translation of description field
+        offering_rule.translations.create(
+            language_code="fr-fr", description="Description règles d'offre"
+        )
+        offering_rule.save()
+
+        with switch_language(offering_rule, "en-us"):
+            self.assertEqual(offering_rule.description, "Offering rule description")
+
+        # Check for French translation
+        with switch_language(offering_rule, "fr-fr"):
+            self.assertEqual(offering_rule.description, "Description règles d'offre")
+
+        # Finally, unknown language should use the default language as fallback
+        with switch_language(offering_rule, "de-de"):
+            self.assertEqual(offering_rule.description, "Offering rule description")

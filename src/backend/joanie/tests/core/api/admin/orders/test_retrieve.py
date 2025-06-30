@@ -39,6 +39,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
         offering_rule = factories.OfferingRuleFactory(
             course_product_relation=offering,
             nb_seats=10,
+            description="Sales",
         )
         order = factories.OrderGeneratorFactory(
             course=offering.course,

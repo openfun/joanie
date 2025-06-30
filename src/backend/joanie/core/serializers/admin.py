@@ -452,118 +452,117 @@ class AdminDiscountSerializer(serializers.ModelSerializer):
         return discount.usage_count
 
 
-# class AdminOfferingRuleSerializer(serializers.ModelSerializer):
-#     """
-#     Admin Serializer for OfferingRule model
-#     """
-#
-#     nb_available_seats = serializers.SerializerMethodField(read_only=True)
-#     discount = AdminDiscountSerializer(read_only=False, required=False)
-#
-#     class Meta:
-#         model = models.OfferingRule
-#         fields = [
-#             "id",
-#             "nb_seats",
-#             "is_active",
-#             "nb_available_seats",
-#             "created_on",
-#             "can_edit",
-#             "is_enabled",
-#             "start",
-#             "end",
-#             "discount",
-#             "description",
-#         ]
-#         read_only_fields = fields
-#
-#     def get_nb_available_seats(self, offering_rule) -> int | None:
-#         """Return the number of available seats for this offering rule."""
-#         return offering_rule.available_seats
+class AdminOfferingRuleSerializer(serializers.ModelSerializer):
+    """
+    Admin Serializer for OfferingRule model
+    """
+
+    nb_available_seats = serializers.SerializerMethodField(read_only=True)
+    discount = AdminDiscountSerializer(read_only=False, required=False)
+
+    class Meta:
+        model = models.OfferingRule
+        fields = [
+            "id",
+            "nb_seats",
+            "is_active",
+            "nb_available_seats",
+            "created_on",
+            "can_edit",
+            "is_enabled",
+            "start",
+            "end",
+            "discount",
+            "description",
+        ]
+        read_only_fields = fields
+
+    def get_nb_available_seats(self, offering_rule) -> int | None:
+        """Return the number of available seats for this offering rule."""
+        return offering_rule.available_seats
 
 
-# @extend_schema_serializer(exclude_fields=("course_product_relation",))
-# class AdminOfferingRuleUpdateSerializer(AdminOfferingRuleSerializer):
-#     """
-#     Admin serializer for Offering Rule reserved for partial update and update actions.
-#
-#     It allows to update the field discount of an offering rule.
-#     """
-#
-#     nb_seats = serializers.IntegerField(
-#         required=False,
-#         allow_null=True,
-#         label=models.OfferingRule._meta.get_field("nb_seats").verbose_name,
-#         help_text=models.OfferingRule._meta.get_field("nb_seats").help_text,
-#         default=models.OfferingRule._meta.get_field("nb_seats").default,
-#         min_value=models.OfferingRule._meta.get_field("nb_seats")
-#         .validators[0]
-#         .limit_value,
-#         max_value=models.OfferingRule._meta.get_field("nb_seats")
-#         .validators[1]
-#         .limit_value,
-#     )
-#     is_active = serializers.BooleanField(
-#         required=False,
-#         default=models.OfferingRule._meta.get_field("is_active").default,
-#     )
-#     start = serializers.DateTimeField(required=False, allow_null=True)
-#     end = serializers.DateTimeField(required=False, allow_null=True)
-#     description = serializers.CharField(
-#         required=False, allow_blank=True, allow_null=True
-#     )
-#
-#     class Meta(AdminOfferingRuleSerializer.Meta):
-#         fields = [*AdminOfferingRuleSerializer.Meta.fields]
-#
-#     def to_internal_value(self, data):
-#         """
-#         Override the default to_internal_value method to remove empty strings
-#         from the data dictionary before validation.
-#         """
-#         for key in list(data.keys()):
-#             if data[key] == "":
-#                 data[key] = None
-#             elif key == "offering":
-#                 data["course_product_relation"] = data.pop("offering")
-#
-#         return super().to_internal_value(data)
-#
-#     def update(self, instance, validated_data):
-#         """Update the discount for the offering rule"""
-#         if discount_id := self.initial_data.get("discount_id"):
-#             discount = get_object_or_404(models.Discount, id=discount_id)
-#             validated_data["discount"] = discount
-#         if discount_id is None:
-#             instance.discount = None
-#
-#         return super().update(instance, validated_data)
-#
-#
-# class AdminOfferingRuleCreateSerializer(AdminOfferingRuleUpdateSerializer):
-#     """
-#     Admin Serializer for OfferingRule model reserved to create action.
-#
-#     Unlike `AdminOfferingRuleSerializer`, it allows to pass a product to create
-#     the offering rule. You can also add a discount.
-#     """
-#
-#     class Meta(AdminOfferingRuleUpdateSerializer.Meta):
-#         fields = [
-#             *AdminOfferingRuleUpdateSerializer.Meta.fields,
-#             "course_product_relation",
-#         ]
-#
-#     def create(self, validated_data):
-#         """
-#         Attach the discount to the offering rule.
-#         """
-#         if discount_id := self.initial_data.get("discount_id"):
-#             discount = get_object_or_404(models.Discount, id=discount_id)
-#             validated_data["discount"] = discount
-#
-#         return super().create(validated_data)
-#
+@extend_schema_serializer(exclude_fields=("course_product_relation",))
+class AdminOfferingRuleUpdateSerializer(AdminOfferingRuleSerializer):
+    """
+    Admin serializer for Offering Rule reserved for partial update and update actions.
+
+    It allows to update the field discount of an offering rule.
+    """
+
+    nb_seats = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        label=models.OfferingRule._meta.get_field("nb_seats").verbose_name,
+        help_text=models.OfferingRule._meta.get_field("nb_seats").help_text,
+        default=models.OfferingRule._meta.get_field("nb_seats").default,
+        min_value=models.OfferingRule._meta.get_field("nb_seats")
+        .validators[0]
+        .limit_value,
+        max_value=models.OfferingRule._meta.get_field("nb_seats")
+        .validators[1]
+        .limit_value,
+    )
+    is_active = serializers.BooleanField(
+        required=False,
+        default=models.OfferingRule._meta.get_field("is_active").default,
+    )
+    start = serializers.DateTimeField(required=False, allow_null=True)
+    end = serializers.DateTimeField(required=False, allow_null=True)
+    description = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+
+    class Meta(AdminOfferingRuleSerializer.Meta):
+        fields = [*AdminOfferingRuleSerializer.Meta.fields]
+
+    def to_internal_value(self, data):
+        """
+        Override the default to_internal_value method to remove empty strings
+        from the data dictionary before validation.
+        """
+        for key in list(data.keys()):
+            if data[key] == "":
+                data[key] = None
+            elif key == "offering":
+                data["course_product_relation"] = data.pop("offering")
+
+        return super().to_internal_value(data)
+
+    def update(self, instance, validated_data):
+        """Update the discount for the offering rule"""
+        if discount_id := self.initial_data.get("discount_id"):
+            discount = get_object_or_404(models.Discount, id=discount_id)
+            validated_data["discount"] = discount
+        if discount_id is None:
+            instance.discount = None
+
+        return super().update(instance, validated_data)
+
+
+class AdminOfferingRuleCreateSerializer(AdminOfferingRuleUpdateSerializer):
+    """
+    Admin Serializer for OfferingRule model reserved to create action.
+
+    Unlike `AdminOfferingRuleSerializer`, it allows to pass a product to create
+    the offering rule. You can also add a discount.
+    """
+
+    class Meta(AdminOfferingRuleUpdateSerializer.Meta):
+        fields = [
+            *AdminOfferingRuleUpdateSerializer.Meta.fields,
+            "course_product_relation",
+        ]
+
+    def create(self, validated_data):
+        """
+        Attach the discount to the offering rule.
+        """
+        if discount_id := self.initial_data.get("discount_id"):
+            discount = get_object_or_404(models.Discount, id=discount_id)
+            validated_data["discount"] = discount
+
+        return super().create(validated_data)
 
 
 class AdminCourseNestedSerializer(serializers.ModelSerializer):
@@ -594,7 +593,7 @@ class AdminOfferingSerializer(serializers.ModelSerializer):
     course = AdminCourseLightSerializer(read_only=True)
     product = AdminProductLightSerializer(read_only=True)
     organizations = AdminOrganizationLightSerializer(many=True, read_only=True)
-    # offering_rules = AdminOfferingRuleSerializer(many=True, read_only=True)
+    offering_rules = AdminOfferingRuleSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.CourseProductRelation
@@ -1261,7 +1260,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     certificate = AdminCertificateSerializer()
     main_invoice = AdminInvoiceSerializer()
     organization = AdminOrganizationLightSerializer(read_only=True)
-    # offering_rules = AdminOfferingRuleSerializer(read_only=True, many=True)
+    offering_rules = AdminOfferingRuleSerializer(read_only=True, many=True)
     payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
     credit_card = AdminCreditCardSerializer(read_only=True)
     has_waived_withdrawal_right = serializers.BooleanField(read_only=True)
@@ -1704,7 +1703,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         help_text="The number of seats to reserve",
     )
     trainees = serializers.JSONField(default=list)
-    # offering_rules = AdminOfferingRuleSerializer(read_only=True, many=True)
+    offering_rules = AdminOfferingRuleSerializer(read_only=True, many=True)
     vouchers = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
