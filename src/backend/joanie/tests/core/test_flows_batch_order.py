@@ -46,6 +46,20 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_ASSIGNED)
 
+    def test_flow_batch_order_quoted(self):
+        """
+        When the batch order is assigned and we generate a quote for it, it should transition
+        to quoted state.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
+        factories.QuoteFactory(batch_order=batch_order)
+
+        batch_order.flow.update()
+
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
+
     def test_flow_batch_order_to_sign_because_submit_for_signature(self):
         """
         When we submit to signature the batch order contract, it should change the state
@@ -138,3 +152,36 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
                 batch_order.flow.cancel()
 
                 self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)
+
+    def test_flow_batch_order_assigned_to_complete_related_with_quote(self):
+        """
+        When the quote related to the batch order has received the purchase order,
+        and the buyer has signed the convention (contract), then the flow can update to
+        `completed`. That way, we can generate the orders for a batch order related to a quote.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
+        quote = factories.QuoteFactory(
+            organization_signed_on=timezone.now(),
+            buyer_signed_on=timezone.now(),
+            batch_order=batch_order,
+        )
+        # Update the flow to `quoted`
+        batch_order.flow.update()
+
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
+        # Simulate that we have received the purchase order
+        quote.has_purchase_order = True
+        # Submit for signature the convention
+        batch_order.submit_for_signature(batch_order.owner)
+        # Should transition `to_sign``
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
+        # Simulate that the buyer has signed the convention
+        batch_order.contract.student_signed_on = timezone.now()
+        batch_order.flow.update()
+        # Should transition to `signing`
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
+        # Should transition to `completed`, because it is paid through quote purchase order
+        batch_order.flow.update()
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)

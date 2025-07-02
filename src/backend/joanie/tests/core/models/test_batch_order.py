@@ -316,6 +316,49 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                         "The batch order is not yet paid." in str(context.exception)
                     )
 
+    def test_models_batch_order_generate_orders_with_quote_unpaid(self):
+        """
+        Orders cannot be generated if the batch order's quote has not received the purchase order.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
+        factories.QuoteFactory(
+            organization_signed_on=django_timezone.now(),
+            buyer_signed_on=django_timezone.now(),
+            has_purchase_order=False,
+            batch_order=batch_order,
+        )
+        batch_order.flow.update()
+
+        with self.assertRaises(ValidationError) as context:
+            batch_order.generate_orders()
+        self.assertTrue("The batch order is not yet paid." in str(context.exception))
+
+    def test_models_batch_order_generate_orders_with_quote(self):
+        """
+        Orders can be generated if the batch order's quote has received the purchase order.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            nb_seats=5,
+        )
+        factories.QuoteFactory(
+            organization_signed_on=django_timezone.now(),
+            buyer_signed_on=django_timezone.now(),
+            has_purchase_order=True,
+            batch_order=batch_order,
+        )
+        batch_order.flow.update()
+
+        batch_order.generate_orders()
+
+        self.assertEqual(batch_order.orders.count(), 5)
+        for order in batch_order.orders.all():
+            self.assertIsNone(order.owner)
+            self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
+            self.assertEqual(order.voucher.discount.rate, 1)
+
     def test_models_batch_order_create_billing_address(self):
         """
         When we call the method to create a billing address, it should take
@@ -391,3 +434,37 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             batch_order.orders.exclude(state=enums.ORDER_STATE_CANCELED).exists()
         )
         self.assertFalse(models.Voucher.objects.filter(code__in=voucher_codes).exists())
+
+    def test_models_batch_order_quote_has_not_received_purchase_order(self):
+        """
+        When the quote related to the batch order has not received purchase order, it
+        should return False and not considered as paid.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
+        factories.QuoteFactory(
+            organization_signed_on=django_timezone.now(),
+            buyer_signed_on=django_timezone.now(),
+            has_purchase_order=False,
+            batch_order=batch_order,
+        )
+
+        self.assertFalse(batch_order.is_paid)
+
+    def test_models_batch_order_quote_has_received_purchase_order(self):
+        """
+        When the quote related to the batch order has received the purchase order, it
+        should return True and considered as paid.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED
+        )
+        factories.QuoteFactory(
+            organization_signed_on=django_timezone.now(),
+            buyer_signed_on=django_timezone.now(),
+            has_purchase_order=True,
+            batch_order=batch_order,
+        )
+
+        self.assertTrue(batch_order.is_paid)
