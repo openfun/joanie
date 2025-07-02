@@ -973,6 +973,19 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
                 f"of {enums.CATALOG_VISIBILITY_CHOICES} or None"
             )
 
+        certificate_discounted_price = None
+        certificate_discount = None
+        if certifying and product:
+            offering = (
+                CourseProductRelation.objects.get(course=self.course, product=product)
+                if product
+                else None
+            )
+
+            if offering and offering.rules.get("discounted_price"):
+                certificate_discounted_price = offering.rules["discounted_price"]
+                certificate_discount = offering.rules.get("discount")
+
         return {
             "catalog_visibility": visibility
             or (enums.COURSE_AND_SEARCH if self.is_listed else enums.HIDDEN),
@@ -986,6 +999,8 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             else None,
             "certificate_offer": self.get_certificate_offer() if certifying else None,
             "certificate_price": product.price if (certifying and product) else None,
+            "certificate_discounted_price": certificate_discounted_price,
+            "certificate_discount": certificate_discount,
             "languages": self.languages,
             "resource_link": self.uri,
             "start": self.start.isoformat() if self.start else None,

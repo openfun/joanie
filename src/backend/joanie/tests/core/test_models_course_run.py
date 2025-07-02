@@ -454,6 +454,8 @@ class CourseRunModelsTestCase(TestCase):
                 "catalog_visibility": "course_and_search",
                 "certificate_offer": None,
                 "certificate_price": None,
+                "certificate_discounted_price": None,
+                "certificate_discount": None,
             },
         )
         course_run.is_listed = False
@@ -471,6 +473,8 @@ class CourseRunModelsTestCase(TestCase):
                 "catalog_visibility": "hidden",
                 "certificate_offer": None,
                 "certificate_price": None,
+                "certificate_discounted_price": None,
+                "certificate_discount": None,
             },
         )
 
@@ -499,6 +503,8 @@ class CourseRunModelsTestCase(TestCase):
                 "catalog_visibility": "hidden",
                 "certificate_offer": None,
                 "certificate_price": None,
+                "certificate_discounted_price": None,
+                "certificate_discount": None,
             },
         )
 
