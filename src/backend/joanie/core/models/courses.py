@@ -851,6 +851,7 @@ class CourseProductRelation(BaseModel):
         discounted_price = None
         discount_amount = None
         discount_rate = None
+        discount = None
         description = None
         discount_start = None
         discount_end = None
@@ -878,11 +879,13 @@ class CourseProductRelation(BaseModel):
                 )
                 discount_amount = offering_rule.discount.amount
                 discount_rate = offering_rule.discount.rate
+                discount = str(offering_rule.discount)
 
         return {
             "discounted_price": discounted_price,
             "discount_amount": discount_amount,
             "discount_rate": discount_rate,
+            "discount": discount,
             "description": description,
             "discount_start": discount_start,
             "discount_end": discount_end,
