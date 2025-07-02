@@ -83,7 +83,12 @@ def on_change_course_runs_to_product_target_course_relation(
 def on_save_course_run(instance, **kwargs):
     """Synchronize the course run and products related to the course run being saved."""
     # Synchronize the course run itself
-    serialized_course_runs = [instance.get_serialized()]
+    if products := instance.course.products.all():
+        serialized_course_runs = [
+            instance.get_serialized(product=product) for product in products
+        ]
+    else:
+        serialized_course_runs = [instance.get_serialized()]
 
     # Synchronize the related products by recomputing their equivalent serialized course run
     serialized_course_runs.extend(

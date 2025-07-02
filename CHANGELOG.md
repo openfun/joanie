@@ -22,6 +22,7 @@ and this project adheres to
 - Add discounted price to course product relation serializer
 - Add description to order group form in the back office
 - Sync discount str representation
+- Sync course run related discount
 
 ### Changed
 
