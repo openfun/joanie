@@ -309,12 +309,12 @@ class Product(parler_models.TranslatableModel, BaseModel):
             if courses:
                 offerings = offerings.filter(course__in=courses)
 
-            for relation in offerings.iterator():
+            for offering in offerings.iterator():
                 equivalent_course_runs.append(
                     {
                         **course_run_data,
-                        "resource_link": relation.uri,
-                        "course": relation.course.code,
+                        "resource_link": offering.uri,
+                        "course": offering.course.code,
                     }
                 )
 

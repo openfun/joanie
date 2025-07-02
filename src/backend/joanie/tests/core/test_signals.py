@@ -186,6 +186,66 @@ class SignalsTestCase(TestCase):
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_save_course_run_target_course_certificate(self, mock_sync):
+        """
+        Webhook should be triggered when a course run is saved, updating the equivalent
+        course run of products related via target course and the course run itself.
+        """
+        course_run = factories.CourseRunFactory(
+            start=datetime(2022, 7, 7, 7, 0, tzinfo=ZoneInfo("UTC")),
+            is_listed=True,
+            is_gradable=True,
+        )
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE, courses=[course_run.course]
+        )
+        mock_sync.reset_mock()
+
+        course_run.save()
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        self.assertEqual(synchronized_course_run["certificate_price"], product.price)
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_save_course_run_target_course_certificate_discount(
+        self, mock_sync
+    ):
+        """
+        Webhook should be triggered when a course run is saved, updating the equivalent
+        course run of products related via target course and the course run itself.
+        """
+        course_run = factories.CourseRunFactory(
+            start=datetime(2022, 7, 7, 7, 0, tzinfo=ZoneInfo("UTC")),
+            is_listed=True,
+            is_gradable=True,
+        )
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[course_run.course],
+            price=D("100.00"),
+        )
+        offering = product.offerings.first()
+        factories.OfferingRuleFactory(
+            discount=factories.DiscountFactory(rate=0.1),
+            course_product_relation=offering,
+            is_active=True,
+        )
+
+        mock_sync.reset_mock()
+
+        course_run.save()
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        self.assertEqual(synchronized_course_run["certificate_price"], product.price)
+        self.assertEqual(
+            synchronized_course_run["certificate_discounted_price"],
+            D("90.00"),
+        )
+        self.assertEqual(synchronized_course_run["certificate_discount"], "-10%")
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_delete_course_run_object(
         self,
         mock_sync,
