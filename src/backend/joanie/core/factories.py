@@ -1243,6 +1243,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
         # Execute transitions based on target state
         if extracted == enums.BATCH_ORDER_STATE_CANCELED:
+            self.flow.cancel()
             return
 
         if extracted == enums.BATCH_ORDER_STATE_DRAFT:
@@ -1252,6 +1253,10 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
         # Initialize flow for all non-draft states
         self.init_flow()
+
+        if extracted in [enums.BATCH_ORDER_STATE_QUOTED]:
+            QuoteFactory(batch_order=self)
+            self.flow.update()
 
         if extracted in [
             enums.BATCH_ORDER_STATE_TO_SIGN,
@@ -1298,6 +1303,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             TransactionFactory(
                 invoice=invoice, total=self.total, reference=f"{self.id}"
             )
+            self.flow.update()
 
         self.save()
 

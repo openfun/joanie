@@ -43,7 +43,7 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
     ):
         """
         Authenticated admin user should not be able to submit for signature the contract
-        of a batch order if the state is not in `to_sign` or `assigned`.
+        of a batch order if the state is not in `to_sign` or `assigned` or `quoted`.
         """
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
@@ -52,7 +52,11 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
             state
             for state, _ in enums.BATCH_ORDER_STATE_CHOICES
             if state
-            not in [enums.BATCH_ORDER_STATE_ASSIGNED, enums.BATCH_ORDER_STATE_TO_SIGN]
+            not in [
+                enums.BATCH_ORDER_STATE_ASSIGNED,
+                enums.BATCH_ORDER_STATE_QUOTED,
+                enums.BATCH_ORDER_STATE_TO_SIGN,
+            ]
         ]
 
         for state in batch_order_states:

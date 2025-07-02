@@ -2264,6 +2264,7 @@ class BatchOrder(BaseModel):
         return self.state in [
             enums.BATCH_ORDER_STATE_ASSIGNED,
             enums.BATCH_ORDER_STATE_TO_SIGN,
+            enums.BATCH_ORDER_STATE_QUOTED,
         ]
 
     @property
@@ -2286,6 +2287,9 @@ class BatchOrder(BaseModel):
     @property
     def is_ready_for_payment(self):
         """Return boolean value whether the batch order can be submitted to payment"""
+        if self.has_quote:  # the payment is done through the quote
+            return False
+
         return self.is_signed_by_owner is True and self.state in [
             enums.BATCH_ORDER_STATE_SIGNING,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
@@ -2305,6 +2309,9 @@ class BatchOrder(BaseModel):
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.
         """
+        if self.has_quote:
+            return self.quote.has_received_purchase_order
+
         child_invoice = self.invoices.filter(
             batch_order=self, parent=self.main_invoice, total=0
         ).first()
@@ -2318,6 +2325,11 @@ class BatchOrder(BaseModel):
     def has_orders_generated(self):
         """Return boolean value whether the batch order has the orders generated"""
         return self.orders.exists()
+
+    @property
+    def has_quote(self):
+        """Return boolean value whether the batch order is related to a quote"""
+        return hasattr(self, "quote")
 
     def cancel_orders(self):
         """

@@ -46,6 +46,18 @@ class BatchOrderFlow:
         Mark batch order as "assign" state.
         """
 
+    def _can_be_quoted(self):
+        """A batch order can be quoted if it is related to a quote"""
+        return hasattr(self.instance, "quote")
+
+    @state.transition(
+        source=enums.BATCH_ORDER_STATE_ASSIGNED,
+        target=enums.BATCH_ORDER_STATE_QUOTED,
+        conditions=[_can_be_quoted],
+    )
+    def quoted(self):
+        "Mark batch order as quoted"
+
     def _can_be_state_to_sign(self):
         """
         A batch order state can be set to `to_sign` if it has an unsigned contract but
@@ -57,7 +69,10 @@ class BatchOrderFlow:
         )
 
     @state.transition(
-        source=enums.BATCH_ORDER_STATE_ASSIGNED,
+        source=[
+            enums.BATCH_ORDER_STATE_ASSIGNED,
+            enums.BATCH_ORDER_STATE_QUOTED,
+        ],
         target=enums.BATCH_ORDER_STATE_TO_SIGN,
         conditions=[_can_be_state_to_sign],
     )
@@ -127,7 +142,10 @@ class BatchOrderFlow:
         return self.instance.is_paid
 
     @state.transition(
-        source=enums.BATCH_ORDER_STATE_PENDING,
+        source=[
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+        ],
         target=enums.BATCH_ORDER_STATE_COMPLETED,
         conditions=[_can_be_state_completed],
     )
@@ -141,6 +159,7 @@ class BatchOrderFlow:
         logger.debug("Transitioning batch order %s", self.instance.id)
         for transition in [
             self.assign,
+            self.quoted,
             self.to_sign,
             self.signing,
             self.pending,
@@ -160,10 +179,16 @@ class BatchOrderFlow:
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
         """Post transition actions"""
         # When the batch order payment is successful, we should log the payment in Activity Log
+        # When the batch order is related to a quote, the state goes from `signing`
+        # to `completed` only if it's paid through purchase order
         ActivityLog = apps.get_model("core", "ActivityLog")  # pylint: disable=invalid-name
         if (
             source
-            in [enums.BATCH_ORDER_STATE_PENDING, enums.BATCH_ORDER_STATE_FAILED_PAYMENT]
+            in [
+                enums.BATCH_ORDER_STATE_SIGNING,
+                enums.BATCH_ORDER_STATE_PENDING,
+                enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+            ]
             and target == enums.BATCH_ORDER_STATE_COMPLETED
         ):
             ActivityLog.create_payment_succeeded_activity_log(self.instance)
