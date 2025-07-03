@@ -973,18 +973,34 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
                 f"of {enums.CATALOG_VISIBILITY_CHOICES} or None"
             )
 
+        price = None
+        discounted_price = None
+        discount = None
+        certificate_offer = None
+        certificate_price = None
         certificate_discounted_price = None
         certificate_discount = None
-        if certifying and product:
-            offering = (
-                CourseProductRelation.objects.get(course=self.course, product=product)
-                if product
-                else None
-            )
+        if product:
+            price = product.price
 
+            try:
+                offering = CourseProductRelation.objects.get(
+                    course=self.course, product=product
+                )
+            except CourseProductRelation.DoesNotExist:
+                offering = None
             if offering and offering.rules.get("discounted_price"):
-                certificate_discounted_price = offering.rules["discounted_price"]
-                certificate_discount = offering.rules.get("discount")
+                discounted_price = offering.rules.get("discounted_price")
+                discount = offering.rules.get("discount")
+
+        if certifying:
+            certificate_offer = self.get_certificate_offer()
+            certificate_price = price
+            certificate_discounted_price = discounted_price
+            certificate_discount = discount
+            price = None
+            discounted_price = None
+            discount = None
 
         return {
             "catalog_visibility": visibility
@@ -997,8 +1013,11 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             "enrollment_end": self.enrollment_end.isoformat()
             if self.enrollment_end
             else None,
-            "certificate_offer": self.get_certificate_offer() if certifying else None,
-            "certificate_price": product.price if (certifying and product) else None,
+            "price": price,
+            "discounted_price": discounted_price,
+            "discount": discount,
+            "certificate_offer": certificate_offer,
+            "certificate_price": certificate_price,
             "certificate_discounted_price": certificate_discounted_price,
             "certificate_discount": certificate_discount,
             "languages": self.languages,

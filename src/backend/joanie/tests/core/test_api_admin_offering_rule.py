@@ -244,7 +244,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": 5,
             "is_active": True,
         }
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(12):
             response = self.client.post(
                 f"{self.base_url}/{offering.id}/offering-rules/",
                 content_type="application/json",
@@ -288,7 +288,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": 505,
             "is_active": True,
         }
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(11):
             response = self.client.put(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -316,7 +316,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "description": None,
         }
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(9):
             response = self.client.put(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -360,7 +360,7 @@ class OfferingRuleAdminApiTest(TestCase):
         data = {
             "is_active": True,
         }
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(9):
             response = self.client.patch(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -395,7 +395,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "description": None,
         }
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(9):
             response = self.client.patch(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -422,7 +422,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": "",
             "is_active": True,
         }
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(9):
             response = self.client.patch(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
