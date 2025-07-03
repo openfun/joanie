@@ -511,6 +511,8 @@ class ProductModelsTestCase(TestCase):
             products, certifying=False
         )
         # Only course run linked to the certificate product should be returned
-        self.assertCountEqual(result, [run.get_serialized(certifying=False)])
+        self.assertCountEqual(
+            result, [run.get_serialized(certifying=False, product=products[0])]
+        )
         self.assertEqual(result[0]["certificate_offer"], None)
         self.assertEqual(result[0]["certificate_price"], None)

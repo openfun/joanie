@@ -23,6 +23,7 @@ and this project adheres to
 - Add description to order group form in the back office
 - Sync discount str representation
 - Sync course run related discount
+- Trigger sync when an offering rule is saved
 
 ### Changed
 
