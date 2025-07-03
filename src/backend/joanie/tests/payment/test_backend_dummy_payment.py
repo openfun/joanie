@@ -13,17 +13,22 @@ from django.urls import reverse
 from rest_framework.test import APIRequestFactory
 
 from joanie.core.enums import (
+    BATCH_ORDER_STATE_COMPLETED,
+    BATCH_ORDER_STATE_FAILED_PAYMENT,
+    BATCH_ORDER_STATE_PENDING,
     ORDER_STATE_COMPLETED,
     ORDER_STATE_NO_PAYMENT,
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
     ORDER_STATE_REFUNDED,
     ORDER_STATE_REFUNDING,
+    ORDER_STATE_TO_OWN,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUNDED,
 )
 from joanie.core.factories import (
+    BatchOrderFactory,
     OrderFactory,
     OrderGeneratorFactory,
     UserFactory,
@@ -37,10 +42,13 @@ from joanie.payment.exceptions import (
     RegisterPaymentFailed,
 )
 from joanie.payment.models import CreditCard, Transaction
+from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
-class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-many-public-methods
+@override_settings(JOANIE_CATALOG_NAME="Test Catalog")
+@override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
+class DummyPaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase):  # pylint: disable=too-many-public-methods
     """Test case for the Dummy Payment Backend"""
 
     def setUp(self):
@@ -812,3 +820,86 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase):  # pylint: disable=too-m
             str(context.exception),
             f"Resource {transaction.reference} amount does not match the amount to refund",
         )
+
+    def test_payment_backend_dummy_handle_notification_for_batch_order_payment_failed(
+        self,
+    ):
+        """
+        When backend is notified that a failed payment, the batch order in state `pending` should
+        transition to `failed_payment`.
+        """
+        backend = DummyPaymentBackend()
+
+        batch_order = BatchOrderFactory(state=BATCH_ORDER_STATE_PENDING)
+
+        # Create a payment
+        payment_id = backend.create_payment(
+            order=batch_order,
+            billing_address=batch_order.main_invoice.recipient_address,
+            installment=None,
+        )["payment_id"]
+
+        # Notify that the payment has failed
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"),
+            data={"id": payment_id, "type": "payment", "state": "failed"},
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+        backend.handle_notification(request)
+
+        batch_order.refresh_from_db()
+
+        self.assertEqual(batch_order.state, BATCH_ORDER_STATE_FAILED_PAYMENT)
+        self.assertPaymentFailedActivityLog(batch_order)
+
+    def test_payment_backend_dummy_handle_notification_for_batch_order_payment_success(
+        self,
+    ):
+        """
+        When backend is notified of a success payment, the batch order in `pending` state should
+        transition to `completed`. A child invoice, a transaction and the orders linked to the
+        batch order should be generated.
+        """
+        backend = DummyPaymentBackend()
+        batch_order = BatchOrderFactory(
+            state=BATCH_ORDER_STATE_PENDING, nb_seats=2, offering__product__price=100
+        )
+
+        # Create a payment
+        payment_id = backend.create_payment(
+            order=batch_order,
+            billing_address=batch_order.main_invoice.recipient_address,
+            installment=None,
+        )["payment_id"]
+
+        # Verify that no orders, no transaction and children invoice exist yet
+        self.assertEqual(batch_order.orders.count(), 0)
+        self.assertFalse(Transaction.objects.filter(reference=payment_id).exists())
+        self.assertEqual(batch_order.main_invoice.children.count(), 0)
+
+        # Notify that the payment has succeeded
+        request = APIRequestFactory().post(
+            reverse("payment_webhook"),
+            data={"id": payment_id, "type": "payment", "state": "success"},
+            format="json",
+        )
+        request.data = json.loads(request.body.decode("utf-8"))
+        backend.handle_notification(request)
+
+        batch_order.refresh_from_db()
+
+        self.assertEqual(batch_order.state, BATCH_ORDER_STATE_COMPLETED)
+        self.assertEqual(batch_order.orders.count(), 2)
+        for order in batch_order.orders.all():
+            self.assertEqual(order.state, ORDER_STATE_TO_OWN)
+            self.assertEqual(order.voucher.discount.rate, 1)
+        self.assertTrue(Transaction.objects.filter(reference=payment_id).exists())
+        self.assertTrue(batch_order.main_invoice.children.count(), 1)
+
+        # check email has been sent
+        self._check_batch_order_paid_email_sent(
+            email=batch_order.owner.email, batch_order=batch_order
+        )
+
+        self.assertPaymentSuccessActivityLog(batch_order)

@@ -11,7 +11,7 @@ from django.utils import timezone
 from rest_framework.test import APIRequestFactory
 from stockholm import Money
 
-from joanie.core.models import Order, User
+from joanie.core.models import BatchOrder, Order, User
 from joanie.payment import exceptions
 from joanie.payment.backends.base import BasePaymentBackend
 from joanie.payment.models import CreditCard, Transaction
@@ -59,6 +59,24 @@ class DummyPaymentBackend(BasePaymentBackend):
                 f"{', '.join(DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_CHOICES)} as value."
             )
 
+        # For case when it's a batch order
+        try:
+            batch_order = BatchOrder.objects.get(id=order_id)
+        except BatchOrder.DoesNotExist:
+            batch_order = None
+        if batch_order:
+            if data.get("state") == DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_FAILED:
+                return self._do_on_batch_order_payment_failure(batch_order=batch_order)
+
+            if data.get("state") == DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_SUCCESS:
+                payment = {
+                    "id": resource.get("id"),
+                    "amount": D(f"{resource.get('amount') / 100:.2f}"),
+                    "billing_address": resource.get("billing_address"),
+                }
+                return self._do_on_batch_order_payment_success(batch_order, payment)
+
+        # For case when it's an order
         try:
             order = Order.objects.get(id=order_id)
         except Order.DoesNotExist as error:
@@ -76,15 +94,16 @@ class DummyPaymentBackend(BasePaymentBackend):
 
         installment_id = str(resource["metadata"].get("installment_id"))
         if data.get("state") == DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_FAILED:
-            self._do_on_payment_failure(order, installment_id=installment_id)
-        elif data.get("state") == DUMMY_PAYMENT_BACKEND_PAYMENT_STATE_SUCCESS:
-            payment = {
-                "id": resource.get("id"),
-                "amount": D(f"{resource.get('amount') / 100:.2f}"),
-                "billing_address": resource.get("billing_address"),
-                "installment_id": installment_id,
-            }
-            self._do_on_payment_success(order, payment)
+            return self._do_on_payment_failure(order, installment_id=installment_id)
+
+        payment = {
+            "id": resource.get("id"),
+            "amount": D(f"{resource.get('amount') / 100:.2f}"),
+            "billing_address": resource.get("billing_address"),
+            "installment_id": installment_id,
+        }
+
+        return self._do_on_payment_success(order, payment)
 
     def _treat_refund(self, resource, amount):
         """
