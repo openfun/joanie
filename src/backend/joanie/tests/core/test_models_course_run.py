@@ -452,7 +452,13 @@ class CourseRunModelsTestCase(TestCase):
                 "enrollment_end": "2022-09-09T09:00:00+00:00",
                 "languages": course_run.languages,
                 "catalog_visibility": "course_and_search",
+                "price": None,
+                "discounted_price": None,
+                "discount": None,
                 "certificate_offer": None,
+                "certificate_price": None,
+                "certificate_discounted_price": None,
+                "certificate_discount": None,
             },
         )
         course_run.is_listed = False
@@ -468,7 +474,13 @@ class CourseRunModelsTestCase(TestCase):
                 "enrollment_end": "2022-09-09T09:00:00+00:00",
                 "languages": course_run.languages,
                 "catalog_visibility": "hidden",
+                "price": None,
+                "discounted_price": None,
+                "discount": None,
                 "certificate_offer": None,
+                "certificate_price": None,
+                "certificate_discounted_price": None,
+                "certificate_discount": None,
             },
         )
 
@@ -495,7 +507,13 @@ class CourseRunModelsTestCase(TestCase):
                 "enrollment_end": "2022-09-09T09:00:00+00:00",
                 "languages": course_run.languages,
                 "catalog_visibility": "hidden",
+                "price": None,
+                "discounted_price": None,
+                "discount": None,
                 "certificate_offer": None,
+                "certificate_price": None,
+                "certificate_discounted_price": None,
+                "certificate_discount": None,
             },
         )
 

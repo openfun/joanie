@@ -83,7 +83,12 @@ def on_change_course_runs_to_product_target_course_relation(
 def on_save_course_run(instance, **kwargs):
     """Synchronize the course run and products related to the course run being saved."""
     # Synchronize the course run itself
-    serialized_course_runs = [instance.get_serialized()]
+    if products := instance.course.products.all():
+        serialized_course_runs = [
+            instance.get_serialized(product=product) for product in products
+        ]
+    else:
+        serialized_course_runs = [instance.get_serialized()]
 
     # Synchronize the related products by recomputing their equivalent serialized course run
     serialized_course_runs.extend(
@@ -183,6 +188,26 @@ def on_change_offering(action, instance, pk_set, **kwargs):
             return
     else:
         return
+
+    webhooks.synchronize_course_runs(serialized_course_runs)
+
+
+def on_save_offering_rule(instance: models.OfferingRule, **kwargs):
+    """
+    Synchronize course runs related to the offering rule being saved.
+    """
+    product = instance.offering.product
+    course = instance.offering.course
+    course_runs = course.course_runs.all()
+    serialized_course_runs = []
+    for course_run in course_runs:
+        certifying = product.type == enums.PRODUCT_TYPE_CERTIFICATE
+        serialized_course_runs.append(
+            course_run.get_serialized(certifying=certifying, product=product)
+        )
+        serialized_course_runs.append(
+            course_run.get_equivalent_serialized_course_runs_for_related_products()
+        )
 
     webhooks.synchronize_course_runs(serialized_course_runs)
 

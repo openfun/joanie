@@ -31,6 +31,11 @@ class CoreConfig(AppConfig):
             sender=models.Product,
             dispatch_uid="save_product",
         )
+        post_save.connect(
+            signals.on_save_offering_rule,
+            sender=models.OfferingRule,
+            dispatch_uid="save_offering_rule",
+        )
         m2m_changed.connect(
             signals.on_change_offering,
             sender=models.Course.products.through,

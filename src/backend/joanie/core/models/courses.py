@@ -851,6 +851,7 @@ class CourseProductRelation(BaseModel):
         discounted_price = None
         discount_amount = None
         discount_rate = None
+        discount = None
         description = None
         discount_start = None
         discount_end = None
@@ -878,11 +879,13 @@ class CourseProductRelation(BaseModel):
                 )
                 discount_amount = offering_rule.discount.amount
                 discount_rate = offering_rule.discount.rate
+                discount = str(offering_rule.discount)
 
         return {
             "discounted_price": discounted_price,
             "discount_amount": discount_amount,
             "discount_rate": discount_rate,
+            "discount": discount,
             "description": description,
             "discount_start": discount_start,
             "discount_end": discount_end,
@@ -955,7 +958,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
 
         return f"https://{site.domain:s}{resource_path:s}"
 
-    def get_serialized(self, visibility=None, certifying=True):
+    def get_serialized(self, visibility=None, certifying=True, product=None):
         """
         Return data for the course run that will be sent to the remote web hooks.
         Course run visibility can be forced via the eponym argument.
@@ -970,6 +973,35 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
                 f"of {enums.CATALOG_VISIBILITY_CHOICES} or None"
             )
 
+        price = None
+        discounted_price = None
+        discount = None
+        certificate_offer = None
+        certificate_price = None
+        certificate_discounted_price = None
+        certificate_discount = None
+        if product:
+            price = product.price
+
+            try:
+                offering = CourseProductRelation.objects.get(
+                    course=self.course, product=product
+                )
+            except CourseProductRelation.DoesNotExist:
+                offering = None
+            if offering and offering.rules.get("discounted_price"):
+                discounted_price = offering.rules.get("discounted_price")
+                discount = offering.rules.get("discount")
+
+        if certifying:
+            certificate_offer = self.get_certificate_offer()
+            certificate_price = price
+            certificate_discounted_price = discounted_price
+            certificate_discount = discount
+            price = None
+            discounted_price = None
+            discount = None
+
         return {
             "catalog_visibility": visibility
             or (enums.COURSE_AND_SEARCH if self.is_listed else enums.HIDDEN),
@@ -981,7 +1013,13 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             "enrollment_end": self.enrollment_end.isoformat()
             if self.enrollment_end
             else None,
-            "certificate_offer": self.get_certificate_offer() if certifying else None,
+            "price": price,
+            "discounted_price": discounted_price,
+            "discount": discount,
+            "certificate_offer": certificate_offer,
+            "certificate_price": certificate_price,
+            "certificate_discounted_price": certificate_discounted_price,
+            "certificate_discount": certificate_discount,
             "languages": self.languages,
             "resource_link": self.uri,
             "start": self.start.isoformat() if self.start else None,
