@@ -858,6 +858,46 @@ class SignalsTestCase(TestCase):
         self.assertEqual(synchronized_course_run["price"], D(100.00))
         self.assertEqual(synchronized_course_run["discounted_price"], D(90.00))
         self.assertEqual(synchronized_course_run["discount"], "-10%")
+        self.assertEqual(synchronized_course_run["certificate_offer"], None)
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_change_offering_rule_create_credential_is_gradded(
+        self, mock_sync
+    ):
+        """
+        Product synchronization should be triggered when an offering rule is created
+        for a credential product with is_graded set to True.
+        """
+        course_run = factories.CourseRunFactory()
+        product = factories.ProductFactory(
+            courses=[course_run.course],
+            price="100.00",
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+        product.target_course_relations.set(
+            [
+                factories.ProductTargetCourseRelationFactory(
+                    is_graded=True,
+                )
+            ]
+        )
+        offering = product.offerings.get()
+        mock_sync.reset_mock()
+
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            discount=factories.DiscountFactory(rate=0.1),
+            is_active=True,
+        )
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        self.assertEqual(synchronized_course_run["price"], D(100.00))
+        self.assertEqual(synchronized_course_run["discounted_price"], D(90.00))
+        self.assertEqual(synchronized_course_run["discount"], "-10%")
+        self.assertEqual(
+            synchronized_course_run["certificate_offer"], enums.COURSE_OFFER_PAID
+        )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_offering_rule_create_certificate(self, mock_sync):

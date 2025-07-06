@@ -277,11 +277,19 @@ class Product(parler_models.TranslatableModel, BaseModel):
         if self.price == 0:
             return {fields["offer"]: enums.COURSE_OFFER_FREE}
 
-        return {
+        properties = {
             fields["offer"]: enums.COURSE_OFFER_PAID,
             fields["price"]: self.price,
             "price_currency": settings.DEFAULT_CURRENCY,
         }
+
+        if self.type != enums.PRODUCT_TYPE_CERTIFICATE:
+            is_graded = self.target_course_relations.filter(is_graded=True).exists()
+            properties["certificate_offer"] = (
+                enums.COURSE_OFFER_PAID if is_graded else None
+            )
+
+        return properties
 
     @staticmethod
     def get_equivalent_serialized_course_runs_for_products(

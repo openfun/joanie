@@ -145,6 +145,7 @@ class ProductModelsTestCase(TestCase):
             product.get_equivalent_course_run_data(),
             {
                 "catalog_visibility": "hidden",
+                "certificate_offer": None,
                 "end": None,
                 "enrollment_end": None,
                 "enrollment_start": None,
@@ -208,7 +209,7 @@ class ProductModelsTestCase(TestCase):
             target_courses=[cr.course for cr in course_runs], price="50.00"
         )
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             data = product.get_equivalent_course_run_data()
 
         languages = data.pop("languages")
@@ -218,6 +219,7 @@ class ProductModelsTestCase(TestCase):
             "enrollment_start": "2022-11-20T09:00:00+00:00",
             "enrollment_end": "2022-12-05T19:00:00+00:00",
             "catalog_visibility": "course_and_search",
+            "certificate_offer": enums.COURSE_OFFER_PAID,
             "offer": "paid",
             "price": D("50.00"),
             "price_currency": "EUR",
@@ -313,6 +315,7 @@ class ProductModelsTestCase(TestCase):
         self.assertEqual(
             product.get_equivalent_course_run_offer(),
             {
+                "certificate_offer": None,
                 "offer": "paid",
                 "price": D("999.99"),
                 "price_currency": settings.DEFAULT_CURRENCY,
@@ -365,6 +368,7 @@ class ProductModelsTestCase(TestCase):
             [
                 {
                     "catalog_visibility": "course_and_search",
+                    "certificate_offer": enums.COURSE_OFFER_PAID,
                     "end": course_run.end.isoformat(),
                     "enrollment_end": course_run.enrollment_end.isoformat(),
                     "enrollment_start": course_run.enrollment_start.isoformat(),
@@ -410,6 +414,7 @@ class ProductModelsTestCase(TestCase):
             [
                 {
                     "catalog_visibility": "hidden",
+                    "certificate_offer": enums.COURSE_OFFER_PAID,
                     "end": course_run.end.isoformat(),
                     "enrollment_end": course_run.enrollment_end.isoformat(),
                     "enrollment_start": course_run.enrollment_start.isoformat(),
