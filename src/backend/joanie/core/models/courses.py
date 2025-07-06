@@ -1001,6 +1001,14 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             price = None
             discounted_price = None
             discount = None
+        else:
+            if product:
+                has_grade = product.target_course_relations.filter(
+                    is_graded=True
+                ).exists()
+            else:
+                has_grade = self.is_gradable
+            certificate_offer = enums.COURSE_OFFER_PAID if has_grade else None
 
         return {
             "catalog_visibility": visibility
