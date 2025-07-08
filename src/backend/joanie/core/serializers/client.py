@@ -986,6 +986,7 @@ class ProductRelationSerializer(CachedModelSerializer):
             "id",
             "product",
             "is_withdrawable",
+            "rules",
         ]
         read_only_fields = fields
 

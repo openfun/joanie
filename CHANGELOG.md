@@ -24,6 +24,7 @@ and this project adheres to
 - Sync discount str representation
 - Sync course run related discount
 - Trigger sync when an offering rule is saved
+- Add Offer rules to ProductRelationSerializer
 
 ### Changed
 
