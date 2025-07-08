@@ -298,7 +298,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         # The user can see his/her enrollment
         token = self.generate_token_from_user(enrollment.user)
 
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(20):
             self.client.get(
                 "/api/v1.0/enrollments/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -347,6 +347,18 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "title": product2.title,
                         "type": "certificate",
                     },
+                    "rules": {
+                        "description": None,
+                        "discount": None,
+                        "discount_amount": None,
+                        "discount_end": None,
+                        "discount_rate": None,
+                        "discount_start": None,
+                        "discounted_price": None,
+                        "has_seat_limit": False,
+                        "has_seats_left": True,
+                        "nb_available_seats": None,
+                    },
                 },
                 {
                     "id": str(product1.offerings.last().id),
@@ -376,6 +388,18 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product1.title,
                         "type": "certificate",
+                    },
+                    "rules": {
+                        "description": None,
+                        "discount": None,
+                        "discount_amount": None,
+                        "discount_end": None,
+                        "discount_rate": None,
+                        "discount_start": None,
+                        "discounted_price": None,
+                        "has_seat_limit": False,
+                        "has_seats_left": True,
+                        "nb_available_seats": None,
                     },
                 },
             ],
@@ -768,7 +792,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         certificate = factories.OrderCertificateFactory(order=order)
         token = self.generate_token_from_user(order.owner)
 
-        with self.assertNumQueries(32):
+        with self.assertNumQueries(33):
             response = self.client.get(
                 f"/api/v1.0/enrollments/{enrollment.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -827,6 +851,18 @@ class EnrollmentApiTest(BaseAPITestCase):
                         "target_courses": [],
                         "title": product.title,
                         "type": "certificate",
+                    },
+                    "rules": {
+                        "description": None,
+                        "discount": None,
+                        "discount_amount": None,
+                        "discount_end": None,
+                        "discount_rate": None,
+                        "discount_start": None,
+                        "discounted_price": None,
+                        "has_seat_limit": False,
+                        "has_seats_left": True,
+                        "nb_available_seats": None,
                     },
                 },
             ],
@@ -949,6 +985,149 @@ class EnrollmentApiTest(BaseAPITestCase):
             },
         )
         self.assertNotIn("2000", content["created_on"])
+
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_create_authenticated_success_certificate_discount(
+        self, _, mock_set
+    ):
+        """
+        Any authenticated user should be able to create an enrollment
+        with a discounted certificate product.
+        """
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        is_active = random.choice([True, False])
+
+        course_run = self.create_opened_course_run(
+            resource_link=resource_link, is_listed=True
+        )
+        product = factories.ProductFactory(
+            courses=[course_run.course],
+            type="certificate",
+            price="100.00",
+        )
+        offering = models.CourseProductRelation.objects.get(
+            product=product, course=course_run.course
+        )
+        offering_rule = factories.OfferingRuleFactory(
+            discount=factories.DiscountFactory(rate=0.50),
+        )
+        offering.offering_rules.add(offering_rule)
+
+        data = {
+            "course_run_id": str(course_run.id),
+            "is_active": is_active,
+            "was_created_by_order": False,
+            "created_on": "2000-01-01T09:00:00+00:00",
+        }
+        token = self.get_user_token("panoramix")
+
+        response = self.client.post(
+            "/api/v1.0/enrollments/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertEqual(models.Enrollment.objects.count(), 1)
+
+        enrollment = models.Enrollment.objects.get()
+        if is_active is True:
+            mock_set.assert_called_once_with(enrollment)
+        else:
+            mock_set.assert_not_called()
+
+        self.assertDictEqual(
+            response.json(),
+            {
+                "id": str(enrollment.id),
+                "certificate_id": None,
+                "course_run": {
+                    "id": str(course_run.id),
+                    "course": {
+                        "id": str(course_run.course.id),
+                        "code": str(course_run.course.code),
+                        "title": str(course_run.course.title),
+                        "cover": "_this_field_is_mocked",
+                    },
+                    "resource_link": course_run.resource_link,
+                    "title": course_run.title,
+                    "enrollment_start": course_run.enrollment_start.isoformat().replace(
+                        "+00:00", "Z"
+                    ),
+                    "enrollment_end": course_run.enrollment_end.isoformat().replace(
+                        "+00:00", "Z"
+                    )
+                    if course_run.state["priority"] != CourseState.ARCHIVED_OPEN
+                    else None,
+                    "start": course_run.start.isoformat().replace("+00:00", "Z"),
+                    "end": course_run.end.isoformat().replace("+00:00", "Z"),
+                    "state": {
+                        "priority": course_run.state["priority"],
+                        "text": course_run.state["text"],
+                        "call_to_action": course_run.state["call_to_action"],
+                        "datetime": course_run.state["datetime"]
+                        .isoformat()
+                        .replace("+00:00", "Z")
+                        if course_run.state["datetime"]
+                        else None,
+                    },
+                    "languages": course_run.languages,
+                },
+                "created_on": enrollment.created_on.isoformat().replace("+00:00", "Z"),
+                "is_active": is_active,
+                "orders": [],
+                "offerings": [
+                    {
+                        "id": str(product.offerings.first().id),
+                        "is_withdrawable": product.offerings.first().is_withdrawable,
+                        "product": {
+                            "call_to_action": "let's go!",
+                            "certificate_definition": {
+                                "description": "",
+                                "name": product.certificate_definition.name,
+                                "title": product.certificate_definition.title,
+                            },
+                            "contract_definition": None,
+                            "id": str(product.id),
+                            "instructions": "",
+                            "price": 100,
+                            "price_currency": "EUR",
+                            "state": {
+                                "call_to_action": None,
+                                "datetime": None,
+                                "priority": 7,
+                                "text": "to be scheduled",
+                            },
+                            "target_courses": [],
+                            "title": product.title,
+                            "type": "certificate",
+                        },
+                        "rules": {
+                            "description": None,
+                            "discount": "-50%",
+                            "discount_amount": None,
+                            "discount_end": None,
+                            "discount_rate": 0.5,
+                            "discount_start": None,
+                            "discounted_price": 50,
+                            "has_seat_limit": False,
+                            "has_seats_left": True,
+                            "nb_available_seats": None,
+                        },
+                    }
+                ],
+                "state": "set" if is_active else "",
+                "was_created_by_order": False,
+            },
+        )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
     def test_api_enrollment_duplicate_course_run_with_order(self, _mock_set):
