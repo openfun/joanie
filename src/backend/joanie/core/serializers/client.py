@@ -1311,7 +1311,7 @@ class OrderSerializer(serializers.ModelSerializer):
                     validated_data["offering_rules"] = []
                 validated_data["offering_rules"].append(offering_rule)
 
-        if seats_limitation:
+        if seats_limitation and not seats_limitation.discount:
             raise serializers.ValidationError(
                 {
                     "offering_rule": [

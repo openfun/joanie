@@ -1414,6 +1414,157 @@ class OrderCreateApiTest(BaseAPITestCase):
             models.Order.objects.filter(course=course, product=product).count(), 1
         )
 
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_create_authenticated_nb_seats_discount(self, _mock_thumbnail):
+        """
+        When a discount rule with seats limit is reached, we should be able
+        to create a new order on the same product.
+        """
+        user = factories.UserFactory()
+        course = factories.CourseFactory()
+        product = factories.ProductFactory()
+        offering = factories.OfferingFactory(
+            course=course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        offering_rule = models.OfferingRule.objects.create(
+            course_product_relation=offering,
+            nb_seats=1,
+            discount=factories.DiscountFactory(),
+        )
+        billing_address = BillingAddressDictFactory()
+        existing_order = factories.OrderFactory(
+            product=product,
+            course=course,
+            state=enums.ORDER_STATE_COMPLETED,
+            offering_rules=[offering_rule],
+        )
+        data = {
+            "course_code": course.code,
+            "organization_id": str(offering.organizations.first().id),
+            "product_id": str(product.id),
+            "billing_address": billing_address,
+            "has_waived_withdrawal_right": True,
+        }
+        token = self.generate_token_from_user(user)
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertEqual(
+            models.Order.objects.filter(course=course, product=product).count(), 2
+        )
+        order = models.Order.objects.exclude(id=existing_order.id).first()
+        organization_address = order.organization.addresses.filter(is_main=True).first()
+
+        self.assertDictEqual(
+            response.json(),
+            {
+                "id": str(order.id),
+                "certificate_id": None,
+                "contract": None,
+                "payment_schedule": [],
+                "course": {
+                    "code": course.code,
+                    "id": str(course.id),
+                    "title": course.title,
+                    "cover": "_this_field_is_mocked",
+                },
+                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "credit_card_id": None,
+                "enrollment": None,
+                "main_invoice_reference": order.main_invoice.reference,
+                "offering_rule_ids": [],
+                "has_waived_withdrawal_right": True,
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                    "logo": "_this_field_is_mocked",
+                    "address": {
+                        "id": str(organization_address.id),
+                        "address": organization_address.address,
+                        "city": organization_address.city,
+                        "country": organization_address.country,
+                        "first_name": organization_address.first_name,
+                        "is_main": organization_address.is_main,
+                        "last_name": organization_address.last_name,
+                        "postcode": organization_address.postcode,
+                        "title": organization_address.title,
+                    }
+                    if organization_address
+                    else None,
+                    "enterprise_code": order.organization.enterprise_code,
+                    "activity_category_code": order.organization.activity_category_code,
+                    "contact_phone": order.organization.contact_phone,
+                    "contact_email": order.organization.contact_email,
+                    "dpo_email": order.organization.dpo_email,
+                },
+                "owner": user.username,
+                "product_id": str(product.id),
+                "state": enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+                "total": float(product.price),
+                "total_currency": settings.DEFAULT_CURRENCY,
+                "target_enrollments": [],
+                "target_courses": [
+                    {
+                        "code": target_course.code,
+                        "course_runs": [
+                            {
+                                "id": course_run.id,
+                                "title": course_run.title,
+                                "resource_link": course_run.resource_link,
+                                "state": {
+                                    "priority": course_run.state["priority"],
+                                    "datetime": course_run.state["datetime"]
+                                    .isoformat()
+                                    .replace("+00:00", "Z"),
+                                    "call_to_action": course_run.state[
+                                        "call_to_action"
+                                    ],
+                                    "text": course_run.state["text"],
+                                },
+                                "start": course_run.start.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "end": course_run.end.isoformat().replace(
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
+                                    "+00:00", "Z"
+                                ),
+                            }
+                            for course_run in target_course.course_runs.all().order_by(
+                                "start"
+                            )
+                        ],
+                        "position": target_course.order_relations.get(
+                            order=order
+                        ).position,
+                        "is_graded": target_course.order_relations.get(
+                            order=order
+                        ).is_graded,
+                        "title": target_course.title,
+                    }
+                    for target_course in order.target_courses.all().order_by(
+                        "order_relations__position"
+                    )
+                ],
+            },
+        )
+
     def test_api_order_create_authenticated_no_seats(self):
         """
         If the number of seats is set to 0 on an active offering rule, we should not be able
@@ -2158,7 +2309,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory()
         offering_rule = factories.OfferingRuleFactory(
-            discount=factories.DiscountFactory(rate=0.1),
             course_product_relation=offering,
             is_active=True,
             nb_seats=1,
