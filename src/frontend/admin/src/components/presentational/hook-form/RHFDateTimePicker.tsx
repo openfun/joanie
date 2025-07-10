@@ -44,7 +44,9 @@ export function RHFDateTimePicker({ label, name, ...props }: Props) {
             }}
             onChange={(newValue: Date | null) => {
               if (newValue === null) {
-                setValue(name, undefined);
+                setValue(name, null, {
+                  shouldDirty: true,
+                });
               } else {
                 const isValid = !Number.isNaN(newValue.getTime());
                 if (isValid) {
