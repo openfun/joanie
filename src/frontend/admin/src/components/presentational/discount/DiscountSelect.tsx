@@ -4,7 +4,7 @@ import { defineMessages, useIntl } from "react-intl";
 import FormHelperText from "@mui/material/FormHelperText";
 import Typography from "@mui/material/Typography";
 import Grid2 from "@mui/material/Grid2";
-import { useForm, useFormContext } from "react-hook-form";
+import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import {
@@ -100,6 +100,10 @@ export function DiscountSelect(
   const discountModal = useModal();
   const [query, setQuery] = useState("");
   const discounts = useDiscounts({ query });
+  const handleAddClick = () => {
+    setQuery("");
+    discountModal.handleOpen();
+  };
 
   const Schema = Yup.object().shape({
     rate: Yup.number()
@@ -175,7 +179,7 @@ export function DiscountSelect(
         getOptionKey={(discountID) => discountID}
         loading={discounts.states.fetching}
         enableAdd={true}
-        onAddClick={discountModal.handleOpen}
+        onAddClick={handleAddClick}
         onFilter={setQuery}
       />
       <FormHelperText>
@@ -213,7 +217,7 @@ export function DiscountSelect(
                 fullWidth
                 slotProps={{ htmlInput: { min: 0 } }}
                 helperText={intl.formatMessage(messages.discountRateHelperText)}
-                disabled={!!form.getValues().amount}
+                disabled={!!useWatch({ name: "amount", control: form.control })}
               />
             </Grid2>
             <Grid2 size={12}>
@@ -226,7 +230,7 @@ export function DiscountSelect(
                 helperText={intl.formatMessage(
                   messages.discountAmountHelperText,
                 )}
-                disabled={!!form.getValues().rate}
+                disabled={!!useWatch({ name: "rate", control: form.control })}
               />
             </Grid2>
             {form.formState.errors.root && (
