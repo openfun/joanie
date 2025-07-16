@@ -2,7 +2,9 @@
 Test suite for OfferingRule model
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.db import IntegrityError
 from django.test import TestCase
@@ -16,6 +18,8 @@ from joanie.core.models import OfferingRule
 
 class OfferingRuleModelTestCase(TestCase):
     """Test suite for the OfferingRule model."""
+
+    maxDiff = None
 
     def test_models_offering_rule_can_edit(self):
         """
@@ -374,3 +378,71 @@ class OfferingRuleModelTestCase(TestCase):
         # Finally, unknown language should use the default language as fallback
         with switch_language(offering_rule, "de-de"):
             self.assertEqual(offering_rule.description, "Offering rule description")
+
+    def test_model_offering_rule_find_to_synchronize(self):
+        """
+        It should return the list of offering rules that start or end in the next 60 minutes.
+        """
+        mocked_now = datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
+
+        offering_rule_started_10_min_ago = factories.OfferingRuleFactory(
+            start=mocked_now - timedelta(minutes=10),
+        )
+        offering_rule_starts_in_10_min = factories.OfferingRuleFactory(
+            start=mocked_now + timedelta(minutes=10),
+        )
+        offering_rule_starts_in_59_min = factories.OfferingRuleFactory(
+            start=mocked_now + timedelta(minutes=59),
+        )
+        offering_rule_starts_in_62_min = factories.OfferingRuleFactory(
+            start=mocked_now + timedelta(minutes=62),
+        )
+
+        offering_rule_ended_10_min_ago = factories.OfferingRuleFactory(
+            end=mocked_now - timedelta(minutes=10),
+        )
+        offering_rule_ends_in_10_min = factories.OfferingRuleFactory(
+            end=mocked_now + timedelta(minutes=10),
+        )
+        offering_rule_ends_in_59_min = factories.OfferingRuleFactory(
+            end=mocked_now + timedelta(minutes=59),
+        )
+        offering_rule_ends_in_62_min = factories.OfferingRuleFactory(
+            end=mocked_now + timedelta(minutes=62),
+        )
+
+        with mock.patch(
+            "django.utils.timezone.now", return_value=mocked_now - timedelta(hours=1)
+        ):
+            offerings = OfferingRule.objects.find_to_synchronize()
+            self.assertCountEqual(
+                offerings,
+                [
+                    offering_rule_started_10_min_ago,
+                    offering_rule_ended_10_min_ago,
+                ],
+            )
+
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            offerings = OfferingRule.objects.find_to_synchronize()
+            self.assertCountEqual(
+                offerings,
+                [
+                    offering_rule_starts_in_10_min,
+                    offering_rule_starts_in_59_min,
+                    offering_rule_ends_in_10_min,
+                    offering_rule_ends_in_59_min,
+                ],
+            )
+
+        with mock.patch(
+            "django.utils.timezone.now", return_value=mocked_now + timedelta(hours=1)
+        ):
+            offerings = OfferingRule.objects.find_to_synchronize()
+            self.assertCountEqual(
+                offerings,
+                [
+                    offering_rule_starts_in_62_min,
+                    offering_rule_ends_in_62_min,
+                ],
+            )

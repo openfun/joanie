@@ -681,6 +681,25 @@ class OfferingRuleManager(TranslatableManager):
             .order_by("position")
         )
 
+    def find_to_synchronize(self):
+        """
+        Retrieve all offering rules that need to be synchronized with webhooks.
+        This includes offering rules that have been created or updated
+        since the last synchronization.
+        """
+        now = timezone.now()
+        return (
+            super()
+            .get_queryset()
+            .filter(
+                models.Q(is_active=True)
+                & (
+                    models.Q(start__date=now.date(), start__hour=now.hour)
+                    | models.Q(end__date=now.date(), end__hour=now.hour)
+                )
+            )
+        )
+
 
 class OfferingRule(parler_models.TranslatableModel, BaseModel):
     """
