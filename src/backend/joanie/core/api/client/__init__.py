@@ -10,7 +10,7 @@ from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.db.models import OuterRef, Prefetch, Subquery
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
@@ -23,7 +23,6 @@ from rest_framework import mixins, viewsets
 from rest_framework import permissions as drf_permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
@@ -36,6 +35,7 @@ from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
+from joanie.core.utils.product import synchronize_product_course_runs
 from joanie.core.utils.signature import check_signature
 from joanie.payment import enums as payment_enums
 from joanie.payment import get_payment_backend
@@ -456,6 +456,8 @@ class OrderViewSet(
             billing_address=request.data.get("billing_address")
         )
 
+        synchronize_product_course_runs(product)
+
         # Else return the fresh new order
         return Response(serializer.data, status=HTTPStatus.CREATED)
 
@@ -471,6 +473,7 @@ class OrderViewSet(
             )
 
         order.flow.cancel()
+        synchronize_product_course_runs(order.product)
         return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=True, methods=["GET"])

@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from joanie.core import enums, models
 from joanie.core.utils import webhooks
 from joanie.core.utils.offering import get_serialized_course_runs
+from joanie.core.utils.product import synchronize_product_course_runs
 
 logger = logging.getLogger(__name__)
 
@@ -212,15 +213,4 @@ def on_save_product(instance, created, **kwargs):
     if created:
         return
 
-    if instance.type == enums.PRODUCT_TYPE_CERTIFICATE:
-        serialized_course_runs = models.Product.get_serialized_certificated_course_runs(
-            [instance]
-        )
-    else:
-        serialized_course_runs = (
-            models.Product.get_equivalent_serialized_course_runs_for_products(
-                [instance]
-            )
-        )
-
-    webhooks.synchronize_course_runs(serialized_course_runs)
+    synchronize_product_course_runs(instance)
