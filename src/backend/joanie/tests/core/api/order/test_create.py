@@ -16,6 +16,7 @@ from joanie.core import enums, factories, models
 from joanie.core.api import client as api_client
 from joanie.core.models import CourseState
 from joanie.core.serializers import fields
+from joanie.core.utils import webhooks
 from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
 from joanie.tests.base import BaseAPITestCase
 
@@ -88,7 +89,10 @@ class OrderCreateApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
-    def test_api_order_create_authenticated_for_course_success(self, _mock_thumbnail):
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_api_order_create_authenticated_for_course_success(
+        self, mock_sync, _mock_thumbnail
+    ):
         """Any authenticated user should be able to create an order for a course."""
         target_courses = factories.CourseFactory.create_batch(2)
         product = factories.ProductFactory(target_courses=target_courses, price=0.00)
@@ -102,6 +106,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_waived_withdrawal_right": True,
         }
         token = self.get_user_token("panoramix")
+        mock_sync.reset_mock()
 
         response = self.client.post(
             "/api/v1.0/orders/",
@@ -109,6 +114,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
+        self.assertEqual(mock_sync.call_count, 1)
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
@@ -1245,7 +1251,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_waived_withdrawal_right": True,
         }
 
-        with self.assertNumQueries(76):
+        with self.assertNumQueries(81):
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,

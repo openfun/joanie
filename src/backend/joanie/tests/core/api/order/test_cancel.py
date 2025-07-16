@@ -1,10 +1,12 @@
 """Tests for the Order cancel API."""
 
 from http import HTTPStatus
+from unittest import mock
 
 from django.core.cache import cache
 
 from joanie.core import enums, factories
+from joanie.core.utils import webhooks
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -60,7 +62,8 @@ class OrderCancelApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
-    def test_api_order_cancel_authenticated_owned(self):
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_api_order_cancel_authenticated_owned(self, mock_sync):
         """
         User should be able to cancel owned orders as long as they are not
         completed
@@ -85,6 +88,7 @@ class OrderCancelApiTest(BaseAPITestCase):
                     self.assertTrue(order.voucher.is_usable_by(user))
                 else:
                     self.assertFalse(order.voucher.is_usable_by(user))
+                mock_sync.reset_mock()
 
                 response = self.client.post(
                     f"/api/v1.0/orders/{order.id}/cancel/",
@@ -99,8 +103,10 @@ class OrderCancelApiTest(BaseAPITestCase):
                         status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                     )
                     self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+                    self.assertEqual(mock_sync.call_count, 0)
                 elif state == enums.ORDER_STATE_TO_OWN:
                     self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+                    self.assertEqual(mock_sync.call_count, 0)
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
                     self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -108,6 +114,7 @@ class OrderCancelApiTest(BaseAPITestCase):
                     self.assertIsNone(order.credit_card)
                     # The voucher should be reusable
                     self.assertTrue(order.voucher.is_usable_by(user))
+                    self.assertEqual(mock_sync.call_count, 1)
 
     def test_api_order_cancel_authenticated_completed(self):
         """
