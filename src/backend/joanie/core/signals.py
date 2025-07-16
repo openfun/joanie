@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 
 from joanie.core import enums, models
 from joanie.core.utils import webhooks
+from joanie.core.utils.offering import get_serialized_course_runs
 
 logger = logging.getLogger(__name__)
 
@@ -196,20 +197,9 @@ def on_save_offering_rule(instance: models.OfferingRule, **kwargs):
     """
     Synchronize course runs related to the offering rule being saved.
     """
-    product = instance.offering.product
-    course = instance.offering.course
-    course_runs = course.course_runs.all()
-    serialized_course_runs = []
-    for course_run in course_runs:
-        certifying = product.type == enums.PRODUCT_TYPE_CERTIFICATE
-        serialized_course_runs.append(
-            course_run.get_serialized(certifying=certifying, product=product)
-        )
-        serialized_course_runs.append(
-            course_run.get_equivalent_serialized_course_runs_for_related_products()
-        )
-
-    webhooks.synchronize_course_runs(serialized_course_runs)
+    serialized_course_runs = get_serialized_course_runs(instance.offering)
+    if serialized_course_runs:
+        webhooks.synchronize_course_runs(serialized_course_runs)
 
 
 def on_save_product(instance, created, **kwargs):
