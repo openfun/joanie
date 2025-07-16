@@ -1,17 +1,24 @@
 """Test suite utility methods for offering to get orders and certificates"""
 
-from django.test import TestCase
+from datetime import datetime, timedelta
+from unittest import mock
+from zoneinfo import ZoneInfo
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseProductRelation, CourseState
+from joanie.core.utils import webhooks
 from joanie.core.utils.offering import (
     get_generated_certificates,
     get_orders,
+    synchronize_offerings,
 )
+from joanie.tests.base import LoggingTestCase
 
 
-class UtilsCourseProductRelationTestCase(TestCase):
+class UtilsCourseProductRelationTestCase(LoggingTestCase):
     """Test suite utility methods for offering to get orders and certificates"""
+
+    maxDiff = None
 
     def test_utils_offering_get_orders_for_product_type_credential(self):
         """
@@ -156,3 +163,84 @@ class UtilsCourseProductRelationTestCase(TestCase):
         generated_certificates_queryset = get_generated_certificates(offering=offering)
 
         self.assertEqual(generated_certificates_queryset.count(), 10)
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_utils_offering_synchronize_offerings(self, mock_sync):
+        """
+        It should return the list of course product relations that have offering rules
+        that start or end in the next 60 minutes, with distinct offerings.
+        """
+        mocked_now = datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
+
+        offering_rule_starts_in_10_min = factories.OfferingRuleFactory(
+            start=mocked_now + timedelta(minutes=10),
+            course_product_relation__course__course_runs=factories.CourseRunFactory.create_batch(
+                3
+            ),
+        )
+        offering_1 = offering_rule_starts_in_10_min.offering
+
+        # Only distinct offerings (course_product_relation) should be returned
+        factories.OfferingRuleFactory(
+            start=mocked_now + timedelta(minutes=59),
+            course_product_relation=offering_rule_starts_in_10_min.course_product_relation,
+        )
+
+        offering_rule_ends_in_10_min = factories.OfferingRuleFactory(
+            end=mocked_now + timedelta(minutes=10),
+        )
+        offering_2 = offering_rule_ends_in_10_min.offering
+        offering_rule_ends_in_59_min = factories.OfferingRuleFactory(
+            end=mocked_now + timedelta(minutes=59),
+            course_product_relation__course__course_runs=factories.CourseRunFactory.create_batch(
+                1
+            ),
+        )
+        offering_3 = offering_rule_ends_in_59_min.offering
+
+        mock_sync.reset_mock()
+
+        with (
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+            self.assertNumQueries(22),
+            self.assertLogs() as logger,
+        ):
+            synchronize_offerings.run()
+
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+
+        self.assertLogsEquals(
+            logger.records,
+            [
+                ("INFO", "Synchronizing 3 offerings"),
+                ("INFO", f"Get serialized course runs for offering {offering_3.id}"),
+                ("INFO", "  1 course runs serialized"),
+                ("INFO", f"Get serialized course runs for offering {offering_2.id}"),
+                ("INFO", "  No course runs serialized"),
+                ("INFO", f"Get serialized course runs for offering {offering_1.id}"),
+                ("INFO", "  3 course runs serialized"),
+                ("INFO", "Synchronizing 4 course runs for offerings"),
+            ],
+        )
+
+        self.assertEqual(len(synchronized_course_runs), 4)
+        self.assertEqual(
+            synchronized_course_runs[0]["resource_link"],
+            "https://example.com/api/v1.0/course-runs/"
+            f"{offering_3.course.course_runs.all()[0].id}/",
+        )
+        self.assertEqual(
+            synchronized_course_runs[1]["resource_link"],
+            "https://example.com/api/v1.0/course-runs/"
+            f"{offering_1.course.course_runs.all()[0].id}/",
+        )
+        self.assertEqual(
+            synchronized_course_runs[2]["resource_link"],
+            "https://example.com/api/v1.0/course-runs/"
+            f"{offering_1.course.course_runs.all()[1].id}/",
+        )
+        self.assertEqual(
+            synchronized_course_runs[3]["resource_link"],
+            "https://example.com/api/v1.0/course-runs/"
+            f"{offering_1.course.course_runs.all()[2].id}/",
+        )

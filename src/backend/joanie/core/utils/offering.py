@@ -1,10 +1,16 @@
 """Utility methods to get all orders and/or certificates from an offering."""
 
+import logging
+
 from django.db.models import Q
 
+from joanie.celery_app import app
 from joanie.core import enums
 from joanie.core.enums import ORDER_STATE_COMPLETED, PRODUCT_TYPE_CERTIFICATE_ALLOWED
-from joanie.core.models import Certificate, Order
+from joanie.core.models import Certificate, CourseProductRelation, OfferingRule, Order
+from joanie.core.utils import webhooks
+
+logger = logging.getLogger(__name__)
 
 
 def get_orders(offering):
@@ -70,3 +76,42 @@ def get_serialized_course_runs(offering):
         return serialized_course_runs
 
     return None
+
+
+@app.task
+def synchronize_offerings():
+    """
+    Synchronize all offerings that have rules to synchronize.
+    """
+    offering_ids = (
+        OfferingRule.objects.find_to_synchronize()
+        .values_list("course_product_relation", flat=True)
+        .distinct()
+    )
+
+    offerings = (
+        CourseProductRelation.objects.filter(
+            id__in=offering_ids,
+        )
+        .select_related("course", "product")
+        .distinct()
+    )
+
+    logger.info("Synchronizing %s offerings", offerings.count())
+
+    course_runs = []
+    for offering in offerings:
+        logger.info("Get serialized course runs for offering %s", offering.id)
+        synchronized_course_runs = get_serialized_course_runs(offering)
+        if synchronized_course_runs:
+            logger.info(
+                "  %s course runs serialized",
+                len(synchronized_course_runs),
+            )
+            course_runs.extend(synchronized_course_runs)
+        else:
+            logger.info("  No course runs serialized")
+
+    if course_runs:
+        logger.info("Synchronizing %s course runs for offerings", len(course_runs))
+        webhooks.synchronize_course_runs(course_runs)
