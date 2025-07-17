@@ -1,0 +1,72 @@
+CourseApiTest.test_api_course_get_authenticated_by_code:
+- db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_course_access" ON ("joanie_course"."id" = "joanie_course_access"."course_id") INNER JOIN "joanie_user" ON ("joanie_course_access"."user_id" = "joanie_user"."id") WHERE ("joanie_user"."username" = # AND UPPER("joanie_course"."code"::text) = UPPER(#)) LIMIT #'
+- db: SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" IN (#::uuid) ORDER BY "joanie_organization"."created_on" DESC
+- db: SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" IN (#::uuid) ORDER BY "joanie_product"."created_on" DESC
+- db: SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" IN (#::uuid) ORDER BY "joanie_course_run"."created_on" DESC
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."username" = # LIMIT #'
+- db: 'UPDATE "joanie_user" SET ... WHERE "joanie_user"."username" = #'
+- db: 'SELECT ... FROM "joanie_course_run" LEFT OUTER JOIN "joanie_product_target_course_relation_course_runs" ON ("joanie_course_run"."id" = "joanie_product_target_course_relation_course_runs"."courserun_id") WHERE ("joanie_product_target_course_relation_course_runs"."producttargetcourserelation_id" IN (SELECT U0."id" FROM "joanie_product_target_course_relation" U0 INNER JOIN "joanie_product_target_course_relation_course_runs" U2 ON (U0."id" = U2."producttargetcourserelation_id") WHERE (U0."product_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) OR "joanie_course_run"."course_id" IN (SELECT W0."id" FROM "joanie_course" W0 INNER JOIN "joanie_product_target_course_relation" W1 ON (W0."id" = W1."course_id") WHERE (W1."product_id" = #::uuid AND NOT (EXISTS(SELECT # AS "a" FROM "joanie_product_target_course_relation" V1 WHERE (V1."id" IN (SELECT U0."id" FROM "joanie_product_target_course_relation" U0 INNER JOIN "joanie_product_target_course_relation_course_runs" U2 ON (U0."id" = U2."producttargetcourserelation_id") WHERE (U0."product_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) AND V1."id" = (W1."id") AND W1."course_id" = (W0."id")) LIMIT #)))))'
+- cache|get: parler.core.CourseTranslation.#.en-us
+CourseApiTest.test_api_course_get_authenticated_with_access:
+- db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_course_access" ON ("joanie_course"."id" = "joanie_course_access"."course_id") INNER JOIN "joanie_user" ON ("joanie_course_access"."user_id" = "joanie_user"."id") WHERE ("joanie_user"."username" = # AND "joanie_course"."id" = #::uuid) LIMIT #'
+- db: SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" IN (#::uuid) ORDER BY "joanie_organization"."created_on" DESC
+- db: SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" IN (#::uuid) ORDER BY "joanie_product"."created_on" DESC
+- db: SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" IN (#::uuid) ORDER BY "joanie_course_run"."created_on" DESC
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."username" = # LIMIT #'
+- db: 'UPDATE "joanie_user" SET ... WHERE "joanie_user"."username" = #'
+- db: 'SELECT ... FROM "joanie_course_run" LEFT OUTER JOIN "joanie_product_target_course_relation_course_runs" ON ("joanie_course_run"."id" = "joanie_product_target_course_relation_course_runs"."courserun_id") WHERE ("joanie_product_target_course_relation_course_runs"."producttargetcourserelation_id" IN (SELECT U0."id" FROM "joanie_product_target_course_relation" U0 INNER JOIN "joanie_product_target_course_relation_course_runs" U2 ON (U0."id" = U2."producttargetcourserelation_id") WHERE (U0."product_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) OR "joanie_course_run"."course_id" IN (SELECT W0."id" FROM "joanie_course" W0 INNER JOIN "joanie_product_target_course_relation" W1 ON (W0."id" = W1."course_id") WHERE (W1."product_id" = #::uuid AND NOT (EXISTS(SELECT # AS "a" FROM "joanie_product_target_course_relation" V1 WHERE (V1."id" IN (SELECT U0."id" FROM "joanie_product_target_course_relation" U0 INNER JOIN "joanie_product_target_course_relation_course_runs" U2 ON (U0."id" = U2."producttargetcourserelation_id") WHERE (U0."product_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) AND V1."id" = (W1."id") AND W1."course_id" = (W0."id")) LIMIT #)))))'
+- cache|get: parler.core.CourseTranslation.#.en-us
+CourseApiTest.test_api_course_list_authenticated_queries:
+- db: 'SELECT COUNT(*) AS "__count" FROM "joanie_course" INNER JOIN "joanie_course_access" ON ("joanie_course"."id" = "joanie_course_access"."course_id") INNER JOIN "joanie_user" ON ("joanie_course_access"."user_id" = "joanie_user"."id") WHERE "joanie_user"."username" = #'
+- db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_course_access" ON ("joanie_course"."id" = "joanie_course_access"."course_id") INNER JOIN "joanie_user" ON ("joanie_course_access"."user_id" = "joanie_user"."id") WHERE "joanie_user"."username" = # ORDER BY "joanie_course"."code" ASC LIMIT #'
+- db: SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" IN (...) ORDER BY "joanie_organization"."created_on" DESC
+- db: SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" IN (...) ORDER BY "joanie_product"."created_on" DESC
+- db: SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" IN (...) ORDER BY "joanie_course_run"."created_on" DESC
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."username" = # LIMIT #'
+- db: 'UPDATE "joanie_user" SET ... WHERE "joanie_user"."username" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.CourseTranslation.#.en-us

@@ -7,14 +7,14 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import ProtectedError
-from django.test import TestCase
 
 from joanie.core.factories import OrderFactory, ProductFactory
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
 from joanie.payment.models import Invoice
+from joanie.tests.base import BaseAPITestCase
 
 
-class InvoiceModelTestCase(TestCase):
+class InvoiceModelTestCase(BaseAPITestCase):
     """
     Test case for the Invoice model
     """
@@ -124,7 +124,7 @@ class InvoiceModelTestCase(TestCase):
         invoice = InvoiceFactory(total=100)
         TransactionFactory.create_batch(2, total=invoice.total / 2, invoice=invoice)
 
-        with self.assertNumQueries(7):
+        with self.record_performance():
             self.assertEqual(invoice.invoiced_balance, invoice.total)
             self.assertEqual(invoice.transactions_balance, invoice.total)
             self.assertEqual(invoice.balance, D("0.00"))
@@ -144,7 +144,7 @@ class InvoiceModelTestCase(TestCase):
             invoice__order=invoice.order, invoice__parent=invoice, total=-invoice.total
         )
 
-        with self.assertNumQueries(12):
+        with self.record_performance():
             self.assertEqual(invoice.invoiced_balance, D("0.00"))
             self.assertEqual(invoice.transactions_balance, D("0.00"))
             self.assertEqual(invoice.balance, D("0.00"))
@@ -158,7 +158,7 @@ class InvoiceModelTestCase(TestCase):
         invoice = InvoiceFactory(total=100)
         TransactionFactory(total=invoice.total / 2, invoice=invoice)
 
-        with self.assertNumQueries(4):
+        with self.record_performance():
             self.assertEqual(invoice.balance, D("-50.00"))
             self.assertEqual(invoice.state, "unpaid")
 

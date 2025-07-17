@@ -1,0 +1,80 @@
+CertificateApiTest.test_api_certificate_read_list_authenticated:
+- db: 'SELECT COUNT(*) FROM (SELECT DISTINCT ... FROM "joanie_certificate" INNER JOIN "joanie_certificate_definition" ON ("joanie_certificate"."certificate_definition_id" = "joanie_certificate_definition"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_certificate"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") LEFT OUTER JOIN "joanie_order" ON ("joanie_certificate"."order_id" = "joanie_order"."id") LEFT OUTER JOIN "joanie_user" T6 ON ("joanie_order"."owner_id" = T6."id") WHERE (("joanie_certificate_definition"."template" = # AND "joanie_user"."username" = #) OR T6."username" = #)) subquery'
+- db: 'SELECT DISTINCT ... FROM "joanie_certificate" INNER JOIN "joanie_certificate_definition" ON ("joanie_certificate"."certificate_definition_id" = "joanie_certificate_definition"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_certificate"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") LEFT OUTER JOIN "joanie_order" ON ("joanie_certificate"."order_id" = "joanie_order"."id") LEFT OUTER JOIN "joanie_user" T6 ON ("joanie_order"."owner_id" = T6."id") WHERE (("joanie_certificate_definition"."template" = # AND "joanie_user"."username" = #) OR T6."username" = #) ORDER BY "joanie_certificate"."issued_on" DESC LIMIT #'
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_order" WHERE "joanie_order"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE "joanie_enrollment"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.ProductTranslation.#.en-us
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE "joanie_enrollment"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_order" WHERE "joanie_order"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.ProductTranslation.#.en-us
+CertificateApiTest.test_api_certificate_read_list_filtered_by_enrollment_type:
+- db: 'SELECT COUNT(*) FROM (SELECT DISTINCT ... FROM "joanie_certificate" INNER JOIN "joanie_certificate_definition" ON ("joanie_certificate"."certificate_definition_id" = "joanie_certificate_definition"."id") INNER JOIN "joanie_enrollment" ON ("joanie_certificate"."enrollment_id" = "joanie_enrollment"."id") INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE ("joanie_certificate_definition"."template" = # AND "joanie_user"."username" = #)) subquery'
+- db: 'SELECT DISTINCT ... FROM "joanie_certificate" INNER JOIN "joanie_certificate_definition" ON ("joanie_certificate"."certificate_definition_id" = "joanie_certificate_definition"."id") INNER JOIN "joanie_enrollment" ON ("joanie_certificate"."enrollment_id" = "joanie_enrollment"."id") INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE ("joanie_certificate_definition"."template" = # AND "joanie_user"."username" = #) ORDER BY "joanie_certificate"."issued_on" DESC LIMIT #'
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE "joanie_enrollment"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE "joanie_enrollment"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+CertificateApiTest.test_api_certificate_read_list_filtered_by_order_type:
+- db: 'SELECT COUNT(*) FROM (SELECT DISTINCT ... FROM "joanie_certificate" INNER JOIN "joanie_certificate_definition" ON ("joanie_certificate"."certificate_definition_id" = "joanie_certificate_definition"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_certificate"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") LEFT OUTER JOIN "joanie_order" ON ("joanie_certificate"."order_id" = "joanie_order"."id") LEFT OUTER JOIN "joanie_user" T6 ON ("joanie_order"."owner_id" = T6."id") WHERE (("joanie_certificate_definition"."template" = # AND "joanie_user"."username" = #) OR T6."username" = #)) subquery'
+- db: 'SELECT DISTINCT ... FROM "joanie_certificate" INNER JOIN "joanie_certificate_definition" ON ("joanie_certificate"."certificate_definition_id" = "joanie_certificate_definition"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_certificate"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") LEFT OUTER JOIN "joanie_order" ON ("joanie_certificate"."order_id" = "joanie_order"."id") LEFT OUTER JOIN "joanie_user" T6 ON ("joanie_order"."owner_id" = T6."id") WHERE (("joanie_certificate_definition"."template" = # AND "joanie_user"."username" = #) OR T6."username" = #) ORDER BY "joanie_certificate"."issued_on" DESC LIMIT #'
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_order" WHERE "joanie_order"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE "joanie_enrollment"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.ProductTranslation.#.en-us
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE "joanie_enrollment"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_order" WHERE "joanie_order"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.ProductTranslation.#.en-us
+CertificateApiTest.test_api_certificate_read_list_unknown_filter_type: []

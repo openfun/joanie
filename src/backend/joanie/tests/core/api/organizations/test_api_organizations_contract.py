@@ -22,7 +22,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         """
         organization = factories.OrganizationFactory()
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/"
             )
@@ -48,7 +48,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -111,7 +111,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
         factories.ContractFactory(order__owner=user)
 
-        with self.assertNumQueries(14):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organizations[0].id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -245,7 +245,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory(order__owner=user)
 
         # - List without filter should return 6 contracts
-        with self.assertNumQueries(66):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -256,7 +256,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 9)
 
         # - Filter by state=unsigned should return 5 contracts
-        with self.assertNumQueries(14):
+        with self.record_performance():
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organization.id)}"
@@ -275,7 +275,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=half_signed should return 3 contracts
-        with self.assertNumQueries(10):
+        with self.record_performance():
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organization.id)}"
@@ -294,7 +294,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=signed should return 1 contract
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/?signature_state=signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -371,7 +371,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         factories.ContractFactory(order__owner=user)
 
         # - List without filter should return 8 contracts
-        with self.assertNumQueries(86):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -382,7 +382,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 8)
 
         # - Filter by the first offering should return 5 contracts
-        with self.assertNumQueries(15):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/contracts/"
                 f"?offering_id={offering_1.id}",
@@ -399,7 +399,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by the second offering should return 3 contracts
-        with self.assertNumQueries(11):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/contracts/"
                 f"?offering_id={offering_2.id}",
@@ -416,7 +416,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by the other offering should return no contracts
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/contracts/"
                 f"?offering_id={other_offering.id}",
@@ -435,7 +435,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         contract = factories.ContractFactory()
         organization = contract.order.organization
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/"
             )
@@ -460,7 +460,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -506,7 +506,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organizations[0]
         ).first()
 
-        with self.assertNumQueries(5):
+        with self.record_performance():
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organizations[0].id)}"
@@ -614,7 +614,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__state=enums.ORDER_STATE_CANCELED,
         ).first()
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{str(organizations[0].id)}"
@@ -655,7 +655,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(49):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organization.code}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -667,7 +667,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         """Anonymous user cannot create an organization's contract."""
         organization = factories.OrganizationFactory()
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.post(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/"
             )
@@ -680,7 +680,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.post(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -697,7 +697,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         contract = factories.ContractFactory()
         organization = contract.order.organization
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.put(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/"
             )
@@ -711,7 +711,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.put(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -728,7 +728,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         contract = factories.ContractFactory()
         organization = contract.order.organization
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.patch(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/"
             )
@@ -742,7 +742,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.patch(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -759,7 +759,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         contract = factories.ContractFactory()
         organization = contract.order.organization
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.delete(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/"
             )
@@ -773,7 +773,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.delete(
                 f"/api/v1.0/organizations/{str(organization.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

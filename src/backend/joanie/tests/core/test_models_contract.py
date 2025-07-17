@@ -5,16 +5,16 @@ from zoneinfo import ZoneInfo
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories, models
+from joanie.tests.base import BaseAPITestCase
 
 # pylint: disable=too-many-public-methods
 
 
-class ContractModelTestCase(TestCase):
+class ContractModelTestCase(BaseAPITestCase):
     """
     Test case for the Contract Model
     """
@@ -688,7 +688,7 @@ class ContractModelTestCase(TestCase):
         contract = factories.ContractFactory()
         contract.order.organization.user_role = "owner"
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             assert contract.get_abilities(user) == {"sign": True}
 
     def test_models_contracts_is_fully_signed_property_should_return_true(self):

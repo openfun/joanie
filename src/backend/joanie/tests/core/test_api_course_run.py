@@ -116,7 +116,7 @@ class CourseRunApiTest(BaseAPITestCase):
         """
         course_run = factories.CourseRunFactory(is_listed=True)
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             response = self.client.get(f"/api/v1.0/course-runs/{course_run.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -170,7 +170,7 @@ class CourseRunApiTest(BaseAPITestCase):
         factories.CourseRunFactory(course=courses[1], is_listed=True)
         factories.CourseRunFactory(course=courses[1], is_listed=False)
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/course-runs/{course_run.id}/"
             )

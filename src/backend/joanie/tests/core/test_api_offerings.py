@@ -496,11 +496,11 @@ class OfferingApiTest(BaseAPITestCase):
             organizations=factories.OrganizationFactory.create_batch(2),
         )
 
-        with self.assertNumQueries(78):
+        with self.record_performance():
             self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
 
         # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
@@ -513,7 +513,7 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(content["product"]["id"], str(product.id))
 
         # This query should be cached
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
@@ -521,13 +521,13 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Then cache should be language sensitive
-        with self.assertNumQueries(19):
+        with self.record_performance():
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
             )
 
-        with self.assertNumQueries(3):
+        with self.record_performance():
             self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/",
                 HTTP_ACCEPT_LANGUAGE="fr-fr",
@@ -620,14 +620,14 @@ class OfferingApiTest(BaseAPITestCase):
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
-        with self.assertNumQueries(7):
+        with self.record_performance():
             self.client.get(
                 f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
         # A second call to the url should benefit from caching on the product serializer
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -786,7 +786,7 @@ class OfferingApiTest(BaseAPITestCase):
                 state=state,
             )
 
-        with self.assertNumQueries(61):
+        with self.record_performance():
             self.client.get(
                 f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -794,7 +794,7 @@ class OfferingApiTest(BaseAPITestCase):
 
         # A second call to the url should benefit from caching on
         # the offering serializer
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

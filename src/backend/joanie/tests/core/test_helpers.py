@@ -2,14 +2,13 @@
 
 from unittest import mock
 
-from django.test.testcases import TestCase
-
 from joanie.core import enums, factories, helpers, models
 from joanie.core.exceptions import CertificateGenerationError
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
+from joanie.tests.base import BaseAPITestCase
 
 
-class HelpersTestCase(TestCase):
+class HelpersTestCase(BaseAPITestCase):
     """Joanie core helpers tests case"""
 
     def test_helpers_get_or_generate_certificate_needs_graded_courses(self):
@@ -154,13 +153,13 @@ class HelpersTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # DB queries should be minimized
-        with self.assertNumQueries(18):
+        with self.record_performance():
             _certificate, created = order.get_or_generate_certificate()
         self.assertTrue(created)
         self.assertEqual(certificate_qs.count(), 1)
 
         # But calling it again, should not create a new certificate
-        with self.assertNumQueries(1):
+        with self.record_performance():
             _certificate, created = order.get_or_generate_certificate()
         self.assertFalse(created)
         self.assertEqual(certificate_qs.count(), 1)

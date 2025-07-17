@@ -1,0 +1,3 @@
+OrganizationAccessModelsTestCase.test_models_organization_access_get_abilities_for_member_of_member_user:
+- db: 'SELECT "joanie_organization_access"."role" FROM "joanie_organization_access" WHERE ("joanie_organization_access"."organization_id" = #::uuid AND "joanie_organization_access"."user_id" = #::uuid) ORDER BY "joanie_organization_access"."created_on" DESC LIMIT #'
+OrganizationAccessModelsTestCase.test_models_organization_access_get_abilities_preset_role: []

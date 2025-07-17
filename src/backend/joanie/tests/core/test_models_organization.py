@@ -113,7 +113,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         """Check abilities returned for the member of a organization."""
         access = factories.UserOrganizationAccessFactory(role="member")
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             abilities = access.organization.get_abilities(access.user)
 
         self.assertEqual(
@@ -133,7 +133,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         access = factories.UserOrganizationAccessFactory(role="member")
         access.organization.user_role = "member"
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             abilities = access.organization.get_abilities(access.user)
 
         self.assertEqual(

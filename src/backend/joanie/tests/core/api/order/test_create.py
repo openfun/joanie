@@ -1251,7 +1251,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             "has_waived_withdrawal_right": True,
         }
 
-        with self.assertNumQueries(81):
+        with self.record_performance():
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1400,7 +1400,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(14):
+        with self.record_performance():
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,
@@ -1597,7 +1597,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         }
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(14):
+        with self.record_performance():
             response = self.client.post(
                 "/api/v1.0/orders/",
                 data=data,

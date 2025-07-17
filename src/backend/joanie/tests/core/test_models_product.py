@@ -10,14 +10,14 @@ from decimal import Decimal as D
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.test import TestCase
 from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories, models
 from joanie.core.models import CourseState
+from joanie.tests.base import BaseAPITestCase
 
 
-class ProductModelsTestCase(TestCase):
+class ProductModelsTestCase(BaseAPITestCase):
     """Test suite for the Product model."""
 
     maxDiff = None
@@ -115,7 +115,7 @@ class ProductModelsTestCase(TestCase):
         relation.course_runs.add(cr3)
 
         # - DB queries should be optimized
-        with self.assertNumQueries(1):
+        with self.record_performance():
             course_runs = product.target_course_runs.order_by("pk")
             self.assertEqual(len(course_runs), 3)
             self.assertCountEqual(list(course_runs), [cr1, cr2, cr3])
@@ -209,7 +209,7 @@ class ProductModelsTestCase(TestCase):
             target_courses=[cr.course for cr in course_runs], price="50.00"
         )
 
-        with self.assertNumQueries(3):
+        with self.record_performance():
             data = product.get_equivalent_course_run_data()
 
         languages = data.pop("languages")

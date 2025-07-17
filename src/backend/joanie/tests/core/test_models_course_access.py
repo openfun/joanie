@@ -402,7 +402,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
             course=access.course, role="manager"
         ).user
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             abilities = access.get_abilities(user)
 
         self.assertEqual(
@@ -424,7 +424,7 @@ class CourseAccessModelsTestCase(BaseAPITestCase):
         ).user
         access.user_role = "manager"
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             abilities = access.get_abilities(user)
 
         self.assertEqual(

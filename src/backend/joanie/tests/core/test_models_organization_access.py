@@ -288,7 +288,7 @@ class OrganizationAccessModelsTestCase(BaseAPITestCase):
             organization=access.organization, role="member"
         ).user
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             abilities = access.get_abilities(user)
 
         self.assertEqual(
@@ -310,7 +310,7 @@ class OrganizationAccessModelsTestCase(BaseAPITestCase):
         ).user
         access.user_role = "member"
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             abilities = access.get_abilities(user)
 
         self.assertEqual(

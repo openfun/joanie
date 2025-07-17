@@ -752,6 +752,10 @@ class Development(Base):
 
     USE_SWAGGER = True
 
+    PERF_REC = {
+        "MODE": "overwrite",
+    }
+
     def __init__(self):
         # pylint: disable=invalid-name
         self.INSTALLED_APPS += [
@@ -843,6 +847,10 @@ class Test(Base):
 
     CELERY_TASK_ALWAYS_EAGER = values.BooleanValue(True)
 
+    PERF_REC = {
+        "MODE": "overwrite",
+    }
+
     def __init__(self):
         # pylint: disable=invalid-name
         self.INSTALLED_APPS += [
@@ -858,6 +866,10 @@ class ContinuousIntegration(Test):
 
     nota bene: it should inherit from the Test environment.
     """
+
+    PERF_REC = {
+        "MODE": "none",
+    }
 
 
 class Production(Base):

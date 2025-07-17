@@ -1,0 +1,15 @@
+UserModelTestCase.test_models_user_create_or_update_from_request_changed:
+- db: 'UPDATE "joanie_user" SET ... WHERE "joanie_user"."username" = #'
+UserModelTestCase.test_models_user_create_or_update_from_request_unchanged: []
+UserModelTestCase.test_models_user_get_abilities_course_roles:
+- db: 'SELECT # AS "a" FROM "joanie_course_access" WHERE "joanie_course_access"."user_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_organization_access" WHERE "joanie_organization_access"."user_id" = #::uuid LIMIT #'
+UserModelTestCase.test_models_user_get_abilities_organization_roles:
+- db: 'SELECT # AS "a" FROM "joanie_course_access" WHERE "joanie_course_access"."user_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_organization_access" WHERE "joanie_organization_access"."user_id" = #::uuid LIMIT #'
+UserModelTestCase.test_models_user_get_other_user_abilities_course_access:
+- db: 'SELECT # AS "a" FROM "joanie_course_access" WHERE "joanie_course_access"."user_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_organization_access" WHERE "joanie_organization_access"."user_id" = #::uuid LIMIT #'
+UserModelTestCase.test_models_user_get_other_user_abilities_organization_access:
+- db: 'SELECT # AS "a" FROM "joanie_course_access" WHERE "joanie_course_access"."user_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_organization_access" WHERE "joanie_organization_access"."user_id" = #::uuid LIMIT #'

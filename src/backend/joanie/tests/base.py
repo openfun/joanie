@@ -9,6 +9,7 @@ from django.test import TestCase, override_settings
 from django.utils import translation
 from django.utils.log import configure_logging
 
+from django_perf_rec import TestCaseMixin as PerfRecTestCaseMixin
 from rest_framework_simplejwt.tokens import AccessToken
 
 from joanie.core import enums
@@ -17,7 +18,7 @@ from joanie.core.utils.jwt_tokens import generate_jwt_token_from_user
 from joanie.core.utils.sentry import serialize_data
 
 
-class BaseAPITestCase(TestCase):
+class BaseAPITestCase(PerfRecTestCaseMixin, TestCase):
     """Base API test case"""
 
     maxDiff = None
@@ -70,7 +71,7 @@ class BaseAPITestCase(TestCase):
         return generate_jwt_token_from_user(user, expires_at)
 
 
-class LoggingTestCase(TestCase):
+class LoggingTestCase(PerfRecTestCaseMixin, TestCase):
     """Base test case for logging tests"""
 
     maxDiff = None

@@ -30,7 +30,7 @@ class ContractApiTest(BaseAPITestCase):
 
     def test_api_contracts_list_anonymous(self):
         """Anonymous user cannot query contracts."""
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.get("/api/v1.0/contracts/")
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -70,7 +70,7 @@ class ContractApiTest(BaseAPITestCase):
 
         factories.ContractFactory.create_batch(5)
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -105,7 +105,7 @@ class ContractApiTest(BaseAPITestCase):
         # - Create random contracts that should not be returned
         factories.ContractFactory.create_batch(5)
 
-        with self.assertNumQueries(14):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -208,7 +208,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 9 contracts
-        with self.assertNumQueries(418):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -219,7 +219,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 9)
 
         # - Filter by state=unsigned should return 5 contracts
-        with self.assertNumQueries(14):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=unsigned",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -235,7 +235,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=half_signed should return 3 contracts
-        with self.assertNumQueries(10):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=half_signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -251,7 +251,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         # - Filter by state=signed should return 1 contract
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/?signature_state=signed",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -319,7 +319,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 2 contracts
-        with self.assertNumQueries(96):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -330,7 +330,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
 
         # - Filter by org1 should return 1 contract
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?organization_id={str(org1.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -344,7 +344,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(org1_contract.id)])
 
         # - Filter by org2 should return 1 contract
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?organization_id={str(org2.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -390,7 +390,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 2 contracts
-        with self.assertNumQueries(96):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -401,7 +401,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
 
         # - Filter by c1 should return 1 contract
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?course_id={str(c1.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -415,7 +415,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(c1_contract.id)])
 
         # - Filter by c2 should return 1 contract
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?course_id={str(c2.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -457,7 +457,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 2 contracts
-        with self.assertNumQueries(96):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -468,7 +468,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
 
         # - Filter by c1 should return 1 contract
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?product_id={str(p1.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -482,7 +482,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(p1_contract.id)])
 
         # - Filter by c2 should return 1 contract
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?product_id={str(p2.id)}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -539,7 +539,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(8)
 
         # - List without filter should return 8 contracts
-        with self.assertNumQueries(96):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -551,7 +551,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 2)
 
         # - Filter by the first offering should return 5 contracts
-        with self.assertNumQueries(7):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?offering_id={offering_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -565,7 +565,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(contract_1.id)])
 
         # - Filter by the second offering should return 3 contracts
-        with self.assertNumQueries(7):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -579,7 +579,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertCountEqual(result_ids, [str(contract_2.id)])
 
         # - Filter by the unknown offering should return no contracts
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?offering_id={uuid4()}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -591,7 +591,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(count, 0)
 
         # - Filter by offering with unowned order should return no contracts
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?offering_id={other_offering.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -618,7 +618,7 @@ class ContractApiTest(BaseAPITestCase):
         factories.ContractFactory.create_batch(5)
 
         # - List without filter should return 5 contracts
-        with self.assertNumQueries(234):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -629,7 +629,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertEqual(content["count"], 5)
 
         # - List by filter id should return only contracts with those ids
-        with self.assertNumQueries(10):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?id={contracts[0].id}&id={contracts[3].id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -650,7 +650,7 @@ class ContractApiTest(BaseAPITestCase):
 
         # - List by unknown id should return a 400 Bad Request
         invalid_uuid = uuid4()
-        with self.assertNumQueries(1):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/?id={invalid_uuid}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -672,7 +672,7 @@ class ContractApiTest(BaseAPITestCase):
         """
         contract = factories.ContractFactory()
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.get(f"/api/v1.0/contracts/{str(contract.id)}/")
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -701,7 +701,7 @@ class ContractApiTest(BaseAPITestCase):
             order__organization=organization,
         )
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -726,7 +726,7 @@ class ContractApiTest(BaseAPITestCase):
             order__state=enums.ORDER_STATE_COMPLETED,
         )
 
-        with self.assertNumQueries(7):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -815,7 +815,7 @@ class ContractApiTest(BaseAPITestCase):
             order__state=enums.ORDER_STATE_CANCELED,
         )
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -829,7 +829,7 @@ class ContractApiTest(BaseAPITestCase):
 
     def test_api_contracts_create_anonymous(self):
         """Anonymous user cannot create a contract."""
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.post("/api/v1.0/contracts/")
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -839,7 +839,7 @@ class ContractApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.post(
                 "/api/v1.0/contracts/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -855,7 +855,7 @@ class ContractApiTest(BaseAPITestCase):
         """Anonymous user cannot update a contract."""
         contract = factories.ContractFactory()
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.put(f"/api/v1.0/contracts/{str(contract.id)}/")
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -866,7 +866,7 @@ class ContractApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.put(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -882,7 +882,7 @@ class ContractApiTest(BaseAPITestCase):
         """Anonymous user cannot patch a contract."""
         contract = factories.ContractFactory()
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.patch(f"/api/v1.0/contracts/{str(contract.id)}/")
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -893,7 +893,7 @@ class ContractApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.patch(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -909,7 +909,7 @@ class ContractApiTest(BaseAPITestCase):
         """Anonymous user cannot delete a contract."""
         contract = factories.ContractFactory()
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.delete(f"/api/v1.0/contracts/{str(contract.id)}/")
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
@@ -920,7 +920,7 @@ class ContractApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.delete(
                 f"/api/v1.0/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

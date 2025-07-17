@@ -165,7 +165,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled from related enrollments
-        with self.assertNumQueries(14):
+        with self.record_performance():
             order.flow.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
@@ -203,7 +203,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         self.assertEqual(Enrollment.objects.filter(is_active=True).count(), 1)
 
         # - When order is canceled, user should not be unenrolled to related enrollments
-        with self.assertNumQueries(11):
+        with self.record_performance():
             order.flow.cancel()
 
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)

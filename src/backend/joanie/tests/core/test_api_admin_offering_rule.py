@@ -6,13 +6,13 @@ from datetime import timedelta
 from http import HTTPStatus
 
 from django.db import IntegrityError
-from django.test import TestCase
 from django.utils import timezone as django_timezone
 
 from joanie.core import factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
-class OfferingRuleAdminApiTest(TestCase):
+class OfferingRuleAdminApiTest(BaseAPITestCase):
     """
     Test suite for OfferingRule Admin API.
     """
@@ -54,7 +54,7 @@ class OfferingRuleAdminApiTest(TestCase):
 
         factories.OfferingRuleFactory.create_batch(5)
 
-        with self.assertNumQueries(22):
+        with self.record_performance():
             response = self.client.get(f"{self.base_url}/{offering.id}/offering-rules/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -135,7 +135,7 @@ class OfferingRuleAdminApiTest(TestCase):
             description="Sales",
         )
 
-        with self.assertNumQueries(8):
+        with self.record_performance():
             response = self.client.get(
                 f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/"
             )
@@ -244,7 +244,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": 5,
             "is_active": True,
         }
-        with self.assertNumQueries(12):
+        with self.record_performance():
             response = self.client.post(
                 f"{self.base_url}/{offering.id}/offering-rules/",
                 content_type="application/json",
@@ -288,7 +288,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": 505,
             "is_active": True,
         }
-        with self.assertNumQueries(11):
+        with self.record_performance():
             response = self.client.put(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -316,7 +316,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "description": None,
         }
 
-        with self.assertNumQueries(9):
+        with self.record_performance():
             response = self.client.put(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -360,7 +360,7 @@ class OfferingRuleAdminApiTest(TestCase):
         data = {
             "is_active": True,
         }
-        with self.assertNumQueries(9):
+        with self.record_performance():
             response = self.client.patch(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -395,7 +395,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "description": None,
         }
 
-        with self.assertNumQueries(9):
+        with self.record_performance():
             response = self.client.patch(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -422,7 +422,7 @@ class OfferingRuleAdminApiTest(TestCase):
             "nb_seats": "",
             "is_active": True,
         }
-        with self.assertNumQueries(9):
+        with self.record_performance():
             response = self.client.patch(
                 f"{self.base_url}/{offering.id}/offering-rules/{str(offering_rule.id)}/",
                 content_type="application/json",
@@ -453,7 +453,7 @@ class OfferingRuleAdminApiTest(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         content = response.json()
-        with self.assertNumQueries(0):
+        with self.record_performance():
             self.assertEqual(
                 content["detail"], "Authentication credentials were not provided."
             )
@@ -467,7 +467,7 @@ class OfferingRuleAdminApiTest(TestCase):
 
         offering = factories.OfferingFactory()
         offering_rule = factories.OfferingRuleFactory(course_product_relation=offering)
-        with self.assertNumQueries(9):
+        with self.record_performance():
             response = self.client.delete(
                 f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
             )
@@ -485,7 +485,7 @@ class OfferingRuleAdminApiTest(TestCase):
 
         offering = factories.OfferingFactory()
         offering_rule = factories.OfferingRuleFactory(course_product_relation=offering)
-        with self.assertNumQueries(9):
+        with self.record_performance():
             response = self.client.delete(
                 f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
             )

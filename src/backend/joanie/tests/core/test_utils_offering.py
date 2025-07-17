@@ -202,7 +202,7 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
 
         with (
             mock.patch("django.utils.timezone.now", return_value=mocked_now),
-            self.assertNumQueries(22),
+            self.record_performance(),
             self.assertLogs() as logger,
         ):
             synchronize_offerings.run()

@@ -71,7 +71,7 @@ class OrderReadApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         token = self.generate_token_from_user(owner)
 
-        with self.assertNumQueries(11):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/orders/{order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

@@ -1,0 +1,14 @@
+OrdersAdminApiTestCase.test_api_admin_enrollments_list:
+- db: 'SELECT ... FROM "django_session" WHERE ("django_session"."expire_date" > #::timestamptz AND "django_session"."session_key" = #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: SELECT COUNT(*) AS "__count" FROM "joanie_enrollment"
+- db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_course" ON ("joanie_course_run"."course_id" = "joanie_course"."id") INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_enrollment"."id" = "joanie_certificate"."enrollment_id") ORDER BY "joanie_enrollment"."created_on" DESC LIMIT #'
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+OrdersAdminApiTestCase.test_api_admin_enrollments_retrieve:
+- db: 'SELECT ... FROM "django_session" WHERE ("django_session"."expire_date" > #::timestamptz AND "django_session"."session_key" = #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_course" ON ("joanie_course_run"."course_id" = "joanie_course"."id") INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_enrollment"."id" = "joanie_certificate"."enrollment_id") WHERE "joanie_enrollment"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CertificateDefinitionTranslation.#.en-us

@@ -102,7 +102,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             organization=other_organization, role="owner"
         )
 
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organization.id!s}/accesses/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",

@@ -5,16 +5,15 @@ from datetime import date, datetime, timezone
 from http import HTTPStatus
 from unittest import mock
 
-from django.test import TestCase
-
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, Order
 from joanie.core.utils import get_default_currency_symbol
 from joanie.tests import format_date
+from joanie.tests.base import BaseAPITestCase
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
-class OrdersAdminApiListTestCase(TestCase):
+class OrdersAdminApiListTestCase(BaseAPITestCase):
     """Test suite for the admin orders API list endpoint."""
 
     maxDiff = None
@@ -82,7 +81,7 @@ class OrdersAdminApiListTestCase(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        with self.assertNumQueries(6):
+        with self.record_performance():
             response = self.client.get("/api/v1.0/admin/orders/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
