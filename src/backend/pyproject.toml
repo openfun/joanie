@@ -101,6 +101,7 @@ dev = [
     "pytest-subtests==0.14.1",
     "pytest-xdist==3.6.1",
     "responses==0.25.7",
+    "rich==14.0.0",
     "ruff==0.11.9",
     "types-requests==2.32.0.20250328",
     # edx_imports
