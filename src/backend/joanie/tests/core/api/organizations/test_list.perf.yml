@@ -1,0 +1,52 @@
+OrganizationApiListTest.test_api_organization_list_authenticated_queries:
+- db: 'SELECT COUNT(*) AS "__count" FROM "joanie_organization" INNER JOIN "joanie_organization_access" ON ("joanie_organization"."id" = "joanie_organization_access"."organization_id") INNER JOIN "joanie_user" ON ("joanie_organization_access"."user_id" = "joanie_user"."id") WHERE "joanie_user"."username" = #'
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_organization_access" ON ("joanie_organization"."id" = "joanie_organization_access"."organization_id") INNER JOIN "joanie_user" ON ("joanie_organization_access"."user_id" = "joanie_user"."id") WHERE "joanie_user"."username" = # ORDER BY "joanie_organization"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."username" = # LIMIT #'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'

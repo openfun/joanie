@@ -1,0 +1,34 @@
+CourseModelsTestCase.test_models_course_get_abilities_manager_user:
+- db: 'SELECT "joanie_course_access"."role" FROM "joanie_course_access" WHERE ("joanie_course_access"."course_id" = #::uuid AND "joanie_course_access"."user_id" = #::uuid) ORDER BY "joanie_course_access"."created_on" DESC LIMIT #'
+CourseModelsTestCase.test_models_course_get_abilities_preset_role: []
+CourseStateModelsTestCase.test_models_course_get_selling_organizations_all:
+- db: 'SELECT COUNT(*) AS "__count" FROM "joanie_organization" WHERE "joanie_organization"."id" IN (SELECT DISTINCT U2."organization_id" FROM "joanie_course_product_relation" U0 LEFT OUTER JOIN "joanie_course_product_relation_organizations" U2 ON (U0."id" = U2."courseproductrelation_id") WHERE U0."course_id" = #::uuid)'
+CourseStateModelsTestCase.test_models_course_get_selling_organizations_with_product:
+- db: 'SELECT COUNT(*) AS "__count" FROM "joanie_organization" WHERE "joanie_organization"."id" IN (SELECT DISTINCT U3."organization_id" FROM "joanie_course_product_relation" U0 LEFT OUTER JOIN "joanie_course_product_relation_organizations" U3 ON (U0."id" = U3."courseproductrelation_id") WHERE (U0."course_id" = #::uuid AND U0."product_id" = #::uuid))'
+CourseStateModelsTestCase.test_models_course_state_archived_closed:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" = #::uuid ORDER BY "joanie_product"."created_on" DESC'
+CourseStateModelsTestCase.test_models_course_state_archived_open:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" = #::uuid ORDER BY "joanie_product"."created_on" DESC'
+CourseStateModelsTestCase.test_models_course_state_future_enrollment_closed:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" = #::uuid ORDER BY "joanie_product"."created_on" DESC'
+CourseStateModelsTestCase.test_models_course_state_future_enrollment_not_yet_open:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" = #::uuid ORDER BY "joanie_product"."created_on" DESC'
+CourseStateModelsTestCase.test_models_course_state_future_enrollment_open:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" = #::uuid ORDER BY "joanie_product"."created_on" DESC'
+CourseStateModelsTestCase.test_models_course_state_ongoing_enrollment_closed:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" = #::uuid ORDER BY "joanie_product"."created_on" DESC'
+CourseStateModelsTestCase.test_models_course_state_ongoing_open:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+CourseStateModelsTestCase.test_models_course_state_to_be_scheduled:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" = #::uuid ORDER BY "joanie_product"."created_on" DESC'
+CourseStateModelsTestCase.test_models_course_state_with_products:
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_product" INNER JOIN "joanie_course_product_relation" ON ("joanie_product"."id" = "joanie_course_product_relation"."product_id") WHERE "joanie_course_product_relation"."course_id" = #::uuid ORDER BY "joanie_product"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_course_run" LEFT OUTER JOIN "joanie_product_target_course_relation_course_runs" ON ("joanie_course_run"."id" = "joanie_product_target_course_relation_course_runs"."courserun_id") WHERE ("joanie_product_target_course_relation_course_runs"."producttargetcourserelation_id" IN (SELECT U0."id" FROM "joanie_product_target_course_relation" U0 INNER JOIN "joanie_product_target_course_relation_course_runs" U2 ON (U0."id" = U2."producttargetcourserelation_id") WHERE (U0."product_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) OR "joanie_course_run"."course_id" IN (SELECT W0."id" FROM "joanie_course" W0 INNER JOIN "joanie_product_target_course_relation" W1 ON (W0."id" = W1."course_id") WHERE (W1."product_id" = #::uuid AND NOT (EXISTS(SELECT # AS "a" FROM "joanie_product_target_course_relation" V1 WHERE (V1."id" IN (SELECT U0."id" FROM "joanie_product_target_course_relation" U0 INNER JOIN "joanie_product_target_course_relation_course_runs" U2 ON (U0."id" = U2."producttargetcourserelation_id") WHERE (U0."product_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) AND V1."id" = (W1."id") AND W1."course_id" = (W0."id")) LIMIT #)))))'

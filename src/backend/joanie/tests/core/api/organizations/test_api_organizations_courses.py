@@ -62,7 +62,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         )
 
         # Retrieve all courses from org with access
-        with self.assertNumQueries(101):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/courses/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -97,7 +97,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         factories.CourseRunFactory(course=courses[0], is_listed=True)
         factories.CourseRunFactory(course=courses[1], is_listed=False)
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{organizations[1].id}"
@@ -119,7 +119,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 0)
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[1].id}/courses/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -129,7 +129,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(content["count"], 0)
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[1].id}/courses/{courses[0].id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -154,7 +154,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(
             organization=organizations[0], user=user
         )
-        with self.assertNumQueries(52):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/courses/{courses[0].id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -180,7 +180,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         factories.CourseRunFactory(course=courses[1], is_listed=False)
 
         factories.UserOrganizationAccessFactory(organization=organizations[0])
-        with self.assertNumQueries(1):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/courses/{courses[0].id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -202,7 +202,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         factories.CourseRunFactory(course=courses[1], is_listed=False)
 
         factories.UserOrganizationAccessFactory(organization=organizations[0])
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/organizations/{organizations[0].id}/courses/{courses[0].id}/",
             )
@@ -238,7 +238,7 @@ class OrganizationCourseApiTest(BaseAPITestCase):
         )
 
         # Retrieve all courses from org with listed course runs
-        with self.assertNumQueries(53):
+        with self.record_performance():
             response = self.client.get(
                 (
                     f"/api/v1.0/organizations/{organizations[0].id}"

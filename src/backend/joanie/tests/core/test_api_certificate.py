@@ -161,7 +161,7 @@ class CertificateApiTest(BaseAPITestCase):
             certificate_definition__template=enums.CERTIFICATE,
         )
 
-        with self.assertNumQueries(19):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
@@ -394,7 +394,7 @@ class CertificateApiTest(BaseAPITestCase):
             enrollment=enrollment_3, certificate_definition__template=enums.CERTIFICATE
         )
 
-        with self.assertNumQueries(19):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/certificates/?type=order",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -607,7 +607,7 @@ class CertificateApiTest(BaseAPITestCase):
             certificate_definition__template=enums.CERTIFICATE,
         )
 
-        with self.assertNumQueries(8):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/certificates/?type=enrollment",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -762,7 +762,7 @@ class CertificateApiTest(BaseAPITestCase):
         enrollment_3 = factories.EnrollmentFactory(user=user)
         factories.EnrollmentCertificateFactory(enrollment=enrollment_3)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/certificates/?type=foo", HTTP_AUTHORIZATION=f"Bearer {token}"
             )

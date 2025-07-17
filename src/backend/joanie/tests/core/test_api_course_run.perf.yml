@@ -1,0 +1,8 @@
+CourseRunApiTest.test_api_course_run_read_detail:
+- db: 'SELECT ... FROM "joanie_course_run" INNER JOIN "joanie_course" ON ("joanie_course_run"."course_id" = "joanie_course"."id") WHERE ("joanie_course_run"."is_listed" AND "joanie_course_run"."id" = #::uuid) LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+CourseRunApiTest.test_api_course_run_read_detail_with_nested_course:
+- db: 'SELECT ... FROM "joanie_course_run" INNER JOIN "joanie_course" ON ("joanie_course_run"."course_id" = "joanie_course"."id") WHERE ("joanie_course_run"."is_listed" AND "joanie_course_run"."course_id" = #::uuid AND "joanie_course_run"."id" = #::uuid) LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us

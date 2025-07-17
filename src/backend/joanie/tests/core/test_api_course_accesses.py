@@ -47,7 +47,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         factories.UserCourseAccessFactory(course=course, role="manager")
         factories.UserCourseAccessFactory(course=course, role="owner")
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id!s}/accesses/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
@@ -89,7 +89,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         factories.UserCourseAccessFactory(course=other_course, role="manager")
         factories.UserCourseAccessFactory(course=other_course, role="owner")
 
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id!s}/accesses/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",

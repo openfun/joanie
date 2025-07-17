@@ -68,7 +68,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
             ],
         )
 
-        with self.assertNumQueries(5):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/batch-orders/{batch_order.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

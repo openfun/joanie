@@ -1,0 +1,4 @@
+AddressAPITestCase.test_api_address_get_addresses:
+- db: 'SELECT COUNT(*) AS "__count" FROM "joanie_address" INNER JOIN "joanie_user" ON ("joanie_address"."owner_id" = "joanie_user"."id") WHERE ("joanie_address"."is_reusable" AND "joanie_user"."username" = #)'
+- db: 'SELECT ... FROM "joanie_address" INNER JOIN "joanie_user" ON ("joanie_address"."owner_id" = "joanie_user"."id") WHERE ("joanie_address"."is_reusable" AND "joanie_user"."username" = #) ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+AddressAPITestCase.test_api_address_get_addresses_for_new_user: []

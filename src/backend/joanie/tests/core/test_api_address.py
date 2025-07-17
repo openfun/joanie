@@ -81,7 +81,7 @@ class AddressAPITestCase(BaseAPITestCase):
             "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertEqual(
@@ -112,7 +112,7 @@ class AddressAPITestCase(BaseAPITestCase):
             owner=user, title="Home", is_reusable=True
         )
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )

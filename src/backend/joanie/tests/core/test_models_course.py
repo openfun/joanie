@@ -7,7 +7,6 @@ from datetime import timedelta
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
-from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import factories, models
@@ -172,7 +171,7 @@ class CourseModelsTestCase(BaseAPITestCase):
         """Check abilities returned for the manager of a course."""
         access = factories.UserCourseAccessFactory(role="manager")
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             abilities = access.course.get_abilities(access.user)
 
         self.assertEqual(
@@ -191,7 +190,7 @@ class CourseModelsTestCase(BaseAPITestCase):
         access = factories.UserCourseAccessFactory(role="manager")
         access.course.user_role = "manager"
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             abilities = access.course.get_abilities(access.user)
 
         self.assertEqual(
@@ -206,7 +205,7 @@ class CourseModelsTestCase(BaseAPITestCase):
         )
 
 
-class CourseStateModelsTestCase(TestCase):
+class CourseStateModelsTestCase(BaseAPITestCase):
     """
     Unit test suite for computing a date to display on the course glimpse depending on
     the state of its related course runs:
@@ -228,7 +227,7 @@ class CourseStateModelsTestCase(TestCase):
         Confirm course state result when there is no course runs at all.
         """
         course = factories.CourseFactory()
-        with self.assertNumQueries(2):
+        with self.record_performance():
             state = course.state
         self.assertEqual(state, CourseState(7))
 
@@ -241,7 +240,7 @@ class CourseStateModelsTestCase(TestCase):
             course=course,
             state=CourseState.ARCHIVED_CLOSED,
         )
-        with self.assertNumQueries(2):
+        with self.record_performance():
             state = course.state
         self.assertEqual(state, CourseState(6))
 
@@ -254,7 +253,7 @@ class CourseStateModelsTestCase(TestCase):
             course=course,
             state=CourseState.ARCHIVED_OPEN,
         )
-        with self.assertNumQueries(2):
+        with self.record_performance():
             state = course.state
         self.assertEqual(state, CourseState(2, MAX_DATE))
 
@@ -268,7 +267,7 @@ class CourseStateModelsTestCase(TestCase):
             course=course,
             state=CourseState.ONGOING_CLOSED,
         )
-        with self.assertNumQueries(2):
+        with self.record_performance():
             state = course.state
         self.assertEqual(state, CourseState(5))
 
@@ -282,7 +281,7 @@ class CourseStateModelsTestCase(TestCase):
             course=course,
             state=CourseState.FUTURE_NOT_YET_OPEN,
         )
-        with self.assertNumQueries(2):
+        with self.record_performance():
             state = course.state
         expected_state = CourseState(3, course_run.start)
         self.assertEqual(state, expected_state)
@@ -297,7 +296,7 @@ class CourseStateModelsTestCase(TestCase):
             course=course,
             state=CourseState.FUTURE_CLOSED,
         )
-        with self.assertNumQueries(2):
+        with self.record_performance():
             state = course.state
         expected_state = CourseState(4)
         self.assertEqual(state, expected_state)
@@ -311,7 +310,7 @@ class CourseStateModelsTestCase(TestCase):
             course=course,
             state=CourseState.FUTURE_OPEN,
         )
-        with self.assertNumQueries(2):
+        with self.record_performance():
             state = course.state
         expected_state = CourseState(1, course_run.start)
         self.assertEqual(state, expected_state)
@@ -325,7 +324,7 @@ class CourseStateModelsTestCase(TestCase):
             course=course,
             state=CourseState.ONGOING_OPEN,
         )
-        with self.assertNumQueries(1):
+        with self.record_performance():
             state = course.state
         expected_state = CourseState(0, course_run.enrollment_end)
         self.assertEqual(state, expected_state)
@@ -342,7 +341,7 @@ class CourseStateModelsTestCase(TestCase):
         product = factories.ProductFactory(target_courses=[target_course])
         course = factories.CourseFactory(products=[product])
 
-        with self.assertNumQueries(3):
+        with self.record_performance():
             state = course.state
 
         expected_state = CourseState(0, target_course_run.enrollment_end)
@@ -362,7 +361,7 @@ class CourseStateModelsTestCase(TestCase):
 
         organizations = course.get_selling_organizations()
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             self.assertEqual(organizations.count(), 1)
 
     def test_models_course_get_selling_organizations_with_product(self):
@@ -385,7 +384,7 @@ class CourseStateModelsTestCase(TestCase):
 
         organizations = course.get_selling_organizations(product=product)
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             self.assertEqual(organizations.count(), 2)
 
     def test_models_course_get_equivalent_course_run_dates(self):

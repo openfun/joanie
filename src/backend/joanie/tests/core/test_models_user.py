@@ -88,7 +88,7 @@ class UserModelTestCase(BaseAPITestCase):
         new_user_for_data = factories.UserFactory.build()
         token = self.generate_token_from_user(new_user_for_data)
 
-        with self.assertNumQueries(1):
+        with self.record_performance():
             user.update_from_token(token)
 
         user.refresh_from_db()
@@ -109,7 +109,7 @@ class UserModelTestCase(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             user.update_from_token(token)
 
     def test_models_user_create_or_update_from_request_language(self):
@@ -188,7 +188,7 @@ class UserModelTestCase(BaseAPITestCase):
         factories.CourseFactory(users=[(user, "administrator")])
         factories.CourseFactory(users=[(user, "administrator")])
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             abilities = user.get_abilities(user)
 
         self.assertTrue(abilities["has_course_access"])
@@ -201,7 +201,7 @@ class UserModelTestCase(BaseAPITestCase):
         factories.OrganizationFactory(users=[(user, "administrator")])
         factories.OrganizationFactory(users=[(user, "administrator")])
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             abilities = user.get_abilities(user)
 
         self.assertFalse(abilities["has_course_access"])
@@ -218,7 +218,7 @@ class UserModelTestCase(BaseAPITestCase):
         factories.OrganizationFactory(users=[(user_target, "administrator")])
         factories.OrganizationFactory(users=[(user_target, "administrator")])
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             abilities = user.get_abilities(user_target)
 
         self.assertFalse(abilities["has_course_access"])
@@ -235,7 +235,7 @@ class UserModelTestCase(BaseAPITestCase):
         factories.CourseFactory(users=[(user_target, "administrator")])
         factories.CourseFactory(users=[(user_target, "administrator")])
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             abilities = user.get_abilities(user_target)
 
         self.assertTrue(abilities["has_course_access"])

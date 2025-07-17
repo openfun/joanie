@@ -6,15 +6,16 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 import responses
 
 from joanie.core import enums, factories, models
 from joanie.lms_handler import LMSHandler
+from joanie.tests.base import BaseAPITestCase
 
 
-class CreateCertificatesTestCase(TestCase):
+class CreateCertificatesTestCase(BaseAPITestCase):
     """Test case for the management command 'generate_certificates'"""
 
     def test_commands_generate_certificates_has_options(
@@ -418,13 +419,13 @@ class CreateCertificatesTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st product
-        with self.assertNumQueries(23):
+        with self.record_performance():
             call_command("generate_certificates", product=product_1.id)
         self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 0)
 
         # Then a certificate should be generated for the 2nd product
-        with self.assertNumQueries(23):
+        with self.record_performance():
             call_command("generate_certificates", product=product_2.id)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)
 
@@ -521,12 +522,12 @@ class CreateCertificatesTestCase(TestCase):
         self.assertEqual(certificate_qs.count(), 0)
 
         # A certificate should be generated for the 1st product
-        with self.assertNumQueries(23):
+        with self.record_performance():
             call_command("generate_certificates", product=product_1.id)
         self.assertEqual(certificate_qs.filter(order=orders[0]).count(), 1)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 0)
 
         # Then a certificate should be generated for the 2nd product
-        with self.assertNumQueries(23):
+        with self.record_performance():
             call_command("generate_certificates", product=product_2.id)
         self.assertEqual(certificate_qs.filter(order=orders[1]).count(), 1)

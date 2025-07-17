@@ -742,6 +742,7 @@ class Demo:
                 course="00000", course_run="CourseRunCertificate_run1"
             ),
             course__code="00000",
+            course__title="Target Course for certificate",
             # Give access to organization owner user
             course__users=[[organization_owner, enums.OWNER]],
             course__organizations=[organization],
@@ -755,6 +756,7 @@ class Demo:
                 course="00001", course_run="CourseRunCertificate_run1"
             ),
             course__code="00001",
+            course__title="Target Course for certificate discount",
             # Give access to organization owner user
             course__users=[[organization_owner, enums.OWNER]],
             course__organizations=[organization],
@@ -769,6 +771,7 @@ class Demo:
                 course="00002", course_run="CourseRunCredential_run1"
             ),
             course__code="00002",
+            course__title="Target Course for credential",
             # Give access to organization owner user
             course__users=[[organization_owner, enums.OWNER]],
             course__organizations=[organization],
@@ -782,6 +785,7 @@ class Demo:
                 course="00003", course_run="CourseRunCredential_run1"
             ),
             course__code="00003",
+            course__title="Target Course for credential discount",
             # Give access to organization owner user
             course__users=[[organization_owner, enums.OWNER]],
             course__organizations=[organization],
@@ -793,7 +797,14 @@ class Demo:
         certificate_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CERTIFICATE,
             title="Certificate Product",
-            courses=[course_run_certificate.course],
+            courses=[
+                factories.CourseFactory(
+                    organizations=[organization],
+                    title="Course for certificate product",
+                    course_runs=factories.CourseRunFactory.create_batch(1),
+                    code="00000",
+                )
+            ],
             target_courses=[course_run_certificate.course],
             certificate_definition=factories.CertificateDefinitionFactory(
                 title="Certification",
@@ -805,7 +816,14 @@ class Demo:
         certificate_product_discount = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CERTIFICATE,
             title="Certificate Product with discount",
-            courses=[course_run_certificate_discount.course],
+            courses=[
+                factories.CourseFactory(
+                    organizations=[organization],
+                    title="Course for certificate product discount",
+                    course_runs=factories.CourseRunFactory.create_batch(1),
+                    code="00001",
+                )
+            ],
             target_courses=[course_run_certificate_discount.course],
             certificate_definition=factories.CertificateDefinitionFactory(
                 title="Certification discount",
@@ -814,7 +832,7 @@ class Demo:
             price=100,
         )
         certificate_discount_offering = models.CourseProductRelation.objects.get(
-            course=course_run_certificate_discount.course,
+            course=certificate_product_discount.courses.first(),
             product=certificate_product_discount,
         )
         factories.OfferingRuleFactory(
@@ -826,7 +844,14 @@ class Demo:
         credential_product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             title="Credential Product",
-            courses=[course_run_credential.course],
+            courses=[
+                factories.CourseFactory(
+                    organizations=[organization],
+                    title="Course for credential product",
+                    course_runs=factories.CourseRunFactory.create_batch(1),
+                    code="00002",
+                )
+            ],
             target_courses=[course_run_credential.course],
             price=100,
         )
@@ -834,12 +859,19 @@ class Demo:
         credential_product_discount = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             title="Credential Product with discount",
-            courses=[course_run_credential_discount.course],
+            courses=[
+                factories.CourseFactory(
+                    organizations=[organization],
+                    title="Course for credential product discount",
+                    course_runs=factories.CourseRunFactory.create_batch(1),
+                    code="00003",
+                )
+            ],
             target_courses=[course_run_credential_discount.course],
             price=100,
         )
         credential_discount_offering = models.CourseProductRelation.objects.get(
-            course=course_run_credential_discount.course,
+            course=credential_product_discount.courses.first(),
             product=credential_product_discount,
         )
         factories.OfferingRuleFactory(

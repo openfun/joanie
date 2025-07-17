@@ -1,0 +1,124 @@
+CreateCertificatesTestCase.test_commands_generate_certificates_can_be_restricted_to_product:
+- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_order_target_course_relation" ON ("joanie_course"."id" = "joanie_order_target_course_relation"."course_id") WHERE ("joanie_order_target_course_relation"."order_id" = #::uuid AND "joanie_order_target_course_relation"."is_graded") ORDER BY "joanie_order_target_course_relation"."position" ASC'
+- db: SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" IN (#::uuid) ORDER BY "joanie_course_run"."created_on" DESC
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE ("joanie_course_run"."course_id" IN (SELECT U0."id" FROM "joanie_course" U0 INNER JOIN "joanie_order_target_course_relation" U1 ON (U0."id" = U1."course_id") WHERE (U1."order_id" = #::uuid AND U1."is_graded")) AND "joanie_course_run"."is_gradable" AND "joanie_course_run"."start" <= #::timestamptz AND "joanie_enrollment"."is_active" AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+- cache|get: grade_#
+- cache|set: grade_#
+- db: 'SELECT ... FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- cache|get: parler.core.ProductTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
+- db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
+- cache|get: parler.core.ProductTranslation.#.fr-fr
+- db: 'SELECT ... FROM "joanie_product_translation" WHERE ("joanie_product_translation"."master_id" = #::uuid AND "joanie_product_translation"."language_code" = #) LIMIT #'
+- cache|set: parler.core.ProductTranslation.#.fr-fr
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
+- db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
+- db: INSERT INTO "joanie_certificate" (...) VALUES (...)
+CreateCertificatesTestCase.test_commands_generate_certificates_can_be_restricted_to_product.2:
+- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_order_target_course_relation" ON ("joanie_course"."id" = "joanie_order_target_course_relation"."course_id") WHERE ("joanie_order_target_course_relation"."order_id" = #::uuid AND "joanie_order_target_course_relation"."is_graded") ORDER BY "joanie_order_target_course_relation"."position" ASC'
+- db: SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" IN (#::uuid) ORDER BY "joanie_course_run"."created_on" DESC
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE ("joanie_course_run"."course_id" IN (SELECT U0."id" FROM "joanie_course" U0 INNER JOIN "joanie_order_target_course_relation" U1 ON (U0."id" = U1."course_id") WHERE (U1."order_id" = #::uuid AND U1."is_graded")) AND "joanie_course_run"."is_gradable" AND "joanie_course_run"."start" <= #::timestamptz AND "joanie_enrollment"."is_active" AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+- cache|get: grade_#
+- cache|set: grade_#
+- db: 'SELECT ... FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- cache|get: parler.core.ProductTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
+- db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
+- cache|get: parler.core.ProductTranslation.#.fr-fr
+- db: 'SELECT ... FROM "joanie_product_translation" WHERE ("joanie_product_translation"."master_id" = #::uuid AND "joanie_product_translation"."language_code" = #) LIMIT #'
+- cache|set: parler.core.ProductTranslation.#.fr-fr
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
+- db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
+- db: INSERT INTO "joanie_certificate" (...) VALUES (...)
+CreateCertificatesTestCase.test_commands_generate_certificates_optimizes_db_queries:
+- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_order_target_course_relation" ON ("joanie_course"."id" = "joanie_order_target_course_relation"."course_id") WHERE ("joanie_order_target_course_relation"."order_id" = #::uuid AND "joanie_order_target_course_relation"."is_graded") ORDER BY "joanie_order_target_course_relation"."position" ASC'
+- db: SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" IN (...) ORDER BY "joanie_course_run"."created_on" DESC
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE ("joanie_course_run"."course_id" IN (SELECT U0."id" FROM "joanie_course" U0 INNER JOIN "joanie_order_target_course_relation" U1 ON (U0."id" = U1."course_id") WHERE (U1."order_id" = #::uuid AND U1."is_graded")) AND "joanie_course_run"."is_gradable" AND "joanie_course_run"."start" <= #::timestamptz AND "joanie_enrollment"."is_active" AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+- cache|get: grade_#
+- cache|set: grade_#
+- cache|get: grade_#
+- cache|set: grade_#
+- cache|get: grade_#
+- cache|set: grade_#
+- db: 'SELECT ... FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- cache|get: parler.core.ProductTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
+- db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
+- cache|get: parler.core.ProductTranslation.#.fr-fr
+- db: 'SELECT ... FROM "joanie_product_translation" WHERE ("joanie_product_translation"."master_id" = #::uuid AND "joanie_product_translation"."language_code" = #) LIMIT #'
+- cache|set: parler.core.ProductTranslation.#.fr-fr
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
+- db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
+- db: INSERT INTO "joanie_certificate" (...) VALUES (...)
+CreateCertificatesTestCase.test_commands_generate_certificates_optimizes_db_queries.2:
+- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_order_target_course_relation" ON ("joanie_course"."id" = "joanie_order_target_course_relation"."course_id") WHERE ("joanie_order_target_course_relation"."order_id" = #::uuid AND "joanie_order_target_course_relation"."is_graded") ORDER BY "joanie_order_target_course_relation"."position" ASC'
+- db: SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" IN (...) ORDER BY "joanie_course_run"."created_on" DESC
+- db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE ("joanie_course_run"."course_id" IN (SELECT U0."id" FROM "joanie_course" U0 INNER JOIN "joanie_order_target_course_relation" U1 ON (U0."id" = U1."course_id") WHERE (U1."order_id" = #::uuid AND U1."is_graded")) AND "joanie_course_run"."is_gradable" AND "joanie_course_run"."start" <= #::timestamptz AND "joanie_enrollment"."is_active" AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+- cache|get: grade_#
+- cache|set: grade_#
+- cache|get: grade_#
+- cache|set: grade_#
+- cache|get: grade_#
+- cache|set: grade_#
+- db: 'SELECT ... FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- cache|get: parler.core.ProductTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
+- db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
+- cache|get: parler.core.ProductTranslation.#.fr-fr
+- db: 'SELECT ... FROM "joanie_product_translation" WHERE ("joanie_product_translation"."master_id" = #::uuid AND "joanie_product_translation"."language_code" = #) LIMIT #'
+- cache|set: parler.core.ProductTranslation.#.fr-fr
+- db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
+- db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
+- db: INSERT INTO "joanie_certificate" (...) VALUES (...)

@@ -4,15 +4,16 @@ from decimal import Decimal as D
 from http import HTTPStatus
 
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from joanie.core import enums, factories
 from joanie.payment.factories import InvoiceFactory
 from joanie.payment.models import Invoice
 from joanie.tests import format_date
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrdersAdminApiRetrieveTestCase(TestCase):
+class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
     """Test suite for the admin orders API retrieve endpoint."""
 
     maxDiff = None
@@ -66,7 +67,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
             total=D("1.00"),
         )
 
-        with self.assertNumQueries(41):
+        with self.record_performance():
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -249,7 +250,7 @@ class OrdersAdminApiRetrieveTestCase(TestCase):
             order=order, certificate_definition=order.product.certificate_definition
         )
 
-        with self.assertNumQueries(15):
+        with self.record_performance():
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)

@@ -19,7 +19,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         """
         course = factories.CourseFactory()
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/orders/",
             )
@@ -41,7 +41,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         course = factories.CourseFactory()
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.post(
                 f"/api/v1.0/courses/{course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -64,7 +64,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         course = factories.CourseFactory()
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.patch(
                 f"/api/v1.0/courses/{course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -87,7 +87,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         course = factories.CourseFactory()
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.put(
                 f"/api/v1.0/courses/{course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -110,7 +110,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         course = factories.CourseFactory()
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(0):
+        with self.record_performance():
             response = self.client.delete(
                 f"/api/v1.0/courses/{course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -169,7 +169,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{offering.course.id}/orders/"
                 f"?organization_id={wrong_organization.id}",
@@ -297,7 +297,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(28):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{offering_1.course.id}/orders/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -355,7 +355,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(29):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{offering.course.id}/orders/"
                 f"?organization_id={organizations[1].id}",
@@ -486,7 +486,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(organization=organization, user=user)
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(30):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -509,7 +509,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             response.json()["results"][1]["owner"]["id"], str(user_learners[0].id)
         )
 
-        with self.assertNumQueries(5):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[1].id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -580,7 +580,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(30):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[0].id}/orders/"
                 f"?organization_id={organizations[0].id}&product_id={product.id}",
@@ -611,7 +611,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             organization=organizations[1], user=user
         )
 
-        with self.assertNumQueries(27):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{courses[1].id}/orders/"
                 f"?organization_id={organizations[1].id}&product_id={product.id}",
@@ -686,7 +686,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         token = self.get_user_token(user.username)
 
         # should return 2 out of 3 learners
-        with self.assertNumQueries(31):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course_1.id}/orders/?offering_id={offering_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -704,7 +704,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.json()["results"][1]["course_id"], str(course_1.id))
 
         # should not get results because the user has not yet access to the organization
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course_2.id}/orders/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -716,7 +716,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(
             organization=organizations[1], user=user
         )
-        with self.assertNumQueries(28):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course_2.id}/orders/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -787,7 +787,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(3):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course_1.id}/orders/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -795,7 +795,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course_2.id}/orders/?offering_id={offering_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -830,7 +830,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
 
         token = self.get_user_token(user.username)
 
-        with self.assertNumQueries(4):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/orders/?offering_id={offering.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -838,7 +838,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -846,7 +846,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
-        with self.assertNumQueries(2):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/orders/"
                 f"?organization_id={organization.id}&product_id={product.id}",
@@ -858,7 +858,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         # Create the organization access for the requesting user to get results
         factories.UserOrganizationAccessFactory(organization=organization, user=user)
 
-        with self.assertNumQueries(28):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/orders/?offering_id={offering.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -870,7 +870,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         self.assertEqual(response.json()["results"][0]["course_id"], str(course.id))
 
-        with self.assertNumQueries(5):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -882,7 +882,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         )
         self.assertEqual(response.json()["results"][0]["course_id"], str(course.id))
 
-        with self.assertNumQueries(5):
+        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.id}/orders/"
                 f"?organization_id={organization.id}&product_id={product.id}",

@@ -1,0 +1,216 @@
+OrderListApiTest.test_api_order_read_list_authenticated:
+- db: 'SELECT COUNT(*) AS "__count" FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") WHERE "joanie_user"."username" = #'
+- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") LEFT OUTER JOIN "joanie_organization" ON ("joanie_order"."organization_id" = "joanie_organization"."id") INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_course" ON ("joanie_order"."course_id" = "joanie_course"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_order"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") LEFT OUTER JOIN "joanie_course" T8 ON ("joanie_course_run"."course_id" = T8."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") LEFT OUTER JOIN "joanie_contract" ON ("joanie_order"."id" = "joanie_contract"."order_id") WHERE "joanie_user"."username" = # ORDER BY "joanie_order"."created_on" DESC LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_credit_card" WHERE "joanie_credit_card"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_order_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_order_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_order_target_course_relation"."order_id" = #::uuid ORDER BY "joanie_order_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE ("joanie_enrollment"."course_run_id" IN (SELECT DISTINCT X0."id" FROM "joanie_course_run" X0 LEFT OUTER JOIN "joanie_order_target_course_relation_course_runs" X1 ON (X0."id" = X1."courserun_id") WHERE (X1."ordertargetcourserelation_id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) OR X0."course_id" IN (SELECT W0."id" FROM "joanie_course" W0 INNER JOIN "joanie_order_target_course_relation" W1 ON (W0."id" = W1."course_id") WHERE (W1."order_id" = #::uuid AND NOT (EXISTS(SELECT # AS "a" FROM "joanie_order_target_course_relation" V1 WHERE (V1."id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) AND V1."id" = (W1."id") AND W1."course_id" = (W0."id")) LIMIT #)))))) AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+OrderListApiTest.test_api_order_read_list_filtered_by_course_code:
+- db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_course_product_relation" ON ("joanie_course"."id" = "joanie_course_product_relation"."course_id") WHERE "joanie_course_product_relation"."product_id" = #::uuid ORDER BY "joanie_course"."code" ASC LIMIT #'
+- db: 'SELECT COUNT(*) AS "__count" FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") INNER JOIN "joanie_course" ON ("joanie_order"."course_id" = "joanie_course"."id") WHERE ("joanie_user"."username" = # AND "joanie_course"."code" = #)'
+- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") INNER JOIN "joanie_course" ON ("joanie_order"."course_id" = "joanie_course"."id") LEFT OUTER JOIN "joanie_organization" ON ("joanie_order"."organization_id" = "joanie_organization"."id") INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_order"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") LEFT OUTER JOIN "joanie_course" T8 ON ("joanie_course_run"."course_id" = T8."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") LEFT OUTER JOIN "joanie_contract" ON ("joanie_order"."id" = "joanie_contract"."order_id") WHERE ("joanie_user"."username" = # AND "joanie_course"."code" = #) ORDER BY "joanie_order"."created_on" DESC LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_credit_card" WHERE "joanie_credit_card"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_order_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_order_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_order_target_course_relation"."order_id" = #::uuid ORDER BY "joanie_order_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE ("joanie_enrollment"."course_run_id" IN (SELECT DISTINCT X0."id" FROM "joanie_course_run" X0 LEFT OUTER JOIN "joanie_order_target_course_relation_course_runs" X1 ON (X0."id" = X1."courserun_id") WHERE (X1."ordertargetcourserelation_id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) OR X0."course_id" IN (SELECT W0."id" FROM "joanie_course" W0 INNER JOIN "joanie_order_target_course_relation" W1 ON (W0."id" = W1."course_id") WHERE (W1."order_id" = #::uuid AND NOT (EXISTS(SELECT # AS "a" FROM "joanie_order_target_course_relation" V1 WHERE (V1."id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) AND V1."id" = (W1."id") AND W1."course_id" = (W0."id")) LIMIT #)))))) AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+OrderListApiTest.test_api_order_read_list_filtered_by_invalid_enrollment_id: []
+OrderListApiTest.test_api_order_read_list_filtered_by_invalid_product_id: []
+OrderListApiTest.test_api_order_read_list_filtered_by_invalid_state: []
+OrderListApiTest.test_api_order_read_list_filtered_by_product_type:
+- db: 'SELECT COUNT(*) FROM (SELECT DISTINCT ... FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") WHERE ("joanie_user"."username" = # AND "joanie_product"."type" = #)) subquery'
+- db: 'SELECT DISTINCT ... FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_organization" ON ("joanie_order"."organization_id" = "joanie_organization"."id") LEFT OUTER JOIN "joanie_course" ON ("joanie_order"."course_id" = "joanie_course"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_order"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") LEFT OUTER JOIN "joanie_course" T8 ON ("joanie_course_run"."course_id" = T8."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") LEFT OUTER JOIN "joanie_contract" ON ("joanie_order"."id" = "joanie_contract"."order_id") WHERE ("joanie_user"."username" = # AND "joanie_product"."type" = #) ORDER BY "joanie_order"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_credit_card" WHERE "joanie_credit_card"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_order_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_order_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_order_target_course_relation"."order_id" = #::uuid ORDER BY "joanie_order_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
+OrderListApiTest.test_api_order_read_list_filtered_with_invalid_product_type: []
+OrderListApiTest.test_api_order_read_list_filtered_with_multiple_product_type:
+- db: 'SELECT COUNT(*) AS "__count" FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") WHERE "joanie_user"."username" = #'
+- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") LEFT OUTER JOIN "joanie_organization" ON ("joanie_order"."organization_id" = "joanie_organization"."id") INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_course" ON ("joanie_order"."course_id" = "joanie_course"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_order"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") LEFT OUTER JOIN "joanie_course" T8 ON ("joanie_course_run"."course_id" = T8."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") LEFT OUTER JOIN "joanie_contract" ON ("joanie_order"."id" = "joanie_contract"."order_id") WHERE "joanie_user"."username" = # ORDER BY "joanie_order"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_credit_card" WHERE "joanie_credit_card"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_order_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_order_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_order_target_course_relation"."order_id" = #::uuid ORDER BY "joanie_order_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE ("joanie_enrollment"."course_run_id" IN (SELECT DISTINCT X0."id" FROM "joanie_course_run" X0 LEFT OUTER JOIN "joanie_order_target_course_relation_course_runs" X1 ON (X0."id" = X1."courserun_id") WHERE (X1."ordertargetcourserelation_id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) OR X0."course_id" IN (SELECT W0."id" FROM "joanie_course" W0 INNER JOIN "joanie_order_target_course_relation" W1 ON (W0."id" = W1."course_id") WHERE (W1."order_id" = #::uuid AND NOT (EXISTS(SELECT # AS "a" FROM "joanie_order_target_course_relation" V1 WHERE (V1."id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) AND V1."id" = (W1."id") AND W1."course_id" = (W0."id")) LIMIT #)))))) AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_credit_card" WHERE "joanie_credit_card"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_order_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_order_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_order_target_course_relation"."order_id" = #::uuid ORDER BY "joanie_order_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE ("joanie_enrollment"."course_run_id" IN (SELECT DISTINCT X0."id" FROM "joanie_course_run" X0 LEFT OUTER JOIN "joanie_order_target_course_relation_course_runs" X1 ON (X0."id" = X1."courserun_id") WHERE (X1."ordertargetcourserelation_id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) OR X0."course_id" IN (SELECT W0."id" FROM "joanie_course" W0 INNER JOIN "joanie_order_target_course_relation" W1 ON (W0."id" = W1."course_id") WHERE (W1."order_id" = #::uuid AND NOT (EXISTS(SELECT # AS "a" FROM "joanie_order_target_course_relation" V1 WHERE (V1."id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) AND V1."id" = (W1."id") AND W1."course_id" = (W0."id")) LIMIT #)))))) AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_credit_card" WHERE "joanie_credit_card"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
+- db: 'SELECT ... FROM "easy_thumbnails_source" WHERE ("easy_thumbnails_source"."name" = # AND "easy_thumbnails_source"."storage_hash" = #) LIMIT #'
+- db: 'UPDATE "easy_thumbnails_source" SET ... WHERE "easy_thumbnails_source"."id" = #'
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- db: 'SELECT ... FROM "easy_thumbnails_thumbnail" WHERE ("easy_thumbnails_thumbnail"."name" = # AND "easy_thumbnails_thumbnail"."source_id" = # AND "easy_thumbnails_thumbnail"."storage_hash" = #) LIMIT #'
+- db: SAVEPOINT `#`
+- db: INSERT INTO "easy_thumbnails_thumbnail" (...) VALUES (...) RETURNING "easy_thumbnails_thumbnail"."id"
+- db: RELEASE SAVEPOINT `#`
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_order_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_order_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_order_target_course_relation"."order_id" = #::uuid ORDER BY "joanie_order_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
+OrderListApiTest.test_api_order_read_list_filtered_with_multiple_product_type.2:
+- db: 'SELECT COUNT(*) FROM (SELECT DISTINCT ... FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") WHERE ("joanie_user"."username" = # AND ("joanie_product"."type" = # OR "joanie_product"."type" = #))) subquery'
+- db: 'SELECT DISTINCT ... FROM "joanie_order" INNER JOIN "joanie_user" ON ("joanie_order"."owner_id" = "joanie_user"."id") INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_organization" ON ("joanie_order"."organization_id" = "joanie_organization"."id") LEFT OUTER JOIN "joanie_course" ON ("joanie_order"."course_id" = "joanie_course"."id") LEFT OUTER JOIN "joanie_enrollment" ON ("joanie_order"."enrollment_id" = "joanie_enrollment"."id") LEFT OUTER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") LEFT OUTER JOIN "joanie_course" T8 ON ("joanie_course_run"."course_id" = T8."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") LEFT OUTER JOIN "joanie_contract" ON ("joanie_order"."id" = "joanie_contract"."order_id") WHERE ("joanie_user"."username" = # AND ("joanie_product"."type" = # OR "joanie_product"."type" = #)) ORDER BY "joanie_order"."created_on" DESC LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_credit_card" WHERE "joanie_credit_card"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_order_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_order_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_order_target_course_relation"."order_id" = #::uuid ORDER BY "joanie_order_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
+- db: 'SELECT ... FROM "joanie_enrollment" WHERE ("joanie_enrollment"."course_run_id" IN (SELECT DISTINCT X0."id" FROM "joanie_course_run" X0 LEFT OUTER JOIN "joanie_order_target_course_relation_course_runs" X1 ON (X0."id" = X1."courserun_id") WHERE (X1."ordertargetcourserelation_id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) OR X0."course_id" IN (SELECT W0."id" FROM "joanie_course" W0 INNER JOIN "joanie_order_target_course_relation" W1 ON (W0."id" = W1."course_id") WHERE (W1."order_id" = #::uuid AND NOT (EXISTS(SELECT # AS "a" FROM "joanie_order_target_course_relation" V1 WHERE (V1."id" IN (SELECT U0."id" FROM "joanie_order_target_course_relation" U0 INNER JOIN "joanie_order_target_course_relation_course_runs" U2 ON (U0."id" = U2."ordertargetcourserelation_id") WHERE (U0."order_id" = #::uuid AND U2."courserun_id" IS NOT NULL)) AND V1."id" = (W1."id") AND W1."course_id" = (W0."id")) LIMIT #)))))) AND "joanie_enrollment"."user_id" = #::uuid) ORDER BY "joanie_enrollment"."created_on" DESC'
+- db: 'SELECT ... FROM "joanie_credit_card" WHERE "joanie_credit_card"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- cache|get: parler.core.CourseRunTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
+- cache|get: parler.core.OrganizationTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
+- db: 'SELECT ... FROM "joanie_order_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_order_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_order_target_course_relation"."order_id" = #::uuid ORDER BY "joanie_order_target_course_relation"."position" ASC, "joanie_course"."code" ASC'

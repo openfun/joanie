@@ -43,7 +43,7 @@ class OrganizationApiListTest(BaseAPITestCase):
             user=user, organization=organizations[1]
         )
 
-        with self.assertNumQueries(49):
+        with self.record_performance():
             response = self.client.get(
                 "/api/v1.0/organizations/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",

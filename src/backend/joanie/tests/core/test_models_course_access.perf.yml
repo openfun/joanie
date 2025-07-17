@@ -1,0 +1,3 @@
+CourseAccessModelsTestCase.test_models_course_access_get_abilities_for_manager_of_manager:
+- db: 'SELECT "joanie_course_access"."role" FROM "joanie_course_access" WHERE ("joanie_course_access"."course_id" = #::uuid AND "joanie_course_access"."user_id" = #::uuid) ORDER BY "joanie_course_access"."created_on" DESC LIMIT #'
+CourseAccessModelsTestCase.test_models_course_access_get_abilities_preset_role: []

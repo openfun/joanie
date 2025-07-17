@@ -5,16 +5,16 @@ import uuid
 from http import HTTPStatus
 from unittest import mock
 
-from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, Enrollment
 from joanie.tests import format_date
+from joanie.tests.base import BaseAPITestCase
 
 
 # pylint: disable=too-many-public-methods, too-many-lines
-class OrdersAdminApiTestCase(TestCase):
+class OrdersAdminApiTestCase(BaseAPITestCase):
     """Test suite for the admin enrollments API endpoints."""
 
     maxDiff = None
@@ -86,7 +86,7 @@ class OrdersAdminApiTestCase(TestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        with self.assertNumQueries(4):
+        with self.record_performance():
             response = self.client.get("/api/v1.0/admin/enrollments/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -153,7 +153,7 @@ class OrdersAdminApiTestCase(TestCase):
         # Create certificate
         factories.EnrollmentCertificateFactory(enrollment=enrollment)
 
-        with self.assertNumQueries(4):
+        with self.record_performance():
             response = self.client.get(f"/api/v1.0/admin/enrollments/{enrollment.id}/")
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
