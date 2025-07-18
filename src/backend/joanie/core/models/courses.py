@@ -976,10 +976,12 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         price = None
         discounted_price = None
         discount = None
-        certificate_offer = None
         certificate_price = None
         certificate_discounted_price = None
         certificate_discount = None
+        offering = None
+        resource_link = self.uri
+
         if product:
             price = product.price
 
@@ -1006,6 +1008,9 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
                 has_grade = product.target_course_relations.filter(
                     is_graded=True
                 ).exists()
+
+                if offering:
+                    resource_link = offering.uri
             else:
                 has_grade = self.is_gradable
             certificate_offer = enums.COURSE_OFFER_PAID if has_grade else None
@@ -1029,7 +1034,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             "certificate_discounted_price": certificate_discounted_price,
             "certificate_discount": certificate_discount,
             "languages": self.languages,
-            "resource_link": self.uri,
+            "resource_link": resource_link,
             "start": self.start.isoformat() if self.start else None,
         }
 

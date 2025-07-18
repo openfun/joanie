@@ -226,21 +226,21 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
         self.assertEqual(len(synchronized_course_runs), 4)
         self.assertEqual(
             synchronized_course_runs[0]["resource_link"],
-            "https://example.com/api/v1.0/course-runs/"
-            f"{offering_3.course.course_runs.all()[0].id}/",
+            f"https://example.com/api/v1.0/courses/{offering_3.course.code}/"
+            f"products/{offering_3.product.id}/",
         )
         self.assertEqual(
             synchronized_course_runs[1]["resource_link"],
-            "https://example.com/api/v1.0/course-runs/"
-            f"{offering_1.course.course_runs.all()[0].id}/",
+            f"https://example.com/api/v1.0/courses/{offering_1.course.code}/"
+            f"products/{offering_1.product.id}/",
         )
         self.assertEqual(
             synchronized_course_runs[2]["resource_link"],
-            "https://example.com/api/v1.0/course-runs/"
-            f"{offering_1.course.course_runs.all()[1].id}/",
+            f"https://example.com/api/v1.0/courses/{offering_1.course.code}/"
+            f"products/{offering_1.product.id}/",
         )
         self.assertEqual(
             synchronized_course_runs[3]["resource_link"],
-            "https://example.com/api/v1.0/course-runs/"
-            f"{offering_1.course.course_runs.all()[2].id}/",
+            f"https://example.com/api/v1.0/courses/{offering_1.course.code}/"
+            f"products/{offering_1.product.id}/",
         )
