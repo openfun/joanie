@@ -61,6 +61,7 @@ admin_router.register("skills", api_admin.SkillViewSet, basename="admin_skills")
 admin_router.register(
     "discounts", api_admin.DiscountViewSet, basename="admin_discounts"
 )
+admin_router.register("vouchers", api_admin.VoucherViewSet, basename="admin_vouchers")
 # Admin API routes nested under a course
 admin_course_related_router = DefaultRouter()
 admin_course_related_router.register(
