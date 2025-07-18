@@ -20,6 +20,24 @@ class SignalsTestCase(TestCase):
 
     maxDiff = None
 
+    def has_certificate_resource_link(self, serialized_course_run):
+        """
+        Check if the serialized course run contains a certificate resource link.
+        """
+        self.assertRegex(
+            serialized_course_run["resource_link"],
+            r"https://example\.com/api/v1\.0/course-runs/[a-f0-9\-]+/",
+        )
+
+    def has_credential_resource_link(self, serialized_course_run):
+        """
+        Check if the serialized course run contains a credential resource link.
+        """
+        self.assertRegex(
+            serialized_course_run["resource_link"],
+            r"https://example\.com/api/v1\.0/courses/[a-f0-9\-]+/products/[a-f0-9\-]+/",
+        )
+
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_certificate_type_product(self, mock_sync):
         """
@@ -898,6 +916,28 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run["certificate_offer"], enums.COURSE_OFFER_PAID
         )
+        self.has_credential_resource_link(synchronized_course_run)
+        self.assertEqual(
+            synchronized_course_run,
+            {
+                "catalog_visibility": "hidden",
+                "certificate_discount": None,
+                "certificate_discounted_price": None,
+                "certificate_offer": "paid",
+                "certificate_price": None,
+                "course": course_run.course.code,
+                "discount": offering.rules.get("discount"),
+                "discounted_price": offering.rules.get("discounted_price"),
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "price": product.price,
+                "resource_link": "https://example.com/api/v1.0/courses/"
+                f"{course_run.course.code}/products/{product.id}/",
+            },
+        )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_offering_rule_create_certificate(self, mock_sync):
@@ -926,6 +966,27 @@ class SignalsTestCase(TestCase):
             synchronized_course_run["certificate_discounted_price"], D(90.00)
         )
         self.assertEqual(synchronized_course_run["certificate_discount"], "-10%")
+        self.has_certificate_resource_link(synchronized_course_run)
+        self.assertEqual(
+            synchronized_course_run,
+            {
+                "catalog_visibility": "hidden",
+                "certificate_discount": offering.rules.get("discount"),
+                "certificate_discounted_price": offering.rules.get("discounted_price"),
+                "certificate_offer": "paid",
+                "certificate_price": product.price,
+                "course": course_run.course.code,
+                "discount": None,
+                "discounted_price": None,
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "price": None,
+                "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
+            },
+        )
 
     # Edit certificate product offering
 
@@ -983,10 +1044,50 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-        self.assertCountEqual(
-            synchronized_course_runs,
-            [cr.get_serialized(certifying=False, product=product) for cr in [cr1, cr2]],
+
+        self.assertEqual(
+            synchronized_course_runs[1],
+            {
+                "catalog_visibility": "hidden",
+                "certificate_discount": None,
+                "certificate_discounted_price": None,
+                "certificate_offer": None,
+                "certificate_price": None,
+                "course": cr1.course.code,
+                "discount": None,
+                "discounted_price": None,
+                "start": cr1.start.isoformat(),
+                "end": cr1.end.isoformat(),
+                "enrollment_start": cr1.enrollment_start.isoformat(),
+                "enrollment_end": cr1.enrollment_end.isoformat(),
+                "languages": cr1.languages,
+                "price": product.price,
+                "resource_link": "https://example.com/api/v1.0/courses/"
+                f"{cr1.course.code}/products/{product.id}/",
+            },
         )
+        self.assertEqual(
+            synchronized_course_runs[0],
+            {
+                "catalog_visibility": "hidden",
+                "certificate_discount": None,
+                "certificate_discounted_price": None,
+                "certificate_offer": None,
+                "certificate_price": None,
+                "course": cr2.course.code,
+                "discount": None,
+                "discounted_price": None,
+                "start": cr2.start.isoformat(),
+                "end": cr2.end.isoformat(),
+                "enrollment_start": cr2.enrollment_start.isoformat(),
+                "enrollment_end": cr2.enrollment_end.isoformat(),
+                "languages": cr2.languages,
+                "price": product.price,
+                "resource_link": "https://example.com/api/v1.0/courses/"
+                f"{cr2.course.code}/products/{product.id}/",
+            },
+        )
+
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["certificate_offer"], None)
             self.assertEqual(course_run["certificate_price"], None)
@@ -1041,6 +1142,7 @@ class SignalsTestCase(TestCase):
                 ),
             ],
         )
+        self.has_credential_resource_link(synchronized_course_runs[0])
         self.assertEqual(
             synchronized_course_runs[0]["course"], product1.courses.first().code
         )
