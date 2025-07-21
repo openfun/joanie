@@ -95,16 +95,10 @@ class Quote(BaseModel):
         null=True,
         encoder=DjangoJSONEncoder,
     )
-    # Quote signature will be done manually for now
-    # The business logic wants the organization to sign before the buyer
+    # Only the organization confirms the signature of the document
     organization_signed_on = models.DateTimeField(
         _("Date and time organization signed on"), null=True, blank=True, editable=False
     )
-    buyer_signed_on = models.DateTimeField(
-        _("Date and time buyer signed on"), null=True, blank=True, editable=False
-    )
-    # Once the quote is signed by both parties, the buyer should send a purchase
-    # order to confirm his engagement. The confirmation will done manually too.
     has_purchase_order = models.BooleanField(
         verbose_name=_("purchase order to confirm payment"),
         editable=False,
@@ -120,21 +114,11 @@ class Quote(BaseModel):
             models.CheckConstraint(
                 check=~(
                     models.Q(organization_signed_on__isnull=True)
-                    & models.Q(buyer_signed_on__isnull=False)
+                    & models.Q(has_purchase_order=True)
                 ),
-                name="organization_must_sign_before_buyer",
+                name="organization_must_sign_quote_before_receiving_purchase_order",
                 violation_error_message=(
-                    "Organization must sign quote before the buyer."
-                ),
-            ),
-            models.CheckConstraint(
-                check=~(
-                    models.Q(has_purchase_order=True)
-                    & models.Q(buyer_signed_on__isnull=True)
-                ),
-                name="both_parties_must_sign_before_purchase_order_accepted",
-                violation_error_message=(
-                    "Both parties must sign quote before confirming the purchase order."
+                    "Organization must sign quote before receiving purchase order."
                 ),
             ),
             models.CheckConstraint(
@@ -159,29 +143,11 @@ class Quote(BaseModel):
         super().save(*args, **kwargs)
 
     @property
-    def unsigned(self):
-        """
-        Returns boolean value whether the quote is not yet signed by both parties (organization
-        and buyer)
-        """
-        return self.organization_signed_on is None and self.buyer_signed_on is None
-
-    @property
     def is_signed_by_organization(self):
         """
         Returns boolean value whether the quote is signed by the organization only.
         """
-        return self.organization_signed_on is not None and self.buyer_signed_on is None
-
-    @property
-    def is_fully_signed(self):
-        """
-        Returns boolean value whether the quote has been signed by both parties (organization
-        and buyer)
-        """
-        return (
-            self.organization_signed_on is not None and self.buyer_signed_on is not None
-        )
+        return self.organization_signed_on is not None
 
     @property
     def has_received_purchase_order(self):
@@ -189,4 +155,4 @@ class Quote(BaseModel):
         Returns boolean value whether the quote has been fully signed and purchase order
         has been received
         """
-        return self.is_fully_signed and self.has_purchase_order
+        return self.is_signed_by_organization and self.has_purchase_order

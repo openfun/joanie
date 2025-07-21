@@ -887,12 +887,10 @@ class QuoteAdmin(admin.ModelAdmin):
     list_display = (
         "batch_order",
         "organization_signed_on",
-        "buyer_signed_on",
         "has_purchase_order",
     )
     readonly_fields = (
         "batch_order",
-        "buyer_signed_on",
         "organization_signed_on",
         "has_purchase_order",
         "definition",

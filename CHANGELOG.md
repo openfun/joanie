@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add admin API endpoint for quote definitions
 - Add quote and quote definition models for batch orders
 - Added `handle_notification` for batch order in dummy payment backend
 - Added discount column to csv order export

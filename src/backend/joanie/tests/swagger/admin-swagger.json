@@ -5025,6 +5025,296 @@
                 }
             }
         },
+        "/api/v1.0/admin/quote-definitions/": {
+            "get": {
+                "operationId": "quote_definitions_list",
+                "description": "Admin Quote Definition ViewSet",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
+                    {
+                        "in": "query",
+                        "name": "language",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "en-us",
+                                "fr-fr"
+                            ]
+                        },
+                        "description": "Language of the quote definition\n\n* `en-us` - English\n* `fr-fr` - French"
+                    },
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "quote-definitions"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminQuoteDefinitionList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "quote_definitions_create",
+                "description": "Admin Quote Definition ViewSet",
+                "tags": [
+                    "quote-definitions"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminQuoteDefinitionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminQuoteDefinitionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminQuoteDefinition"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/quote-definitions/{id}/": {
+            "get": {
+                "operationId": "quote_definitions_retrieve",
+                "description": "Admin Quote Definition ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "quote-definitions"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminQuoteDefinition"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "quote_definitions_update",
+                "description": "Admin Quote Definition ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "quote-definitions"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminQuoteDefinitionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminQuoteDefinitionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminQuoteDefinition"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "quote_definitions_partial_update",
+                "description": "Admin Quote Definition ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "quote-definitions"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminQuoteDefinitionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminQuoteDefinitionRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminQuoteDefinition"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "quote_definitions_destroy",
+                "description": "Admin Quote Definition ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "quote-definitions"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/skills/": {
             "get": {
                 "operationId": "skills_list",
@@ -6042,7 +6332,7 @@
                     "name": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/NameEnum"
+                                "$ref": "#/components/schemas/AdminContractDefinitionNameEnum"
                             }
                         ],
                         "default": "contract_definition_default",
@@ -6054,6 +6344,14 @@
                     "language",
                     "title"
                 ]
+            },
+            "AdminContractDefinitionNameEnum": {
+                "enum": [
+                    "contract_definition_default",
+                    "contract_definition_unicamp"
+                ],
+                "type": "string",
+                "description": "* `contract_definition_default` - Contract Definition Default\n* `contract_definition_unicamp` - Contract Definition Unicamp"
             },
             "AdminContractDefinitionRequest": {
                 "type": "object",
@@ -6083,7 +6381,7 @@
                     "name": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/NameEnum"
+                                "$ref": "#/components/schemas/AdminContractDefinitionNameEnum"
                             }
                         ],
                         "default": "contract_definition_default",
@@ -8356,6 +8654,84 @@
                     "product"
                 ]
             },
+            "AdminQuoteDefinition": {
+                "type": "object",
+                "description": "Serializer for QuoteDefinition model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "$ref": "#/components/schemas/AdminQuoteDefinitionNameEnum"
+                    },
+                    "body": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LanguageEnum"
+                            }
+                        ],
+                        "description": "Language of the quote definition\n\n* `en-us` - English\n* `fr-fr` - French"
+                    }
+                },
+                "required": [
+                    "id",
+                    "language",
+                    "name",
+                    "title"
+                ]
+            },
+            "AdminQuoteDefinitionNameEnum": {
+                "enum": [
+                    "quote_default"
+                ],
+                "type": "string",
+                "description": "* `quote_default` - Quote Default"
+            },
+            "AdminQuoteDefinitionRequest": {
+                "type": "object",
+                "description": "Serializer for QuoteDefinition model.",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "name": {
+                        "$ref": "#/components/schemas/AdminQuoteDefinitionNameEnum"
+                    },
+                    "body": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LanguageEnum"
+                            }
+                        ],
+                        "description": "Language of the quote definition\n\n* `en-us` - English\n* `fr-fr` - French"
+                    }
+                },
+                "required": [
+                    "language",
+                    "name",
+                    "title"
+                ]
+            },
             "AdminSkill": {
                 "type": "object",
                 "description": "Serializer for Skill model.",
@@ -8880,14 +9256,6 @@
                 "type": "string",
                 "description": "* `af` - Afrikaans\n* `ar` - Arabic\n* `ar-dz` - Algerian Arabic\n* `ast` - Asturian\n* `az` - Azerbaijani\n* `bg` - Bulgarian\n* `be` - Belarusian\n* `bn` - Bengali\n* `br` - Breton\n* `bs` - Bosnian\n* `ca` - Catalan\n* `ckb` - Central Kurdish (Sorani)\n* `cs` - Czech\n* `cy` - Welsh\n* `da` - Danish\n* `de` - German\n* `dsb` - Lower Sorbian\n* `el` - Greek\n* `en` - English\n* `en-au` - Australian English\n* `en-gb` - British English\n* `eo` - Esperanto\n* `es` - Spanish\n* `es-ar` - Argentinian Spanish\n* `es-co` - Colombian Spanish\n* `es-mx` - Mexican Spanish\n* `es-ni` - Nicaraguan Spanish\n* `es-ve` - Venezuelan Spanish\n* `et` - Estonian\n* `eu` - Basque\n* `fa` - Persian\n* `fi` - Finnish\n* `fr` - French\n* `fy` - Frisian\n* `ga` - Irish\n* `gd` - Scottish Gaelic\n* `gl` - Galician\n* `he` - Hebrew\n* `hi` - Hindi\n* `hr` - Croatian\n* `hsb` - Upper Sorbian\n* `hu` - Hungarian\n* `hy` - Armenian\n* `ia` - Interlingua\n* `id` - Indonesian\n* `ig` - Igbo\n* `io` - Ido\n* `is` - Icelandic\n* `it` - Italian\n* `ja` - Japanese\n* `ka` - Georgian\n* `kab` - Kabyle\n* `kk` - Kazakh\n* `km` - Khmer\n* `kn` - Kannada\n* `ko` - Korean\n* `ky` - Kyrgyz\n* `lb` - Luxembourgish\n* `lt` - Lithuanian\n* `lv` - Latvian\n* `mk` - Macedonian\n* `ml` - Malayalam\n* `mn` - Mongolian\n* `mr` - Marathi\n* `ms` - Malay\n* `my` - Burmese\n* `nb` - Norwegian Bokmål\n* `ne` - Nepali\n* `nl` - Dutch\n* `nn` - Norwegian Nynorsk\n* `os` - Ossetic\n* `pa` - Punjabi\n* `pl` - Polish\n* `pt` - Portuguese\n* `pt-br` - Brazilian Portuguese\n* `ro` - Romanian\n* `ru` - Russian\n* `sk` - Slovak\n* `sl` - Slovenian\n* `sq` - Albanian\n* `sr` - Serbian\n* `sr-latn` - Serbian Latin\n* `sv` - Swedish\n* `sw` - Swahili\n* `ta` - Tamil\n* `te` - Telugu\n* `tg` - Tajik\n* `th` - Thai\n* `tk` - Turkmen\n* `tr` - Turkish\n* `tt` - Tatar\n* `udm` - Udmurt\n* `uk` - Ukrainian\n* `ur` - Urdu\n* `uz` - Uzbek\n* `vi` - Vietnamese\n* `zh-hans` - Simplified Chinese\n* `zh-hant` - Traditional Chinese"
             },
-            "NameEnum": {
-                "enum": [
-                    "contract_definition_default",
-                    "contract_definition_unicamp"
-                ],
-                "type": "string",
-                "description": "* `contract_definition_default` - Contract Definition Default\n* `contract_definition_unicamp` - Contract Definition Unicamp"
-            },
             "NullEnum": {
                 "enum": [
                     null
@@ -9294,6 +9662,37 @@
                     }
                 }
             },
+            "PaginatedAdminQuoteDefinitionList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminQuoteDefinition"
+                        }
+                    }
+                }
+            },
             "PaginatedAdminSkillList": {
                 "type": "object",
                 "required": [
@@ -9449,7 +9848,7 @@
                     "name": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/NameEnum"
+                                "$ref": "#/components/schemas/AdminContractDefinitionNameEnum"
                             }
                         ],
                         "default": "contract_definition_default",
@@ -9855,6 +10254,34 @@
                             "format": "uuid",
                             "description": "primary key for the record as UUID"
                         }
+                    }
+                }
+            },
+            "PatchedAdminQuoteDefinitionRequest": {
+                "type": "object",
+                "description": "Serializer for QuoteDefinition model.",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "name": {
+                        "$ref": "#/components/schemas/AdminQuoteDefinitionNameEnum"
+                    },
+                    "body": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LanguageEnum"
+                            }
+                        ],
+                        "description": "Language of the quote definition\n\n* `en-us` - English\n* `fr-fr` - French"
                     }
                 }
             },

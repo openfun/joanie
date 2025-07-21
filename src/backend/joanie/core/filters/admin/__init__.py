@@ -222,6 +222,28 @@ class ContractDefinitionAdminFilterSet(filters.FilterSet):
         return queryset.filter(title__icontains=value).distinct()
 
 
+class QuoteDefinitionAdminFilterSet(filters.FilterSet):
+    """
+    Filters QuoteDefinition by title, IDs, or language.
+    """
+
+    class Meta:
+        model = models.QuoteDefinition
+        fields: List[str] = ["query", "language"]
+
+    query = filters.CharFilter(method="filter_by_query")
+    language = filters.ChoiceFilter(choices=settings.LANGUAGES)
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter resource by looking for title which contains provided value in
+        "query" query parameter.
+        """
+
+        return queryset.filter(translations__title__icontains=value).distinct()
+
+
 class UserAdminFilterSet(filters.FilterSet):
     """
     UserAdminFilter allows to filter this resource with a query for username,

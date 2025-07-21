@@ -325,7 +325,6 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
         factories.QuoteFactory(
             organization_signed_on=django_timezone.now(),
-            buyer_signed_on=django_timezone.now(),
             has_purchase_order=False,
             batch_order=batch_order,
         )
@@ -345,7 +344,6 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
         factories.QuoteFactory(
             organization_signed_on=django_timezone.now(),
-            buyer_signed_on=django_timezone.now(),
             has_purchase_order=True,
             batch_order=batch_order,
         )
@@ -445,7 +443,6 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
         factories.QuoteFactory(
             organization_signed_on=django_timezone.now(),
-            buyer_signed_on=django_timezone.now(),
             has_purchase_order=False,
             batch_order=batch_order,
         )
@@ -462,7 +459,6 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
         factories.QuoteFactory(
             organization_signed_on=django_timezone.now(),
-            buyer_signed_on=django_timezone.now(),
             has_purchase_order=True,
             batch_order=batch_order,
         )

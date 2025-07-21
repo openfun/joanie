@@ -463,6 +463,19 @@ class ContractDefinitionViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
 
+class QuoteDefinitionViewSet(viewsets.ModelViewSet):
+    """
+    Admin Quote Definition ViewSet
+    """
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminQuoteDefinitionSerializer
+    queryset = models.QuoteDefinition.objects.all()
+    filterset_class = filters.QuoteDefinitionAdminFilterSet
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+
+
 class OfferingViewSet(viewsets.ModelViewSet):
     """
     CourseProductRelation ViewSet
