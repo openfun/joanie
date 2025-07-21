@@ -426,4 +426,81 @@ test.describe("Offering", () => {
     await page.getByRole("button", { name: "Submit" }).click();
     await expect(page.getByText("Offering rule 3Discount: 10%")).toBeVisible();
   });
+
+  test("Add a new discount", async ({ page }) => {
+    await store.mockOfferingRule(
+      page,
+      store.offerings,
+      store.offeringRules,
+      store.discounts,
+    );
+    const course = store.list[0];
+    await page.goto(PATH_ADMIN.courses.list);
+    course.offerings = course.offerings ?? [];
+    await store.mockCourseRunsFromCourse(page, []);
+    await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
+    await Promise.all(
+      course.offerings.map(async (offering) => {
+        await expect(
+          page.getByRole("heading", { name: offering.product.title }),
+        ).toBeVisible();
+      }),
+    );
+    await page
+      .getByRole("button", { name: "Add offering rule" })
+      .first()
+      .click();
+    await page.getByRole("heading", { name: "Add an offering rule" }).click();
+    await page.getByTestId("search-add-button").click();
+    await expect(
+      page.getByRole("heading", { name: "Add a discount" }),
+    ).toBeVisible();
+    await page.getByRole("spinbutton", { name: "Rate (%)" }).fill("10");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await page.getByTestId("search-add-button").click();
+    await expect(
+      page.getByRole("heading", { name: "Add a discount" }),
+    ).toBeVisible();
+    await page.getByRole("spinbutton", { name: "Amount (€)" }).fill("33");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Add an offering rule" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.getByText("Offering rule 3Discount: 33 €")).toBeVisible();
+  });
+
+  test("Empty date field", async ({ page }) => {
+    await store.mockOfferingRule(
+      page,
+      store.offerings,
+      store.offeringRules,
+      store.discounts,
+    );
+    const course = store.list[0];
+    await page.goto(PATH_ADMIN.courses.list);
+    course.offerings = course.offerings ?? [];
+    await store.mockCourseRunsFromCourse(page, []);
+    await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
+    await Promise.all(
+      course.offerings.map(async (offering) => {
+        await expect(
+          page.getByRole("heading", { name: offering.product.title }),
+        ).toBeVisible();
+      }),
+    );
+    await page
+      .getByRole("button", { name: "Add offering rule" })
+      .first()
+      .click();
+    await page.getByRole("heading", { name: "Add an offering rule" }).click();
+    await page
+      .getByRole("textbox", { name: "Start date" })
+      .fill("01/31/2023 10:00 AM");
+    await page.getByTitle("Clear").first().click();
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.getByText("From: 1/31/23, 10:00 AM")).not.toBeVisible();
+  });
 });
