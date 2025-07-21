@@ -164,7 +164,6 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         )
         quote = factories.QuoteFactory(
             organization_signed_on=timezone.now(),
-            buyer_signed_on=timezone.now(),
             batch_order=batch_order,
         )
         # Update the flow to `quoted`

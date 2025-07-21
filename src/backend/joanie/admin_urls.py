@@ -48,6 +48,11 @@ admin_router.register(
     api_admin.ContractDefinitionViewSet,
     basename="admin_contract-definitions",
 )
+admin_router.register(
+    "quote-definitions",
+    api_admin.QuoteDefinitionViewSet,
+    basename="admin_quote_definitions",
+)
 admin_router.register("users", api_admin.UserViewSet, basename="admin_user")
 admin_router.register("orders", api_admin.OrderViewSet, basename="admin_orders")
 admin_router.register(

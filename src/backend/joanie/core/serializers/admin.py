@@ -54,6 +54,21 @@ class AdminCertificateDefinitionSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class AdminQuoteDefinitionSerializer(serializers.ModelSerializer):
+    """Serializer for QuoteDefinition model."""
+
+    title = serializers.CharField()
+    name = serializers.ChoiceField(
+        choices=models.QuoteDefinition._meta.get_field("name").choices,
+    )
+    description = serializers.CharField(required=False)
+
+    class Meta:
+        model = models.QuoteDefinition
+        fields = ("id", "title", "description", "name", "body", "language")
+        read_only_fields = ["id"]
+
+
 class AdminCourseLightSerializer(serializers.ModelSerializer):
     """Read-only light serializer for Course model."""
 
