@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
@@ -12,6 +12,9 @@ import RHFSwitch from "@/components/presentational/hook-form/RHFSwitch";
 import { Maybe } from "@/types/utils";
 import { DiscountSelect } from "@/components/presentational/discount/DiscountSelect";
 import { RHFDateTimePicker } from "@/components/presentational/hook-form/RHFDateTimePicker";
+import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
+import { Box, CircularProgress } from "@mui/material";
+import { useOffering } from "@/hooks/useOffering/useOffering";
 
 const messages = defineMessages({
   descriptionInputLabel: {
@@ -66,6 +69,11 @@ const getMinNbSeats = (offeringRule?: OfferingRule): number => {
 };
 
 export function OfferingRuleForm({ offeringRule, onSubmit }: Props) {
+  const {
+    item,
+    methods: { create, update, invalidate },
+  } = useOffering(offeringRule?.id, {}, { enabled: !!offeringRule });
+
   const intl = useIntl();
 
   const Schema = Yup.object().shape({
@@ -76,72 +84,85 @@ export function OfferingRuleForm({ offeringRule, onSubmit }: Props) {
     discount_id: Yup.string().nullable(),
   });
 
-  const getDefaultValues = () => ({
-    nb_seats: offeringRule?.nb_seats ?? null,
-    start: offeringRule?.start ?? null,
-    end: offeringRule?.end ?? null,
-    is_active: offeringRule?.is_active ?? false,
-    discount_id: offeringRule?.discount?.id ?? null,
-  });
+  const defaultValues = useMemo(
+    () => ({
+      nb_seats: offeringRule?.nb_seats ?? null,
+      start: offeringRule?.start ?? null,
+      end: offeringRule?.end ?? null,
+      is_active: offeringRule?.is_active ?? false,
+      discount_id: offeringRule?.discount?.id ?? null,
+    }),
+    [offeringRule]
+  );
 
   const form = useForm({
     resolver: yupResolver(Schema),
-    defaultValues: getDefaultValues(),
+    values: defaultValues,
   });
 
-  useEffect(() => {
-    form.reset(getDefaultValues());
-  }, [offeringRule]);
+  if (!offeringRule) {
+    return (
+      <Box padding={4}>
+        <CircularProgress color="inherit" />
+      </Box>
+    );
+  }
 
   return (
-    <RHFProvider
-      methods={form}
-      id="offering-rule-form"
-      onSubmit={form.handleSubmit((values) => onSubmit?.(values))}
+    <TranslatableForm
+      resetForm={() => form.reset(defaultValues)}
+      entitiesDeps={[offeringRule]}
+      onSelectLang={invalidate}
     >
-      <Grid2 container spacing={2}>
-        <Grid2 size={12}>
-          <RHFTextField
-            type="text"
-            name="description"
-            label={intl.formatMessage(messages.descriptionInputLabel)}
-          />
+      <RHFProvider
+        methods={form}
+        id="offering-rule-form"
+        onSubmit={form.handleSubmit((values) => onSubmit?.(values))}
+      >
+        <Grid2 container spacing={2}>
+          <Grid2 size={12}>
+            <RHFTextField
+              type="text"
+              name="description"
+              label={intl.formatMessage(messages.descriptionInputLabel)}
+            />
+          </Grid2>
+          <Grid2 size={12}>
+            <RHFTextField
+              type="number"
+              name="nb_seats"
+              label={intl.formatMessage(messages.numberOfSeatInputLabel)}
+            />
+          </Grid2>
+          <Grid2 size={12}>
+            <RHFDateTimePicker
+              name="start"
+              label={intl.formatMessage(messages.startLabel)}
+              slotProps={{ field: { clearable: true } }}
+            />
+          </Grid2>
+          <Grid2 size={12}>
+            <RHFDateTimePicker
+              name="end"
+              label={intl.formatMessage(messages.endLabel)}
+              slotProps={{ field: { clearable: true } }}
+            />
+          </Grid2>
+          <Grid2 size={12}>
+            <DiscountSelect
+              name="discount_id"
+              label={intl.formatMessage(messages.discountLabel)}
+              helperText={form.formState.errors.discount_id?.message}
+            />
+          </Grid2>
+          <Grid2 size={12}>
+            <RHFSwitch
+              name="is_active"
+              label={intl.formatMessage(messages.isActiveLabel)}
+            />
+          </Grid2>
         </Grid2>
-        <Grid2 size={12}>
-          <RHFTextField
-            type="number"
-            name="nb_seats"
-            label={intl.formatMessage(messages.numberOfSeatInputLabel)}
-          />
-        </Grid2>
-        <Grid2 size={12}>
-          <RHFDateTimePicker
-            name="start"
-            label={intl.formatMessage(messages.startLabel)}
-            slotProps={{ field: { clearable: true } }}
-          />
-        </Grid2>
-        <Grid2 size={12}>
-          <RHFDateTimePicker
-            name="end"
-            label={intl.formatMessage(messages.endLabel)}
-            slotProps={{ field: { clearable: true } }}
-          />
-        </Grid2>
-        <Grid2 size={12}>
-          <DiscountSelect
-            name="discount_id"
-            label={intl.formatMessage(messages.discountLabel)}
-            helperText={form.formState.errors.discount_id?.message}
-          />
-        </Grid2>
-        <Grid2 size={12}>
-          <RHFSwitch
-            name="is_active"
-            label={intl.formatMessage(messages.isActiveLabel)}
-          />
-        </Grid2>
-      </Grid2>
-    </RHFProvider>
+      </RHFProvider>
+    </TranslatableForm>
   );
 }
