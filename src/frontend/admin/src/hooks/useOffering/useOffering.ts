@@ -167,6 +167,25 @@ export const useOfferings = (
           );
         },
       }).mutate,
+      getOfferingRule: mutation({
+        mutationFn: async (data: {
+          offeringId: string;
+          offeringRuleId: string;
+        }) => {
+          return OfferingRepository.getOfferingRule(
+            data.offeringId,
+            data.offeringRuleId,
+          );
+        },
+        onSuccess: () => {
+          custom.methods.invalidate();
+        },
+        onError: () => {
+          custom.methods.setError(
+            intl.formatMessage(messages.errorDeleteOfferingRule),
+          );
+        },
+      }).mutate,
     },
   };
 };

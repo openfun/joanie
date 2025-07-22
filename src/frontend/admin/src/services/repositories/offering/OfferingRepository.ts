@@ -20,6 +20,8 @@ export const offeringsRoutes = {
   get: (id: string, params: string = "") => `/offerings/${id}/${params}`,
   update: (id: string) => `/offerings/${id}/`,
   delete: (id: string) => `/offerings/${id}/`,
+  getOfferingRule: (id: string, offeringRuleId: string) =>
+    `/offerings/${id}/offering-rules/${offeringRuleId}/`,
   addOfferingRule: (id: string) => `/offerings/${id}/offering-rules/`,
   editOfferingRule: (id: string, offeringRuleId: string) =>
     `/offerings/${id}/offering-rules/${offeringRuleId}/`,
@@ -75,6 +77,16 @@ export const OfferingRepository = class OfferingRepository {
         "Accept-Language": getAcceptLanguage(),
       },
     }).then(checkStatus);
+  }
+
+  static getOfferingRule(
+    offeringId: string,
+    offeringRuleId: string,
+  ): Promise<OfferingRule> {
+    const url = offeringsRoutes.getOfferingRule(
+      offeringId, offeringRuleId
+    );
+    return fetchApi(url, { method: "GET" }).then(checkStatus);
   }
 
   static addOfferingRule(
