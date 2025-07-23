@@ -163,6 +163,51 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
         }
         self.assertEqual(content, expected_return)
 
+    def test_api_admin_offering_rule_get_description_in_accepted_language(self):
+        """
+        Admin authenticated user should be able to get the description of the offering rule
+        into the accepted language of the request. When the translation exists, it should return
+        it, otherwise it should return the default one in english.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering = factories.OfferingFactory()
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            description="An offering rule",
+        )
+        offering_rule.translations.create(
+            language_code="fr-fr", description="Une règle d'achat"
+        )
+
+        response = self.client.get(
+            f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
+            HTTP_ACCEPT_LANGUAGE="en-us",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        # Should return the default translation of description
+        self.assertEqual(response.json()["description"], "An offering rule")
+
+        response = self.client.get(
+            f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
+            HTTP_ACCEPT_LANGUAGE="fr-fr",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        # Should return the French translation of description
+        self.assertEqual(response.json()["description"], "Une règle d'achat")
+
+        response = self.client.get(
+            f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
+            HTTP_ACCEPT_LANGUAGE="de-de",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        # Should return the fallback translation of description (English)
+        self.assertEqual(response.json()["description"], "An offering rule")
+
     # create
     def test_admin_api_offering_rule_create_anonymous(self):
         """
