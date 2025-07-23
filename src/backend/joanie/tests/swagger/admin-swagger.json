@@ -6056,6 +6056,14 @@
                             "$ref": "#/components/schemas/AdminOfferingRule"
                         },
                         "readOnly": true
+                    },
+                    "quote": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminQuote"
+                            }
+                        ],
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6072,6 +6080,7 @@
                     "organization",
                     "owner",
                     "postcode",
+                    "quote",
                     "relation",
                     "total",
                     "vouchers"
@@ -8652,6 +8661,41 @@
                 "required": [
                     "course",
                     "product"
+                ]
+            },
+            "AdminQuote": {
+                "type": "object",
+                "description": "Read only serializer for Quote model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "definition_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "organization_signed_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time organization signed on"
+                    },
+                    "has_purchase_order": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "title": "Purchase order to confirm payment",
+                        "description": "Quote has purchase order to confirm payment from buyer"
+                    }
+                },
+                "required": [
+                    "definition_title",
+                    "has_purchase_order",
+                    "id",
+                    "organization_signed_on"
                 ]
             },
             "AdminQuoteDefinition": {
