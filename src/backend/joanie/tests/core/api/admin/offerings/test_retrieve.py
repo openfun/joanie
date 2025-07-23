@@ -99,6 +99,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
                         offering.product.certificate_definition.id
                     ),
                     "contract_definition": None,
+                    "quote_definition": None,
                     "target_courses": [
                         str(target_course.id)
                         for target_course in offering.product.target_courses.all().order_by(

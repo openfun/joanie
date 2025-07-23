@@ -330,6 +330,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "title": str(product2.certificate_definition.title),
                         },
                         "contract_definition": None,
+                        "quote_definition": None,
                         "id": str(product2.id),
                         "price": float(product2.price),
                         "price_currency": "EUR",
@@ -372,6 +373,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "title": str(product1.certificate_definition.title),
                         },
                         "contract_definition": None,
+                        "quote_definition": None,
                         "state": {
                             "priority": product1.state["priority"],
                             "datetime": product1.state["datetime"]
@@ -838,6 +840,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "title": product.certificate_definition.title,
                         },
                         "contract_definition": None,
+                        "quote_definition": None,
                         "id": str(product.id),
                         "instructions": "",
                         "price": float(product.price),
@@ -1096,6 +1099,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 "title": product.certificate_definition.title,
                             },
                             "contract_definition": None,
+                            "quote_definition": None,
                             "id": str(product.id),
                             "instructions": "",
                             "price": 100,

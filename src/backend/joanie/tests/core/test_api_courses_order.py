@@ -335,6 +335,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         offering = factories.OfferingFactory(
             product__certificate_definition=factories.CertificateDefinitionFactory(),
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
             organizations=organizations,
         )
         orders = []
@@ -425,6 +426,9 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                             ),
                             "certificate_definition_id": str(
                                 offering.product.certificate_definition_id
+                            ),
+                            "quote_definition_id": str(
+                                offering.product.quote_definition.id
                             ),
                         },
                         "state": str(orders[1].state),

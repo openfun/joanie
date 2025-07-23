@@ -476,6 +476,31 @@ class ContractSerializer(AbilitiesModelSerializer):
         read_only_fields = fields
 
 
+class QuoteDefinitionSerializer(serializers.ModelSerializer):
+    """Read only serializer for QuoteDefinition model."""
+
+    class Meta:
+        model = models.QuoteDefinition
+        fields = ("id", "title", "description", "name", "body", "language")
+        read_only_fields = fields
+
+
+class QuoteSerializer(serializers.ModelSerializer):
+    """Read only serializer for Quote model."""
+
+    definition = QuoteDefinitionSerializer()
+
+    class Meta:
+        model = models.Quote
+        fields = [
+            "id",
+            "definition",
+            "organization_signed_on",
+            "has_purchase_order",
+        ]
+        read_only_fields = fields
+
+
 class CourseRunLightSerializer(serializers.ModelSerializer):
     """
     Serialize all information about a course run
@@ -770,10 +795,18 @@ class DefinitionResourcesProductSerializer(serializers.ModelSerializer):
     contract_definition_id = serializers.SlugRelatedField(
         read_only=True, source="contract_definition", slug_field="id"
     )
+    quote_definition_id = serializers.SlugRelatedField(
+        read_only=True, source="quote_definition", slug_field="id"
+    )
 
     class Meta:
         model = models.Product
-        fields = ["id", "contract_definition_id", "certificate_definition_id"]
+        fields = [
+            "id",
+            "contract_definition_id",
+            "certificate_definition_id",
+            "quote_definition_id",
+        ]
         read_only_fields = fields
 
 
@@ -803,6 +836,7 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only=True, many=True, source="target_course_relations"
     )
     contract_definition = ContractDefinitionSerializer(read_only=True)
+    quote_definition = QuoteDefinitionSerializer(read_only=True)
 
     class Meta:
         model = models.Product
@@ -810,6 +844,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "call_to_action",
             "certificate_definition",
             "contract_definition",
+            "quote_definition",
             "id",
             "instructions",
             "price",
@@ -1389,6 +1424,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         required=False,
         read_only=True,
     )
+    quote = QuoteSerializer(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -1411,6 +1447,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "nb_seats",
             "trainees",
             "offering_rule_ids",
+            "quote",
         ]
         read_only_fields = [
             "id",
@@ -1421,6 +1458,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "main_invoice_reference",
             "contract_id",
             "offering_rule_ids",
+            "quote",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:

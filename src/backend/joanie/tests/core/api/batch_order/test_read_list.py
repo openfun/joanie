@@ -82,6 +82,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                         },
                         "main_invoice_reference": bo.main_invoice.reference,
                         "contract_id": str(bo.contract.id),
+                        "quote": None,
                         "company_name": bo.company_name,
                         "identification_number": bo.identification_number,
                         "address": bo.address,

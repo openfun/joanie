@@ -80,7 +80,9 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
         )
         course = factories.CourseFactory()
         product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL, courses=[]
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            courses=[],
+            quote_definition=factories.QuoteDefinitionFactory(),
         )
         response = self.client.put(
             f"/api/v1.0/admin/offerings/{offering.id}/",
@@ -128,6 +130,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                         offering.product.certificate_definition.id
                     ),
                     "contract_definition": None,
+                    "quote_definition": str(offering.product.quote_definition.id),
                     "target_courses": [
                         str(target_course.id)
                         for target_course in offering.product.target_courses.all().order_by(
@@ -244,6 +247,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                         offering.product.certificate_definition.id
                     ),
                     "contract_definition": None,
+                    "quote_definition": None,
                     "target_courses": [
                         str(target_course.id)
                         for target_course in offering.product.target_courses.all().order_by(
@@ -321,6 +325,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
                     offering.product.certificate_definition.id
                 ),
                 "contract_definition": None,
+                "quote_definition": None,
                 "target_courses": [
                     str(target_course.id)
                     for target_course in offering.product.target_courses.all().order_by(

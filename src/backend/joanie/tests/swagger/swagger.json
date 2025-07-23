@@ -4994,6 +4994,14 @@
                             "description": "primary key for the record as UUID"
                         },
                         "readOnly": true
+                    },
+                    "quote": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Quote"
+                            }
+                        ],
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5010,6 +5018,7 @@
                     "organization",
                     "owner",
                     "postcode",
+                    "quote",
                     "total"
                 ]
             },
@@ -5901,12 +5910,19 @@
                         "format": "uuid",
                         "description": "primary key for the record as UUID",
                         "readOnly": true
+                    },
+                    "quote_definition_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "certificate_definition_id",
                     "contract_definition_id",
-                    "id"
+                    "id",
+                    "quote_definition_id"
                 ]
             },
             "Enrollment": {
@@ -6201,6 +6217,13 @@
                 ],
                 "type": "string",
                 "description": "* `info` - Info\n* `success` - Success\n* `warning` - Warning\n* `error` - Error"
+            },
+            "NameEnum": {
+                "enum": [
+                    "quote_default"
+                ],
+                "type": "string",
+                "description": "* `quote_default` - Quote Default"
             },
             "NestedOrder": {
                 "type": "object",
@@ -7606,6 +7629,14 @@
                         ],
                         "readOnly": true
                     },
+                    "quote_definition": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/QuoteDefinition"
+                            }
+                        ],
+                        "readOnly": true
+                    },
                     "id": {
                         "type": "string",
                         "readOnly": true
@@ -7661,6 +7692,7 @@
                     "instructions",
                     "price",
                     "price_currency",
+                    "quote_definition",
                     "state",
                     "target_courses",
                     "title",
@@ -7715,6 +7747,90 @@
                 ],
                 "type": "string",
                 "description": "* `credential` - Credential\n* `enrollment` - Enrollment\n* `certificate` - Certificate"
+            },
+            "Quote": {
+                "type": "object",
+                "description": "Read only serializer for Quote model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "definition": {
+                        "$ref": "#/components/schemas/QuoteDefinition"
+                    },
+                    "organization_signed_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time organization signed on"
+                    },
+                    "has_purchase_order": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "title": "Purchase order to confirm payment",
+                        "description": "Quote has purchase order to confirm payment from buyer"
+                    }
+                },
+                "required": [
+                    "definition",
+                    "has_purchase_order",
+                    "id",
+                    "organization_signed_on"
+                ]
+            },
+            "QuoteDefinition": {
+                "type": "object",
+                "description": "Read only serializer for QuoteDefinition model.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/NameEnum"
+                            }
+                        ],
+                        "readOnly": true,
+                        "title": "Template name to generate pdf"
+                    },
+                    "body": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "language": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LanguageEnum"
+                            }
+                        ],
+                        "readOnly": true,
+                        "description": "Language of the quote definition\n\n* `en-us` - English\n* `fr-fr` - French"
+                    }
+                },
+                "required": [
+                    "body",
+                    "description",
+                    "id",
+                    "language",
+                    "name",
+                    "title"
+                ]
             },
             "User": {
                 "type": "object",

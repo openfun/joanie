@@ -70,6 +70,7 @@ NestedOrderCourseViewSetAPITest.test_api_courses_order_get_list_leaners_filter_b
 - db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
 - db: 'SELECT ... FROM "joanie_contract_definition" WHERE "joanie_contract_definition"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_quote_definition" WHERE "joanie_quote_definition"."id" = #::uuid LIMIT #'
 NestedOrderCourseViewSetAPITest.test_api_courses_order_get_list_learners_anonymous_user: []
 NestedOrderCourseViewSetAPITest.test_api_courses_order_get_list_learners_authenticated_user_delete_method_fails: []
 NestedOrderCourseViewSetAPITest.test_api_courses_order_get_list_learners_authenticated_user_patch_method_fails: []

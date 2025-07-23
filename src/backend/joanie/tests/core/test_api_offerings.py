@@ -76,6 +76,7 @@ class OfferingApiTest(BaseAPITestCase):
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             contract_definition=factories.ContractDefinitionFactory(),
+            quote_definition=factories.QuoteDefinitionFactory(),
         )
         product.instructions = (
             "# An h1 header\n"
@@ -145,6 +146,14 @@ class OfferingApiTest(BaseAPITestCase):
                         "description": product.contract_definition.description,
                         "language": product.contract_definition.language,
                         "title": product.contract_definition.title,
+                    },
+                    "quote_definition": {
+                        "id": str(product.quote_definition.id),
+                        "title": product.quote_definition.title,
+                        "description": product.quote_definition.description,
+                        "name": product.quote_definition.name,
+                        "language": product.quote_definition.language,
+                        "body": product.quote_definition.body,
                     },
                     "state": {
                         "priority": product.state["priority"],
@@ -613,10 +622,12 @@ class OfferingApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course = factories.CourseFactory()
+        quote_definition = factories.QuoteDefinitionFactory()
         offering = factories.OfferingFactory(
             course=course,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=quote_definition,
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
@@ -661,6 +672,14 @@ class OfferingApiTest(BaseAPITestCase):
                         "description": offering.product.contract_definition.description,
                         "language": offering.product.contract_definition.language,
                         "title": offering.product.contract_definition.title,
+                    },
+                    "quote_definition": {
+                        "id": str(offering.product.quote_definition.id),
+                        "body": offering.product.quote_definition.body,
+                        "description": offering.product.quote_definition.description,
+                        "language": offering.product.quote_definition.language,
+                        "name": offering.product.quote_definition.name,
+                        "title": offering.product.quote_definition.title,
                     },
                     "state": {
                         "priority": offering.product.state["priority"],
