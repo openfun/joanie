@@ -407,6 +407,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "instructions",
             "certificate_definition",
             "contract_definition",
+            "quote_definition",
             "target_courses",
             "certification_level",
             "teachers",
@@ -461,6 +462,7 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
             "type",
             "certificate_definition",
             "contract_definition",
+            "quote_definition",
             "target_courses",
         ]
         read_only_fields = fields
@@ -1068,6 +1070,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
 
     certificate_definition = AdminCertificateDefinitionSerializer(read_only=True)
     contract_definition = AdminContractDefinitionSerializer(read_only=True)
+    quote_definition = AdminQuoteDefinitionSerializer(read_only=True)
     target_courses = serializers.SerializerMethodField(read_only=True)
     price = serializers.DecimalField(
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
@@ -1090,6 +1093,7 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "price_currency",
             "certificate_definition",
             "contract_definition",
+            "quote_definition",
             "target_courses",
             "offerings",
             "certification_level",

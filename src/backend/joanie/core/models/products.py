@@ -127,6 +127,13 @@ class Product(parler_models.TranslatableModel, BaseModel):
         blank=True,
         null=True,
     )
+    quote_definition = models.ForeignKey(
+        "QuoteDefinition",
+        verbose_name=_("Quote definition"),
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
     certification_level = models.PositiveSmallIntegerField(
         verbose_name=_("level of certification"),
         validators=[MinValueValidator(1), MaxValueValidator(8)],

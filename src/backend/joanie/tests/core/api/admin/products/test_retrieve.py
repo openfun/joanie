@@ -26,7 +26,9 @@ class ProductAdminApiRetrieveTest(TestCase):
         contract_definition = factories.ContractDefinitionFactory()
         skill = factories.SkillFactory(title="Python")
         teacher = factories.TeacherFactory(first_name="Joanie", last_name="Cunningham")
+        quote_definition = factories.QuoteDefinitionFactory()
         product = factories.ProductFactory(
+            quote_definition=quote_definition,
             contract_definition=contract_definition,
             skills=[skill],
             teachers=[teacher],
@@ -96,6 +98,14 @@ class ProductAdminApiRetrieveTest(TestCase):
                 "language": contract_definition.language,
                 "body": contract_definition.body,
                 "appendix": contract_definition.appendix,
+            },
+            "quote_definition": {
+                "id": str(quote_definition.id),
+                "body": quote_definition.body,
+                "description": quote_definition.description,
+                "language": quote_definition.language,
+                "name": quote_definition.name,
+                "title": quote_definition.title,
             },
             "target_courses": [
                 {
@@ -181,6 +191,7 @@ class ProductAdminApiRetrieveTest(TestCase):
                         "contract_definition": str(
                             offering.product.contract_definition.id
                         ),
+                        "quote_definition": str(offering.product.quote_definition.id),
                         "target_courses": [
                             str(offerings[0].course.id),
                             str(offerings[1].course.id),
