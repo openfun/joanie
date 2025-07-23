@@ -69,6 +69,24 @@ class AdminQuoteDefinitionSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class AdminQuoteSerializer(serializers.ModelSerializer):
+    """Read only serializer for Quote model."""
+
+    definition_title = serializers.SlugRelatedField(
+        read_only=True, slug_field="title", source="definition"
+    )
+
+    class Meta:
+        model = models.Quote
+        fields = [
+            "id",
+            "definition_title",
+            "organization_signed_on",
+            "has_purchase_order",
+        ]
+        read_only_fields = fields
+
+
 class AdminCourseLightSerializer(serializers.ModelSerializer):
     """Read-only light serializer for Course model."""
 
@@ -1720,6 +1738,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
     trainees = serializers.JSONField(default=list)
     offering_rules = AdminOfferingRuleSerializer(read_only=True, many=True)
     vouchers = serializers.SerializerMethodField(read_only=True)
+    quote = AdminQuoteSerializer(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -1743,6 +1762,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "voucher",
             "vouchers",
             "offering_rules",
+            "quote",
         ]
         read_only_fields = [
             "id",
@@ -1752,6 +1772,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "contract_id",
             "offering_rules",
             "vouchers",
+            "quote",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:

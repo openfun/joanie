@@ -64,6 +64,7 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "voucher": None,
                 "vouchers": [],
                 "offering_rules": [],
+                "quote": None,
             }
             for batch_order in batch_orders
         ]
