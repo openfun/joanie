@@ -69,6 +69,7 @@ export function OfferingRuleForm({ offeringRule, onSubmit }: Props) {
   const intl = useIntl();
 
   const Schema = Yup.object().shape({
+    description: Yup.string().nullable(),
     nb_seats: Yup.number().min(getMinNbSeats(offeringRule)).nullable(),
     start: Yup.string().nullable(),
     end: Yup.string().nullable(),
@@ -77,6 +78,7 @@ export function OfferingRuleForm({ offeringRule, onSubmit }: Props) {
   });
 
   const getDefaultValues = () => ({
+    description: offeringRule?.description ?? null,
     nb_seats: offeringRule?.nb_seats ?? null,
     start: offeringRule?.start ?? null,
     end: offeringRule?.end ?? null,
