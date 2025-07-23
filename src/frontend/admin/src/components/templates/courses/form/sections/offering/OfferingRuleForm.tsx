@@ -86,6 +86,7 @@ export function OfferingRuleForm({ offeringRule, onSubmit }: Props) {
 
   const defaultValues = useMemo(
     () => ({
+      description: offeringRule?.description ?? null,
       nb_seats: offeringRule?.nb_seats ?? null,
       start: offeringRule?.start ?? null,
       end: offeringRule?.end ?? null,
