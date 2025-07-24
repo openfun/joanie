@@ -186,7 +186,6 @@ export function OfferingRow({
 
   const deleteOfferingRule = (offeringRule: OfferingRule, index: number) => {
     const { id: offeringRuleId } = offeringRule;
-    offeringRuleListMethods.removeAt(index);
     offeringQuery.methods.deleteOfferingRule(
       {
         offeringId: offering.id,
@@ -374,6 +373,7 @@ export function OfferingRow({
       >
         <Box mt={1}>
           <OfferingRuleForm
+            offeringId={offering?.id}
             offeringRule={currentOfferingRule?.offeringRule}
             onSubmit={(values) => {
               offeringRuleModal.handleClose();
