@@ -26,6 +26,7 @@ and this project adheres to
 - Trigger sync when an offering rule is saved
 - Add Offer rules to ProductRelationSerializer
 - Add cron task to sync offering rules
+- Language tab for offering rule
 
 ### Changed
 
