@@ -3862,7 +3862,7 @@
         "/api/v1.0/organizations/{organization_id}/contracts/": {
             "get": {
                 "operationId": "organizations_contracts_list",
-                "description": "Nested Contract Viewset inside organization route.\nIt allows to list & retrieve organization's contracts if the user is\nan administrator or an owner of the organization.\n\nGET /api/courses/<organization_id|organization_code>/contracts/\n    Return list of all organization's contracts\n\nGET /api/courses/<organization_id|organization_code>/contracts/<contract_id>/\n    Return an organization's contract if one matches the provided id",
+                "description": "Nested Contract Viewset inside organization route.\nIt allows to list & retrieve organization's contracts if the user is\nan administrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/contracts/\n    Return list of all organization's contracts\n\nGET /api/organizations/<organization_id|organization_code>/contracts/<contract_id>/\n    Return an organization's contract if one matches the provided id",
                 "parameters": [
                     {
                         "in": "query",
@@ -3976,7 +3976,7 @@
         "/api/v1.0/organizations/{organization_id}/contracts/{id}/": {
             "get": {
                 "operationId": "organizations_contracts_retrieve",
-                "description": "Nested Contract Viewset inside organization route.\nIt allows to list & retrieve organization's contracts if the user is\nan administrator or an owner of the organization.\n\nGET /api/courses/<organization_id|organization_code>/contracts/\n    Return list of all organization's contracts\n\nGET /api/courses/<organization_id|organization_code>/contracts/<contract_id>/\n    Return an organization's contract if one matches the provided id",
+                "description": "Nested Contract Viewset inside organization route.\nIt allows to list & retrieve organization's contracts if the user is\nan administrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/contracts/\n    Return list of all organization's contracts\n\nGET /api/organizations/<organization_id|organization_code>/contracts/<contract_id>/\n    Return an organization's contract if one matches the provided id",
                 "parameters": [
                     {
                         "in": "path",
@@ -4475,6 +4475,108 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/OrderPaymentSchedule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/organizations/{organization_id}/quotes/": {
+            "get": {
+                "operationId": "organizations_quotes_list",
+                "description": "Nested Organization and Quote viewset inside organization route.\nIt allows to list and retrieve organization quotes if the user is an\nadministrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/quotes/\n    Return list of all organization's quotes\n\nGET /api/organizations/<organization_id|organization_code>/quotes/<quote_id>/\n    Return an organization's quote",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedQuoteList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/organizations/{organization_id}/quotes/{id}/": {
+            "get": {
+                "operationId": "organizations_quotes_retrieve",
+                "description": "Nested Organization and Quote viewset inside organization route.\nIt allows to list and retrieve organization quotes if the user is an\nadministrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/quotes/\n    Return list of all organization's quotes\n\nGET /api/organizations/<organization_id|organization_code>/quotes/<quote_id>/\n    Return an organization's quote",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Quote"
                                 }
                             }
                         },
@@ -5021,6 +5123,89 @@
                     "quote",
                     "total"
                 ]
+            },
+            "BatchOrderLight": {
+                "type": "object",
+                "description": "Read only Batch Order light serializer",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "owner_name": {
+                        "type": "string",
+                        "description": "Returns owner fullname of batch order",
+                        "readOnly": true
+                    },
+                    "organization_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/BatchOrderLightStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "company name"
+                    },
+                    "relation_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    }
+                },
+                "required": [
+                    "company_name",
+                    "id",
+                    "organization_id",
+                    "owner_name",
+                    "relation_id",
+                    "state"
+                ]
+            },
+            "BatchOrderLightRequest": {
+                "type": "object",
+                "description": "Read only Batch Order light serializer",
+                "properties": {
+                    "organization_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "relation_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    }
+                },
+                "required": [
+                    "organization_id",
+                    "relation_id"
+                ]
+            },
+            "BatchOrderLightStateEnum": {
+                "enum": [
+                    "draft",
+                    "assigned",
+                    "quoted",
+                    "to_sign",
+                    "signing",
+                    "pending",
+                    "failed_payment",
+                    "canceled",
+                    "completed"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "BatchOrderRequest": {
                 "type": "object",
@@ -7500,6 +7685,37 @@
                     }
                 }
             },
+            "PaginatedQuoteList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Quote"
+                        }
+                    }
+                }
+            },
             "PatchedAddressRequest": {
                 "type": "object",
                 "description": "Address model serializer",
@@ -7773,9 +7989,18 @@
                         "readOnly": true,
                         "title": "Purchase order to confirm payment",
                         "description": "Quote has purchase order to confirm payment from buyer"
+                    },
+                    "batch_order": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/BatchOrderLight"
+                            }
+                        ],
+                        "readOnly": true
                     }
                 },
                 "required": [
+                    "batch_order",
                     "definition",
                     "has_purchase_order",
                     "id",

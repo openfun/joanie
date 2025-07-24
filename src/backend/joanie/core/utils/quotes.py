@@ -151,9 +151,11 @@ def prepare_customer_context(batch_order):
     }
 
 
-def generate_document_context(quote=None):
+def generate_document_context(quote_definition=None, batch_order=None):
     """Generate quote document context"""
-    language_code = quote.definition.language if quote else settings.LANGUAGE_CODE
+    language_code = (
+        quote_definition.language if quote_definition else settings.LANGUAGE_CODE
+    )
 
     document_context = {
         "quote": QUOTE_FALLBACK_DATA,
@@ -163,27 +165,27 @@ def generate_document_context(quote=None):
         "organization": ORGANIZATION_FALLBACK_DATA,
     }
 
-    if quote:
+    if quote_definition:
         logo = prepare_organization_logo(
-            definition=quote.definition, organization=quote.batch_order.organization
+            definition=quote_definition, organization=batch_order.organization
         )
         document_context.update(
             {
                 "quote": {
-                    "title": quote.definition.title,
-                    "description": quote.definition.description,
-                    "body": quote.definition.get_body_in_html(),
+                    "title": quote_definition.title,
+                    "description": quote_definition.description,
+                    "body": quote_definition.get_body_in_html(),
                 },
                 "batch_order": {
-                    "nb_seats": quote.batch_order.nb_seats,
+                    "nb_seats": batch_order.nb_seats,
                 },
                 "course": prepare_course_context(
-                    language_code=language_code, batch_order=quote.batch_order
+                    language_code=language_code, batch_order=batch_order
                 ),
-                "customer": prepare_customer_context(batch_order=quote.batch_order),
+                "customer": prepare_customer_context(batch_order=batch_order),
                 "organization": prepare_organization_context(
                     language_code=language_code,
-                    organization=quote.batch_order.organization,
+                    organization=batch_order.organization,
                     logo=logo,
                 ),
             },
