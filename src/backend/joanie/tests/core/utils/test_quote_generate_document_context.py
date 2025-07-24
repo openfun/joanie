@@ -74,7 +74,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
             },
         }
 
-        context = generate_document_context(quote=None)
+        context = generate_document_context()
 
         self.assertEqual(context, expected_context)
 
@@ -154,7 +154,9 @@ class UtilsQuoteGenerateContextDocument(TestCase):
             },
         }
 
-        context = generate_document_context(quote=quote)
+        context = generate_document_context(
+            quote_definition=quote.definition, batch_order=batch_order
+        )
 
         organization_logo = models.DocumentImage.objects.get()
         expected_context["organization"]["logo_id"] = str(organization_logo.id)

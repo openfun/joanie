@@ -108,6 +108,11 @@ organization_related_router.register(
     api_client.CourseViewSet,
     basename="course_per_organization",
 )
+organization_related_router.register(
+    "quotes",
+    api_client.NestedOrganizationQuoteViewSet,
+    basename="organization_quotes",
+)
 
 urlpatterns = [
     path(

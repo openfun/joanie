@@ -110,6 +110,7 @@ class Quote(BaseModel):
         db_table = "joanie_quote"
         verbose_name = _("Quote")
         verbose_name_plural = _("Quotes")
+        ordering = ["-created_on"]
         constraints = [
             models.CheckConstraint(
                 check=~(

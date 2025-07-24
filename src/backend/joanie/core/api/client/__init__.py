@@ -1511,10 +1511,10 @@ class NestedOrganizationContractViewSet(NestedGenericViewSet, GenericContractVie
     It allows to list & retrieve organization's contracts if the user is
     an administrator or an owner of the organization.
 
-    GET /api/courses/<organization_id|organization_code>/contracts/
+    GET /api/organizations/<organization_id|organization_code>/contracts/
         Return list of all organization's contracts
 
-    GET /api/courses/<organization_id|organization_code>/contracts/<contract_id>/
+    GET /api/organizations/<organization_id|organization_code>/contracts/<contract_id>/
         Return an organization's contract if one matches the provided id
     """
 
@@ -1654,6 +1654,81 @@ class ContractDefinitionViewset(viewsets.GenericViewSet):
             contract_definition_pdf_bytes_io,
             as_attachment=True,
             filename="contract_definition_preview_template.pdf",
+        )
+
+
+class GenericQuoteViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
+    """
+    Generic API viewset to list, retrieve quotes
+
+    GET /.*/quotes/<uuid_quote_id>
+    """
+
+    lookup_field = "pk"
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.QuoteSerializer
+    ordering = ["-created_on"]
+    queryset = models.Quote.objects.exclude(
+        batch_order__state=enums.BATCH_ORDER_STATE_CANCELED
+    ).select_related(
+        "definition",
+        "batch_order__organization",
+        "batch_order__owner",
+        "batch_order__relation__product",
+        "batch_order__relation__course",
+    )
+
+
+class NestedOrganizationQuoteViewSet(NestedGenericViewSet, GenericQuoteViewSet):
+    """
+    Nested Organization and Quote viewset inside organization route.
+    It allows to list and retrieve organization quotes if the user is an
+    administrator or an owner of the organization.
+
+    GET /api/organizations/<organization_id|organization_code>/quotes/
+        Return list of all organization's quotes
+
+    GET /api/organizations/<organization_id|organization_code>/quotes/<quote_id>/
+        Return an organization's quote
+    """
+
+    lookup_fields = ["batch_order__organization__pk", "pk"]
+    lookup_url_kwargs = ["organization_id", "pk"]
+
+    def _lookup_by_organization_code_or_pk(self):
+        """
+        Override `lookup_fields` to lookup by organization code or pk according to
+        the `organization_id` kwarg if is a valid UUID or not.
+        """
+        try:
+            uuid.UUID(self.kwargs["organization_id"])
+        except ValueError:
+            self.lookup_fields[0] = "batch_order__organization__code__iexact"
+
+    def initial(self, request, *args, **kwargs):
+        """
+        Runs anything that needs to occur prior to calling method handler.
+        """
+        super().initial(request, *args, **kwargs)
+        self._lookup_by_organization_code_or_pk()
+
+    def get_queryset(self):
+        """
+        Customize the queryset to get only organization's quotes for those user has
+        access to.
+        """
+        queryset = super().get_queryset()
+
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        return queryset.filter(
+            batch_order__organization__accesses__user__username=username
         )
 
 

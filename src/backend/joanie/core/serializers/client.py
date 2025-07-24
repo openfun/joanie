@@ -476,6 +476,38 @@ class ContractSerializer(AbilitiesModelSerializer):
         read_only_fields = fields
 
 
+class BatchOrderLightSerializer(serializers.ModelSerializer):
+    """Read only Batch Order light serializer"""
+
+    organization_id = serializers.SlugRelatedField(
+        queryset=models.Organization.objects.all(),
+        slug_field="id",
+        source="organization",
+    )
+    relation_id = serializers.SlugRelatedField(
+        queryset=models.CourseProductRelation.objects.all(),
+        slug_field="id",
+        source="relation",
+    )
+    owner_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.BatchOrder
+        fields = [
+            "id",
+            "owner_name",
+            "organization_id",
+            "state",
+            "company_name",
+            "relation_id",
+        ]
+        read_only_fields = fields
+
+    def get_owner_name(self, instance) -> str:
+        """Returns owner fullname of batch order"""
+        return instance.owner.name
+
+
 class QuoteDefinitionSerializer(serializers.ModelSerializer):
     """Read only serializer for QuoteDefinition model."""
 
@@ -489,6 +521,7 @@ class QuoteSerializer(serializers.ModelSerializer):
     """Read only serializer for Quote model."""
 
     definition = QuoteDefinitionSerializer()
+    batch_order = BatchOrderLightSerializer(read_only=True)
 
     class Meta:
         model = models.Quote
@@ -497,6 +530,7 @@ class QuoteSerializer(serializers.ModelSerializer):
             "definition",
             "organization_signed_on",
             "has_purchase_order",
+            "batch_order",
         ]
         read_only_fields = fields
 
