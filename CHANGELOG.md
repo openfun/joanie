@@ -27,6 +27,7 @@ and this project adheres to
 - Add Offer rules to ProductRelationSerializer
 - Add cron task to sync offering rules
 - Language tab for offering rule
+- Add make rules to make front dev easier
 
 ### Changed
 
