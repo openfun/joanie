@@ -1037,6 +1037,49 @@ class OrganizationViewSet(
             status=HTTPStatus.OK,
         )
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="quote_id",
+                description="Quote id in string, must be provided.",
+                required=True,
+                type=OpenApiTypes.UUID,
+                many=False,
+            ),
+        ],
+    )
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="download-quote",
+        permission_classes=[permissions.CanDownloadQuoteOrganization],
+    )
+    def download(self, request, *args, **kwargs):
+        """
+        Return the PDF file in bytes of the quote related to the organization.
+        """
+        organization = self.get_object()
+        quote_id = request.query_params.get("quote_id")
+
+        try:
+            quote = models.Quote.objects.get(
+                pk=quote_id, batch_order__organization=organization
+            )
+        except models.Quote.DoesNotExist:
+            return Response("Quote does not exist.", status=HTTPStatus.NOT_FOUND)
+
+        quote_pdf_bytes = issuers.generate_document(
+            name=quote.definition.name, context=quote.context
+        )
+        quote_pdf_bytes_io = io.BytesIO(quote_pdf_bytes)
+        quote_pdf_bytes_io.seek(0)
+
+        return FileResponse(
+            quote_pdf_bytes_io,
+            as_attachment=True,
+            filename=f"{quote.definition.title}-{quote.id}.pdf".replace(" ", "_"),
+        )
+
 
 class OrganizationAccessViewSet(
     mixins.CreateModelMixin,
@@ -1679,6 +1722,32 @@ class GenericQuoteViewSet(
         "batch_order__relation__product",
         "batch_order__relation__course",
     )
+
+
+class QuoteViewSet(GenericQuoteViewSet):
+    """
+    Quote viewset allows for owner of a batch order to view the quote document.
+
+    GET /api/v1.0/quotes/
+        Return the list of quotes of a batch order owner.
+
+    GET /api/v1.0/quotes/<quote_id>/
+        Return the information of a quote for a batch order owner.
+    """
+
+    def get_queryset(self):
+        """
+        Customize the queryset to get only user's quotes.
+        """
+        queryset = super().get_queryset()
+
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        return queryset.filter(batch_order__owner__username=username)
 
 
 class NestedOrganizationQuoteViewSet(NestedGenericViewSet, GenericQuoteViewSet):

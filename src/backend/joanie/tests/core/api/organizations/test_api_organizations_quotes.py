@@ -70,7 +70,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
         )
         batch_order.flow.cancel()
         # Create random batch orders that should not be returned
-        batch_order = factories.BatchOrderFactory(
+        factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_QUOTED,
         )
 
