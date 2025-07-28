@@ -35,6 +35,18 @@ class CanSignOrganizationContracts(IsAuthenticated):
         return abilities.get("sign_contracts", False)
 
 
+class CanDownloadQuoteOrganization(IsAuthenticated):
+    """
+    Check if the authenticated user is allowed to download the quote of an organization
+    from a batch order.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        """Check permission for a given object."""
+        abilities = obj.get_abilities(request.user)
+        return abilities.get("download_quote", False)
+
+
 class HasAPIKey(permissions.BasePermission):
     """Permission class to grant access to our remote endpoints API."""
 

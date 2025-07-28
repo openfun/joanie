@@ -157,3 +157,19 @@ class Quote(BaseModel):
         has been received
         """
         return self.is_signed_by_organization and self.has_purchase_order
+
+    def get_abilities(self, user):
+        """
+        Compute and return abilities for the user taking into account their
+        roles on other objects.
+        """
+
+        download_quote = False
+
+        if user.is_authenticated:
+            abilities = self.batch_order.organization.get_abilities(user=user)
+            download_quote = abilities.get("download_quote", False)
+
+        return {
+            "download_quote": download_quote,
+        }

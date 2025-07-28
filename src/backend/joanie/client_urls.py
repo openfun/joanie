@@ -40,6 +40,11 @@ router.register(
     api_client.ContractDefinitionViewset,
     basename="contract_definitions",
 )
+router.register(
+    "quotes",
+    api_client.QuoteViewSet,
+    basename="quotes",
+)
 router.register("courses", api_client.CourseViewSet, basename="courses")
 router.register("course-runs", api_client.CourseRunViewSet, basename="course-runs")
 router.register("enrollments", api_client.EnrollmentViewSet, basename="enrollments")
