@@ -1549,10 +1549,10 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         Verify that the number of available seats in offering rules of the offering
         is sufficient to meet the required seats specified in the batch order.
         """
-        organization_id = self.initial_data.get("organization_id")
-        if organization_id:
-            organization = get_object_or_404(models.Organization, id=organization_id)
-            validated_data["organization"] = organization
+        organization = get_object_or_404(
+            models.Organization, id=self.initial_data.get("organization_id")
+        )
+        validated_data["organization"] = organization
 
         offering_id = self.initial_data.get("relation_id")
         nb_seats = self.initial_data.get("nb_seats")
