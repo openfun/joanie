@@ -797,8 +797,15 @@ class BatchOrderViewSet(
                 f"The offering does not exist: {offering_id}",
                 status=HTTPStatus.BAD_REQUEST,
             )
-        organization = get_least_active_organization(offering.product, offering.course)
-        serializer.initial_data["organization_id"] = organization.id
+
+        organization_id = request.data.get("organization_id")
+        if not organization_id:
+            organization = get_least_active_organization(
+                offering.product, offering.course
+            )
+        else:
+            organization = get_object_or_404(models.Organization, pk=organization_id)
+        serializer.initial_data["organization_id"] = str(organization.id)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
