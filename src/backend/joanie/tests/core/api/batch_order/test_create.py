@@ -102,6 +102,45 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             },
         )
 
+    def test_api_batch_order_create_authenticated_with_invalid_organization_id(self):
+        """
+        Authenticated user should not be able to create a batch order with an invalid
+        organization id.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+            product__price=10,
+        )
+
+        data = {
+            "offering_id": offering.id,
+            "nb_seats": 2,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "trainees": [
+                {"first_name": "John", "last_name": "Doe"},
+                {"first_name": "Jane", "last_name": "Doe"},
+            ],
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "organization_id": "invalid_id",
+        }
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+
     def test_api_batch_order_create_authenticated(self):
         """
         Authenticated user should be able to create a batch order with the required
@@ -130,6 +169,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "organization_id": str(offering.organizations.first().id),
         }
 
         response = self.client.post(
@@ -144,6 +184,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         batch_order = models.BatchOrder.objects.get(owner=user)
 
         self.assertEqual(batch_order.owner, user)
+        self.assertEqual(batch_order.organization, offering.organizations.first())
         self.assertEqual(batch_order.offering, offering)
         self.assertEqual(batch_order.nb_seats, 2)
         self.assertEqual(batch_order.trainees, data["trainees"])
