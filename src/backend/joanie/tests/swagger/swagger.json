@@ -2025,7 +2025,7 @@
         "/api/v1.0/courses/{course_id}/products/{pk_or_product_id}/payment-schedule/": {
             "get": {
                 "operationId": "courses_products_payment_schedule_retrieve",
-                "description": "Return the payment schedule for an offering.",
+                "description": "Return the price and the payment schedule for an offering, whether there is a discount\nor a voucher code that is passed.",
                 "parameters": [
                     {
                         "in": "path",
@@ -2910,7 +2910,7 @@
         "/api/v1.0/offerings/{pk_or_product_id}/payment-schedule/": {
             "get": {
                 "operationId": "offerings_payment_schedule_retrieve",
-                "description": "Return the payment schedule for an offering.",
+                "description": "Return the price and the payment schedule for an offering, whether there is a discount\nor a voucher code that is passed.",
                 "parameters": [
                     {
                         "in": "path",
@@ -4438,7 +4438,7 @@
         "/api/v1.0/organizations/{organization_id}/offerings/{pk_or_product_id}/payment-schedule/": {
             "get": {
                 "operationId": "organizations_offerings_payment_schedule_retrieve",
-                "description": "Return the payment schedule for an offering.",
+                "description": "Return the price and the payment schedule for an offering, whether there is a discount\nor a voucher code that is passed.",
                 "parameters": [
                     {
                         "in": "path",
@@ -7102,6 +7102,13 @@
                         "items": {
                             "$ref": "#/components/schemas/OrderPayment"
                         }
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
                     }
                 },
                 "required": [

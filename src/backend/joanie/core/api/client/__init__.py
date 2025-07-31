@@ -33,6 +33,7 @@ from joanie.core.models import CourseProductRelation
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.core.utils.product import synchronize_product_course_runs
@@ -206,9 +207,10 @@ class OfferingViewSet(
         return self.serializer_class
 
     @action(detail=True, methods=["GET"], url_path="payment-schedule")
-    def payment_schedule(self, *args, **kwargs):
+    def payment_schedule(self, request, *args, **kwargs):
         """
-        Return the payment schedule for an offering.
+        Return the price and the payment schedule for an offering, whether there is a discount
+        or a voucher code that is passed.
         """
         offering = self.get_object()
 
@@ -220,17 +222,41 @@ class OfferingViewSet(
             ignore_archived=True
         )
 
-        payment_schedule = generate_payment_schedule(
-            offering.rules.get("discounted_price") or offering.product.price,
-            timezone.now(),
-            course_run_dates["start"],
-            course_run_dates["end"],
-        )
+        # If voucher code is passed, retrieve the query parameter
+        voucher_code = self._get_voucher_code(request)
+        price = self._get_price(offering, voucher_code)
 
-        serializer = self.get_serializer(data={"payment_schedule": payment_schedule})
+        serializer = self.get_serializer(
+            data={
+                "payment_schedule": generate_payment_schedule(
+                    price,
+                    timezone.now(),
+                    course_run_dates["start"],
+                    course_run_dates["end"],
+                ),
+                "price": price,
+            }
+        )
         serializer.is_valid(raise_exception=True)
 
-        return Response(serializer.data.get("payment_schedule"))
+        return Response(serializer.data, HTTPStatus.OK)
+
+    def _get_voucher_code(self, request):
+        """Return the voucher code if passed in query parameters, else None"""
+        return request.query_params.get("voucher_code", None) or request.data.get(
+            "voucher_code", None
+        )
+
+    def _get_price(self, offering, voucher_code):
+        """
+        Return the price whether there is a discount, or a voucher code is passed, else
+        it returns the product's initial price.
+        """
+        if voucher_code:
+            voucher = get_object_or_404(models.Voucher, code=voucher_code)
+            return calculate_price(offering.product.price, voucher.discount)
+
+        return offering.rules.get("discounted_price") or offering.product.price
 
 
 class EnrollmentViewSet(
