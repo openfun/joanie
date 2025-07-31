@@ -1233,6 +1233,13 @@ class OrderPaymentScheduleSerializer(serializers.Serializer):
     """
 
     payment_schedule = OrderPaymentSerializer(many=True, required=True)
+    price = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        required=False,
+    )
 
     def create(self, validated_data):
         """Only there to avoid a NotImplementedError"""

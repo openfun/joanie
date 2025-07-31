@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Update payment schedule endpoint to return discounted amount and schedule
+  with voucher code
 - Add nested Organization Quote client api
 - Add admin API endpoint for quote definitions
 - Add quote and quote definition models for batch orders

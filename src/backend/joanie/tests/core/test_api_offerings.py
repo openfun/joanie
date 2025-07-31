@@ -1678,22 +1678,25 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
-            [
-                {
-                    "id": "00000000-0000-0000-0000-000000000001",
-                    "amount": 0.90,
-                    "currency": settings.DEFAULT_CURRENCY,
-                    "due_date": "2024-01-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "00000000-0000-0000-0000-000000000001",
-                    "amount": 2.10,
-                    "currency": settings.DEFAULT_CURRENCY,
-                    "due_date": "2024-03-01",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-            ],
+            {
+                "price": 3.00,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 0.90,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2024-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 2.10,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2024-03-01",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+            },
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -1761,22 +1764,25 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
-            [
-                {
-                    "id": "00000000-0000-0000-0000-000000000001",
-                    "amount": 0.45,
-                    "currency": settings.DEFAULT_CURRENCY,
-                    "due_date": "2024-01-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "00000000-0000-0000-0000-000000000001",
-                    "amount": 1.05,
-                    "currency": settings.DEFAULT_CURRENCY,
-                    "due_date": "2024-03-01",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-            ],
+            {
+                "price": 1.50,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 0.45,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2024-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 1.05,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2024-03-01",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+            },
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -1829,15 +1835,18 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
-            [
-                {
-                    "id": "00000000-0000-0000-0000-000000000001",
-                    "amount": 3.00,
-                    "currency": settings.DEFAULT_CURRENCY,
-                    "due_date": "2024-01-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-            ],
+            {
+                "price": 3.00,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 3.00,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2024-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+            },
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -1894,16 +1903,380 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
-            [
-                {
-                    "id": "00000000-0000-0000-0000-000000000001",
-                    "amount": 1.50,
-                    "currency": settings.DEFAULT_CURRENCY,
-                    "due_date": "2024-01-17",
-                    "state": enums.PAYMENT_STATE_PENDING,
-                },
-            ],
+            {
+                "price": 1.50,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 1.50,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2024-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+            },
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
         self.assertEqual(response_relation_path.json(), response.json())
+
+    def test_api_offering_voucher_estimated_price_authenticated_invalid_voucher(
+        self,
+    ):
+        """
+        Authenticated users should not be able to retrieve a payment schedule and the estimated
+        discounted price with an invalid voucher code.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory()
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{offering.course.code}/"
+            f"products/{offering.product.id}/payment-schedule/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data={"voucher_code": "invalid_code"},
+        )
+        response_relation_path = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            data={"voucher_code": "invalid_code"},
+        )
+        response_with_query_params = self.client.get(
+            f"/api/v1.0/courses/{offering.course.code}/"
+            f"products/{offering.product.id}/payment-schedule/?voucher_code=invalid_code",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        response_relation_path_with_query_param = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/payment-schedule/?voucher_code=invalid_code",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertEqual(
+            response_relation_path.status_code, HTTPStatus.NOT_FOUND, response.json()
+        )
+        self.assertEqual(
+            response_with_query_params.status_code,
+            HTTPStatus.NOT_FOUND,
+            response.json(),
+        )
+        self.assertEqual(
+            response_relation_path_with_query_param.status_code,
+            HTTPStatus.NOT_FOUND,
+            response.json(),
+        )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            10: (30, 70),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_offering_voucher_estimated_price_anonymous(
+        self,
+    ):
+        """
+        Anonymous users should be able to retrieve a payment schedule and the estimated
+        discounted price with a voucher code.
+        """
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2025, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+        # Create an archived course_run
+        factories.CourseRunFactory(
+            start=datetime(2025, 12, 15, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 12, 31, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+        product = factories.ProductFactory(
+            price=10,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+        )
+        offering = factories.OfferingFactory(
+            course=course_run.course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        voucher = factories.VoucherFactory(discount=factories.DiscountFactory(rate=0.1))
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch(
+                "django.utils.timezone.now",
+                return_value=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            ),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{offering.course.code}/"
+                f"products/{offering.product.id}/payment-schedule/",
+                data={"voucher_code": voucher.code},
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+                data={"voucher_code": voucher.code},
+            )
+            response_with_query_params = self.client.get(
+                f"/api/v1.0/courses/{offering.course.code}/"
+                f"products/{offering.product.id}/payment-schedule/?voucher_code={voucher.code}",
+            )
+            response_relation_with_query_params = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/?voucher_code={voucher.code}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertEqual(
+            response.json(),
+            {
+                "price": 9.00,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 2.70,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2025-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 6.30,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2025-03-01",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+            },
+        )
+        self.assertEqual(
+            response_relation_path.status_code, HTTPStatus.OK, response.json()
+        )
+        self.assertEqual(response_relation_path.json(), response.json())
+        self.assertEqual(
+            response_with_query_params.status_code, HTTPStatus.OK, response.json()
+        )
+        self.assertEqual(response_with_query_params.json(), response.json())
+        self.assertEqual(
+            response_relation_with_query_params.status_code,
+            HTTPStatus.OK,
+            response.json(),
+        )
+        self.assertEqual(response_relation_with_query_params.json(), response.json())
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            10: (30, 70),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_offering_voucher_estimated_price_with_credential_product_id_with_voucher_code(
+        self,
+    ):
+        """
+        Authenticated users should be able to retrieve a payment schedule with the estimated
+        discounted price of a voucher code for a single offering if a product id is provided
+        and the product is a credential. If there are archived course runs, they should be ignored.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        mocked_now = datetime(2025, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2025, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+        # Create an archived course_run
+        factories.CourseRunFactory(
+            start=datetime(2024, 12, 15, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 12, 31, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+
+        product = factories.ProductFactory(
+            price=10,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+        )
+        offering = factories.OfferingFactory(
+            course=course_run.course,
+            product=product,
+        )
+        voucher = factories.VoucherFactory(
+            multiple_use=True,
+            multiple_users=True,
+            discount=factories.DiscountFactory(rate=0.1),
+        )
+        payload = {"voucher_code": voucher.code}
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                data=payload,
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                data=payload,
+            )
+            response_with_query_params = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/?voucher_code={voucher.code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            response_relation_path_with_query_param = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+                f"?voucher_code={voucher.code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "price": 9.00,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 2.70,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2025-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 6.30,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2025-03-01",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+            },
+        )
+        self.assertEqual(
+            response_relation_path.status_code, HTTPStatus.OK, response.json()
+        )
+        self.assertEqual(response_relation_path.json(), response.json())
+        self.assertEqual(
+            response_with_query_params.status_code, HTTPStatus.OK, response.json()
+        )
+        self.assertEqual(response_with_query_params.json(), response.json())
+        self.assertEqual(
+            response_relation_path_with_query_param.status_code,
+            HTTPStatus.OK,
+            response.json(),
+        )
+        self.assertEqual(
+            response_relation_path_with_query_param.json(), response.json()
+        )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            100: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_offering_voucher_estimated_price_with_certificate_product_id_with_voucher_code(
+        self,
+    ):
+        """
+        Authenticated users should be able to retrieve a payment schedule for
+        a single offering if a product id is provided and the product is a certificate.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2025, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        product = factories.ProductFactory(
+            price=100,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+        offering = factories.OfferingFactory(
+            course=course_run.course,
+            product=product,
+        )
+        voucher = factories.VoucherFactory(
+            multiple_use=True,
+            multiple_users=True,
+            discount=factories.DiscountFactory(rate=0.1),
+        )
+        payload = {"voucher_code": voucher.code}
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch(
+                "django.utils.timezone.now",
+                return_value=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            ),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                data=payload,
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                data=payload,
+            )
+            response_with_query_params = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/?voucher_code={voucher.code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            response_relation_path_with_query_param = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+                f"?voucher_code={voucher.code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "price": 90.00,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 90.00,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2025-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+            },
+        )
+
+        self.assertEqual(
+            response_relation_path.status_code, HTTPStatus.OK, response.json()
+        )
+        self.assertEqual(
+            response_relation_path.status_code, HTTPStatus.OK, response.json()
+        )
+        self.assertEqual(response_relation_path.json(), response.json())
+        self.assertEqual(
+            response_with_query_params.status_code, HTTPStatus.OK, response.json()
+        )
+        self.assertEqual(response_with_query_params.json(), response.json())
+        self.assertEqual(
+            response_relation_path_with_query_param.status_code,
+            HTTPStatus.OK,
+            response.json(),
+        )
+        self.assertEqual(
+            response_relation_path_with_query_param.json(), response.json()
+        )
