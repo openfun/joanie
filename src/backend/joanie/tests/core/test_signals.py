@@ -71,7 +71,7 @@ class SignalsTestCase(TestCase):
         )
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"],
-            "course_and_search",
+            enums.COURSE_AND_SEARCH,
         )
 
     # Course run
@@ -123,7 +123,7 @@ class SignalsTestCase(TestCase):
             ["2022-07-07T07:00:00+00:00"] * 3,
         )
         for course_run in synchronized_course_runs:
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_save_course_run_target_course_restrict(self, mock_sync):
@@ -175,7 +175,9 @@ class SignalsTestCase(TestCase):
         )
         for course_run_dict in synchronized_course_runs:
             self.assertIsNotNone(course_run_dict["start"])
-            self.assertEqual(course_run_dict["catalog_visibility"], "course_and_search")
+            self.assertEqual(
+                course_run_dict["catalog_visibility"], enums.COURSE_AND_SEARCH
+            )
 
         mock_sync.reset_mock()
         # we save the course run excluded from the product
@@ -200,7 +202,7 @@ class SignalsTestCase(TestCase):
         )
         self.assertIsNotNone(synchronized_course_runs[0]["start"])
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -316,7 +318,7 @@ class SignalsTestCase(TestCase):
             ["2022-07-07T07:00:00+00:00", None, None],
         )
         for course_run in synchronized_course_runs:
-            self.assertEqual(course_run["catalog_visibility"], "hidden")
+            self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_delete_course_run_query(self, mock_sync):
@@ -370,7 +372,7 @@ class SignalsTestCase(TestCase):
         self.assertIsNotNone(synchronized_course_runs[0]["start"])
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"],
-            "course_and_search",
+            enums.COURSE_AND_SEARCH,
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -405,7 +407,9 @@ class SignalsTestCase(TestCase):
         )
         self.assertIsNone(synchronized_course_runs[0]["start"])
         self.assertEqual(synchronized_course_runs[0]["course"], offering.course.code)
-        self.assertEqual(synchronized_course_runs[0]["catalog_visibility"], "hidden")
+        self.assertEqual(
+            synchronized_course_runs[0]["catalog_visibility"], enums.HIDDEN
+        )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_delete_product_target_course_relation_query(self, mock_sync):
@@ -461,7 +465,7 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_offering_set(self, mock_sync):
@@ -499,7 +503,7 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
-            self.assertEqual(course_run["catalog_visibility"], "hidden")
+            self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
 
         # added
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
@@ -522,7 +526,7 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_offering_create(self, mock_sync):
@@ -561,7 +565,7 @@ class SignalsTestCase(TestCase):
                 course_run["start"]
             )  # Created product can't have course runs yet
             self.assertEqual(course_run["course"], course.code)
-            self.assertEqual(course_run["catalog_visibility"], "hidden")
+            self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_offering_remove(self, mock_sync):
@@ -592,7 +596,7 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
-            self.assertEqual(course_run["catalog_visibility"], "hidden")
+            self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
 
     def test_signals_on_change_offering_clear(self):
         """Product synchronization should be triggered when course's products are cleared."""
@@ -627,7 +631,7 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
-            self.assertEqual(course_run["catalog_visibility"], "hidden")
+            self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_relation_add(self, mock_sync):
@@ -669,7 +673,7 @@ class SignalsTestCase(TestCase):
         )
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_relation_set(self, mock_sync):
@@ -714,7 +718,9 @@ class SignalsTestCase(TestCase):
         )
         self.assertIsNotNone(synchronized_course_runs[0]["start"])
         self.assertEqual(synchronized_course_runs[0]["course"], old_course.code)
-        self.assertEqual(synchronized_course_runs[0]["catalog_visibility"], "hidden")
+        self.assertEqual(
+            synchronized_course_runs[0]["catalog_visibility"], enums.HIDDEN
+        )
 
         # Added
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
@@ -737,7 +743,7 @@ class SignalsTestCase(TestCase):
         )
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_relation_create(self, mock_sync):
@@ -779,7 +785,7 @@ class SignalsTestCase(TestCase):
         )
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_relation_remove(self, mock_sync):
@@ -811,7 +817,9 @@ class SignalsTestCase(TestCase):
         )
         self.assertIsNotNone(synchronized_course_runs[0]["start"])
         self.assertEqual(synchronized_course_runs[0]["course"], courses[0].code)
-        self.assertEqual(synchronized_course_runs[0]["catalog_visibility"], "hidden")
+        self.assertEqual(
+            synchronized_course_runs[0]["catalog_visibility"], enums.HIDDEN
+        )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_relation_clear(self, mock_sync):
@@ -849,7 +857,7 @@ class SignalsTestCase(TestCase):
         )
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
-            self.assertEqual(course_run["catalog_visibility"], "hidden")
+            self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_offering_rule_create_credential(self, mock_sync):
@@ -920,10 +928,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": "hidden",
+                "catalog_visibility": enums.HIDDEN,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
-                "certificate_offer": "paid",
+                "certificate_offer": enums.COURSE_OFFER_PAID,
                 "certificate_price": None,
                 "course": course_run.course.code,
                 "discount": offering.rules.get("discount"),
@@ -970,10 +978,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": "hidden",
+                "catalog_visibility": enums.HIDDEN,
                 "certificate_discount": offering.rules.get("discount"),
                 "certificate_discounted_price": offering.rules.get("discounted_price"),
-                "certificate_offer": "paid",
+                "certificate_offer": enums.COURSE_OFFER_PAID,
                 "certificate_price": product.price,
                 "course": course_run.course.code,
                 "discount": None,
@@ -1015,7 +1023,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": "hidden",
+                "catalog_visibility": enums.HIDDEN,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
                 "certificate_offer": None,
@@ -1072,7 +1080,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": "hidden",
+                "catalog_visibility": enums.HIDDEN,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
                 "certificate_offer": enums.COURSE_OFFER_PAID,
@@ -1119,10 +1127,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": "hidden",
+                "catalog_visibility": enums.HIDDEN,
                 "certificate_discount": offering.rules.get("discount"),
                 "certificate_discounted_price": offering.rules.get("discounted_price"),
-                "certificate_offer": "paid",
+                "certificate_offer": enums.COURSE_OFFER_PAID,
                 "certificate_price": product.price,
                 "course": course_run.course.code,
                 "discount": None,
@@ -1165,7 +1173,7 @@ class SignalsTestCase(TestCase):
         )
 
         for course_run in synchronized_course_runs:
-            self.assertEqual(course_run["certificate_offer"], "paid")
+            self.assertEqual(course_run["certificate_offer"], enums.COURSE_OFFER_PAID)
             self.assertEqual(course_run["certificate_price"], D(50.00))
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1197,7 +1205,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[1],
             {
-                "catalog_visibility": "hidden",
+                "catalog_visibility": enums.HIDDEN,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
                 "certificate_offer": None,
@@ -1218,7 +1226,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0],
             {
-                "catalog_visibility": "hidden",
+                "catalog_visibility": enums.HIDDEN,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
                 "certificate_offer": None,
@@ -1299,7 +1307,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-08-08T08:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1356,7 +1364,7 @@ class SignalsTestCase(TestCase):
         )
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["start"], "2022-07-07T07:00:00+00:00")
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
         # Adding
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
@@ -1379,7 +1387,7 @@ class SignalsTestCase(TestCase):
         )
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["start"], "2022-08-08T08:00:00+00:00")
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_run_restrict_relation_create(
@@ -1443,7 +1451,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1498,7 +1506,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-08-08T08:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1551,7 +1559,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1607,7 +1615,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-08-08T08:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1669,7 +1677,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
         # Adding
@@ -1702,7 +1710,7 @@ class SignalsTestCase(TestCase):
         )
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["start"], "2022-08-08T08:00:00+00:00")
-            self.assertEqual(course_run["catalog_visibility"], "course_and_search")
+            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_course_run_restrict_product_relation_create(
@@ -1755,7 +1763,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
         synchronized_course_runs = mock_sync.call_args_list[1][0][0]
@@ -1781,7 +1789,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-08-08T08:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1838,7 +1846,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1904,7 +1912,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["start"], "2022-07-07T07:00:00+00:00"
         )
         self.assertEqual(
-            synchronized_course_runs[0]["catalog_visibility"], "course_and_search"
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1953,7 +1961,7 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(synchronized_course_runs, serialized_course_runs)
 
         for entry in serialized_course_runs:
-            self.assertEqual(entry["certificate_offer"], "paid")
+            self.assertEqual(entry["certificate_offer"], enums.COURSE_OFFER_PAID)
             self.assertEqual(entry["certificate_price"], D(52.00))
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -1999,6 +2007,6 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(synchronized_course_runs, serialized_course_runs)
 
         for entry in serialized_course_runs:
-            self.assertEqual(entry["offer"], "paid")
+            self.assertEqual(entry["offer"], enums.COURSE_OFFER_PAID)
             self.assertEqual(entry["price"], D("52.00"))
             self.assertEqual(entry["price_currency"], "EUR")
