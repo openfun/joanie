@@ -29,6 +29,9 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_delete_authenticated:
 - db: DELETE FROM "joanie_order_offering_rules" WHERE "joanie_order_offering_rules"."offeringrule_id" IN (#::uuid)
 - db: DELETE FROM "joanie_batch_order_offering_rules" WHERE "joanie_batch_order_offering_rules"."offeringrule_id" IN (#::uuid)
 - db: DELETE FROM "joanie_offeringrule" WHERE "joanie_offeringrule"."id" IN (#::uuid)
+- db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
 OfferingRuleAdminApiTest.test_admin_api_offering_rule_delete_cannot_edit:
 - db: 'SELECT ... FROM "django_session" WHERE ("django_session"."expire_date" > #::timestamptz AND "django_session"."session_key" = #) LIMIT #'
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
@@ -42,6 +45,9 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_delete_cannot_edit:
 - db: DELETE FROM "joanie_order_offering_rules" WHERE "joanie_order_offering_rules"."offeringrule_id" IN (#::uuid)
 - db: DELETE FROM "joanie_batch_order_offering_rules" WHERE "joanie_batch_order_offering_rules"."offeringrule_id" IN (#::uuid)
 - db: DELETE FROM "joanie_offeringrule" WHERE "joanie_offeringrule"."id" IN (#::uuid)
+- db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
 OfferingRuleAdminApiTest.test_admin_api_offering_rule_list_authenticated:
 - db: 'SELECT ... FROM "django_session" WHERE ("django_session"."expire_date" > #::timestamptz AND "django_session"."session_key" = #) LIMIT #'
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
