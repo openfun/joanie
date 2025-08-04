@@ -200,7 +200,7 @@ jobs:
           POSTGRES_PASSWORD: pass
     working_directory: ~/joanie/src/backend
     environment:
-        DJANGO_CONFIGURATION: Test
+        DJANGO_CONFIGURATION: ContinuousIntegration
     steps:
       - checkout:
           path: ~/joanie
