@@ -988,6 +988,155 @@ class SignalsTestCase(TestCase):
             },
         )
 
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_delete_offering_rule_delete_for_credential(self, mock_sync):
+        """
+        Product synchronization should be triggered when an offering rule is deleted.
+        """
+        course_run = factories.CourseRunFactory()
+        product = factories.ProductFactory(
+            courses=[course_run.course],
+            price="100.00",
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+        offering = product.offerings.get()
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            discount=factories.DiscountFactory(rate=0.1),
+            is_active=True,
+        )
+        mock_sync.reset_mock()
+
+        offering_rule.delete()
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+
+        self.assertEqual(
+            synchronized_course_run,
+            {
+                "catalog_visibility": "hidden",
+                "certificate_discount": None,
+                "certificate_discounted_price": None,
+                "certificate_offer": None,
+                "certificate_price": None,
+                "course": course_run.course.code,
+                "discount": offering.rules.get("discount"),
+                "discounted_price": offering.rules.get("discounted_price"),
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "price": product.price,
+                "resource_link": "https://example.com/api/v1.0/courses/"
+                f"{course_run.course.code}/products/{product.id}/",
+            },
+        )
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_delete_offering_rule_delete_credential_is_graded(
+        self, mock_sync
+    ):
+        """
+        Product synchronization should be triggered when an offering rule is deleted
+        for a credential product with is_graded set to True.
+        """
+        course_run = factories.CourseRunFactory()
+        product = factories.ProductFactory(
+            courses=[course_run.course],
+            price="100.00",
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+        product.target_course_relations.set(
+            [
+                factories.ProductTargetCourseRelationFactory(
+                    is_graded=True,
+                )
+            ]
+        )
+        offering = product.offerings.get()
+
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            discount=factories.DiscountFactory(rate=0.1),
+            is_active=True,
+        )
+        mock_sync.reset_mock()
+
+        offering_rule.delete()
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        self.has_credential_resource_link(synchronized_course_run)
+        self.assertEqual(
+            synchronized_course_run,
+            {
+                "catalog_visibility": "hidden",
+                "certificate_discount": None,
+                "certificate_discounted_price": None,
+                "certificate_offer": enums.COURSE_OFFER_PAID,
+                "certificate_price": None,
+                "course": course_run.course.code,
+                "discount": offering.rules.get("discount"),
+                "discounted_price": offering.rules.get("discounted_price"),
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "price": product.price,
+                "resource_link": "https://example.com/api/v1.0/courses/"
+                f"{course_run.course.code}/products/{product.id}/",
+            },
+        )
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_signals_on_delete_offering_rule_delete_certificate(self, mock_sync):
+        """
+        Product synchronization should be triggered when an offering rule is deleted.
+        """
+        course_run = factories.CourseRunFactory()
+        product = factories.ProductFactory(
+            courses=[course_run.course],
+            price="100.00",
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+        offering = product.offerings.get()
+
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            discount=factories.DiscountFactory(rate=0.1),
+            is_active=True,
+        )
+        mock_sync.reset_mock()
+
+        offering_rule.delete()
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        self.has_certificate_resource_link(synchronized_course_run)
+        self.assertEqual(
+            synchronized_course_run,
+            {
+                "catalog_visibility": "hidden",
+                "certificate_discount": offering.rules.get("discount"),
+                "certificate_discounted_price": offering.rules.get("discounted_price"),
+                "certificate_offer": "paid",
+                "certificate_price": product.price,
+                "course": course_run.course.code,
+                "discount": None,
+                "discounted_price": None,
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "price": None,
+                "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
+            },
+        )
+
     # Edit certificate product offering
 
     @mock.patch.object(webhooks, "synchronize_course_runs")

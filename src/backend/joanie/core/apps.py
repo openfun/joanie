@@ -1,7 +1,7 @@
 """Joanie Core application"""
 
 from django.apps import AppConfig
-from django.db.models.signals import m2m_changed, post_save
+from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.utils.translation import gettext_lazy as _
 
 
@@ -35,6 +35,11 @@ class CoreConfig(AppConfig):
             signals.on_save_offering_rule,
             sender=models.OfferingRule,
             dispatch_uid="save_offering_rule",
+        )
+        post_delete.connect(
+            signals.on_save_offering_rule,
+            sender=models.OfferingRule,
+            dispatch_uid="delete_offering_rule",
         )
         m2m_changed.connect(
             signals.on_change_offering,
