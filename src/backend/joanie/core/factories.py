@@ -1188,6 +1188,19 @@ class OrderTargetCourseRelationFactory(
     position = factory.fuzzy.FuzzyInteger(0, 1000)
 
 
+class QuoteDefinitionFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create a quote definition"""
+
+    class Meta:
+        model = models.QuoteDefinition
+
+    body = factory.Faker("paragraphs", nb=3)
+    description = factory.Faker("paragraph", nb_sentences=5)
+    language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
+    name = factory.fuzzy.FuzzyChoice([name[0] for name in enums.QUOTE_NAME_CHOICES])
+    title = factory.Sequence(lambda n: f"Quote definition {n}")
+
+
 class TraineeFactory(factory.DictFactory):
     """Factory to create trainees for batch orders"""
 
@@ -1205,6 +1218,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         OfferingFactory,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
+        product__quote_definition=factory.SubFactory(QuoteDefinitionFactory),
     )
     owner = factory.SubFactory(UserFactory)
     identification_number = factory.Faker("random_number", digits=14, fix_len=True)
@@ -1221,11 +1235,6 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """Set organization based on the course relations"""
         offerings = self.offering.product.offerings
         return offerings.first().organizations.order_by("?").first()
-
-    @factory.lazy_attribute
-    def total(self):
-        """Calculate total based on seats and product price"""
-        return self.nb_seats * self.offering.product.price
 
     @factory.lazy_attribute
     def trainees(self):
@@ -1253,10 +1262,12 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
         # Initialize flow for all non-draft states
         self.init_flow()
+        self.quote.context = quote_utils.generate_document_context(
+            quote_definition=self.relation.product.quote_definition, batch_order=self
+        )
+        self.quote.save()
 
-        if extracted in [enums.BATCH_ORDER_STATE_QUOTED]:
-            QuoteFactory(batch_order=self)
-            self.flow.update()
+        self.flow.update()
 
         if extracted in [
             enums.BATCH_ORDER_STATE_TO_SIGN,
@@ -1265,6 +1276,13 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
+            if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                self.quote.organization_signed_on = django_timezone.now()
+                self.quote.has_purchase_order = True
+                self.quote.save()
+
+            # Add the total to the batch order and marks the quote as signed by organization
+            self.freeze_total(total=Decimal("100.00"))
             self.submit_for_signature(self.owner)
             self.flow.update()
 
@@ -1306,19 +1324,6 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             self.flow.update()
 
         self.save()
-
-
-class QuoteDefinitionFactory(DebugModelFactory, factory.django.DjangoModelFactory):
-    """A factory to create a quote definition"""
-
-    class Meta:
-        model = models.QuoteDefinition
-
-    body = factory.Faker("paragraphs", nb=3)
-    description = factory.Faker("paragraph", nb_sentences=5)
-    language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
-    name = factory.fuzzy.FuzzyChoice([name[0] for name in enums.QUOTE_NAME_CHOICES])
-    title = factory.Sequence(lambda n: f"Quote definition {n}")
 
 
 class QuoteFactory(DebugModelFactory, factory.django.DjangoModelFactory):
