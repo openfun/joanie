@@ -41,7 +41,7 @@ def assign_organization(batch_order):
     """
     Assigns an organization to a batch order with the least active orders.
     It also adds an active offering rule if some are declared on the offering.
-    Finally, it initiates the flow of the batch order to state 'assigned'.
+    Finally, it initiates the flow of the batch order to state 'quoted'.
     """
     batch_order.organization = get_least_active_organization(
         batch_order.offering.product, batch_order.offering.course

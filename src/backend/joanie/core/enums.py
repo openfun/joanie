@@ -273,6 +273,17 @@ BATCH_ORDER_STATE_CHOICES = (
     (BATCH_ORDER_STATE_COMPLETED, _("Completed")),
 )
 
+# Batch order accepted payment methods
+BATCH_ORDER_WITH_PURCHASE_ORDER = "purchase_order"
+BATCH_ORDER_WITH_BANK_TRANSFER = "bank_transfer"
+BATCH_ORDER_WITH_CARD_PAYMENT = "card_payment"
+
+BATCH_ORDER_PAYMENT_METHOD_CHOICES = (
+    (BATCH_ORDER_WITH_PURCHASE_ORDER, _("Purchase order")),
+    (BATCH_ORDER_WITH_BANK_TRANSFER, _("Bank transfer")),
+    (BATCH_ORDER_WITH_CARD_PAYMENT, _("Card payment")),
+)
+
 # For Quotes of batch orders
 QUOTE_DEFAULT = "quote_default"
 QUOTE_NAME_CHOICES = ((QUOTE_DEFAULT, _("Quote Default")),)

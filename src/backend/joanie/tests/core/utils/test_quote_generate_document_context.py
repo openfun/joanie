@@ -1,6 +1,7 @@
 """Test suite for Quote generate document context"""
 
 from datetime import timedelta
+from decimal import Decimal
 
 from django.conf import settings
 from django.test import TestCase
@@ -102,13 +103,13 @@ class UtilsQuoteGenerateContextDocument(TestCase):
             nb_seats=2,
         )
         batch_order.init_flow()
-        quote = factories.QuoteFactory(batch_order=batch_order)
+        batch_order.total = Decimal("302.00")
 
         expected_context = {
             "quote": {
-                "title": quote.definition.title,
-                "description": quote.definition.description,
-                "body": quote.definition.get_body_in_html(),
+                "title": batch_order.quote.definition.title,
+                "description": batch_order.quote.definition.description,
+                "body": batch_order.quote.definition.get_body_in_html(),
             },
             "batch_order": {
                 "nb_seats": batch_order.nb_seats,
@@ -117,7 +118,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "name": batch_order.relation.product.title,
                 "code": batch_order.relation.course.code,
                 "effort": "P0DT10H30M12S",
-                "price": "302.00",
+                "price": str(batch_order.total),
                 "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
             },
             "customer": {
@@ -155,7 +156,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
         }
 
         context = generate_document_context(
-            quote_definition=quote.definition, batch_order=batch_order
+            quote_definition=batch_order.quote.definition, batch_order=batch_order
         )
 
         organization_logo = models.DocumentImage.objects.get()
