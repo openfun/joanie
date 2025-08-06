@@ -4,7 +4,6 @@ from http import HTTPStatus
 from unittest import mock
 
 from joanie.core import enums, factories
-from joanie.payment.factories import InvoiceFactory, TransactionFactory
 from joanie.tests.base import LoggingTestCase
 
 
@@ -107,14 +106,11 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase):
         self.client.login(username=user.username, password="password")
 
         batch_order = factories.BatchOrderFactory(
+            offering__product__quote_definition=factories.QuoteDefinitionFactory(),
+            offering__product__contract_definition=factories.ContractDefinitionFactory(),
             state=enums.BATCH_ORDER_STATE_COMPLETED,
             nb_seats=10,
         )
-        # Create the Invoice and the Transaction here
-        child_invoice = InvoiceFactory(
-            batch_order=batch_order, parent=batch_order.main_invoice, total=0
-        )
-        TransactionFactory(invoice=child_invoice)
 
         with self.assertLogs("joanie") as logger:
             response = self.client.post(

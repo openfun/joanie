@@ -11,8 +11,8 @@ from django.utils import timezone as django_timezone
 
 from joanie.core import enums, factories, models
 from joanie.core.utils import contract_definition
+from joanie.core.utils.batch_order import validate_success_payment
 from joanie.core.utils.billing_address import CompanyBillingAddress
-from joanie.payment.models import Invoice
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import LoggingTestCase
 
@@ -74,17 +74,28 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self, mock_issuer_generate_document
     ):
         """
-        When the batch order does not yet have a contract, submitting to signature
-        will generate one. At the end of submitting the contract we should get in
+        The batch order's contract is not yet completed tag submissions values until it has
+        been submitted to signature. The contract should be first generated when the batch
+        order is initialized. At the end of submitting the contract we should get in
         return the invitation link to sign it.
         """
         batch_order = factories.BatchOrderFactory(
-            nb_seats=2, state=enums.BATCH_ORDER_STATE_ASSIGNED
+            nb_seats=2, state=enums.BATCH_ORDER_STATE_QUOTED
         )
+        batch_order.quote.organization_signed_on = django_timezone.now()
+        batch_order.quote.save()
+
+        self.assertIsNotNone(batch_order.contract)
+        self.assertIsNotNone(batch_order.contract.definition)
+        self.assertIsNone(batch_order.contract.student_signed_on)
+        self.assertIsNone(batch_order.contract.submitted_for_signature_on)
+        self.assertIsNone(batch_order.contract.context)
+        self.assertIsNone(batch_order.contract.signature_backend_reference)
+        self.assertIsNone(batch_order.contract.definition_checksum)
 
         invitation_link = batch_order.submit_for_signature(user=batch_order.owner)
 
-        batch_order.contract.refresh_from_db()
+        batch_order.refresh_from_db()
         self.assertIsNotNone(batch_order.contract)
         self.assertIsNone(batch_order.contract.student_signed_on)
         self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
@@ -92,6 +103,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertIsNotNone(batch_order.contract.definition)
         self.assertIsNotNone(batch_order.contract.signature_backend_reference)
         self.assertIsNotNone(batch_order.contract.definition_checksum)
+
         self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_link)
 
         context_with_images = mock_issuer_generate_document.call_args.kwargs["context"]
@@ -151,15 +163,10 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         'submitted_for_signature_on', 'context', 'definition_checksum',
         and 'signature_backend_reference'.
         """
-        offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
-        )
-        batch_order = factories.BatchOrderFactory(
-            offering=offering, state=enums.BATCH_ORDER_STATE_TO_SIGN
-        )
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
 
         context = contract_definition.generate_document_context(
-            contract_definition=offering.product.contract_definition,
+            contract_definition=batch_order.offering.product.contract_definition,
             user=batch_order.owner,
             batch_order=batch_order,
         )
@@ -261,6 +268,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_ASSIGNED
         )
+        batch_order.quote.organization_signed_on = django_timezone.now()
+        batch_order.quote.save()
 
         batch_order.submit_for_signature(user=batch_order.owner)
         now = django_timezone.now()
@@ -301,7 +310,11 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         """
         for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
             with self.subTest(state=state):
-                batch_order = factories.BatchOrderFactory(state=state, nb_seats=12)
+                batch_order = factories.BatchOrderFactory(
+                    state=state,
+                    nb_seats=12,
+                    payment_method=enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+                )
                 if state == enums.BATCH_ORDER_STATE_COMPLETED:
                     batch_order.generate_orders()
                     self.assertEqual(batch_order.orders.count(), 12)
@@ -316,37 +329,35 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                         "The batch order is not yet paid." in str(context.exception)
                     )
 
-    def test_models_batch_order_generate_orders_with_quote_unpaid(self):
+    def test_models_batch_order_generate_orders_with_quote_missing_purchase_order(self):
         """
         Orders cannot be generated if the batch order's quote has not received the purchase order.
         """
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_ASSIGNED
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        factories.QuoteFactory(
-            organization_signed_on=django_timezone.now(),
-            has_purchase_order=False,
-            batch_order=batch_order,
-        )
-        batch_order.flow.update()
+        batch_order.freeze_total("100.00")
 
         with self.assertRaises(ValidationError) as context:
             batch_order.generate_orders()
         self.assertTrue("The batch order is not yet paid." in str(context.exception))
 
-    def test_models_batch_order_generate_orders_with_quote(self):
+    def test_models_batch_order_generate_orders_with_quote_with_purchase_order_payment_method(
+        self,
+    ):
         """
         Orders can be generated if the batch order's quote has received the purchase order.
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_ASSIGNED,
             nb_seats=5,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        factories.QuoteFactory(
-            organization_signed_on=django_timezone.now(),
-            has_purchase_order=True,
-            batch_order=batch_order,
-        )
+        batch_order.freeze_total("100.00")
+        batch_order.quote.has_purchase_order = True
+        batch_order.quote.save()
+
         batch_order.flow.update()
 
         batch_order.generate_orders()
@@ -379,10 +390,11 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             ),
         )
 
-    def test_models_batch_order_create_main_invoice(self):
+    def test_models_batch_order_create_main_invoice_should_be_none(self):
         """
-        When we initialize the flow of a batch order, it creates a main invoice.
-        When we call the property main_invoice, it should return the main invoice.
+        When we initialize the flow of a batch order, it should not create a main invoice,
+        since we don't have yet the total price. So when we call the property `main_invoice`,
+        it should return None.
         """
         batch_order = factories.BatchOrderFactory(
             nb_seats=2,
@@ -392,9 +404,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         batch_order.init_flow()
 
-        main_invoice = Invoice.objects.get(batch_order=batch_order, parent__isnull=True)
-
-        self.assertEqual(batch_order.main_invoice, main_invoice)
+        self.assertIsNone(batch_order.main_invoice)
 
     def test_models_batch_order_property_vouchers(self):
         """
@@ -433,34 +443,56 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
         self.assertFalse(models.Voucher.objects.filter(code__in=voucher_codes).exists())
 
-    def test_models_batch_order_quote_has_not_received_purchase_order(self):
+    def test_models_batch_order_is_paid_quote_has_not_received_purchase_order(self):
         """
         When the quote related to the batch order has not received purchase order, it
         should return False and not considered as paid.
         """
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_ASSIGNED
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        factories.QuoteFactory(
-            organization_signed_on=django_timezone.now(),
-            has_purchase_order=False,
-            batch_order=batch_order,
-        )
+        batch_order.freeze_total("100.00")
+        batch_order.quote.has_purchase_order = False
 
         self.assertFalse(batch_order.is_paid)
 
-    def test_models_batch_order_quote_has_received_purchase_order(self):
+    def test_models_batch_order_is_paid_quote_has_received_purchase_order(self):
         """
         When the quote related to the batch order has received the purchase order, it
         should return True and considered as paid.
         """
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_ASSIGNED
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        factories.QuoteFactory(
-            organization_signed_on=django_timezone.now(),
-            has_purchase_order=True,
-            batch_order=batch_order,
+        batch_order.freeze_total("100.00")
+        batch_order.quote.has_purchase_order = True
+
+        self.assertTrue(batch_order.is_paid)
+
+    def test_models_batch_order_is_paid_with_bank_transfer_not_confirmed(self):
+        """
+        When the batch order's payment method is with bank transfer and the transfer has not been
+        confirmed,  `is_paid` should return False.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_PENDING,
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
         )
+
+        self.assertFalse(batch_order.is_paid)
+
+    def test_models_batch_order_is_paid_with_bank_transfer(self):
+        """
+        When the batch order's payment method is with bank transfer and the transfer has been
+        confirmed, `is_paid` should return True.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_PENDING,
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+        )
+        # Create the transaction and the child invoice
+        validate_success_payment(batch_order)
 
         self.assertTrue(batch_order.is_paid)
