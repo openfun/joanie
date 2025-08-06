@@ -1682,9 +1682,6 @@ class VoucherFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     class Meta:
         model = models.Voucher
 
-    offering_rule = factory.SubFactory(
-        OfferingRuleFactory,
-        discount=factory.SubFactory(DiscountFactory, rate=0.1),
-    )
+    discount = factory.SubFactory(DiscountFactory)
     multiple_use = False
     multiple_users = False
