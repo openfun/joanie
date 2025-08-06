@@ -331,6 +331,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "manage_accesses": is_owner_or_admin,
             "sign_contracts": role == enums.OWNER,
             "download_quote": role == enums.OWNER,
+            "confirm_quote": role == enums.OWNER,
         }
 
     def signature_backend_references_to_sign(self, **kwargs):
