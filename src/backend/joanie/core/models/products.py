@@ -1328,7 +1328,7 @@ class Order(BaseModel):
         there is no offering rule, the total price should be the full product price.
         """
         if self.voucher:
-            discount = self.voucher.discount or self.voucher.offering_rule.discount
+            discount = self.voucher.discount
             if discount:
                 return calculate_price(self.product.price, discount)
 
@@ -2563,21 +2563,6 @@ class Voucher(BaseModel):
         verbose_name = _("Voucher")
         verbose_name_plural = _("Vouchers")
         ordering = ["created_on"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["code", "offering_rule"],
-                name="unique_code_offering_rule",
-                violation_error_message=(
-                    "A voucher with this code already exists for this offering rule."
-                ),
-            ),
-            models.CheckConstraint(
-                check=models.Q(discount__isnull=False)
-                | models.Q(offering_rule__isnull=False),
-                name="voucher_discount_or_offering_rule_required",
-                violation_error_message="Voucher discount or offering rule is required.",
-            ),
-        ]
 
     code = models.CharField(
         _("code"),
@@ -2585,21 +2570,13 @@ class Voucher(BaseModel):
         max_length=255,
         default=generate_random_code,
     )
-    offering_rule = models.ForeignKey(
-        to=OfferingRule,
-        verbose_name=_("offering rule"),
-        related_name="vouchers",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
     discount = models.ForeignKey(
         to=Discount,
         verbose_name=_("discount"),
         related_name="vouchers",
         on_delete=models.RESTRICT,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
     )
     multiple_use = models.BooleanField(
         _("multiple use"),
@@ -2618,7 +2595,7 @@ class Voucher(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.code or str(self.offering_rule)
+        return self.code
 
     def is_usable_by(self, user_id):
         """

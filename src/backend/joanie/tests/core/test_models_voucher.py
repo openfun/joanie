@@ -63,6 +63,6 @@ class VoucherModelTestCase(TestCase):
                 voucher.code,
                 "new_code",
             ]
-            new_voucher = VoucherFactory(offering_rule=voucher.offering_rule)
+            new_voucher = VoucherFactory()
 
         self.assertEqual(new_voucher.code, "new_code")
