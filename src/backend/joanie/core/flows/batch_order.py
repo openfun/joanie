@@ -64,7 +64,8 @@ class BatchOrderFlow:
         is submitted at the signature provider.
         """
         return (
-            self.instance.is_submitted_to_signature
+            self.instance.quote.organization_signed_on
+            and self.instance.is_submitted_to_signature
             and self.instance.is_eligible_to_get_sign
         )
 
@@ -102,7 +103,10 @@ class BatchOrderFlow:
         A batch order can be set to pending for a payment because the contract has been
         signed or is in state failed payment
         """
-        return self.instance.is_ready_for_payment
+        return (
+            self.instance.is_ready_for_payment
+            and not self.instance.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+        )
 
     @state.transition(
         source=[

@@ -49,6 +49,7 @@ from joanie.core.models.courses import (
     Enrollment,
     Organization,
 )
+from joanie.core.models.quotes import Quote
 from joanie.core.utils import (
     contract_definition as contract_definition_utility,
 )
@@ -2099,6 +2100,11 @@ class BatchOrder(BaseModel):
         related_name="batch_orders",
         blank=True,
     )
+    payment_method = models.CharField(
+        default=enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+        choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
+        db_index=True,
+    )
 
     # pylint:disable=no-member
     def clean(self):
@@ -2127,46 +2133,33 @@ class BatchOrder(BaseModel):
 
     def init_flow(self):
         """
-        Transition batch order to assigned state, creates a main invoice,
-        generates a contract.
+        Initialize the flow of the and transition to `quoted` state,
+        finally it creates the contract and the quote.
         """
-        self.freeze_total()
-        self.create_main_invoice()
-
         # Generate the contract
         if self.relation.product.contract_definition and not self.contract:
             self.contract = Contract.objects.create(
                 definition=self.relation.product.contract_definition
             )
+
+        # Generate the quote
+        if self.relation.product.quote_definition:
+            self.quote = Quote.objects.create(  # pylint:disable=attribute-defined-outside-init
+                batch_order=self,
+                definition=self.relation.product.quote_definition,
+            )
+
         self.flow.update()
         self.save()
 
-    def get_discounted_price(self):
+    def freeze_total(self, total):
         """
-        When a voucher is used, return the discounted price. Otherwise,
-        return the total price, considering the offering rule discount if applicable.
-        If neither a voucher nor an offering rule group discount exists,
-        return the total amount based on the number of seats taken.
+        Freeze the total price for the batch order. It can only be done when the quote's
+        batch order is signed by the organization.
         """
-        price_per_seat = Money(self.relation.product.price).as_decimal()
-        total = self.nb_seats * price_per_seat
-
-        if self.voucher:
-            discount = self.voucher.discount or self.voucher.offering_rule.discount
-            if discount:
-                return calculate_price(total, discount)
-
-        for offering_rule in self.offering_rules.all():
-            if discount := offering_rule.discount:
-                return calculate_price(total, discount)
-
-        return total
-
-    def freeze_total(self):
-        """
-        Freeze the total price for the batch order.
-        """
-        self.total = self.get_discounted_price()
+        self.quote.tag_organization_signed_on()
+        self.total = round(Money(total).as_decimal(), 2)
+        self.create_main_invoice()
         self.save(update_fields=["total"])
 
     # pylint: disable=no-member
@@ -2321,8 +2314,11 @@ class BatchOrder(BaseModel):
     @property
     def is_ready_for_payment(self):
         """Return boolean value whether the batch order can be submitted to payment"""
-        if self.has_quote:  # the payment is done through the quote
-            return False
+        # if self.has_quote:  # the payment is done through the quote
+        #     return False
+        # breakpoint()
+        if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+            return self.quote.has_purchase_order
 
         return self.is_signed_by_owner is True and self.state in [
             enums.BATCH_ORDER_STATE_SIGNING,
@@ -2343,7 +2339,16 @@ class BatchOrder(BaseModel):
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.
         """
-        if self.has_quote:
+        # TO DO THIS !!!!!
+        # And then, you should change in the flow batch order state some conditions...
+        # This should change ...
+        # If payment_method == "purchase_order":
+            # return self.quote.has_received_purchase_order
+        # if payment_method == "card_payment" or "bank_transfer":
+            # child_invoice
+
+        if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+            # breakpoint()
             return self.quote.has_received_purchase_order
 
         child_invoice = self.invoices.filter(
@@ -2351,6 +2356,7 @@ class BatchOrder(BaseModel):
         ).first()
 
         if not child_invoice:
+            # breakpoint()
             return False
 
         return child_invoice.transactions.filter(invoice=child_invoice).exists()

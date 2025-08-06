@@ -7,6 +7,7 @@ import textwrap
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -142,6 +143,11 @@ class Quote(BaseModel):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def tag_organization_signed_on(self):
+        """Updates the quote with the datetime of signature from the organization"""
+        self.organization_signed_on = timezone.now()
+        self.save()
 
     @property
     def is_signed_by_organization(self):
