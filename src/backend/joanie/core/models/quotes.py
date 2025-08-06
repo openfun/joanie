@@ -211,11 +211,14 @@ class Quote(BaseModel):
         """
 
         download_quote = False
+        confirm_quote = False
 
         if user.is_authenticated:
             abilities = self.batch_order.organization.get_abilities(user=user)
             download_quote = abilities.get("download_quote", False)
+            confirm_quote = abilities.get("confirm_quote", False)
 
         return {
             "download_quote": download_quote,
+            "confirm_quote": confirm_quote,
         }
