@@ -1480,6 +1480,10 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     quote = QuoteSerializer(read_only=True)
+    payment_method = serializers.ChoiceField(
+        choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
+        required=True,
+    )
 
     class Meta:
         model = models.BatchOrder
@@ -1503,6 +1507,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "trainees",
             "offering_rule_ids",
             "quote",
+            "payment_method",
         ]
         read_only_fields = [
             "id",

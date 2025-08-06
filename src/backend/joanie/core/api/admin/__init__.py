@@ -807,10 +807,8 @@ class BatchOrderViewSet(
         """
         batch_order = self.get_object()
 
-        if not batch_order.is_eligible_to_get_sign:
-            raise ValidationError(
-                "Batch order state should be `assigned` or `to_sign`."
-            )
+        if not batch_order.is_signable:
+            raise ValidationError("Batch order is not eligible to get signed.")
 
         if batch_order.offering_rules.exists():
             # Verify if the actual offering rule still accepts the number of seats requested

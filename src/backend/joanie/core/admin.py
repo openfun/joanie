@@ -755,7 +755,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         the admin user can call this method again to update the initial contract.
         """
         for batch_order in queryset:
-            if not batch_order.is_eligible_to_get_sign:
+            if not batch_order.is_signable:
                 messages.warning(
                     request,
                     _(
