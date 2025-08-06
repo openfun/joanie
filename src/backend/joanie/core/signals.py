@@ -198,7 +198,12 @@ def on_save_offering_rule(instance: models.OfferingRule, **kwargs):
     """
     Synchronize course runs related to the offering rule being saved.
     """
-    serialized_course_runs = get_serialized_course_runs(instance.offering)
+    visibility = None
+    if instance.offering.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+        visibility = enums.COURSE_AND_SEARCH
+    serialized_course_runs = get_serialized_course_runs(
+        instance.offering, visibility=visibility
+    )
     if serialized_course_runs:
         webhooks.synchronize_course_runs(serialized_course_runs)
 
