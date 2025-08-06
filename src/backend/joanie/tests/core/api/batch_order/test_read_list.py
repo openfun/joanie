@@ -45,6 +45,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                 {"first_name": "John", "last_name": "Doe"},
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
 
         with self.record_performance():
@@ -65,7 +66,8 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                     {
                         "id": str(bo.id),
                         "owner": user.username,
-                        "total": float(bo.total),
+                        "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                        "total": bo.total,
                         "currency": settings.DEFAULT_CURRENCY,
                         "offering_id": str(bo.offering.id),
                         "organization": {
@@ -80,9 +82,29 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                             "contact_email": bo.organization.contact_email,
                             "dpo_email": bo.organization.dpo_email,
                         },
-                        "main_invoice_reference": bo.main_invoice.reference,
+                        "main_invoice_reference": None,
                         "contract_id": str(bo.contract.id),
-                        "quote": None,
+                        "quote": {
+                            "batch_order": {
+                                "company_name": bo.company_name,
+                                "id": str(bo.id),
+                                "organization_id": str(bo.organization.id),
+                                "owner_name": bo.owner.get_full_name(),
+                                "relation_id": str(bo.offering.id),
+                                "state": enums.BATCH_ORDER_STATE_QUOTED,
+                            },
+                            "definition": {
+                                "body": bo.quote.definition.body,
+                                "description": bo.quote.definition.description,
+                                "id": str(bo.quote.definition.id),
+                                "language": bo.quote.definition.language,
+                                "name": bo.quote.definition.name,
+                                "title": bo.quote.definition.title,
+                            },
+                            "has_purchase_order": False,
+                            "id": str(bo.quote.id),
+                            "organization_signed_on": None,
+                        },
                         "company_name": bo.company_name,
                         "identification_number": bo.identification_number,
                         "address": bo.address,
