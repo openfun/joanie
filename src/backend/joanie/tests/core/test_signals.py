@@ -928,7 +928,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": enums.HIDDEN,
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
                 "certificate_offer": enums.COURSE_OFFER_PAID,
@@ -1023,7 +1023,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": enums.HIDDEN,
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
                 "certificate_offer": None,
@@ -1080,7 +1080,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": enums.HIDDEN,
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
                 "certificate_offer": enums.COURSE_OFFER_PAID,

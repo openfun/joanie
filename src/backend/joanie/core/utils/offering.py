@@ -51,7 +51,7 @@ def get_generated_certificates(offering):
     )
 
 
-def get_serialized_course_runs(offering):
+def get_serialized_course_runs(offering, visibility=None):
     """
     Synchronize course runs related to an offering.
     """
@@ -62,6 +62,7 @@ def get_serialized_course_runs(offering):
     serialized_course_runs = []
     for course_run in course_runs:
         if serialized_runs := course_run.get_serialized(
+            visibility=visibility,
             certifying=certifying,
             product=product,
         ):
