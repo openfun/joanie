@@ -1126,6 +1126,25 @@ class OrganizationViewSet(
             filename=f"{quote.definition.title}-{quote.id}.pdf".replace(" ", "_"),
         )
 
+    @action(
+        detail=True,
+        methods=["PATCH"],
+        url_path="confirm-quote",
+    )
+    def confirm_quote(self, request, *args, **kwargs):
+        """
+        Organization can confirm they have signed the quote and apply the total
+        for the batch order related to the quote.
+        """
+        organization = self.get_object()
+        quote_id = request.data.get("quote_id")
+        total = request.data.get("total")
+
+        quote = get_object_or_404(models.Quote, id=quote_id, batch_order__organization=organization)
+        quote.batch_order.freeze_total(total)
+
+        return Response(status=HTTPStatus.OK)
+
 
 class OrganizationAccessViewSet(
     mixins.CreateModelMixin,
