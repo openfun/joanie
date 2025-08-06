@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add payment methods for batch orders
 - Update payment schedule endpoint to return discounted amount and schedule
   with voucher code
 - Add nested Organization Quote client api

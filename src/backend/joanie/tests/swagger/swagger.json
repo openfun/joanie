@@ -5371,6 +5371,9 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "payment_method": {
+                        "$ref": "#/components/schemas/PaymentMethodEnum"
                     }
                 },
                 "required": [
@@ -5386,6 +5389,7 @@
                     "offering_rule_ids",
                     "organization",
                     "owner",
+                    "payment_method",
                     "postcode",
                     "quote",
                     "total"
@@ -5528,7 +5532,10 @@
                         "minimum": 1,
                         "description": "The number of seats to reserve"
                     },
-                    "trainees": {}
+                    "trainees": {},
+                    "payment_method": {
+                        "$ref": "#/components/schemas/PaymentMethodEnum"
+                    }
                 },
                 "required": [
                     "address",
@@ -5536,6 +5543,7 @@
                     "company_name",
                     "identification_number",
                     "nb_seats",
+                    "payment_method",
                     "postcode"
                 ]
             },
