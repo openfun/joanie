@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.test import TestCase
+from django.utils import timezone
 
 from joanie.core import enums, factories
 
@@ -62,17 +63,33 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
         for state in batch_order_states:
             with self.subTest(state=state):
                 batch_order = factories.BatchOrderFactory(state=state)
+                if state not in [
+                    enums.BATCH_ORDER_STATE_DRAFT,
+                    enums.BATCH_ORDER_STATE_CANCELED,
+                ]:
+                    batch_order.quote.organization_signed_on = timezone.now()
+                    batch_order.quote.save()
 
                 response = self.client.post(
                     f"/api/v1.0/admin/batch-orders/{batch_order.id}/submit-for-signature/",
                     content_type="application/json",
                 )
 
-                self.assertContains(
-                    response,
-                    "Batch order state should be `assigned` or `to_sign`.",
-                    status_code=HTTPStatus.BAD_REQUEST,
-                )
+                if state in [
+                    enums.BATCH_ORDER_STATE_DRAFT,
+                    enums.BATCH_ORDER_STATE_CANCELED,
+                ]:
+                    self.assertContains(
+                        response,
+                        "Batch order is not eligible to get signed.",
+                        status_code=HTTPStatus.BAD_REQUEST,
+                    )
+                else:
+                    self.assertContains(
+                        response,
+                        "Contract is already signed by the buyer, cannot resubmit.",
+                        status_code=HTTPStatus.FORBIDDEN,
+                    )
 
     def test_api_admin_batch_orders_submit_for_signature_no_seats_left_on_active_offering_rules(
         self,
@@ -93,6 +110,8 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
             nb_seats=10, course_product_relation=batch_order.offering
         )
         batch_order.offering_rules.add(offering_rule)
+        batch_order.quote.organization_signed_on = timezone.now()
+        batch_order.quote.save()
 
         # Create just 1 order into the offering rule to make it not enough for the batch order
         factories.OrderFactory(
@@ -137,6 +156,8 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
         ]:
             with self.subTest(state=state):
                 batch_order = factories.BatchOrderFactory(state=state, nb_seats=7)
+                batch_order.quote.organization_signed_on = timezone.now()
+                batch_order.quote.save()
 
                 offering_rule_1 = factories.OfferingRuleFactory(
                     nb_seats=7, course_product_relation=batch_order.offering
