@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 
+from django.utils import timezone
+
 from joanie.core import enums, factories
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import BaseAPITestCase
@@ -168,6 +170,8 @@ class BatchOrderSubmitForSignatureAPITest(BaseAPITestCase):
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_ASSIGNED, owner=user, nb_seats=2
         )
+        batch_order.quote.organization_signed_on = timezone.now()
+        batch_order.quote.save()
         expected_substring_invite_url = "https://dummysignaturebackend.fr/?reference="
 
         response = self.client.post(

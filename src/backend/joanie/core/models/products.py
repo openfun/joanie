@@ -2343,9 +2343,9 @@ class BatchOrder(BaseModel):
         # And then, you should change in the flow batch order state some conditions...
         # This should change ...
         # If payment_method == "purchase_order":
-            # return self.quote.has_received_purchase_order
+        # return self.quote.has_received_purchase_order
         # if payment_method == "card_payment" or "bank_transfer":
-            # child_invoice
+        # child_invoice
 
         if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
             # breakpoint()

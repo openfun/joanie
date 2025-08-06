@@ -105,7 +105,8 @@ class BatchOrderFlow:
         """
         return (
             self.instance.is_ready_for_payment
-            and not self.instance.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+            and not self.instance.payment_method
+            == enums.BATCH_ORDER_WITH_PURCHASE_ORDER
         )
 
     @state.transition(

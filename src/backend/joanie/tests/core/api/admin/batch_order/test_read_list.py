@@ -49,7 +49,7 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "country": batch_order.country.code,
                 "currency": settings.DEFAULT_CURRENCY,
                 "identification_number": batch_order.identification_number,
-                "main_invoice_reference": str(batch_order.main_invoice.reference),
+                "main_invoice_reference": None,
                 "nb_seats": batch_order.nb_seats,
                 "organization": {
                     "code": batch_order.organization.code,
@@ -64,7 +64,12 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "voucher": None,
                 "vouchers": [],
                 "offering_rules": [],
-                "quote": None,
+                "quote": {
+                    "definition_title": batch_order.quote.definition.title,
+                    "has_purchase_order": False,
+                    "id": str(batch_order.quote.id),
+                    "organization_signed_on": None,
+                },
             }
             for batch_order in batch_orders
         ]

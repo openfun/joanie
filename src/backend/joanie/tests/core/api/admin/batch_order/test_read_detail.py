@@ -1,15 +1,20 @@
 """Test suite for the admin batch orders API read detail endpoint."""
 
+from decimal import Decimal
 from http import HTTPStatus
 
 from django.conf import settings
 from django.test import TestCase
+from django.utils import timezone
 
 from joanie.core import enums, factories
+from joanie.tests import format_date
 
 
 class BatchOrdersAdminApiDetailTestCase(TestCase):
     """Test suite for the admin batch orders API read detail endpoint."""
+
+    maxDiff = None
 
     def test_api_admin_read_detail_batch_order_anonymous(self):
         """Anonymous user should not be able to read detail of a batch order"""
@@ -57,7 +62,7 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
                 "country": batch_order.country.code,
                 "currency": settings.DEFAULT_CURRENCY,
                 "identification_number": batch_order.identification_number,
-                "main_invoice_reference": str(batch_order.main_invoice.reference),
+                "main_invoice_reference": None,
                 "nb_seats": batch_order.nb_seats,
                 "organization": {
                     "code": batch_order.organization.code,
@@ -72,7 +77,12 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
                 "vouchers": [],
                 "offering_rules": [],
                 "voucher": None,
-                "quote": None,
+                "quote": {
+                    "definition_title": batch_order.quote.definition.title,
+                    "has_purchase_order": False,
+                    "id": str(batch_order.quote.id),
+                    "organization_signed_on": None,
+                },
             },
         )
 
@@ -84,6 +94,11 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_QUOTED)
+        batch_order.quote.organization_signed_on = timezone.now()
+        batch_order.quote.save()
+        batch_order.total = Decimal("100.00")
+        batch_order.save()
+        batch_order.create_main_invoice()
 
         response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
@@ -118,7 +133,9 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
                     "definition_title": batch_order.quote.definition.title,
                     "has_purchase_order": False,
                     "id": str(batch_order.quote.id),
-                    "organization_signed_on": batch_order.quote.organization_signed_on,
+                    "organization_signed_on": format_date(
+                        batch_order.quote.organization_signed_on
+                    ),
                 },
             },
         )

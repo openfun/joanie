@@ -1263,8 +1263,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         # Initialize flow for all non-draft states
         self.init_flow()
         self.quote.context = quote_utils.generate_document_context(
-            quote_definition=self.relation.product.quote_definition,
-            batch_order=self
+            quote_definition=self.relation.product.quote_definition, batch_order=self
         )
         self.quote.save()
 
