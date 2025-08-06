@@ -47,6 +47,18 @@ class CanDownloadQuoteOrganization(IsAuthenticated):
         return abilities.get("download_quote", False)
 
 
+class CanConfirmQuoteOrganization(IsAuthenticated):
+    """
+    Check if the authenticated user is allowed to confirm the quote of an organization
+    from a batch order.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        """Check permission for a given object."""
+        abilities = obj.get_abilities(request.user)
+        return abilities.get("confirm_quote", False)
+
+
 class HasAPIKey(permissions.BasePermission):
     """Permission class to grant access to our remote endpoints API."""
 
