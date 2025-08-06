@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 
+from django.utils import timezone
+
 from joanie.core import enums, factories
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import BaseAPITestCase
@@ -118,7 +120,7 @@ class BatchOrderSubmitForSignatureAPITest(BaseAPITestCase):
 
     def test_api_batch_order_submit_for_signature_but_state_is_draft(self):
         """
-        Authenticated user cannot submit for signature a batch order in state
+        Authenticated user cannot submit for signature a batch order in draft state
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -133,7 +135,7 @@ class BatchOrderSubmitForSignatureAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
         self.assertEqual(
             response.json(),
-            ["Your batch order cannot be submitted for signature, state: draft"],
+            ["The batch order isn't eligible to be signed"],
         )
 
     def test_api_batch_order_submit_for_signature_when_already_signed_by_buyer(self):
@@ -157,6 +159,34 @@ class BatchOrderSubmitForSignatureAPITest(BaseAPITestCase):
             {"detail": "Contract is already signed by the buyer, cannot resubmit."},
         )
 
+    def test_api_batch_order_submit_for_signature_purchase_order_not_received(self):
+        """
+        When a batch order payment method with purchase order has not yet been received,
+        we cannot submit to signature the contract
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            owner=user,
+            nb_seats=2,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        batch_order.quote.organization_signed_on = timezone.now()
+        batch_order.quote.save()
+
+        response = self.client.post(
+            f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-signature/",
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertEqual(
+            response.json()[0], "The batch order isn't eligible to be signed"
+        )
+
     def test_api_batch_order_submit_for_signature_authenticated(self):
         """
         Authenticated user should be able to submit for signature the contract of the batch order
@@ -165,32 +195,46 @@ class BatchOrderSubmitForSignatureAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_ASSIGNED, owner=user, nb_seats=2
-        )
-        expected_substring_invite_url = "https://dummysignaturebackend.fr/?reference="
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    state=enums.BATCH_ORDER_STATE_QUOTED,
+                    owner=user,
+                    nb_seats=2,
+                    payment_method=payment_method,
+                )
+                batch_order.quote.organization_signed_on = timezone.now()
+                batch_order.quote.save()
 
-        response = self.client.post(
-            f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-signature/",
-            content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+                expected_substring_invite_url = (
+                    "https://dummysignaturebackend.fr/?reference="
+                )
 
-        batch_order.refresh_from_db()
+                if payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                    batch_order.quote.has_purchase_order = True
+                    batch_order.quote.save()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+                response = self.client.post(
+                    f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-signature/",
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
 
-        invitation_url = response.json()["invitation_link"]
+                batch_order.refresh_from_db()
 
-        self.assertIn(expected_substring_invite_url, invitation_url)
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        backend = get_signature_backend()
-        backend.confirm_signature(
-            reference=batch_order.contract.signature_backend_reference
-        )
+                invitation_url = response.json()["invitation_link"]
 
-        batch_order.refresh_from_db()
+                self.assertIn(expected_substring_invite_url, invitation_url)
+                self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
 
-        self.assertIsNotNone(batch_order.contract.student_signed_on)
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
+                backend = get_signature_backend()
+                backend.confirm_signature(
+                    reference=batch_order.contract.signature_backend_reference
+                )
+
+                batch_order.refresh_from_db()
+
+                self.assertIsNotNone(batch_order.contract.student_signed_on)
+                self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)

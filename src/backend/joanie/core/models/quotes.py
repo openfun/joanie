@@ -184,6 +184,11 @@ class Quote(BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def tag_organization_signed_on(self):
+        """Updates the quote with the datetime of signature from the organization"""
+        self.organization_signed_on = timezone.now()
+        self.save()
+
     @property
     def is_signed_by_organization(self):
         """

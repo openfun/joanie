@@ -1924,6 +1924,8 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
             nb_seats=2,
         )
         billing_address = batch_order.create_billing_address()
+        # Simulate that the organization as set 240.00 euros for the batch order
+        batch_order.freeze_total(total=D("240.00"))
 
         with self.open("lyra/responses/create_payment.json") as file:
             json_response = json.loads(file.read())

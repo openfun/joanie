@@ -1743,6 +1743,10 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
     offering_rules = AdminOfferingRuleSerializer(read_only=True, many=True)
     vouchers = serializers.SerializerMethodField(read_only=True)
     quote = AdminQuoteSerializer(read_only=True)
+    payment_method = serializers.ChoiceField(
+        choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
+        required=True,
+    )
 
     class Meta:
         model = models.BatchOrder
@@ -1767,6 +1771,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "vouchers",
             "offering_rules",
             "quote",
+            "payment_method",
         ]
         read_only_fields = [
             "id",
