@@ -4758,6 +4758,68 @@
                 }
             }
         },
+        "/api/v1.0/organizations/{id}/confirm-quote/": {
+            "patch": {
+                "operationId": "organizations_confirm_quote_partial_update",
+                "description": "Organization can confirm they have signed the quote and apply the total\nfor the batch order related to the quote.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "quote_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "Quote id in string, must be provided.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedOrganizationRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedOrganizationRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Organization"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/organizations/{id}/contracts-signature-link/": {
             "get": {
                 "operationId": "organizations_contracts_signature_link_retrieve",
@@ -8116,6 +8178,26 @@
                         "description": "primary key for the record as UUID"
                     }
                 }
+            },
+            "PatchedOrganizationRequest": {
+                "type": "object",
+                "description": "Serialize all non-sensitive information about an organization",
+                "properties": {
+                    "logo": {
+                        "type": "string",
+                        "format": "binary",
+                        "nullable": true
+                    }
+                }
+            },
+            "PaymentMethodEnum": {
+                "enum": [
+                    "purchase_order",
+                    "bank_transfer",
+                    "card_payment"
+                ],
+                "type": "string",
+                "description": "* `purchase_order` - Purchase order\n* `bank_transfer` - Bank transfer\n* `card_payment` - Card payment"
             },
             "Product": {
                 "type": "object",
