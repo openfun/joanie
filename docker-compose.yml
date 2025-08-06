@@ -37,6 +37,8 @@ services:
       - postgresql
       - mailcatcher
       - redis
+    stdin_open: true
+    tty: true
     networks:
       default:
       lms_outside:
