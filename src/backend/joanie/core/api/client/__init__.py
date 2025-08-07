@@ -1140,7 +1140,9 @@ class OrganizationViewSet(
         quote_id = request.data.get("quote_id")
         total = request.data.get("total")
 
-        quote = get_object_or_404(models.Quote, id=quote_id, batch_order__organization=organization)
+        quote = get_object_or_404(
+            models.Quote, id=quote_id, batch_order__organization=organization
+        )
         quote.batch_order.freeze_total(total)
 
         return Response(status=HTTPStatus.OK)

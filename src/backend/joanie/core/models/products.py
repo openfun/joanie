@@ -2286,12 +2286,37 @@ class BatchOrder(BaseModel):
         return self.organization is not None
 
     @property
+    def uses_purchase_order(self):
+        """Return boolean value whether the batch order's payment method is with purchase order"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+
+    @property
+    def uses_bank_transfer(self):
+        """Return boolean value whether the batch order's payment method is bank transfer"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_BANK_TRANSFER
+
+    @property
+    def uses_card_payment(self):
+        """Return boolean value whether the batch order's payment method is with credit card"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_CARD_PAYMENT
+
+    @property
+    def can_be_signed(self):
+        """Return boolean value whether the batch order can be signed"""
+        can_be_signed = (
+            self.quote.organization_signed_on and self.is_submitted_to_signature
+        )
+        if self.uses_purchase_order:
+            return self.quote.has_received_purchase_order and can_be_signed
+        return can_be_signed
+
+    @property
     def is_eligible_to_get_sign(self):
         """Return boolean value whether the batch order contract can be signed"""
         return self.state in [
             enums.BATCH_ORDER_STATE_ASSIGNED,
-            enums.BATCH_ORDER_STATE_TO_SIGN,
             enums.BATCH_ORDER_STATE_QUOTED,
+            enums.BATCH_ORDER_STATE_TO_SIGN,
         ]
 
     @property
@@ -2313,12 +2338,12 @@ class BatchOrder(BaseModel):
 
     @property
     def is_ready_for_payment(self):
-        """Return boolean value whether the batch order can be submitted to payment"""
-        # if self.has_quote:  # the payment is done through the quote
-        #     return False
-        # breakpoint()
-        if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
-            return self.quote.has_purchase_order
+        """
+        Return boolean value whether the batch order can be submitted to payment through our
+        payment backend.
+        """
+        if self.uses_purchase_order or self.uses_bank_transfer:
+            return False
 
         return self.is_signed_by_owner is True and self.state in [
             enums.BATCH_ORDER_STATE_SIGNING,
@@ -2339,16 +2364,7 @@ class BatchOrder(BaseModel):
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.
         """
-        # TO DO THIS !!!!!
-        # And then, you should change in the flow batch order state some conditions...
-        # This should change ...
-        # If payment_method == "purchase_order":
-        # return self.quote.has_received_purchase_order
-        # if payment_method == "card_payment" or "bank_transfer":
-        # child_invoice
-
-        if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
-            # breakpoint()
+        if self.uses_purchase_order:
             return self.quote.has_received_purchase_order
 
         child_invoice = self.invoices.filter(
@@ -2356,7 +2372,6 @@ class BatchOrder(BaseModel):
         ).first()
 
         if not child_invoice:
-            # breakpoint()
             return False
 
         return child_invoice.transactions.filter(invoice=child_invoice).exists()

@@ -153,7 +153,9 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
 
                 self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)
 
-    def test_flow_batch_order_assigned_to_complete_related_with_quote(self):
+    def test_flow_batch_order_assigned_to_complete_related_with_quote_and_purchase_order(
+        self,
+    ):
         """
         When the quote related to the batch order has received the purchase order,
         and the buyer has signed the convention (contract), then the flow can update to
