@@ -13,6 +13,7 @@ from django.test import override_settings
 
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
+from joanie.core.utils import get_default_currency_symbol
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -1680,6 +1681,8 @@ class OfferingApiTest(BaseAPITestCase):
             response.json(),
             {
                 "price": 3.00,
+                "discount": None,
+                "discounted_price": None,
                 "payment_schedule": [
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
@@ -1765,7 +1768,9 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "price": 1.50,
+                "price": 3.00,
+                "discount": "-50%",
+                "discounted_price": 1.50,
                 "payment_schedule": [
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
@@ -1837,6 +1842,8 @@ class OfferingApiTest(BaseAPITestCase):
             response.json(),
             {
                 "price": 3.00,
+                "discount": None,
+                "discounted_price": None,
                 "payment_schedule": [
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
@@ -1904,7 +1911,9 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "price": 1.50,
+                "price": 3.00,
+                "discount": "-50%",
+                "discounted_price": 1.50,
                 "payment_schedule": [
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
@@ -2033,7 +2042,9 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "price": 9.00,
+                "price": 10.00,
+                "discount": "-10%",
+                "discounted_price": 9.00,
                 "payment_schedule": [
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
@@ -2110,7 +2121,7 @@ class OfferingApiTest(BaseAPITestCase):
         voucher = factories.VoucherFactory(
             multiple_use=True,
             multiple_users=True,
-            discount=factories.DiscountFactory(rate=0.1),
+            discount=factories.DiscountFactory(amount=1),
         )
         payload = {"voucher_code": voucher.code}
 
@@ -2144,7 +2155,9 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "price": 9.00,
+                "price": 10.00,
+                "discount": f"-1 {get_default_currency_symbol()}",
+                "discounted_price": 9.00,
                 "payment_schedule": [
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
@@ -2248,7 +2261,9 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(
             response.json(),
             {
-                "price": 90.00,
+                "price": 100.00,
+                "discount": "-10%",
+                "discounted_price": 90.00,
                 "payment_schedule": [
                     {
                         "id": "00000000-0000-0000-0000-000000000001",
