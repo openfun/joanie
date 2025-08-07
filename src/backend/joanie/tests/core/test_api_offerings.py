@@ -2295,3 +2295,282 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(
             response_relation_path_with_query_param.json(), response.json()
         )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            100: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_offering_payment_schedule_anonymous_product_type_certificate(self):
+        """
+        Anonymous user should be able to get the payment schedule of an offering
+        for a certificate product.
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2025, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        product = factories.ProductFactory(
+            price=100,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+        offering = factories.OfferingFactory(
+            course=course_run.course,
+            product=product,
+        )
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch(
+                "django.utils.timezone.now",
+                return_value=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            ),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/",
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 100.00,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2025-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        self.assertEqual(
+            response_relation_path.status_code, HTTPStatus.OK, response.json()
+        )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            100: (30, 35, 35),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_offering_payment_schedule_anonymous_product_type_credential(self):
+        """
+        Anonymous user should be able to get the payment schedule of an offering for a
+        credential product
+        """
+        mocked_now = datetime(2025, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2025, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+        # Create an archived course_run
+        factories.CourseRunFactory(
+            start=datetime(2024, 12, 15, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 12, 31, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+
+        product = factories.ProductFactory(
+            price=100,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+        )
+        offering = factories.OfferingFactory(
+            course=course_run.course,
+            product=product,
+        )
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/",
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 30.00,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2025-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 35.00,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2025-03-01",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 35.00,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2025-04-01",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        self.assertEqual(
+            response_relation_path.status_code, HTTPStatus.OK, response.json()
+        )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            100: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_offering_payment_schedule_anonymous_with_certificate_product_id_discount(
+        self,
+    ):
+        """
+        Anonymous users should be able to retrieve a payment schedule
+        with applied discount for a single offering
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2025, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        )
+        product = factories.ProductFactory(
+            price=100,
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
+        offering = factories.OfferingFactory(
+            course=course_run.course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        offering_rule = factories.OfferingRuleFactory(
+            discount=factories.DiscountFactory(rate=0.50),
+        )
+        offering.offering_rules.add(offering_rule)
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch(
+                "django.utils.timezone.now",
+                return_value=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            ),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/"
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 50.00,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2025-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            5: (30, 70),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_offering_payment_schedule_with_product_id_credential_discount(
+        self,
+    ):
+        """
+        Anonymous users should be able to retrieve a payment schedule with applied discount for
+        a single offering when the product is credential. Archived ones should be ignored.
+        """
+        mocked_now = datetime(2025, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2025, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+        # Create an archived course_run
+        factories.CourseRunFactory(
+            start=datetime(2024, 12, 15, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2024, 12, 31, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+
+        product = factories.ProductFactory(
+            price=3,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+        )
+        offering = factories.OfferingFactory(
+            course=course_run.course,
+            product=product,
+            organizations=factories.OrganizationFactory.create_batch(2),
+        )
+        offering_rule = factories.OfferingRuleFactory(
+            discount=factories.DiscountFactory(rate=0.50),
+        )
+        offering.offering_rules.add(offering_rule)
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-schedule/"
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+            )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 0.45,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2025-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "amount": 1.05,
+                    "currency": settings.DEFAULT_CURRENCY,
+                    "due_date": "2025-03-01",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())

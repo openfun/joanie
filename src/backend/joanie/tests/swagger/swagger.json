@@ -2070,6 +2070,54 @@
                 }
             }
         },
+        "/api/v1.0/courses/{course_id}/products/{pk_or_product_id}/payment-schedule/": {
+            "get": {
+                "operationId": "courses_products_payment_schedule_retrieve",
+                "description": "Return the payment schedule for an offering",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "course_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "pk_or_product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderPaymentSchedule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/courses/{id}/": {
             "get": {
                 "operationId": "courses_retrieve",
@@ -2911,6 +2959,45 @@
             "get": {
                 "operationId": "offerings_payment_plan_retrieve",
                 "description": "Return information on the payment schedule, the price, the discount if any\n(on the offering or through a voucher code), and the discounted price.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "pk_or_product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offerings"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderPaymentSchedule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/offerings/{pk_or_product_id}/payment-schedule/": {
+            "get": {
+                "operationId": "offerings_payment_schedule_retrieve",
+                "description": "Return the payment schedule for an offering",
                 "parameters": [
                     {
                         "in": "path",
@@ -4439,6 +4526,54 @@
             "get": {
                 "operationId": "organizations_offerings_payment_plan_retrieve",
                 "description": "Return information on the payment schedule, the price, the discount if any\n(on the offering or through a voucher code), and the discounted price.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "pk_or_product_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrderPaymentSchedule"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/organizations/{organization_id}/offerings/{pk_or_product_id}/payment-schedule/": {
+            "get": {
+                "operationId": "organizations_offerings_payment_schedule_retrieve",
+                "description": "Return the payment schedule for an offering",
                 "parameters": [
                     {
                         "in": "path",
