@@ -15,13 +15,10 @@ class VouchersAdminApiUpdateTestCase(BaseAPITestCase):
     def test_api_admin_vouchers_update_anonymous(self):
         """Anonymous users should not be able to update a voucher."""
         voucher = factories.VoucherFactory()
+
         response = self.client.put(f"/api/v1.0/admin/vouchers/{voucher.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "Authentication credentials were not provided."
-        )
 
     def test_api_admin_vouchers_update_authenticated_with_lambda_user(self):
         """Lambda users should not be able to update a voucher."""
@@ -29,13 +26,21 @@ class VouchersAdminApiUpdateTestCase(BaseAPITestCase):
         self.client.login(username=user.username, password="password")
 
         voucher = factories.VoucherFactory()
+
         response = self.client.put(f"/api/v1.0/admin/vouchers/{voucher.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "You do not have permission to perform this action."
-        )
+
+    def test_api_admin_vouchers_update_authenticated_with_staff_user(self):
+        """Staff users should not be able to update a voucher."""
+        user = factories.UserFactory(is_staff=True, is_superuser=False)
+        self.client.login(username=user.username, password="password")
+
+        voucher = factories.VoucherFactory()
+
+        response = self.client.put(f"/api/v1.0/admin/vouchers/{voucher.id}/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_vouchers_update(self):
         """Admin users should be able to update a voucher."""

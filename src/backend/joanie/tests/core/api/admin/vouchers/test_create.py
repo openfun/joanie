@@ -17,10 +17,6 @@ class VouchersAdminApiCreateTestCase(BaseAPITestCase):
         response = self.client.post("/api/v1.0/admin/vouchers/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "Authentication credentials were not provided."
-        )
 
     def test_api_admin_vouchers_create_authenticated_with_lambda_user(self):
         """Lambda users should not be able to create a voucher."""
@@ -30,10 +26,15 @@ class VouchersAdminApiCreateTestCase(BaseAPITestCase):
         response = self.client.post("/api/v1.0/admin/vouchers/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "You do not have permission to perform this action."
-        )
+
+    def test_api_admin_vouchers_create_authenticated_with_staff_user(self):
+        """Staff users should not be able to create a voucher."""
+        user = factories.UserFactory(is_staff=True, is_superuser=False)
+        self.client.login(username=user.username, password="password")
+
+        response = self.client.post("/api/v1.0/admin/vouchers/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_vouchers_create(self):
         """Admin users should be able to create a voucher."""

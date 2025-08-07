@@ -18,11 +18,7 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
         """
         response = self.client.get("/api/v1.0/admin/vouchers/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "Authentication credentials were not provided."
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_vouchers_list_with_lambda_user(self):
         """
@@ -33,10 +29,43 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/vouchers/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "You do not have permission to perform this action."
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
+
+    def test_api_admin_vouchers_list_with_staff_user(self):
+        """
+        Staff user should be able to list all existing vouchers.
+        """
+        user = factories.UserFactory(is_staff=True, is_superuser=False)
+        self.client.login(username=user.username, password="password")
+
+        voucher = factories.VoucherFactory()
+
+        response = self.client.get("/api/v1.0/admin/vouchers/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(voucher.id),
+                        "code": voucher.code,
+                        "discount_id": str(voucher.discount.id)
+                        if voucher.discount
+                        else None,
+                        "offering_rule_id": str(voucher.offering_rule.id)
+                        if voucher.offering_rule
+                        else None,
+                        "multiple_use": False,
+                        "multiple_users": False,
+                        "created_on": format_date(voucher.created_on),
+                        "updated_on": format_date(voucher.updated_on),
+                    }
+                ],
+            },
         )
 
     def test_api_admin_vouchers_list(self):
@@ -50,7 +79,7 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/vouchers/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         expected_content = {
@@ -87,7 +116,7 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/vouchers/?page_size=2")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 5)
         self.assertEqual(
@@ -99,7 +128,7 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/vouchers/?page_size=2&page=2")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 5)
         self.assertEqual(

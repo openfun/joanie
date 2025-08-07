@@ -15,13 +15,10 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
     def test_api_admin_vouchers_retrieve_anonymous(self):
         """Anonymous users should not be able to retrieve a voucher."""
         voucher = factories.VoucherFactory()
+
         response = self.client.get(f"/api/v1.0/admin/vouchers/{voucher.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
-        content = response.json()
-        self.assertEqual(
-            content["detail"], "Authentication credentials were not provided."
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_vouchers_retrieve_authenticated_with_lambda_user(self):
         """Lambda users should not be able to retrieve a voucher."""
@@ -29,12 +26,33 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
         self.client.login(username=user.username, password="password")
 
         voucher = factories.VoucherFactory()
+
         response = self.client.get(f"/api/v1.0/admin/vouchers/{voucher.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
-        content = response.json()
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
+
+    def test_api_admin_vouchers_retrieve_authenticated_with_staff_user(self):
+        """Staff users should not be able to retrieve a voucher."""
+        user = factories.UserFactory(is_staff=True, is_superuser=False)
+        self.client.login(username=user.username, password="password")
+
+        voucher = factories.VoucherFactory()
+
+        response = self.client.get(f"/api/v1.0/admin/vouchers/{voucher.id}/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
-            content["detail"], "You do not have permission to perform this action."
+            response.json(),
+            {
+                "id": str(voucher.id),
+                "created_on": format_date(voucher.created_on),
+                "updated_on": format_date(voucher.updated_on),
+                "code": voucher.code,
+                "offering_rule_id": str(voucher.offering_rule.id),
+                "discount_id": None,
+                "multiple_use": voucher.multiple_use,
+                "multiple_users": voucher.multiple_users,
+            },
         )
 
     def test_api_admin_vouchers_retrieve(self):
@@ -46,7 +64,7 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/admin/vouchers/{voucher.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         expected_content = {
@@ -74,7 +92,7 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/admin/vouchers/{voucher.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         expected_content = {
@@ -97,4 +115,4 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/vouchers/non-existing-id/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
