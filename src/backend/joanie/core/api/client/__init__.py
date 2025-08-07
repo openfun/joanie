@@ -190,7 +190,7 @@ class OfferingViewSet(
         if (
             self.action == "retrieve"
             and self.kwargs.get("course_id")
-            or self.action == "payment_schedule"
+            or self.action == "payment_plan"
         ):
             permission_classes = [drf_permissions.AllowAny]
         else:
@@ -200,17 +200,17 @@ class OfferingViewSet(
 
     def get_serializer_class(self):
         """Return the serializer class to use."""
-        if self.action == "payment_schedule":
+        if self.action == "payment_plan":
             return serializers.OrderPaymentScheduleSerializer
         if self.action == "list":
             return serializers.OfferingLightSerializer
         return self.serializer_class
 
-    @action(detail=True, methods=["GET"], url_path="payment-schedule")
-    def payment_schedule(self, request, *args, **kwargs):
+    @action(detail=True, methods=["GET"], url_path="payment-plan")
+    def payment_plan(self, request, *args, **kwargs):
         """
-        Return the price and the payment schedule for an offering, whether there is a discount
-        or a voucher code that is passed.
+        Return information on the payment schedule, the price, the discount if any
+        (on the offering or through a voucher code), and the discounted price.
         """
         offering = self.get_object()
 

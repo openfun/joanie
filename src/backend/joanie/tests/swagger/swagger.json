@@ -2022,10 +2022,10 @@
                 }
             }
         },
-        "/api/v1.0/courses/{course_id}/products/{pk_or_product_id}/payment-schedule/": {
+        "/api/v1.0/courses/{course_id}/products/{pk_or_product_id}/payment-plan/": {
             "get": {
-                "operationId": "courses_products_payment_schedule_retrieve",
-                "description": "Return the price and the payment schedule for an offering, whether there is a discount\nor a voucher code that is passed.",
+                "operationId": "courses_products_payment_plan_retrieve",
+                "description": "Return information on the payment schedule, the price, the discount if any\n(on the offering or through a voucher code), and the discounted price.",
                 "parameters": [
                     {
                         "in": "path",
@@ -2907,10 +2907,10 @@
                 }
             }
         },
-        "/api/v1.0/offerings/{pk_or_product_id}/payment-schedule/": {
+        "/api/v1.0/offerings/{pk_or_product_id}/payment-plan/": {
             "get": {
-                "operationId": "offerings_payment_schedule_retrieve",
-                "description": "Return the price and the payment schedule for an offering, whether there is a discount\nor a voucher code that is passed.",
+                "operationId": "offerings_payment_plan_retrieve",
+                "description": "Return information on the payment schedule, the price, the discount if any\n(on the offering or through a voucher code), and the discounted price.",
                 "parameters": [
                     {
                         "in": "path",
@@ -4435,10 +4435,10 @@
                 }
             }
         },
-        "/api/v1.0/organizations/{organization_id}/offerings/{pk_or_product_id}/payment-schedule/": {
+        "/api/v1.0/organizations/{organization_id}/offerings/{pk_or_product_id}/payment-plan/": {
             "get": {
-                "operationId": "organizations_offerings_payment_schedule_retrieve",
-                "description": "Return the price and the payment schedule for an offering, whether there is a discount\nor a voucher code that is passed.",
+                "operationId": "organizations_offerings_payment_plan_retrieve",
+                "description": "Return information on the payment schedule, the price, the discount if any\n(on the offering or through a voucher code), and the discounted price.",
                 "parameters": [
                     {
                         "in": "path",
