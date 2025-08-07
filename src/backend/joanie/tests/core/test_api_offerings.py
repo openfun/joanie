@@ -1630,7 +1630,7 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offering_payment_schedule_with_product_id(
+    def test_api_offering_payment_plan_with_product_id(
         self,
     ):
         """
@@ -1670,10 +1670,10 @@ class OfferingApiTest(BaseAPITestCase):
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
-                f"products/{product.id}/payment-schedule/"
+                f"products/{product.id}/payment-plan/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1713,7 +1713,7 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offering_payment_schedule_with_product_id_discount(
+    def test_api_offering_payment_plan_with_product_id_discount(
         self,
     ):
         """
@@ -1758,10 +1758,10 @@ class OfferingApiTest(BaseAPITestCase):
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
-                f"products/{product.id}/payment-schedule/"
+                f"products/{product.id}/payment-plan/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1799,7 +1799,7 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offering_payment_schedule_with_certificate_product_id(
+    def test_api_offering_payment_plan_with_certificate_product_id(
         self,
     ):
         """
@@ -1831,10 +1831,10 @@ class OfferingApiTest(BaseAPITestCase):
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
-                f"products/{product.id}/payment-schedule/"
+                f"products/{product.id}/payment-plan/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1865,7 +1865,7 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offering_payment_schedule_with_certificate_product_id_discount(
+    def test_api_offering_payment_plan_with_certificate_product_id_discount(
         self,
     ):
         """
@@ -1901,10 +1901,10 @@ class OfferingApiTest(BaseAPITestCase):
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
-                f"products/{product.id}/payment-schedule/"
+                f"products/{product.id}/payment-plan/"
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/"
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -1929,7 +1929,7 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
         self.assertEqual(response_relation_path.json(), response.json())
 
-    def test_api_offering_voucher_estimated_price_authenticated_invalid_voucher(
+    def test_api_offering_voucher_payment_plan_authenticated_invalid_voucher(
         self,
     ):
         """
@@ -1942,22 +1942,22 @@ class OfferingApiTest(BaseAPITestCase):
 
         response = self.client.get(
             f"/api/v1.0/courses/{offering.course.code}/"
-            f"products/{offering.product.id}/payment-schedule/",
+            f"products/{offering.product.id}/payment-plan/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={"voucher_code": "invalid_code"},
         )
         response_relation_path = self.client.get(
-            f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+            f"/api/v1.0/offerings/{offering.id}/payment-plan/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={"voucher_code": "invalid_code"},
         )
         response_with_query_params = self.client.get(
             f"/api/v1.0/courses/{offering.course.code}/"
-            f"products/{offering.product.id}/payment-schedule/?voucher_code=invalid_code",
+            f"products/{offering.product.id}/payment-plan/?voucher_code=invalid_code",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         response_relation_path_with_query_param = self.client.get(
-            f"/api/v1.0/offerings/{offering.id}/payment-schedule/?voucher_code=invalid_code",
+            f"/api/v1.0/offerings/{offering.id}/payment-plan/?voucher_code=invalid_code",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1982,7 +1982,7 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offering_voucher_estimated_price_anonymous(
+    def test_api_offering_voucher_payment_plan_anonymous(
         self,
     ):
         """
@@ -2023,19 +2023,19 @@ class OfferingApiTest(BaseAPITestCase):
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{offering.course.code}/"
-                f"products/{offering.product.id}/payment-schedule/",
+                f"products/{offering.product.id}/payment-plan/",
                 data={"voucher_code": voucher.code},
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/",
                 data={"voucher_code": voucher.code},
             )
             response_with_query_params = self.client.get(
                 f"/api/v1.0/courses/{offering.course.code}/"
-                f"products/{offering.product.id}/payment-schedule/?voucher_code={voucher.code}",
+                f"products/{offering.product.id}/payment-plan/?voucher_code={voucher.code}",
             )
             response_relation_with_query_params = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/?voucher_code={voucher.code}",
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/?voucher_code={voucher.code}",
             )
 
         self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
@@ -2084,7 +2084,7 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offering_voucher_estimated_price_with_credential_product_id_with_voucher_code(
+    def test_api_offering_voucher_payment_plan_with_credential_product_id_with_voucher_code(
         self,
     ):
         """
@@ -2131,22 +2131,22 @@ class OfferingApiTest(BaseAPITestCase):
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
-                f"products/{product.id}/payment-schedule/",
+                f"products/{product.id}/payment-plan/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
                 data=payload,
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
                 data=payload,
             )
             response_with_query_params = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
-                f"products/{product.id}/payment-schedule/?voucher_code={voucher.code}",
+                f"products/{product.id}/payment-plan/?voucher_code={voucher.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
             response_relation_path_with_query_param = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/"
                 f"?voucher_code={voucher.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
@@ -2199,7 +2199,7 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
-    def test_api_offering_voucher_estimated_price_with_certificate_product_id_with_voucher_code(
+    def test_api_offering_voucher_payment_plan_with_certificate_product_id_with_voucher_code(
         self,
     ):
         """
@@ -2237,22 +2237,22 @@ class OfferingApiTest(BaseAPITestCase):
         ):
             response = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
-                f"products/{product.id}/payment-schedule/",
+                f"products/{product.id}/payment-plan/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
                 data=payload,
             )
             response_relation_path = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
                 data=payload,
             )
             response_with_query_params = self.client.get(
                 f"/api/v1.0/courses/{course_run.course.code}/"
-                f"products/{product.id}/payment-schedule/?voucher_code={voucher.code}",
+                f"products/{product.id}/payment-plan/?voucher_code={voucher.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
             response_relation_path_with_query_param = self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/"
                 f"?voucher_code={voucher.code}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )

@@ -34,6 +34,7 @@ and this project adheres to
 
 ### Changed
 
+- Rename `payment_schedule` endpoint to `payment_plan`
 - Update contract definition template to move course section into
   contract body before articles
 - Update limits for payment schedule for credential products and
