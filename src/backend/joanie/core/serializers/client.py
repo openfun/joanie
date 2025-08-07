@@ -1240,6 +1240,20 @@ class OrderPaymentScheduleSerializer(serializers.Serializer):
         min_value=D(0.00),
         required=False,
     )
+    discount = serializers.CharField(
+        allow_null=True,
+        required=False,
+        help_text=_("String representation of the discount"),
+    )
+    discounted_price = serializers.DecimalField(
+        allow_null=True,
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        required=False,
+        help_text=_("Discounted price of the offer."),
+    )
 
     def create(self, validated_data):
         """Only there to avoid a NotImplementedError"""

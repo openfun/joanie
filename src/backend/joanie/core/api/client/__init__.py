@@ -225,6 +225,8 @@ class OfferingViewSet(
         # If voucher code is passed, retrieve the query parameter
         voucher_code = self._get_voucher_code(request)
         price = self._get_price(offering, voucher_code)
+        # Get the discount value if one is set
+        discount = self._get_discount(offering, voucher_code)
 
         serializer = self.get_serializer(
             data={
@@ -234,7 +236,9 @@ class OfferingViewSet(
                     course_run_dates["start"],
                     course_run_dates["end"],
                 ),
-                "price": price,
+                "price": offering.product.price,
+                "discount": discount,
+                "discounted_price": price if discount else None,
             }
         )
         serializer.is_valid(raise_exception=True)
@@ -257,6 +261,14 @@ class OfferingViewSet(
             return calculate_price(offering.product.price, voucher.discount)
 
         return offering.rules.get("discounted_price") or offering.product.price
+
+    def _get_discount(self, offering, voucher_code):
+        """Return the amount or rate of the discount found, else it returns None."""
+        if voucher_code:
+            voucher = get_object_or_404(models.Voucher, code=voucher_code)
+            return str(voucher.discount)
+
+        return offering.rules.get("discount", None)
 
 
 class EnrollmentViewSet(

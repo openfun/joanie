@@ -7109,6 +7109,20 @@
                         "maximum": 10000000,
                         "minimum": 0.0,
                         "exclusiveMaximum": true
+                    },
+                    "discount": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "String representation of the discount"
+                    },
+                    "discounted_price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true,
+                        "nullable": true,
+                        "description": "Discounted price of the offer."
                     }
                 },
                 "required": [
