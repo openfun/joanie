@@ -73,17 +73,28 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self, mock_issuer_generate_document
     ):
         """
-        When the batch order does not yet have a contract, submitting to signature
-        will generate one. At the end of submitting the contract we should get in
+        The batch order's contract is not yet completed tag submissions values until it has
+        been submitted to signature. The contract should be first generated when the batch
+        order is initialized. At the end of submitting the contract we should get in
         return the invitation link to sign it.
         """
         batch_order = factories.BatchOrderFactory(
-            nb_seats=2, state=enums.BATCH_ORDER_STATE_ASSIGNED
+            nb_seats=2, state=enums.BATCH_ORDER_STATE_QUOTED
         )
+        batch_order.quote.organization_signed_on = django_timezone.now()
+        batch_order.quote.save()
+
+        self.assertIsNotNone(batch_order.contract)
+        self.assertIsNotNone(batch_order.contract.definition)
+        self.assertIsNone(batch_order.contract.student_signed_on)
+        self.assertIsNone(batch_order.contract.submitted_for_signature_on)
+        self.assertIsNone(batch_order.contract.context)
+        self.assertIsNone(batch_order.contract.signature_backend_reference)
+        self.assertIsNone(batch_order.contract.definition_checksum)
 
         invitation_link = batch_order.submit_for_signature(user=batch_order.owner)
 
-        batch_order.contract.refresh_from_db()
+        batch_order.refresh_from_db()
         self.assertIsNotNone(batch_order.contract)
         self.assertIsNone(batch_order.contract.student_signed_on)
         self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
@@ -91,6 +102,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertIsNotNone(batch_order.contract.definition)
         self.assertIsNotNone(batch_order.contract.signature_backend_reference)
         self.assertIsNotNone(batch_order.contract.definition_checksum)
+
         self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_link)
 
         context_with_images = mock_issuer_generate_document.call_args.kwargs["context"]
@@ -255,6 +267,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_ASSIGNED
         )
+        batch_order.quote.organization_signed_on = django_timezone.now()
+        batch_order.quote.save()
 
         batch_order.submit_for_signature(user=batch_order.owner)
         now = django_timezone.now()

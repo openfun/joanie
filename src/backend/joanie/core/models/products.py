@@ -2184,12 +2184,17 @@ class BatchOrder(BaseModel):
             )
             raise ValidationError(message)
 
-        if not self.is_assigned:
-            raise ValidationError(
-                _(
-                    f"Your batch order cannot be submitted for signature, state: {self.state}"
-                )
+        if not self.is_eligible_to_get_signed:
+            message = "The batch order isn't eligible to be signed"
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                    }
+                },
             )
+            raise ValidationError(message)
 
         if self.is_signed_by_owner:
             message = "Contract is already signed by the buyer, cannot resubmit."
@@ -2311,13 +2316,20 @@ class BatchOrder(BaseModel):
         return can_be_signed
 
     @property
-    def is_eligible_to_get_sign(self):
+    def is_eligible_to_get_signed(self):
         """Return boolean value whether the batch order contract can be signed"""
-        return self.state in [
-            enums.BATCH_ORDER_STATE_ASSIGNED,
-            enums.BATCH_ORDER_STATE_QUOTED,
-            enums.BATCH_ORDER_STATE_TO_SIGN,
-        ]
+        if self.state in [
+            enums.BATCH_ORDER_STATE_DRAFT,
+            enums.BATCH_ORDER_STATE_CANCELED,
+        ]:
+            return False
+
+        if self.uses_purchase_order:
+            return (
+                self.quote.is_signed_by_organization
+                and self.quote.has_received_purchase_order
+            )
+        return self.quote.is_signed_by_organization
 
     @property
     def is_submitted_to_signature(self):
