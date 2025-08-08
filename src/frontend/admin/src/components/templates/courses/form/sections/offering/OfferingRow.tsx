@@ -75,7 +75,7 @@ const messages = defineMessages({
     description: "Title for the add offering rule modal",
   },
   editOfferingRuleModalFormTitle: {
-    id: "components.templates.courses.form.offering.row.addOfferingRuleModalFormTitle",
+    id: "components.templates.courses.form.offering.row.editOfferingRuleModalFormTitle",
     defaultMessage: "Edit an offering rule",
     description: "Title for the edit offering rule modal",
   },
@@ -214,6 +214,7 @@ export function OfferingRow({
       can_edit: false,
       is_active: payload.is_active,
       discount: null,
+      voucher: null,
     };
 
     dummyListMethods.push(dummy);

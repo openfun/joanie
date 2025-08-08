@@ -29,6 +29,12 @@ export const PATH_ADMIN = {
     create: path("/products/create"),
     edit: (id: string) => path(`/products/${id}/edit`),
   },
+  vouchers: {
+    root: path("/vouchers"),
+    list: path("/vouchers/list"),
+    create: path("/vouchers/create"),
+    edit: (id: string) => path(`/vouchers/${id}/edit`),
+  },
   certificates: {
     root: path("/certificates-definitions"),
     list: path("/certificates-definitions/list"),
