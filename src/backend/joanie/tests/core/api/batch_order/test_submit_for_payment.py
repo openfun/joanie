@@ -3,8 +3,6 @@
 from http import HTTPStatus
 from unittest import mock
 
-from django.utils import timezone
-
 from joanie.core import enums, factories
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.tests.base import BaseAPITestCase
@@ -120,7 +118,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
         self.assertContains(
             response,
             "This batch order cannot be submitted to payment",
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
     def test_api_batch_order_submit_for_payment_if_state_not_in_signing_of_failed_payment(
@@ -231,12 +229,11 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
         ]:
             for payment_method in [
                 enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-                enums.BATCH_ORDER_WITH_BANK_TRANSFER
+                enums.BATCH_ORDER_WITH_BANK_TRANSFER,
             ]:
                 with self.subTest(state=state, payment_method=payment_method):
                     batch_order = factories.BatchOrderFactory(
-                        owner=user,
-                        state=enums.BATCH_ORDER_STATE_DRAFT
+                        owner=user, state=enums.BATCH_ORDER_STATE_DRAFT
                     )
                     batch_order.organization = factories.OrganizationFactory()
                     batch_order.payment_method = payment_method
@@ -252,5 +249,5 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
                     self.assertContains(
                         response,
                         "This batch order cannot be submitted to payment",
-                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY
+                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                     )

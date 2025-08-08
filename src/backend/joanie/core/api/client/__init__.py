@@ -811,11 +811,7 @@ class BatchOrderViewSet(
 
         if not batch_order.is_ready_for_payment:
             return Response(
-                {
-                    "detail": (
-                        "This batch order cannot be submitted to payment"
-                    )
-                },
+                {"detail": ("This batch order cannot be submitted to payment")},
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
@@ -1130,6 +1126,7 @@ class OrganizationViewSet(
         detail=True,
         methods=["PATCH"],
         url_path="confirm-quote",
+        permission_classes=[permissions.CanConfirmQuoteOrganization],
     )
     def confirm_quote(self, request, *args, **kwargs):
         """
@@ -1139,6 +1136,9 @@ class OrganizationViewSet(
         organization = self.get_object()
         quote_id = request.data.get("quote_id")
         total = request.data.get("total")
+
+        if not total:
+            raise ValidationError("Missing total value. It's required.")
 
         quote = get_object_or_404(
             models.Quote, id=quote_id, batch_order__organization=organization

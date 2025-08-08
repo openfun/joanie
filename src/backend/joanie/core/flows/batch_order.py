@@ -103,9 +103,7 @@ class BatchOrderFlow:
         When the batch order uses a purchase order, it goes to completed directly after the
         contract is signed by the owner.
         """
-        return (
-            self.instance.is_ready_for_payment
-        )
+        return self.instance.is_ready_for_payment
 
     @state.transition(
         source=[
