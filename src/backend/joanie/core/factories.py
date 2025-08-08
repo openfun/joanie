@@ -1276,6 +1276,11 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
+            if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                self.quote.organization_signed_on = django_timezone.now()
+                self.quote.has_purchase_order = True
+                self.quote.save()
+
             # Add the total to the batch order and marks the quote as signed by organization
             self.freeze_total(total=Decimal("100.00"))
             self.submit_for_signature(self.owner)

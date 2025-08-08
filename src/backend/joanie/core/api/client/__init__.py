@@ -813,7 +813,7 @@ class BatchOrderViewSet(
             return Response(
                 {
                     "detail": (
-                        f"The batch order is not ready to submit for payment: {batch_order.state}."
+                        "This batch order cannot be submitted to payment"
                     )
                 },
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,

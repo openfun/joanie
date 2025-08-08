@@ -104,7 +104,7 @@ class BatchOrderFlow:
         contract is signed by the owner.
         """
         return (
-            self.instance.is_ready_for_payment and not self.instance.uses_purchase_order
+            self.instance.is_ready_for_payment
         )
 
     @state.transition(
