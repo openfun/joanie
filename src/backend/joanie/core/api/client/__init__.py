@@ -811,11 +811,7 @@ class BatchOrderViewSet(
 
         if not batch_order.is_ready_for_payment:
             return Response(
-                {
-                    "detail": (
-                        f"The batch order is not ready to submit for payment: {batch_order.state}."
-                    )
-                },
+                {"detail": ("This batch order cannot be submitted to payment")},
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
@@ -1125,6 +1121,31 @@ class OrganizationViewSet(
             as_attachment=True,
             filename=f"{quote.definition.title}-{quote.id}.pdf".replace(" ", "_"),
         )
+
+    @action(
+        detail=True,
+        methods=["PATCH"],
+        url_path="confirm-quote",
+        permission_classes=[permissions.CanConfirmQuoteOrganization],
+    )
+    def confirm_quote(self, request, *args, **kwargs):
+        """
+        Organization can confirm they have signed the quote and apply the total
+        for the batch order related to the quote.
+        """
+        organization = self.get_object()
+        quote_id = request.data.get("quote_id")
+        total = request.data.get("total")
+
+        if not total:
+            raise ValidationError("Missing total value. It's required.")
+
+        quote = get_object_or_404(
+            models.Quote, id=quote_id, batch_order__organization=organization
+        )
+        quote.batch_order.freeze_total(total)
+
+        return Response(status=HTTPStatus.OK)
 
 
 class OrganizationAccessViewSet(
