@@ -2317,12 +2317,9 @@ class BatchOrder(BaseModel):
     @property
     def can_be_signed(self):
         """Return boolean value whether the batch order can be signed"""
-        can_be_signed = (
-            self.quote.organization_signed_on and self.is_submitted_to_signature
-        )
         if self.uses_purchase_order:
-            return self.quote.has_received_purchase_order and can_be_signed
-        return can_be_signed
+            return self.quote.has_received_purchase_order
+        return self.quote.organization_signed_on and not self.is_signed_by_owner
 
     @property
     def is_signable(self):
