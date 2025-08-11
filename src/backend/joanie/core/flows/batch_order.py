@@ -179,6 +179,14 @@ class BatchOrderFlow:
     @state.on_success()
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
         """Post transition actions"""
+
+        if (
+            source in [enums.BATCH_ORDER_STATE_SIGNING, enums.BATCH_ORDER_STATE_PENDING]
+            and target == enums.BATCH_ORDER_STATE_COMPLETED
+            and (self.instance.uses_purchase_order or self.instance.uses_bank_transfer)
+        ):
+            self.instance.validate_payment_and_generate_orders()
+
         # When the batch order payment is successful, we should log the payment in Activity Log
         # When the batch order is related to a quote, the state goes from `signing`
         # to `completed` only if it's paid through purchase order

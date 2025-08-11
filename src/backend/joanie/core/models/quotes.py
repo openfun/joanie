@@ -217,13 +217,16 @@ class Quote(BaseModel):
 
         download_quote = False
         confirm_quote = False
+        confirm_bank_transfer = False
 
         if user.is_authenticated:
             abilities = self.batch_order.organization.get_abilities(user=user)
             download_quote = abilities.get("download_quote", False)
             confirm_quote = abilities.get("confirm_quote", False)
+            confirm_bank_transfer = abilities.get("confirm_bank_transfer", False)
 
         return {
             "download_quote": download_quote,
             "confirm_quote": confirm_quote,
+            "confirm_bank_transfer": confirm_bank_transfer,
         }
