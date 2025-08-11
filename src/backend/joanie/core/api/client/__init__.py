@@ -1189,6 +1189,51 @@ class OrganizationViewSet(
 
         return Response(status=HTTPStatus.OK)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="quote_id",
+                description="Quote id in string, must be provided.",
+                required=True,
+                type=OpenApiTypes.UUID,
+                many=False,
+            ),
+        ],
+    )
+    @action(
+        detail=True,
+        methods=["PATCH"],
+        url_path="confirm-purchase-order",
+        permission_classes=[permissions.CanConfirmQuoteOrganization],
+    )
+    def confirm_purchase_order(self, request, *args, **kwargs):
+        """
+        Organization can confirm they have received the purchase order when the batch
+        order's payment is with purchase order
+        """
+        organization = self.get_object()
+        quote_id = request.data.get("quote_id")
+
+        quote = get_object_or_404(
+            models.Quote, id=quote_id, batch_order__organization=organization
+        )
+
+        if (
+            quote.has_received_purchase_order
+            or not quote.batch_order.uses_purchase_order
+            or not quote.is_signed_by_organization
+        ):
+            return Response(
+                {"detail": "Cannot confirm purchase order."},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        quote.tag_has_purchase_order()
+        # Update the flow of batch order to sign
+        quote.batch_order.flow.update()
+
+        return Response(status=HTTPStatus.OK)
+
 
 class OrganizationAccessViewSet(
     mixins.CreateModelMixin,
