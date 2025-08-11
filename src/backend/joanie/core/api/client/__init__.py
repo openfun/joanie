@@ -34,6 +34,7 @@ from joanie.core.models import CourseProductRelation
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers, webhooks
+from joanie.core.utils.batch_order import validate_success_payment
 from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.offering import get_serialized_course_runs
 from joanie.core.utils.organization import get_least_active_organization
@@ -1231,6 +1232,49 @@ class OrganizationViewSet(
         quote.tag_has_purchase_order()
         # Update the flow of batch order to sign
         quote.batch_order.flow.update()
+
+        return Response(status=HTTPStatus.OK)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="batch_order_id",
+                description="Batch order id in string, must be provided.",
+                required=True,
+                type=OpenApiTypes.UUID,
+                many=False,
+            ),
+        ],
+    )
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="confirm-bank-transfer",
+        permission_classes=[permissions.CanConfirmOrganizationBankTransfer],
+    )
+    def confirm_bank_transfer(self, request, *args, **kwargs):
+        """
+        When organization confirms the bank transfer of a batch order, it will validate the payment
+        and generate the orders with their voucher codes.
+        """
+        organization = self.get_object()
+        batch_order_id = request.data.get("batch_order_id")
+
+        batch_order = get_object_or_404(
+            models.BatchOrder, id=batch_order_id, organization=organization
+        )
+
+        if not (
+            batch_order.uses_bank_transfer
+            and batch_order.is_eligible_to_validate_payment
+        ):
+            return Response(
+                "You are not allowed to validate the bank transfer",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        validate_success_payment(batch_order)
+        batch_order.flow.update()
 
         return Response(status=HTTPStatus.OK)
 
