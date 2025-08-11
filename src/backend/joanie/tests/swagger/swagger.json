@@ -4758,6 +4758,69 @@
                 }
             }
         },
+        "/api/v1.0/organizations/{id}/confirm-bank-transfer/": {
+            "post": {
+                "operationId": "organizations_confirm_bank_transfer_create",
+                "description": "When organization confirms the bank transfer of a batch order, it will validate the payment\nand generate the orders with their voucher codes.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "batch_order_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "Batch order id in string, must be provided.",
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrganizationRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrganizationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Organization"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/organizations/{id}/confirm-purchase-order/": {
             "patch": {
                 "operationId": "organizations_confirm_purchase_order_partial_update",
