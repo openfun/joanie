@@ -189,6 +189,11 @@ class Quote(BaseModel):
         self.organization_signed_on = timezone.now()
         self.save()
 
+    def tag_has_purchase_order(self):
+        """Updates the quote with the reception of the purchase order"""
+        self.has_purchase_order = True
+        self.save()
+
     @property
     def is_signed_by_organization(self):
         """
