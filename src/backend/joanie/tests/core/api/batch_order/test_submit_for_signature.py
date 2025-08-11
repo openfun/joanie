@@ -237,4 +237,9 @@ class BatchOrderSubmitForSignatureAPITest(BaseAPITestCase):
                 batch_order.refresh_from_db()
 
                 self.assertIsNotNone(batch_order.contract.student_signed_on)
-                self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
+                if payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                    self.assertEqual(
+                        batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED
+                    )
+                else:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
