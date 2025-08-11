@@ -2457,6 +2457,18 @@ class BatchOrder(BaseModel):
         except ObjectDoesNotExist:
             return None
 
+    def validate_payment_and_generate_orders(self):
+        """
+        When the batch order is paid through purchase order or bank transfer, it generates
+        the orders with their vouchers and send the mail to the
+        batch order owner with the codes.
+        """
+        from joanie.core.tasks import (  # pylint:disable=import-outside-toplevel
+            generate_orders_and_send_vouchers_task,
+        )
+
+        generate_orders_and_send_vouchers_task.delay(batch_order_id=str(self.id))
+
 
 class Skill(parler_models.TranslatableModel, BaseModel):
     """
