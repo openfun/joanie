@@ -59,6 +59,18 @@ class CanConfirmQuoteOrganization(IsAuthenticated):
         return abilities.get("confirm_quote", False)
 
 
+class CanConfirmOrganizationBankTransfer(IsAuthenticated):
+    """
+    Check if the authenticated user is allowed to confirm the bank transfer of a batch order
+    for an organization.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        """Check permission for a given object."""
+        abilities = obj.get_abilities(request.user)
+        return abilities.get("confirm_bank_transfer", False)
+
+
 class HasAPIKey(permissions.BasePermission):
     """Permission class to grant access to our remote endpoints API."""
 
