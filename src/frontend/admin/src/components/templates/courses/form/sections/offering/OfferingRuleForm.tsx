@@ -93,7 +93,7 @@ export function OfferingRuleForm({
   const data = item ?? offeringRule;
 
   const getDefaultValues = () => ({
-    description: data?.description ?? null,
+    description: data?.description ?? "",
     nb_seats: data?.nb_seats ?? null,
     start: data?.start ?? null,
     end: data?.end ?? null,
@@ -107,6 +107,7 @@ export function OfferingRuleForm({
   });
 
   useEffect(() => {
+    invalidate();
     form.reset(getDefaultValues());
   }, [data]);
 
