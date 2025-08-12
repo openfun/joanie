@@ -18,8 +18,7 @@ type Props = DateTimePickerProps<any> & {
 
 export function RHFDateTimePicker({ label, name, ...props }: Props) {
   const intl = useIntl();
-  const { control, getValues, setValue, setError } = useFormContext();
-  const value = getValues(name);
+  const { control, setValue, setError } = useFormContext();
   return (
     <Controller
       name={name}
@@ -28,7 +27,9 @@ export function RHFDateTimePicker({ label, name, ...props }: Props) {
         <div>
           <DateTimePicker
             {...field}
-            value={value ? new Date(value) : null}
+            value={field.value ? new Date(field.value) : null}
+            closeOnSelect={false}
+            ampm={intl.locale.toLowerCase().startsWith("en")}
             slotProps={{
               ...props.slotProps,
               desktopPaper: {
