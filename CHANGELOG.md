@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add unique reference for a quote once generated
+
 ## [3.0.4] - 2025-09-25
 
 ### Changed
