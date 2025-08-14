@@ -36,6 +36,7 @@ from joanie.core.fields.schedule import (
 )
 from joanie.core.flows.batch_order import BatchOrderFlow
 from joanie.core.flows.order import OrderFlow
+from joanie.core.helpers import generate_orders as generate_batch_order_orders
 from joanie.core.models.accounts import Address, User
 from joanie.core.models.activity_logs import ActivityLog
 from joanie.core.models.base import BaseModel
@@ -49,6 +50,7 @@ from joanie.core.models.courses import (
     Enrollment,
     Organization,
 )
+from joanie.core.models.quotes import Quote
 from joanie.core.utils import (
     contract_definition as contract_definition_utility,
 )
@@ -2099,6 +2101,11 @@ class BatchOrder(BaseModel):
         related_name="batch_orders",
         blank=True,
     )
+    payment_method = models.CharField(
+        default=enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+        choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
+        db_index=True,
+    )
 
     # pylint:disable=no-member
     def clean(self):
@@ -2127,46 +2134,33 @@ class BatchOrder(BaseModel):
 
     def init_flow(self):
         """
-        Transition batch order to assigned state, creates a main invoice,
-        generates a contract.
+        Initialize the flow of the and transition to `quoted` state,
+        finally it creates the contract and the quote.
         """
-        self.freeze_total()
-        self.create_main_invoice()
-
         # Generate the contract
         if self.relation.product.contract_definition and not self.contract:
             self.contract = Contract.objects.create(
                 definition=self.relation.product.contract_definition
             )
+
+        # Generate the quote
+        if self.relation.product.quote_definition:
+            self.quote = Quote.objects.create(  # pylint:disable=attribute-defined-outside-init
+                batch_order=self,
+                definition=self.relation.product.quote_definition,
+            )
+
         self.flow.update()
         self.save()
 
-    def get_discounted_price(self):
+    def freeze_total(self, total):
         """
-        When a voucher is used, return the discounted price. Otherwise,
-        return the total price, considering the offering rule discount if applicable.
-        If neither a voucher nor an offering rule group discount exists,
-        return the total amount based on the number of seats taken.
+        Freeze the total price for the batch order. It can only be done when the quote's
+        batch order is signed by the organization.
         """
-        price_per_seat = Money(self.relation.product.price).as_decimal()
-        total = self.nb_seats * price_per_seat
-
-        if self.voucher:
-            discount = self.voucher.discount or self.voucher.offering_rule.discount
-            if discount:
-                return calculate_price(total, discount)
-
-        for offering_rule in self.offering_rules.all():
-            if discount := offering_rule.discount:
-                return calculate_price(total, discount)
-
-        return total
-
-    def freeze_total(self):
-        """
-        Freeze the total price for the batch order.
-        """
-        self.total = self.get_discounted_price()
+        self.quote.tag_organization_signed_on()
+        self.total = round(Money(total).as_decimal(), 2)
+        self.create_main_invoice()
         self.save(update_fields=["total"])
 
     # pylint: disable=no-member
@@ -2191,12 +2185,17 @@ class BatchOrder(BaseModel):
             )
             raise ValidationError(message)
 
-        if not self.is_assigned:
-            raise ValidationError(
-                _(
-                    f"Your batch order cannot be submitted for signature, state: {self.state}"
-                )
+        if not self.is_eligible_to_get_signed:
+            message = "The batch order isn't eligible to be signed"
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                    }
+                },
             )
+            raise ValidationError(message)
 
         if self.is_signed_by_owner:
             message = "Contract is already signed by the buyer, cannot resubmit."
@@ -2247,40 +2246,8 @@ class BatchOrder(BaseModel):
         )
 
     def generate_orders(self):
-        """
-        Generate orders and vouchers once the batch order has been paid.
-        """
-        if not self.is_paid:
-            message = "The batch order is not yet paid."
-            logger.error(
-                message,
-                extra={
-                    "context": {
-                        "batch_order": self.to_dict(),
-                        "relation": self.relation.to_dict(),
-                    }
-                },
-            )
-            raise ValidationError(message)
-
-        discount, _ = Discount.objects.get_or_create(rate=1)
-
-        for _ in range(self.nb_seats):
-            order = Order.objects.create(
-                owner=None,
-                product=self.relation.product,
-                course=self.relation.course,
-                organization=self.organization,
-            )
-            if self.offering_rules.exists():
-                order.offering_rules.add(self.offering_rules.first())
-
-            order.voucher = Voucher.objects.create(
-                discount=discount, multiple_use=False, multiple_users=False
-            )
-            order.flow.assign()
-            self.orders.add(order)
-            order.flow.update()
+        """Generate orders of the batch order"""
+        return generate_batch_order_orders(str(self.id))
 
     @property
     def vouchers(self):
@@ -2293,13 +2260,42 @@ class BatchOrder(BaseModel):
         return self.organization is not None
 
     @property
-    def is_eligible_to_get_sign(self):
+    def uses_purchase_order(self):
+        """Return boolean value whether the batch order's payment method is with purchase order"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+
+    @property
+    def uses_bank_transfer(self):
+        """Return boolean value whether the batch order's payment method is bank transfer"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_BANK_TRANSFER
+
+    @property
+    def uses_card_payment(self):
+        """Return boolean value whether the batch order's payment method is with credit card"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_CARD_PAYMENT
+
+    @property
+    def can_be_signed(self):
+        """Return boolean value whether the batch order can be signed"""
+        if self.uses_purchase_order:
+            return self.quote.has_received_purchase_order
+        return self.quote.organization_signed_on and not self.is_signed_by_owner
+
+    @property
+    def is_eligible_to_get_signed(self):
         """Return boolean value whether the batch order contract can be signed"""
-        return self.state in [
-            enums.BATCH_ORDER_STATE_ASSIGNED,
-            enums.BATCH_ORDER_STATE_TO_SIGN,
-            enums.BATCH_ORDER_STATE_QUOTED,
-        ]
+        if self.state in [
+            enums.BATCH_ORDER_STATE_DRAFT,
+            enums.BATCH_ORDER_STATE_CANCELED,
+        ]:
+            return False
+
+        if self.uses_purchase_order:
+            return (
+                self.quote.is_signed_by_organization
+                and self.quote.has_received_purchase_order
+            )
+        return self.quote.is_signed_by_organization
 
     @property
     def is_submitted_to_signature(self):
@@ -2320,8 +2316,11 @@ class BatchOrder(BaseModel):
 
     @property
     def is_ready_for_payment(self):
-        """Return boolean value whether the batch order can be submitted to payment"""
-        if self.has_quote:  # the payment is done through the quote
+        """
+        Return boolean value whether the batch order can be submitted to payment through our
+        payment backend.
+        """
+        if self.uses_purchase_order:
             return False
 
         return self.is_signed_by_owner is True and self.state in [
@@ -2343,7 +2342,7 @@ class BatchOrder(BaseModel):
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.
         """
-        if self.has_quote:
+        if self.uses_purchase_order:
             return self.quote.has_received_purchase_order
 
         child_invoice = self.invoices.filter(

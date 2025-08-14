@@ -6064,6 +6064,9 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "payment_method": {
+                        "$ref": "#/components/schemas/PaymentMethodEnum"
                     }
                 },
                 "required": [
@@ -6079,6 +6082,7 @@
                     "offering_rules",
                     "organization",
                     "owner",
+                    "payment_method",
                     "postcode",
                     "quote",
                     "relation",
@@ -6144,6 +6148,9 @@
                         "type": "string",
                         "minLength": 1,
                         "description": "Voucher code"
+                    },
+                    "payment_method": {
+                        "$ref": "#/components/schemas/PaymentMethodEnum"
                     }
                 },
                 "required": [
@@ -6153,6 +6160,7 @@
                     "identification_number",
                     "nb_seats",
                     "owner",
+                    "payment_method",
                     "postcode",
                     "relation"
                 ]
@@ -10380,6 +10388,15 @@
                         "maxLength": 255
                     }
                 }
+            },
+            "PaymentMethodEnum": {
+                "enum": [
+                    "purchase_order",
+                    "bank_transfer",
+                    "card_payment"
+                ],
+                "type": "string",
+                "description": "* `purchase_order` - Purchase order\n* `bank_transfer` - Bank transfer\n* `card_payment` - Card payment"
             },
             "TemplateEnum": {
                 "enum": [

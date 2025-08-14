@@ -33,6 +33,7 @@ from joanie.core.models import CourseProductRelation
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils.batch_order import validate_success_payment
 from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
@@ -765,8 +766,15 @@ class BatchOrderViewSet(
                 f"The offering does not exist: {offering_id}",
                 status=HTTPStatus.BAD_REQUEST,
             )
-        organization = get_least_active_organization(offering.product, offering.course)
-        serializer.initial_data["organization_id"] = organization.id
+
+        organization_id = request.data.get("organization_id")
+        if not organization_id:
+            organization = get_least_active_organization(
+                offering.product, offering.course
+            )
+        else:
+            organization = get_object_or_404(models.Organization, pk=organization_id)
+        serializer.initial_data["organization_id"] = str(organization.id)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
@@ -811,11 +819,7 @@ class BatchOrderViewSet(
 
         if not batch_order.is_ready_for_payment:
             return Response(
-                {
-                    "detail": (
-                        f"The batch order is not ready to submit for payment: {batch_order.state}."
-                    )
-                },
+                {"detail": ("This batch order cannot be submitted to payment")},
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
@@ -1125,6 +1129,130 @@ class OrganizationViewSet(
             as_attachment=True,
             filename=f"{quote.definition.title}-{quote.id}.pdf".replace(" ", "_"),
         )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="quote_id",
+                description="Quote id in string, must be provided.",
+                required=True,
+                type=OpenApiTypes.UUID,
+                many=False,
+            ),
+        ],
+    )
+    @action(
+        detail=True,
+        methods=["PATCH"],
+        url_path="confirm-quote",
+        permission_classes=[permissions.CanConfirmQuoteOrganization],
+    )
+    def confirm_quote(self, request, *args, **kwargs):
+        """
+        Organization can confirm they have signed the quote and apply the total
+        for the batch order related to the quote.
+        """
+        organization = self.get_object()
+        quote_id = request.data.get("quote_id")
+        total = request.data.get("total")
+
+        if not total:
+            raise ValidationError("Missing total value. It's required.")
+
+        quote = get_object_or_404(
+            models.Quote, id=quote_id, batch_order__organization=organization
+        )
+        quote.batch_order.freeze_total(total)
+
+        return Response(status=HTTPStatus.OK)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="quote_id",
+                description="Quote id in string, must be provided.",
+                required=True,
+                type=OpenApiTypes.UUID,
+                many=False,
+            ),
+        ],
+    )
+    @action(
+        detail=True,
+        methods=["PATCH"],
+        url_path="confirm-purchase-order",
+        permission_classes=[permissions.CanConfirmQuoteOrganization],
+    )
+    def confirm_purchase_order(self, request, *args, **kwargs):
+        """
+        Organization can confirm they have received the purchase order when the batch
+        order's payment is with purchase order
+        """
+        organization = self.get_object()
+        quote_id = request.data.get("quote_id")
+
+        quote = get_object_or_404(
+            models.Quote, id=quote_id, batch_order__organization=organization
+        )
+
+        if (
+            quote.has_received_purchase_order
+            or not quote.batch_order.uses_purchase_order
+            or not quote.is_signed_by_organization
+        ):
+            return Response(
+                {"detail": "Cannot confirm purchase order."},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        quote.tag_has_purchase_order()
+        # Update the flow of batch order to sign
+        quote.batch_order.flow.update()
+
+        return Response(status=HTTPStatus.OK)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="batch_order_id",
+                description="Batch order id in string, must be provided.",
+                required=True,
+                type=OpenApiTypes.UUID,
+                many=False,
+            ),
+        ],
+    )
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="confirm-bank-transfer",
+        permission_classes=[permissions.CanConfirmOrganizationBankTransfer],
+    )
+    def confirm_bank_transfer(self, request, *args, **kwargs):
+        """
+        When organization confirms the bank transfer of a batch order, it will validate the payment
+        and generate the orders with their voucher codes.
+        """
+        organization = self.get_object()
+        batch_order_id = request.data.get("batch_order_id")
+
+        batch_order = get_object_or_404(
+            models.BatchOrder, id=batch_order_id, organization=organization
+        )
+
+        if not (
+            batch_order.uses_bank_transfer
+            and batch_order.is_eligible_to_validate_payment
+        ):
+            return Response(
+                "You are not allowed to validate the bank transfer",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        validate_success_payment(batch_order)
+        batch_order.flow.update()
+
+        return Response(status=HTTPStatus.OK)
 
 
 class OrganizationAccessViewSet(
