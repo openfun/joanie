@@ -6,7 +6,8 @@ import textwrap
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
+from django.db import models, transaction
+from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -105,6 +106,14 @@ class Quote(BaseModel):
         default=False,
         help_text=_("Quote has purchase order to confirm payment from buyer"),
     )
+    reference = models.CharField(
+        _("reference"),
+        max_length=20,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text=_("Incremental quote reference number, e.g. FUN_2025_0000001"),
+    )
 
     class Meta:
         db_table = "joanie_quote"
@@ -137,6 +146,38 @@ class Quote(BaseModel):
     # pylint: disable=no-member
     def __str__(self):
         return f"Quote for course {self.batch_order.relation.course.code}"
+
+    def clean(self):
+        """
+        When the object is created, add a unique reference to it
+        """
+        if not self.reference:
+            year = timezone.now().year
+            prefix_reference = f"{settings.JOANIE_PREFIX_QUOTE_REFERENCE}_{year}_"
+            with transaction.atomic():
+                # select_for_update() will lock row the queryset until the end of the transaction
+                last = (
+                    Quote.objects.filter(reference__startswith=prefix_reference)
+                    .order_by("-reference")
+                    .select_for_update()
+                    .first()
+                )
+                next_number = 0
+                if last and last.reference:
+                    last_number = int(last.reference.split("_")[-1])
+                    next_number = last_number + 1
+
+                reference = f"{prefix_reference}{next_number:07d}"
+
+                while self.__class__.objects.filter(reference=reference).exists():
+                    # This while loop handles cases when concurrent requests are made,
+                    # ensuring the reference is unique.
+                    next_number += 1
+                    reference = f"{prefix_reference}{next_number:07d}"
+
+                self.reference = reference
+
+        return super().clean()
 
     def save(self, *args, **kwargs):
         """Enforce validation each time an instance is saved."""

@@ -32,6 +32,11 @@ for your training, feel free to use this template as a base.
         <p>{% translate "The current quote is formed between the University and the Company, as identified below:" %}
         </p>
         <dl>
+          <dt>
+            <p>
+              {% translate "Quote reference:" %} {{ quote.reference }}
+            </p>
+          </dt>
           <dt>{% translate 'University (hereinafter "the University"): '%}</dt>
           <dd>
             <ul>
