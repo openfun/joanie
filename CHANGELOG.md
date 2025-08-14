@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add unique reference for a quote once generated
+
 ### Changed
 
 - Changed background color for micro-credential default template

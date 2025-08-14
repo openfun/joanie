@@ -13,6 +13,7 @@ QUOTE_FALLBACK_DATA = {
     "title": _("<QUOTE_TITLE>"),
     "description": _("<QUOTE_DESCRIPTION>"),
     "body": _("&lt;QUOTE_BODY&gt;"),
+    "reference": _("<REFERENCE>"),
 }
 
 BATCH_ORDER_FALLBACK_DATA = {
@@ -169,6 +170,7 @@ def generate_document_context(quote_definition=None, batch_order=None):
                     "title": quote_definition.title,
                     "description": quote_definition.description,
                     "body": quote_definition.get_body_in_html(),
+                    "reference": batch_order.quote.reference,
                 },
                 "batch_order": {
                     "nb_seats": batch_order.nb_seats,
