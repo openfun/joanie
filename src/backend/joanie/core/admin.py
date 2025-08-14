@@ -18,11 +18,11 @@ from django_object_actions import DjangoObjectActions, takes_instance_or_queryse
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
 
 from joanie.core import enums, forms, models
+from joanie.core.helpers import generate_orders, send_mail_vouchers
 from joanie.core.utils.batch_order import (
     assign_organization,
     get_active_offering_rule,
     send_mail_invitation_link,
-    send_mail_vouchers,
     validate_success_payment,
 )
 
@@ -834,7 +834,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 )
                 continue
 
-            batch_order.generate_orders()
+            generate_orders(str(batch_order.id))
 
             return self.message_user(
                 request,
@@ -851,7 +851,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
             if not batch_order.has_orders_generated:
                 continue
 
-            send_mail_vouchers(batch_order)
+            send_mail_vouchers(str(batch_order.id))
 
             return self.message_user(
                 request,

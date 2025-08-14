@@ -8,6 +8,7 @@ from django.apps import apps
 from viewflow import fsm
 
 from joanie.core import enums
+from joanie.core.tasks import generate_orders_and_send_vouchers_task
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +186,9 @@ class BatchOrderFlow:
             and target == enums.BATCH_ORDER_STATE_COMPLETED
             and (self.instance.uses_purchase_order or self.instance.uses_bank_transfer)
         ):
-            self.instance.validate_payment_and_generate_orders()
+            generate_orders_and_send_vouchers_task.delay(
+                batch_order_id=str(self.instance.id)
+            )
 
         # When the batch order payment is successful, we should log the payment in Activity Log
         # When the batch order is related to a quote, the state goes from `signing`
