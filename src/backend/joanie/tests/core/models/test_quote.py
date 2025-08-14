@@ -49,3 +49,15 @@ class QuoteModelsTestCase(LoggingTestCase):
             "You must generate the quote context before signing the quote."
             in str(context.exception)
         )
+
+    def test_models_quote_reference_should_increment_by_1(self):
+        """Everytime a quote object is created, the reference should be incremented by one"""
+        year = timezone.now().year
+
+        quote_1 = QuoteFactory()
+        quote_2 = QuoteFactory()
+        quote_3 = QuoteFactory()
+
+        self.assertEqual(quote_1.reference, f"FUN_{year}_0000001")
+        self.assertEqual(quote_2.reference, f"FUN_{year}_0000002")
+        self.assertEqual(quote_3.reference, f"FUN_{year}_0000003")
