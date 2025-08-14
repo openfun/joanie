@@ -87,9 +87,7 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase):
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
-    @mock.patch(
-        "joanie.core.models.products.BatchOrder.generate_orders", side_effect=Exception
-    )
+    @mock.patch("joanie.core.helpers.generate_orders", side_effect=Exception)
     @mock.patch(
         "joanie.payment.backends.base.BasePaymentBackend._send_mail_batch_order_payment_success"
     )

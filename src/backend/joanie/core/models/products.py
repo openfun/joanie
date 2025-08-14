@@ -36,6 +36,7 @@ from joanie.core.fields.schedule import (
 )
 from joanie.core.flows.batch_order import BatchOrderFlow
 from joanie.core.flows.order import OrderFlow
+from joanie.core.helpers import generate_orders as generate_batch_order_orders
 from joanie.core.models.accounts import Address, User
 from joanie.core.models.activity_logs import ActivityLog
 from joanie.core.models.base import BaseModel
@@ -2254,40 +2255,8 @@ class BatchOrder(BaseModel):
         )
 
     def generate_orders(self):
-        """
-        Generate orders and vouchers once the batch order has been paid.
-        """
-        if not self.is_paid:
-            message = "The batch order is not yet paid."
-            logger.error(
-                message,
-                extra={
-                    "context": {
-                        "batch_order": self.to_dict(),
-                        "relation": self.relation.to_dict(),
-                    }
-                },
-            )
-            raise ValidationError(message)
-
-        discount, _ = Discount.objects.get_or_create(rate=1)
-
-        for _ in range(self.nb_seats):
-            order = Order.objects.create(
-                owner=None,
-                product=self.relation.product,
-                course=self.relation.course,
-                organization=self.organization,
-            )
-            if self.offering_rules.exists():
-                order.offering_rules.add(self.offering_rules.first())
-
-            order.voucher = Voucher.objects.create(
-                discount=discount, multiple_use=False, multiple_users=False
-            )
-            order.flow.assign()
-            self.orders.add(order)
-            order.flow.update()
+        """Generate orders of the batch order"""
+        return generate_batch_order_orders(str(self.id))
 
     @property
     def vouchers(self):
@@ -2456,18 +2425,6 @@ class BatchOrder(BaseModel):
             return self.invoices.get(parent__isnull=True)
         except ObjectDoesNotExist:
             return None
-
-    def validate_payment_and_generate_orders(self):
-        """
-        When the batch order is paid through purchase order or bank transfer, it generates
-        the orders with their vouchers and send the mail to the
-        batch order owner with the codes.
-        """
-        from joanie.core.tasks import (  # pylint:disable=import-outside-toplevel
-            generate_orders_and_send_vouchers_task,
-        )
-
-        generate_orders_and_send_vouchers_task.delay(batch_order_id=str(self.id))
 
 
 class Skill(parler_models.TranslatableModel, BaseModel):
