@@ -6,8 +6,6 @@ from django.conf import settings
 from django.utils.duration import duration_iso_string
 from django.utils.translation import gettext as _
 
-from babel.numbers import get_currency_symbol
-
 from joanie.core.models import DocumentImage
 from joanie.core.utils import file_checksum
 
@@ -25,8 +23,6 @@ COURSE_FALLBACK_DATA = {
     "name": _("<COURSE_NAME>"),
     "code": _("<COURSE_CODE>"),
     "effort": _("<COURSE_EFFORT>"),
-    "price": _("<COURSE_PRICE>"),
-    "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
 }
 
 CUSTOMER_FALLBACK_DATA = {
@@ -133,8 +129,6 @@ def prepare_course_context(language_code, batch_order):
         ),
         "code": batch_order.offering.course.code,
         "effort": course_effort,
-        "price": str(batch_order.total),
-        "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
     }
 
 
