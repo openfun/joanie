@@ -25,6 +25,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "body": "&lt;QUOTE_BODY&gt;",
                 "title": "<QUOTE_TITLE>",
                 "description": "<QUOTE_DESCRIPTION>",
+                "reference": "<REFERENCE>",
             },
             "batch_order": {
                 "nb_seats": "<BATCH_ORDER_NB_SEATS>",
@@ -104,6 +105,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "title": quote.definition.title,
                 "description": quote.definition.description,
                 "body": quote.definition.get_body_in_html(),
+                "reference": quote.reference,
             },
             "batch_order": {
                 "nb_seats": batch_order.nb_seats,
