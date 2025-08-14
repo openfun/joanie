@@ -6,11 +6,11 @@ from logging import getLogger
 from typing import List
 from uuid import uuid4
 
+from django.apps import apps
 from django.core.files.storage import storages
 from django.db.models import Q
 
 from joanie.core import enums
-from joanie.core.models import BatchOrder, Contract, Order, OrganizationAccess
 from joanie.signature.backends import get_signature_backend
 
 logger = getLogger(__name__)
@@ -31,6 +31,7 @@ def _get_base_signature_backend_references(
     if not extra_filters:
         extra_filters = {}
 
+    Contract = apps.get_model("core", "Contract")  # pylint: disable=invalid-name
     base_query = (
         Contract.objects.filter(
             student_signed_on__isnull=False,
@@ -156,11 +157,12 @@ def generate_zip_archive(pdf_bytes_list: list, user_uuid: str, zip_uuid=None) ->
     return zip_archive_name
 
 
-def order_has_organization_owner(order: Order | BatchOrder) -> bool:
+def order_has_organization_owner(order: "Order | BatchOrder") -> bool:
     """
     Returns True whether we can find at least one organization owner
     with the appropriate access rights, otherwise we return False.
     """
+    OrganizationAccess = apps.get_model("core", "OrganizationAccess")  # pylint:disable=invalid-name
     return OrganizationAccess.objects.filter(
         organization=order.organization, role=enums.OWNER
     ).exists()
@@ -173,6 +175,7 @@ def get_signature_references(organization_id: str, student_has_not_signed: bool)
     are not yet signed at all, otherwise, it means that there is already a student's
     signature.
     """
+    Contract = apps.get_model("core", "Contract")  # pylint:disable=invalid-name
     return (
         Contract.objects.filter(
             submitted_for_signature_on__isnull=False,

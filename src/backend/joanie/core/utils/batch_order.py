@@ -7,7 +7,6 @@ from django.utils.translation import override
 from joanie.core import models
 from joanie.core.utils.emails import send
 from joanie.core.utils.organization import get_least_active_organization
-from joanie.payment import get_payment_backend
 from joanie.payment.models import Invoice, Transaction
 
 
@@ -106,13 +105,3 @@ def validate_success_payment(batch_order):
 
     # Transition to `completed` state
     batch_order.flow.update()
-
-
-def send_mail_vouchers(batch_order):
-    """Send an email to batch order's owner with vouchers into the owner's language."""
-
-    payment_backend = get_payment_backend()
-    # pylint:disable=protected-access
-    payment_backend._send_mail_batch_order_payment_success(  # noqa: SLF001
-        batch_order, batch_order.total, batch_order.vouchers
-    )

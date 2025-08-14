@@ -2,8 +2,9 @@
 
 from logging import getLogger
 
+from django.apps import apps
+
 from joanie.celery_app import app
-from joanie.core.models import Order
 from joanie.core.utils.payment_schedule import (
     is_installment_to_debit,
     send_mail_reminder_for_installment_debit,
@@ -20,6 +21,7 @@ def debit_pending_installment(order_id):
     Process the payment schedule for the order. We debit all installments in a state
     to be debited with a due date less than or equal to today.
     """
+    Order = apps.get_model("core", "Order")  # pylint: disable=invalid-name
     order = Order.objects.get(id=order_id)
 
     for installment in order.payment_schedule:
@@ -58,6 +60,7 @@ def send_mail_reminder_installment_debit_task(order_id, installment_id):
     """
     Task to send an email reminder to the order's owner about the next installment debit.
     """
+    Order = apps.get_model("core", "Order")  # pylint: disable=invalid-name
     order = Order.objects.get(id=order_id)
     installment = next(
         (

@@ -10,11 +10,11 @@ from django.test.utils import override_settings
 from parler.utils.context import switch_language
 
 from joanie.core import enums, factories
+from joanie.core.helpers import send_mail_vouchers
 from joanie.core.utils.batch_order import (
     assign_organization,
     get_active_offering_rule,
     send_mail_invitation_link,
-    send_mail_vouchers,
     validate_success_payment,
 )
 from joanie.payment.models import Invoice, Transaction
@@ -300,7 +300,7 @@ class UtilsBatchOrderTestCase(TestCase):
         batch_order.offering_rules.add(offering_rule)
         batch_order.generate_orders()
 
-        send_mail_vouchers(batch_order)
+        send_mail_vouchers(str(batch_order.id))
 
         # Verify that the orders and vouchers are created
         self.assertEqual(batch_order.orders.count(), 2)
@@ -332,7 +332,7 @@ class UtilsBatchOrderTestCase(TestCase):
             user.language = "fr-fr"
             user.save()
 
-            send_mail_vouchers(batch_order)
+            send_mail_vouchers(str(batch_order.id))
 
             email_content = " ".join(mail.outbox[0].body.split())
             self.assertIn("Bonjour", email_content)
@@ -344,7 +344,7 @@ class UtilsBatchOrderTestCase(TestCase):
             user.language = "de-de"
             user.save()
 
-            send_mail_vouchers(batch_order)
+            send_mail_vouchers(str(batch_order.id))
 
             email_content = " ".join(mail.outbox[0].body.split())
             self.assertIn("Hello", email_content)
