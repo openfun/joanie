@@ -11,6 +11,8 @@ from django.urls import clear_url_caches
 from django.utils import timezone as django_timezone
 from django.utils import translation
 
+from beaupy import select_multiple
+
 from joanie.core import enums, factories, models
 from joanie.core.models import CourseState
 from joanie.demo.defaults import NB_DEV_OBJECTS
@@ -736,151 +738,213 @@ class Demo:
             rate=None,
         )
 
-        course_run_certificate = factories.CourseRunFactory(
-            title="Course run certificate",
-            resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="00000", course_run="CourseRunCertificate_run1"
-            ),
-            course__code="00000",
-            course__title="Target Course for certificate",
-            # Give access to organization owner user
-            course__users=[[organization_owner, enums.OWNER]],
-            course__organizations=[organization],
-            languages=self.get_random_languages(),
-            state=CourseState.ONGOING_OPEN,
-            is_listed=True,
-        )
-        course_run_certificate_discount = factories.CourseRunFactory(
-            title="Course run certificate discount",
-            resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="00001", course_run="CourseRunCertificate_run1"
-            ),
-            course__code="00001",
-            course__title="Target Course for certificate discount",
-            # Give access to organization owner user
-            course__users=[[organization_owner, enums.OWNER]],
-            course__organizations=[organization],
-            languages=self.get_random_languages(),
-            state=CourseState.ONGOING_OPEN,
-            is_listed=True,
-        )
+        item_options = [
+            "Certificate product",
+            "Certificate product with discount",
+            "Credential product",
+            "Credential product with discount",
+        ]
+        items = select_multiple(item_options)
 
-        course_run_credential = factories.CourseRunFactory(
-            title="Course run credential",
-            resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="00002", course_run="CourseRunCredential_run1"
-            ),
-            course__code="00002",
-            course__title="Target Course for credential",
-            # Give access to organization owner user
-            course__users=[[organization_owner, enums.OWNER]],
-            course__organizations=[organization],
-            languages=self.get_random_languages(),
-            state=CourseState.ONGOING_OPEN,
-            is_listed=True,
-        )
-        course_run_credential_discount = factories.CourseRunFactory(
-            title="Course run credential discount",
-            resource_link=OPENEDX_COURSE_RUN_URI.format(
-                course="00003", course_run="CourseRunCredential_run1"
-            ),
-            course__code="00003",
-            course__title="Target Course for credential discount",
-            # Give access to organization owner user
-            course__users=[[organization_owner, enums.OWNER]],
-            course__organizations=[organization],
-            languages=self.get_random_languages(),
-            state=CourseState.ONGOING_OPEN,
-            is_listed=True,
-        )
+        if "Certificate product" in items:
+            course = factories.CourseFactory(
+                code="00000",
+                title="Course for certificate",
+                users=[[organization_owner, enums.OWNER]],
+                organizations=[organization],
+            )
+            self.log(f'Successfully created "{course.title}" course')
+            self.log("")
 
-        certificate_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CERTIFICATE,
-            title="Certificate Product",
-            courses=[
-                factories.CourseFactory(
-                    organizations=[organization],
-                    title="Course for certificate product",
-                    course_runs=factories.CourseRunFactory.create_batch(1),
-                    code="00000",
-                )
-            ],
-            target_courses=[course_run_certificate.course],
-            certificate_definition=factories.CertificateDefinitionFactory(
-                title="Certification",
-                name="Become a certified learner certificate",
-            ),
-            price=100,
-        )
-        self.log(f'Successfully created "{certificate_product.title}" product')
-        certificate_product_discount = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CERTIFICATE,
-            title="Certificate Product with discount",
-            courses=[
-                factories.CourseFactory(
-                    organizations=[organization],
-                    title="Course for certificate product discount",
-                    course_runs=factories.CourseRunFactory.create_batch(1),
-                    code="00001",
-                )
-            ],
-            target_courses=[course_run_certificate_discount.course],
-            certificate_definition=factories.CertificateDefinitionFactory(
-                title="Certification discount",
-                name="Become a discounted learner certificate",
-            ),
-            price=100,
-        )
-        certificate_discount_offering = models.CourseProductRelation.objects.get(
-            course=certificate_product_discount.courses.first(),
-            product=certificate_product_discount,
-        )
-        factories.OfferingRuleFactory(
-            course_product_relation=certificate_discount_offering,
-            discount=discount,
-        )
-        self.log(f'Successfully created "{certificate_product_discount.title}" product')
+            course_run_certificate = factories.CourseRunFactory(
+                title="Course run certificate",
+                resource_link=OPENEDX_COURSE_RUN_URI.format(
+                    course="00000", course_run="CourseRunCertificate_run1"
+                ),
+                course=course,
+                languages=self.get_random_languages(),
+                state=CourseState.ONGOING_OPEN,
+                is_listed=True,
+            )
+            self.log(
+                f'Successfully created "{course_run_certificate.title}" course run'
+            )
+            self.log("")
 
-        credential_product = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL,
-            title="Credential Product",
-            courses=[
-                factories.CourseFactory(
-                    organizations=[organization],
-                    title="Course for credential product",
-                    course_runs=factories.CourseRunFactory.create_batch(1),
-                    code="00002",
-                )
-            ],
-            target_courses=[course_run_credential.course],
-            price=100,
-        )
-        self.log(f'Successfully created "{credential_product.title}" product')
-        credential_product_discount = factories.ProductFactory(
-            type=enums.PRODUCT_TYPE_CREDENTIAL,
-            title="Credential Product with discount",
-            courses=[
-                factories.CourseFactory(
-                    organizations=[organization],
-                    title="Course for credential product discount",
-                    course_runs=factories.CourseRunFactory.create_batch(1),
-                    code="00003",
-                )
-            ],
-            target_courses=[course_run_credential_discount.course],
-            price=100,
-        )
-        credential_discount_offering = models.CourseProductRelation.objects.get(
-            course=credential_product_discount.courses.first(),
-            product=credential_product_discount,
-        )
-        factories.OfferingRuleFactory(
-            course_product_relation=credential_discount_offering,
-            discount=discount,
-        )
-        self.log(f'Successfully created "{credential_product_discount.title}" product')
+            certificate_product = factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                title="Certificate Product",
+                courses=[course_run_certificate.course],
+                target_courses=[],
+                certificate_definition=factories.CertificateDefinitionFactory(
+                    title="Certification",
+                    name="Become a certified learner certificate",
+                ),
+                price=100,
+            )
+            self.log(f'Successfully created "{certificate_product.title}" product')
+            self.log("")
 
-        course_run_certificate.save()
-        course_run_certificate_discount.save()
-        course_run_credential.save()
-        course_run_credential_discount.save()
+            course_run_certificate.save()
+
+        if "Certificate product with discount" in items:
+            course = factories.CourseFactory(
+                code="00001",
+                title="Course for certificate with discount",
+                users=[[organization_owner, enums.OWNER]],
+                organizations=[organization],
+            )
+            self.log(f'Successfully created "{course.title}" course')
+            self.log("")
+
+            course_run_certificate_discount = factories.CourseRunFactory(
+                title="Course run certificate discount",
+                resource_link=OPENEDX_COURSE_RUN_URI.format(
+                    course="00001", course_run="CourseRunCertificate_run1"
+                ),
+                course=course,
+                languages=self.get_random_languages(),
+                state=CourseState.ONGOING_OPEN,
+                is_listed=True,
+            )
+            self.log(
+                f'Successfully created "{course_run_certificate_discount.title}" course run'
+            )
+            self.log("")
+
+            certificate_product_discount = factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                title="Certificate Product with discount",
+                courses=[course_run_certificate_discount.course],
+                target_courses=[],
+                certificate_definition=factories.CertificateDefinitionFactory(
+                    title="Certification discount",
+                    name="Become a discounted learner certificate",
+                ),
+                price=100,
+            )
+            self.log(
+                f'Successfully created "{certificate_product_discount.title}" product'
+            )
+            self.log("")
+
+            certificate_discount_offering = models.CourseProductRelation.objects.get(
+                course=certificate_product_discount.courses.first(),
+                product=certificate_product_discount,
+            )
+            self.log(
+                f'Successfully created "{certificate_discount_offering}" '
+                "offering (course product relation)"
+            )
+            self.log("")
+
+            factories.OfferingRuleFactory(
+                course_product_relation=certificate_discount_offering,
+                discount=discount,
+            )
+            self.log("Successfully created offering rule")
+            self.log("")
+
+            course_run_certificate_discount.save()
+
+        if "Credential product" in items:
+            course = factories.CourseFactory(
+                code="00002",
+                title="Course for credential",
+                users=[[organization_owner, enums.OWNER]],
+                organizations=[organization],
+            )
+            self.log(f'Successfully created "{course.title}" course')
+            self.log("")
+
+            course_run_credential = factories.CourseRunFactory(
+                title="Course run credential",
+                resource_link=OPENEDX_COURSE_RUN_URI.format(
+                    course="00002", course_run="CourseRunCredential_run1"
+                ),
+                course=course,
+                languages=self.get_random_languages(),
+                state=CourseState.ONGOING_OPEN,
+                is_listed=False,
+            )
+            self.log(f'Successfully created "{course_run_credential.title}" course run')
+            self.log("")
+
+            credential_product = factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CREDENTIAL,
+                title="Credential Product",
+                courses=[course_run_credential.course],
+                target_courses=[
+                    course_run_credential.course,
+                ],
+                price=100,
+            )
+            self.log(f'Successfully created "{credential_product.title}" product')
+            self.log("")
+
+            course_run_credential.save()
+
+        if "Credential product with discount" in items:
+            course = factories.CourseFactory(
+                code="00003",
+                title="Course for credential with discount",
+                users=[[organization_owner, enums.OWNER]],
+                organizations=[organization],
+            )
+            self.log(f'Successfully created "{course.title}" course')
+            self.log("")
+
+            course_run_credential_discount = factories.CourseRunFactory(
+                title="Course run credential discount",
+                resource_link=OPENEDX_COURSE_RUN_URI.format(
+                    course="00003", course_run="CourseRunCredential_run1"
+                ),
+                course=course,
+                languages=self.get_random_languages(),
+                state=CourseState.ONGOING_OPEN,
+                is_listed=True,
+            )
+            self.log(
+                f'Successfully created "{course_run_credential_discount.title}" course run'
+            )
+            self.log("")
+
+            credential_product_discount = factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CREDENTIAL,
+                title="Credential Product with discount",
+                courses=[course_run_credential_discount.course],
+                target_courses=[
+                    factories.CourseFactory(
+                        organizations=[organization],
+                        title="Target Course for credential product discount",
+                        course_runs=factories.CourseRunFactory.create_batch(
+                            1, course__code="cred_disc"
+                        ),
+                        code="00003",
+                    )
+                ],
+                price=100,
+            )
+            self.log(
+                f'Successfully created "{credential_product_discount.title}" product'
+            )
+            self.log("")
+
+            credential_discount_offering = models.CourseProductRelation.objects.get(
+                course=credential_product_discount.courses.first(),
+                product=credential_product_discount,
+            )
+            self.log(
+                f'Successfully created "{credential_discount_offering}" '
+                "offering (course product relation)"
+            )
+            self.log("")
+
+            factories.OfferingRuleFactory(
+                course_product_relation=credential_discount_offering,
+                discount=discount,
+            )
+            self.log("Successfully created offering rule")
+            self.log("")
+
+            course_run_credential_discount.save()
