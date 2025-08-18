@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 Django settings for Joanie project.
 
@@ -736,7 +737,7 @@ class Development(Base):
             "loggers": {
                 "joanie": {
                     "handlers": ["console"],
-                    "level": "WARNING",
+                    "level": "DEBUG",
                 },
                 "request.summary": {
                     "handlers": ["console"],
@@ -809,13 +810,14 @@ class Test(Base):
             "disable_existing_loggers": False,
             "handlers": {
                 "console": {
-                    "class": "logging.StreamHandler",
+                    "class": "rich.logging.RichHandler",
+                    "show_time": False,
                 },
             },
             "loggers": {
                 "joanie": {
                     "handlers": ["console"],
-                    "level": "WARNING",
+                    "level": "DEBUG",
                 },
                 "request.summary": {
                     "handlers": ["console"],
@@ -867,6 +869,28 @@ class ContinuousIntegration(Test):
 
     nota bene: it should inherit from the Test environment.
     """
+
+    LOGGING = values.DictValue(
+        {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                },
+            },
+            "loggers": {
+                "joanie": {
+                    "handlers": ["console"],
+                    "level": "WARNING",
+                },
+                "request.summary": {
+                    "handlers": ["console"],
+                    "level": "WARNING",
+                },
+            },
+        }
+    )
 
     PERF_REC = {
         "MODE": "none",

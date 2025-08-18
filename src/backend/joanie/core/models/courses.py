@@ -1016,6 +1016,17 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
                 has_grade = self.is_gradable
             certificate_offer = enums.COURSE_OFFER_PAID if has_grade else None
 
+        logger.debug(
+            "Serializing course run %s with visibility",
+            self.id,
+        )
+        logger.debug("visibility: %s", visibility)
+        logger.debug("is_listed: %s", self.is_listed)
+        logger.debug(
+            visibility or (enums.COURSE_AND_SEARCH if self.is_listed else enums.HIDDEN)
+        )
+
+        # visibility is set here
         return {
             "catalog_visibility": visibility
             or (enums.COURSE_AND_SEARCH if self.is_listed else enums.HIDDEN),
@@ -1171,6 +1182,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         serialized_course_runs.extend(
             self.get_equivalent_serialized_course_runs_for_related_products()
         )
+        logger.debug(serialized_course_runs)
         webhooks.synchronize_course_runs(serialized_course_runs)
 
     def can_enroll(self, user):
@@ -1392,12 +1404,12 @@ class Enrollment(BaseModel):
         super().save(*args, **kwargs)
 
         if is_creating is True and self.is_active is True:
-            logger.info("Active Enrollment %s has been created", self.id)
+            logger.debug("Active Enrollment %s has been created", self.id)
             self.set()
 
         if self.is_active != self.last_is_active:
             # The user has changed their subscription status
-            logger.info(
+            logger.debug(
                 "Enrollment %s has changed its active status to %s",
                 self.id,
                 self.is_active,

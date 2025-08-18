@@ -211,7 +211,7 @@ test-back: ## run back-end tests
 
 test-back-parallel: ## run all back-end tests in parallel
 	@args="$(filter-out $@,$(MAKECMDGOALS))" && \
-	bin/pytest -n auto $${args:-${1}}
+	bin/pytest -s -n auto $${args:-${1}}
 .PHONY: test-back-parallel
 
 
