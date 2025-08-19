@@ -174,14 +174,20 @@ CONTRACT_SIGNATURE_STATE_FILTER_CHOICES = (
 # For certification names choices
 CERTIFICATE = "certificate"
 DEGREE = "degree"
-UNICAMP_DEGREE = "unicamp-degree"
+MICROCREDENTIAL_DEGREE_DEFAULT = "microcredential_degree_default"
+MICROCREDENTIAL_DEGREE_UNICAMP = "microcredential_degree_unicamp"
 
-VERIFIABLE_CERTIFICATES = (DEGREE, UNICAMP_DEGREE)
+VERIFIABLE_CERTIFICATES = (
+    DEGREE,
+    MICROCREDENTIAL_DEGREE_DEFAULT,
+    MICROCREDENTIAL_DEGREE_UNICAMP,
+)
 
 CERTIFICATE_NAME_CHOICES = (
     (CERTIFICATE, _("Certificate")),
     (DEGREE, _("Degree")),
-    (UNICAMP_DEGREE, _("Unicamp degree")),
+    (MICROCREDENTIAL_DEGREE_DEFAULT, _("Microcredential Degree Default")),
+    (MICROCREDENTIAL_DEGREE_UNICAMP, _("Microcredential Degree Unicamp")),
 )
 
 # For filtering certificates by type

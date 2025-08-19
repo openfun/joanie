@@ -25,9 +25,10 @@ from joanie.debug.views import (
     DebugMailSuccessPaymentViewBatchOrderTxt,
     DebugMailSuccessPaymentViewHtml,
     DebugMailSuccessPaymentViewTxt,
+    DebugMicrocredentialDegreeDefaultTemplateView,
+    DebugMicrocredentialDegreeUnicampTemplateView,
     DebugPaymentTemplateView,
     DebugQuoteTemplateView,
-    DebugUnicampDegreeTemplateView,
 )
 
 urlpatterns = [
@@ -67,9 +68,14 @@ urlpatterns = [
         name="debug.contract_unicamp.definition",
     ),
     path(
-        "__debug__/pdf-templates/unicamp-degree",
-        DebugUnicampDegreeTemplateView.as_view(),
-        name="debug.certificate_definition.unicamp_degree",
+        "__debug__/pdf-templates/microcredential-degree-unicamp",
+        DebugMicrocredentialDegreeUnicampTemplateView.as_view(),
+        name="debug.certificate_definition.microcredential_degree_unicamp",
+    ),
+    path(
+        "__debug__/pdf-templates/microcredential-degree-default",
+        DebugMicrocredentialDegreeDefaultTemplateView.as_view(),
+        name="debug.certificate_definition.microcredential_degree_default",
     ),
     path(
         "__debug__/pdf-templates/contract",

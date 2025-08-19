@@ -24,12 +24,13 @@ from joanie.core.enums import (
     CONTRACT_DEFINITION_DEFAULT,
     CONTRACT_DEFINITION_UNICAMP,
     DEGREE,
+    MICROCREDENTIAL_DEGREE_DEFAULT,
+    MICROCREDENTIAL_DEGREE_UNICAMP,
     ORDER_STATE_PENDING_PAYMENT,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
     QUOTE_DEFAULT,
-    UNICAMP_DEGREE,
 )
 from joanie.core.factories import (
     ContractDefinitionFactory,
@@ -455,12 +456,20 @@ class DebugDegreeTemplateView(DebugCertificateTemplateView):
     issuer_document = DEGREE
 
 
-class DebugUnicampDegreeTemplateView(DebugCertificateTemplateView):
+class DebugMicrocredentialDegreeUnicampTemplateView(DebugCertificateTemplateView):
     """
-    Debug view to check the layout of "degree" template.
+    Debug view to check the layout of "micro credential degree unicamp" template.
     """
 
-    issuer_document = UNICAMP_DEGREE
+    issuer_document = MICROCREDENTIAL_DEGREE_UNICAMP
+
+
+class DebugMicrocredentialDegreeDefaultTemplateView(DebugCertificateTemplateView):
+    """
+    Debug view to check the layout of "micro credential degree default" template.
+    """
+
+    issuer_document = MICROCREDENTIAL_DEGREE_DEFAULT
 
 
 class DebugContractUnicampTemplateView(DebugPdfTemplateView):
