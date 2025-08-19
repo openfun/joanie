@@ -2,6 +2,7 @@
 
 from io import BytesIO
 
+from django.template.exceptions import TemplateDoesNotExist
 from django.test import TestCase
 
 from parler.utils.context import switch_language
@@ -186,7 +187,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         )
         course = factories.CourseFactory(organizations=[organization])
         certificate_definition = factories.CertificateDefinitionFactory(
-            template=enums.UNICAMP_DEGREE
+            template=enums.MICROCREDENTIAL_DEGREE_UNICAMP
         )
         skill1 = factories.SkillFactory(title="Skill 1")
         skill1.translations.create(language_code="fr-fr", title="Compétence 1")
@@ -309,7 +310,7 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         )
         course = factories.CourseFactory(organizations=[organization])
         certificate_definition = factories.CertificateDefinitionFactory(
-            template=enums.UNICAMP_DEGREE
+            template=enums.MICROCREDENTIAL_DEGREE_UNICAMP
         )
 
         product = factories.ProductFactory(
@@ -359,3 +360,78 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             )
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(document_text, r"en-us")
+
+    def test_utils_issuers_generate_document_microcredential_degree_default(self):
+        """
+        We should be able to generate a microcredential degree default template. The method
+        `get_document_context` will prepare the data in the appropriate language.
+        """
+        organization = factories.OrganizationFactory(
+            title="University X",
+            representative="Joanie Cunningham",
+            representative_profession="Head of the department",
+        )
+        course = factories.CourseFactory(organizations=[organization])
+        certificate_definition = factories.CertificateDefinitionFactory(
+            template=enums.MICROCREDENTIAL_DEGREE_DEFAULT
+        )
+
+        product = factories.ProductFactory(
+            courses=[course],
+            title="Graded product",
+            certificate_definition=certificate_definition,
+            certification_level=None,
+        )
+
+        owner = factories.UserFactory(first_name="Joanie Cunningham")
+        order = factories.OrderFactory(product=product, owner=owner)
+        certificate = factories.OrderCertificateFactory(order=order)
+
+        document = issuers.generate_document(
+            name=certificate.certificate_definition.template,
+            context=certificate.get_document_context(),
+        )
+
+        document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+
+        self.assertRegex(
+            document_text,
+            (
+                r"Joanie Cunningham.*"
+                r"acquired the skills from the professional training.*"
+                r"Graded product"
+            ),
+        )
+        self.assertRegex(document_text, r"en-us")
+
+        with switch_language(product, "fr-fr"):
+            document = issuers.generate_document(
+                name=certificate.certificate_definition.template,
+                context=certificate.get_document_context(),
+            )
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(document_text, r"fr-fr")
+
+        with switch_language(product, "de-de"):
+            # - Finally, unknown language should use the default language as fallback
+            document = issuers.generate_document(
+                name=certificate.certificate_definition.template,
+                context=certificate.get_document_context(),
+            )
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(document_text, r"en-us")
+
+    def test_utils_issuers_generate_document_template_does_not_exist(self):
+        """If the template html and css don't exist, issuer generate document should fail"""
+        certificate = factories.OrderCertificateFactory(order=factories.OrderFactory())
+
+        with self.assertRaises(TemplateDoesNotExist) as context:
+            issuers.generate_document(
+                name="unicamp-degree",
+                context=certificate.get_document_context(),
+            )
+
+        self.assertTrue(
+            str(context.exception),
+            "issuers/unicamp-degree.html",
+        )

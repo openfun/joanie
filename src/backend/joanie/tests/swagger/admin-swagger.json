@@ -384,10 +384,11 @@
                             "enum": [
                                 "certificate",
                                 "degree",
-                                "unicamp-degree"
+                                "microcredential_degree_default",
+                                "microcredential_degree_unicamp"
                             ]
                         },
-                        "description": "* `certificate` - Certificate\n* `degree` - Degree\n* `unicamp-degree` - Unicamp degree"
+                        "description": "* `certificate` - Certificate\n* `degree` - Degree\n* `microcredential_degree_default` - Microcredential Degree Default\n* `microcredential_degree_unicamp` - Microcredential Degree Unicamp"
                     }
                 ],
                 "tags": [
@@ -10385,10 +10386,11 @@
                 "enum": [
                     "certificate",
                     "degree",
-                    "unicamp-degree"
+                    "microcredential_degree_default",
+                    "microcredential_degree_unicamp"
                 ],
                 "type": "string",
-                "description": "* `certificate` - Certificate\n* `degree` - Degree\n* `unicamp-degree` - Unicamp degree"
+                "description": "* `certificate` - Certificate\n* `degree` - Degree\n* `microcredential_degree_default` - Microcredential Degree Default\n* `microcredential_degree_unicamp` - Microcredential Degree Unicamp"
             },
             "TypeEnum": {
                 "enum": [
