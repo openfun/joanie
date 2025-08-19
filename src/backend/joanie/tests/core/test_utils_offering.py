@@ -244,3 +244,149 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
             f"https://example.com/api/v1.0/courses/{offering_1.course.code}/"
             f"products/{offering_1.product.id}/",
         )
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_utils_offering_synchronize_certificate(self, mock_sync):
+        """
+        It should synchronize the course runs of a certificate product.
+        """
+        mocked_now = datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
+        course = factories.CourseFactory()
+
+        course_run = factories.CourseRunFactory(
+            course=course,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+        )
+
+        certificate_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            courses=[course_run.course],
+            target_courses=[],
+            certificate_definition=factories.CertificateDefinitionFactory(
+                title="Certification",
+                name="Become a certified learner certificate",
+            ),
+            price=100,
+        )
+        offering = certificate_product.offerings.first()
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            start=mocked_now + timedelta(minutes=10),
+        )
+        mock_sync.reset_mock()
+
+        with (
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+            self.record_performance(),
+            self.assertLogs() as logger,
+        ):
+            synchronize_offerings.run()
+
+        self.assertLogsEquals(
+            logger.records,
+            [
+                ("INFO", "Synchronizing 1 offerings"),
+                ("INFO", f"Get serialized course runs for offering {offering.id}"),
+                ("INFO", "  1 course runs serialized"),
+                ("INFO", "Synchronizing 1 course runs for offerings"),
+            ],
+        )
+
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
+        self.assertEqual(
+            synchronized_course_run,
+            {
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
+                "certificate_discount": offering.rules.get("discount"),
+                "certificate_discounted_price": offering.rules.get("discounted_price"),
+                "certificate_offer": enums.COURSE_OFFER_PAID,
+                "certificate_price": certificate_product.price,
+                "course": course_run.course.code,
+                "discount": None,
+                "discounted_price": None,
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "price": None,
+                "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
+            },
+        )
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_utils_offering_synchronize_credential(self, mock_sync):
+        """
+        It should synchronize the course runs of a credential product.
+        """
+        mocked_now = datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
+        course = factories.CourseFactory()
+
+        course_run = factories.CourseRunFactory(
+            course=course,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+
+        credential_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            courses=[course_run.course],
+            target_courses=[course_run.course],
+            certificate_definition=factories.CertificateDefinitionFactory(
+                title="Certification",
+                name="Become a certified learner certificate",
+            ),
+            price=100,
+        )
+        offering = credential_product.offerings.first()
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            start=mocked_now + timedelta(minutes=10),
+        )
+        course_run.save()
+        mock_sync.reset_mock()
+
+        with (
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+            self.record_performance(),
+            self.assertLogs() as logger,
+        ):
+            synchronize_offerings.run()
+
+        self.assertLogsEquals(
+            logger.records,
+            [
+                ("INFO", "Synchronizing 1 offerings"),
+                ("INFO", f"Get serialized course runs for offering {offering.id}"),
+                ("INFO", "  1 course runs serialized"),
+                ("INFO", "Synchronizing 1 course runs for offerings"),
+            ],
+        )
+
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(mock_sync.call_args_list), 1)
+        synchronized_course_run = synchronized_course_runs[0]
+        self.assertEqual(
+            synchronized_course_run,
+            {
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
+                "certificate_discount": None,
+                "certificate_discounted_price": None,
+                "certificate_offer": enums.COURSE_OFFER_PAID,
+                "certificate_price": None,
+                "course": course_run.course.code,
+                "discount": offering.rules.get("discount"),
+                "discounted_price": offering.rules.get("discounted_price"),
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "price": credential_product.price,
+                "resource_link": "https://example.com/api/v1.0/courses/"
+                f"{course_run.course.code}/products/{credential_product.id}/",
+            },
+        )

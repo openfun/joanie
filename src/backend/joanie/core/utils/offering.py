@@ -98,7 +98,12 @@ def synchronize_offerings():
     course_runs = []
     for offering in offerings:
         logger.info("Get serialized course runs for offering %s", offering.id)
-        synchronized_course_runs = get_serialized_course_runs(offering)
+        visibility = None
+        if offering.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+            visibility = enums.COURSE_AND_SEARCH
+        synchronized_course_runs = get_serialized_course_runs(
+            offering, visibility=visibility
+        )
         if synchronized_course_runs:
             logger.info(
                 "  %s course runs serialized",
