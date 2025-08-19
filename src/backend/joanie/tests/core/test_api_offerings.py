@@ -3,13 +3,14 @@
 
 import random
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest import mock
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.test import override_settings
+from django.utils import timezone
 
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
@@ -1093,6 +1094,61 @@ class OfferingApiTest(BaseAPITestCase):
                 "discount_end": None,
                 "nb_available_seats": offering_rule_2.available_seats,
                 "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_api_offering_read_offering_rules_end_passed(self):
+        """
+        Offering rules with an end date that has passed should be ignored.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(product__price=100)
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
+
+        now = timezone.now()
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=True,
+            end=now - timedelta(hours=1),
+            discount=factories.DiscountFactory(amount=30),
+            description="expired 1 hour ago",
+        )
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=True,
+            end=now - timedelta(minutes=1),
+            discount=factories.DiscountFactory(amount=20),
+            description="expired 1 minute ago",
+        )
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=True,
+            end=now + timedelta(minutes=1),
+            discount=factories.DiscountFactory(amount=10),
+            description="will expire in 1 minute",
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": 90,
+                "discount_amount": offering_rule.discount.amount,
+                "discount_rate": offering_rule.discount.rate,
+                "description": offering_rule.description,
+                "discount_start": None,
+                "discount_end": offering_rule.end.isoformat().replace("+00:00", "Z"),
+                "nb_available_seats": None,
+                "has_seat_limit": False,
                 "has_seats_left": True,
             },
         )
