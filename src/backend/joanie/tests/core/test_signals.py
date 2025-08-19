@@ -224,7 +224,9 @@ class SignalsTestCase(TestCase):
         course_run.save()
 
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
         self.assertEqual(synchronized_course_run["certificate_price"], product.price)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -257,7 +259,9 @@ class SignalsTestCase(TestCase):
         course_run.save()
 
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
         self.assertEqual(synchronized_course_run["certificate_price"], product.price)
         self.assertEqual(
             synchronized_course_run["certificate_discounted_price"],
@@ -880,7 +884,9 @@ class SignalsTestCase(TestCase):
         )
 
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
         self.assertEqual(synchronized_course_run["price"], D(100.00))
         self.assertEqual(synchronized_course_run["discounted_price"], D(90.00))
         self.assertEqual(synchronized_course_run["discount"], "-10%")
@@ -917,7 +923,9 @@ class SignalsTestCase(TestCase):
         )
 
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
         self.assertEqual(synchronized_course_run["price"], D(100.00))
         self.assertEqual(synchronized_course_run["discounted_price"], D(90.00))
         self.assertEqual(synchronized_course_run["discount"], "-10%")
@@ -952,7 +960,7 @@ class SignalsTestCase(TestCase):
         """
         Product synchronization should be triggered when an offering rule is created.
         """
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(is_listed=True)
         product = factories.ProductFactory(
             courses=[course_run.course],
             price="100.00",
@@ -968,7 +976,9 @@ class SignalsTestCase(TestCase):
         )
 
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
         self.assertEqual(synchronized_course_run["certificate_price"], D(100.00))
         self.assertEqual(
             synchronized_course_run["certificate_discounted_price"], D(90.00)
@@ -978,7 +988,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": enums.HIDDEN,
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
                 "certificate_discount": offering.rules.get("discount"),
                 "certificate_discounted_price": offering.rules.get("discounted_price"),
                 "certificate_offer": enums.COURSE_OFFER_PAID,
@@ -1001,9 +1011,10 @@ class SignalsTestCase(TestCase):
         """
         Product synchronization should be triggered when an offering rule is deleted.
         """
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(is_listed=False)
         product = factories.ProductFactory(
             courses=[course_run.course],
+            target_courses=[course_run.course],
             price="100.00",
             type=enums.PRODUCT_TYPE_CREDENTIAL,
         )
@@ -1018,7 +1029,9 @@ class SignalsTestCase(TestCase):
         offering_rule.delete()
 
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
 
         self.assertEqual(
             synchronized_course_run,
@@ -1026,7 +1039,7 @@ class SignalsTestCase(TestCase):
                 "catalog_visibility": enums.COURSE_AND_SEARCH,
                 "certificate_discount": None,
                 "certificate_discounted_price": None,
-                "certificate_offer": None,
+                "certificate_offer": enums.COURSE_OFFER_PAID,
                 "certificate_price": None,
                 "course": course_run.course.code,
                 "discount": offering.rules.get("discount"),
@@ -1050,9 +1063,10 @@ class SignalsTestCase(TestCase):
         Product synchronization should be triggered when an offering rule is deleted
         for a credential product with is_graded set to True.
         """
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(is_listed=False)
         product = factories.ProductFactory(
             courses=[course_run.course],
+            target_courses=[course_run.course],
             price="100.00",
             type=enums.PRODUCT_TYPE_CREDENTIAL,
         )
@@ -1075,7 +1089,9 @@ class SignalsTestCase(TestCase):
         offering_rule.delete()
 
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
         self.has_credential_resource_link(synchronized_course_run)
         self.assertEqual(
             synchronized_course_run,
@@ -1104,9 +1120,10 @@ class SignalsTestCase(TestCase):
         """
         Product synchronization should be triggered when an offering rule is deleted.
         """
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(is_listed=True)
         product = factories.ProductFactory(
             courses=[course_run.course],
+            target_courses=[],
             price="100.00",
             type=enums.PRODUCT_TYPE_CERTIFICATE,
         )
@@ -1122,12 +1139,14 @@ class SignalsTestCase(TestCase):
         offering_rule.delete()
 
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        synchronized_course_run = synchronized_course_runs[0]
         self.has_certificate_resource_link(synchronized_course_run)
         self.assertEqual(
             synchronized_course_run,
             {
-                "catalog_visibility": enums.HIDDEN,
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
                 "certificate_discount": offering.rules.get("discount"),
                 "certificate_discounted_price": offering.rules.get("discounted_price"),
                 "certificate_offer": enums.COURSE_OFFER_PAID,
@@ -1423,6 +1442,9 @@ class SignalsTestCase(TestCase):
         self.assertCountEqual(
             synchronized_course_runs,
             [course_run.get_serialized()],
+        )
+        self.assertEqual(
+            synchronized_course_runs[0]["catalog_visibility"], enums.HIDDEN
         )
 
         # 2- a second time when the course run is attached to the product/target course offering
