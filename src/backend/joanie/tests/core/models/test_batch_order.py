@@ -380,13 +380,13 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertEqual(
             billing_address,
             CompanyBillingAddress(
-                address=batch_order.address,
-                postcode=batch_order.postcode,
-                city=batch_order.city,
-                country=batch_order.country,
-                first_name=batch_order.owner.first_name,
+                address=batch_order.billing_address["address"],
+                postcode=batch_order.billing_address["postcode"],
+                city=batch_order.billing_address["city"],
+                country=batch_order.billing_address["country"],
+                first_name=batch_order.billing_address["contact_name"],
                 language=batch_order.owner.language,
-                last_name=batch_order.owner.last_name,
+                last_name="",
             ),
         )
 
