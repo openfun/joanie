@@ -2059,6 +2059,16 @@ class BatchOrder(BaseModel):
         help_text=_("company identification number like SIRET in France"),
         max_length=255,
     )
+    # Company's information
+    vat_registration = models.CharField(
+        verbose_name=_("Tax registration number"),
+        help_text=_(
+            "company's vat identification number like Numero de TVA intracommunautaire in France"
+        ),
+        max_length=255,
+        blank=True,
+        null=True,
+    )
     company_name = models.CharField(
         verbose_name=_("company name"),
         help_text=_("company name"),
@@ -2074,6 +2084,40 @@ class BatchOrder(BaseModel):
         verbose_name=_("city"), help_text=_("company city"), max_length=255
     )
     country = CountryField(verbose_name=_("company country"))
+    # Billing
+    billing_address = models.JSONField(
+        verbose_name=_("billing address of the company"),
+        help_text=_("billing address if different from company's address"),
+        editable=False,
+        encoder=DjangoJSONEncoder,
+        default=dict,
+    )
+    # Administrative contact for follow up
+    administrative_firstname = models.CharField(
+        verbose_name=_("Administrative firstname"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    administrative_lastname = models.CharField(
+        verbose_name=_("Administrative lastname"), max_length=100, blank=True, null=True
+    )
+    administrative_profession = models.CharField(
+        verbose_name=_("Administrative profession representative"),
+        help_text=_("administrative profession representative"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    administrative_email = models.CharField(
+        verbose_name=_("Administrative email"), max_length=100, blank=True, null=True
+    )
+    administrative_telephone = models.CharField(
+        verbose_name=_("Administrative phone number"),
+        max_length=40,
+        blank=True,
+        null=True,
+    )
     nb_seats = models.PositiveSmallIntegerField(
         verbose_name=_("Number of seats"),
         help_text=_("The number of seats to reserve"),
@@ -2086,6 +2130,23 @@ class BatchOrder(BaseModel):
         editable=True,
         encoder=DjangoJSONEncoder,
         default=list,
+    )
+    funding_entity = models.CharField(
+        verbose_name=_("funding entity name"),
+        help_text=_("funding entity's name that helps financially the payment"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    funding_amount = models.DecimalField(
+        _("funding amount"),
+        editable=False,
+        help_text=_("funding amount of the batch order from the funding entity"),
+        decimal_places=2,
+        max_digits=9,
+        default=0.00,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
     )
     total = models.DecimalField(
         _("total"),
