@@ -2178,9 +2178,21 @@ class BatchOrder(BaseModel):
     # pylint:disable=no-member
     def clean(self):
         """
-        Ensure that the number of reserved seats (`nb_seats`) matches the number of trainees
-        in the `trainees` list when saving a BatchOrder instance.
+        If no billing address was given on creation, it means that the billing address does
+        not differenciates from the buyer's company address.
         """
+        if not self.billing_address:
+            self.billing_address = {
+                "company_name": self.company_name,
+                "identification_number": self.identification_number,
+                "address": self.address,
+                "city": self.city,
+                "postcode": self.postcode,
+                "country": self.country.code,
+                "contact_name": f"{self.administrative_firstname} {self.administrative_lastname}",
+                "contact_email": self.administrative_email,
+            }
+
         if len(self.trainees) != self.nb_seats:
             raise ValidationError(
                 _("The number of trainees must match the number of seats.")
@@ -2459,15 +2471,28 @@ class BatchOrder(BaseModel):
         """
         Create a billing address for the batch order
         """
-        return CompanyBillingAddress(
-            address=self.address,
-            postcode=self.postcode,
-            city=self.city,
-            country=self.country,
-            language=self.owner.language,
-            first_name=self.owner.first_name,
-            last_name="",
-        )
+        if self.billing_address:
+            data = {
+                "address": self.billing_address["address"],
+                "postcode": self.billing_address["postcode"],
+                "city": self.billing_address["city"],
+                "country": self.billing_address["country"],
+                "language": self.owner.language,
+                "first_name": self.billing_address["contact_name"],
+                "last_name": "",
+            }
+        else:
+            data = {
+                "address": self.address,
+                "postcode": self.postcode,
+                "city": self.city,
+                "country": self.country.code,
+                "language": self.owner.language,
+                "first_name": f"{self.administrative_firstname} {self.administrative_lastname}",
+                "last_name": "",
+            }
+
+        return CompanyBillingAddress(**data)
 
     def create_main_invoice(self):
         """
