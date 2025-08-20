@@ -4,12 +4,13 @@ Test suite for accounts models for users and organizations.
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from joanie.core import factories, models
 
 
 # pylint: disable=too-many-public-methods
+@override_settings(LANGUAGE_CODE="en-us")
 class AddressModelTestCase(TestCase):
     """Test suite for Address model when related to a user, and then, to an organization."""
 

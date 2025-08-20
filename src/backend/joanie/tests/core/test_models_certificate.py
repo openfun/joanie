@@ -8,6 +8,7 @@ from joanie.core.models import Certificate, DocumentImage
 from joanie.tests.base import LoggingTestCase
 
 
+@override_settings(LANGUAGE_CODE="en-us")
 class CertificateModelTestCase(LoggingTestCase):
     """Certificate model test case."""
 
