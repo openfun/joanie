@@ -370,3 +370,33 @@ help:
 	@echo "Please use 'make $(BOLD)target$(RESET)' where $(BOLD)target$(RESET) is one of:"
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-30s$(RESET) %s\n", $$1, $$2}'
 .PHONY: help
+
+lint-front: ## run all front-end "linters"
+lint-front: \
+  lint-front-eslint \
+  lint-front-prettier
+.PHONY: lint-front
+
+lint-front-prettier: ## run prettier over js/jsx/json/ts/tsx files -- beware! overwrites files
+	@$(ADMIN_YARN) prettier-write
+.PHONY: lint-front-prettier
+
+lint-front-eslint: ## lint TypeScript sources
+	@$(ADMIN_YARN) lint
+.PHONY: lint-front-eslint
+
+test-front: ## run front-end tests, or specific test like `make test-front js/components/CourseRunEnrollment`
+	@args="$(filter-out $@,$(MAKECMDGOALS))" && \
+	$(ADMIN_YARN) test $${args:-${1}}
+.PHONY: test-front
+
+test-e2e-front: ## run front-end tests, or specific test like `make test-e2e-front js/components/CourseRunEnrollment`
+	npx playwright install --with-deps chromium
+	NEXT_PUBLIC_API_SOURCE=test $(ADMIN_YARN) build
+	@args="$(filter-out $@,$(MAKECMDGOALS))" && \
+	$(ADMIN_YARN) test:e2e $${args:-${1}}
+.PHONY: test-front
+
+install-front: ## install front-end dependencies
+	@$(ADMIN_YARN) install
+.PHONY: install-front
