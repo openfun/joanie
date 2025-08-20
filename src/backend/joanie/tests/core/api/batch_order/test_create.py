@@ -46,6 +46,20 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "janedoe@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -81,6 +95,12 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+            "vat_registration": "987654321",
         }
 
         response = self.client.post(
@@ -102,50 +122,10 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             },
         )
 
-    def test_api_batch_order_create_authenticated_with_invalid_organization_id(self):
-        """
-        Authenticated user should not be able to create a batch order with an invalid
-        organization id.
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            product__quote_definition=factories.QuoteDefinitionFactory(),
-            product__price=10,
-        )
-
-        data = {
-            "offering_id": offering.id,
-            "nb_seats": 2,
-            "company_name": "Acme Org",
-            "identification_number": "123",
-            "address": "Street of awesomeness",
-            "city": "Paradise",
-            "postcode": "2900",
-            "country": "FR",
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
-            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-            "organization_id": "invalid_id",
-        }
-
-        response = self.client.post(
-            "/api/v1.0/batch-orders/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-            content_type="application/json",
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
-
     def test_api_batch_order_create_authenticated(self):
         """
         Authenticated user should be able to create a batch order with the required
         data in the payload. The user who request is the owner of the batch order.
-        The batch order contract and quote should be created.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -164,12 +144,22 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             "city": "Paradise",
             "postcode": "2900",
             "country": "FR",
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-            "organization_id": str(offering.organizations.first().id),
+            "organization_id": offering.organizations.first().id,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "jane@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -184,15 +174,69 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         batch_order = models.BatchOrder.objects.get(owner=user)
 
         self.assertEqual(batch_order.owner, user)
-        self.assertEqual(batch_order.organization, offering.organizations.first())
         self.assertEqual(batch_order.offering, offering)
-        self.assertEqual(batch_order.nb_seats, 2)
+        self.assertEqual(batch_order.nb_seats, 3)
         self.assertEqual(batch_order.trainees, data["trainees"])
         self.assertEqual(batch_order.company_name, data["company_name"])
         self.assertIsNotNone(batch_order.organization)
         self.assertEqual(batch_order.total, Decimal("0.00"))
-        self.assertIsNotNone(batch_order.contract)
-        self.assertIsNotNone(batch_order.quote)
+
+    def test_api_batch_order_create_authenticated_without_billing_address(self):
+        """
+        Authenticated user should be able to create a batch order. When they don't pass a
+        specific billing address into the payload, it should use the company's address as
+        the billing address.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+
+        data = {
+            "offering_id": offering.id,
+            "nb_seats": 2,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "organization_id": offering.organizations.first().id,
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+        }
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        batch_order = models.BatchOrder.objects.get()
+
+        self.assertDictEqual(
+            batch_order.billing_address,
+            {
+                "company_name": batch_order.company_name,
+                "identification_number": batch_order.identification_number,
+                "address": batch_order.address,
+                "city": batch_order.city,
+                "postcode": batch_order.postcode,
+                "country": batch_order.country.code,
+                "contact_email": batch_order.administrative_email,
+                "contact_name": (
+                    f"{batch_order.administrative_firstname} {batch_order.administrative_lastname}"
+                ),
+            },
+        )
 
     def test_api_batch_order_create_authenticated_fails_offering_rule_no_more_seats_available(
         self,
@@ -227,6 +271,20 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "jane@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -338,6 +396,20 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "John", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "janedoe@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
