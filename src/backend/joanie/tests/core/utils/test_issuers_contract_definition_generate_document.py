@@ -2,9 +2,10 @@
 
 from datetime import datetime, timedelta
 from io import BytesIO
+from zoneinfo import ZoneInfo
 
 from django.contrib.sites.models import Site
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 
@@ -290,3 +291,76 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         self.assertIn("[SignatureField#1]", document_text)
         self.assertIn("University representative's signature", document_text)
         self.assertIn("[SignatureField#2]", document_text)
+
+    def test_issuers_contract_definition_generate_document_course_start_end_utc_aware(
+        self,
+    ):
+        """
+        When generating the course context for the contract, `course_start` and `course_end`
+        should reflect the timezone set in Django configuration. Previously, those values were
+        timezone aware UTC but did not apply the timezone in the configuration. We want the
+        context to be aware of the timezone since the document is generated on server side
+        and is not aware of the requesting user timezone.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.OrganizationAddressFactory(organization=organization)
+        definition = factories.ContractDefinitionFactory()
+        run = factories.CourseRunFactory(
+            start=datetime(2025, 6, 20, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 7, 14, tzinfo=ZoneInfo("UTC")),
+            enrollment_start=datetime(2025, 6, 19, tzinfo=ZoneInfo("UTC")),
+            enrollment_end=datetime(2025, 7, 30, tzinfo=ZoneInfo("UTC")),
+        )
+        product = factories.ProductFactory(
+            contract_definition=definition,
+            target_courses=[run.course],
+        )
+        course = factories.CourseFactory(code="UX-00001", effort=timedelta(hours=404))
+        offering = factories.OfferingFactory(
+            product=product, course=course, organizations=[organization]
+        )
+        order = factories.OrderFactory(
+            owner=user,
+            product=offering.product,
+            course=offering.course,
+            organization=organization,
+            state=enums.ORDER_STATE_TO_SIGN,
+            main_invoice=InvoiceFactory(
+                recipient_address=factories.UserAddressFactory(
+                    owner=user,
+                    address="1 Rue de l'Apprenant",
+                    postcode="58000",
+                    city="Nevers",
+                    country="FR",
+                )
+            ),
+        )
+
+        with override_settings(TIME_ZONE="Europe/Paris"):
+            context = contract_definition_utility.generate_document_context(
+                contract_definition=definition, user=user, order=order
+            )
+            self.assertIn("+02:00", context["course"]["start"])
+            self.assertIn("+02:00", context["course"]["end"])
+
+        with override_settings(TIME_ZONE="America/Montreal"):
+            context = contract_definition_utility.generate_document_context(
+                contract_definition=definition, user=user, order=order
+            )
+            self.assertIn("-04:00", context["course"]["start"])
+            self.assertIn("-04:00", context["course"]["end"])
+
+        with override_settings(TIME_ZONE="Asia/Tokyo"):
+            context = contract_definition_utility.generate_document_context(
+                contract_definition=definition, user=user, order=order
+            )
+            self.assertIn("+09:00", context["course"]["start"])
+            self.assertIn("+09:00", context["course"]["end"])
+
+        with override_settings(TIME_ZONE="UTC"):
+            context = contract_definition_utility.generate_document_context(
+                contract_definition=definition, user=user, order=order
+            )
+            self.assertIn("+00:00", context["course"]["start"])
+            self.assertIn("+00:00", context["course"]["end"])

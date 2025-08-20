@@ -51,6 +51,8 @@ and this project adheres to
 
 ### Fixed
 
+- Course `start` and `end` are timezone aware from configuration
+  TIME_ZONE when generating the PDF contract definition
 - Invalidate course product relation cache on order group update
 - Compute offer rule properties instead of returning the first one
 - Offering rule form date time picker and discount
