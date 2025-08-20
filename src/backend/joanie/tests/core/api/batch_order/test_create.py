@@ -46,6 +46,20 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "janedoe@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -81,6 +95,12 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+            "vat_registration": "987654321",
         }
 
         response = self.client.post(
@@ -170,6 +190,23 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
             "organization_id": str(offering.organizations.first().id),
+            "billing_address": {
+                "company_name": "Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_name": "Jane Doe",
+                "contact_email": "janedoe@example.org",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+            "vat_registration": "987654321",
+            "funding_entity": "Acme Finance Corp",
+            "funding_amount": "100.00",
         }
 
         response = self.client.post(
@@ -227,6 +264,20 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "jane@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -338,6 +389,20 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 {"first_name": "John", "last_name": "Doe"},
             ],
             "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "janedoe@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
