@@ -842,12 +842,14 @@ class CourseProductRelation(BaseModel):
         """
         offering_rule_found = None
         offering_rule_is_blocking = False
-        for offering_rule in self.offering_rules.all():
-            if offering_rule.is_enabled:
-                offering_rule_is_blocking = (
-                    not offering_rule.is_assignable and not offering_rule.discount
-                )
-                offering_rule_found = offering_rule
+        for offering_rule in self.offering_rules.filter(is_active=True):
+            if not offering_rule.is_enabled:
+                continue
+            no_seats = offering_rule.available_seats == 0
+            if no_seats and offering_rule.discount:
+                continue
+            offering_rule_is_blocking = no_seats and not offering_rule.discount
+            offering_rule_found = offering_rule
 
         discounted_price = None
         discount_amount = None

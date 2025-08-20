@@ -1052,10 +1052,64 @@ class OfferingApiTest(BaseAPITestCase):
             },
         )
 
-    def test_api_offering_read_offering_rules_no_seats_left(self):
+    def test_api_offering_read_offering_rules_no_seats_left_next_rule(self):
         """
         Authenticated user should only have assignable offer rules when on the course product
         relation it has 2 offers rules but one of them has no seat left.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(product__price=100)
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
+
+        offering_rule_1 = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=True,
+            nb_seats=1,
+            description="1 seat left",
+            discount=factories.DiscountFactory(amount=10),
+        )
+        offering_rule_2 = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=True,
+            nb_seats=3,
+            description="3 seats left",
+            discount=factories.DiscountFactory(amount=30),
+        )
+        factories.OrderFactory(
+            course=offering.course,
+            product=offering.product,
+            offering_rules=[offering_rule_1],
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": 70,
+                "discount_amount": 30,
+                "discount_rate": None,
+                "description": "3 seats left",
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": offering_rule_2.available_seats,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_api_offering_read_offering_rules_no_seats_left_regular_price(self):
+        """
+        Authenticated user should only have regular price when on the course product
+        it has 1 offer with no seat left.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -1063,10 +1117,11 @@ class OfferingApiTest(BaseAPITestCase):
         factories.UserCourseAccessFactory(user=user, course=offering.course)
 
         offering_rule_1 = factories.OfferingRuleFactory(
-            course_product_relation=offering, is_active=True, nb_seats=1
-        )
-        offering_rule_2 = factories.OfferingRuleFactory(
-            course_product_relation=offering, is_active=True, nb_seats=3
+            course_product_relation=offering,
+            is_active=True,
+            nb_seats=1,
+            description="1 seat left",
+            discount=factories.DiscountFactory(amount=10),
         )
         factories.OrderFactory(
             course=offering.course,
@@ -1092,8 +1147,8 @@ class OfferingApiTest(BaseAPITestCase):
                 "description": None,
                 "discount_start": None,
                 "discount_end": None,
-                "nb_available_seats": offering_rule_2.available_seats,
-                "has_seat_limit": True,
+                "nb_available_seats": None,
+                "has_seat_limit": False,
                 "has_seats_left": True,
             },
         )
@@ -1147,6 +1202,69 @@ class OfferingApiTest(BaseAPITestCase):
                 "description": offering_rule.description,
                 "discount_start": None,
                 "discount_end": offering_rule.end.isoformat().replace("+00:00", "Z"),
+                "nb_available_seats": None,
+                "has_seat_limit": False,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_api_offering_read_offering_rules_mixed(self):
+        """
+        Offering rules with mixed states should return the expected values.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(product__price=100)
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
+
+        now = timezone.now()
+        offering_rule_1 = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=True,
+            description="A discount without seats left",
+            nb_seats=1,
+            discount=factories.DiscountFactory(amount=50),
+        )
+        factories.OrderFactory(
+            course=offering.course,
+            product=offering.product,
+            offering_rules=[offering_rule_1],
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+        )
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=False,
+            description="An inactive discount",
+            start=now - timedelta(days=1),
+            end=now + timedelta(days=1),
+            discount=factories.DiscountFactory(rate=0.1),
+        )
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=True,
+            description="An expired discount with seats left",
+            end=now - timedelta(minutes=1),
+            discount=factories.DiscountFactory(rate=0.5),
+            nb_seats=1,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
                 "nb_available_seats": None,
                 "has_seat_limit": False,
                 "has_seats_left": True,
