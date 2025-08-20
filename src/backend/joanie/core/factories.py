@@ -1325,6 +1325,24 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
         self.save()
 
+    @factory.post_generation
+    # pylint: disable=method-hidden, unused-argument
+    def billing_address(self, create, extracted, **kwargs):
+        """
+        Add the billing address for the batch order. We assume that use the same one as their
+        company's address.
+        """
+        self.billing_address = {
+            "company_name": self.company_name,
+            "identification_number": self.identification_number,
+            "address": self.address,
+            "postcode": self.postcode,
+            "country": self.country.code,  # pylint: disable=no-member
+            "city": self.city,
+            "contact_email": "janedoe@example.org",
+            "contact_name": "Jane Doe",
+        }
+
 
 class QuoteFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """A factory to create a quote"""

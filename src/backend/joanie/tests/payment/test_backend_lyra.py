@@ -1956,7 +1956,7 @@ class LyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
                                 "address": billing_address.address,
                                 "zipCode": billing_address.postcode,
                                 "city": billing_address.city,
-                                "country": billing_address.country.code,
+                                "country": billing_address.country,
                                 "language": batch_order.owner.language,
                             },
                             "shippingDetails": {
