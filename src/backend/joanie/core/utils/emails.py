@@ -34,7 +34,7 @@ def prepare_context_data(
         "email": order.owner.email,
         "product_title": product_title,
         "installment_amount": Money(installment_amount),
-        "product_price": Money(order.product.price),
+        "product_price": Money(order.total),
         "credit_card_last_numbers": credit_card_last_numbers,
         "order_payment_schedule": order.payment_schedule,
         "dashboard_order_link": (

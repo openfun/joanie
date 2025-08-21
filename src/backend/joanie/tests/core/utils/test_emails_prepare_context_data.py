@@ -13,7 +13,14 @@ from joanie.core.enums import (
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_REFUSED,
 )
-from joanie.core.factories import OrderGeneratorFactory, ProductFactory, UserFactory
+from joanie.core.factories import (
+    DiscountFactory,
+    OfferingFactory,
+    OfferingRuleFactory,
+    OrderGeneratorFactory,
+    ProductFactory,
+    UserFactory,
+)
 from joanie.core.utils.emails import (
     prepare_context_data,
     prepare_context_for_upcoming_installment,
@@ -206,5 +213,64 @@ class UtilsEmailPrepareContextDataInstallmentPaymentTestCase(TestCase):
                 "date_next_installment_to_pay": date(2024, 3, 17),
                 "targeted_installment_index": 2,
                 "days_until_debit": 2,
+            },
+        )
+
+    def test_utils_emails_prepare_context_should_show_total_with_discounted_price(self):
+        """
+        When the order was bought with a discount from an offering rule, the total should
+        show the discounted price instead of the product's price.
+        """
+        offering = OfferingFactory(
+            product=ProductFactory(price=Decimal("1000.00"), title="Product 1")
+        )
+        offering_rule = OfferingRuleFactory(
+            course_product_relation=offering,
+            discount=DiscountFactory(rate=0.9),
+        )
+        order = OrderGeneratorFactory(
+            product=offering.product,
+            state=ORDER_STATE_PENDING_PAYMENT,
+            owner=UserFactory(
+                first_name="John",
+                last_name="Doe",
+                language="en-us",
+                email="johndoe@fun-test.fr",
+            ),
+            offering_rules=[offering_rule],
+        )
+        order.payment_schedule[0]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[1]["state"] = PAYMENT_STATE_PAID
+        order.payment_schedule[2]["due_date"] = date(2025, 3, 17)
+        order.save()
+
+        context_data = prepare_context_data(
+            order,
+            order.payment_schedule[2]["amount"],
+            order.credit_card.last_numbers,
+            offering.product.title,
+            payment_refused=False,
+        )
+
+        self.assertDictEqual(
+            context_data,
+            {
+                "fullname": "John Doe",
+                "email": "johndoe@fun-test.fr",
+                "product_title": "Product 1",
+                "installment_amount": Money("30.00"),
+                "product_price": Money("100.00"),
+                "credit_card_last_numbers": order.credit_card.last_numbers,
+                "order_payment_schedule": order.payment_schedule,
+                "dashboard_order_link": (
+                    f"http://localhost:8070/dashboard/courses/orders/{order.id}/"
+                ),
+                "site": {
+                    "name": "Test Catalog",
+                    "url": "https://richie.education",
+                },
+                "remaining_balance_to_pay": Money("50.00"),
+                "date_next_installment_to_pay": date(2025, 3, 17),
+                "targeted_installment_index": 1,
             },
         )

@@ -51,6 +51,7 @@ and this project adheres to
 
 ### Fixed
 
+- Render discounted price in installment emails when one is present
 - Invalidate course product relation cache on order group update
 - Compute offer rule properties instead of returning the first one
 - Offering rule form date time picker and discount
