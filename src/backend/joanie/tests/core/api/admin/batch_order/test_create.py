@@ -27,6 +27,20 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             "country": "FR",
             "trainees": factories.TraineeFactory.create_batch(nb_seats),
             "payment_method": payment_method,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_name": "Jane Doe",
+                "contact_email": "janedoe@example.org",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
     def test_api_admin_batch_orders_create_anonymous(self):
@@ -355,3 +369,61 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.assertEqual(batch_order.total, Decimal("0.00"))
         self.assertIsNotNone(batch_order.contract)
         self.assertIsNotNone(batch_order.quote)
+
+    def test_api_admin_batch_order_create_authenticated_without_billing_address(self):
+        """
+        Authenticated admin user should be able to create a batch order. When they don't pass a
+        specific billing address into the payload, it should use the company's address as
+        the billing address.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering = factories.OfferingFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+
+        data = {
+            "owner": str(factories.UserFactory().id),
+            "offering": offering.id,
+            "nb_seats": 2,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "organization_id": offering.organizations.first().id,
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+        }
+
+        response = self.client.post(
+            "/api/v1.0/admin/batch-orders/",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        batch_order = models.BatchOrder.objects.get()
+
+        self.assertDictEqual(
+            batch_order.billing_address,
+            {
+                "company_name": batch_order.company_name,
+                "identification_number": batch_order.identification_number,
+                "address": batch_order.address,
+                "city": batch_order.city,
+                "postcode": batch_order.postcode,
+                "country": batch_order.country.code,
+                "contact_email": batch_order.administrative_email,
+                "contact_name": (
+                    f"{batch_order.administrative_firstname} {batch_order.administrative_lastname}"
+                ),
+            },
+        )
