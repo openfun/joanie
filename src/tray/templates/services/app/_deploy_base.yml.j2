@@ -80,6 +80,8 @@ spec:
               value: "https://{{ joanie_admin_host }}"
             - name: DJANGO_CELERY_DEFAULT_QUEUE
               value: "default-queue-{{ deployment_stamp }}"
+            - name: JOANIE_LOGGING_LEVEL
+              value: "{{ joanie_logging_level }}"
           envFrom:
             - secretRef:
                 name: "{{ joanie_secret_name }}"
