@@ -125,16 +125,16 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             )
 
             # Logger
-            self.assertEqual(mock_info.call_count, 2)
+            self.assertEqual(mock_info.call_count, 4)
             self.assertEqual(
-                mock_info.call_args_list[0][0],
+                mock_info.call_args_list[2][0],
                 (
                     "Synchronization succeeded with %s",
                     "http://richie.education/webhook1",
                 ),
             )
             self.assertEqual(
-                mock_info.call_args_list[1][0],
+                mock_info.call_args_list[3][0],
                 (
                     "Synchronization succeeded with %s",
                     "http://richie.education/webhook2",
@@ -254,9 +254,9 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
 
             # Logger
             self.assertFalse(mock_error.called)
-            self.assertEqual(mock_info.call_count, 1)
+            self.assertEqual(mock_info.call_count, 3)
             self.assertEqual(
-                mock_info.call_args_list[0][0],
+                mock_info.call_args_list[2][0],
                 (
                     "Synchronization succeeded with %s",
                     "http://richie.education/webhook",

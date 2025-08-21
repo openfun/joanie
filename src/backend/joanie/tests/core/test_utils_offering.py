@@ -209,17 +209,17 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
 
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
 
-        self.assertLogsContains(
-            logger,
+        self.assertLogsEquals(
+            logger.records,
             [
-                "Synchronizing 3 offerings",
-                f"Get serialized course runs for offering {offering_3.id}",
-                "  1 course runs serialized",
-                f"Get serialized course runs for offering {offering_2.id}",
-                "  No course runs serialized",
-                f"Get serialized course runs for offering {offering_1.id}",
-                "  3 course runs serialized",
-                "Synchronizing 4 course runs for offerings",
+                ("INFO", "Synchronizing 3 offerings"),
+                ("INFO", f"Get serialized course runs for offering {offering_3.id}"),
+                ("INFO", "  1 course runs serialized"),
+                ("INFO", f"Get serialized course runs for offering {offering_2.id}"),
+                ("INFO", "  No course runs serialized"),
+                ("INFO", f"Get serialized course runs for offering {offering_1.id}"),
+                ("INFO", "  3 course runs serialized"),
+                ("INFO", "Synchronizing 4 course runs for offerings"),
             ],
         )
 
@@ -283,13 +283,13 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
         ):
             synchronize_offerings.run()
 
-        self.assertLogsContains(
-            logger,
+        self.assertLogsEquals(
+            logger.records,
             [
-                "Synchronizing 1 offerings",
-                f"Get serialized course runs for offering {offering.id}",
-                "  1 course runs serialized",
-                "Synchronizing 1 course runs for offerings",
+                ("INFO", "Synchronizing 1 offerings"),
+                ("INFO", f"Get serialized course runs for offering {offering.id}"),
+                ("INFO", "  1 course runs serialized"),
+                ("INFO", "Synchronizing 1 course runs for offerings"),
             ],
         )
 
@@ -356,13 +356,13 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
         ):
             synchronize_offerings.run()
 
-        self.assertLogsContains(
-            logger,
+        self.assertLogsEquals(
+            logger.records,
             [
-                "Synchronizing 1 offerings",
-                f"Get serialized course runs for offering {offering.id}",
-                "  1 course runs serialized",
-                "Synchronizing 1 course runs for offerings",
+                ("INFO", "Synchronizing 1 offerings"),
+                ("INFO", f"Get serialized course runs for offering {offering.id}"),
+                ("INFO", "  1 course runs serialized"),
+                ("INFO", "Synchronizing 1 course runs for offerings"),
             ],
         )
 

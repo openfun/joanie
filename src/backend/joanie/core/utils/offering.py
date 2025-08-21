@@ -109,7 +109,6 @@ def synchronize_offerings():
                 "  %s course runs serialized",
                 len(synchronized_course_runs),
             )
-            logger.info("  %s", synchronized_course_runs)
             course_runs.extend(synchronized_course_runs)
         else:
             logger.info("  No course runs serialized")
