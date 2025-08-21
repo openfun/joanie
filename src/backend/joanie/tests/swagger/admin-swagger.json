@@ -6017,6 +6017,13 @@
                         "description": "company identification number like SIRET in France",
                         "maxLength": 255
                     },
+                    "vat_registration": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Tax registration number",
+                        "description": "company's vat identification number like Numero de TVA intracommunautaire in France",
+                        "maxLength": 255
+                    },
                     "address": {
                         "type": "string",
                         "description": "company address",
@@ -6068,14 +6075,49 @@
                     },
                     "payment_method": {
                         "$ref": "#/components/schemas/PaymentMethodEnum"
+                    },
+                    "administrative_firstname": {
+                        "type": "string"
+                    },
+                    "administrative_lastname": {
+                        "type": "string"
+                    },
+                    "administrative_profession": {
+                        "type": "string"
+                    },
+                    "administrative_email": {
+                        "type": "string"
+                    },
+                    "administrative_telephone": {
+                        "type": "string"
+                    },
+                    "billing_address": {
+                        "$ref": "#/components/schemas/AdminBatchOrderBillingAddress"
+                    },
+                    "funding_entity": {
+                        "type": "string"
+                    },
+                    "funding_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true,
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "address",
+                    "administrative_email",
+                    "administrative_firstname",
+                    "administrative_lastname",
+                    "administrative_profession",
+                    "administrative_telephone",
                     "city",
                     "company_name",
                     "contract_id",
                     "currency",
+                    "funding_amount",
                     "id",
                     "identification_number",
                     "main_invoice_reference",
@@ -6089,6 +6131,85 @@
                     "relation",
                     "total",
                     "vouchers"
+                ]
+            },
+            "AdminBatchOrderBillingAddress": {
+                "type": "object",
+                "description": "Serializer for the billing address of a batch order",
+                "properties": {
+                    "company_name": {
+                        "type": "string"
+                    },
+                    "identification_number": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "postcode": {
+                        "type": "string"
+                    },
+                    "country": {
+                        "type": "string"
+                    },
+                    "contact_email": {
+                        "type": "string"
+                    },
+                    "contact_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "address",
+                    "company_name",
+                    "contact_email",
+                    "contact_name",
+                    "country",
+                    "identification_number",
+                    "postcode"
+                ]
+            },
+            "AdminBatchOrderBillingAddressRequest": {
+                "type": "object",
+                "description": "Serializer for the billing address of a batch order",
+                "properties": {
+                    "company_name": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "identification_number": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "address": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "country": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "contact_email": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "contact_name": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "address",
+                    "company_name",
+                    "contact_email",
+                    "contact_name",
+                    "country",
+                    "identification_number",
+                    "postcode"
                 ]
             },
             "AdminBatchOrderRequest": {
@@ -6116,6 +6237,13 @@
                         "minLength": 1,
                         "title": "Company identification number",
                         "description": "company identification number like SIRET in France",
+                        "maxLength": 255
+                    },
+                    "vat_registration": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Tax registration number",
+                        "description": "company's vat identification number like Numero de TVA intracommunautaire in France",
                         "maxLength": 255
                     },
                     "address": {
@@ -6152,10 +6280,42 @@
                     },
                     "payment_method": {
                         "$ref": "#/components/schemas/PaymentMethodEnum"
+                    },
+                    "administrative_firstname": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "administrative_lastname": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "administrative_profession": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "administrative_email": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "administrative_telephone": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "billing_address": {
+                        "$ref": "#/components/schemas/AdminBatchOrderBillingAddressRequest"
+                    },
+                    "funding_entity": {
+                        "type": "string",
+                        "minLength": 1
                     }
                 },
                 "required": [
                     "address",
+                    "administrative_email",
+                    "administrative_firstname",
+                    "administrative_lastname",
+                    "administrative_profession",
+                    "administrative_telephone",
                     "city",
                     "company_name",
                     "identification_number",
