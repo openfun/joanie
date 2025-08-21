@@ -27,6 +27,20 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             "country": "FR",
             "trainees": factories.TraineeFactory.create_batch(nb_seats),
             "payment_method": payment_method,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_name": "Jane Doe",
+                "contact_email": "janedoe@example.org",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
     def test_api_admin_batch_orders_create_anonymous(self):
