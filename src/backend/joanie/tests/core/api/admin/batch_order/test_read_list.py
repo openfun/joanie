@@ -67,12 +67,29 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "vouchers": [],
                 "offering_rules": [],
                 "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                "billing_address": {
+                    "company_name": batch_order.company_name,
+                    "identification_number": batch_order.identification_number,
+                    "address": batch_order.address,
+                    "postcode": batch_order.postcode,
+                    "country": batch_order.billing_address["country"],
+                    "contact_email": "janedoe@example.org",
+                    "contact_name": "Jane Doe",
+                },
+                "vat_registration": None,
+                "administrative_email": None,
+                "administrative_firstname": None,
+                "administrative_lastname": None,
+                "administrative_telephone": None,
+                "administrative_profession": None,
                 "quote": {
                     "definition_title": batch_order.quote.definition.title,
                     "has_purchase_order": False,
                     "id": str(batch_order.quote.id),
                     "organization_signed_on": None,
                 },
+                "funding_entity": batch_order.funding_entity,
+                "funding_amount": batch_order.funding_amount,
             }
             for batch_order in batch_orders
         ]
