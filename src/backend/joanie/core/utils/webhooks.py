@@ -37,6 +37,8 @@ def synchronize_course_runs(serialized_course_runs):
     json_course_runs = json.dumps(serialized_course_runs, cls=DjangoJSONEncoder).encode(
         "utf-8"
     )
+    logger.info("Synchronizing course runs with webhooks")
+    logger.info(json_course_runs)
 
     for webhook in settings.COURSE_WEB_HOOKS:
         signature = hmac.new(
