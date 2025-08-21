@@ -51,6 +51,7 @@ joanie_django_settings_module: "joanie.settings"
 joanie_django_configuration: "Staging"
 joanie_secret_name: "joanie-{{ joanie_vault_checksum | default('undefined_joanie_vault_checksum') }}"
 joanie_activate_http_basic_auth: false
+joanie_logging_level: "INFO"
 
 # -- joanie celery
 joanie_celery_replicas: 1

@@ -347,6 +347,25 @@ class Base(Configuration):
         environ_prefix=None,
     )
 
+    # Logging
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {"class": "logging.StreamHandler"},
+        },
+        "loggers": {
+            "joanie": {
+                "handlers": ["console"],
+                "level": values.Value("INFO", environ_name="JOANIE_LOGGING_LEVEL"),
+            },
+            "request.summary": {
+                "handlers": ["console"],
+                "level": "WARNING",
+            },
+        },
+    }
+
     # Mail
     EMAIL_BACKEND = values.Value("django.core.mail.backends.smtp.EmailBackend")
     EMAIL_HOST = values.Value(None)
