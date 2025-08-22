@@ -589,7 +589,6 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Batch Order model"""
 
-    form = forms.BatchOrderAdminForm
     # Custom actions
     actions = (
         ACTION_NAME_CANCEL,
@@ -665,7 +664,6 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                     "organization",
                     "voucher",
                     "nb_seats",
-                    "trainees",
                     "total",
                 )
             },
@@ -780,8 +778,6 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     def submit_to_signature(self, request, queryset):
         """
         Custom action to submit to signature the contract of the batch order.
-        When the contract is not yet signed and if the list of trainees has changed,
-        the admin user can call this method again to update the initial contract.
         """
         for batch_order in queryset:
             if not batch_order.is_signable:

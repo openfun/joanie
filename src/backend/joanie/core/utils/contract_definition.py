@@ -232,7 +232,6 @@ def prepare_company_context(batch_order):
         "city": _("<COMPANY_CITY>"),
         "identification_number": _("<COMPANY_IDENTIFICATION_NUMBER>"),
         "number_seats": _("<NUMBER_OF_SEATS_RESERVED>"),
-        "trainees": None,
     }
 
     if batch_order:
@@ -244,13 +243,6 @@ def prepare_company_context(batch_order):
                 "city": batch_order.city,
                 "identification_number": batch_order.identification_number,
                 "number_seats": batch_order.nb_seats,
-                "trainees": [
-                    {
-                        "first_name": trainee["first_name"],
-                        "last_name": trainee["last_name"],
-                    }
-                    for trainee in batch_order.trainees
-                ],
             }
         )
 
