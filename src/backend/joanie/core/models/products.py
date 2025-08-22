@@ -2029,6 +2029,7 @@ class BatchOrder(BaseModel):
         blank=True,
         null=True,
     )
+    # Deprecated `voucher` field
     voucher = models.ForeignKey(
         to="Voucher",
         verbose_name=_("voucher"),
