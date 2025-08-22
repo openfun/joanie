@@ -6047,10 +6047,6 @@
                         "minimum": 1,
                         "description": "The number of seats to reserve"
                     },
-                    "voucher": {
-                        "type": "string",
-                        "description": "Voucher code"
-                    },
                     "vouchers": {
                         "type": "array",
                         "items": {},
@@ -6270,11 +6266,6 @@
                         "type": "integer",
                         "minimum": 1,
                         "description": "The number of seats to reserve"
-                    },
-                    "voucher": {
-                        "type": "string",
-                        "minLength": 1,
-                        "description": "Voucher code"
                     },
                     "payment_method": {
                         "$ref": "#/components/schemas/PaymentMethodEnum"

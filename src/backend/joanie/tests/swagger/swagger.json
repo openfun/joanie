@@ -348,7 +348,7 @@
         "/api/v1.0/batch-orders/": {
             "get": {
                 "operationId": "batch_orders_list",
-                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offering id (offering)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
+                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offering id (offering)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
                 "parameters": [
                     {
                         "name": "page",
@@ -433,7 +433,7 @@
         "/api/v1.0/batch-orders/{id}/": {
             "get": {
                 "operationId": "batch_orders_retrieve",
-                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offering id (offering)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    - exhaustive list of trainees (should match the number of seats)\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
+                "description": "BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.\n\nGET /api/batch-orders/\n    Return list of all orders for a user with pagination\n\nGET /api/batch-orders/:batch_order_id/\n    Return information about a batch order\n\nPOST /api/batch-orders/ with expected data:\n    - offering id (offering)\n    - company required data (name, identification number, address, postcode, city, country)\n    - number of seats\n    Return new batch_order just created\n\nPOST /api/batch-orders/:batch_order_id/submit-for-signature/\n    Return an invitation link to pay the batch order\n\nPOST /api/batch-orders/:batch_order_id/submit-for-payment/\n    Returns the info to pay the batch order",
                 "parameters": [
                     {
                         "in": "path",
@@ -5793,12 +5793,6 @@
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID"
-                    },
-                    "voucher": {
-                        "type": "string",
-                        "minLength": 1,
-                        "description": "Voucher code",
-                        "writeOnly": true
                     },
                     "company_name": {
                         "type": "string",
