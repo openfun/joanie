@@ -749,7 +749,6 @@ class BatchOrderViewSet(
         - offering id (offering)
         - company required data (name, identification number, address, postcode, city, country)
         - number of seats
-        - exhaustive list of trainees (should match the number of seats)
         Return new batch_order just created
 
     POST /api/batch-orders/:batch_order_id/submit-for-signature/
