@@ -662,7 +662,6 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 "fields": (
                     "relation",
                     "organization",
-                    "voucher",
                     "nb_seats",
                     "total",
                 )

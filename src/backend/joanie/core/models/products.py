@@ -2029,14 +2029,6 @@ class BatchOrder(BaseModel):
         blank=True,
         null=True,
     )
-    voucher = models.ForeignKey(
-        to="Voucher",
-        verbose_name=_("voucher"),
-        related_name="batch_orders",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
     contract = models.ForeignKey(
         to=Contract,
         help_text=_("contract of type convention"),

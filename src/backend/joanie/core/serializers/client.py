@@ -1480,12 +1480,6 @@ class BatchOrderSerializer(serializers.ModelSerializer):
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
     )
-    voucher = serializers.SlugRelatedField(
-        queryset=models.Voucher.objects.all(),
-        slug_field="code",
-        required=False,
-        write_only=True,
-    )
     country = CountryField(required=False)
     nb_seats = serializers.IntegerField(
         min_value=1,
@@ -1530,7 +1524,6 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "organization",
             "main_invoice_reference",
             "contract_id",
-            "voucher",
             "company_name",
             "identification_number",
             "vat_registration",
