@@ -1040,6 +1040,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             "enrollment_end": self.enrollment_end.isoformat()
             if self.enrollment_end
             else None,
+            "offer": enums.COURSE_OFFER_PAID if price else enums.COURSE_OFFER_FREE,
             "price": price,
             "discounted_price": discounted_price,
             "discount": discount,
