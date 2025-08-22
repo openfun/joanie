@@ -1749,11 +1749,11 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
     )
-    voucher = serializers.SlugRelatedField(
-        queryset=models.Voucher.objects.all(),
-        slug_field="code",
-        required=False,
-    )
+    # voucher = serializers.SlugRelatedField(
+    #     queryset=models.Voucher.objects.all(),
+    #     slug_field="code",
+    #     required=False,
+    # )
     country = CountryField(required=False)
     nb_seats = serializers.IntegerField(
         min_value=1,
@@ -1801,7 +1801,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "city",
             "country",
             "nb_seats",
-            "voucher",
+            # "voucher",
             "vouchers",
             "offering_rules",
             "quote",
