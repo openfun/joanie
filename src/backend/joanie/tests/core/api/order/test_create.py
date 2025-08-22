@@ -94,16 +94,33 @@ class OrderCreateApiTest(BaseAPITestCase):
         self, mock_sync, _mock_thumbnail
     ):
         """Any authenticated user should be able to create an order for a course."""
-        target_courses = factories.CourseFactory.create_batch(2)
-        product = factories.ProductFactory(target_courses=target_courses, price=0.00)
-        organization = product.offerings.first().organizations.first()
-        course = product.courses.first()
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+        course = course_run.course
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            courses=[course],
+            target_courses=[course],
+            certificate_definition=factories.CertificateDefinitionFactory(
+                title="Certification",
+                name="Become a certified learner certificate",
+            ),
+            price=100,
+        )
+        offering = product.offerings.first()
+        factories.OfferingRuleFactory(
+            course_product_relation=offering,
+        )
+        organization = offering.organizations.first()
 
         data = {
             "course_code": course.code,
             "organization_id": str(organization.id),
             "product_id": str(product.id),
             "has_waived_withdrawal_right": True,
+            "billing_address": BillingAddressDictFactory(),
         }
         token = self.get_user_token("panoramix")
         mock_sync.reset_mock()
@@ -114,8 +131,32 @@ class OrderCreateApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(mock_sync.call_count, 1)
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        # sync has been called
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0][0]
+        self.assertEqual(
+            synchronized_course_runs,
+            {
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
+                "certificate_discount": None,
+                "certificate_discounted_price": None,
+                "certificate_offer": enums.COURSE_OFFER_PAID,
+                "certificate_price": None,
+                "course": offering.course.code,
+                "discount": None,
+                "discounted_price": None,
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_PAID,
+                "price": product.price,
+                "resource_link": f"https://example.com/api/v1.0/courses/{course.code}"
+                f"/products/{product.id}/",
+            },
+        )
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
         order = models.Order.objects.get()
@@ -137,8 +178,11 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "credit_card_id": None,
                 "enrollment": None,
-                "main_invoice_reference": None,
-                "offering_rule_ids": [],
+                "main_invoice_reference": order.main_invoice.reference,
+                "offering_rule_ids": [
+                    str(offering_rule.id)
+                    for offering_rule in order.offering_rules.all()
+                ],
                 "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),
@@ -166,7 +210,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 },
                 "owner": "panoramix",
                 "product_id": str(product.id),
-                "state": enums.ORDER_STATE_COMPLETED,
+                "state": order.state,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -175,8 +219,9 @@ class OrderCreateApiTest(BaseAPITestCase):
                         "code": target_course.code,
                         "course_runs": [
                             {
-                                "id": course_run.id,
+                                "id": str(course_run.id),
                                 "title": course_run.title,
+                                "languages": course_run.languages,
                                 "resource_link": course_run.resource_link,
                                 "state": {
                                     "priority": course_run.state["priority"],
@@ -1962,8 +2007,10 @@ class OrderCreateApiTest(BaseAPITestCase):
                         },
                     )
 
+    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_api_order_create_authenticated_product_enrollment_unicity_when_not_in_inactive_state(
         self,
+        mock_sync,
     ):
         """
         Allow authenticated user to create a new order when a triplet product-enrollment-owner
@@ -1977,12 +2024,15 @@ class OrderCreateApiTest(BaseAPITestCase):
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
                 enrollment = factories.EnrollmentFactory(user=user)
+                course = enrollment.course_run.course
+                course_run = course.course_runs.first()
                 product = factories.ProductFactory(
                     courses=[enrollment.course_run.course],
                     price=10.00,
                     type=enums.PRODUCT_TYPE_CERTIFICATE,
                 )
-                organization = product.offerings.first().organizations.first()
+                offering = product.offerings.first()
+                organization = offering.organizations.first()
                 billing_address = BillingAddressDictFactory()
 
                 factories.OrderFactory(
@@ -1993,6 +2043,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     organization=organization,
                     state=state,
                 )
+                mock_sync.reset_mock()
 
                 data = {
                     "enrollment_id": str(enrollment.id),
@@ -2011,6 +2062,35 @@ class OrderCreateApiTest(BaseAPITestCase):
 
                 if state in enums.ORDER_INACTIVE_STATES:
                     self.assertEqual(response.status_code, HTTPStatus.CREATED)
+                    self.assertEqual(
+                        response.status_code, HTTPStatus.CREATED, response.json()
+                    )
+                    # sync has been called
+                    self.assertEqual(mock_sync.call_count, 1)
+                    synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+                    self.assertEqual(
+                        synchronized_course_run,
+                        {
+                            "catalog_visibility": enums.COURSE_AND_SEARCH,
+                            "certificate_discount": None,
+                            "certificate_discounted_price": None,
+                            "certificate_offer": enums.COURSE_OFFER_PAID,
+                            "certificate_price": product.price,
+                            "course": offering.course.code,
+                            "discount": None,
+                            "discounted_price": None,
+                            "start": synchronized_course_run["start"],
+                            "end": synchronized_course_run["end"],
+                            "enrollment_start": synchronized_course_run[
+                                "enrollment_start"
+                            ],
+                            "enrollment_end": synchronized_course_run["enrollment_end"],
+                            "languages": course_run.languages,
+                            "offer": enums.COURSE_OFFER_FREE,
+                            "price": None,
+                            "resource_link": synchronized_course_run["resource_link"],
+                        },
+                    )
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
                     self.assertEqual(
@@ -2351,6 +2431,78 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "offering_rule": [
                     f"Maximum number of orders reached for product {offering.product.title}"
                 ]
+            },
+        )
+
+    @mock.patch.object(webhooks, "synchronize_course_runs")
+    def test_api_order_create_discount_rate_offering_rule_enabled_last_seat_available(
+        self,
+        mock_sync,
+    ):
+        """
+        Authenticated user creates an order on an offering rule that is enabled but has no more
+        seat available, the order should not be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        course_run = factories.CourseRunFactory()
+        offering = factories.OfferingFactory(course__course_runs=[course_run])
+        product = offering.product
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            is_active=True,
+            nb_seats=2,
+        )
+        factories.OrderFactory(
+            offering_rules=[offering_rule],
+            course=offering.course,
+            product=offering.product,
+            state=random.choice(
+                [enums.ORDER_STATE_COMPLETED, enums.ORDER_STATE_PENDING]
+            ),
+        )
+        mock_sync.reset_mock()
+
+        data = {
+            "course_code": offering.course.code,
+            "organization_id": str(offering.organizations.first().id),
+            "offering_rule_id": str(offering_rule.id),
+            "product_id": str(offering.product.id),
+            "billing_address": BillingAddressDictFactory(),
+            "has_waived_withdrawal_right": True,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        # sync has been called
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0][0]
+        self.assertEqual(
+            synchronized_course_runs,
+            {
+                "catalog_visibility": enums.COURSE_AND_SEARCH,
+                "certificate_discount": None,
+                "certificate_discounted_price": None,
+                "certificate_offer": None,
+                "certificate_price": None,
+                "course": offering.course.code,
+                "discount": None,
+                "discounted_price": None,
+                "start": course_run.start.isoformat(),
+                "end": course_run.end.isoformat(),
+                "enrollment_start": course_run.enrollment_start.isoformat(),
+                "enrollment_end": course_run.enrollment_end.isoformat(),
+                "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_PAID,
+                "price": product.price,
+                "resource_link": "https://example.com/api/v1.0/courses/"
+                f"{offering.course.code}/products/{product.id}/",
             },
         )
 

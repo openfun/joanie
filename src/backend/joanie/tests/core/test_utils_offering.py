@@ -312,6 +312,7 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
                 "enrollment_start": course_run.enrollment_start.isoformat(),
                 "enrollment_end": course_run.enrollment_end.isoformat(),
                 "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_FREE,
                 "price": None,
                 "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
             },
@@ -385,6 +386,7 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
                 "enrollment_start": course_run.enrollment_start.isoformat(),
                 "enrollment_end": course_run.enrollment_end.isoformat(),
                 "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_PAID,
                 "price": credential_product.price,
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{course_run.course.code}/products/{credential_product.id}/",

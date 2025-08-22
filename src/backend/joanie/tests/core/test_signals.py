@@ -949,6 +949,7 @@ class SignalsTestCase(TestCase):
                 "enrollment_start": course_run.enrollment_start.isoformat(),
                 "enrollment_end": course_run.enrollment_end.isoformat(),
                 "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{course_run.course.code}/products/{product.id}/",
@@ -1001,6 +1002,7 @@ class SignalsTestCase(TestCase):
                 "enrollment_start": course_run.enrollment_start.isoformat(),
                 "enrollment_end": course_run.enrollment_end.isoformat(),
                 "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_FREE,
                 "price": None,
                 "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
             },
@@ -1049,6 +1051,7 @@ class SignalsTestCase(TestCase):
                 "enrollment_start": course_run.enrollment_start.isoformat(),
                 "enrollment_end": course_run.enrollment_end.isoformat(),
                 "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{course_run.course.code}/products/{product.id}/",
@@ -1109,6 +1112,7 @@ class SignalsTestCase(TestCase):
                 "enrollment_start": course_run.enrollment_start.isoformat(),
                 "enrollment_end": course_run.enrollment_end.isoformat(),
                 "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{course_run.course.code}/products/{product.id}/",
@@ -1159,6 +1163,7 @@ class SignalsTestCase(TestCase):
                 "enrollment_start": course_run.enrollment_start.isoformat(),
                 "enrollment_end": course_run.enrollment_end.isoformat(),
                 "languages": course_run.languages,
+                "offer": enums.COURSE_OFFER_FREE,
                 "price": None,
                 "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
             },
@@ -1237,6 +1242,7 @@ class SignalsTestCase(TestCase):
                 "enrollment_start": cr1.enrollment_start.isoformat(),
                 "enrollment_end": cr1.enrollment_end.isoformat(),
                 "languages": cr1.languages,
+                "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{cr1.course.code}/products/{product.id}/",
@@ -1258,6 +1264,7 @@ class SignalsTestCase(TestCase):
                 "enrollment_start": cr2.enrollment_start.isoformat(),
                 "enrollment_end": cr2.enrollment_end.isoformat(),
                 "languages": cr2.languages,
+                "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{cr2.course.code}/products/{product.id}/",

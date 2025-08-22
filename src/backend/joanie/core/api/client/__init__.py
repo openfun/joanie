@@ -32,8 +32,9 @@ from joanie.core.exceptions import NoContractToSignError
 from joanie.core.models import CourseProductRelation
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
-from joanie.core.utils import contract_definition, issuers
+from joanie.core.utils import contract_definition, issuers, webhooks
 from joanie.core.utils.discount import calculate_price
+from joanie.core.utils.offering import get_serialized_course_runs
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.core.utils.product import synchronize_product_course_runs
@@ -502,7 +503,14 @@ class OrderViewSet(
             billing_address=request.data.get("billing_address")
         )
 
-        synchronize_product_course_runs(product)
+        visibility = None
+        if offering.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+            visibility = enums.COURSE_AND_SEARCH
+        serialized_course_runs = get_serialized_course_runs(
+            offering, visibility=visibility
+        )
+        if serialized_course_runs:
+            webhooks.synchronize_course_runs(serialized_course_runs)
 
         # Else return the fresh new order
         return Response(serializer.data, status=HTTPStatus.CREATED)
