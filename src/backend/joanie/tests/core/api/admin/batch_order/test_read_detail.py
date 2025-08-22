@@ -75,7 +75,6 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
                 "total": float(batch_order.total),
                 "vouchers": [],
                 "offering_rules": [],
-                "voucher": None,
                 "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
                 "quote": {
                     "definition_title": batch_order.quote.definition.title,
@@ -143,7 +142,6 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
                 "total": float(batch_order.total),
                 "vouchers": [],
                 "offering_rules": [],
-                "voucher": None,
                 "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
                 "quote": {
                     "definition_title": batch_order.quote.definition.title,

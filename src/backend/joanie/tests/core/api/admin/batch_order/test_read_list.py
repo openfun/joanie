@@ -62,7 +62,6 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "postcode": batch_order.postcode,
                 "offering": str(batch_order.offering.id),
                 "total": float(batch_order.total),
-                "voucher": None,
                 "vouchers": [],
                 "offering_rules": [],
                 "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
