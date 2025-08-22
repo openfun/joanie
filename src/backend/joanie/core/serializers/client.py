@@ -1491,7 +1491,6 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         min_value=1,
         help_text="The number of seats to reserve",
     )
-    trainees = serializers.JSONField(default=list)
     offering_rule_ids = serializers.SlugRelatedField(
         source="offering_rules",
         many=True,
@@ -1540,7 +1539,6 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "city",
             "country",
             "nb_seats",
-            "trainees",
             "offering_rule_ids",
             "quote",
             "payment_method",

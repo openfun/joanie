@@ -161,7 +161,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
                 "name": "<COMPANY_NAME>",
                 "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
-                "trainees": None,
             },
             "organization": {
                 "address": {
@@ -259,7 +258,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
                 "name": "<COMPANY_NAME>",
                 "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
-                "trainees": None,
             },
             "organization": {
                 "address": {
@@ -347,7 +345,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
                 "name": "<COMPANY_NAME>",
                 "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
-                "trainees": None,
             },
             "organization": {
                 "address": {
