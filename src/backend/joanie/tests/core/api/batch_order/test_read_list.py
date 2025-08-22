@@ -41,10 +41,6 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
             state=enums.BATCH_ORDER_STATE_ASSIGNED,
             owner=user,
             nb_seats=2,
-            trainees=[
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
 
@@ -112,10 +108,6 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                         "city": bo.city,
                         "country": bo.country.code,
                         "nb_seats": 2,
-                        "trainees": [
-                            {"last_name": "Doe", "first_name": "John"},
-                            {"last_name": "Doe", "first_name": "Jane"},
-                        ],
                         "offering_rule_ids": [],
                         "billing_address": {
                             "company_name": bo.company_name,
