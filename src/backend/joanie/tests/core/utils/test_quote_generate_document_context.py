@@ -2,10 +2,7 @@
 
 from datetime import timedelta
 
-from django.conf import settings
 from django.test import TestCase
-
-from babel.numbers import get_currency_symbol
 
 from joanie.core import factories, models
 from joanie.core.utils.quotes import generate_document_context
@@ -28,6 +25,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "body": "&lt;QUOTE_BODY&gt;",
                 "title": "<QUOTE_TITLE>",
                 "description": "<QUOTE_DESCRIPTION>",
+                "reference": "<REFERENCE>",
             },
             "batch_order": {
                 "nb_seats": "<BATCH_ORDER_NB_SEATS>",
@@ -36,8 +34,6 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "name": "<COURSE_NAME>",
                 "code": "<COURSE_CODE>",
                 "effort": "<COURSE_EFFORT>",
-                "price": "<COURSE_PRICE>",
-                "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
             },
             "customer": {
                 "representative_name": "<CUSTOMER_REPRESENTATIVE_NAME>",
@@ -109,6 +105,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "title": quote.definition.title,
                 "description": quote.definition.description,
                 "body": quote.definition.get_body_in_html(),
+                "reference": quote.reference,
             },
             "batch_order": {
                 "nb_seats": batch_order.nb_seats,
@@ -117,8 +114,6 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "name": batch_order.relation.product.title,
                 "code": batch_order.relation.course.code,
                 "effort": "P0DT10H30M12S",
-                "price": "302.00",
-                "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
             },
             "customer": {
                 "representative_name": batch_order.owner.name,
