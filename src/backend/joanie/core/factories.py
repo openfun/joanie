@@ -1201,13 +1201,6 @@ class QuoteDefinitionFactory(DebugModelFactory, factory.django.DjangoModelFactor
     title = factory.Sequence(lambda n: f"Quote definition {n}")
 
 
-class TraineeFactory(factory.DictFactory):
-    """Factory to create trainees for batch orders"""
-
-    first_name = factory.Faker("first_name")
-    last_name = factory.Faker("last_name")
-
-
 class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     """Factory for the Batch Order model"""
 
@@ -1235,11 +1228,6 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """Set organization based on the course relations"""
         offerings = self.offering.product.offerings
         return offerings.first().organizations.order_by("?").first()
-
-    @factory.lazy_attribute
-    def trainees(self):
-        """Generate trainees based on nb_seats"""
-        return TraineeFactory.create_batch(self.nb_seats)
 
     @factory.post_generation
     def state(self, create, extracted, **kwargs):
