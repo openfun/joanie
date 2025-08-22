@@ -5548,7 +5548,6 @@
                         "minimum": 1,
                         "description": "The number of seats to reserve"
                     },
-                    "trainees": {},
                     "offering_rule_ids": {
                         "type": "array",
                         "items": {
@@ -5847,7 +5846,6 @@
                         "minimum": 1,
                         "description": "The number of seats to reserve"
                     },
-                    "trainees": {},
                     "payment_method": {
                         "$ref": "#/components/schemas/PaymentMethodEnum"
                     },

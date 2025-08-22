@@ -2124,6 +2124,7 @@ class BatchOrder(BaseModel):
         default=1,
         validators=[MinValueValidator(1)],
     )
+    # Deprecated `trainees` field, not required anymore for creation of batch order
     trainees = models.JSONField(
         verbose_name=_("trainees"),
         help_text=_("trainees name list"),
@@ -2192,11 +2193,6 @@ class BatchOrder(BaseModel):
                 "contact_name": f"{self.administrative_firstname} {self.administrative_lastname}",
                 "contact_email": self.administrative_email,
             }
-
-        if len(self.trainees) != self.nb_seats:
-            raise ValidationError(
-                _("The number of trainees must match the number of seats.")
-            )
 
         return super().clean()
 
