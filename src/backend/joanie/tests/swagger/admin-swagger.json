@@ -6047,7 +6047,6 @@
                         "minimum": 1,
                         "description": "The number of seats to reserve"
                     },
-                    "trainees": {},
                     "voucher": {
                         "type": "string",
                         "description": "Voucher code"
@@ -6272,7 +6271,6 @@
                         "minimum": 1,
                         "description": "The number of seats to reserve"
                     },
-                    "trainees": {},
                     "voucher": {
                         "type": "string",
                         "minLength": 1,

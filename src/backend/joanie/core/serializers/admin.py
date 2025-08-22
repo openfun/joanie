@@ -1759,7 +1759,6 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         min_value=1,
         help_text="The number of seats to reserve",
     )
-    trainees = serializers.JSONField(default=list)
     offering_rules = AdminOfferingRuleSerializer(read_only=True, many=True)
     vouchers = serializers.SerializerMethodField(read_only=True)
     quote = AdminQuoteSerializer(read_only=True)
@@ -1802,7 +1801,6 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "city",
             "country",
             "nb_seats",
-            "trainees",
             "voucher",
             "vouchers",
             "offering_rules",
