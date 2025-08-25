@@ -527,7 +527,18 @@ class OrderViewSet(
             )
 
         order.flow.cancel()
-        synchronize_product_course_runs(order.product)
+        offering = CourseProductRelation.objects.get(
+            product_id=order.product.id, course_id=order.course.id
+        )
+        visibility = None
+        if offering.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+            visibility = enums.COURSE_AND_SEARCH
+        serialized_course_runs = get_serialized_course_runs(
+            offering, visibility=visibility
+        )
+        if serialized_course_runs:
+            webhooks.synchronize_course_runs(serialized_course_runs)
+
         return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=True, methods=["GET"])

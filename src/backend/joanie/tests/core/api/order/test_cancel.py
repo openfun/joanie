@@ -6,6 +6,7 @@ from unittest import mock
 from django.core.cache import cache
 
 from joanie.core import enums, factories
+from joanie.core.models import CourseState
 from joanie.core.utils import webhooks
 from joanie.tests.base import BaseAPITestCase
 
@@ -70,16 +71,38 @@ class OrderCancelApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+        course = course_run.course
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            courses=[course],
+            target_courses=[course],
+            certificate_definition=factories.CertificateDefinitionFactory(
+                title="Certification",
+                name="Become a certified learner certificate",
+            ),
+            price=100,
+        )
+        offering = product.offerings.first()
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+        )
+
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
                 if state == enums.ORDER_STATE_TO_OWN:
-                    order = factories.OrderGeneratorFactory(state=state)
+                    order = factories.OrderGeneratorFactory(
+                        state=state, product=product
+                    )
                     # No credit card should be created and a voucher is already attached to order
                     self.assertIsNone(order.credit_card)
                 else:
-                    voucher = factories.VoucherFactory()
+                    voucher = factories.VoucherFactory(offering_rule=offering_rule)
                     order = factories.OrderFactory(
-                        owner=user, state=state, voucher=voucher
+                        owner=user, state=state, voucher=voucher, product=product
                     )
                     # A credit card should be created
                     self.assertIsNotNone(order.credit_card)
@@ -115,6 +138,29 @@ class OrderCancelApiTest(BaseAPITestCase):
                     # The voucher should be reusable
                     self.assertTrue(order.voucher.is_usable_by(user))
                     self.assertEqual(mock_sync.call_count, 1)
+                    synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
+                    self.assertEqual(
+                        synchronized_course_run,
+                        {
+                            "catalog_visibility": enums.COURSE_AND_SEARCH,
+                            "certificate_discount": None,
+                            "certificate_discounted_price": None,
+                            "certificate_offer": enums.COURSE_OFFER_PAID,
+                            "certificate_price": None,
+                            "course": offering.course.code,
+                            "discount": None,
+                            "discounted_price": None,
+                            "start": course_run.start.isoformat(),
+                            "end": course_run.end.isoformat(),
+                            "enrollment_start": course_run.enrollment_start.isoformat(),
+                            "enrollment_end": course_run.enrollment_end.isoformat(),
+                            "languages": course_run.languages,
+                            "offer": enums.COURSE_OFFER_PAID,
+                            "price": product.price,
+                            "resource_link": f"https://example.com/api/v1.0/courses/{course.code}"
+                            f"/products/{product.id}/",
+                        },
+                    )
 
     def test_api_order_cancel_authenticated_completed(self):
         """
