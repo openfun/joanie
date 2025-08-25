@@ -48,6 +48,13 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "postcode": "<CUSTOMER_POSTCODE>",
                 "country": "<CUSTOMER_COUNTRY>",
                 "city": "<CUSTOMER_CITY>",
+                "billing_address": {
+                    "address": "<BILLING_ADDRESS>",
+                    "postcode": "<BILLING_POSTCODE>",
+                    "city": "<BILLING_CITY>",
+                    "country": "<BILLING_COUNTRY>",
+                    "company_name": "<BILLING_COMPANY_NAME>",
+                },
             },
             "organization": {
                 "address": {
