@@ -85,8 +85,49 @@ for your training, feel free to use this template as a base.
               <li>{% translate "SIRET number: "%}
                 {{ customer.identification_number }}
               </li>
+              <li>{% translate "VAT registration number: "%}
+                {{ customer.vat_registration }}
+              </li>
               <li>{% translate "Postal address: " %}
                 {{ customer.address }}, {{ customer.postcode }}, {{ customer.city }}, {{ customer.country }}
+              </li>
+              <li>
+                {% translate "Administrative firstname: "%}
+                {{ customer.administrative_firstname }}
+              </li>
+              <li>
+                {% translate "Administrative lastname: "%}
+                  {{ customer.administrative_lastname }}
+              </li>
+              <li>
+                {% translate "Administrative profession: "%}
+                  {{ customer.administrative_profession }}
+              </li>
+              <li>
+                {% translate "Administrative email: "%}
+                  {{ customer.administrative_email }}
+              </li>
+              <li>
+                {% translate "Administrative telephone: "%}
+                  {{ customer.administrative_telephone }}
+              </li>
+              <li>
+                {% translate "Billing address : " %}
+                  {{ customer.billing_address.contact_name }}
+                  <br>{{ customer.billing_address.contact_email }}
+                  <br>{{ customer.billing_address.company_name}}:
+                  <br>{{ customer.billing_address.address }}, {{ customer.billing_address.postcode }}, {{ customer.billing_address.city }}, {{ customer.billing_address.country }}
+              </li>
+            </ul>
+          </dd>
+          <dt>{% translate 'External funding:' %}</dt>
+          <dd>
+            <ul>
+              <li>{%translate "Funding entity: " %}
+                {{ customer.funding_entity }}
+              </li>
+              <li>{%translate "Funding amount: " %}
+                {{ customer.funding_amount  }} {{customer.currency}}
               </li>
             </ul>
           </dd>
@@ -126,12 +167,6 @@ for your training, feel free to use this template as a base.
             <p>{% translate "University representative's signature :" %}</p>
             <div class="signature-recipient">
               [SignatureField#1]
-            </div>
-          </div>
-          <div class="signature_zone">
-            <p>{% translate "Company representative's signature :" %}</p>
-            <div class="signature-recipient">
-              [SignatureField#2]
             </div>
           </div>
         </section>
