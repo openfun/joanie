@@ -37,6 +37,13 @@ CUSTOMER_FALLBACK_DATA = {
     "postcode": _("<CUSTOMER_POSTCODE>"),
     "country": _("<CUSTOMER_COUNTRY>"),
     "city": _("<CUSTOMER_CITY>"),
+    "billing_address": {
+        "address": _("<BILLING_ADDRESS>"),
+        "postcode": _("<BILLING_POSTCODE>"),
+        "city": _("<BILLING_CITY>"),
+        "country": _("<BILLING_COUNTRY>"),
+        "company_name": _("<BILLING_COMPANY_NAME>"),
+    },
 }
 
 ORGANIZATION_FALLBACK_DATA = {

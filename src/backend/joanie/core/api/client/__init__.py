@@ -203,7 +203,7 @@ class OfferingViewSet(
         """Return the serializer class to use."""
         if self.action in ["payment_schedule", "payment_plan"]:
             return serializers.OrderPaymentScheduleSerializer
-        if self.action == "list":
+        if self.action in ["list", "get_organizations"]:
             return serializers.OfferingLightSerializer
         return self.serializer_class
 
@@ -278,6 +278,18 @@ class OfferingViewSet(
             return str(voucher.discount)
 
         return offering.rules.get("discount", None)
+
+    @action(
+        methods=["GET"],
+        detail=True,
+        url_path="get-organizations",
+        url_name="get_organizations",
+    )
+    def get_organizations(self, request, *args, **kwargs):
+        """Returns the list of organizations that delivers the offerings"""
+        offering = self.get_object()
+        serializer = self.get_serializer(offering)
+        return Response(serializer.data["organizations"], status=HTTPStatus.OK)
 
 
 class EnrollmentViewSet(
@@ -718,7 +730,6 @@ class BatchOrderViewSet(
         - offering id (offering)
         - company required data (name, identification number, address, postcode, city, country)
         - number of seats
-        - exhaustive list of trainees (should match the number of seats)
         Return new batch_order just created
 
     POST /api/batch-orders/:batch_order_id/submit-for-signature/

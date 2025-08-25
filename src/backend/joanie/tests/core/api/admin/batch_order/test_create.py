@@ -25,8 +25,21 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             "city": "Paradise",
             "postcode": "2900",
             "country": "FR",
-            "trainees": factories.TraineeFactory.create_batch(nb_seats),
             "payment_method": payment_method,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_name": "Jane Doe",
+                "contact_email": "janedoe@example.org",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
     def test_api_admin_batch_orders_create_anonymous(self):
@@ -52,33 +65,6 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
-
-    def test_api_admin_batch_orders_create_number_of_seats_does_not_match_trainees(
-        self,
-    ):
-        """
-        Authenticated admin user should not be able to create a batch order if the number
-        of seats is not equal to the number of trainees declared.
-        """
-        admin = factories.UserFactory(is_staff=True, is_superuser=True)
-        self.client.login(username=admin.username, password="password")
-
-        owner = factories.UserFactory()
-        offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            product__price=10,
-        )
-
-        data = self.create_payload_batch_order(
-            owner, offering, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
-        )
-        data.update(nb_seats=1)
-
-        response = self.client.post(
-            "/api/v1.0/admin/batch-orders/", content_type="application/json", data=data
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
 
     def test_api_admin_batch_orders_create_fails_when_missing_company_information(self):
         """

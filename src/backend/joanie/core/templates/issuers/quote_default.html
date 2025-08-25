@@ -83,6 +83,15 @@ for your training, feel free to use this template as a base.
               <li>{% translate "Postal address: " %}
                 {{ customer.address }}, {{ customer.postcode }}, {{ customer.city }}, {{ customer.country }}
               </li>
+              <li>
+                {% translate "Tax registration number : " %}
+                  {{customer.vat_registration}}
+              </li>
+              <li>
+                {% translate "Billing address : " %}
+                  {{ customer.billing_address.company_name}}:
+                  </br>{{ customer.billing_address.address }}, {{ customer.billing_address.postcode }}, {{ customer.billing_address.city }}, {{ customer.billing_address.country }}
+              </li>
             </ul>
           </dd>
           <dt>{% translate 'Course (hereinafter "the Course"):' %}</dt>
@@ -108,13 +117,6 @@ for your training, feel free to use this template as a base.
               <li>{% translate "Teaching Format: Online Only" %}</li>
               <li>{% translate "For number of seats: " %} {{ batch_order.nb_seats }}</li>
               <li>{% translate "Price of the course: " %}
-                {% with price=course.price|floatformat:2 currency=course.currency %}
-                {% if price %}
-                  {{ price }} {{ currency }}
-                {% else %}
-                  {{ course.price|default:"-" }}
-                {% endif %}
-                {% endwith %}
               </li>
             </ul>
           </dd>
