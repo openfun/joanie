@@ -2440,8 +2440,8 @@ class OrderCreateApiTest(BaseAPITestCase):
         mock_sync,
     ):
         """
-        Authenticated user creates an order on an offering rule that is enabled but has no more
-        seat available, the order should not be created.
+        Authenticated user creates an order on an offering rule that is enabled and has one
+        seat available, the order should be created.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
