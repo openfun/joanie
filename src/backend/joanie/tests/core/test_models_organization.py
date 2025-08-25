@@ -59,6 +59,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": False,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -76,6 +78,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": False,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -93,6 +97,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": True,
                 "sign_contracts": True,
                 "download_quote": True,
+                "confirm_quote": True,
+                "confirm_bank_transfer": True,
             },
         )
 
@@ -110,6 +116,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": True,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -130,6 +138,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": False,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -151,6 +161,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": False,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
