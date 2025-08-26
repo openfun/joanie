@@ -66,6 +66,7 @@ def get_serialized_course_runs(offering, visibility=None):
             certifying=certifying,
             product=product,
         ):
+            logger.debug("[SYNC] %s", serialized_runs)
             serialized_course_runs.append(serialized_runs)
 
     if serialized_course_runs:

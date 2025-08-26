@@ -37,8 +37,8 @@ def synchronize_course_runs(serialized_course_runs):
     json_course_runs = json.dumps(serialized_course_runs, cls=DjangoJSONEncoder).encode(
         "utf-8"
     )
-    logger.info("Synchronizing course runs with webhooks")
-    logger.info(json_course_runs)
+    logger.info("[SYNC] Synchronizing course runs with webhooks")
+    logger.info("[SYNC] payload %s", json_course_runs)
 
     for webhook in settings.COURSE_WEB_HOOKS:
         signature = hmac.new(
@@ -61,13 +61,13 @@ def synchronize_course_runs(serialized_course_runs):
 
         except requests.exceptions.RetryError as exc:
             logger.error(
-                "Synchronization failed due to max retries exceeded with url %s",
+                "[SYNC] Synchronization failed due to max retries exceeded with url %s",
                 webhook["url"],
                 exc_info=exc,
             )
         except requests.exceptions.RequestException as exc:
             logger.error(
-                "Synchronization failed with %s.",
+                "[SYNC] Synchronization failed with %s.",
                 webhook["url"],
                 exc_info=exc,
             )
@@ -79,13 +79,13 @@ def synchronize_course_runs(serialized_course_runs):
             # pylint: disable=no-member
             if response.status_code == requests.codes.ok:
                 logger.info(
-                    "Synchronization succeeded with %s",
+                    "[SYNC] Synchronization succeeded with %s",
                     webhook["url"],
                     extra=extra,
                 )
             else:
                 logger.error(
-                    "Synchronization failed with %s",
+                    "[SYNC] Synchronization failed with %s",
                     webhook["url"],
                     extra=extra,
                 )

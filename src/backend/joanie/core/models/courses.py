@@ -986,6 +986,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         resource_link = self.uri
 
         if product:
+            logger.debug("[SYNC] product: %s", product)
             price = product.price
 
             try:
@@ -994,9 +995,12 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
                 )
             except CourseProductRelation.DoesNotExist:
                 offering = None
+            logger.debug("[SYNC] offering: %s", offering)
             if offering and offering.rules.get("discounted_price"):
                 discounted_price = offering.rules.get("discounted_price")
+                logger.debug("[SYNC] discounted_price: %s", discounted_price)
                 discount = offering.rules.get("discount")
+                logger.debug("[SYNC] discount: %s", discount)
 
         if certifying:
             certificate_offer = self.get_certificate_offer()
@@ -1019,13 +1023,14 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
             certificate_offer = enums.COURSE_OFFER_PAID if has_grade else None
 
         logger.debug(
-            "Serializing course run %s with visibility",
+            "[SYNC] Serializing course run %s with visibility",
             self.id,
         )
-        logger.debug("visibility: %s", visibility)
-        logger.debug("is_listed: %s", self.is_listed)
+        logger.debug("[SYNC] visibility: %s", visibility)
+        logger.debug("[SYNC] is_listed: %s", self.is_listed)
         logger.debug(
-            visibility or (enums.COURSE_AND_SEARCH if self.is_listed else enums.HIDDEN)
+            "[SYNC] %s",
+            visibility or (enums.COURSE_AND_SEARCH if self.is_listed else enums.HIDDEN),
         )
 
         # visibility is set here
@@ -1185,7 +1190,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         serialized_course_runs.extend(
             self.get_equivalent_serialized_course_runs_for_related_products()
         )
-        logger.debug(serialized_course_runs)
+        logger.debug("[SYNC] %s", serialized_course_runs)
         webhooks.synchronize_course_runs(serialized_course_runs)
 
     def can_enroll(self, user):
