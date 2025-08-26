@@ -5,6 +5,7 @@ Client API endpoints
 # pylint: disable=too-many-ancestors, too-many-lines, too-many-branches
 # ruff: noqa: PLR0911,PLR0912
 import io
+import logging
 import uuid
 from http import HTTPStatus
 
@@ -37,11 +38,12 @@ from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.offering import get_serialized_course_runs
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
-from joanie.core.utils.product import synchronize_product_course_runs
 from joanie.core.utils.signature import check_signature
 from joanie.payment import enums as payment_enums
 from joanie.payment import get_payment_backend
 from joanie.payment.models import CreditCard, Invoice
+
+logger = logging.getLogger(__name__)
 
 UUID_REGEX = (
     "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"
@@ -380,7 +382,8 @@ class OrderViewSet(
         """Force the order's "owner" field to the logged-in user."""
         serializer.save(owner=self.request.user)
 
-    # pylint: disable=too-many-return-statements, too-many-locals
+    # ruff: noqa: PLR0915
+    # pylint: disable=too-many-statements, too-many-return-statements, too-many-locals
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
@@ -503,13 +506,18 @@ class OrderViewSet(
             billing_address=request.data.get("billing_address")
         )
 
+        logger.debug("[SYNC] Order created: %s", serializer.instance)
+        logger.debug("[SYNC] Syncing offering")
+        offering.refresh_from_db()
         visibility = None
         if offering.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
             visibility = enums.COURSE_AND_SEARCH
         serialized_course_runs = get_serialized_course_runs(
             offering, visibility=visibility
         )
+        logger.debug("[SYNC] Syncing course runs")
         if serialized_course_runs:
+            logger.debug("[SYNC] Course runs: %s", serialized_course_runs)
             webhooks.synchronize_course_runs(serialized_course_runs)
 
         # Else return the fresh new order
@@ -527,6 +535,8 @@ class OrderViewSet(
             )
 
         order.flow.cancel()
+        logger.debug("[SYNC] Order cancelled: %s", order)
+        logger.debug("[SYNC] Syncing offering")
         offering = CourseProductRelation.objects.get(
             product_id=order.product.id, course_id=order.course.id
         )
@@ -536,7 +546,9 @@ class OrderViewSet(
         serialized_course_runs = get_serialized_course_runs(
             offering, visibility=visibility
         )
+        logger.debug("[SYNC] Syncing course runs")
         if serialized_course_runs:
+            logger.debug("[SYNC] Course runs: %s", serialized_course_runs)
             webhooks.synchronize_course_runs(serialized_course_runs)
 
         return Response(status=HTTPStatus.NO_CONTENT)

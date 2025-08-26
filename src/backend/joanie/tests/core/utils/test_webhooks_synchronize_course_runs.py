@@ -129,14 +129,14 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             self.assertEqual(
                 mock_info.call_args_list[2][0],
                 (
-                    "Synchronization succeeded with %s",
+                    "[SYNC] Synchronization succeeded with %s",
                     "http://richie.education/webhook1",
                 ),
             )
             self.assertEqual(
                 mock_info.call_args_list[3][0],
                 (
-                    "Synchronization succeeded with %s",
+                    "[SYNC] Synchronization succeeded with %s",
                     "http://richie.education/webhook2",
                 ),
             )
@@ -203,7 +203,7 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             self.assertEqual(
                 mock_error.call_args_list[0][0],
                 (
-                    "Synchronization failed with %s",
+                    "[SYNC] Synchronization failed with %s",
                     "http://richie.education/webhook",
                 ),
             )
@@ -258,7 +258,7 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             self.assertEqual(
                 mock_info.call_args_list[2][0],
                 (
-                    "Synchronization succeeded with %s",
+                    "[SYNC] Synchronization succeeded with %s",
                     "http://richie.education/webhook",
                 ),
             )
@@ -319,7 +319,7 @@ class SynchronizeCourseRunsUtilsTestCase(TestCase):
             self.assertEqual(
                 mock_error.call_args_list[0][0],
                 (
-                    "Synchronization failed due to max retries exceeded with url %s",
+                    "[SYNC] Synchronization failed due to max retries exceeded with url %s",
                     "http://richie.education/webhook",
                 ),
             )

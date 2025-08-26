@@ -103,6 +103,8 @@ OrderCreateApiTest.test_api_order_create_authenticated_payment_binding:
 - db: 'SELECT # AS "_check" WHERE COALESCE(...)'
 - db: 'UPDATE "joanie_order" SET ... WHERE "joanie_order"."id" = #::uuid'
 - db: 'SELECT # AS "a" FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course_product_relation" WHERE "joanie_course_product_relation"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course_run" WHERE "joanie_course_run"."course_id" = #::uuid ORDER BY "joanie_course_run"."created_on" DESC'
 - db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'

@@ -79,7 +79,7 @@ def on_change_course_runs_to_product_target_course_relation(
                     )
                 )
 
-        logger.debug(serialized_course_runs)
+        logger.debug("[SYNC] %s", serialized_course_runs)
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
@@ -91,15 +91,15 @@ def on_save_course_run(instance, **kwargs):
             instance.get_serialized(product=product) for product in products
         ]
     else:
-        logger.debug("No products linked to this course run")
+        logger.debug("[SYNC] No products linked to this course run")
         serialized_course_runs = [instance.get_serialized()]
 
-    logger.debug(serialized_course_runs)
+    logger.debug("[SYNC] %s", serialized_course_runs)
     # Synchronize the related products by recomputing their equivalent serialized course run
     serialized_course_runs.extend(
         instance.get_equivalent_serialized_course_runs_for_related_products()
     )
-    logger.debug(serialized_course_runs)
+    logger.debug("[SYNC] %s", serialized_course_runs)
     webhooks.synchronize_course_runs(serialized_course_runs)
 
 
@@ -112,7 +112,7 @@ def on_save_product_target_course_relation(instance, **kwargs):
             [instance.product]
         )
     )
-    logger.debug(serialized_course_runs)
+    logger.debug("[SYNC] %s", serialized_course_runs)
     webhooks.synchronize_course_runs(serialized_course_runs)
 
 
@@ -196,7 +196,7 @@ def on_change_offering(action, instance, pk_set, **kwargs):
     else:
         return
 
-    logger.debug(serialized_course_runs)
+    logger.debug("[SYNC] %s", serialized_course_runs)
     webhooks.synchronize_course_runs(serialized_course_runs)
 
 
@@ -224,5 +224,5 @@ def on_save_product(instance, created, **kwargs):
     if created:
         return
 
-    logger.debug(instance)
+    logger.debug("[SYNC] %s", instance)
     synchronize_product_course_runs(instance)

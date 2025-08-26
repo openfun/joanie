@@ -233,9 +233,11 @@ class Product(parler_models.TranslatableModel, BaseModel):
 
         dates = self.get_equivalent_course_run_dates()
 
-        logger.debug("Calculating equivalent course run data for product %s", self.pk)
-        logger.debug("visibility: %s", visibility)
-        logger.debug("dates: %s", dates)
+        logger.debug(
+            "[SYNC] Calculating equivalent course run data for product %s", self.pk
+        )
+        logger.debug("[SYNC] visibility: %s", visibility)
+        logger.debug("[SYNC] dates: %s", dates)
 
         return {
             "catalog_visibility": visibility
@@ -462,7 +464,7 @@ class ProductTargetCourseRelation(BaseModel):
         serialized_course_runs = (
             Product.get_equivalent_serialized_course_runs_for_products([product])
         )
-        logger.debug(serialized_course_runs)
+        logger.debug("[SYNC] %s", serialized_course_runs)
         webhooks.synchronize_course_runs(serialized_course_runs)
 
 
