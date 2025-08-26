@@ -156,7 +156,9 @@ class Quote(BaseModel):
             with transaction.atomic():
                 # select_for_update() will lock row the queryset until the end of the transaction
                 last = (
-                    Quote.objects.filter(reference__startswith=f"FUN_{year}_")
+                    Quote.objects.filter(
+                        reference__startswith=f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_"
+                    )
                     .order_by("-reference")
                     .select_for_update()
                     .first()
@@ -171,7 +173,7 @@ class Quote(BaseModel):
                 while self.__class__.objects.filter(reference=reference).exists():
                     # The while loop when concurrent requests are made
                     next_number += 1
-                    reference = f"FUN_{year}_{next_number:07d}"
+                    reference = f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_{next_number:07d}"
 
                 self.reference = reference
 

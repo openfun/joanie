@@ -5,6 +5,7 @@ from datetime import datetime
 from unittest import mock
 from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -65,10 +66,15 @@ class QuoteModelsTestCase(LoggingTestCase):
 
         quote_1 = QuoteFactory()
 
-        self.assertEqual(quote_1.reference, f"FUN_{year}_0000000")
+        self.assertEqual(
+            quote_1.reference,
+            f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000000",
+        )
 
         with self.assertRaises(ValidationError) as context:
-            QuoteFactory(reference=f"FUN_{year}_0000000")
+            QuoteFactory(
+                reference=f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000000"
+            )
 
         self.assertTrue(
             "Quote with this Reference already exists." in str(context.exception)
@@ -82,9 +88,18 @@ class QuoteModelsTestCase(LoggingTestCase):
         quote_2 = QuoteFactory()
         quote_3 = QuoteFactory()
 
-        self.assertEqual(quote_1.reference, f"FUN_{year}_0000000")
-        self.assertEqual(quote_2.reference, f"FUN_{year}_0000001")
-        self.assertEqual(quote_3.reference, f"FUN_{year}_0000002")
+        self.assertEqual(
+            quote_1.reference,
+            f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000000",
+        )
+        self.assertEqual(
+            quote_2.reference,
+            f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000001",
+        )
+        self.assertEqual(
+            quote_3.reference,
+            f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000002",
+        )
 
 
 # pylint:disable=unused-argument
@@ -101,7 +116,8 @@ def test_models_quote_generate_unique_reference_multiple_thread(transactional_db
 
     # Create the seed of the first quote with reference number ends with "0000000"
     Quote.objects.create(
-        definition=QuoteDefinitionFactory(), reference="FUN_2025_000000"
+        definition=QuoteDefinitionFactory(),
+        reference=f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_2025_000000",
     )
 
     def create_quote():
@@ -123,8 +139,12 @@ def test_models_quote_generate_unique_reference_multiple_thread(transactional_db
 
     assert len(created_references) == 2  # noqa: PLR2004
     assert created_references[0] != created_references[1]
-    assert created_references[0] == f"FUN_{mocked_now.year}_0000001"
-    assert created_references[1] == f"FUN_{mocked_now.year}_0000002"
+    assert created_references[0] == (
+        f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{mocked_now.year}_0000001"
+    )
+    assert created_references[1] == (
+        f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{mocked_now.year}_0000002"
+    )
 
     Quote.objects.all().delete()
     QuoteDefinition.objects.all().delete()
