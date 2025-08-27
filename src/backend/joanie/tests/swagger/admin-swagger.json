@@ -167,6 +167,58 @@
                 }
             }
         },
+        "/api/v1.0/admin/batch-orders/{id}/confirm-quote/": {
+            "patch": {
+                "operationId": "batch_orders_confirm_quote_partial_update",
+                "description": "Confirm the organization has signed the quote and freeze total.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminBatchOrderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminBatchOrderRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/batch-orders/{id}/generate-orders/": {
             "post": {
                 "operationId": "batch_orders_generate_orders_create",
@@ -10005,6 +10057,98 @@
                         "items": {
                             "$ref": "#/components/schemas/AdminUser"
                         }
+                    }
+                }
+            },
+            "PatchedAdminBatchOrderRequest": {
+                "type": "object",
+                "description": "Admin Batch Order Serializer",
+                "properties": {
+                    "owner": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "relation": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company name",
+                        "maxLength": 255
+                    },
+                    "identification_number": {
+                        "type": "string",
+                        "minLength": 1,
+                        "title": "Company identification number",
+                        "description": "company identification number like SIRET in France",
+                        "maxLength": 255
+                    },
+                    "vat_registration": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Tax registration number",
+                        "description": "company's vat identification number like Numero de TVA intracommunautaire in France",
+                        "maxLength": 255
+                    },
+                    "address": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company address",
+                        "maxLength": 255
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company postcode",
+                        "maxLength": 50
+                    },
+                    "city": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "company city",
+                        "maxLength": 255
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryEnum"
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "The number of seats to reserve"
+                    },
+                    "payment_method": {
+                        "$ref": "#/components/schemas/PaymentMethodEnum"
+                    },
+                    "administrative_firstname": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "administrative_lastname": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "administrative_profession": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "administrative_email": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "administrative_telephone": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "billing_address": {
+                        "$ref": "#/components/schemas/AdminBatchOrderBillingAddressRequest"
+                    },
+                    "funding_entity": {
+                        "type": "string",
+                        "minLength": 1
                     }
                 }
             },
