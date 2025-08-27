@@ -2451,11 +2451,16 @@ class BatchOrder(BaseModel):
         """Return boolean value whether the batch order is related to a quote"""
         return hasattr(self, "quote")
 
+    @property
+    def is_canceled(self):
+        """Returns boolean value whether the batch order is canceled or not."""
+        return self.state == enums.BATCH_ORDER_STATE_CANCELED
+
     def cancel_orders(self):
         """
         Cancel all orders associated with this batch order and delete their linked vouchers.
         """
-        if self.state != enums.BATCH_ORDER_STATE_CANCELED:
+        if not self.is_canceled:
             message = "You must cancel the batch order before canceling the orders"
             logger.error(
                 message,
