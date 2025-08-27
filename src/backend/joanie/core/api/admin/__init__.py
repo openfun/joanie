@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
@@ -878,6 +879,38 @@ class BatchOrderViewSet(
         generate_orders_and_send_vouchers_task.delay(batch_order_id=str(batch_order.id))
 
         return Response(status=HTTPStatus.ACCEPTED)
+
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="confirm-quote",
+    )
+    def confirm_quote(self, request, *args, **kwargs):
+        """
+        Confirm the organization has signed the quote and freeze total.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.is_canceled:
+            raise ValidationError(
+                "Batch order is canceled, cannot confirm quote signature."
+            )
+
+        if not batch_order.has_quote:
+            raise ValidationError(_("You must generate the quote first."))
+
+        if batch_order.quote.is_signed_by_organization or batch_order.total:
+            raise ValidationError(_("Quote is already signed, and total is frozen."))
+
+        total = request.data.get("total")
+        if not total:
+            raise ValidationError(
+                _("Missing total value. It's required to confirm quote.")
+            )
+
+        batch_order.freeze_total(total)
+
+        return Response(status=HTTPStatus.OK)
 
 
 class OrganizationAddressViewSet(
