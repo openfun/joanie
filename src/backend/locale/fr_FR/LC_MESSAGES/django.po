@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-12 14:37+0000\n"
-"PO-Revision-Date: 2025-02-13 10:42\n"
+"POT-Creation-Date: 2025-08-26 12:40+0000\n"
+"PO-Revision-Date: 2025-08-27 07:34\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -78,7 +78,7 @@ msgstr "Lien de la ressource"
 msgid "Link to the resource the badge has been issued for (e.g. a course session)"
 msgstr "Lien vers la ressource pour laquelle le badge a été émis (par ex. une session de cours)"
 
-#: joanie/badges/models.py:109 joanie/core/admin.py:99
+#: joanie/badges/models.py:109 joanie/core/admin.py:109
 #: joanie/core/models/accounts.py:58
 msgid "User"
 msgstr "Utilisateur"
@@ -99,100 +99,161 @@ msgstr "Badge émis"
 msgid "Issued badges"
 msgstr "Badges émis"
 
-#: joanie/core/admin.py:34
+#: joanie/core/admin.py:44
 msgid "No certificates have been generated."
 msgstr "Aucun certificat n'a été généré."
 
-#: joanie/core/admin.py:40
+#: joanie/core/admin.py:50
 msgid "{:d} certificate has been generated."
 msgid_plural "{:d} certificates have been generated."
 msgstr[0] "{:d} certificat a été généré."
 msgstr[1] "{:d} certificats ont été générés."
 
-#: joanie/core/admin.py:64 joanie/core/models/course_wishes.py:25
-#: joanie/core/models/courses.py:500
+#: joanie/core/admin.py:74 joanie/core/models/course_wishes.py:25
+#: joanie/core/models/courses.py:530
 msgid "Course"
 msgstr "Cours"
 
-#: joanie/core/admin.py:71 joanie/core/models/products.py:145
-#: joanie/core/serializers/admin.py:1285
+#: joanie/core/admin.py:81 joanie/core/models/products.py:177
+#: joanie/core/serializers/admin.py:1395
 #: joanie/core/templates/issuers/invoice.html:78
 msgid "Product"
 msgstr "Produit"
 
-#: joanie/core/admin.py:78 joanie/core/admin.py:85
-#: joanie/core/models/courses.py:241 joanie/core/serializers/admin.py:1288
+#: joanie/core/admin.py:88 joanie/core/admin.py:95
+#: joanie/core/models/courses.py:256 joanie/core/serializers/admin.py:1398
 msgid "Organization"
 msgstr "Établissement"
 
-#: joanie/core/admin.py:92 joanie/core/models/course_wishes.py:18
-#: joanie/core/serializers/admin.py:1286 joanie/payment/admin.py:27
+#: joanie/core/admin.py:102 joanie/core/models/course_wishes.py:18
+#: joanie/core/serializers/admin.py:1396 joanie/payment/admin.py:27
 #: joanie/payment/admin.py:41 joanie/payment/admin.py:244
 msgid "Owner"
 msgstr "Propriétaire"
 
-#: joanie/core/admin.py:106 joanie/core/models/courses.py:854
+#: joanie/core/admin.py:116 joanie/core/models/courses.py:946
 msgid "Course run"
 msgstr "Session de cours"
 
-#: joanie/core/admin.py:192
+#: joanie/core/admin.py:202
 msgid "To get results, choose an organization on the right first, then type the username of the student in the search bar."
 msgstr "Pour obtenir des résultats, choisissez d'abord une organisation sur la droite, puis tapez le nom d'utilisateur de l'élève dans la barre de recherche."
 
-#: joanie/core/admin.py:281 joanie/core/admin.py:322 joanie/core/admin.py:442
+#: joanie/core/admin.py:302 joanie/core/admin.py:331 joanie/core/admin.py:464
+#: joanie/core/admin.py:635
 msgid "Main information"
 msgstr "Information principale"
 
-#: joanie/core/admin.py:292 joanie/core/models/courses.py:242
+#: joanie/core/admin.py:313 joanie/core/models/courses.py:257
 #: joanie/core/templates/contract_definition/fragment_appendice_syllabus.html:50
 msgid "Organizations"
 msgstr "Établissements"
 
-#: joanie/core/admin.py:294
+#: joanie/core/admin.py:315
 msgid "Select organizations that author this course."
 msgstr "Sélectionnez les établissements qui ont créés ce cours."
 
-#: joanie/core/admin.py:358
+#: joanie/core/admin.py:367
 msgid "Mark course run as gradable"
 msgstr "Marquez la session de cours comme étant disponible à la notation"
 
-#: joanie/core/admin.py:385
+#: joanie/core/admin.py:407
 msgid "Personal info"
 msgstr "Information personnelle"
 
-#: joanie/core/admin.py:395
+#: joanie/core/admin.py:417
 msgid "Permissions"
 msgstr "Permissions"
 
-#: joanie/core/admin.py:406
+#: joanie/core/admin.py:428
 msgid "Important dates"
 msgstr "Dates importantes"
 
-#: joanie/core/admin.py:458
+#: joanie/core/admin.py:480
 msgid "Certifications"
 msgstr "Certifications"
 
-#: joanie/core/admin.py:611
+#: joanie/core/admin.py:567
 msgid "Cancel selected orders"
 msgstr "Annuler les commandes sélectionnées"
 
-#: joanie/core/admin.py:663
+#: joanie/core/admin.py:649
+msgid "Order details"
+msgstr "Détails de la commande"
+
+#: joanie/core/admin.py:726
+msgid "Cancel batch order"
+msgstr "Annuler la commande groupée"
+
+#: joanie/core/admin.py:738
+msgid "Batch order should be in state 'draft'."
+msgstr "La commande groupée doit être dans l'état 'brouillon'."
+
+#: joanie/core/admin.py:744
+#, python-brace-format
+msgid "{exception}"
+msgstr "{exception}"
+
+#: joanie/core/admin.py:747
+#, python-brace-format
+msgid "{batch_order.id} assigned to an organization"
+msgstr "{batch_order.id} assignée à un établissement"
+
+#: joanie/core/admin.py:762
+#, python-brace-format
+msgid "Cannot submit to signature the contract, state : {batch_order.state}"
+msgstr "Impossible de soumettre le contrat à la signature, état : {batch_order.state}"
+
+#: joanie/core/admin.py:783
+#, python-brace-format
+msgid "{batch_order.id} - {exception}"
+msgstr "{batch_order.id} - {exception}"
+
+#: joanie/core/admin.py:793
+#, python-brace-format
+msgid "{batch_order.id} - Email invitation link to sign contract sent."
+msgstr "{batch_order.id} - L’email contenant le lien de signature du contrat a été envoyé."
+
+#: joanie/core/admin.py:807
+msgid "Your batch order is not in state 'signing' nor 'pending'."
+msgstr "Votre commande groupée n'est ni en état 'en cours de signature' ni en état 'en attente'."
+
+#: joanie/core/admin.py:819
+#, python-brace-format
+msgid "{batch_order.id} payment success validated."
+msgstr "{batch_order.id} paiement validé avec succès."
+
+#: joanie/core/admin.py:832
+msgid "Your batch order is not in 'completed' state. Cannot generate orders."
+msgstr "Votre commande groupée n’est pas en état 'complétée'. Impossible de générer les commandes."
+
+#: joanie/core/admin.py:841
+#, python-brace-format
+msgid "{batch_order.id} orders generated."
+msgstr "{batch_order.id} commandes générées."
+
+#: joanie/core/admin.py:858
+#, python-brace-format
+msgid "{batch_order.id} mail sent to: {batch_order.owner.email}."
+msgstr "Courriel {batch_order.id} envoyé à : {batch_order.owner.email}."
+
+#: joanie/core/admin.py:922
 msgid "To get results, choose a user on the right"
 msgstr "Pour obtenir des résultats, choisissez un utilisateur sur la droite"
 
-#: joanie/core/admin.py:707
+#: joanie/core/admin.py:966
 msgid "To get results, choose an owner or an organization on the right"
 msgstr "Pour obtenir des résultats, choisissez un propriétaire ou un établissement à droite"
 
-#: joanie/core/admin.py:752
+#: joanie/core/admin.py:1011
 msgid "Config field"
 msgstr "Champ de configuration"
 
-#: joanie/core/admin.py:753
+#: joanie/core/admin.py:1012
 msgid "Config fields"
 msgstr "Champs de configuration"
 
-#: joanie/core/api/client/__init__.py:441
+#: joanie/core/api/client/__init__.py:480
 #, python-brace-format
 msgid "This order cannot be linked to the product \"{product.title}\", "
 msgstr "Cette commande ne peut pas être liée au produit \"{product.title}\", "
@@ -209,175 +270,200 @@ msgstr "Le token ne contient aucun identifiant utilisateur reconnaissable"
 msgid "Credential"
 msgstr "Diplôme"
 
-#: joanie/core/enums.py:34 joanie/core/enums.py:182
-#: joanie/core/models/courses.py:1071
+#: joanie/core/enums.py:34 joanie/core/enums.py:198
+#: joanie/core/models/courses.py:1248
 msgid "Enrollment"
 msgstr "Inscription"
 
-#: joanie/core/enums.py:37 joanie/core/enums.py:172
+#: joanie/core/enums.py:37 joanie/core/enums.py:187
 #: joanie/core/models/certifications.py:117
 #: joanie/core/templates/issuers/degree.html:27
 msgid "Certificate"
 msgstr "Certificat"
 
-#: joanie/core/enums.py:77
+#: joanie/core/enums.py:80 joanie/core/enums.py:265
 msgid "Draft"
 msgstr "Brouillon"
 
-#: joanie/core/enums.py:78
+#: joanie/core/enums.py:81 joanie/core/enums.py:266
 msgid "Assigned"
 msgstr "Assignée"
 
-#: joanie/core/enums.py:79
+#: joanie/core/enums.py:82
 msgid "To save payment method"
 msgstr "Moyen de paiement à définir"
 
-#: joanie/core/enums.py:80
+#: joanie/core/enums.py:83 joanie/core/enums.py:268
 msgid "To sign"
 msgstr "À signer"
 
-#: joanie/core/enums.py:81
+#: joanie/core/enums.py:84 joanie/core/enums.py:269
 msgid "Signing"
 msgstr "En cours de signature"
 
-#: joanie/core/enums.py:82 joanie/core/enums.py:226
+#: joanie/core/enums.py:85 joanie/core/enums.py:242 joanie/core/enums.py:270
 msgid "Pending"
 msgstr "En attente"
 
-#: joanie/core/enums.py:83
+#: joanie/core/enums.py:86
 msgctxt "As in: the order is canceled."
 msgid "Canceled"
 msgstr "Annulée"
 
-#: joanie/core/enums.py:86
+#: joanie/core/enums.py:89
 msgctxt "As in: the order payment is pending."
 msgid "Pending payment"
 msgstr "En attente de paiement"
 
-#: joanie/core/enums.py:90
+#: joanie/core/enums.py:93
 msgctxt "As in: the last order payment has failed."
 msgid "Failed payment"
 msgstr "Paiement échoué"
 
-#: joanie/core/enums.py:94
+#: joanie/core/enums.py:97
 msgctxt "As in: the first order payment has failed."
 msgid "No payment"
 msgstr "Aucun paiement"
 
-#: joanie/core/enums.py:98
+#: joanie/core/enums.py:101
 msgctxt "As in: the order is completed."
 msgid "Completed"
-msgstr "Complété"
+msgstr "Complétée"
 
-#: joanie/core/enums.py:102
+#: joanie/core/enums.py:105
 msgctxt "As in: the order is being refunded"
 msgid "Refunding"
 msgstr "Remboursement en cours"
 
-#: joanie/core/enums.py:106
+#: joanie/core/enums.py:109
 msgctxt "As in: the order payments are refunded"
 msgid "Refunded"
 msgstr "Remboursée"
 
-#: joanie/core/enums.py:133
+#: joanie/core/enums.py:114
+msgctxt "As in: the order is paid through batch order but without owner"
+msgid "To own"
+msgstr "À attribuer"
+
+#: joanie/core/enums.py:143
 msgctxt "As in: the enrollment was successfully set on the LMS."
 msgid "Set"
 msgstr "Défini"
 
-#: joanie/core/enums.py:137
+#: joanie/core/enums.py:147
 msgctxt "As in: the enrollment failed on the LMS."
 msgid "Failed"
 msgstr "En échec"
 
-#: joanie/core/enums.py:146
+#: joanie/core/enums.py:156
 msgid "Contract Definition Default"
 msgstr "Modèle de contrat par défaut"
 
-#: joanie/core/enums.py:147
+#: joanie/core/enums.py:157
 msgid "Contract Definition Unicamp"
 msgstr "Modèle de contrat Unicamp"
 
-#: joanie/core/enums.py:156
+#: joanie/core/enums.py:166
 msgid "Unsigned"
 msgstr "Non signé"
 
-#: joanie/core/enums.py:159
+#: joanie/core/enums.py:169
 msgid "Partially signed"
 msgstr "Partiellement signé"
 
-#: joanie/core/enums.py:161
+#: joanie/core/enums.py:171
 msgid "Signed"
 msgstr "Signé"
 
-#: joanie/core/enums.py:173
+#: joanie/core/enums.py:188
 msgid "Degree"
 msgstr "Diplôme"
 
-#: joanie/core/enums.py:174
-msgid "Unicamp degree"
-msgstr "Diplôme Unicamp"
+#: joanie/core/enums.py:189
+msgid "Microcredential Degree Default"
+msgstr "Micro-certification par défaut"
 
-#: joanie/core/enums.py:181 joanie/core/models/products.py:617
+#: joanie/core/enums.py:190
+msgid "Microcredential Degree Unicamp"
+msgstr "Micro-certification UniCamp"
+
+#: joanie/core/enums.py:197 joanie/core/models/products.py:1166
 msgid "Order"
 msgstr "Commande"
 
-#: joanie/core/enums.py:192
+#: joanie/core/enums.py:208
 msgid "Info"
 msgstr "Info"
 
-#: joanie/core/enums.py:193
+#: joanie/core/enums.py:209
 msgid "Success"
 msgstr "Succès"
 
-#: joanie/core/enums.py:194
+#: joanie/core/enums.py:210
 msgid "Warning"
 msgstr "Avertissement"
 
-#: joanie/core/enums.py:195 joanie/core/enums.py:231
+#: joanie/core/enums.py:211 joanie/core/enums.py:247
 msgid "Error"
 msgstr "Erreur"
 
-#: joanie/core/enums.py:205
+#: joanie/core/enums.py:221
 msgid "Notification"
 msgstr "Notification"
 
-#: joanie/core/enums.py:206
+#: joanie/core/enums.py:222
 msgid "Payment succeeded"
 msgstr "Paiement réussi"
 
-#: joanie/core/enums.py:207
+#: joanie/core/enums.py:223
 msgid "Payment failed"
 msgstr "Échec du paiement"
 
-#: joanie/core/enums.py:208
+#: joanie/core/enums.py:224
 msgid "Payment refunded"
 msgstr "Paiement remboursé"
 
-#: joanie/core/enums.py:227 joanie/payment/enums.py:28
+#: joanie/core/enums.py:243 joanie/payment/enums.py:28
 msgid "Paid"
 msgstr "Payée"
 
-#: joanie/core/enums.py:228
+#: joanie/core/enums.py:244
 msgid "Refused"
 msgstr "Refusé"
 
-#: joanie/core/enums.py:229 joanie/payment/enums.py:30
+#: joanie/core/enums.py:245 joanie/payment/enums.py:30
 msgid "Refunded"
 msgstr "Remboursée"
 
-#: joanie/core/enums.py:230
+#: joanie/core/enums.py:246 joanie/core/enums.py:272
 msgid "Canceled"
 msgstr "Annulée"
 
-#: joanie/core/factories.py:1293 joanie/core/utils/contract_definition.py:101
+#: joanie/core/enums.py:267
+msgid "Quoted"
+msgstr "Devis établi"
+
+#: joanie/core/enums.py:271
+msgid "Failed payment"
+msgstr "Paiement en échec"
+
+#: joanie/core/enums.py:273
+msgid "Completed"
+msgstr "Complétée"
+
+#: joanie/core/enums.py:278
+msgid "Quote Default"
+msgstr "Devis par défaut"
+
+#: joanie/core/factories.py:1504 joanie/core/utils/contract_definition.py:140
 msgid "<COURSE_START_DATE>"
 msgstr "<DATE_DE_DEBUT_DU_COURS>"
 
-#: joanie/core/factories.py:1298 joanie/core/utils/contract_definition.py:102
+#: joanie/core/factories.py:1509 joanie/core/utils/contract_definition.py:141
 msgid "<COURSE_END_DATE>"
 msgstr "<DATE_DE_FIN_DU_COURS>"
 
-#: joanie/core/factories.py:1305
+#: joanie/core/factories.py:1516
 msgid "<EFFORT_DURATION>"
 msgstr "<EFFORT_DU_COURS>"
 
@@ -434,6 +520,7 @@ msgstr[0] "%d produit à synchroniser."
 msgstr[1] "%d produits à synchroniser."
 
 #: joanie/core/models/accounts.py:34 joanie/core/models/contracts.py:36
+#: joanie/core/models/quotes.py:33
 msgid "language"
 msgstr "langue"
 
@@ -458,50 +545,49 @@ msgid "Users"
 msgstr "Utilisateurs"
 
 #: joanie/core/models/accounts.py:161 joanie/core/models/certifications.py:33
-#: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:173
-#: joanie/core/models/courses.py:474 joanie/core/models/courses.py:825
-#: joanie/core/models/products.py:83 joanie/core/models/products.py:1439
-#: joanie/payment/models.py:481
+#: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:174
+#: joanie/core/models/courses.py:490 joanie/core/models/courses.py:917
+#: joanie/core/models/products.py:95 joanie/core/models/products.py:2441
+#: joanie/core/models/quotes.py:26 joanie/payment/models.py:493
 msgid "title"
 msgstr "titre"
 
-#: joanie/core/models/accounts.py:162
+#: joanie/core/models/accounts.py:162 joanie/core/models/products.py:2066
 msgid "address"
 msgstr "adresse"
 
-#: joanie/core/models/accounts.py:163
+#: joanie/core/models/accounts.py:163 joanie/core/models/products.py:2069
 msgid "postcode"
 msgstr "code postal"
 
-#: joanie/core/models/accounts.py:164
+#: joanie/core/models/accounts.py:164 joanie/core/models/products.py:2072
 msgid "city"
 msgstr "ville"
 
-#: joanie/core/models/accounts.py:165 joanie/core/models/courses.py:184
+#: joanie/core/models/accounts.py:165 joanie/core/models/courses.py:185
 msgid "country"
 msgstr "pays"
 
-#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:1481
+#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2483
 msgid "first name"
 msgstr "prénom"
 
-#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:1482
+#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2484
 msgid "last name"
 msgstr "nom de famille"
 
-#: joanie/core/models/accounts.py:170 joanie/core/models/courses.py:361
-#: joanie/core/models/courses.py:605 joanie/core/models/products.py:545
-#: joanie/payment/models.py:491
+#: joanie/core/models/accounts.py:170 joanie/core/models/courses.py:377
+#: joanie/core/models/courses.py:635 joanie/core/models/products.py:1076
+#: joanie/core/models/products.py:2049
 msgid "owner"
 msgstr "propriétaire"
 
 #: joanie/core/models/accounts.py:178 joanie/core/models/certifications.py:98
-#: joanie/core/models/products.py:488
+#: joanie/core/models/products.py:1017 joanie/core/models/products.py:2024
 msgid "organization"
 msgstr "établissement"
 
-#: joanie/core/models/accounts.py:184 joanie/payment/models.py:413
-#: joanie/payment/models.py:504
+#: joanie/core/models/accounts.py:184 joanie/payment/models.py:425
 msgid "main"
 msgstr "principal"
 
@@ -529,69 +615,69 @@ msgstr "L'adresse principale doit être réutilisable."
 msgid "Demote a main address is forbidden"
 msgstr "Rétrograder une adresse principale est interdit"
 
-#: joanie/core/models/activity_logs.py:64 joanie/core/models/courses.py:1049
+#: joanie/core/models/activity_logs.py:66 joanie/core/models/courses.py:1226
 msgid "user"
 msgstr "utilisateur"
 
-#: joanie/core/models/activity_logs.py:69
+#: joanie/core/models/activity_logs.py:71
 msgid "level"
 msgstr "niveau"
 
-#: joanie/core/models/activity_logs.py:75
-#: joanie/core/models/certifications.py:109 joanie/core/models/contracts.py:103
-#: joanie/payment/models.py:76
+#: joanie/core/models/activity_logs.py:77
+#: joanie/core/models/certifications.py:109 joanie/core/models/contracts.py:104
+#: joanie/core/models/quotes.py:91 joanie/payment/models.py:85
 msgid "context"
 msgstr "contexte"
 
-#: joanie/core/models/activity_logs.py:79 joanie/core/models/products.py:80
+#: joanie/core/models/activity_logs.py:81 joanie/core/models/products.py:92
 msgid "type"
 msgstr "type"
 
-#: joanie/core/models/activity_logs.py:86
+#: joanie/core/models/activity_logs.py:88
 msgid "activity_log"
 msgstr "journal_activités"
 
-#: joanie/core/models/activity_logs.py:87
+#: joanie/core/models/activity_logs.py:89
 msgid "activity_logs"
 msgstr "journaux_activités"
 
-#: joanie/core/models/base.py:22
+#: joanie/core/models/base.py:27
 msgid "id"
 msgstr "id"
 
-#: joanie/core/models/base.py:23
+#: joanie/core/models/base.py:28
 msgid "primary key for the record as UUID"
 msgstr "clé primaire de l'entrée sous la forme d'un UUID"
 
-#: joanie/core/models/base.py:29
+#: joanie/core/models/base.py:34
 msgid "created on"
 msgstr "créé le"
 
-#: joanie/core/models/base.py:30
+#: joanie/core/models/base.py:35
 msgid "date and time at which a record was created"
 msgstr "date et heure à laquelle une entrée a été créée"
 
-#: joanie/core/models/base.py:35
+#: joanie/core/models/base.py:40
 msgid "updated on"
 msgstr "modifié le"
 
-#: joanie/core/models/base.py:36
+#: joanie/core/models/base.py:41
 msgid "date and time at which a record was last updated"
 msgstr "date et heure à laquelle l'entrée a été modifiée"
 
-#: joanie/core/models/base.py:81
+#: joanie/core/models/base.py:109
 msgid "checksum"
 msgstr "checksum"
 
-#: joanie/core/models/base.py:83
+#: joanie/core/models/base.py:111
 msgid "SHA-256 Checksum of the file"
 msgstr "Checksum SHA-256 du fichier"
 
-#: joanie/core/models/base.py:88
+#: joanie/core/models/base.py:116
 msgid "file"
 msgstr "fichier"
 
-#: joanie/core/models/base.py:90
+#: joanie/core/models/base.py:118
 msgid "File used in the certificate"
 msgstr "Fichier utilisé dans le certificat"
 
@@ -600,7 +686,8 @@ msgid "name"
 msgstr "nom"
 
 #: joanie/core/models/certifications.py:34 joanie/core/models/contracts.py:30
-#: joanie/core/models/products.py:84
+#: joanie/core/models/products.py:96 joanie/core/models/products.py:539
+#: joanie/core/models/products.py:786 joanie/core/models/quotes.py:27
 msgid "description"
 msgstr "description"
 
@@ -622,15 +709,16 @@ msgid "Date of issuance"
 msgstr "Date de délivrance"
 
 #: joanie/core/models/certifications.py:83 joanie/core/models/contracts.py:93
-#: joanie/core/models/products.py:1400 joanie/payment/models.py:56
+#: joanie/core/models/products.py:1948 joanie/payment/models.py:55
 msgid "order"
 msgstr "commande"
 
-#: joanie/core/models/certifications.py:92 joanie/core/models/products.py:510
+#: joanie/core/models/certifications.py:92 joanie/core/models/products.py:1039
 msgid "enrollment"
 msgstr "inscription"
 
 #: joanie/core/models/certifications.py:103 joanie/core/models/contracts.py:47
+#: joanie/core/models/quotes.py:44
 msgid "images"
 msgstr "images"
 
@@ -642,7 +730,7 @@ msgstr "Données traduites qui doivent être gelées lors de la création d'un c
 msgid "Certificates"
 msgstr "Certificats"
 
-#: joanie/core/models/contracts.py:31
+#: joanie/core/models/contracts.py:31 joanie/core/models/quotes.py:29
 msgid "body"
 msgstr "contenu"
 
@@ -659,7 +747,7 @@ msgid "template name"
 msgstr "nom du modèle"
 
 #: joanie/core/models/contracts.py:55 joanie/core/models/contracts.py:86
-#: joanie/core/models/products.py:114
+#: joanie/core/models/products.py:125
 msgid "Contract definition"
 msgstr "Définition de contrat"
 
@@ -667,35 +755,35 @@ msgstr "Définition de contrat"
 msgid "Contract definitions"
 msgstr "Définitions de contrat"
 
-#: joanie/core/models/contracts.py:105
+#: joanie/core/models/contracts.py:106
 msgid "Localized data snapshot on contract signature"
 msgstr "Instantané des données internationalisées à la signature du contrat"
 
-#: joanie/core/models/contracts.py:115
+#: joanie/core/models/contracts.py:116
 msgid "Reference in the external signature backend"
 msgstr "Référence sur la plateforme de signature externe"
 
-#: joanie/core/models/contracts.py:120
+#: joanie/core/models/contracts.py:121
 msgid "Date and time we send the contract to signature provider"
 msgstr "Date et heure d'envoi du contrat sur la plateforme de signature"
 
-#: joanie/core/models/contracts.py:128
+#: joanie/core/models/contracts.py:129
 msgid "Date and time of issuance"
 msgstr "Date et heure de signature du contrat par l'établissement"
 
-#: joanie/core/models/contracts.py:134
+#: joanie/core/models/contracts.py:135
 msgid "organization signatory"
 msgstr "signataire de l'établissement"
 
-#: joanie/core/models/contracts.py:142
+#: joanie/core/models/contracts.py:143
 msgid "Date and time the organization signed the contract"
 msgstr "Date et heure de signature du contrat par l'établissement"
 
-#: joanie/core/models/contracts.py:150 joanie/core/serializers/admin.py:1300
+#: joanie/core/models/contracts.py:151 joanie/core/serializers/admin.py:1411
 msgid "Contract"
 msgstr "Contrat"
 
-#: joanie/core/models/contracts.py:151
+#: joanie/core/models/contracts.py:152
 msgid "Contracts"
 msgstr "Contrats"
 
@@ -707,518 +795,750 @@ msgstr "Vœu de cours"
 msgid "Course Wishes"
 msgstr "Vœux de cours"
 
-#: joanie/core/models/courses.py:75 joanie/core/models/courses.py:76
+#: joanie/core/models/courses.py:76 joanie/core/models/courses.py:77
 msgid "enroll now"
 msgstr "s'inscrire maintenant"
 
-#: joanie/core/models/courses.py:77
+#: joanie/core/models/courses.py:78
 msgid "study now"
 msgstr "étudier maintenant"
 
-#: joanie/core/models/courses.py:86 joanie/core/models/courses.py:88
+#: joanie/core/models/courses.py:87 joanie/core/models/courses.py:89
 msgid "closing on"
 msgstr "termine le"
 
-#: joanie/core/models/courses.py:87 joanie/core/models/courses.py:89
+#: joanie/core/models/courses.py:88 joanie/core/models/courses.py:90
 msgid "starting on"
 msgstr "débute le"
 
-#: joanie/core/models/courses.py:90
+#: joanie/core/models/courses.py:91
 msgid "enrollment closed"
 msgstr "inscription fermée"
 
-#: joanie/core/models/courses.py:91
+#: joanie/core/models/courses.py:92
 msgid "on-going"
 msgstr "en cours"
 
-#: joanie/core/models/courses.py:92
+#: joanie/core/models/courses.py:93
 msgid "archived"
 msgstr "archivé"
 
-#: joanie/core/models/courses.py:93
+#: joanie/core/models/courses.py:94
 msgid "to be scheduled"
 msgstr "à planifier"
 
-#: joanie/core/models/courses.py:132
+#: joanie/core/models/courses.py:133
 msgid "forever open"
 msgstr "ouvert indéfiniment"
 
-#: joanie/core/models/courses.py:171 joanie/core/models/courses.py:471
+#: joanie/core/models/courses.py:172 joanie/core/models/courses.py:487
+#: joanie/core/models/products.py:2583
 msgid "code"
 msgstr "code"
 
-#: joanie/core/models/courses.py:176
+#: joanie/core/models/courses.py:177
 msgid "representative"
 msgstr "représentant"
 
-#: joanie/core/models/courses.py:177
+#: joanie/core/models/courses.py:178
 msgid "representative fullname (to sign certificate for example)"
 msgstr "nom complet du représentant (pour signer un certificat par exemple)"
 
-#: joanie/core/models/courses.py:181
+#: joanie/core/models/courses.py:182
 msgid "signature"
 msgstr "signature"
 
-#: joanie/core/models/courses.py:182
+#: joanie/core/models/courses.py:183
 msgid "logo"
 msgstr "logo"
 
-#: joanie/core/models/courses.py:186
+#: joanie/core/models/courses.py:187
 msgid "Country field will be deprecated soon in order to be replaced by address relation."
 msgstr "Le champ Pays sera bientôt déprécié afin d'être remplacé par l'adresse."
 
-#: joanie/core/models/courses.py:191
+#: joanie/core/models/courses.py:192
 msgid "Enterprise code"
 msgstr "Numéro Siret"
 
-#: joanie/core/models/courses.py:197
+#: joanie/core/models/courses.py:198
 msgid "Activity category code"
 msgstr "N° Déclaration d'Activité"
 
-#: joanie/core/models/courses.py:202
+#: joanie/core/models/courses.py:203
 msgid "Profession of the organization's representative"
 msgstr "Profession du représentant de l'établissement"
 
-#: joanie/core/models/courses.py:203
+#: joanie/core/models/courses.py:204
 msgid "representative profession"
 msgstr "profession du représentant"
 
-#: joanie/core/models/courses.py:209
+#: joanie/core/models/courses.py:210
 msgid "Signatory representative"
 msgstr "Représentant signataire"
 
-#: joanie/core/models/courses.py:211
+#: joanie/core/models/courses.py:212
 msgid "This field is optional. If it is set, you must set the field'signatory_representative_profession' as well"
 msgstr "Ce champ est optionnel. S'il est défini, vous devez également définir le champ de \"signatory_representative_profession\""
 
-#: joanie/core/models/courses.py:219
+#: joanie/core/models/courses.py:220
 msgid "Profession of the signatory representative"
 msgstr "Profession du représentant signataire"
 
-#: joanie/core/models/courses.py:220
+#: joanie/core/models/courses.py:221
 msgid "signatory representative profession"
 msgstr "profession du représentant signataire"
 
-#: joanie/core/models/courses.py:226
+#: joanie/core/models/courses.py:227
 msgid "Contact phone number"
 msgstr "Numéro de téléphone de contact"
 
-#: joanie/core/models/courses.py:231
+#: joanie/core/models/courses.py:232
 msgid "Contact email"
 msgstr "Email de contact"
 
-#: joanie/core/models/courses.py:234
+#: joanie/core/models/courses.py:235
 msgid "Data protection officer email"
 msgstr "Email du responsable de la protection des données"
 
-#: joanie/core/models/courses.py:258
+#: joanie/core/models/courses.py:273
 msgid "Both signatory representative fields must be set."
 msgstr "Les deux champs du représentant signataire doivent être définis."
 
-#: joanie/core/models/courses.py:362 joanie/core/models/courses.py:606
+#: joanie/core/models/courses.py:378 joanie/core/models/courses.py:636
 msgid "administrator"
 msgstr "administrateur"
 
-#: joanie/core/models/courses.py:363
+#: joanie/core/models/courses.py:379
 msgid "member"
 msgstr "membre"
 
-#: joanie/core/models/courses.py:378
+#: joanie/core/models/courses.py:394
 msgid "Organization access"
 msgstr "Droit d'accès à l'établissement"
 
-#: joanie/core/models/courses.py:379
+#: joanie/core/models/courses.py:395
 msgid "Organization accesses"
 msgstr "Droits d'accès aux établissements"
 
-#: joanie/core/models/courses.py:472
+#: joanie/core/models/courses.py:488
 msgid "cover"
 msgstr "couverture"
 
-#: joanie/core/models/courses.py:479 joanie/core/models/courses.py:736
+#: joanie/core/models/courses.py:495 joanie/core/models/courses.py:766
 msgid "organizations"
 msgstr "établissements"
 
-#: joanie/core/models/courses.py:486
+#: joanie/core/models/courses.py:502
 msgid "products"
 msgstr "produits"
 
-#: joanie/core/models/courses.py:501
+#: joanie/core/models/courses.py:531
 msgid "Courses"
 msgstr "Cours"
 
-#: joanie/core/models/courses.py:607
+#: joanie/core/models/courses.py:637
 msgid "instructor"
 msgstr "formateur"
 
-#: joanie/core/models/courses.py:608
+#: joanie/core/models/courses.py:638
 msgid "manager"
 msgstr "gestionnaire"
 
-#: joanie/core/models/courses.py:625
+#: joanie/core/models/courses.py:655
 msgid "Course access"
 msgstr "Droit d'accès au cours"
 
-#: joanie/core/models/courses.py:626
+#: joanie/core/models/courses.py:656
 msgid "Course accesses"
 msgstr "Droits d'accès aux cours"
 
-#: joanie/core/models/courses.py:723 joanie/core/models/courses.py:819
-#: joanie/core/models/products.py:309 joanie/core/models/products.py:503
-#: joanie/core/models/products.py:1388
+#: joanie/core/models/courses.py:753 joanie/core/models/courses.py:911
+#: joanie/core/models/products.py:414 joanie/core/models/products.py:1032
+#: joanie/core/models/products.py:1936
 msgid "course"
 msgstr "cours"
 
-#: joanie/core/models/courses.py:729 joanie/core/models/products.py:315
-#: joanie/core/models/products.py:495
+#: joanie/core/models/courses.py:759 joanie/core/models/products.py:420
+#: joanie/core/models/products.py:1024
 msgid "product"
 msgstr "produit"
 
-#: joanie/core/models/courses.py:742
+#: joanie/core/models/courses.py:772
 msgid "Course relation to a product"
 msgstr "Relation d'un cours à un produit"
 
-#: joanie/core/models/courses.py:743
+#: joanie/core/models/courses.py:773
 msgid "Courses relations to products"
 msgstr "Relations de cours à des produits"
 
-#: joanie/core/models/courses.py:757
-msgid "You cannot delete this course product relation."
-msgstr "Vous ne pouvez pas supprimer cette relation cours / produit."
+#: joanie/core/models/courses.py:787
+msgid "You cannot delete this offering."
+msgstr "Vous ne pouvez pas supprimer cette offre commerciale."
 
-#: joanie/core/models/courses.py:823
+#: joanie/core/models/courses.py:915
 msgid "resource link"
 msgstr "lien de la ressource"
 
-#: joanie/core/models/courses.py:828
+#: joanie/core/models/courses.py:920
 msgid "course start"
 msgstr "début du cours"
 
-#: joanie/core/models/courses.py:829
+#: joanie/core/models/courses.py:921
 msgid "course end"
 msgstr "fin du cours"
 
-#: joanie/core/models/courses.py:831
+#: joanie/core/models/courses.py:923
 msgid "enrollment date"
 msgstr "date d'inscription"
 
-#: joanie/core/models/courses.py:832
+#: joanie/core/models/courses.py:924
 msgid "enrollment end"
 msgstr "date de fermeture des inscriptions"
 
-#: joanie/core/models/courses.py:840
+#: joanie/core/models/courses.py:932
 msgid "The list of languages in which the course content is available."
 msgstr "La liste des langues dans lesquelles le contenu du cours est disponible."
 
-#: joanie/core/models/courses.py:842
+#: joanie/core/models/courses.py:934
 msgid "is gradable"
 msgstr "est évaluable"
 
-#: joanie/core/models/courses.py:844
+#: joanie/core/models/courses.py:936
 msgid "is listed"
 msgstr "est répertorié"
 
-#: joanie/core/models/courses.py:847
+#: joanie/core/models/courses.py:939
 msgid "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
 msgstr "Si coché, la session de cours sera incluse dans la liste des sessions de cours disponibles à l'inscription sur la page de cours correspondante."
 
-#: joanie/core/models/courses.py:855
+#: joanie/core/models/courses.py:947
 msgid "Course runs"
 msgstr "Sessions de cours"
 
-#: joanie/core/models/courses.py:988
+#: joanie/core/models/courses.py:1164
 msgid "This course run relies on a product relation. So you cannot modify its course."
 msgstr "Cette session de cours est liée à une relation produit. Vous ne pouvez donc pas modifier son cours."
 
-#: joanie/core/models/courses.py:1043
+#: joanie/core/models/courses.py:1220
 msgid "course run"
 msgstr "session de cours"
 
-#: joanie/core/models/courses.py:1054
+#: joanie/core/models/courses.py:1231
 msgid "Ticked if the user is enrolled to the course run."
 msgstr "Coché si l'utilisateur est inscrit à la session de cours."
 
-#: joanie/core/models/courses.py:1058
+#: joanie/core/models/courses.py:1235
 msgid "state"
 msgstr "état"
 
-#: joanie/core/models/courses.py:1062
+#: joanie/core/models/courses.py:1239
 msgid "Ticked if the enrollment has been initially created in the scope of an order."
 msgstr "Coché si l'inscription a été initialement créée dans le cadre d'une commande."
 
-#: joanie/core/models/courses.py:1064
+#: joanie/core/models/courses.py:1241
 msgid "was created by order"
 msgstr "a été créé pour une commande"
 
-#: joanie/core/models/courses.py:1072
+#: joanie/core/models/courses.py:1249
 msgid "Enrollments"
 msgstr "Inscriptions"
 
-#: joanie/core/models/courses.py:1080
+#: joanie/core/models/courses.py:1257
 msgid "active"
 msgstr "active"
 
-#: joanie/core/models/courses.py:1080
+#: joanie/core/models/courses.py:1257
 msgid "inactive"
 msgstr "inactive"
 
-#: joanie/core/models/courses.py:1150
+#: joanie/core/models/courses.py:1327
 msgid "You cannot enroll to a non-listed course run out of the scope of an order."
 msgstr "Vous ne pouvez pas vous inscrire à un cours non listé en dehors d'une commande."
 
-#: joanie/core/models/courses.py:1175
+#: joanie/core/models/courses.py:1352
 msgid "Course run \"{self.course_run.id!s}\" requires a valid order to enroll."
 msgstr "La session de cours \"{self.course_run.resource_link:s}\" nécessite une commande valide pour s'inscrire."
 
-#: joanie/core/models/courses.py:1180
+#: joanie/core/models/courses.py:1357
 msgid "You are not allowed to enroll to a course run not listed."
 msgstr "Vous n'êtes pas autorisé à vous inscrire à une session de cours non répertoriée."
 
-#: joanie/core/models/products.py:85
+#: joanie/core/models/products.py:97
 msgid "instructions"
 msgstr "instructions"
 
-#: joanie/core/models/products.py:86
+#: joanie/core/models/products.py:98
 msgid "call to action"
 msgstr "appel à action"
 
-#: joanie/core/models/products.py:93
+#: joanie/core/models/products.py:105
 msgid "target courses"
 msgstr "cours ciblés"
 
-#: joanie/core/models/products.py:97 joanie/core/models/products.py:534
+#: joanie/core/models/products.py:109 joanie/core/models/products.py:1066
 msgid "price"
 msgstr "prix"
 
-#: joanie/core/models/products.py:98 joanie/core/models/products.py:536
-msgid "tax included"
-msgstr "taxe incluse"
-
-#: joanie/core/models/products.py:107
+#: joanie/core/models/products.py:118
 msgid "certificate definition"
 msgstr "définition de certificat"
 
-#: joanie/core/models/products.py:120
+#: joanie/core/models/products.py:132 joanie/core/models/quotes.py:52
+#: joanie/core/models/quotes.py:85
+msgid "Quote definition"
+msgstr "Définition du devis"
+
+#: joanie/core/models/products.py:138
 msgid "level of certification"
 msgstr "niveau de certification"
 
-#: joanie/core/models/products.py:123
+#: joanie/core/models/products.py:141
 msgid "Level of certification as defined by the European Qualifications Framework."
 msgstr "Niveau de certification comme défini par le Cadre Européen des Certifications."
 
-#: joanie/core/models/products.py:131
+#: joanie/core/models/products.py:149
 msgid "teachers"
 msgstr "responsables pédagogiques"
 
-#: joanie/core/models/products.py:132
+#: joanie/core/models/products.py:150
 msgid "Teachers that will be displayed on the delivered certificate."
 msgstr "Les responsables pédagogiques qui seront affichés sur le certificat."
 
-#: joanie/core/models/products.py:138
+#: joanie/core/models/products.py:156
 msgid "skills"
 msgstr "compétences"
 
-#: joanie/core/models/products.py:139
+#: joanie/core/models/products.py:157
 msgid "Skills that will be displayed on the delivered certificate."
 msgstr "Les compétences qui seront affichées sur le certificat."
 
-#: joanie/core/models/products.py:146
+#: joanie/core/models/products.py:178
 msgid "Products"
 msgstr "Produits"
 
-#: joanie/core/models/products.py:289
+#: joanie/core/models/products.py:394
 msgid "Certificate definition is only allowed for product kinds: "
 msgstr "La définition de certificat n'est autorisée que pour les produits de types : "
 
-#: joanie/core/models/products.py:324 joanie/core/models/products.py:1394
+#: joanie/core/models/products.py:429 joanie/core/models/products.py:1942
 msgid "course runs"
 msgstr "sessions de cours"
 
-#: joanie/core/models/products.py:327
+#: joanie/core/models/products.py:432
 msgid "position in product"
 msgstr "position dans le produit"
 
-#: joanie/core/models/products.py:329 joanie/core/models/products.py:1406
+#: joanie/core/models/products.py:434 joanie/core/models/products.py:1954
 msgid "take into account for certification"
 msgstr "prendre en compte pour la certification"
 
-#: joanie/core/models/products.py:330 joanie/core/models/products.py:1407
+#: joanie/core/models/products.py:435 joanie/core/models/products.py:1955
 msgid "Take into account the course grade for certification."
 msgstr "Prendre en compte la note du cours pour la certification."
 
-#: joanie/core/models/products.py:338
+#: joanie/core/models/products.py:443
 msgid "Target course relation to a product with a position"
 msgstr "Relation d'un cours cible à un produit avec une position"
 
-#: joanie/core/models/products.py:339
+#: joanie/core/models/products.py:444
 msgid "Target courses relations to products with a position"
 msgstr "Relation de cours cibles à des produits avec une position"
 
-#: joanie/core/models/products.py:370
+#: joanie/core/models/products.py:497 joanie/core/models/products.py:728
+#: joanie/core/models/products.py:2076
 msgid "Number of seats"
 msgstr "Nombre de sièges"
 
-#: joanie/core/models/products.py:372
+#: joanie/core/models/products.py:499
 msgid "The maximum number of orders that can be validated for a given order group"
 msgstr "Le nombre maximum de commandes pouvant être validées pour un groupe de commandes donné"
 
-#: joanie/core/models/products.py:377
+#: joanie/core/models/products.py:506 joanie/core/models/products.py:737
 msgid "course product relation"
 msgstr "relation cours produit"
 
-#: joanie/core/models/products.py:381
+#: joanie/core/models/products.py:510 joanie/core/models/products.py:756
 msgid "is active"
 msgstr "est actif"
 
+#: joanie/core/models/products.py:512 joanie/core/models/products.py:758
+msgid "priority"
+msgstr "priorité"
+
+#: joanie/core/models/products.py:513 joanie/core/models/products.py:759
+msgid "Priority"
+msgstr "Priorité"
+
 #: joanie/core/models/products.py:519
+msgid "Date at which the order group rule starts"
+msgstr "Date de début de la règle d'offre"
+
+#: joanie/core/models/products.py:520 joanie/core/models/products.py:766
+msgid "rule starts at"
+msgstr "la règle d'offre débute le"
+
+#: joanie/core/models/products.py:525
+msgid "Date at which the order group rule ends"
+msgstr "Date de fin de la règle d'offre"
+
+#: joanie/core/models/products.py:526 joanie/core/models/products.py:772
+msgid "rule ends at"
+msgstr "la règle d'offre se termine le"
+
+#: joanie/core/models/products.py:532 joanie/core/models/products.py:778
+msgid "Product price discount"
+msgstr "Réduction sur le prix du produit"
+
+#: joanie/core/models/products.py:543
+msgid "Description of the order group"
+msgstr "Description de la règle d'offre"
+
+#: joanie/core/models/products.py:547
+msgid "Order group"
+msgstr "Règle d'offre"
+
+#: joanie/core/models/products.py:548
+msgid "Order groups"
+msgstr "Règles d'offre"
+
+#: joanie/core/models/products.py:554 joanie/core/models/products.py:804
+msgid "Start date cannot be greater than end date"
+msgstr "La date de début ne peut pas être postérieure à la date de fin"
+
+#: joanie/core/models/products.py:730
+msgid "The maximum number of orders that can be validated for a given offering rule"
+msgstr "Nombre maximal de commandes pouvant être validées pour une règle d'offre donnée"
+
+#: joanie/core/models/products.py:765
+msgid "Date at which the offering rule rule starts"
+msgstr "Date de début de la règle d'offre"
+
+#: joanie/core/models/products.py:771
+msgid "Date at which the offering rule rule ends"
+msgstr "Date de fin de la règle d'offre"
+
+#: joanie/core/models/products.py:787
+msgid "Description of the offering rule"
+msgstr "Description de la règle d'offre"
+
+#: joanie/core/models/products.py:797
+msgid "Offering rule"
+msgstr "Règle d'offre"
+
+#: joanie/core/models/products.py:798
+msgid "Offering rules"
+msgstr "Règles d'offre"
+
+#: joanie/core/models/products.py:1047
 msgid "order group"
 msgstr "groupe de commandes"
 
-#: joanie/core/models/products.py:530
+#: joanie/core/models/products.py:1053 joanie/core/models/products.py:2105
+#: joanie/core/models/products.py:2590
+msgid "offering rule"
+msgstr "règle d'offre"
+
+#: joanie/core/models/products.py:1062
 msgid "courses"
 msgstr "cours"
 
-#: joanie/core/models/products.py:551
+#: joanie/core/models/products.py:1084
 msgid "has consent to terms"
 msgstr "a consenti aux conditions"
 
-#: joanie/core/models/products.py:554
+#: joanie/core/models/products.py:1087
 msgid "User has consented to the platform terms and conditions."
 msgstr "L'utilisateur a consenti aux conditions générales de vente de la plateforme."
 
-#: joanie/core/models/products.py:558
+#: joanie/core/models/products.py:1091
 msgid "has waived their right of withdrawal"
 msgstr "a renoncé à son droit de rétractation"
 
-#: joanie/core/models/products.py:561
+#: joanie/core/models/products.py:1094
 msgid "User has waived their withdrawal right."
 msgstr "L'utilisateur a renoncé à son droit de rétractation."
 
-#: joanie/core/models/products.py:569
+#: joanie/core/models/products.py:1102
 msgid "payment schedule"
 msgstr "échéancier"
 
-#: joanie/core/models/products.py:570
+#: joanie/core/models/products.py:1103
 msgid "Payment schedule for the order."
 msgstr "Échéancier pour la commande."
 
-#: joanie/core/models/products.py:580
+#: joanie/core/models/products.py:1113
 msgid "credit card"
 msgstr "carte de crédit"
 
-#: joanie/core/models/products.py:618
+#: joanie/core/models/products.py:1121 joanie/core/models/products.py:2032
+msgid "voucher"
+msgstr "coupon"
+
+#: joanie/core/models/products.py:1129
+msgid "batch_order"
+msgstr "commande groupée"
+
+#: joanie/core/models/products.py:1167
 msgid "Orders"
 msgstr "Commandes"
 
-#: joanie/core/models/products.py:729
+#: joanie/core/models/products.py:1278
 #, python-brace-format
 msgid "{required_field} field should be set for {self.product.type} products."
 msgstr "Le champ {required_field} doit être défini pour les produits {self.product.type}."
 
-#: joanie/core/models/products.py:735
+#: joanie/core/models/products.py:1284
 #, python-brace-format
 msgid "{empty_field} field should be left empty for {self.product.type} products."
 msgstr "Le champ {empty_field} devrait être laissé vide pour les produits {self.product.type}."
 
-#: joanie/core/models/products.py:742
+#: joanie/core/models/products.py:1291
 msgid "The enrollment should belong to the owner of this order."
 msgstr "L'inscription devrait appartenir au propriétaire de cette commande."
 
-#: joanie/core/models/products.py:747
+#: joanie/core/models/products.py:1296
 msgid "Orders can't be placed on enrollments originating from an order."
 msgstr "Des commandes ne peuvent pas être passées sur des inscriptions créées à partir d'une commande."
 
-#: joanie/core/models/products.py:758
+#: joanie/core/models/products.py:1307
 msgid "The order cannot be created on course run that is in archived state."
 msgstr "La commande ne peut pas être créée en lien avec une session archivée."
 
-#: joanie/core/models/products.py:777
-#, python-brace-format
-msgid "This order cannot be linked to the product \"{product_title}\", "
-msgstr "Cette commande ne peut pas être liée au produit \"{product_title}\", "
+#: joanie/core/models/products.py:1313
+msgid "The voucher is not usable."
+msgstr "Le coupon n'est pas utilisable."
 
-#: joanie/core/models/products.py:783
-#, python-brace-format
-msgid "This order cannot be linked to the product \"{product_title}\" and "
-msgstr "Cette commande ne peut pas être liée au produit \"{product_title}\" et "
-
-#: joanie/core/models/products.py:933
+#: joanie/core/models/products.py:1454
 #, python-brace-format
 msgid "Cannot automatically enroll the user {self.owner.id} in the course"
 msgstr "Impossible d'inscrire automatiquement l'utilisateur {self.owner.id} à ce cours"
 
-#: joanie/core/models/products.py:999
+#: joanie/core/models/products.py:1520
 #, python-brace-format
 msgid "Product {self.product.title} does not allow to generate a certificate."
 msgstr "Le produit {self.product.title} ne permet pas de générer un certificat."
 
-#: joanie/core/models/products.py:1014
+#: joanie/core/models/products.py:1535
 msgid "No graded courses found."
 msgstr "Aucun cours noté trouvé."
 
-#: joanie/core/models/products.py:1030
+#: joanie/core/models/products.py:1551
 msgid "This order is not ready for gradation."
 msgstr "Cette commande n'est pas prête à être évaluée."
 
-#: joanie/core/models/products.py:1040
+#: joanie/core/models/products.py:1561
 msgid "Course run "
 msgstr "Session de cours "
 
-#: joanie/core/models/products.py:1404
+#: joanie/core/models/products.py:1952
 msgid "position in order"
 msgstr "position dans la commande"
 
-#: joanie/core/models/products.py:1415
+#: joanie/core/models/products.py:1963
 msgid "Course relation to an order with a position"
 msgstr "Relation d'un cours à une commande avec une position"
 
-#: joanie/core/models/products.py:1416
+#: joanie/core/models/products.py:1964
 msgid "Courses relations to orders with a position"
 msgstr "Relations de cours à des commandes avec une position"
 
-#: joanie/core/models/products.py:1434
+#: joanie/core/models/products.py:1982 joanie/payment/models.py:63
+msgid "batch order"
+msgstr "commande groupée"
+
+#: joanie/core/models/products.py:1983
+msgid "batch orders"
+msgstr "commandes groupées"
+
+#: joanie/core/models/products.py:2003
+msgid "course product relation batch orders"
+msgstr "relation produit-cours des commandes groupées"
+
+#: joanie/core/models/products.py:2040
+msgid "contract of type convention"
+msgstr "contrat de type convention"
+
+#: joanie/core/models/products.py:2041
+msgid "contract"
+msgstr "contrat"
+
+#: joanie/core/models/products.py:2051
+msgid "eligible person to sign the convention from the company"
+msgstr "personne habilitée par l'Entreprise à signer la convention"
+
+#: joanie/core/models/products.py:2056
+msgid "company identification number"
+msgstr "numéro d'identification de l'entreprise"
+
+#: joanie/core/models/products.py:2057
+msgid "company identification number like SIRET in France"
+msgstr "numéro d'identification de l'Entreprise comme SIRET en France"
+
+#: joanie/core/models/products.py:2061 joanie/core/models/products.py:2062
+msgid "company name"
+msgstr "raison sociale"
+
+#: joanie/core/models/products.py:2066
+msgid "company address"
+msgstr "adresse de l'entreprise"
+
+#: joanie/core/models/products.py:2069
+msgid "company postcode"
+msgstr "code postal de l'entreprise"
+
+#: joanie/core/models/products.py:2072
+msgid "company city"
+msgstr "ville de l'entreprise"
+
+#: joanie/core/models/products.py:2074
+msgid "company country"
+msgstr "pays de l'entreprise"
+
+#: joanie/core/models/products.py:2077
+msgid "The number of seats to reserve"
+msgstr "Le nombre de places à réserver"
+
+#: joanie/core/models/products.py:2082
+msgid "trainees"
+msgstr "stagiaires"
+
+#: joanie/core/models/products.py:2083
+msgid "trainees name list"
+msgstr "liste des noms des stagiaires"
+
+#: joanie/core/models/products.py:2089 joanie/payment/models.py:70
+#: joanie/payment/models.py:341
+msgid "total"
+msgstr "total"
+
+#: joanie/core/models/products.py:2091
+msgid "total price for orders"
+msgstr "prix total des commandes"
+
+#: joanie/core/models/products.py:2118
+msgid "The number of trainees must match the number of seats."
+msgstr "Le nombre de stagiaires doit correspondre au nombre de places."
+
+#: joanie/core/models/products.py:2204
+#, python-brace-format
+msgid "Your batch order cannot be submitted for signature, state: {self.state}"
+msgstr "Votre commande groupée ne peut pas être soumise pour signature, état : {self.state}"
+
+#: joanie/core/models/products.py:2436
 msgid "Skill"
 msgstr "Compétence"
 
-#: joanie/core/models/products.py:1435
+#: joanie/core/models/products.py:2437
 msgid "Skills"
 msgstr "Compétences"
 
-#: joanie/core/models/products.py:1454
+#: joanie/core/models/products.py:2456
 msgid "A skill with this title already exists."
 msgstr "Cette compétence existe déjà."
 
-#: joanie/core/models/products.py:1476
+#: joanie/core/models/products.py:2478
 msgid "Teacher"
 msgstr "Responsable pédagogique"
 
-#: joanie/core/models/products.py:1477
+#: joanie/core/models/products.py:2479
 msgid "Teachers"
 msgstr "Responsables pédagogiques"
 
-#: joanie/core/models/products.py:1492
+#: joanie/core/models/products.py:2494 joanie/core/serializers/admin.py:1408
 msgid "Discount"
 msgstr "Réduction"
 
-#: joanie/core/models/products.py:1493
+#: joanie/core/models/products.py:2495
 msgid "Discounts"
 msgstr "Réductions"
 
-#: joanie/core/models/products.py:1509
+#: joanie/core/models/products.py:2511
 msgid "amount"
 msgstr "montant"
 
-#: joanie/core/models/products.py:1510
+#: joanie/core/models/products.py:2512
 msgid "Discount amount"
 msgstr "Montant de la réduction"
 
-#: joanie/core/models/products.py:1515
+#: joanie/core/models/products.py:2518
 msgid "rate"
 msgstr "taux"
 
-#: joanie/core/models/products.py:1516
+#: joanie/core/models/products.py:2519
 msgid "Discount rate"
 msgstr "Taux de réduction"
+
+#: joanie/core/models/products.py:2563
+msgid "Voucher"
+msgstr "Coupon"
+
+#: joanie/core/models/products.py:2564
+msgid "Vouchers"
+msgstr "Coupons"
+
+#: joanie/core/models/products.py:2584
+msgid "Voucher code"
+msgstr "Code du coupon"
+
+#: joanie/core/models/products.py:2598
+msgid "discount"
+msgstr "réduction"
+
+#: joanie/core/models/products.py:2605
+msgid "multiple use"
+msgstr "utilisation multiple"
+
+#: joanie/core/models/products.py:2606
+msgid "Voucher can be used multiple times per user."
+msgstr "Le coupon peut être utilisé plusieurs fois par utilisateur."
+
+#: joanie/core/models/products.py:2610
+msgid "multiple users"
+msgstr "plusieurs utilisateurs"
+
+#: joanie/core/models/products.py:2611
+msgid "Voucher can be used by multiple users."
+msgstr "Le coupon peut être utilisé par plusieurs utilisateurs."
+
+#: joanie/core/models/quotes.py:34
+msgid "Language of the quote definition"
+msgstr "Langue de la définition du devis"
+
+#: joanie/core/models/quotes.py:37
+msgid "template name to generate pdf"
+msgstr "nom du modèle pour générer le PDF"
+
+#: joanie/core/models/quotes.py:53
+msgid "Quote definitions"
+msgstr "Définitions des devis"
+
+#: joanie/core/models/quotes.py:77
+msgid "Batch order"
+msgstr "Commande groupée"
+
+#: joanie/core/models/quotes.py:93
+msgid "Localized data snapshot of the quote generated"
+msgstr "Capture localisée des données du devis généré"
+
+#: joanie/core/models/quotes.py:100
+msgid "Date and time organization signed on"
+msgstr "Date et heure de signature du contrat par l'établissement"
+
+#: joanie/core/models/quotes.py:103
+msgid "purchase order to confirm payment"
+msgstr "bon de commande pour confirmer le paiement"
+
+#: joanie/core/models/quotes.py:106
+msgid "Quote has purchase order to confirm payment from buyer"
+msgstr "Le devis dispose d’un bon de commande pour confirmer le paiement par l’acheteur"
+
+#: joanie/core/models/quotes.py:111
+msgid "Quote"
+msgstr "Devis"
+
+#: joanie/core/models/quotes.py:112
+msgid "Quotes"
+msgstr "Devis"
 
 #: joanie/core/models/site.py:18
 msgid "site"
@@ -1240,145 +1560,189 @@ msgstr "Paramètre du site"
 msgid "Site configs"
 msgstr "Paramètres du site"
 
-#: joanie/core/serializers/admin.py:1284
+#: joanie/core/serializers/admin.py:1394
 msgid "Order reference"
 msgstr "Référence de commande"
 
-#: joanie/core/serializers/admin.py:1287
+#: joanie/core/serializers/admin.py:1397
 msgid "Email"
 msgstr "Courriel"
 
-#: joanie/core/serializers/admin.py:1289
+#: joanie/core/serializers/admin.py:1399
 msgid "Order state"
 msgstr "Statut de la commande"
 
-#: joanie/core/serializers/admin.py:1290
+#: joanie/core/serializers/admin.py:1400
 msgid "Creation date"
 msgstr "Date de création"
 
-#: joanie/core/serializers/admin.py:1291
+#: joanie/core/serializers/admin.py:1401
 msgid "Last modification date"
 msgstr "Date de dernière modification"
 
-#: joanie/core/serializers/admin.py:1292
+#: joanie/core/serializers/admin.py:1402
 msgid "Product type"
 msgstr "Type de produit"
 
-#: joanie/core/serializers/admin.py:1293
+#: joanie/core/serializers/admin.py:1403
 msgid "Enrollment session"
 msgstr "Session"
 
-#: joanie/core/serializers/admin.py:1294
+#: joanie/core/serializers/admin.py:1404
 msgid "Session status"
 msgstr "Statut de la session"
 
-#: joanie/core/serializers/admin.py:1295
+#: joanie/core/serializers/admin.py:1405
 msgid "Enrolled on"
 msgstr "Inscrit le"
 
-#: joanie/core/serializers/admin.py:1296
+#: joanie/core/serializers/admin.py:1406
 #: joanie/core/templates/issuers/invoice.html:87
 msgid "Price"
 msgstr "Prix"
 
-#: joanie/core/serializers/admin.py:1297
+#: joanie/core/serializers/admin.py:1407
 msgid "Currency"
 msgstr "Devise"
 
-#: joanie/core/serializers/admin.py:1298
+#: joanie/core/serializers/admin.py:1409
 msgid "Waived withdrawal right"
 msgstr "Droit de rétractation renoncé"
 
-#: joanie/core/serializers/admin.py:1299
+#: joanie/core/serializers/admin.py:1410
 msgid "Certificate generated for this order"
 msgstr "Certificat généré pour cette commande"
 
-#: joanie/core/serializers/admin.py:1301
+#: joanie/core/serializers/admin.py:1412
 msgid "Submitted for signature"
 msgstr "Soumis à signature"
 
-#: joanie/core/serializers/admin.py:1302
+#: joanie/core/serializers/admin.py:1413
 msgid "Student signature date"
 msgstr "Date de signature de l'apprenant"
 
-#: joanie/core/serializers/admin.py:1303
+#: joanie/core/serializers/admin.py:1414
 msgid "Organization signature date"
 msgstr "Date de signature de l'établissement"
 
-#: joanie/core/serializers/admin.py:1304
+#: joanie/core/serializers/admin.py:1415
 msgid "Type"
 msgstr "Type"
 
-#: joanie/core/serializers/admin.py:1305
+#: joanie/core/serializers/admin.py:1416
 msgid "Total (on invoice)"
 msgstr "Total (sur facture)"
 
-#: joanie/core/serializers/admin.py:1306
+#: joanie/core/serializers/admin.py:1417
 msgid "Balance (on invoice)"
 msgstr "Solde (sur facture)"
 
-#: joanie/core/serializers/admin.py:1307
+#: joanie/core/serializers/admin.py:1418
 msgid "Billing state"
 msgstr "État de facturation"
 
-#: joanie/core/serializers/admin.py:1308
+#: joanie/core/serializers/admin.py:1419
 msgid "Card type"
 msgstr "Type de CB"
 
-#: joanie/core/serializers/admin.py:1309
+#: joanie/core/serializers/admin.py:1420
 msgid "Last card digits"
 msgstr "Derniers chiffres de CB"
 
-#: joanie/core/serializers/admin.py:1310
+#: joanie/core/serializers/admin.py:1421
 msgid "Card expiration date"
 msgstr "Date d’expiration de la CB"
 
-#: joanie/core/serializers/admin.py:1314
+#: joanie/core/serializers/admin.py:1425
 #, python-format
 msgid "Installment date %d"
 msgstr "Date d'échéance %d"
 
-#: joanie/core/serializers/admin.py:1317
+#: joanie/core/serializers/admin.py:1428
 #, python-format
 msgid "Installment amount %d"
 msgstr "Montant de l'échéance %d"
 
-#: joanie/core/serializers/admin.py:1320
+#: joanie/core/serializers/admin.py:1431
 #, python-format
 msgid "Installment state %d"
 msgstr "Statut de l'échéance %d"
 
-#: joanie/core/serializers/client.py:156 joanie/core/serializers/client.py:271
+#: joanie/core/serializers/client.py:158 joanie/core/serializers/client.py:273
 msgid "You are only allowed to set role to {', '.join(can_set_role_to)}"
 msgstr "Vous n'êtes autorisé qu'à définir le rôle à {', '.join(can_set_role_to)}"
 
-#: joanie/core/serializers/client.py:159 joanie/core/serializers/client.py:274
+#: joanie/core/serializers/client.py:161 joanie/core/serializers/client.py:276
 msgid "You are not allowed to set this role for this course."
 msgstr "Vous n'êtes pas autorisé à définir ce rôle pour ce cours."
 
-#: joanie/core/serializers/client.py:170
+#: joanie/core/serializers/client.py:172
 msgid "You must set a course ID in context to create a new course access."
 msgstr "Vous devez définir un ID de cours dans le contexte pour créer un nouveau droit d'accès au cours."
 
-#: joanie/core/serializers/client.py:180
+#: joanie/core/serializers/client.py:182
 msgid "You are not allowed to manage accesses for this course."
 msgstr "Vous n'êtes pas autorisé à gérer les droits d'accès à ce cours."
 
-#: joanie/core/serializers/client.py:285
+#: joanie/core/serializers/client.py:287
 msgid "You must set a organization ID in context to create a new organization access."
 msgstr "Vous devez définir un ID d'établissement dans le contexte pour créer un nouveau droit d'accès à l'établissement."
 
-#: joanie/core/serializers/client.py:296
+#: joanie/core/serializers/client.py:298
 msgid "You are not allowed to manage accesses for this organization."
 msgstr "Vous n'êtes pas autorisé à gérer les droits d'accès à cet établissement."
 
-#: joanie/core/serializers/client.py:618
+#: joanie/core/serializers/client.py:679
 msgid "You are not allowed to enroll to a course run not opened for enrollment."
 msgstr "Vous n'êtes pas autorisé à vous inscrire à une session de cours qui n'est pas ouverte à l'inscription."
 
-#: joanie/core/serializers/client.py:628
+#: joanie/core/serializers/client.py:689
 msgid "You are already enrolled to an opened course run "
 msgstr "Vous êtes déjà inscrit à une session de cours ouverte "
+
+#: joanie/core/serializers/client.py:951 joanie/core/serializers/client.py:1255
+msgid "Discounted price of the offer."
+msgstr "Prix réduit de l'offre commerciale."
+
+#: joanie/core/serializers/client.py:960
+msgid "Discount rate of the offer."
+msgstr "Taux de réduction de l’offre commerciale."
+
+#: joanie/core/serializers/client.py:968
+msgid "Discount amount of the offer."
+msgstr "Montant de réduction de l'offre commerciale."
+
+#: joanie/core/serializers/client.py:972
+msgid "Start date of the discount period for the offer."
+msgstr "Date de début de la période de réduction pour l’offre commerciale."
+
+#: joanie/core/serializers/client.py:976
+msgid "End date of the discount period for the offer."
+msgstr "Date de fin de la période de réduction pour l’offre commerciale."
+
+#: joanie/core/serializers/client.py:980
+msgid "Description of the offer rule."
+msgstr "Description de la règle d'offre."
+
+#: joanie/core/serializers/client.py:984
+msgid "Number of available seats for the offer."
+msgstr "Nombre de places disponibles pour l'offre commerciale."
+
+#: joanie/core/serializers/client.py:988
+msgid "Indicates if the offer has a seat limit."
+msgstr "Indique si l’offre commerciale a un nombre de places limité."
+
+#: joanie/core/serializers/client.py:992
+msgid "Indicates if there are seats left for the offer."
+msgstr "Indique s’il reste des places pour l’offre commerciale."
+
+#: joanie/core/serializers/client.py:1034
+msgid "Offering rules applied to this offering."
+msgstr "Règles d’offre appliquées à cette offre commerciale."
+
+#: joanie/core/serializers/client.py:1246
+msgid "String representation of the discount"
+msgstr "Représentation textuelle de la réduction"
 
 #: joanie/core/templates/admin/base.html:5
 msgid "Back office"
@@ -1393,12 +1757,14 @@ msgstr "Sentry"
 #: joanie/core/templates/mail/html/installment_refused.html:159
 #: joanie/core/templates/mail/html/installment_reminder.html:159
 #: joanie/core/templates/mail/html/installments_fully_paid.html:159
+#: joanie/core/templates/mail/html/invitation_to_sign_contract.html:159
 #: joanie/core/templates/mail/html/order_refunded.html:159
 #: joanie/core/templates/mail/html/order_validated.html:159
 #: joanie/core/templates/mail/text/installment_paid.txt:3
 #: joanie/core/templates/mail/text/installment_refused.txt:3
 #: joanie/core/templates/mail/text/installment_reminder.txt:3
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:3
+#: joanie/core/templates/mail/text/invitation_to_sign_contract.txt:3
 #: joanie/core/templates/mail/text/order_refunded.txt:3
 #: joanie/core/templates/mail/text/order_validated.txt:3
 msgid "Company logo"
@@ -1422,12 +1788,14 @@ msgid "Ref."
 msgstr "Réf."
 
 #: joanie/core/templates/contract_definition/fragment_appendice_syllabus.html:10
-#: joanie/core/templates/issuers/contract_definition_default.html:94
+#: joanie/core/templates/issuers/contract_definition_default.html:96
+#: joanie/core/templates/issuers/quote_default.html:94
 msgid "Total duration of the course: "
 msgstr "Durée totale de la formation : "
 
 #: joanie/core/templates/contract_definition/fragment_appendice_syllabus.html:14
-#: joanie/core/templates/issuers/contract_definition_default.html:97
+#: joanie/core/templates/issuers/contract_definition_default.html:99
+#: joanie/core/templates/issuers/quote_default.html:97
 #, python-format
 msgid "%(duration)s hour"
 msgid_plural "%(duration)s hours"
@@ -1494,34 +1862,43 @@ msgid "The current contract is formed between the University and the Learner, as
 msgstr "Le présent contrat est établi entre l’Université et le Stagiaire ci-après désignés :"
 
 #: joanie/core/templates/issuers/contract_definition_default.html:32
+#: joanie/core/templates/issuers/quote_default.html:35
 msgid "University (hereinafter \"the University\"): "
 msgstr "Université (ci-après \"l'Université\") : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:35
+#: joanie/core/templates/issuers/quote_default.html:38
 msgid "Name of the University: "
 msgstr "Nom de l'université : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:37
+#: joanie/core/templates/issuers/quote_default.html:40
 msgid "Head office address: "
 msgstr "Adresse du siège social : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:39
+#: joanie/core/templates/issuers/quote_default.html:44
+#: joanie/core/templates/issuers/quote_default.html:80
 msgid "SIRET number: "
 msgstr "Numéro Siret : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:40
+#: joanie/core/templates/issuers/quote_default.html:47
 msgid "Activity Declaration N°: "
 msgstr "N° Déclaration d'Activité : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:41
+#: joanie/core/templates/issuers/quote_default.html:50
 msgid "Legal Representative: "
 msgstr "Représentant légal : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:45
+#: joanie/core/templates/issuers/quote_default.html:57
 msgid "Delegated signatory: "
 msgstr "Signataire délégué : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:47
+#: joanie/core/templates/issuers/quote_default.html:62
 msgid "Administrative contact: "
 msgstr "Contact administratif : "
 
@@ -1538,6 +1915,7 @@ msgid "Full name: "
 msgstr "Nom complet : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:63
+#: joanie/core/templates/issuers/quote_default.html:83
 msgid "Postal address: "
 msgstr "Adresse postale : "
 
@@ -1549,43 +1927,47 @@ msgstr "Courriel : "
 msgid "Telephone number: "
 msgstr "Numéro de téléphone : "
 
-#: joanie/core/templates/issuers/contract_definition_default.html:70
-msgid "Course (hereinafter \"the Course\"):"
-msgstr "Formation (ci-après \"la Formation\") :"
-
 #: joanie/core/templates/issuers/contract_definition_default.html:73
+msgid "Article 1 : Training Description"
+msgstr "Article 1 : Description de la Formation"
+
+#: joanie/core/templates/issuers/contract_definition_default.html:75
+#: joanie/core/templates/issuers/quote_default.html:91
 msgid "Course number: "
 msgstr "Référence de la formation : "
 
-#: joanie/core/templates/issuers/contract_definition_default.html:74
+#: joanie/core/templates/issuers/contract_definition_default.html:76
+#: joanie/core/templates/issuers/quote_default.html:92
 msgid "Name of the Course: "
 msgstr "Nom de la formation : "
 
-#: joanie/core/templates/issuers/contract_definition_default.html:75
+#: joanie/core/templates/issuers/contract_definition_default.html:77
 msgid "Session start date: "
 msgstr "Date de début de la session : "
 
-#: joanie/core/templates/issuers/contract_definition_default.html:84
+#: joanie/core/templates/issuers/contract_definition_default.html:86
 msgid "Session end date: "
 msgstr "Date de fin de la session : "
 
-#: joanie/core/templates/issuers/contract_definition_default.html:108
+#: joanie/core/templates/issuers/contract_definition_default.html:110
+#: joanie/core/templates/issuers/quote_default.html:110
 msgid "Price of the course: "
 msgstr "Prix : "
 
-#: joanie/core/templates/issuers/contract_definition_default.html:127
+#: joanie/core/templates/issuers/contract_definition_default.html:125
 msgid "Learner's signature :"
 msgstr "Signature du stagiaire :"
 
-#: joanie/core/templates/issuers/contract_definition_default.html:133
+#: joanie/core/templates/issuers/contract_definition_default.html:131
+#: joanie/core/templates/issuers/quote_default.html:129
 msgid "University representative's signature :"
 msgstr "Signature du représentant de l'université :"
 
-#: joanie/core/templates/issuers/contract_definition_default.html:140
+#: joanie/core/templates/issuers/contract_definition_default.html:138
 msgid "Appendices"
 msgstr "Annexes"
 
-#: joanie/core/templates/issuers/contract_definition_default.html:146
+#: joanie/core/templates/issuers/contract_definition_default.html:144
 #: joanie/core/templates/mail/html/installment_paid.html:259
 #: joanie/core/templates/mail/html/installment_refused.html:235
 #: joanie/core/templates/mail/html/installment_reminder.html:235
@@ -1599,19 +1981,19 @@ msgstr "Annexes"
 msgid "Payment schedule"
 msgstr "Échéancier"
 
-#: joanie/core/templates/issuers/contract_definition_default.html:150
+#: joanie/core/templates/issuers/contract_definition_default.html:148
 msgid "Due date"
 msgstr "Date d’échéance"
 
-#: joanie/core/templates/issuers/contract_definition_default.html:151
+#: joanie/core/templates/issuers/contract_definition_default.html:149
 msgid "Amount"
 msgstr "Montant"
 
-#: joanie/core/templates/issuers/contract_definition_default.html:157
+#: joanie/core/templates/issuers/contract_definition_default.html:155
 msgid "Total :"
 msgstr "Total :"
 
-#: joanie/core/templates/issuers/contract_definition_default.html:175
+#: joanie/core/templates/issuers/contract_definition_default.html:173
 msgid "Catalog syllabus"
 msgstr "Syllabus de la formation"
 
@@ -1696,33 +2078,33 @@ msgstr "Sous-total"
 msgid "Sales Tax VAT"
 msgstr "TVA"
 
-#: joanie/core/templates/issuers/unicamp-degree.html:22
+#: joanie/core/templates/issuers/microcredential_degree_default.html:22
 msgid "Micro-credential"
 msgstr "Micro-certification"
 
-#: joanie/core/templates/issuers/unicamp-degree.html:32
+#: joanie/core/templates/issuers/microcredential_degree_default.html:33
 #, python-format
 msgid "<span class=\"student-name\">%(student)s</span><br/> acquired the skills from the professional training:<br/> <span class=\"course-name\">%(course)s</span>"
 msgstr "<span class=\"student-name\">%(student)s</span><br/> a acquis les compétences de la formation professionnelle : <br/> <span class=\"course-name\">%(course)s</span>"
 
-#: joanie/core/templates/issuers/unicamp-degree.html:39
+#: joanie/core/templates/issuers/microcredential_degree_default.html:40
 #, python-format
 msgid "Issued on %(creation_date)s in France."
 msgstr "Délivrée le %(creation_date)s en France."
 
-#: joanie/core/templates/issuers/unicamp-degree.html:52
+#: joanie/core/templates/issuers/microcredential_degree_default.html:53
 msgid "Educational coordinator "
 msgstr "Responsable pédagogique "
 
-#: joanie/core/templates/issuers/unicamp-degree.html:60
+#: joanie/core/templates/issuers/microcredential_degree_default.html:61
 msgid "Issued by"
 msgstr "Délivrée par"
 
-#: joanie/core/templates/issuers/unicamp-degree.html:76
+#: joanie/core/templates/issuers/microcredential_degree_default.html:77
 msgid "Certification level"
 msgstr "Niveau de certification"
 
-#: joanie/core/templates/issuers/unicamp-degree.html:84
+#: joanie/core/templates/issuers/microcredential_degree_default.html:85
 #, python-format
 msgid "\n"
 "                            This micro-certification is issued in compliance with the common framework for micro-certifications:\n"
@@ -1733,11 +2115,11 @@ msgstr "\n"
 "                            <br /><a href=\"%(microcertification_terms_url)s\">%(microcertification_terms_url)s</a>\n"
 "                            "
 
-#: joanie/core/templates/issuers/unicamp-degree.html:97
+#: joanie/core/templates/issuers/microcredential_degree_default.html:98
 msgid "This training<br/>is hosted by FUN"
 msgstr "Cette formation<br/>est hébergée par FUN"
 
-#: joanie/core/templates/issuers/unicamp-degree.html:108
+#: joanie/core/templates/issuers/microcredential_degree_default.html:109
 #, python-format
 msgid "\n"
 "                    To verify the authenticity<br />of this certificate, visit <br /><a href=\"%(link)s\">%(link)s</a>\n"
@@ -1746,19 +2128,53 @@ msgstr "\n"
 "                    Pour vérifier l'authenticité<br />de ce certificat, rendez-vous sur <br /><a href=\"%(link)s\">%(link)s</a>\n"
 "                    "
 
-#: joanie/core/templates/issuers/unicamp-degree.html:120
+#: joanie/core/templates/issuers/microcredential_degree_default.html:121
 msgid "<strong>Assessed skills</strong> of the professional training:"
 msgstr "<strong>Compétences évaluées</strong> de la formation professionnelle :"
+
+#: joanie/core/templates/issuers/quote_default.html:32
+msgid "The current quote is formed between the University and the Company, as identified below:"
+msgstr "Le présent devis est établi entre l’Université et l’Entreprise ci-après désignées :"
+
+#: joanie/core/templates/issuers/quote_default.html:73
+msgid "Company (hereinafter \"the Company\"):"
+msgstr "Organisation acheteuse (ci-après \"l'Entreprise\") :"
+
+#: joanie/core/templates/issuers/quote_default.html:76
+msgid "Company representative Full name: "
+msgstr "Nom complet du représentant légal de l'Entreprise : "
+
+#: joanie/core/templates/issuers/quote_default.html:77
+msgid "Representing company : "
+msgstr "Représentant l'Entreprise : "
+
+#: joanie/core/templates/issuers/quote_default.html:88
+msgid "Course (hereinafter \"the Course\"):"
+msgstr "Formation (ci-après \"la Formation\") :"
+
+#: joanie/core/templates/issuers/quote_default.html:108
+msgid "Teaching Format: Online Only"
+msgstr "Modalité d’enseignement : Formation en ligne"
+
+#: joanie/core/templates/issuers/quote_default.html:109
+msgid "For number of seats: "
+msgstr "Nombre de places : "
+
+#: joanie/core/templates/issuers/quote_default.html:135
+msgid "Company representative's signature :"
+msgstr "Signature du représentant habilité de l'Entreprise :"
 
 #: joanie/core/templates/mail/html/installment_paid.html:187
 #: joanie/core/templates/mail/html/installment_refused.html:187
 #: joanie/core/templates/mail/html/installment_reminder.html:187
 #: joanie/core/templates/mail/html/installments_fully_paid.html:187
+#: joanie/core/templates/mail/html/invitation_to_sign_contract.html:187
 #: joanie/core/templates/mail/html/order_refunded.html:187
 #: joanie/core/templates/mail/text/installment_paid.txt:7
 #: joanie/core/templates/mail/text/installment_refused.txt:7
 #: joanie/core/templates/mail/text/installment_reminder.txt:7
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:7
+#: joanie/core/templates/mail/text/invitation_to_sign_contract.txt:7
 #: joanie/core/templates/mail/text/order_refunded.txt:7
 #, python-format
 msgid " Hello %(name)s, "
@@ -1768,11 +2184,13 @@ msgstr " Bonjour %(name)s, "
 #: joanie/core/templates/mail/html/installment_refused.html:187
 #: joanie/core/templates/mail/html/installment_reminder.html:187
 #: joanie/core/templates/mail/html/installments_fully_paid.html:187
+#: joanie/core/templates/mail/html/invitation_to_sign_contract.html:187
 #: joanie/core/templates/mail/html/order_refunded.html:187
 #: joanie/core/templates/mail/text/installment_paid.txt:9
 #: joanie/core/templates/mail/text/installment_refused.txt:9
 #: joanie/core/templates/mail/text/installment_reminder.txt:9
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:9
+#: joanie/core/templates/mail/text/invitation_to_sign_contract.txt:9
 #: joanie/core/templates/mail/text/order_refunded.txt:9
 msgid "Hello,"
 msgstr "Bonjour,"
@@ -1865,8 +2283,9 @@ msgstr " Voir les détails de la commande sur votre <a href=\"%(dashboard_order_
 #: joanie/core/templates/mail/html/installment_refused.html:354
 #: joanie/core/templates/mail/html/installment_reminder.html:354
 #: joanie/core/templates/mail/html/installments_fully_paid.html:378
+#: joanie/core/templates/mail/html/invitation_to_sign_contract.html:302
 #: joanie/core/templates/mail/html/order_refunded.html:330
-#: joanie/core/templates/mail/html/order_validated.html:278
+#: joanie/core/templates/mail/html/order_validated.html:279
 #, python-format
 msgid "This mail has been sent to %(email)s by <a href=\"%(href)s\">%(name)s</a>"
 msgstr "Ce courriel a été envoyé à %(email)s par <a href=\"%(href)s\">%(name)s</a>"
@@ -1901,6 +2320,21 @@ msgstr " Pour le cours <strong>%(title)s</strong>, nous venons de prélever la d
 msgid " An amount of <strong>%(installment_amount)s</strong> has been debited on the credit card •••• •••• •••• %(credit_card_last_numbers)s. <br /> "
 msgstr " Un montant de <strong>%(installment_amount)s</strong> a été prélevé avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s. <br /> "
 
+#: joanie/core/templates/mail/html/invitation_to_sign_contract.html:211
+#, python-format
+msgid " For your batch order with the course <strong>%(title)s</strong>, a contract awaits your signature. "
+msgstr " Pour votre commande groupée du cours <strong>%(title)s</strong>, un contrat attend votre signature. "
+
+#: joanie/core/templates/mail/html/invitation_to_sign_contract.html:248
+#, python-format
+msgid " To sign this document, please click the button above or copy the following address and paste it into your browser's address bar: <a href=\"%(invitation_link)s\">%(invitation_link)s</a> "
+msgstr " Pour signer ce document, cliquez sur le bouton ci‑dessus ou copiez l’adresse suivante dans la barre d’adresse de votre navigateur : <a href=\"%(invitation_link)s\">%(invitation_link)s</a> "
+
+#: joanie/core/templates/mail/html/invitation_to_sign_contract.html:272
+#: joanie/core/templates/mail/text/invitation_to_sign_contract.txt:18
+msgid " Once your contract is signed, please contact the support team to guide you with payment details. "
+msgstr " Une fois votre contrat signé, merci de contacter l’équipe support pour vous guider sur les modalités de paiement. "
+
 #: joanie/core/templates/mail/html/order_refunded.html:211
 #, python-format
 msgid " For the course <strong>%(title)s</strong>, the order has been refunded. <br /> We have refunded the following installments on the credit card used for the payment. <br /> The remaining installments have been canceled. "
@@ -1929,11 +2363,16 @@ msgstr "Votre commande a été confirmée."
 
 #: joanie/core/templates/mail/html/order_validated.html:222
 #, python-format
+msgid "You have bought <strong>%(title)s</strong> <br />for a price of <strong>%(total)s</strong> for %(number_of_seats)s seats. <br />Here are your <strong>single use vouchers</strong> :"
+msgstr "Vous avez acheté <strong>%(title)s</strong> <br />pour un montant de <strong>%(total)s</strong> pour %(number_of_seats)s places. <br />Voici vos <strong>coupons à usage unique</strong> :"
+
+#: joanie/core/templates/mail/html/order_validated.html:223
+#, python-format
 msgid "You have bought <strong>%(title)s</strong> <br />for a price of <strong>%(price)s</strong>."
 msgstr "Vous avez acheté <strong>%(title)s</strong> <br />pour un prix de <strong>%(price)s</strong>."
 
-#: joanie/core/templates/mail/html/order_validated.html:248
-#: joanie/core/templates/mail/text/order_validated.txt:14
+#: joanie/core/templates/mail/html/order_validated.html:249
+#: joanie/core/templates/mail/text/order_validated.txt:21
 msgid "We wish you plenty of success in your training. 🎉"
 msgstr "Nous vous souhaitons beaucoup de succès dans votre formation. 🎉"
 
@@ -1958,8 +2397,9 @@ msgstr " Voir les détails de la commande sur votre tableau de bord [%(dashboard
 #: joanie/core/templates/mail/text/installment_refused.txt:48
 #: joanie/core/templates/mail/text/installment_reminder.txt:48
 #: joanie/core/templates/mail/text/installments_fully_paid.txt:50
+#: joanie/core/templates/mail/text/invitation_to_sign_contract.txt:20
 #: joanie/core/templates/mail/text/order_refunded.txt:47
-#: joanie/core/templates/mail/text/order_validated.txt:16
+#: joanie/core/templates/mail/text/order_validated.txt:23
 #, python-format
 msgid "This mail has been sent to %(email)s by %(name)s [%(href)s]"
 msgstr "Ce courriel a été envoyé à %(email)s par %(name)s [%(href)s]"
@@ -1996,6 +2436,16 @@ msgstr " Pour le cours %(title)s, nous venons de prélever la dernière échéan
 msgid " An amount of %(installment_amount)s has been debited on the credit card •••• •••• •••• %(credit_card_last_numbers)s.\n"
 msgstr " Un montant de %(installment_amount)s a été prélevé avec la carte de crédit •••• •••• •••• %(credit_card_last_numbers)s.\n"
 
+#: joanie/core/templates/mail/text/invitation_to_sign_contract.txt:12
+#, python-format
+msgid " For your batch order with the course %(title)s, a contract awaits your signature. "
+msgstr " Pour votre commande groupée du cours %(title)s, un contrat attend votre signature. "
+
+#: joanie/core/templates/mail/text/invitation_to_sign_contract.txt:16
+#, python-format
+msgid " To sign this document, please click the button above or copy the following address and paste it into your browser's address bar: %(invitation_link)s [%(invitation_link)s] "
+msgstr " Pour signer ce document, cliquez sur le bouton ci‑dessus ou copiez l’adresse suivante dans la barre de votre navigateur : %(invitation_link)s [%(invitation_link)s] "
+
 #: joanie/core/templates/mail/text/order_refunded.txt:12
 #, python-format
 msgid " For the course %(title)s, the order has been refunded.\n"
@@ -2007,154 +2457,244 @@ msgstr " Pour le cours %(title)s, la commande a été remboursée.\n"
 
 #: joanie/core/templates/mail/text/order_validated.txt:11
 #, python-format
+msgid "You have bought %(title)s for a price of %(total)s for %(number_of_seats)s seats. Here are your single use vouchers :"
+msgstr "Vous avez acheté %(title)s pour un montant de %(total)s pour %(number_of_seats)s places. Voici vos coupons à usage unique :"
+
+#: joanie/core/templates/mail/text/order_validated.txt:18
+#, python-format
 msgid "You have bought %(title)s for a price of %(price)s."
 msgstr "Vous avez acheté %(title)s pour un prix de %(price)s."
 
-#: joanie/core/utils/contract_definition.py:20
+#: joanie/core/utils/batch_order.py:34
+msgid "Seat limitation has been reached."
+msgstr "La limite de places a été atteinte."
+
+#: joanie/core/utils/batch_order.py:70 joanie/core/utils/batch_order.py:74
+#, python-brace-format
+msgid "{product_title} - A signature is requested for your batch order."
+msgstr "{product_title} - Une signature est requise pour votre commande groupée."
+
+#: joanie/core/utils/contract_definition.py:22 joanie/core/utils/quotes.py:48
 msgid "<ORGANIZATION_ADDRESS_STREET_NAME>"
 msgstr "<NOM_DE_LA_RUE_DE_LADRESSE_DE_LETABLISSEMENT>"
 
-#: joanie/core/utils/contract_definition.py:21
+#: joanie/core/utils/contract_definition.py:23 joanie/core/utils/quotes.py:49
 msgid "<ORGANIZATION_ADDRESS_CITY>"
 msgstr "<VILLE_DE_LADRESSE_DE_LETABLISSEMENT>"
 
-#: joanie/core/utils/contract_definition.py:22
+#: joanie/core/utils/contract_definition.py:24 joanie/core/utils/quotes.py:50
 msgid "<ORGANIZATION_ADDRESS_COUNTRY>"
 msgstr "<PAYS_DE_LADRESSE_DE_LETABLISSEMENT>"
 
-#: joanie/core/utils/contract_definition.py:23
+#: joanie/core/utils/contract_definition.py:25 joanie/core/utils/quotes.py:51
 msgid "<ORGANIZATION_LAST_NAME>"
 msgstr "<PRENOM_DE_LETABLISSEMENT>"
 
-#: joanie/core/utils/contract_definition.py:24
+#: joanie/core/utils/contract_definition.py:26 joanie/core/utils/quotes.py:52
 msgid "<ORGANIZATION_FIRST_NAME>"
 msgstr "<NOM_DE_LETABLISSEMENT>"
 
-#: joanie/core/utils/contract_definition.py:25
+#: joanie/core/utils/contract_definition.py:27 joanie/core/utils/quotes.py:53
 msgid "<ORGANIZATION_ADDRESS_POSTCODE>"
 msgstr "<CODE_POSTAL_DE_LADRESSE_DE_LETABLISSEMENT>"
 
-#: joanie/core/utils/contract_definition.py:26
+#: joanie/core/utils/contract_definition.py:28 joanie/core/utils/quotes.py:54
 msgid "<ORGANIZATION_ADDRESS_TITLE>"
 msgstr "<TITRE_DE_LADRESSE_DE_LETABLISSEMENT>"
 
-#: joanie/core/utils/contract_definition.py:37
+#: joanie/core/utils/contract_definition.py:39
 msgid "<STUDENT_ADDRESS_STREET_NAME>"
 msgstr "<ADRESSE_DE_LAPPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:38
+#: joanie/core/utils/contract_definition.py:40
 msgid "<STUDENT_ADDRESS_CITY>"
 msgstr "<VILLE_DE_LAPPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:39
+#: joanie/core/utils/contract_definition.py:41
 msgid "<STUDENT_ADDRESS_COUNTRY>"
 msgstr "<PAYS_DE_LAPPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:40
+#: joanie/core/utils/contract_definition.py:42
 msgid "<STUDENT_LAST_NAME>"
 msgstr "<NOM_DE_LAPPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:41
+#: joanie/core/utils/contract_definition.py:43
 msgid "<STUDENT_FIRST_NAME>"
 msgstr "<PRENOM_DE_LAPPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:42
+#: joanie/core/utils/contract_definition.py:44
 msgid "<STUDENT_ADDRESS_POSTCODE>"
 msgstr "<CODE_POSTAL_DE_LAPPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:43
+#: joanie/core/utils/contract_definition.py:45
 msgid "<STUDENT_ADDRESS_TITLE>"
 msgstr "<TITRE_DE_LADRESSE_DE_LAPPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:87
+#: joanie/core/utils/contract_definition.py:79 joanie/core/utils/quotes.py:57
 msgid "<ORGANIZATION_NAME>"
 msgstr "<NOM_DE_LETABLISSEMENT>"
 
-#: joanie/core/utils/contract_definition.py:88
+#: joanie/core/utils/contract_definition.py:80 joanie/core/utils/quotes.py:60
 msgid "<REPRESENTATIVE>"
 msgstr "<REPRESENTANT>"
 
-#: joanie/core/utils/contract_definition.py:89
+#: joanie/core/utils/contract_definition.py:81
 msgid "<REPRESENTATIVE_PROFESSION>"
 msgstr "<PROFESSION_DU_REPRESENTANT>"
 
-#: joanie/core/utils/contract_definition.py:90
+#: joanie/core/utils/contract_definition.py:82
 msgid "<ENTERPRISE_CODE>"
 msgstr "<NUMERO_SIRET>"
 
-#: joanie/core/utils/contract_definition.py:91
+#: joanie/core/utils/contract_definition.py:83
 msgid "<ACTIVITY_CATEGORY_CODE>"
 msgstr "<NUMERO_DECLARATION_ACTIVITE>"
 
-#: joanie/core/utils/contract_definition.py:92
+#: joanie/core/utils/contract_definition.py:84 joanie/core/utils/quotes.py:61
 msgid "<SIGNATORY_REPRESENTATIVE>"
 msgstr "<REPRESENTANT_SIGNATAIRE>"
 
-#: joanie/core/utils/contract_definition.py:93
+#: joanie/core/utils/contract_definition.py:86 joanie/core/utils/quotes.py:62
 msgid "<SIGNATURE_REPRESENTATIVE_PROFESSION>"
 msgstr "<PROFESSION_DU_REPRESENTANT_SIGNATAIRE>"
 
-#: joanie/core/utils/contract_definition.py:94
+#: joanie/core/utils/contract_definition.py:88 joanie/core/utils/quotes.py:63
 msgid "<CONTACT_PHONE>"
 msgstr "<NUMERO_DE_TELEPHONE_DE_CONTACT>"
 
-#: joanie/core/utils/contract_definition.py:95
+#: joanie/core/utils/contract_definition.py:89 joanie/core/utils/quotes.py:64
 msgid "<CONTACT_EMAIL>"
 msgstr "<EMAIL_DE_CONTACT>"
 
-#: joanie/core/utils/contract_definition.py:96
+#: joanie/core/utils/contract_definition.py:90
 msgid "<DPO_EMAIL_ADDRESS>"
 msgstr "<EMAIL_DU_DÉLÉGUÉ_À_LA_PROTECTION_DES_DONNEES>"
 
-#: joanie/core/utils/contract_definition.py:99
-msgid "<COURSE_CODE>"
-msgstr "<CODE_DU_COURS>"
-
-#: joanie/core/utils/contract_definition.py:100
+#: joanie/core/utils/contract_definition.py:138 joanie/core/utils/quotes.py:25
 msgid "<COURSE_NAME>"
 msgstr "<NOM_DU_COURS>"
 
-#: joanie/core/utils/contract_definition.py:103
+#: joanie/core/utils/contract_definition.py:139 joanie/core/utils/quotes.py:26
+msgid "<COURSE_CODE>"
+msgstr "<CODE_DU_COURS>"
+
+#: joanie/core/utils/contract_definition.py:142 joanie/core/utils/quotes.py:27
 msgid "<COURSE_EFFORT>"
 msgstr "<EFFORT_DU_COURS>"
 
-#: joanie/core/utils/contract_definition.py:104
+#: joanie/core/utils/contract_definition.py:143 joanie/core/utils/quotes.py:28
 msgid "<COURSE_PRICE>"
 msgstr "<PRIX_DU_COURS>"
 
-#: joanie/core/utils/contract_definition.py:106
+#: joanie/core/utils/contract_definition.py:183
 msgid "<STUDENT_NAME>"
 msgstr "<NOM_APPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:107
+#: joanie/core/utils/contract_definition.py:184
 msgid "<STUDENT_EMAIL>"
 msgstr "<MAIL_APPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:108
+#: joanie/core/utils/contract_definition.py:185
 msgid "<STUDENT_PHONE_NUMBER>"
 msgstr "<TELEPHONE_APPRENANT>"
 
-#: joanie/core/utils/contract_definition.py:112
-msgid "&lt;CONTRACT_BODY&gt;"
-msgstr "&lt;CORPS_DU_CONTRAT&gt;"
-
-#: joanie/core/utils/contract_definition.py:113
-msgid "&lt;CONTRACT_APPENDIX&gt;"
-msgstr "&lt;ANNEXE_DU_CONTRAT&gt;"
-
-#: joanie/core/utils/contract_definition.py:114
+#: joanie/core/utils/contract_definition.py:206
 msgid "<CONTRACT_TITLE>"
 msgstr "<TITRE_DU_CONTRAT>"
 
-#: joanie/core/utils/contract_definition.py:115
+#: joanie/core/utils/contract_definition.py:207
 msgid "<CONTRACT_DESCRIPTION>"
 msgstr "<DESCRIPTION_DU_CONTRAT>"
 
+#: joanie/core/utils/contract_definition.py:208
+msgid "&lt;CONTRACT_BODY&gt;"
+msgstr "&lt;CORPS_DU_CONTRAT&gt;"
+
+#: joanie/core/utils/contract_definition.py:209
+msgid "&lt;CONTRACT_APPENDIX&gt;"
+msgstr "&lt;ANNEXE_DU_CONTRAT&gt;"
+
+#: joanie/core/utils/contract_definition.py:229
+msgid "<COMPANY_NAME>"
+msgstr "<RAISON_SOCIALE>"
+
+#: joanie/core/utils/contract_definition.py:230
+msgid "<COMPANY_ADDRESS>"
+msgstr "<ADRESSE_DE_L_ENTREPRISE>"
+
+#: joanie/core/utils/contract_definition.py:231
+msgid "<COMPANY_POSTCODE>"
+msgstr "<CODE_POSTAL_DE_L_ENTREPRISE>"
+
+#: joanie/core/utils/contract_definition.py:232
+msgid "<COMPANY_CITY>"
+msgstr "<VILLE_DE_L_ENTREPRISE>"
+
+#: joanie/core/utils/contract_definition.py:233
+msgid "<COMPANY_IDENTIFICATION_NUMBER>"
+msgstr "<NUMERO_D_IDENTIFICATION_DE_L_ENTREPRISE>"
+
+#: joanie/core/utils/contract_definition.py:234
+msgid "<NUMBER_OF_SEATS_RESERVED>"
+msgstr "<NOMBRE_DE_PLACES_RESERVEES>"
+
 #: joanie/core/utils/payment_schedule.py:230
-#: joanie/payment/backends/base.py:114
+#: joanie/payment/backends/base.py:178
 #, python-brace-format
 msgid "{settings.JOANIE_CATALOG_NAME} - {product_title} - "
 msgstr "{settings.JOANIE_CATALOG_NAME} - {product_title} - "
+
+#: joanie/core/utils/quotes.py:15
+msgid "<QUOTE_TITLE>"
+msgstr "<TITRE_DU_DEVIS>"
+
+#: joanie/core/utils/quotes.py:16
+msgid "<QUOTE_DESCRIPTION>"
+msgstr "<DESCRIPTION_DU_DEVIS>"
+
+#: joanie/core/utils/quotes.py:17
+msgid "&lt;QUOTE_BODY&gt;"
+msgstr "<CORPS_DU_DEVIS>"
+
+#: joanie/core/utils/quotes.py:21
+msgid "<BATCH_ORDER_NB_SEATS>"
+msgstr "<NOMBRE_DE_PLACES_DE_LA_COMMANDE_GROUPEE>"
+
+#: joanie/core/utils/quotes.py:33
+msgid "<CUSTOMER_REPRESENTATIVE_NAME>"
+msgstr "<NOM_DU_REPRESENTANT_DU_CLIENT>"
+
+#: joanie/core/utils/quotes.py:34
+msgid "<CUSTOMER_IDENTIFICATION_NUMBER>"
+msgstr "<NUMERO_D_IDENTIFICATION_DU_CLIENT>"
+
+#: joanie/core/utils/quotes.py:35
+msgid "<CUSTOMER_COMPANY_NAME>"
+msgstr "<NOM_DE_L_ENTREPRISE_DU_CLIENT>"
+
+#: joanie/core/utils/quotes.py:36
+msgid "<CUSTOMER_ADDRESS>"
+msgstr "<ADRESSE_DU_CLIENT>"
+
+#: joanie/core/utils/quotes.py:37
+msgid "<CUSTOMER_POSTCODE>"
+msgstr "<CODE_POSTAL_DU_CLIENT>"
+
+#: joanie/core/utils/quotes.py:38
+msgid "<CUSTOMER_COUNTRY>"
+msgstr "<PAYS_DU_CLIENT>"
+
+#: joanie/core/utils/quotes.py:39
+msgid "<CUSTOMER_CITY>"
+msgstr "<VILLE_DU_CLIENT>"
+
+#: joanie/core/utils/quotes.py:58
+msgid "<ORGANIZATION_ENTERPRISE_CODE>"
+msgstr "<NUMERO_D_IDENTIFICATION_DE_L_ETABLISSEMENT>"
+
+#: joanie/core/utils/quotes.py:59
+msgid "<ORGANIZATION_ACTIVITY_CODE>"
+msgstr "<NUMERO_DE_DECLARATION_D_ACTIVITE_DE_L_ETABLISSEMENT>"
 
 #: joanie/payment/admin.py:239
 msgid "Main"
@@ -2168,26 +2708,34 @@ msgstr "Pour obtenir des résultats, choisissez un propriétaire sur la droite"
 msgid "Joanie payment application"
 msgstr "Application de paiement de Joanie"
 
-#: joanie/payment/backends/base.py:87 joanie/payment/backends/base.py:89
+#: joanie/payment/backends/base.py:120
+msgid "Batch order payment validated!"
+msgstr "Paiement de la commande groupée validé !"
+
+#: joanie/payment/backends/base.py:122
+msgid "Payment confirmed!"
+msgstr "Paiement confirmé !"
+
+#: joanie/payment/backends/base.py:150 joanie/payment/backends/base.py:152
 msgid "Subscription confirmed!"
 msgstr "Souscription confirmée !"
 
-#: joanie/payment/backends/base.py:119
+#: joanie/payment/backends/base.py:183
 #, python-brace-format
 msgid "An installment has been successfully paid of {installment_amount} {currency}"
 msgstr "Une échéance d'un montant de {installment_amount} {currency} a été payée avec succès"
 
-#: joanie/payment/backends/base.py:123
+#: joanie/payment/backends/base.py:187
 #, python-brace-format
 msgid "Order completed ! The last installment of {installment_amount} {currency} has been debited"
 msgstr "Commande complétée ! La dernière échéance d'un montant de {installment_amount} {currency} a été prélevée"
 
-#: joanie/payment/backends/base.py:167
+#: joanie/payment/backends/base.py:231
 #, python-brace-format
 msgid "{catalog_name} - {product_title} - An installment debit has failed {installment_amount:.2f} {currency}"
 msgstr "{catalog_name} - {product_title} - Le prélèvement d'une échéance d'un montant de {installment_amount:.2f} {currency} a échoué"
 
-#: joanie/payment/backends/base.py:230
+#: joanie/payment/backends/base.py:299
 #, python-brace-format
 msgid "{catalog_name} - {product_title} - Your order has been refunded for an amount of {installments_amount:.2f} {currency}"
 msgstr "{catalog_name} - {product_title} - Votre commande a été remboursée pour montant de {installments_amount:.2f} {currency}"
@@ -2224,87 +2772,83 @@ msgstr "Erreur API du fournisseur de paiement."
 msgid "Payment provider API server error."
 msgstr "Erreur serveur d'API du fournisseur de paiement."
 
-#: joanie/payment/models.py:63 joanie/payment/models.py:329
-msgid "total"
-msgstr "total"
-
-#: joanie/payment/models.py:71
+#: joanie/payment/models.py:78
 msgid "invoice address"
 msgstr "adresse de facturation"
 
-#: joanie/payment/models.py:77
+#: joanie/payment/models.py:86
 msgid "Localized data that needs to be frozen on invoice creation"
 msgstr "Données traduites qui doivent être gelées lors de la création de la facture"
 
-#: joanie/payment/models.py:84 joanie/payment/models.py:321
+#: joanie/payment/models.py:93 joanie/payment/models.py:333
 msgid "invoice"
 msgstr "facture"
 
-#: joanie/payment/models.py:85
+#: joanie/payment/models.py:94
 msgid "invoices"
 msgstr "factures"
 
-#: joanie/payment/models.py:267
+#: joanie/payment/models.py:279
 msgid "invoice cannot have as parent another invoice which is a child."
 msgstr "Une facture ne peut pas avoir comme parent une autre facture qui est un enfant."
 
-#: joanie/payment/models.py:277
+#: joanie/payment/models.py:289
 msgid "Credit note amount cannot be greater than its related invoice invoiced balance."
 msgstr "Le montant de l'avoir ne peut pas être supérieur au solde de la facture correspondante."
 
-#: joanie/payment/models.py:310
+#: joanie/payment/models.py:322
 msgid "Reference to identify transaction from external platform"
 msgstr "Référence pour identifier la transaction depuis une plateforme externe"
 
-#: joanie/payment/models.py:336
+#: joanie/payment/models.py:348
 msgid "Transaction"
 msgstr "Transaction"
 
-#: joanie/payment/models.py:337
+#: joanie/payment/models.py:349
 msgid "Transactions"
 msgstr "Transactions"
 
-#: joanie/payment/models.py:450
+#: joanie/payment/models.py:462
 msgid "Demote a main credit card is forbidden"
 msgstr "Rétrograder une carte bancaire principale est interdit"
 
-#: joanie/payment/models.py:475
+#: joanie/payment/models.py:487
 msgid "initial issuer transaction identifier"
 msgstr "identifiant de transaction de l'émetteur initial"
 
-#: joanie/payment/models.py:482
+#: joanie/payment/models.py:494
 msgid "brand"
 msgstr "marque"
 
-#: joanie/payment/models.py:484
+#: joanie/payment/models.py:496
 msgid "expiration month"
 msgstr "mois d'expiration"
 
-#: joanie/payment/models.py:486
+#: joanie/payment/models.py:498
 msgid "expiration year"
 msgstr "année d'expiration"
 
-#: joanie/payment/models.py:487
+#: joanie/payment/models.py:499
 msgid "last 4 numbers"
 msgstr "4 derniers chiffres"
 
-#: joanie/payment/models.py:499
+#: joanie/payment/models.py:502
 msgid "owners"
 msgstr "propriétaires"
 
-#: joanie/payment/models.py:506
+#: joanie/payment/models.py:508
 msgid "payment provider"
 msgstr "fournisseur de paiement"
 
-#: joanie/payment/models.py:532
+#: joanie/payment/models.py:534
 msgid "Payment provider field cannot be None."
 msgstr "Le champ fournisseur de paiement ne peut pas être vide."
 
-#: joanie/settings.py:147
+#: joanie/settings.py:148
 msgid "English"
 msgstr "Anglais"
 
-#: joanie/settings.py:148
+#: joanie/settings.py:149
 msgid "French"
 msgstr "Français"
 

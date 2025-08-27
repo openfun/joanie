@@ -84,7 +84,12 @@ class BasePaymentTestCase(TestCase):
         """Shortcut to check over batch order successful payment email"""
         # check we send it to the right email
         self.assertEqual(mail.outbox[0].to[0], email)
-        self.assertRegex(mail.outbox[0].subject, "Batch order payment validated!")
+        if "fr" in batch_order.owner.language:
+            self.assertRegex(
+                mail.outbox[0].subject, "Paiement de la commande groupée validé !"
+            )
+        else:
+            self.assertRegex(mail.outbox[0].subject, "Batch order payment validated!")
 
         email_content = " ".join(mail.outbox[0].body.split())
         fullname = batch_order.owner.get_full_name()
