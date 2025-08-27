@@ -879,6 +879,38 @@ class BatchOrderViewSet(
 
         return Response(status=HTTPStatus.ACCEPTED)
 
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="confirm-quote",
+    )
+    def confirm_quote(self, request, *args, **kwargs):
+        """
+        Confirm the organization has signed the quote and freeze total.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.is_canceled:
+            raise ValidationError(
+                "Batch order is canceled, cannot confirm quote signature."
+            )
+
+        if not batch_order.has_quote:
+            raise ValidationError("You must generate the quote first.")
+
+        if batch_order.quote.is_signed_by_organization or batch_order.total:
+            raise ValidationError("Quote is already signed, and total is frozen.")
+
+        total = request.data.get("total")
+        if not total:
+            raise ValidationError(
+                "Missing total value. It's required to confirm quote."
+            )
+
+        batch_order.freeze_total(total)
+
+        return Response(status=HTTPStatus.OK)
+
 
 class OrganizationAddressViewSet(
     mixins.CreateModelMixin,
