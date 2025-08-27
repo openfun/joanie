@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Update backend translations
+
 ## [3.0.0] - 2025-08-26
 
 ### Added

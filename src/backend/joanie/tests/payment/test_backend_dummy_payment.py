@@ -863,7 +863,10 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase
         """
         backend = DummyPaymentBackend()
         batch_order = BatchOrderFactory(
-            state=BATCH_ORDER_STATE_PENDING, nb_seats=2, offering__product__price=100
+            state=BATCH_ORDER_STATE_PENDING,
+            nb_seats=2,
+            offering__product__price=100,
+            owner__language="en-us",
         )
 
         # Create a payment
