@@ -19,6 +19,58 @@
     "description": "Payment method label",
     "message": "Payment method"
   },
+  "components.presentational.discount.DiscountSelect.addDiscountModalFormTitle": {
+    "description": "Title for the add discount modal",
+    "message": "Add a discount"
+  },
+  "components.presentational.discount.DiscountSelect.amountLabel": {
+    "description": "The label for the amount field",
+    "message": "Amount (€)"
+  },
+  "components.presentational.discount.DiscountSelect.cancelButton": {
+    "description": "The cancel button",
+    "message": "Cancel"
+  },
+  "components.presentational.discount.DiscountSelect.createButton": {
+    "description": "The create button",
+    "message": "Create"
+  },
+  "components.presentational.discount.DiscountSelect.createNewDiscountButton": {
+    "description": "The button to create a new discount",
+    "message": "Create new discount"
+  },
+  "components.presentational.discount.DiscountSelect.discountAmountHelperText": {
+    "description": "The helper text for the amount field",
+    "message": "Enter a fixed amount in euros"
+  },
+  "components.presentational.discount.DiscountSelect.discountExclusiveHelperText": {
+    "description": "The helper text explaining that rate and amount are exclusive",
+    "message": "You can only set either a rate or an amount, not both"
+  },
+  "components.presentational.discount.DiscountSelect.discountHelperText": {
+    "description": "The helper text for the discount select",
+    "message": "Select a discount or create a new one"
+  },
+  "components.presentational.discount.DiscountSelect.discountRateHelperText": {
+    "description": "The helper text for the rate field",
+    "message": "Enter a rate between 0 and 100"
+  },
+  "components.presentational.discount.DiscountSelect.discountSelectLabel": {
+    "description": "The label for the discount select",
+    "message": "Discount"
+  },
+  "components.presentational.discount.DiscountSelect.editDiscountModalFormTitle": {
+    "description": "Title for the edit discount modal",
+    "message": "Edit a discount"
+  },
+  "components.presentational.discount.DiscountSelect.noDiscountOption": {
+    "description": "The option for no discount",
+    "message": "No discount"
+  },
+  "components.presentational.discount.DiscountSelect.rateLabel": {
+    "description": "The label for the rate field",
+    "message": "Rate (%)"
+  },
   "components.presentational.dnd.DndList.emptyList": {
     "description": "Text when the drag n drop list is empty",
     "message": "No line to display, click add to add one"
@@ -223,9 +275,9 @@
     "description": "Label for the add course run modal",
     "message": "Add a course run"
   },
-  "components.templates.course.form.translations.addRelationButtonLabel": {
-    "description": "Label for the product relation subheader form",
-    "message": "Add relation"
+  "components.templates.course.form.translations.addOfferingButtonLabel": {
+    "description": "Label for the offering subheader form",
+    "message": "Add offering"
   },
   "components.templates.course.form.translations.codeLabel": {
     "description": "Label for the Code input form",
@@ -419,48 +471,76 @@
     "description": "Text for the search input placeholder",
     "message": "Search by title or code"
   },
-  "components.templates.courses.form.productRelation.row.addOrderGroupButton": {
-    "description": "Add order group button label",
-    "message": "Add order group"
+  "components.templates.courses.form.offering.row.addOfferingRuleButton": {
+    "description": "Add offering rule button label",
+    "message": "Add offering rule"
   },
-  "components.templates.courses.form.productRelation.row.addOrderGroupModalFormTitle": {
-    "description": "Title for the edit order group modal",
-    "message": "Edit an order group"
+  "components.templates.courses.form.offering.row.addOfferingRuleModalFormTitle": {
+    "description": "Title for the edit offering rule modal",
+    "message": "Edit an offering rule"
   },
-  "components.templates.courses.form.productRelation.row.alreadyCertificateGenerationInProgress": {
+  "components.templates.courses.form.offering.row.alreadyCertificateGenerationInProgress": {
     "description": "Text when hovering over the action to generate certificates, but a generation is already in progress",
     "message": "There is already a certificate generation in progress"
   },
-  "components.templates.courses.form.productRelation.row.deleteOrderGroupModal": {
-    "description": "Title for the delete order group modal",
-    "message": "Delete an order group"
+  "components.templates.courses.form.offering.row.deleteOfferingRuleModal": {
+    "description": "Title for the delete offering rule modal",
+    "message": "Delete an offering rule"
   },
-  "components.templates.courses.form.productRelation.row.deleteOrderGroupModalContent": {
-    "description": "Content for the delete order group modal",
-    "message": "Are you sure you want to delete this order group?"
+  "components.templates.courses.form.offering.row.deleteOfferingRuleModalContent": {
+    "description": "Content for the delete offering rule modal",
+    "message": "Are you sure you want to delete this offering rule?"
   },
-  "components.templates.courses.form.productRelation.row.generateCertificate": {
+  "components.templates.courses.form.offering.row.generateCertificate": {
     "description": "Label for the generate certificate action",
     "message": "Generate certificates"
   },
-  "components.templates.courses.form.productRelation.row.mainTitleOrderGroup": {
-    "description": "Title for the order group row",
-    "message": "Order group {number}"
+  "components.templates.courses.form.offering.row.mainTitleOfferingRule": {
+    "description": "Title for the offering rule row",
+    "message": "Offering rule {number}"
   },
-  "components.templates.courses.form.productRelation.row.orderGroupDisabledActionsMessage": {
-    "description": "Information message for order group disabled actions",
+  "components.templates.courses.form.offering.row.offeringDisabledActionsMessage": {
+    "description": "Information message for offering disabled actions",
+    "message": "One or more orders have already occurred for this offering, so you cannot perform this action"
+  },
+  "components.templates.courses.form.offering.row.offeringRuleIsActiveSwitchAriaLabel": {
+    "description": "Aria-label for the offering rule is active switch",
+    "message": "Offering rule is active switch"
+  },
+  "components.templates.courses.form.offering.row.subTitleOfferingRule": {
+    "description": "Sub title for the offering rule row",
+    "message": "{reservedSeats}/{totalSeats} seats"
+  },
+  "components.templates.courses.form.productRelation.row.addOfferingRuleButton": {
+    "description": "Add offering rule button label",
+    "message": "Add offering rule"
+  },
+  "components.templates.courses.form.productRelation.row.discountLabel": {
+    "description": "Discount label",
+    "message": "Discount:"
+  },
+  "components.templates.courses.form.productRelation.row.endLabel": {
+    "description": "End date label",
+    "message": "To:"
+  },
+  "components.templates.courses.form.productRelation.row.mainTitleOfferingRule": {
+    "description": "Title for the offering rule row",
+    "message": "Offering rule {number}"
+  },
+  "components.templates.courses.form.productRelation.row.offeringRuleDisabledActionsMessage": {
+    "description": "Information message for offering rule disabled actions",
     "message": "Seats have already been reserved, so you cannot perform this action."
   },
-  "components.templates.courses.form.productRelation.row.orderGroupIsActiveSwitchAriaLabel": {
-    "description": "Aria-label for the order group is active switch",
-    "message": "Order group is active switch"
+  "components.templates.courses.form.productRelation.row.offeringRuleIsActiveSwitchAriaLabel": {
+    "description": "Aria-label for the offering rule is active switch",
+    "message": "Offering rule is active switch"
   },
-  "components.templates.courses.form.productRelation.row.relationDisabledActionsMessage": {
-    "description": "Information message for relation disabled actions",
-    "message": "One or more orders have already occurred for this relationship, so you cannot perform this action"
+  "components.templates.courses.form.productRelation.row.startLabel": {
+    "description": "Start date label",
+    "message": "From:"
   },
-  "components.templates.courses.form.productRelation.row.subTitleOrderGroup": {
-    "description": "Sub title for the order group row",
+  "components.templates.courses.form.productRelation.row.subTitleOfferingRule": {
+    "description": "Sub title for the offering rule row",
     "message": "{reservedSeats}/{totalSeats} seats"
   },
   "components.templates.courses.form.productRelationModal.addButton": {
@@ -469,7 +549,7 @@
   },
   "components.templates.courses.form.productRelationModal.addModalTitle": {
     "description": "Title for productRelationModal in add mode ",
-    "message": "Add the relation"
+    "message": "Add offering"
   },
   "components.templates.courses.form.productRelationModal.editButton": {
     "description": "Label for the validate button in edit mode",
@@ -477,7 +557,7 @@
   },
   "components.templates.courses.form.productRelationModal.editModalTitle": {
     "description": "Title for productRelationModal in edit mode ",
-    "message": "Edit the relation"
+    "message": "Edit offering"
   },
   "components.templates.courses.inputs.search.CourseSearch.searchLabel": {
     "description": "Label for the CourseSearch component",
@@ -591,6 +671,34 @@
     "description": "wasCreatedForOrder helper text",
     "message": "Checked if the enrollment was originally created as part of an order."
   },
+  "components.templates.offerings.offering.OfferingList.addOfferingButtonLabel": {
+    "description": "Label for the product offering subheader form",
+    "message": "Add offering"
+  },
+  "components.templates.offerings.offering.OfferingList.deleteOfferingModalContent": {
+    "description": "Content for the delete offering modal",
+    "message": "Are you sure you want to delete this offering?"
+  },
+  "components.templates.offerings.offering.OfferingList.deleteOfferingModalTitle": {
+    "description": "Title for the delete offering modal",
+    "message": "Delete offering"
+  },
+  "components.templates.offerings.offering.OfferingList.emptyCourseList": {
+    "description": "Message when the offering list is empty inside the course form",
+    "message": "No offering have been created for this course"
+  },
+  "components.templates.offerings.offering.OfferingList.emptyProductList": {
+    "description": "Message when the course offering product list is empty inside the product form",
+    "message": "No offering have been created for this product"
+  },
+  "components.templates.offerings.offering.OfferingList.titleCourseHeader": {
+    "description": "Title for the offering list inside the course form",
+    "message": "Offerings"
+  },
+  "components.templates.offerings.offering.OfferingList.titleProductHeader": {
+    "description": "Title for the course offering product list inside the product form",
+    "message": "Offerings"
+  },
   "components.templates.orders.buttons.enrollmentActionsButton.cantEnrollMessage": {
     "description": "Label for the can't enroll tooltip message",
     "message": "It's impossible to enroll because the course run is not opened for enrollment."
@@ -663,6 +771,10 @@
     "description": "Label for the created on header inside the table",
     "message": "Created on"
   },
+  "components.templates.orders.list.discount": {
+    "description": "Label for the discount header inside the table",
+    "message": "Discount"
+  },
   "components.templates.orders.list.id": {
     "description": "Label for the id header inside the table",
     "message": "ID"
@@ -682,6 +794,10 @@
   "components.templates.orders.list.state": {
     "description": "Label for the state header inside the table",
     "message": "State"
+  },
+  "components.templates.orders.list.total": {
+    "description": "Label for the total header inside the table",
+    "message": "Total"
   },
   "components.templates.orders.list.updatedOn": {
     "description": "Label for the updated on header inside the table",
@@ -775,6 +891,10 @@
     "description": "Message displayed when order has no payment method",
     "message": "No payment method has been defined."
   },
+  "components.templates.orders.view.offeringRule": {
+    "description": "Offering rule field",
+    "message": "Offering rule"
+  },
   "components.templates.orders.view.orderDetailsSectionAlert": {
     "description": "Text for the order details alert",
     "message": "In this view, you can see the details of an order, such as the user concerned, their status etc."
@@ -782,10 +902,6 @@
   "components.templates.orders.view.orderDetailsSectionTitle": {
     "description": "Title for the order section",
     "message": "Order informations"
-  },
-  "components.templates.orders.view.orderGroup": {
-    "description": "Order group field",
-    "message": "Order group"
   },
   "components.templates.orders.view.orderStatesMessages.assigned": {
     "description": "Text for assigned order state",
@@ -830,6 +946,10 @@
   "components.templates.orders.view.orderStatesMessages.signing": {
     "description": "Text for signing order state",
     "message": "Signing"
+  },
+  "components.templates.orders.view.orderStatesMessages.to_own": {
+    "description": "Text for to own order state",
+    "message": "To own"
   },
   "components.templates.orders.view.orderStatesMessages.to_save_payment_method": {
     "description": "Text for to save payment method order state",
@@ -1075,13 +1195,29 @@
     "description": "Text for the search input placeholder",
     "message": "Search by title"
   },
-  "components.templates.products.form.sections.OderGroups.OrderGroupForm.isActiveLabel": {
-    "description": "The input label for the activate switch",
-    "message": "Activate this order group"
+  "components.templates.products.form.sections.OfferingRules.OfferingRuleForm.descriptionInputLabel": {
+    "description": "The input label for the description",
+    "message": "Description"
   },
-  "components.templates.products.form.sections.OderGroups.OrderGroupForm.numberOfSeatInputLabel": {
+  "components.templates.products.form.sections.OfferingRules.OfferingRuleForm.discountLabel": {
+    "description": "The input label for the discount select",
+    "message": "Discount"
+  },
+  "components.templates.products.form.sections.OfferingRules.OfferingRuleForm.endLabel": {
+    "description": "The input label for the end date",
+    "message": "End date"
+  },
+  "components.templates.products.form.sections.OfferingRules.OfferingRuleForm.isActiveLabel": {
+    "description": "The input label for the activate switch",
+    "message": "Activate this offering rule"
+  },
+  "components.templates.products.form.sections.OfferingRules.OfferingRuleForm.numberOfSeatInputLabel": {
     "description": "The input label for the number of seats",
     "message": "Number of seats"
+  },
+  "components.templates.products.form.sections.OfferingRules.OfferingRuleForm.startLabel": {
+    "description": "The input label for the start date",
+    "message": "Start date"
   },
   "components.templates.products.form.sections.ProductFormTypeSection.microCredentialTitle": {
     "description": "Title for the credential product type",
@@ -1319,34 +1455,6 @@
     "description": "Title for the credential product type",
     "message": "Microcredential"
   },
-  "components.templates.relations.courseProductRelation.CourseProductRelationList.addRelationButtonLabel": {
-    "description": "Label for the product relation subheader form",
-    "message": "Add relation"
-  },
-  "components.templates.relations.courseProductRelation.CourseProductRelationList.deleteRelationModalContent": {
-    "description": "Content for the delete relation modal",
-    "message": "Are you sure you want to delete this relation?"
-  },
-  "components.templates.relations.courseProductRelation.CourseProductRelationList.deleteRelationModalTitle": {
-    "description": "Title for the delete relation modal",
-    "message": "Delete product relationship"
-  },
-  "components.templates.relations.courseProductRelation.CourseProductRelationList.emptyCourseList": {
-    "description": "Message when the course relation product list is empty inside the course form",
-    "message": "No product relationships have been created for this course"
-  },
-  "components.templates.relations.courseProductRelation.CourseProductRelationList.emptyProductList": {
-    "description": "Message when the course relation product list is empty inside the product form",
-    "message": "No course relationships have been created for this product"
-  },
-  "components.templates.relations.courseProductRelation.CourseProductRelationList.titleCourseHeader": {
-    "description": "Title for the course relation product list inside the course form",
-    "message": "Relation to products"
-  },
-  "components.templates.relations.courseProductRelation.CourseProductRelationList.titleProductHeader": {
-    "description": "Title for the course relation product list inside the product form",
-    "message": "Relation to courses"
-  },
   "dashboard.nav.DashboardNavThemeMenu.buttonAriaLabel": {
     "description": "Aria label of button to open color scheme menu",
     "message": "Open color schemes menu"
@@ -1427,17 +1535,17 @@
     "description": "Error message shown to the user when course product relation creation request fails.",
     "message": "An error occurred while creating the course product relation. Please retry later."
   },
-  "hooks.useCourseProductRelation.errorCreateOrderGroup": {
-    "description": "Error message shown to the user when order group creation request fails.",
-    "message": "An error occurred while creating the order group. Please retry later."
+  "hooks.useCourseProductRelation.errorCreateOfferingRule": {
+    "description": "Error message shown to the user when offering rule creation request fails.",
+    "message": "An error occurred while creating the offering rule. Please retry later."
   },
   "hooks.useCourseProductRelation.errorDelete": {
     "description": "Error message shown to the user when course product relation deletion request fails.",
     "message": "An error occurred while deleting the course product relation. Please retry later."
   },
-  "hooks.useCourseProductRelation.errorDeleteOrderGroup": {
-    "description": "Error message shown to the user when order group deletion request fails.",
-    "message": "An error occurred while deleting the order group. Please retry later."
+  "hooks.useCourseProductRelation.errorDeleteOfferingRule": {
+    "description": "Error message shown to the user when offering rule deletion request fails.",
+    "message": "An error occurred while deleting the offering rule. Please retry later."
   },
   "hooks.useCourseProductRelation.errorGet": {
     "description": "Error message shown to the user when course product relations fetch request fails.",
@@ -1451,9 +1559,9 @@
     "description": "Error message shown to the user when course product relation update request fails.",
     "message": "An error occurred while updating the course product relation. Please retry later."
   },
-  "hooks.useCourseProductRelation.errorUpdateOrderGroup": {
-    "description": "Error message shown to the user when order group update request fails.",
-    "message": "An error occurred while updating the order group. Please retry later."
+  "hooks.useCourseProductRelation.errorUpdateOfferingRule": {
+    "description": "Error message shown to the user when offering rule update request fails.",
+    "message": "An error occurred while updating the offering rule. Please retry later."
   },
   "hooks.useCourseRun.errorCreate": {
     "description": "Error message shown to the user when course-run creation request fails.",
@@ -1474,6 +1582,26 @@
   "hooks.useCourseRun.errorUpdate": {
     "description": "Error message shown to the user when course run update request fails.",
     "message": "An error occurred while updating the course run. Please retry later."
+  },
+  "hooks.useDiscounts.errorCreate": {
+    "description": "Error message shown to the user when discount creation request fails.",
+    "message": "An error occurred while creating the discount. Please retry later."
+  },
+  "hooks.useDiscounts.errorDelete": {
+    "description": "Error message shown to the user when discount deletion request fails.",
+    "message": "An error occurred while deleting the discount. Please retry later."
+  },
+  "hooks.useDiscounts.errorGet": {
+    "description": "Error message shown to the user when discounts fetch request fails.",
+    "message": "An error occurred while fetching discounts. Please retry later."
+  },
+  "hooks.useDiscounts.errorNotFound": {
+    "description": "Error message shown to the user when no discount matches.",
+    "message": "Cannot find the discount"
+  },
+  "hooks.useDiscounts.errorUpdate": {
+    "description": "Error message shown to the user when discount update request fails.",
+    "message": "An error occurred while updating the discount. Please retry later."
   },
   "hooks.useEnrollments.errorCreate": {
     "description": "Error message shown to the user when order creation request fails.",
