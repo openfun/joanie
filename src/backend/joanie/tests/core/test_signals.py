@@ -1955,13 +1955,13 @@ class SignalsTestCase(TestCase):
             type=enums.PRODUCT_TYPE_CERTIFICATE, price="50.00"
         )
 
-        cr1 = factories.CourseRunFactory(
+        course_run_ongoing_open = factories.CourseRunFactory(
             state=CourseState.ONGOING_OPEN,
         )
-        cr2 = factories.CourseRunFactory(
+        course_run_future_open = factories.CourseRunFactory(
             state=CourseState.FUTURE_OPEN,
         )
-        cr3 = factories.CourseRunFactory(
+        course_run_archived = factories.CourseRunFactory(
             state=CourseState.ARCHIVED_CLOSED,
         )
         factories.CourseRunFactory(
@@ -1970,9 +1970,11 @@ class SignalsTestCase(TestCase):
 
         mock_sync.reset_mock()
 
-        factories.OfferingFactory(product=product, course=cr1.course)
-        factories.OfferingFactory(product=product, course=cr2.course)
-        factories.OfferingFactory(product=product, course=cr3.course)
+        factories.OfferingFactory(
+            product=product, course=course_run_ongoing_open.course
+        )
+        factories.OfferingFactory(product=product, course=course_run_future_open.course)
+        factories.OfferingFactory(product=product, course=course_run_archived.course)
 
         # Update the product price
         product.price = "52.00"
@@ -1980,18 +1982,50 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-
-        # Only cr1 and cr2 should have been synchronized
-        # cr3 has been ignored because it is archived
+        # Only course_run_ongoing_open and course_run_future_open should have been synchronized
+        # course_run_archived has been ignored because it is archived
         # The fourth course run has been ignored it does offer the certificate product
-        serialized_course_runs = [
-            cr.get_serialized(product=product) for cr in [cr1, cr2]
-        ]
-        self.assertCountEqual(synchronized_course_runs, serialized_course_runs)
-
-        for entry in serialized_course_runs:
-            self.assertEqual(entry["certificate_offer"], enums.COURSE_OFFER_PAID)
-            self.assertEqual(entry["certificate_price"], D(52.00))
+        self.assertEqual(
+            synchronized_course_runs,
+            [
+                {
+                    "catalog_visibility": enums.HIDDEN,
+                    "certificate_discount": None,
+                    "certificate_discounted_price": None,
+                    "certificate_offer": enums.COURSE_OFFER_PAID,
+                    "certificate_price": D("52.00"),
+                    "course": course_run_future_open.course.code,
+                    "discount": None,
+                    "discounted_price": None,
+                    "end": course_run_future_open.end.isoformat(),
+                    "enrollment_end": course_run_future_open.enrollment_end.isoformat(),
+                    "enrollment_start": course_run_future_open.enrollment_start.isoformat(),
+                    "languages": course_run_future_open.languages,
+                    "offer": enums.COURSE_OFFER_FREE,
+                    "price": None,
+                    "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run_future_open.id}/",
+                    "start": course_run_future_open.start.isoformat(),
+                },
+                {
+                    "catalog_visibility": enums.HIDDEN,
+                    "certificate_discount": None,
+                    "certificate_discounted_price": None,
+                    "certificate_offer": enums.COURSE_OFFER_PAID,
+                    "certificate_price": D("52.00"),
+                    "course": course_run_ongoing_open.course.code,
+                    "discount": None,
+                    "discounted_price": None,
+                    "end": course_run_ongoing_open.end.isoformat(),
+                    "enrollment_end": course_run_ongoing_open.enrollment_end.isoformat(),
+                    "enrollment_start": course_run_ongoing_open.enrollment_start.isoformat(),
+                    "languages": course_run_ongoing_open.languages,
+                    "offer": enums.COURSE_OFFER_FREE,
+                    "price": None,
+                    "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run_ongoing_open.id}/",
+                    "start": course_run_ongoing_open.start.isoformat(),
+                },
+            ],
+        )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_type_credential(self, mock_sync):
@@ -2001,13 +2035,13 @@ class SignalsTestCase(TestCase):
         all offering should be synchronized.
         """
 
-        cr1 = factories.CourseRunFactory(
+        course_run_ongoing_open = factories.CourseRunFactory(
             state=CourseState.ONGOING_OPEN,
         )
-        cr2 = factories.CourseRunFactory(
+        course_run_future_open = factories.CourseRunFactory(
             state=CourseState.FUTURE_OPEN,
         )
-        cr3 = factories.CourseRunFactory(
+        course_run_archived = factories.CourseRunFactory(
             state=CourseState.ARCHIVED_CLOSED,
         )
         factories.CourseRunFactory(
@@ -2019,7 +2053,11 @@ class SignalsTestCase(TestCase):
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             price="50.00",
-            courses=[cr1.course, cr2.course, cr3.course],
+            courses=[
+                course_run_ongoing_open.course,
+                course_run_future_open.course,
+                course_run_archived.course,
+            ],
         )
 
         # Update the product price should
@@ -2028,14 +2066,53 @@ class SignalsTestCase(TestCase):
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
-
-        serialized_course_runs = (
-            product.get_equivalent_serialized_course_runs_for_products([product])
+        self.assertEqual(
+            synchronized_course_runs,
+            [
+                {
+                    "catalog_visibility": enums.HIDDEN,
+                    "certificate_offer": None,
+                    "course": course_run_archived.course.code,
+                    "end": None,
+                    "enrollment_end": None,
+                    "enrollment_start": None,
+                    "languages": [],
+                    "offer": enums.COURSE_OFFER_PAID,
+                    "price": product.price,
+                    "price_currency": "EUR",
+                    "resource_link": "https://example.com/api/v1.0/courses/"
+                    f"{course_run_archived.course.code}/products/{product.id}/",
+                    "start": None,
+                },
+                {
+                    "catalog_visibility": enums.HIDDEN,
+                    "certificate_offer": None,
+                    "course": course_run_future_open.course.code,
+                    "end": None,
+                    "enrollment_end": None,
+                    "enrollment_start": None,
+                    "languages": [],
+                    "offer": enums.COURSE_OFFER_PAID,
+                    "price": product.price,
+                    "price_currency": "EUR",
+                    "resource_link": "https://example.com/api/v1.0/courses/"
+                    f"{course_run_future_open.course.code}/products/{product.id}/",
+                    "start": None,
+                },
+                {
+                    "catalog_visibility": enums.HIDDEN,
+                    "certificate_offer": None,
+                    "course": course_run_ongoing_open.course.code,
+                    "end": None,
+                    "enrollment_end": None,
+                    "enrollment_start": None,
+                    "languages": [],
+                    "offer": enums.COURSE_OFFER_PAID,
+                    "price": product.price,
+                    "price_currency": "EUR",
+                    "resource_link": "https://example.com/api/v1.0/courses/"
+                    f"{course_run_ongoing_open.course.code}/products/{product.id}/",
+                    "start": None,
+                },
+            ],
         )
-        self.assertEqual(len(synchronized_course_runs), 3)
-        self.assertCountEqual(synchronized_course_runs, serialized_course_runs)
-
-        for entry in serialized_course_runs:
-            self.assertEqual(entry["offer"], enums.COURSE_OFFER_PAID)
-            self.assertEqual(entry["price"], D("52.00"))
-            self.assertEqual(entry["price_currency"], "EUR")
