@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Remove OfferingLightSerializer which caused cache issues
+  with OfferingSerializer
+
 ## [3.0.1] - 2025-08-26
 
 ### Fixed

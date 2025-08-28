@@ -243,6 +243,17 @@ class OfferingApiTest(BaseAPITestCase):
                     }
                     for organization in offering.organizations.all()
                 ],
+                "rules": {
+                    "description": None,
+                    "discount_amount": None,
+                    "discount_end": None,
+                    "discount_rate": None,
+                    "discount_start": None,
+                    "discounted_price": None,
+                    "has_seat_limit": False,
+                    "has_seats_left": True,
+                    "nb_available_seats": None,
+                },
             },
         )
 

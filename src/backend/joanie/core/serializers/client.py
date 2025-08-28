@@ -999,15 +999,20 @@ class OfferingRulePropertySerializer(serializers.Serializer):
         """Only there to avoid a NotImplementedError"""
 
 
-class OfferingLightSerializer(CachedModelSerializer):
+class OfferingSerializer(CachedModelSerializer):
     """
-    Serialize an offering in its minimal format.
+    Serialize an offering.
     """
 
     course = CourseLightSerializer(read_only=True, exclude_abilities=True)
     product = ProductSerializer(read_only=True)
     organizations = OrganizationSerializer(
         many=True, read_only=True, exclude_abilities=True
+    )
+    is_withdrawable = serializers.BooleanField(read_only=True)
+    rules = OfferingRulePropertySerializer(
+        read_only=True,
+        help_text=_("Offering rules applied to this offering."),
     )
 
     class Meta:
@@ -1018,24 +1023,6 @@ class OfferingLightSerializer(CachedModelSerializer):
             "id",
             "organizations",
             "product",
-            "is_withdrawable",
-        ]
-        read_only_fields = fields
-
-
-class OfferingSerializer(OfferingLightSerializer):
-    """
-    Serialize an offering.
-    """
-
-    is_withdrawable = serializers.BooleanField(read_only=True)
-    rules = OfferingRulePropertySerializer(
-        read_only=True,
-        help_text=_("Offering rules applied to this offering."),
-    )
-
-    class Meta(OfferingLightSerializer.Meta):
-        fields = OfferingLightSerializer.Meta.fields + [
             "is_withdrawable",
             "rules",
         ]

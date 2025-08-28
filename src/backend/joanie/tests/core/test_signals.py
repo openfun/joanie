@@ -2003,7 +2003,8 @@ class SignalsTestCase(TestCase):
                     "languages": course_run_future_open.languages,
                     "offer": enums.COURSE_OFFER_FREE,
                     "price": None,
-                    "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run_future_open.id}/",
+                    "resource_link": "https://example.com/api/v1.0/course-runs/"
+                    f"{course_run_future_open.id}/",
                     "start": course_run_future_open.start.isoformat(),
                 },
                 {
@@ -2021,7 +2022,8 @@ class SignalsTestCase(TestCase):
                     "languages": course_run_ongoing_open.languages,
                     "offer": enums.COURSE_OFFER_FREE,
                     "price": None,
-                    "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run_ongoing_open.id}/",
+                    "resource_link": "https://example.com/api/v1.0/course-runs/"
+                    f"{course_run_ongoing_open.id}/",
                     "start": course_run_ongoing_open.start.isoformat(),
                 },
             ],

@@ -1966,7 +1966,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedOfferingLightList"
+                                    "$ref": "#/components/schemas/PaginatedOfferingList"
                                 }
                             }
                         },
@@ -2908,7 +2908,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedOfferingLightList"
+                                    "$ref": "#/components/schemas/PaginatedOfferingList"
                                 }
                             }
                         },
@@ -4466,7 +4466,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedOfferingLightList"
+                                    "$ref": "#/components/schemas/PaginatedOfferingList"
                                 }
                             }
                         },
@@ -6886,59 +6886,6 @@
                     "rules"
                 ]
             },
-            "OfferingLight": {
-                "type": "object",
-                "description": "Serialize an offering in its minimal format.",
-                "properties": {
-                    "course": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/CourseLight"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "created_on": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "date and time at which a record was created"
-                    },
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "readOnly": true,
-                        "description": "primary key for the record as UUID"
-                    },
-                    "organizations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Organization"
-                        },
-                        "readOnly": true
-                    },
-                    "product": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/Product"
-                            }
-                        ],
-                        "readOnly": true
-                    },
-                    "is_withdrawable": {
-                        "type": "string",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "course",
-                    "created_on",
-                    "id",
-                    "is_withdrawable",
-                    "organizations",
-                    "product"
-                ]
-            },
             "OfferingRuleProperty": {
                 "type": "object",
                 "description": "Serializer for the rules property of an offer.",
@@ -7849,7 +7796,7 @@
                     }
                 }
             },
-            "PaginatedOfferingLightList": {
+            "PaginatedOfferingList": {
                 "type": "object",
                 "required": [
                     "count",
@@ -7875,7 +7822,7 @@
                     "results": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/OfferingLight"
+                            "$ref": "#/components/schemas/Offering"
                         }
                     }
                 }
