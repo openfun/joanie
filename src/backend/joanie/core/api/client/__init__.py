@@ -205,8 +205,6 @@ class OfferingViewSet(
         """Return the serializer class to use."""
         if self.action in ["payment_schedule", "payment_plan"]:
             return serializers.OrderPaymentScheduleSerializer
-        if self.action == "list":
-            return serializers.OfferingLightSerializer
         return self.serializer_class
 
     @action(detail=True, methods=["GET"], url_path="payment-schedule")
