@@ -54,6 +54,8 @@ class BaseSignatureBackend:
         if contract.batch_orders.count() == 1:
             batch_order = contract.batch_orders.first()
             flow = batch_order.flow
+            if batch_order.uses_purchase_order:
+                flow.update()  # Transition to `signing` state now and second call is to `completed`
         else:
             flow = contract.order.flow
         flow.update()

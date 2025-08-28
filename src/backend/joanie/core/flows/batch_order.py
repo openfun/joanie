@@ -8,6 +8,7 @@ from django.apps import apps
 from viewflow import fsm
 
 from joanie.core import enums
+from joanie.core.tasks import generate_orders_and_send_vouchers_task
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ class BatchOrderFlow:
 
     def _can_be_quoted(self):
         """A batch order can be quoted if it is related to a quote"""
-        return hasattr(self.instance, "quote")
+        return self.instance.has_quote
 
     @state.transition(
         source=enums.BATCH_ORDER_STATE_ASSIGNED,
@@ -60,13 +61,12 @@ class BatchOrderFlow:
 
     def _can_be_state_to_sign(self):
         """
-        A batch order state can be set to `to_sign` if it has an unsigned contract but
-        is submitted at the signature provider.
+        When a batch order is paid through the purchase order, we should only allow to transition
+        to `to_sign` state once the quote's purchase order is received. Otherwise, when the payment
+        method is set with bank transfer or credit card, it can be set to `to_sign` once the quote
+        has been signed by the organization.
         """
-        return (
-            self.instance.is_submitted_to_signature
-            and self.instance.is_eligible_to_get_sign
-        )
+        return self.instance.can_be_signed
 
     @state.transition(
         source=[
@@ -100,7 +100,9 @@ class BatchOrderFlow:
     def _can_be_state_pending(self):
         """
         A batch order can be set to pending for a payment because the contract has been
-        signed or is in state failed payment
+        signed or is in state failed payment.
+        When the batch order uses a purchase order, it goes to completed directly after the
+        contract is signed by the owner.
         """
         return self.instance.is_ready_for_payment
 
@@ -178,6 +180,16 @@ class BatchOrderFlow:
     @state.on_success()
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
         """Post transition actions"""
+
+        if (
+            source in [enums.BATCH_ORDER_STATE_SIGNING, enums.BATCH_ORDER_STATE_PENDING]
+            and target == enums.BATCH_ORDER_STATE_COMPLETED
+            and (self.instance.uses_purchase_order or self.instance.uses_bank_transfer)
+        ):
+            generate_orders_and_send_vouchers_task.delay(
+                batch_order_id=str(self.instance.id)
+            )
+
         # When the batch order payment is successful, we should log the payment in Activity Log
         # When the batch order is related to a quote, the state goes from `signing`
         # to `completed` only if it's paid through purchase order

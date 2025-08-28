@@ -1,6 +1,6 @@
 """Test suite for the admin batch orders API create endpoint."""
 
-from decimal import Decimal as D
+from decimal import Decimal
 from http import HTTPStatus
 
 from django.test import TestCase
@@ -11,7 +11,7 @@ from joanie.core import enums, factories, models
 class BatchOrdersAdminApiCreateTestCase(TestCase):
     """Test suite for the admin batch orders API create endpoint."""
 
-    def create_payload_batch_order(self, owner, offering, nb_seats):
+    def create_payload_batch_order(self, owner, offering, nb_seats, payment_method):
         """
         Create batch order required payload data.
         """
@@ -26,6 +26,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             "postcode": "2900",
             "country": "FR",
             "trainees": factories.TraineeFactory.create_batch(nb_seats),
+            "payment_method": payment_method,
         }
 
     def test_api_admin_batch_orders_create_anonymous(self):
@@ -68,7 +69,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             product__price=10,
         )
 
-        data = self.create_payload_batch_order(owner, offering, 2)
+        data = self.create_payload_batch_order(
+            owner, offering, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+        )
         data.update(nb_seats=1)
 
         response = self.client.post(
@@ -100,7 +103,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         ]
 
         for company_key in company_keys:
-            data = self.create_payload_batch_order(owner, offering, 2)
+            data = self.create_payload_batch_order(
+                owner, offering, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+            )
             data[company_key] = ""
 
             response = self.client.post(
@@ -122,7 +127,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
                 )
 
         for company_key in company_keys:
-            data = self.create_payload_batch_order(owner, offering, 2)
+            data = self.create_payload_batch_order(
+                owner, offering, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+            )
             del data[company_key]
 
             response = self.client.post(
@@ -155,7 +162,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         owner = factories.UserFactory()
-        data = self.create_payload_batch_order(owner, None, 2)
+        data = self.create_payload_batch_order(
+            owner, None, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+        )
 
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
@@ -177,7 +186,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )
-        data = self.create_payload_batch_order(None, offering, 2)
+        data = self.create_payload_batch_order(
+            None, offering, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+        )
 
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
@@ -209,45 +220,12 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
             content_type="application/json",
-            data=self.create_payload_batch_order(owner, offering, 2),
+            data=self.create_payload_batch_order(
+                owner, offering, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+            ),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
-
-    def test_api_admin_batch_orders_create_when_offering_rule_has_discount(self):
-        """
-        Authenticated user should be able to get the discounted price on the batch order when
-        there is a discount on the offering rule.
-        """
-        admin = factories.UserFactory(is_staff=True, is_superuser=True)
-        self.client.login(username=admin.username, password="password")
-
-        owner = factories.UserFactory()
-        offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            product__price=10,
-        )
-        offering_rule = factories.OfferingRuleFactory(
-            discount=factories.DiscountFactory(rate=0.1),
-            course_product_relation=offering,
-            is_active=True,
-            nb_seats=4,
-        )
-
-        response = self.client.post(
-            "/api/v1.0/admin/batch-orders/",
-            content_type="application/json",
-            data=self.create_payload_batch_order(owner, offering, 4),
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
-
-        batch_order = models.BatchOrder.objects.get(owner=owner)
-
-        self.assertEqual(batch_order.relation, offering)
-        self.assertEqual(batch_order.nb_seats, 4)
-        self.assertEqual(batch_order.offering_rules.first(), offering_rule)
-        self.assertEqual(batch_order.total, D("36.00"))
 
     def test_api_admin_batch_orders_create_auto_assign_organization_with_least_orders(
         self,
@@ -265,6 +243,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         )
         offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
             organizations=[organization, expected_organization],
         )
@@ -284,7 +263,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
             content_type="application/json",
-            data=self.create_payload_batch_order(owner, offering, 3),
+            data=self.create_payload_batch_order(
+                owner, offering, 3, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+            ),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
@@ -305,6 +286,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         organization1, organization2 = factories.OrganizationFactory.create_batch(2)
         offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
             organizations=[organization1, organization2],
         )
@@ -313,7 +295,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             is_active=True,
             nb_seats=8,
         )
-        data = self.create_payload_batch_order(owner, offering, 3)
+        data = self.create_payload_batch_order(
+            owner, offering, 3, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+        )
         data["organization"] = organization1.id
 
         response = self.client.post(
@@ -328,46 +312,20 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         self.assertEqual(batch_order.organization, organization1)
 
-    def test_api_admin_batch_orders_create_with_voucher_code(self):
-        """
-        Authenticated admin user should be able to create a batch order with a voucher code.
-        """
-        admin = factories.UserFactory(is_staff=True, is_superuser=True)
-        self.client.login(username=admin.username, password="password")
-
-        owner = factories.UserFactory()
-        offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            product__price=123,
-        )
-        voucher = factories.VoucherFactory(
-            discount=factories.DiscountFactory(rate=0.5),
-            multiple_use=False,
-            multiple_users=False,
-        )
-
-        data = self.create_payload_batch_order(owner, offering, 2)
-        data["voucher"] = voucher.code
-
-        response = self.client.post(
-            "/api/v1.0/admin/batch-orders/",
-            content_type="application/json",
-            data=data,
-        )
-
-        batch_order = models.BatchOrder.objects.get(owner=owner)
-
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
-        self.assertEqual(batch_order.total, D("123.00"))
-
     def test_api_admin_batch_orders_create(self):
-        """Authenticated admin user should be to create a batch order."""
+        """
+        Authenticated admin user should be to create a batch order.
+        Once the batch order is created, it should have a contract, a quote, and the state
+        should be `quoted`. Also, the total amount should be set at 0, since freezing total
+        comes afterwards.
+        """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
         owner = factories.UserFactory()
         offering = factories.OfferingFactory(
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
         )
         factories.OfferingRuleFactory(
@@ -379,8 +337,21 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         response = self.client.post(
             "/api/v1.0/admin/batch-orders/",
             content_type="application/json",
-            data=self.create_payload_batch_order(owner, offering, 2),
+            data=self.create_payload_batch_order(
+                owner, offering, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
+            ),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         self.assertEqual(models.BatchOrder.objects.count(), 1)
+
+        batch_order = models.BatchOrder.objects.get()
+
+        self.assertEqual(batch_order.owner, owner)
+        self.assertEqual(batch_order.organization, offering.organizations.first())
+        self.assertEqual(batch_order.offering, offering)
+        self.assertEqual(batch_order.nb_seats, 2)
+        self.assertIsNotNone(batch_order.organization)
+        self.assertEqual(batch_order.total, Decimal("0.00"))
+        self.assertIsNotNone(batch_order.contract)
+        self.assertIsNotNone(batch_order.quote)

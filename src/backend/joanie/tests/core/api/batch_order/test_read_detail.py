@@ -66,6 +66,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                 {"first_name": "John", "last_name": "Doe"},
                 {"first_name": "Jane", "last_name": "Doe"},
             ],
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
 
         with self.record_performance():
@@ -80,6 +81,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
             {
                 "id": str(batch_order.id),
                 "owner": user.username,
+                "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
                 "total": float(batch_order.total),
                 "currency": settings.DEFAULT_CURRENCY,
                 "offering_id": str(batch_order.offering.id),
@@ -95,9 +97,29 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                     "contact_email": batch_order.organization.contact_email,
                     "dpo_email": batch_order.organization.dpo_email,
                 },
-                "main_invoice_reference": batch_order.main_invoice.reference,
+                "main_invoice_reference": None,
                 "contract_id": str(batch_order.contract.id),
-                "quote": None,
+                "quote": {
+                    "batch_order": {
+                        "company_name": batch_order.company_name,
+                        "id": str(batch_order.id),
+                        "organization_id": str(batch_order.organization.id),
+                        "owner_name": batch_order.owner.get_full_name(),
+                        "relation_id": str(batch_order.offering.id),
+                        "state": enums.BATCH_ORDER_STATE_QUOTED,
+                    },
+                    "definition": {
+                        "body": batch_order.quote.definition.body,
+                        "description": batch_order.quote.definition.description,
+                        "id": str(batch_order.quote.definition.id),
+                        "language": batch_order.quote.definition.language,
+                        "name": batch_order.quote.definition.name,
+                        "title": batch_order.quote.definition.title,
+                    },
+                    "has_purchase_order": False,
+                    "id": str(batch_order.quote.id),
+                    "organization_signed_on": None,
+                },
                 "company_name": batch_order.company_name,
                 "identification_number": batch_order.identification_number,
                 "address": batch_order.address,
