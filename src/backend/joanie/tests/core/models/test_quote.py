@@ -1,9 +1,19 @@
 """Test suite for quote model."""
 
+import threading
+from datetime import datetime
+from unittest import mock
+from zoneinfo import ZoneInfo
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils import timezone
 
-from joanie.core.factories import QuoteFactory
+import pytest
+
+from joanie.core.factories import QuoteDefinitionFactory, QuoteFactory
+from joanie.core.models import Quote, QuoteDefinition
 from joanie.tests.base import LoggingTestCase
 
 
@@ -49,3 +59,92 @@ class QuoteModelsTestCase(LoggingTestCase):
             "You must generate the quote context before signing the quote."
             in str(context.exception)
         )
+
+    def test_models_quote_reference_uniqueness(self):
+        """Everytime a quote object is created, the reference should be incremented by one"""
+        year = timezone.now().year
+
+        quote_1 = QuoteFactory()
+
+        self.assertEqual(
+            quote_1.reference,
+            f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000000",
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            QuoteFactory(
+                reference=f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000000"
+            )
+
+        self.assertTrue(
+            "Quote with this Reference already exists." in str(context.exception)
+        )
+
+    def test_models_quote_reference_should_increment_by_1(self):
+        """Everytime a quote object is created, the reference should be incremented by one"""
+        year = timezone.now().year
+
+        quote_1 = QuoteFactory()
+        quote_2 = QuoteFactory()
+        quote_3 = QuoteFactory()
+
+        self.assertEqual(
+            quote_1.reference,
+            f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000000",
+        )
+        self.assertEqual(
+            quote_2.reference,
+            f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000001",
+        )
+        self.assertEqual(
+            quote_3.reference,
+            f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_0000002",
+        )
+
+
+# pylint:disable=unused-argument
+@pytest.mark.django_db(transaction=True)
+def test_models_quote_generate_unique_reference_multiple_thread(transactional_db):
+    """
+    We want to ensure that when 2 requests are sent to create a Quote, the first
+    creation locks the rows in the database for uniqueness of reference. Both object are
+    created in the order of their arrival.
+    """
+    created_references = []
+    mocked_now = datetime(2025, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
+    Quote.objects.all().delete()
+
+    # Create the seed of the first quote with reference number ends with "0000000"
+    Quote.objects.create(
+        definition=QuoteDefinitionFactory(),
+        reference=f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_2025_000000",
+    )
+
+    def create_quote():
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            quote = Quote(definition=QuoteDefinitionFactory())
+            with transaction.atomic():
+                quote.clean()
+                quote.save()
+                created_references.append(quote.reference)
+
+    thread_1 = threading.Thread(target=create_quote)
+    thread_2 = threading.Thread(target=create_quote)
+
+    thread_1.start()
+    thread_2.start()
+
+    thread_1.join()
+    thread_2.join()
+
+    assert len(created_references) == 2  # noqa: PLR2004
+    assert created_references[0] != created_references[1]
+    assert created_references[0] == (
+        f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{mocked_now.year}_0000001"
+    )
+    assert created_references[1] == (
+        f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{mocked_now.year}_0000002"
+    )
+
+    Quote.objects.all().delete()
+    QuoteDefinition.objects.all().delete()

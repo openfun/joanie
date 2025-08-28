@@ -18,6 +18,7 @@ and this project adheres to
 
 ### Added
 
+- Add unique reference for a quote once generated
 - Add template micro credential without Unicamp brand
 - Update payment schedule endpoint to return discounted amount and schedule
   with voucher code
