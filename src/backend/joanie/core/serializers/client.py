@@ -1433,6 +1433,26 @@ class OrderSerializer(serializers.ModelSerializer):
         return settings.DEFAULT_CURRENCY
 
 
+class BatchOrderBillingAddressSerializer(serializers.Serializer):
+    """
+    Serializer for the billing address of a batch order
+    """
+
+    company_name = serializers.CharField(required=True)
+    identification_number = serializers.CharField(required=True)
+    address = serializers.CharField(required=True)
+    postcode = serializers.CharField(required=True)
+    country = serializers.CharField(required=True)
+    contact_email = serializers.CharField(required=True)
+    contact_name = serializers.CharField(required=True)
+
+    def create(self, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+    def update(self, instance, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+
 class BatchOrderSerializer(serializers.ModelSerializer):
     """BatchOrder client serializer"""
 
@@ -1460,18 +1480,11 @@ class BatchOrderSerializer(serializers.ModelSerializer):
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
     )
-    voucher = serializers.SlugRelatedField(
-        queryset=models.Voucher.objects.all(),
-        slug_field="code",
-        required=False,
-        write_only=True,
-    )
     country = CountryField(required=False)
     nb_seats = serializers.IntegerField(
         min_value=1,
         help_text="The number of seats to reserve",
     )
-    trainees = serializers.JSONField(default=list)
     offering_rule_ids = serializers.SlugRelatedField(
         source="offering_rules",
         many=True,
@@ -1483,6 +1496,21 @@ class BatchOrderSerializer(serializers.ModelSerializer):
     payment_method = serializers.ChoiceField(
         choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
         required=True,
+    )
+    administrative_firstname = serializers.CharField(required=True)
+    administrative_lastname = serializers.CharField(required=True)
+    administrative_profession = serializers.CharField(required=True)
+    administrative_email = serializers.CharField(required=True)
+    administrative_telephone = serializers.CharField(required=True)
+    billing_address = BatchOrderBillingAddressSerializer(required=False)
+    funding_entity = serializers.CharField(required=False)
+    funding_amount = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        required=False,
     )
 
     class Meta:
@@ -1496,18 +1524,25 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "organization",
             "main_invoice_reference",
             "contract_id",
-            "voucher",
             "company_name",
             "identification_number",
+            "vat_registration",
             "address",
             "postcode",
             "city",
             "country",
             "nb_seats",
-            "trainees",
             "offering_rule_ids",
             "quote",
             "payment_method",
+            "administrative_firstname",
+            "administrative_lastname",
+            "administrative_profession",
+            "administrative_email",
+            "administrative_telephone",
+            "billing_address",
+            "funding_entity",
+            "funding_amount",
         ]
         read_only_fields = [
             "id",

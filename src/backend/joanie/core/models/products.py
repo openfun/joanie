@@ -2029,14 +2029,6 @@ class BatchOrder(BaseModel):
         blank=True,
         null=True,
     )
-    voucher = models.ForeignKey(
-        to="Voucher",
-        verbose_name=_("voucher"),
-        related_name="batch_orders",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
     contract = models.ForeignKey(
         to=Contract,
         help_text=_("contract of type convention"),
@@ -2059,6 +2051,16 @@ class BatchOrder(BaseModel):
         help_text=_("company identification number like SIRET in France"),
         max_length=255,
     )
+    # Company's information
+    vat_registration = models.CharField(
+        verbose_name=_("Tax registration number"),
+        help_text=_(
+            "company's vat identification number like Numero de TVA intracommunautaire in France"
+        ),
+        max_length=255,
+        blank=True,
+        null=True,
+    )
     company_name = models.CharField(
         verbose_name=_("company name"),
         help_text=_("company name"),
@@ -2074,18 +2076,62 @@ class BatchOrder(BaseModel):
         verbose_name=_("city"), help_text=_("company city"), max_length=255
     )
     country = CountryField(verbose_name=_("company country"))
+    # Billing
+    billing_address = models.JSONField(
+        verbose_name=_("billing address of the company"),
+        help_text=_("billing address if different from company's address"),
+        editable=False,
+        encoder=DjangoJSONEncoder,
+        default=dict,
+    )
+    # Administrative contact for follow up
+    administrative_firstname = models.CharField(
+        verbose_name=_("Administrative firstname"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    administrative_lastname = models.CharField(
+        verbose_name=_("Administrative lastname"), max_length=100, blank=True, null=True
+    )
+    administrative_profession = models.CharField(
+        verbose_name=_("Administrative profession representative"),
+        help_text=_("administrative profession representative"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    administrative_email = models.CharField(
+        verbose_name=_("Administrative email"), max_length=100, blank=True, null=True
+    )
+    administrative_telephone = models.CharField(
+        verbose_name=_("Administrative phone number"),
+        max_length=40,
+        blank=True,
+        null=True,
+    )
     nb_seats = models.PositiveSmallIntegerField(
         verbose_name=_("Number of seats"),
         help_text=_("The number of seats to reserve"),
         default=1,
         validators=[MinValueValidator(1)],
     )
-    trainees = models.JSONField(
-        verbose_name=_("trainees"),
-        help_text=_("trainees name list"),
-        editable=True,
-        encoder=DjangoJSONEncoder,
-        default=list,
+    funding_entity = models.CharField(
+        verbose_name=_("funding entity name"),
+        help_text=_("funding entity's name that helps financially the payment"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    funding_amount = models.DecimalField(
+        _("funding amount"),
+        editable=False,
+        help_text=_("funding amount of the batch order from the funding entity"),
+        decimal_places=2,
+        max_digits=9,
+        default=0.00,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
     )
     total = models.DecimalField(
         _("total"),
@@ -2117,13 +2163,20 @@ class BatchOrder(BaseModel):
     # pylint:disable=no-member
     def clean(self):
         """
-        Ensure that the number of reserved seats (`nb_seats`) matches the number of trainees
-        in the `trainees` list when saving a BatchOrder instance.
+        If no billing address was given on creation, it means that the billing address does
+        not differenciates from the buyer's company address.
         """
-        if len(self.trainees) != self.nb_seats:
-            raise ValidationError(
-                _("The number of trainees must match the number of seats.")
-            )
+        if not self.billing_address:
+            self.billing_address = {
+                "company_name": self.company_name,
+                "identification_number": self.identification_number,
+                "address": self.address,
+                "city": self.city,
+                "postcode": self.postcode,
+                "country": self.country.code,
+                "contact_name": f"{self.administrative_firstname} {self.administrative_lastname}",
+                "contact_email": self.administrative_email,
+            }
 
         return super().clean()
 
@@ -2398,15 +2451,28 @@ class BatchOrder(BaseModel):
         """
         Create a billing address for the batch order
         """
-        return CompanyBillingAddress(
-            address=self.address,
-            postcode=self.postcode,
-            city=self.city,
-            country=self.country,
-            language=self.owner.language,
-            first_name=self.owner.first_name,
-            last_name="",
-        )
+        if self.billing_address:
+            data = {
+                "address": self.billing_address["address"],
+                "postcode": self.billing_address["postcode"],
+                "city": self.billing_address["city"],
+                "country": self.billing_address["country"],
+                "language": self.owner.language,
+                "first_name": self.billing_address["contact_name"],
+                "last_name": "",
+            }
+        else:
+            data = {
+                "address": self.address,
+                "postcode": self.postcode,
+                "city": self.city,
+                "country": self.country.code,
+                "language": self.owner.language,
+                "first_name": f"{self.administrative_firstname} {self.administrative_lastname}",
+                "last_name": "",
+            }
+
+        return CompanyBillingAddress(**data)
 
     def create_main_invoice(self):
         """
