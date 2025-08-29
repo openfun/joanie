@@ -15,7 +15,6 @@ from rest_framework import exceptions, serializers
 from rest_framework.generics import get_object_or_404
 
 from joanie.core import enums, models
-from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
 from joanie.core.utils.batch_order import get_active_offering_rule
 from joanie.payment.models import CreditCard
@@ -999,7 +998,7 @@ class OfferingRulePropertySerializer(serializers.Serializer):
         """Only there to avoid a NotImplementedError"""
 
 
-class OfferingLightSerializer(CachedModelSerializer):
+class OfferingLightSerializer(serializers.ModelSerializer):
     """
     Serialize an offering in its minimal format.
     """
@@ -1042,7 +1041,7 @@ class OfferingSerializer(OfferingLightSerializer):
         read_only_fields = fields
 
 
-class ProductRelationSerializer(CachedModelSerializer):
+class ProductRelationSerializer(serializers.ModelSerializer):
     """
     Serialize an offering.
     """

@@ -508,10 +508,6 @@ class OfferingApiTest(BaseAPITestCase):
         )
 
         with self.record_performance():
-            self.client.get(f"/api/v1.0/courses/{course.code}/products/{product.id}/")
-
-        # A second call to the url should benefit from caching on the product serializer
-        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
@@ -522,27 +518,6 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(content["id"], str(offering.id))
         self.assertEqual(content["course"]["code"], "00000")
         self.assertEqual(content["product"]["id"], str(product.id))
-
-        # This query should be cached
-        with self.record_performance():
-            response = self.client.get(
-                f"/api/v1.0/courses/{course.code}/products/{product.id}/"
-            )
-
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-        # Then cache should be language sensitive
-        with self.record_performance():
-            self.client.get(
-                f"/api/v1.0/courses/{course.code}/products/{product.id}/",
-                HTTP_ACCEPT_LANGUAGE="fr-fr",
-            )
-
-        with self.record_performance():
-            self.client.get(
-                f"/api/v1.0/courses/{course.code}/products/{product.id}/",
-                HTTP_ACCEPT_LANGUAGE="fr-fr",
-            )
 
     def test_api_offering_read_detail_no_organization(self):
         """
@@ -633,13 +608,6 @@ class OfferingApiTest(BaseAPITestCase):
         )
         factories.UserCourseAccessFactory(user=user, course=course)
 
-        with self.record_performance():
-            self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-
-        # A second call to the url should benefit from caching on the product serializer
         with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/offerings/{offering.id}/",
@@ -808,14 +776,6 @@ class OfferingApiTest(BaseAPITestCase):
             )
 
         with self.record_performance():
-            self.client.get(
-                f"/api/v1.0/offerings/{offering.id}/",
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-            )
-
-        # A second call to the url should benefit from caching on
-        # the offering serializer
-        with self.record_performance():
             response = self.client.get(
                 f"/api/v1.0/offerings/{offering.id}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
@@ -834,6 +794,50 @@ class OfferingApiTest(BaseAPITestCase):
                 "discount_start": None,
                 "discount_end": None,
                 "nb_available_seats": offering_rule.available_seats,
+                "has_seat_limit": True,
+                "has_seats_left": True,
+            },
+        )
+
+    def test_api_offering_read_offering_rules_no_cache(self):
+        """
+        No cache should be used, so that the data returned is always up to date and correct.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        product = factories.ProductFactory(price="0.00")
+        offering = factories.OfferingFactory(product=product)
+        factories.UserCourseAccessFactory(user=user, course=offering.course)
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering, nb_seats=10
+        )
+        factories.OrderFactory(
+            product=product, course=offering.course, offering_rules=[offering_rule]
+        )
+
+        # OfferingLightSerializer is used here, common cache was used as the cache key is
+        # related to the model, not the serializer
+        self.client.get("/api/v1.0/offerings/", HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        # OfferingSerializer is used here, no cache was used
+        response = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = response.json()
+
+        self.assertEqual(
+            content["rules"],
+            {
+                "discounted_price": None,
+                "discount_amount": None,
+                "discount_rate": None,
+                "description": None,
+                "discount_start": None,
+                "discount_end": None,
+                "nb_available_seats": 10,
                 "has_seat_limit": True,
                 "has_seats_left": True,
             },
@@ -869,96 +873,6 @@ class OfferingApiTest(BaseAPITestCase):
                 "discount_start": None,
                 "discount_end": None,
                 "nb_available_seats": offering_rule.available_seats,
-                "has_seat_limit": True,
-                "has_seats_left": True,
-            },
-        )
-
-    def test_api_offering_read_offering_rules_cache(self):
-        """Cache should be reset on order submit and cancel."""
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        product = factories.ProductFactory(price="0.00")
-        offering = factories.OfferingFactory(product=product)
-        factories.UserCourseAccessFactory(user=user, course=offering.course)
-        offering_rule = factories.OfferingRuleFactory(
-            course_product_relation=offering, nb_seats=10
-        )
-        order = factories.OrderFactory(
-            product=product, course=offering.course, offering_rules=[offering_rule]
-        )
-
-        response = self.client.get(
-            f"/api/v1.0/offerings/{offering.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-        content = response.json()
-
-        self.assertEqual(
-            content["rules"],
-            {
-                "discounted_price": None,
-                "discount_amount": None,
-                "discount_rate": None,
-                "description": None,
-                "discount_start": None,
-                "discount_end": None,
-                "nb_available_seats": 10,
-                "has_seat_limit": True,
-                "has_seats_left": True,
-            },
-        )
-
-        # Starting order state flow should impact the number of seat availabilities in the
-        # representation of the product
-        order.init_flow()
-
-        response = self.client.get(
-            f"/api/v1.0/offerings/{offering.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-        content = response.json()
-        self.assertEqual(
-            content["rules"],
-            {
-                "discounted_price": None,
-                "discount_amount": None,
-                "discount_rate": None,
-                "description": None,
-                "discount_start": None,
-                "discount_end": None,
-                "nb_available_seats": 9,
-                "has_seat_limit": True,
-                "has_seats_left": True,
-            },
-        )
-
-        # Cancelling order should re-credit the number of seat availabilities in the
-        # representation of the product
-        order.flow.cancel()
-
-        response = self.client.get(
-            f"/api/v1.0/offerings/{offering.id}/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-        content = response.json()
-        self.assertEqual(
-            content["rules"],
-            {
-                "discounted_price": None,
-                "discount_amount": None,
-                "discount_rate": None,
-                "description": None,
-                "discount_start": None,
-                "discount_end": None,
-                "nb_available_seats": 10,
                 "has_seat_limit": True,
                 "has_seats_left": True,
             },

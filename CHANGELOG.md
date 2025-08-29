@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Removed
+
+- Remove offering API cache
+
 ## [3.0.1] - 2025-08-26
 
 ### Fixed
