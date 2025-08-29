@@ -888,6 +888,8 @@ class OfferingApiTest(BaseAPITestCase):
             product=product, course=offering.course, offering_rules=[offering_rule]
         )
 
+        self.client.get("/api/v1.0/offerings/", HTTP_AUTHORIZATION=f"Bearer {token}")
+
         response = self.client.get(
             f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",

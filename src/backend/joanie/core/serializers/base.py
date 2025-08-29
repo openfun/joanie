@@ -21,6 +21,7 @@ class CachedModelSerializer(serializers.ModelSerializer):
         """
         cache_key = instance.get_cache_key(
             is_language_sensitive=True,
+            prefix=self.__class__.__name__,
         )
         representation = cache.get(cache_key)
 
