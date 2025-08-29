@@ -83,11 +83,6 @@ class BaseModel(models.Model):
         Clear the instance cache for all languages.
         """
 
-        if not self.cached_serializers:
-            raise AttributeError(
-                "The cached_serializers class attribute must be set on the model."
-            )
-
         for language, _ in settings.LANGUAGES:
             cache_key = self.get_cache_key(language=language)
             logger.debug(
