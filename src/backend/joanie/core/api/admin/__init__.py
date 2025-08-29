@@ -948,6 +948,32 @@ class BatchOrderViewSet(
 
         return Response(status=HTTPStatus.OK)
 
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="confirm-bank-transfer",
+    )
+    def confirm_bank_transfer(self, request, *args, **kwargs):
+        """
+        Confirm the bank transfer of a batch order, it will validate the payment
+        and generate the orders with their voucher codes.
+        """
+        batch_order = self.get_object()
+
+        if not (
+            batch_order.uses_bank_transfer
+            and batch_order.is_eligible_to_validate_payment
+        ):
+            return Response(
+                _("You are not allowed to validate the bank transfer."),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        validate_success_payment(batch_order)
+        batch_order.flow.update()
+
+        return Response(status=HTTPStatus.OK)
+
 
 class OrganizationAddressViewSet(
     mixins.CreateModelMixin,
