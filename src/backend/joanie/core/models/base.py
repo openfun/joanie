@@ -80,6 +80,10 @@ class BaseModel(models.Model):
         """
         Clear the instance cache for all languages.
         """
+
+        # pylint: disable=import-outside-toplevel
+        from joanie.core.serializers import CachedModelSerializer
+
         for language, _ in settings.LANGUAGES:
             cache_key = self.get_cache_key(language=language)
             logger.debug(
@@ -88,6 +92,18 @@ class BaseModel(models.Model):
                 cache_key,
             )
             cache.delete(cache_key)
+            for serializer in CachedModelSerializer.__subclasses__():
+                if serializer.Meta.model.__name__ == self.__class__.__name__:
+                    serializer_cache_key = self.get_cache_key(
+                        prefix=serializer.__name__,
+                        language=language,
+                    )
+                    logger.debug(
+                        "Clearing cache for %s: %s",
+                        serializer.__name__,
+                        serializer_cache_key,
+                    )
+                    cache.delete(serializer_cache_key)
 
     def to_dict(self):
         """Return a dictionary representation of the model."""

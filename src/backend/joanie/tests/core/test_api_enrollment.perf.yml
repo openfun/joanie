@@ -29,7 +29,7 @@ EnrollmentApiTest.test_api_enrollment_read_detail_authenticated_owner_certificat
 - cache|get: parler.core.CourseRunTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
-- cache|get: CourseProductRelation-#-#.#-en-us
+- cache|get: ProductRelationSerializer-#-#.#-en-us
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
 - cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
@@ -37,7 +37,7 @@ EnrollmentApiTest.test_api_enrollment_read_detail_authenticated_owner_certificat
 - db: 'SELECT ... FROM "joanie_product_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_product_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_product_target_course_relation"."product_id" = #::uuid ORDER BY "joanie_product_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
 - db: 'SELECT ... FROM "joanie_course_run" WHERE ("joanie_course_run"."course_id" = #::uuid AND "joanie_course_run"."end" > #::timestamptz)'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."is_active") ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
-- cache|set: CourseProductRelation-#-#.#-en-us
+- cache|set: ProductRelationSerializer-#-#.#-en-us
 EnrollmentApiTest.test_api_enrollment_read_list_authenticated_owned:
 - db: 'SELECT COUNT(*) AS "__count" FROM "joanie_enrollment" INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE "joanie_user"."username" = #'
 - db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_course" ON ("joanie_course_run"."course_id" = "joanie_course"."id") WHERE "joanie_user"."username" = # ORDER BY "joanie_enrollment"."created_on" DESC LIMIT #'
@@ -62,7 +62,7 @@ EnrollmentApiTest.test_api_enrollment_read_list_authenticated_with_certificate_p
 - db: 'SELECT ... FROM "joanie_course_product_relation" INNER JOIN "joanie_product" ON ("joanie_course_product_relation"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_contract_definition" ON ("joanie_product"."contract_definition_id" = "joanie_contract_definition"."id") WHERE ("joanie_product"."type" = # AND "joanie_course_product_relation"."course_id" IN (...)) ORDER BY "joanie_course_product_relation"."created_on" DESC'
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.CourseRunTranslation.#.en-us
-- cache|get: CourseProductRelation-#-#.#-en-us
+- cache|get: ProductRelationSerializer-#-#.#-en-us
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
 - cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
@@ -70,12 +70,12 @@ EnrollmentApiTest.test_api_enrollment_read_list_authenticated_with_certificate_p
 - db: 'SELECT ... FROM "joanie_product_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_product_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_product_target_course_relation"."product_id" = #::uuid ORDER BY "joanie_product_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
 - db: 'SELECT ... FROM "joanie_course_run" WHERE ("joanie_course_run"."course_id" = #::uuid AND "joanie_course_run"."end" > #::timestamptz)'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."is_active") ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
-- cache|set: CourseProductRelation-#-#.#-en-us
+- cache|set: ProductRelationSerializer-#-#.#-en-us
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.CourseRunTranslation.#.en-us
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.CourseRunTranslation.#.en-us
-- cache|get: CourseProductRelation-#-#.#-en-us
+- cache|get: ProductRelationSerializer-#-#.#-en-us
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
 - cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
@@ -83,8 +83,8 @@ EnrollmentApiTest.test_api_enrollment_read_list_authenticated_with_certificate_p
 - db: 'SELECT ... FROM "joanie_product_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_product_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_product_target_course_relation"."product_id" = #::uuid ORDER BY "joanie_product_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
 - db: 'SELECT ... FROM "joanie_course_run" WHERE ("joanie_course_run"."course_id" = #::uuid AND "joanie_course_run"."end" > #::timestamptz)'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."is_active") ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
-- cache|set: CourseProductRelation-#-#.#-en-us
-- cache|get: CourseProductRelation-#-#.#-en-us
+- cache|set: ProductRelationSerializer-#-#.#-en-us
+- cache|get: ProductRelationSerializer-#-#.#-en-us
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
 - cache|get: parler.core.CertificateDefinitionTranslation.#.en-us
@@ -92,7 +92,7 @@ EnrollmentApiTest.test_api_enrollment_read_list_authenticated_with_certificate_p
 - db: 'SELECT ... FROM "joanie_product_target_course_relation" INNER JOIN "joanie_course" ON ("joanie_product_target_course_relation"."course_id" = "joanie_course"."id") WHERE "joanie_product_target_course_relation"."product_id" = #::uuid ORDER BY "joanie_product_target_course_relation"."position" ASC, "joanie_course"."code" ASC'
 - db: 'SELECT ... FROM "joanie_course_run" WHERE ("joanie_course_run"."course_id" = #::uuid AND "joanie_course_run"."end" > #::timestamptz)'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."is_active") ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
-- cache|set: CourseProductRelation-#-#.#-en-us
+- cache|set: ProductRelationSerializer-#-#.#-en-us
 EnrollmentApiTest.test_api_enrollment_read_list_authenticated_with_certificate_products.2:
 - db: 'SELECT COUNT(*) AS "__count" FROM "joanie_enrollment" INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE "joanie_user"."username" = #'
 - db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_course" ON ("joanie_course_run"."course_id" = "joanie_course"."id") WHERE "joanie_user"."username" = # ORDER BY "joanie_enrollment"."created_on" DESC LIMIT #'
@@ -101,13 +101,13 @@ EnrollmentApiTest.test_api_enrollment_read_list_authenticated_with_certificate_p
 - db: 'SELECT ... FROM "joanie_course_product_relation" INNER JOIN "joanie_product" ON ("joanie_course_product_relation"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_contract_definition" ON ("joanie_product"."contract_definition_id" = "joanie_contract_definition"."id") WHERE ("joanie_product"."type" = # AND "joanie_course_product_relation"."course_id" IN (...)) ORDER BY "joanie_course_product_relation"."created_on" DESC'
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.CourseRunTranslation.#.en-us
-- cache|get: CourseProductRelation-#-#.#-en-us
+- cache|get: ProductRelationSerializer-#-#.#-en-us
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.CourseRunTranslation.#.en-us
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.CourseRunTranslation.#.en-us
-- cache|get: CourseProductRelation-#-#.#-en-us
-- cache|get: CourseProductRelation-#-#.#-en-us
+- cache|get: ProductRelationSerializer-#-#.#-en-us
+- cache|get: ProductRelationSerializer-#-#.#-en-us
 EnrollmentApiTest.test_api_enrollment_read_list_authenticated_with_direct_certificate:
 - db: 'SELECT COUNT(*) AS "__count" FROM "joanie_enrollment" INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") WHERE "joanie_user"."username" = #'
 - db: 'SELECT ... FROM "joanie_enrollment" INNER JOIN "joanie_user" ON ("joanie_enrollment"."user_id" = "joanie_user"."id") INNER JOIN "joanie_course_run" ON ("joanie_enrollment"."course_run_id" = "joanie_course_run"."id") INNER JOIN "joanie_course" ON ("joanie_course_run"."course_id" = "joanie_course"."id") WHERE "joanie_user"."username" = # ORDER BY "joanie_enrollment"."created_on" DESC LIMIT #'
