@@ -49,6 +49,8 @@ class BaseModel(models.Model):
         abstract = True
         ordering = ["created_on"]
 
+    cached_serializers = []
+
     def __repr__(self, dict_repr=False):
         return str(self.to_dict())
 
@@ -88,6 +90,18 @@ class BaseModel(models.Model):
                 cache_key,
             )
             cache.delete(cache_key)
+
+            for serializer_name in self.cached_serializers:
+                serializer_cache_key = self.get_cache_key(
+                    prefix=serializer_name,
+                    language=language,
+                )
+                logger.debug(
+                    "Clearing cache for %s: %s",
+                    serializer_name,
+                    serializer_cache_key,
+                )
+                cache.delete(serializer_cache_key)
 
     def to_dict(self):
         """Return a dictionary representation of the model."""

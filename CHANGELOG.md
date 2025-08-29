@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix cache collision between Serializers
+
 ## [3.0.1] - 2025-08-26
 
 ### Fixed

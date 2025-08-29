@@ -766,6 +766,12 @@ class CourseProductRelation(BaseModel):
         verbose_name=_("organizations"),
     )
 
+    cached_serializers = [
+        "OfferingLightSerializer",
+        "OfferingSerializer",
+        "ProductRelationSerializer",
+    ]
+
     class Meta:
         db_table = "joanie_course_product_relation"
         unique_together = ("product", "course")
