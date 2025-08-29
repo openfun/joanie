@@ -2,6 +2,7 @@
 Admin API Endpoints
 """
 
+# pylint:disable=too-many-lines
 from http import HTTPStatus
 
 from django.core.cache import cache
@@ -878,6 +879,95 @@ class BatchOrderViewSet(
         generate_orders_and_send_vouchers_task.delay(batch_order_id=str(batch_order.id))
 
         return Response(status=HTTPStatus.ACCEPTED)
+
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="confirm-quote",
+    )
+    def confirm_quote(self, request, *args, **kwargs):
+        """
+        Confirm the organization has signed the quote and freeze total.
+        """
+        batch_order = self.get_object()
+
+        if batch_order.is_canceled:
+            raise ValidationError(
+                "Batch order is canceled, cannot confirm quote signature."
+            )
+
+        if not batch_order.has_quote:
+            raise ValidationError("You must generate the quote first.")
+
+        if batch_order.quote.is_signed_by_organization or batch_order.total:
+            raise ValidationError("Quote is already signed, and total is frozen.")
+
+        total = request.data.get("total")
+        if not total:
+            raise ValidationError(
+                "Missing total value. It's required to confirm quote."
+            )
+
+        batch_order.freeze_total(total)
+
+        return Response(status=HTTPStatus.OK)
+
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="confirm-purchase-order",
+    )
+    def confirm_purchase_order(self, request, *args, **kwargs):
+        """
+        Confirm the purchase order when the batch order is the payment method is `purchase_order`.
+        Once confirmed, the batch order's state transition to `to_sign`.
+        """
+        batch_order = self.get_object()
+
+        if not batch_order.uses_purchase_order:
+            raise ValidationError(
+                "Cannot confirm purchase order. Batch order payment"
+                f" method is {batch_order.payment_method}"
+            )
+
+        if not (batch_order.quote.is_signed_by_organization and batch_order.total):
+            raise ValidationError("Batch order's quote is not signed, nor has a total.")
+
+        if batch_order.quote.has_received_purchase_order:
+            raise ValidationError(
+                "Batch order's quote purchase order already confirmed."
+            )
+
+        batch_order.quote.tag_has_purchase_order()
+        batch_order.flow.update()
+
+        return Response(status=HTTPStatus.OK)
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="confirm-bank-transfer",
+    )
+    def confirm_bank_transfer(self, request, *args, **kwargs):
+        """
+        Confirm the bank transfer of a batch order, it will validate the payment
+        and generate the orders with their voucher codes.
+        """
+        batch_order = self.get_object()
+
+        if not (
+            batch_order.uses_bank_transfer
+            and batch_order.is_eligible_to_validate_payment
+        ):
+            return Response(
+                "You are not allowed to validate the bank transfer.",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        validate_success_payment(batch_order)
+        batch_order.flow.update()
+
+        return Response(status=HTTPStatus.OK)
 
 
 class OrganizationAddressViewSet(
