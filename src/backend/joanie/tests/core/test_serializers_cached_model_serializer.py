@@ -46,6 +46,11 @@ class TestCachedModelSerializer(TestCase):
         The CachedModelSerializer should return a cached representation of the
         resource until the resource has been updated.
         """
+        CachedAddress = models.Address
+        CachedAddress.cached_serializers = [
+            "AddressCachedSerializer",
+            "OtherAddressCachedSerializer",
+        ]
 
         class AddressCachedSerializer(CachedModelSerializer):
             """A Test Serializer based on Address Model."""
