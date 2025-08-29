@@ -4,7 +4,13 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_create_authenticated:
 - db: 'SELECT ... FROM "joanie_course_product_relation" WHERE "joanie_course_product_relation"."id" = #::uuid LIMIT #'
 - db: 'SELECT COUNT(*) AS "__count" FROM "joanie_offeringrule" WHERE "joanie_offeringrule"."course_product_relation_id" = #::uuid'
 - cache|delete: CourseProductRelation-#-#.#-en-us
+- cache|delete: OfferingLightSerializer-#-#.#-en-us
+- cache|delete: OfferingSerializer-#-#.#-en-us
+- cache|delete: ProductRelationSerializer-#-#.#-en-us
 - cache|delete: CourseProductRelation-#-#.#-fr-fr
+- cache|delete: OfferingLightSerializer-#-#.#-fr-fr
+- cache|delete: OfferingSerializer-#-#.#-fr-fr
+- cache|delete: ProductRelationSerializer-#-#.#-fr-fr
 - db: INSERT INTO "joanie_offeringrule" (...) VALUES (...)
 - db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
@@ -21,7 +27,13 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_delete_authenticated:
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") LEFT OUTER JOIN "joanie_discount" ON ("joanie_offeringrule"."discount_id" = "joanie_discount"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."id" = #::uuid) LIMIT #'
 - cache|delete: CourseProductRelation-#-#.#-en-us
+- cache|delete: OfferingLightSerializer-#-#.#-en-us
+- cache|delete: OfferingSerializer-#-#.#-en-us
+- cache|delete: ProductRelationSerializer-#-#.#-en-us
 - cache|delete: CourseProductRelation-#-#.#-fr-fr
+- cache|delete: OfferingLightSerializer-#-#.#-fr-fr
+- cache|delete: OfferingSerializer-#-#.#-fr-fr
+- cache|delete: ProductRelationSerializer-#-#.#-fr-fr
 - db: 'SELECT "joanie_offeringrule_translation"."language_code" FROM "joanie_offeringrule_translation" WHERE "joanie_offeringrule_translation"."master_id" = #::uuid ORDER BY "joanie_offeringrule_translation"."language_code" ASC'
 - cache|delete_many: []
 - db: SELECT "joanie_voucher"."id" FROM "joanie_voucher" WHERE "joanie_voucher"."offering_rule_id" IN (#::uuid) ORDER BY "joanie_voucher"."created_on" ASC
@@ -37,7 +49,13 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_delete_cannot_edit:
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") LEFT OUTER JOIN "joanie_discount" ON ("joanie_offeringrule"."discount_id" = "joanie_discount"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."id" = #::uuid) LIMIT #'
 - cache|delete: CourseProductRelation-#-#.#-en-us
+- cache|delete: OfferingLightSerializer-#-#.#-en-us
+- cache|delete: OfferingSerializer-#-#.#-en-us
+- cache|delete: ProductRelationSerializer-#-#.#-en-us
 - cache|delete: CourseProductRelation-#-#.#-fr-fr
+- cache|delete: OfferingLightSerializer-#-#.#-fr-fr
+- cache|delete: OfferingSerializer-#-#.#-fr-fr
+- cache|delete: ProductRelationSerializer-#-#.#-fr-fr
 - db: 'SELECT "joanie_offeringrule_translation"."language_code" FROM "joanie_offeringrule_translation" WHERE "joanie_offeringrule_translation"."master_id" = #::uuid ORDER BY "joanie_offeringrule_translation"."language_code" ASC'
 - cache|delete_many: []
 - db: SELECT "joanie_voucher"."id" FROM "joanie_voucher" WHERE "joanie_voucher"."offering_rule_id" IN (#::uuid) ORDER BY "joanie_voucher"."created_on" ASC
@@ -82,7 +100,13 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_patch_authenticated:
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") LEFT OUTER JOIN "joanie_discount" ON ("joanie_offeringrule"."discount_id" = "joanie_discount"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."id" = #::uuid) LIMIT #'
 - cache|delete: CourseProductRelation-#-#.#-en-us
+- cache|delete: OfferingLightSerializer-#-#.#-en-us
+- cache|delete: OfferingSerializer-#-#.#-en-us
+- cache|delete: ProductRelationSerializer-#-#.#-en-us
 - cache|delete: CourseProductRelation-#-#.#-fr-fr
+- cache|delete: OfferingLightSerializer-#-#.#-fr-fr
+- cache|delete: OfferingSerializer-#-#.#-fr-fr
+- cache|delete: ProductRelationSerializer-#-#.#-fr-fr
 - db: 'UPDATE "joanie_offeringrule" SET ... WHERE "joanie_offeringrule"."id" = #::uuid'
 - db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
@@ -96,7 +120,13 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_patch_authenticated_empty_
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") LEFT OUTER JOIN "joanie_discount" ON ("joanie_offeringrule"."discount_id" = "joanie_discount"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."id" = #::uuid) LIMIT #'
 - cache|delete: CourseProductRelation-#-#.#-en-us
+- cache|delete: OfferingLightSerializer-#-#.#-en-us
+- cache|delete: OfferingSerializer-#-#.#-en-us
+- cache|delete: ProductRelationSerializer-#-#.#-en-us
 - cache|delete: CourseProductRelation-#-#.#-fr-fr
+- cache|delete: OfferingLightSerializer-#-#.#-fr-fr
+- cache|delete: OfferingSerializer-#-#.#-fr-fr
+- cache|delete: ProductRelationSerializer-#-#.#-fr-fr
 - db: 'UPDATE "joanie_offeringrule" SET ... WHERE "joanie_offeringrule"."id" = #::uuid'
 - db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
@@ -111,7 +141,13 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_patch_authenticated_passin
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") LEFT OUTER JOIN "joanie_discount" ON ("joanie_offeringrule"."discount_id" = "joanie_discount"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."id" = #::uuid) LIMIT #'
 - cache|get: parler.core.OfferingRuleTranslation.#.en-us
 - cache|delete: CourseProductRelation-#-#.#-en-us
+- cache|delete: OfferingLightSerializer-#-#.#-en-us
+- cache|delete: OfferingSerializer-#-#.#-en-us
+- cache|delete: ProductRelationSerializer-#-#.#-en-us
 - cache|delete: CourseProductRelation-#-#.#-fr-fr
+- cache|delete: OfferingLightSerializer-#-#.#-fr-fr
+- cache|delete: OfferingSerializer-#-#.#-fr-fr
+- cache|delete: ProductRelationSerializer-#-#.#-fr-fr
 - db: 'UPDATE "joanie_offeringrule" SET ... WHERE "joanie_offeringrule"."id" = #::uuid'
 - db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
@@ -134,7 +170,13 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_update_authenticated:
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") LEFT OUTER JOIN "joanie_discount" ON ("joanie_offeringrule"."discount_id" = "joanie_discount"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."id" = #::uuid) LIMIT #'
 - cache|delete: CourseProductRelation-#-#.#-en-us
+- cache|delete: OfferingLightSerializer-#-#.#-en-us
+- cache|delete: OfferingSerializer-#-#.#-en-us
+- cache|delete: ProductRelationSerializer-#-#.#-en-us
 - cache|delete: CourseProductRelation-#-#.#-fr-fr
+- cache|delete: OfferingLightSerializer-#-#.#-fr-fr
+- cache|delete: OfferingSerializer-#-#.#-fr-fr
+- cache|delete: ProductRelationSerializer-#-#.#-fr-fr
 - db: 'UPDATE "joanie_offeringrule" SET ... WHERE "joanie_offeringrule"."id" = #::uuid'
 - db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
@@ -151,7 +193,13 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_update_description_authent
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") LEFT OUTER JOIN "joanie_discount" ON ("joanie_offeringrule"."discount_id" = "joanie_discount"."id") WHERE ("joanie_offeringrule"."course_product_relation_id" = #::uuid AND "joanie_offeringrule"."id" = #::uuid) LIMIT #'
 - cache|get: parler.core.OfferingRuleTranslation.#.en-us
 - cache|delete: CourseProductRelation-#-#.#-en-us
+- cache|delete: OfferingLightSerializer-#-#.#-en-us
+- cache|delete: OfferingSerializer-#-#.#-en-us
+- cache|delete: ProductRelationSerializer-#-#.#-en-us
 - cache|delete: CourseProductRelation-#-#.#-fr-fr
+- cache|delete: OfferingLightSerializer-#-#.#-fr-fr
+- cache|delete: OfferingSerializer-#-#.#-fr-fr
+- cache|delete: ProductRelationSerializer-#-#.#-fr-fr
 - db: 'UPDATE "joanie_offeringrule" SET ... WHERE "joanie_offeringrule"."id" = #::uuid'
 - db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
