@@ -2,6 +2,7 @@
 Admin API Endpoints
 """
 
+# pylint:disable=too-many-lines
 from http import HTTPStatus
 
 from django.core.cache import cache
@@ -909,6 +910,41 @@ class BatchOrderViewSet(
             )
 
         batch_order.freeze_total(total)
+
+        return Response(status=HTTPStatus.OK)
+
+    @action(
+        methods=["PATCH"],
+        detail=True,
+        url_path="confirm-purchase-order",
+    )
+    def confirm_purchase_order(self, request, *args, **kwargs):
+        """
+        Confirm the purchase order when the batch order payment method is `purchase_order`.
+        Once confirmed, the batch order's state transition to `to_sign`.
+        """
+        batch_order = self.get_object()
+
+        if not batch_order.uses_purchase_order:
+            raise ValidationError(
+                _(
+                    "Cannot confirm purchase order. Batch order payment"
+                    f" method is {batch_order.payment_method}"
+                )
+            )
+
+        if not (batch_order.quote.is_signed_by_organization and batch_order.total):
+            raise ValidationError(
+                _("Batch order's quote is not signed, nor has a total.")
+            )
+
+        if batch_order.quote.has_received_purchase_order:
+            raise ValidationError(
+                _("Batch order's quote purchase order already confirmed.")
+            )
+
+        batch_order.quote.tag_has_purchase_order()
+        batch_order.flow.update()
 
         return Response(status=HTTPStatus.OK)
 
