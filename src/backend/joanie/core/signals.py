@@ -101,6 +101,8 @@ def on_save_course_run(instance, **kwargs):
     )
     logger.debug("[SYNC] %s", serialized_course_runs)
     webhooks.synchronize_course_runs(serialized_course_runs)
+    for offering in instance.course.offerings.all():
+        offering.clear_cache()
 
 
 def on_save_product_target_course_relation(instance, **kwargs):
@@ -114,6 +116,7 @@ def on_save_product_target_course_relation(instance, **kwargs):
     )
     logger.debug("[SYNC] %s", serialized_course_runs)
     webhooks.synchronize_course_runs(serialized_course_runs)
+    instance.clear_cache()
 
 
 # pylint: disable=too-many-branches
@@ -198,6 +201,7 @@ def on_change_offering(action, instance, pk_set, **kwargs):
 
     logger.debug("[SYNC] %s", serialized_course_runs)
     webhooks.synchronize_course_runs(serialized_course_runs)
+    instance.clear_cache()
 
 
 def on_save_offering_rule(instance: models.OfferingRule, **kwargs):
@@ -211,7 +215,9 @@ def on_save_offering_rule(instance: models.OfferingRule, **kwargs):
         instance.offering, visibility=visibility
     )
     if serialized_course_runs:
+        logger.debug("[SYNC] %s", serialized_course_runs)
         webhooks.synchronize_course_runs(serialized_course_runs)
+        instance.offering.clear_cache()
 
 
 def on_save_product(instance, created, **kwargs):
@@ -226,3 +232,5 @@ def on_save_product(instance, created, **kwargs):
 
     logger.debug("[SYNC] %s", instance)
     synchronize_product_course_runs(instance)
+    for offering in instance.offerings.all():
+        offering.clear_cache()
