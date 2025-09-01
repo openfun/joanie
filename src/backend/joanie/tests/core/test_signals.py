@@ -9,12 +9,15 @@ from zoneinfo import ZoneInfo
 from django.test.testcases import TestCase
 
 from joanie.core import enums, factories, models
+from joanie.core.models import BaseModel
 from joanie.core.models.courses import CourseState
 from joanie.core.utils import webhooks
 
 # pylint: disable=too-many-locals,too-many-public-methods,too-many-lines
 
 
+@mock.patch.object(BaseModel, "clear_cache")
+@mock.patch.object(webhooks, "synchronize_course_runs")
 class SignalsTestCase(TestCase):
     """Joanie core helpers tests case"""
 
@@ -38,8 +41,7 @@ class SignalsTestCase(TestCase):
             r"https://example\.com/api/v1\.0/courses/[a-f0-9\-]+/products/[a-f0-9\-]+/",
         )
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_certificate_type_product(self, mock_sync):
+    def test_signals_on_certificate_type_product(self, mock_sync, mock_clear_cache):
         """
         Certificate products return None as equivalent course runs and should
         not trigger any synchronization.
@@ -50,6 +52,7 @@ class SignalsTestCase(TestCase):
         )
         factories.ProductFactory(type="certificate", courses=[course_run.course])
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.save()
 
@@ -73,11 +76,15 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["catalog_visibility"],
             enums.COURSE_AND_SEARCH,
         )
+        self.assertEqual(
+            mock_clear_cache.call_count, course_run.course.offerings.count()
+        )
 
     # Course run
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_save_course_run_target_course_success(self, mock_sync):
+    def test_signals_on_save_course_run_target_course_success(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Webhook should be triggered when a course run is saved, updating the equivalent
         course run of products related via target course and the course run itself.
@@ -91,6 +98,7 @@ class SignalsTestCase(TestCase):
         )
         offerings = models.CourseProductRelation.objects.filter(product__in=products)
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.save()
 
@@ -122,11 +130,17 @@ class SignalsTestCase(TestCase):
             [course_run["start"] for course_run in synchronized_course_runs],
             ["2022-07-07T07:00:00+00:00"] * 3,
         )
-        for course_run in synchronized_course_runs:
-            self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
+        for synchronized_course_run in synchronized_course_runs:
+            self.assertEqual(
+                synchronized_course_run["catalog_visibility"], enums.COURSE_AND_SEARCH
+            )
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_save_course_run_target_course_restrict(self, mock_sync):
+        # no offering cache should be cleared
+        mock_clear_cache.assert_not_called()
+
+    def test_signals_on_save_course_run_target_course_restrict(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         When a course run restriction is in place, synchronize_course_runs should only be triggered
         on products for course runs of target course that are declared in the restriction list.
@@ -141,6 +155,7 @@ class SignalsTestCase(TestCase):
             product=product, course=course_run.course, course_runs=[course_run]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.save()
 
@@ -178,8 +193,9 @@ class SignalsTestCase(TestCase):
             self.assertEqual(
                 course_run_dict["catalog_visibility"], enums.COURSE_AND_SEARCH
             )
-
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
+
         # we save the course run excluded from the product
         course_run_excluded.save()
 
@@ -204,9 +220,12 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        # no offering cache should be cleared
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_save_course_run_target_course_certificate(self, mock_sync):
+    def test_signals_on_save_course_run_target_course_certificate(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Webhook should be triggered when a course run is saved, updating the equivalent
         course run of products related via target course and the course run itself.
@@ -220,6 +239,7 @@ class SignalsTestCase(TestCase):
             type=enums.PRODUCT_TYPE_CERTIFICATE, courses=[course_run.course]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.save()
 
@@ -228,10 +248,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(len(synchronized_course_runs), 1)
         synchronized_course_run = synchronized_course_runs[0]
         self.assertEqual(synchronized_course_run["certificate_price"], product.price)
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_save_course_run_target_course_certificate_discount(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Webhook should be triggered when a course run is saved, updating the equivalent
@@ -253,8 +273,8 @@ class SignalsTestCase(TestCase):
             course_product_relation=offering,
             is_active=True,
         )
-
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.save()
 
@@ -268,11 +288,12 @@ class SignalsTestCase(TestCase):
             D("90.00"),
         )
         self.assertEqual(synchronized_course_run["certificate_discount"], "-10%")
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_delete_course_run_object(
         self,
         mock_sync,
+        mock_clear_cache,
     ):
         """
         synchronize_course_runs should be triggered when a course run is deleted
@@ -288,6 +309,7 @@ class SignalsTestCase(TestCase):
         )
         offerings = models.CourseProductRelation.objects.filter(product__in=products)
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.delete()
 
@@ -321,11 +343,13 @@ class SignalsTestCase(TestCase):
             [course_run["start"] for course_run in synchronized_course_runs],
             ["2022-07-07T07:00:00+00:00", None, None],
         )
-        for course_run in synchronized_course_runs:
-            self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
+        for synchronized_course_run in synchronized_course_runs:
+            self.assertEqual(
+                synchronized_course_run["catalog_visibility"], enums.HIDDEN
+            )
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_delete_course_run_query(self, mock_sync):
+    def test_signals_on_delete_course_run_query(self, mock_sync, mock_clear_cache):
         """
         Product synchronization or course run synchronization should not be triggered when
         course runs are deleted via a query.
@@ -335,15 +359,18 @@ class SignalsTestCase(TestCase):
             2, target_courses=[cr.course for cr in course_runs]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         models.CourseRun.objects.all().delete()
 
         self.assertFalse(mock_sync.called)
+        mock_clear_cache.assert_not_called()
 
     # Product target course offering
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_save_product_target_course_relation(self, mock_sync):
+    def test_signals_on_save_product_target_course_relation(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when a product target course
         relation (ptcr) is saved.
@@ -358,6 +385,7 @@ class SignalsTestCase(TestCase):
             product=other_product, course=course_run.course
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         ptcr.save()
 
@@ -378,9 +406,11 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["catalog_visibility"],
             enums.COURSE_AND_SEARCH,
         )
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_delete_product_target_course_relation(self, mock_sync):
+    def test_signals_on_delete_product_target_course_relation(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when a product target course
         relation is deleted.
@@ -395,6 +425,7 @@ class SignalsTestCase(TestCase):
             product=other_product, course=course_run.course
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         ptcr.delete()
 
@@ -415,8 +446,11 @@ class SignalsTestCase(TestCase):
             synchronized_course_runs[0]["catalog_visibility"], enums.HIDDEN
         )
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_delete_product_target_course_relation_query(self, mock_sync):
+        mock_clear_cache.assert_not_called()
+
+    def test_signals_on_delete_product_target_course_relation_query(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should not be triggered when product target course offerings
         are deleted via a query. This case should be handled manually by the developer.
@@ -430,15 +464,16 @@ class SignalsTestCase(TestCase):
             product=other_product, course=course_run.course
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         models.ProductTargetCourseRelation.objects.all().delete()
 
         self.assertFalse(mock_sync.called)
+        mock_clear_cache.assert_not_called()
 
     # offering
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offering_add(self, mock_sync):
+    def test_signals_on_change_offering_add(self, mock_sync, mock_clear_cache):
         """
         Product synchronization should be triggered when a product is added to a course.
         Only the impacted product should be re-synchronized.
@@ -449,6 +484,7 @@ class SignalsTestCase(TestCase):
         )
         course = factories.CourseFactory(products=[product1])
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course.products.add(product2)
         offering = models.CourseProductRelation.objects.get(
@@ -470,9 +506,9 @@ class SignalsTestCase(TestCase):
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
             self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offering_set(self, mock_sync):
+    def test_signals_on_change_offering_set(self, mock_sync, mock_clear_cache):
         """
         Product synchronization should be triggered when products are added to a course in bulk.
         It is equivalent to removing existing offerings before creating the new ones.
@@ -488,6 +524,7 @@ class SignalsTestCase(TestCase):
         previous_relation_product = previous_relation.product.id
         previous_relation_course = previous_relation.course.code
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course.products.set(products)
 
@@ -531,14 +568,15 @@ class SignalsTestCase(TestCase):
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
             self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
+        self.assertEqual(mock_clear_cache.call_count, len(offerings))
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offering_create(self, mock_sync):
+    def test_signals_on_change_offering_create(self, mock_sync, mock_clear_cache):
         """Product synchronization should be triggered when a product is created for a course."""
         course_run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         product = factories.ProductFactory(target_courses=[course_run.course])
         course = factories.CourseFactory(products=[product])
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         product_types = [
             product_type
@@ -570,9 +608,9 @@ class SignalsTestCase(TestCase):
             )  # Created product can't have course runs yet
             self.assertEqual(course_run["course"], course.code)
             self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offering_remove(self, mock_sync):
+    def test_signals_on_change_offering_remove(self, mock_sync, mock_clear_cache):
         """Product synchronization should be triggered when a product is removed from a course."""
         course_run = factories.CourseRunFactory()
         course = factories.CourseFactory()
@@ -580,6 +618,7 @@ class SignalsTestCase(TestCase):
             2, courses=[course], target_courses=[course_run.course]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         offering = models.CourseProductRelation.objects.get(
             course=course, product=products[0]
@@ -601,8 +640,9 @@ class SignalsTestCase(TestCase):
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
             self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
+        mock_clear_cache.assert_called_once()
 
-    def test_signals_on_change_offering_clear(self):
+    def test_signals_on_change_offering_clear(self, mock_sync, mock_clear_cache):
         """Product synchronization should be triggered when course's products are cleared."""
         course_run1, course_run2 = factories.CourseRunFactory.create_batch(2)
         product1 = factories.ProductFactory(target_courses=[course_run1.course])
@@ -613,9 +653,10 @@ class SignalsTestCase(TestCase):
                 "course__code", "product__id"
             ).filter(course=course)
         )
+        mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
-        with mock.patch.object(webhooks, "synchronize_course_runs") as mock_sync:
-            course.products.clear()
+        course.products.clear()
 
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
@@ -636,9 +677,11 @@ class SignalsTestCase(TestCase):
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["course"], course.code)
             self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_product_course_relation_add(self, mock_sync):
+    def test_signals_on_change_product_course_relation_add(
+        self, mock_sync, mock_clear_cache
+    ):
         """Product synchronization should be triggered when a course is added to a product."""
         course1, course2 = factories.CourseFactory.create_batch(2)
         course_run = factories.CourseRunFactory()
@@ -647,6 +690,7 @@ class SignalsTestCase(TestCase):
         )
         offerings = product.offerings.all()
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         product.courses.add(course2)
 
@@ -678,9 +722,11 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_product_course_relation_set(self, mock_sync):
+    def test_signals_on_change_product_course_relation_set(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when courses are added to a product in bulk.
         It is equivalent to removing existing offerings before creating the new ones.
@@ -692,6 +738,7 @@ class SignalsTestCase(TestCase):
         )
         factories.ProductFactory(courses=[course1, course2, old_course])
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         old_relation = list(
             models.CourseProductRelation.objects.values_list(
@@ -748,9 +795,11 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
+        self.assertEqual(mock_clear_cache.call_count, 2)
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_product_course_relation_create(self, mock_sync):
+    def test_signals_on_change_product_course_relation_create(
+        self, mock_sync, mock_clear_cache
+    ):
         """Product synchronization should be triggered when a course is created for a product."""
         course = factories.CourseFactory()
         course_run = factories.CourseRunFactory()
@@ -758,6 +807,7 @@ class SignalsTestCase(TestCase):
             courses=[course], target_courses=[course_run.course]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         product.courses.create(code="123")
         offerings = product.offerings.all()
@@ -790,9 +840,11 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_product_course_relation_remove(self, mock_sync):
+    def test_signals_on_change_product_course_relation_remove(
+        self, mock_sync, mock_clear_cache
+    ):
         """Product synchronization should be triggered when a course is removed from a product."""
         course_run = factories.CourseRunFactory()
         courses = factories.CourseFactory.create_batch(2)
@@ -800,6 +852,7 @@ class SignalsTestCase(TestCase):
             2, courses=courses, target_courses=[course_run.course]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         old_relation = list(
             models.CourseProductRelation.objects.values_list(
@@ -824,9 +877,11 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.HIDDEN
         )
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_product_course_relation_clear(self, mock_sync):
+    def test_signals_on_change_product_course_relation_clear(
+        self, mock_sync, mock_clear_cache
+    ):
         """Product synchronization should be triggered when a product's courses are cleared."""
         course_run = factories.CourseRunFactory()
         courses = factories.CourseFactory.create_batch(2)
@@ -834,6 +889,7 @@ class SignalsTestCase(TestCase):
             courses=courses, target_courses=[course_run.course]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         old_relations = list(
             product.offerings.values_list("course__code", "product__id").all()
@@ -862,9 +918,11 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertIsNotNone(course_run["start"])
             self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offering_rule_create_credential(self, mock_sync):
+    def test_signals_on_change_offering_rule_create_credential(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when an offering rule is created.
         """
@@ -876,6 +934,7 @@ class SignalsTestCase(TestCase):
         )
         offering = product.offerings.get()
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         factories.OfferingRuleFactory(
             course_product_relation=offering,
@@ -891,10 +950,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(synchronized_course_run["discounted_price"], D(90.00))
         self.assertEqual(synchronized_course_run["discount"], "-10%")
         self.assertEqual(synchronized_course_run["certificate_offer"], None)
+        self.assertEqual(mock_clear_cache.call_count, 2)
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_offering_rule_create_credential_is_gradded(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when an offering rule is created
@@ -915,6 +974,7 @@ class SignalsTestCase(TestCase):
         )
         offering = product.offerings.get()
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         factories.OfferingRuleFactory(
             course_product_relation=offering,
@@ -955,9 +1015,11 @@ class SignalsTestCase(TestCase):
                 f"{course_run.course.code}/products/{product.id}/",
             },
         )
+        self.assertEqual(mock_clear_cache.call_count, 2)
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_offering_rule_create_certificate(self, mock_sync):
+    def test_signals_on_change_offering_rule_create_certificate(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when an offering rule is created.
         """
@@ -969,6 +1031,7 @@ class SignalsTestCase(TestCase):
         )
         offering = product.offerings.get()
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         factories.OfferingRuleFactory(
             course_product_relation=offering,
@@ -1007,9 +1070,11 @@ class SignalsTestCase(TestCase):
                 "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
             },
         )
+        self.assertEqual(mock_clear_cache.call_count, 2)
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_delete_offering_rule_delete_for_credential(self, mock_sync):
+    def test_signals_on_delete_offering_rule_delete_for_credential(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when an offering rule is deleted.
         """
@@ -1027,6 +1092,7 @@ class SignalsTestCase(TestCase):
             is_active=True,
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         offering_rule.delete()
 
@@ -1057,10 +1123,10 @@ class SignalsTestCase(TestCase):
                 f"{course_run.course.code}/products/{product.id}/",
             },
         )
+        self.assertEqual(mock_clear_cache.call_count, 2)
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_delete_offering_rule_delete_credential_is_graded(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when an offering rule is deleted
@@ -1088,6 +1154,7 @@ class SignalsTestCase(TestCase):
             is_active=True,
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         offering_rule.delete()
 
@@ -1118,9 +1185,11 @@ class SignalsTestCase(TestCase):
                 f"{course_run.course.code}/products/{product.id}/",
             },
         )
+        self.assertEqual(mock_clear_cache.call_count, 2)
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_delete_offering_rule_delete_certificate(self, mock_sync):
+    def test_signals_on_delete_offering_rule_delete_certificate(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when an offering rule is deleted.
         """
@@ -1139,6 +1208,7 @@ class SignalsTestCase(TestCase):
             is_active=True,
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         offering_rule.delete()
 
@@ -1168,12 +1238,12 @@ class SignalsTestCase(TestCase):
                 "resource_link": f"https://example.com/api/v1.0/course-runs/{course_run.id}/",
             },
         )
+        self.assertEqual(mock_clear_cache.call_count, 2)
 
     # Edit certificate product offering
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_certificate_product_course_relation_create(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Certificate product synchronization should be triggered
@@ -1186,6 +1256,7 @@ class SignalsTestCase(TestCase):
             price="50.00",
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         product.courses.create(code="123")
 
@@ -1199,10 +1270,10 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["certificate_offer"], enums.COURSE_OFFER_PAID)
             self.assertEqual(course_run["certificate_price"], D(50.00))
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_certificate_product_course_relation_clear(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Certificate Product synchronization should be triggered
@@ -1220,6 +1291,7 @@ class SignalsTestCase(TestCase):
             courses=courses, type=enums.PRODUCT_TYPE_CERTIFICATE, price="50.00"
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         product.courses.clear()
 
@@ -1274,12 +1346,12 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["certificate_offer"], None)
             self.assertEqual(course_run["certificate_price"], None)
+        mock_clear_cache.assert_called_once()
 
     # Product course run restrict offering
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_run_restrict_relation_add(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when a course run restriction is added to
@@ -1303,6 +1375,7 @@ class SignalsTestCase(TestCase):
         )
 
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         ptcr.course_runs.add(course_run)
 
@@ -1335,10 +1408,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_run_restrict_relation_set(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when course run restrictions are added to a
@@ -1363,6 +1436,7 @@ class SignalsTestCase(TestCase):
             start=datetime(2022, 8, 8, 8, 0, tzinfo=ZoneInfo("UTC")),
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         ptcr.course_runs.set(course_runs)
 
@@ -1414,10 +1488,10 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["start"], "2022-08-08T08:00:00+00:00")
             self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_run_restrict_relation_create(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when a course run restriction is
@@ -1433,6 +1507,7 @@ class SignalsTestCase(TestCase):
             product=product, course=target_course, course_runs=[previous_course_run]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run = ptcr.course_runs.create(
             course=target_course,
@@ -1482,10 +1557,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_run_restrict_relation_remove(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when a course run restriction is removed
@@ -1507,6 +1582,7 @@ class SignalsTestCase(TestCase):
             course_runs=[course_run1, course_run2],
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         ptcr.course_runs.remove(course_run1)
 
@@ -1537,10 +1613,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_product_course_run_restrict_relation_clear(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when course run restrictions are clear from
@@ -1562,6 +1638,7 @@ class SignalsTestCase(TestCase):
             course_runs=[course_run1, course_run2],
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         ptcr.course_runs.clear()
 
@@ -1590,10 +1667,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_course_run_restrict_product_relation_add(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when a product target course offering is
@@ -1616,6 +1693,7 @@ class SignalsTestCase(TestCase):
             start=datetime(2022, 8, 8, 8, 0, tzinfo=ZoneInfo("UTC")),
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.product_relations.add(ptcr)
 
@@ -1646,10 +1724,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_course_run_restrict_product_relation_set(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when product target course offerings are
@@ -1676,6 +1754,7 @@ class SignalsTestCase(TestCase):
             product=product3, course=target_course
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.product_relations.set([ptcr2, ptcr3])
 
@@ -1740,10 +1819,10 @@ class SignalsTestCase(TestCase):
         for course_run in synchronized_course_runs:
             self.assertEqual(course_run["start"], "2022-08-08T08:00:00+00:00")
             self.assertEqual(course_run["catalog_visibility"], enums.COURSE_AND_SEARCH)
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_course_run_restrict_product_relation_create(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when a product target course offering is
@@ -1764,6 +1843,7 @@ class SignalsTestCase(TestCase):
             product=product1, course=target_course, course_runs=[course_run]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.product_relations.create(
             product=product2, course=target_course, position=1
@@ -1820,10 +1900,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        mock_clear_cache.assert_called_once()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_course_run_restrict_product_relation_remove(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """
         Product synchronization should be triggered when a product target course offering is
@@ -1847,6 +1927,7 @@ class SignalsTestCase(TestCase):
             product=product2, course=target_course, course_runs=[course_run]
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.product_relations.remove(ptcr1)
 
@@ -1877,10 +1958,10 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        mock_clear_cache.not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
     def test_signals_on_change_course_run_restrict_product_relation_clear(
-        self, mock_sync
+        self, mock_sync, mock_clear_cache
     ):
         """Product synchronization should be triggered when product target course offerings are
         cleared for a course run.
@@ -1904,6 +1985,7 @@ class SignalsTestCase(TestCase):
         )
         factories.ProductTargetCourseRelationFactory(product=product3)
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         course_run.product_relations.clear()
 
@@ -1943,9 +2025,11 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
+        mock_clear_cache.assert_not_called()
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_product_type_certificate(self, mock_sync):
+    def test_signals_on_change_product_type_certificate(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when product data change.
         If the product is of type certificate, all course runs from which this
@@ -1969,6 +2053,7 @@ class SignalsTestCase(TestCase):
         )
 
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         factories.OfferingFactory(product=product, course=cr1.course)
         factories.OfferingFactory(product=product, course=cr2.course)
@@ -1992,9 +2077,11 @@ class SignalsTestCase(TestCase):
         for entry in serialized_course_runs:
             self.assertEqual(entry["certificate_offer"], enums.COURSE_OFFER_PAID)
             self.assertEqual(entry["certificate_price"], D(52.00))
+        self.assertEqual(mock_clear_cache.call_count, product.offerings.count())
 
-    @mock.patch.object(webhooks, "synchronize_course_runs")
-    def test_signals_on_change_product_type_credential(self, mock_sync):
+    def test_signals_on_change_product_type_credential(
+        self, mock_sync, mock_clear_cache
+    ):
         """
         Product synchronization should be triggered when product data change.
         If the product is different from certificate,
@@ -2014,6 +2101,7 @@ class SignalsTestCase(TestCase):
             state=CourseState.ONGOING_CLOSED,
         )
         mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         # Create the product should not trigger a synchronization
         product = factories.ProductFactory(
@@ -2039,3 +2127,4 @@ class SignalsTestCase(TestCase):
             self.assertEqual(entry["offer"], enums.COURSE_OFFER_PAID)
             self.assertEqual(entry["price"], D("52.00"))
             self.assertEqual(entry["price_currency"], "EUR")
+        self.assertEqual(mock_clear_cache.call_count, product.offerings.count())
