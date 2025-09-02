@@ -76,6 +76,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         owner = factories.UserFactory()
         offering = factories.OfferingFactory(
+            product__quote_definition=factories.QuoteDefinitionFactory(),
             product__contract_definition=factories.ContractDefinitionFactory(),
             product__price=10,
         )

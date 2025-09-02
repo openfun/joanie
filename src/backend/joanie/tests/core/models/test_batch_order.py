@@ -28,6 +28,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         user = factories.UserFactory()
         offering = factories.OfferingFactory(
             product__contract_definition=None,
+            product__quote_definition=factories.QuoteDefinitionFactory(),
         )
         batch_order = factories.BatchOrderFactory(owner=user, offering=offering)
 
@@ -479,3 +480,23 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         validate_success_payment(batch_order)
 
         self.assertTrue(batch_order.is_paid)
+
+    def test_models_batch_order_when_product_has_no_quote_definition(self):
+        """
+        When the product has not quote definition, it should not be possible to create
+        the batch order
+        """
+        offering = factories.OfferingFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=None,
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.BatchOrderFactory(
+                owner=factories.UserFactory(), offering=offering
+            )
+
+        self.assertTrue(
+            "Your product doesn't have a quote definition attached, "
+            "aborting create batch order." in str(context.exception)
+        )
