@@ -354,3 +354,51 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         batch_order = models.BatchOrder.objects.get(relation=offering)
 
         self.assertEqual(batch_order.organization, expected_organization)
+
+    def test_api_batch_order_create_with_product_without_quote_definition(self):
+        """
+        Authenticated user cannot create a batch order when the product is not attached
+        to a quote definition.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=None,
+        )
+
+        data = {
+            "offering_id": offering.id,
+            "nb_seats": 2,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "organization_id": offering.organizations.first().id,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "jane@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+        }
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
