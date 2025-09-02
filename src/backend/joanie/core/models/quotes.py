@@ -153,12 +153,11 @@ class Quote(BaseModel):
         """
         if not self.reference:
             year = timezone.now().year
+            prefix_reference = f"{settings.JOANIE_PREFIX_QUOTE_REFERENCE}_{year}_"
             with transaction.atomic():
                 # select_for_update() will lock row the queryset until the end of the transaction
                 last = (
-                    Quote.objects.filter(
-                        reference__startswith=f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_"
-                    )
+                    Quote.objects.filter(reference__startswith=prefix_reference)
                     .order_by("-reference")
                     .select_for_update()
                     .first()
@@ -168,12 +167,12 @@ class Quote(BaseModel):
                     last_number = int(last.reference.split("_")[-1])
                     next_number = last_number + 1
 
-                reference = f"FUN_{year}_{next_number:07d}"
+                reference = f"{prefix_reference}{next_number:07d}"
 
                 while self.__class__.objects.filter(reference=reference).exists():
                     # The while loop when concurrent requests are made
                     next_number += 1
-                    reference = f"{settings.JOANIE_QUOTE_REFERENCE_PREFIX}_{year}_{next_number:07d}"
+                    reference = f"{prefix_reference}{next_number:07d}"
 
                 self.reference = reference
 
