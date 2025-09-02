@@ -5692,13 +5692,21 @@
                     "quote": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/Quote"
+                                "$ref": "#/components/schemas/QuoteLight"
                             }
                         ],
                         "readOnly": true
                     },
                     "payment_method": {
                         "$ref": "#/components/schemas/PaymentMethodEnum"
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/State062Enum"
+                            }
+                        ],
+                        "readOnly": true
                     },
                     "administrative_firstname": {
                         "type": "string"
@@ -5752,6 +5760,7 @@
                     "payment_method",
                     "postcode",
                     "quote",
+                    "state",
                     "total"
                 ]
             },
@@ -5857,7 +5866,7 @@
                     "state": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/BatchOrderLightStateEnum"
+                                "$ref": "#/components/schemas/State062Enum"
                             }
                         ],
                         "readOnly": true
@@ -5881,41 +5890,6 @@
                     "relation_id",
                     "state"
                 ]
-            },
-            "BatchOrderLightRequest": {
-                "type": "object",
-                "description": "Read only Batch Order light serializer",
-                "properties": {
-                    "organization_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
-                    },
-                    "relation_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
-                    }
-                },
-                "required": [
-                    "organization_id",
-                    "relation_id"
-                ]
-            },
-            "BatchOrderLightStateEnum": {
-                "enum": [
-                    "draft",
-                    "assigned",
-                    "quoted",
-                    "to_sign",
-                    "signing",
-                    "pending",
-                    "failed_payment",
-                    "canceled",
-                    "completed"
-                ],
-                "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "BatchOrderRequest": {
                 "type": "object",
@@ -8843,6 +8817,51 @@
                     "name",
                     "title"
                 ]
+            },
+            "QuoteLight": {
+                "type": "object",
+                "description": "Light serializer of the Quote model",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "organization_signed_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time organization signed on"
+                    },
+                    "has_purchase_order": {
+                        "type": "boolean",
+                        "readOnly": true,
+                        "title": "Purchase order to confirm payment",
+                        "description": "Quote has purchase order to confirm payment from buyer"
+                    }
+                },
+                "required": [
+                    "has_purchase_order",
+                    "id",
+                    "organization_signed_on"
+                ]
+            },
+            "State062Enum": {
+                "enum": [
+                    "draft",
+                    "assigned",
+                    "quoted",
+                    "to_sign",
+                    "signing",
+                    "pending",
+                    "failed_payment",
+                    "canceled",
+                    "completed"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "User": {
                 "type": "object",
