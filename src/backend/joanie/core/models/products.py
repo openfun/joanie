@@ -2185,6 +2185,12 @@ class BatchOrder(BaseModel):
         If no billing address was given on creation, it means that the billing address does
         not differenciates from the buyer's company address.
         """
+        if not self.relation.product.quote_definition:
+            raise ValidationError(
+                "Your product doesn't have a quote definition attached, "
+                "aborting create batch order."
+            )
+
         if not self.billing_address:
             self.billing_address = {
                 "company_name": self.company_name,
