@@ -535,6 +535,19 @@ class QuoteSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class QuoteLightSerializer(serializers.ModelSerializer):
+    """Light serializer of the Quote model"""
+
+    class Meta:
+        model = models.Quote
+        fields = [
+            "id",
+            "organization_signed_on",
+            "has_purchase_order",
+        ]
+        read_only_fields = fields
+
+
 class CourseRunLightSerializer(serializers.ModelSerializer):
     """
     Serialize all information about a course run
@@ -1492,7 +1505,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         required=False,
         read_only=True,
     )
-    quote = QuoteSerializer(read_only=True)
+    quote = QuoteLightSerializer(read_only=True)
     payment_method = serializers.ChoiceField(
         choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
         required=True,
@@ -1535,6 +1548,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "offering_rule_ids",
             "quote",
             "payment_method",
+            "state",
             "administrative_firstname",
             "administrative_lastname",
             "administrative_profession",
@@ -1554,6 +1568,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "contract_id",
             "offering_rule_ids",
             "quote",
+            "state",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
