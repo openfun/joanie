@@ -18,6 +18,7 @@ from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.core.utils import webhooks
 from joanie.payment.factories import BillingAddressDictFactory, CreditCardFactory
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -227,25 +228,21 @@ class OrderCreateApiTest(BaseAPITestCase):
                                 "resource_link": course_run.resource_link,
                                 "state": {
                                     "priority": course_run.state["priority"],
-                                    "datetime": course_run.state["datetime"]
-                                    .isoformat()
-                                    .replace("+00:00", "Z"),
+                                    "datetime": format_date(
+                                        course_run.state["datetime"]
+                                    ),
                                     "call_to_action": course_run.state[
                                         "call_to_action"
                                     ],
                                     "text": course_run.state["text"],
                                 },
-                                "start": course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
+                                "start": format_date(course_run.start),
+                                "end": format_date(course_run.end),
+                                "enrollment_start": (
+                                    format_date(course_run.enrollment_start)
                                 ),
-                                "end": course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
+                                "enrollment_end": format_date(
+                                    course_run.enrollment_end
                                 ),
                             }
                             for course_run in target_course.course_runs.all().order_by(
@@ -337,40 +334,30 @@ class OrderCreateApiTest(BaseAPITestCase):
                             "id": str(enrollment.course_run.course.id),
                             "title": enrollment.course_run.course.title,
                         },
-                        "end": enrollment.course_run.end.isoformat().replace(
-                            "+00:00", "Z"
-                        ),
+                        "end": format_date(enrollment.course_run.end),
                         "enrollment_end": (
-                            enrollment.course_run.enrollment_end.isoformat().replace(
-                                "+00:00", "Z"
-                            )
+                            format_date(enrollment.course_run.enrollment_end)
                         ),
                         "enrollment_start": (
-                            enrollment.course_run.enrollment_start.isoformat().replace(
-                                "+00:00", "Z"
-                            )
+                            format_date(enrollment.course_run.enrollment_start)
                         ),
                         "id": str(enrollment.course_run.id),
                         "languages": enrollment.course_run.languages,
                         "resource_link": enrollment.course_run.resource_link,
-                        "start": enrollment.course_run.start.isoformat().replace(
-                            "+00:00", "Z"
-                        ),
+                        "start": format_date(enrollment.course_run.start),
                         "state": {
                             "call_to_action": enrollment.course_run.state.get(
                                 "call_to_action"
                             ),
-                            "datetime": enrollment.course_run.state.get("datetime")
-                            .isoformat()
-                            .replace("+00:00", "Z"),
+                            "datetime": format_date(
+                                enrollment.course_run.state.get("datetime")
+                            ),
                             "priority": enrollment.course_run.state.get("priority"),
                             "text": enrollment.course_run.state.get("text"),
                         },
                         "title": enrollment.course_run.title,
                     },
-                    "created_on": enrollment.created_on.isoformat().replace(
-                        "+00:00", "Z"
-                    ),
+                    "created_on": format_date(enrollment.created_on),
                     "id": str(enrollment.id),
                     "is_active": enrollment.is_active,
                     "state": enrollment.state,
@@ -1041,25 +1028,21 @@ class OrderCreateApiTest(BaseAPITestCase):
                                 "resource_link": course_run.resource_link,
                                 "state": {
                                     "priority": course_run.state["priority"],
-                                    "datetime": course_run.state["datetime"]
-                                    .isoformat()
-                                    .replace("+00:00", "Z"),
+                                    "datetime": format_date(
+                                        course_run.state["datetime"]
+                                    ),
                                     "call_to_action": course_run.state[
                                         "call_to_action"
                                     ],
                                     "text": course_run.state["text"],
                                 },
-                                "start": course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
+                                "start": format_date(course_run.start),
+                                "end": format_date(course_run.end),
+                                "enrollment_start": (
+                                    format_date(course_run.enrollment_start)
                                 ),
-                                "end": course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
+                                "enrollment_end": format_date(
+                                    course_run.enrollment_end
                                 ),
                             }
                             for course_run in target_course.course_runs.all().order_by(
@@ -1375,25 +1358,21 @@ class OrderCreateApiTest(BaseAPITestCase):
                                 "resource_link": course_run.resource_link,
                                 "state": {
                                     "priority": course_run.state["priority"],
-                                    "datetime": course_run.state["datetime"]
-                                    .isoformat()
-                                    .replace("+00:00", "Z"),
+                                    "datetime": format_date(
+                                        course_run.state["datetime"]
+                                    ),
                                     "call_to_action": course_run.state[
                                         "call_to_action"
                                     ],
                                     "text": course_run.state["text"],
                                 },
-                                "start": course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
+                                "start": format_date(course_run.start),
+                                "end": format_date(course_run.end),
+                                "enrollment_start": (
+                                    format_date(course_run.enrollment_start)
                                 ),
-                                "end": course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
+                                "enrollment_end": format_date(
+                                    course_run.enrollment_end
                                 ),
                             }
                             for course_run in target_course.course_runs.all().order_by(
@@ -1578,25 +1557,21 @@ class OrderCreateApiTest(BaseAPITestCase):
                                 "resource_link": course_run.resource_link,
                                 "state": {
                                     "priority": course_run.state["priority"],
-                                    "datetime": course_run.state["datetime"]
-                                    .isoformat()
-                                    .replace("+00:00", "Z"),
+                                    "datetime": format_date(
+                                        course_run.state["datetime"]
+                                    ),
                                     "call_to_action": course_run.state[
                                         "call_to_action"
                                     ],
                                     "text": course_run.state["text"],
                                 },
-                                "start": course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
+                                "start": format_date(course_run.start),
+                                "end": format_date(course_run.end),
+                                "enrollment_start": (
+                                    format_date(course_run.enrollment_start)
                                 ),
-                                "end": course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_start": course_run.enrollment_start.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
-                                ),
-                                "enrollment_end": course_run.enrollment_end.isoformat().replace(  # pylint: disable=line-too-long
-                                    "+00:00", "Z"
+                                "enrollment_end": format_date(
+                                    course_run.enrollment_end
                                 ),
                             }
                             for course_run in target_course.course_runs.all().order_by(
