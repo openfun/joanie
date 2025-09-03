@@ -134,28 +134,30 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
         # sync has been called
         self.assertEqual(mock_sync.call_count, 1)
-        synchronized_course_runs = mock_sync.call_args_list[0][0][0][0]
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertEqual(
             synchronized_course_runs,
-            {
-                "catalog_visibility": enums.COURSE_AND_SEARCH,
-                "certificate_discount": None,
-                "certificate_discounted_price": None,
-                "certificate_offer": enums.COURSE_OFFER_PAID,
-                "certificate_price": None,
-                "course": offering.course.code,
-                "discount": None,
-                "discounted_price": None,
-                "start": course_run.start.isoformat(),
-                "end": course_run.end.isoformat(),
-                "enrollment_start": course_run.enrollment_start.isoformat(),
-                "enrollment_end": course_run.enrollment_end.isoformat(),
-                "languages": course_run.languages,
-                "offer": enums.COURSE_OFFER_PAID,
-                "price": product.price,
-                "resource_link": f"https://example.com/api/v1.0/courses/{course.code}"
-                f"/products/{product.id}/",
-            },
+            [
+                {
+                    "catalog_visibility": enums.COURSE_AND_SEARCH,
+                    "certificate_discount": None,
+                    "certificate_discounted_price": None,
+                    "certificate_offer": enums.COURSE_OFFER_PAID,
+                    "certificate_price": None,
+                    "course": offering.course.code,
+                    "discount": None,
+                    "discounted_price": None,
+                    "start": course_run.start.isoformat(),
+                    "end": course_run.end.isoformat(),
+                    "enrollment_start": course_run.enrollment_start.isoformat(),
+                    "enrollment_end": course_run.enrollment_end.isoformat(),
+                    "languages": course_run.languages,
+                    "offer": enums.COURSE_OFFER_PAID,
+                    "price": product.price,
+                    "resource_link": f"https://example.com/api/v1.0/courses/{course.code}"
+                    f"/products/{product.id}/",
+                }
+            ],
         )
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
