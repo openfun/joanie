@@ -129,6 +129,22 @@ class Product(parler_models.TranslatableModel, BaseModel):
         blank=True,
         null=True,
     )
+    contract_definition_order = models.ForeignKey(
+        "ContractDefinition",
+        related_name="contract_definition_order",
+        verbose_name=_("Contract definition for single order"),
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
+    contract_definition_batch_order = models.ForeignKey(
+        "ContractDefinition",
+        related_name="contract_definition_batch_order",
+        verbose_name=_("Contract definition for batch order"),
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
     quote_definition = models.ForeignKey(
         "QuoteDefinition",
         verbose_name=_("Quote definition"),
