@@ -1012,6 +1012,25 @@ class OfferingRulePropertySerializer(serializers.Serializer):
         """Only there to avoid a NotImplementedError"""
 
 
+class OfferingBatchOrderSerializer(serializers.ModelSerializer):
+    """Convenient serializer for the offering model to use for the Batch Order"""
+
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
+    product_title = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "course",
+            "product_id",
+            "product_title",
+        ]
+
+    def get_product_title(self, instance):
+        """Return the product's title of the instance."""
+        return instance.product.title
+
+
 class OfferingLightSerializer(CachedModelSerializer):
     """
     Serialize an offering in its minimal format.
@@ -1482,12 +1501,13 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     currency = serializers.SerializerMethodField(read_only=True)
+    relation = OfferingBatchOrderSerializer(read_only=True)
     relation_id = serializers.SlugRelatedField(
         queryset=models.CourseProductRelation.objects.all(),
         slug_field="id",
         source="relation",
-        required=False,
-        write_only=False,
+        write_only=True,
+        read_only=False,
     )
     organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
     main_invoice_reference = serializers.SlugRelatedField(
@@ -1533,6 +1553,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "owner",
             "total",
             "currency",
+            "relation",
             "relation_id",
             "organization",
             "main_invoice_reference",
@@ -1591,7 +1612,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         for consistency with the model field.
         """
         representation = super().to_representation(instance)
-        representation["offering_id"] = representation.pop("relation_id", None)
+        representation["offering"] = representation.pop("relation", None)
         return representation
 
     def create(self, validated_data):
@@ -1599,6 +1620,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         Verify that the number of available seats in offering rules of the offering
         is sufficient to meet the required seats specified in the batch order.
         """
+        # breakpoint()
         organization = get_object_or_404(
             models.Organization, id=self.initial_data.get("organization_id")
         )
