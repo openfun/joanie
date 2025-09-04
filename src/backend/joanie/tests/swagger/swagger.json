@@ -5615,10 +5615,13 @@
                         "description": "Return the currency used",
                         "readOnly": true
                     },
-                    "relation_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID"
+                    "relation": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OfferingBatchOrder"
+                            }
+                        ],
+                        "readOnly": true
                     },
                     "organization": {
                         "allOf": [
@@ -5760,6 +5763,7 @@
                     "payment_method",
                     "postcode",
                     "quote",
+                    "relation",
                     "state",
                     "total"
                 ]
@@ -5898,7 +5902,8 @@
                     "relation_id": {
                         "type": "string",
                         "format": "uuid",
-                        "description": "primary key for the record as UUID"
+                        "description": "primary key for the record as UUID",
+                        "writeOnly": true
                     },
                     "company_name": {
                         "type": "string",
@@ -5989,7 +5994,8 @@
                     "identification_number",
                     "nb_seats",
                     "payment_method",
-                    "postcode"
+                    "postcode",
+                    "relation_id"
                 ]
             },
             "Certificate": {
@@ -7337,6 +7343,28 @@
                     "organizations",
                     "product",
                     "rules"
+                ]
+            },
+            "OfferingBatchOrder": {
+                "type": "object",
+                "description": "Convenient serializer for the offering model to use for the Batch Order",
+                "properties": {
+                    "course": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CourseLight"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "product": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "course",
+                    "product"
                 ]
             },
             "OfferingLight": {
