@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Exclude archived course runs from synchronization
+
 ## [3.0.2] - 2025-09-01
 
 ### Fixed

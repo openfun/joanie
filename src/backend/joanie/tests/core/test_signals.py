@@ -926,7 +926,9 @@ class SignalsTestCase(TestCase):
         """
         Product synchronization should be triggered when an offering rule is created.
         """
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+        )
         product = factories.ProductFactory(
             courses=[course_run.course],
             price="100.00",
@@ -959,7 +961,9 @@ class SignalsTestCase(TestCase):
         Product synchronization should be triggered when an offering rule is created
         for a credential product with is_graded set to True.
         """
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+        )
         product = factories.ProductFactory(
             courses=[course_run.course],
             price="100.00",
@@ -1023,7 +1027,10 @@ class SignalsTestCase(TestCase):
         """
         Product synchronization should be triggered when an offering rule is created.
         """
-        course_run = factories.CourseRunFactory(is_listed=True)
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+        )
         product = factories.ProductFactory(
             courses=[course_run.course],
             price="100.00",
@@ -1078,7 +1085,10 @@ class SignalsTestCase(TestCase):
         """
         Product synchronization should be triggered when an offering rule is deleted.
         """
-        course_run = factories.CourseRunFactory(is_listed=False)
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+        )
         product = factories.ProductFactory(
             courses=[course_run.course],
             target_courses=[course_run.course],
@@ -1132,7 +1142,10 @@ class SignalsTestCase(TestCase):
         Product synchronization should be triggered when an offering rule is deleted
         for a credential product with is_graded set to True.
         """
-        course_run = factories.CourseRunFactory(is_listed=False)
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+        )
         product = factories.ProductFactory(
             courses=[course_run.course],
             target_courses=[course_run.course],
@@ -1193,7 +1206,10 @@ class SignalsTestCase(TestCase):
         """
         Product synchronization should be triggered when an offering rule is deleted.
         """
-        course_run = factories.CourseRunFactory(is_listed=True)
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+            is_listed=True,
+        )
         product = factories.ProductFactory(
             courses=[course_run.course],
             target_courses=[],
