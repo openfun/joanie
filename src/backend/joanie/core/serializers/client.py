@@ -1012,6 +1012,27 @@ class OfferingRulePropertySerializer(serializers.Serializer):
         """Only there to avoid a NotImplementedError"""
 
 
+class OfferingBatchOrderSerializer(serializers.ModelSerializer):
+    """Convenient serializer for the offering model to use for the Batch Order"""
+
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
+    product = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "course",
+            "product",
+        ]
+
+    def get_product(self, instance):
+        """Return simple product representation."""
+        return {
+            "id": str(instance.product.id),
+            "title": instance.product.title,
+        }
+
+
 class OfferingLightSerializer(CachedModelSerializer):
     """
     Serialize an offering in its minimal format.
@@ -1482,12 +1503,13 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     currency = serializers.SerializerMethodField(read_only=True)
+    relation = OfferingBatchOrderSerializer(read_only=True)
     relation_id = serializers.SlugRelatedField(
         queryset=models.CourseProductRelation.objects.all(),
         slug_field="id",
         source="relation",
-        required=False,
-        write_only=False,
+        write_only=True,
+        read_only=False,
     )
     organization = OrganizationSerializer(read_only=True, exclude_abilities=True)
     main_invoice_reference = serializers.SlugRelatedField(
@@ -1533,6 +1555,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "owner",
             "total",
             "currency",
+            "relation",
             "relation_id",
             "organization",
             "main_invoice_reference",
@@ -1591,7 +1614,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         for consistency with the model field.
         """
         representation = super().to_representation(instance)
-        representation["offering_id"] = representation.pop("relation_id", None)
+        representation["offering"] = representation.pop("relation", None)
         return representation
 
     def create(self, validated_data):
