@@ -39,11 +39,11 @@ class LexPersonaBackendUpdateSignatoriesTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             definition_checksum="1234",
             context="context",
             signature_backend_reference="wfl_id_fake",
@@ -260,11 +260,11 @@ class LexPersonaBackendUpdateSignatoriesTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             definition_checksum="1234",
             context="context",
             signature_backend_reference="wfl_id_fake",
@@ -487,11 +487,11 @@ class LexPersonaBackendUpdateSignatoriesTestCase(TestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             definition_checksum="1234",
             context="context",
             signature_backend_reference="fake_wfl_id_fake",

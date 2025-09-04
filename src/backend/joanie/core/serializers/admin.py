@@ -406,7 +406,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "type",
             "instructions",
             "certificate_definition",
-            "contract_definition",
+            "contract_definition_order",
             "quote_definition",
             "target_courses",
             "certification_level",
@@ -461,7 +461,8 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
             "price_currency",
             "type",
             "certificate_definition",
-            "contract_definition",
+            "contract_definition_order",
+            "contract_definition_batch_order",
             "quote_definition",
             "target_courses",
         ]
@@ -1069,7 +1070,8 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
     """Serializer for Product details"""
 
     certificate_definition = AdminCertificateDefinitionSerializer(read_only=True)
-    contract_definition = AdminContractDefinitionSerializer(read_only=True)
+    contract_definition_order = AdminContractDefinitionSerializer(read_only=True)
+    contract_definition_batch_order = AdminContractDefinitionSerializer(read_only=True)
     quote_definition = AdminQuoteDefinitionSerializer(read_only=True)
     target_courses = serializers.SerializerMethodField(read_only=True)
     price = serializers.DecimalField(
@@ -1092,7 +1094,8 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "price",
             "price_currency",
             "certificate_definition",
-            "contract_definition",
+            "contract_definition_order",
+            "contract_definition_batch_order",
             "quote_definition",
             "target_courses",
             "offerings",
