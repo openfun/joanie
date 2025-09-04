@@ -122,9 +122,18 @@ class Product(parler_models.TranslatableModel, BaseModel):
         blank=True,
         null=True,
     )
-    contract_definition = models.ForeignKey(
+    contract_definition_order = models.ForeignKey(
         "ContractDefinition",
-        verbose_name=_("Contract definition"),
+        related_name="contract_definition_order",
+        verbose_name=_("Contract definition for single order"),
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
+    contract_definition_batch_order = models.ForeignKey(
+        "ContractDefinition",
+        related_name="contract_definition_batch_order",
+        verbose_name=_("Contract definition for batch order"),
         on_delete=models.PROTECT,
         blank=True,
         null=True,
@@ -1265,7 +1274,7 @@ class Order(BaseModel):
         try:
             return self.contract.student_signed_on is None  # pylint: disable=no-member
         except Contract.DoesNotExist:
-            return self.product.contract_definition is not None
+            return self.product.contract_definition_order is not None
 
     # pylint: disable=too-many-branches
     # ruff: noqa: PLR0912
@@ -1585,7 +1594,7 @@ class Order(BaseModel):
         to delete at the signature provider the ongoing procedure and create a new contract
         to submit.
         """
-        if not self.product.contract_definition_id:
+        if not self.product.contract_definition_order_id:
             message = "No contract definition attached to the contract's product."
             logger.error(
                 message,
@@ -1603,7 +1612,7 @@ class Order(BaseModel):
             logger.error(message, extra={"context": {"order": self.to_dict()}})
             raise ValidationError(message)
 
-        contract_definition = self.product.contract_definition
+        contract_definition = self.product.contract_definition_order
 
         if self.contract.student_signed_on:
             message = "Contract is already signed by the student, cannot resubmit."
@@ -1865,9 +1874,9 @@ class Order(BaseModel):
 
         self.freeze_target_courses()
 
-        if self.product.contract_definition and not self.has_contract:
+        if self.product.contract_definition_order and not self.has_contract:
             Contract.objects.create(
-                order=self, definition=self.product.contract_definition
+                order=self, definition=self.product.contract_definition_order
             )
 
         self.flow.update()
@@ -2225,9 +2234,9 @@ class BatchOrder(BaseModel):
         self.flow.update()  # Transition to assigned
 
         # Generate the contract
-        if self.relation.product.contract_definition and not self.contract:
+        if self.relation.product.contract_definition_batch_order and not self.contract:
             self.contract = Contract.objects.create(
-                definition=self.relation.product.contract_definition
+                definition=self.relation.product.contract_definition_batch_order
             )
 
         # Generate the quote
@@ -2259,7 +2268,7 @@ class BatchOrder(BaseModel):
         of type convention. Also, if the document's validity has been reached, we will resubmit
         a newer version for it to be eligble to be signed.
         """
-        if not self.relation.product.contract_definition_id:
+        if not self.relation.product.contract_definition_batch_order_id:
             message = "No contract definition attached to the contract's product."
             logger.error(
                 message,
@@ -2291,7 +2300,7 @@ class BatchOrder(BaseModel):
             )
             raise PermissionDenied(message)
 
-        contract_definition = self.relation.product.contract_definition
+        contract_definition = self.relation.product.contract_definition_batch_order
         context = contract_definition_utility.generate_document_context(
             contract_definition=contract_definition,
             user=user,

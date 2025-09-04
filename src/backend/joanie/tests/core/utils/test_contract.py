@@ -36,7 +36,7 @@ class UtilsContractTestCase(TestCase):
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
                 offering = factories.OfferingFactory(
-                    product__contract_definition=factories.ContractDefinitionFactory()
+                    product__contract_definition_order=factories.ContractDefinitionFactory()
                 )
                 contract = factories.ContractFactory(
                     # order__owner=users[index],
@@ -79,7 +79,7 @@ class UtilsContractTestCase(TestCase):
         """
         users = factories.UserFactory.create_batch(3)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -126,7 +126,7 @@ class UtilsContractTestCase(TestCase):
         """
         users = factories.UserFactory.create_batch(3)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -168,7 +168,7 @@ class UtilsContractTestCase(TestCase):
         """
         users = factories.UserFactory.create_batch(3)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         organization = offering.organizations.first()
         signature_reference_choices = [
@@ -215,7 +215,7 @@ class UtilsContractTestCase(TestCase):
         """
         users = factories.UserFactory.create_batch(3)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         organization = offering.organizations.first()
         signature_reference_choices = [
@@ -260,7 +260,7 @@ class UtilsContractTestCase(TestCase):
         users = factories.UserFactory.create_batch(3)
         offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -314,7 +314,7 @@ class UtilsContractTestCase(TestCase):
         users = factories.UserFactory.create_batch(3)
         offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         signature_reference_choices = [
             "wfl_fake_dummy_1",
@@ -370,7 +370,7 @@ class UtilsContractTestCase(TestCase):
         )
         offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             organizations=[organization],
         )
         signature_reference_choices = [
@@ -430,7 +430,7 @@ class UtilsContractTestCase(TestCase):
         organization_course_supplier = factories.OrganizationFactory()
         offering = factories.OfferingFactory(
             product__type=enums.PRODUCT_TYPE_CERTIFICATE,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             organizations=[organization_course_supplier],
         )
         signature_reference_choices = [
@@ -568,7 +568,7 @@ class UtilsContractTestCase(TestCase):
         users = factories.UserFactory.create_batch(3)
         requesting_user = factories.UserFactory()
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(
+            product__contract_definition_order=factories.ContractDefinitionFactory(
                 title="Contract definition title"
             )
         )
@@ -592,7 +592,7 @@ class UtilsContractTestCase(TestCase):
                 ),
             )
             context = contract_definition_utility.generate_document_context(
-                order.product.contract_definition, users[index], order
+                order.product.contract_definition_order, users[index], order
             )
             factories.ContractFactory(
                 order=order,
@@ -603,7 +603,7 @@ class UtilsContractTestCase(TestCase):
                 organization_signed_on=timezone.now(),
             )
             pdf_bytes_file = issuers.generate_document(
-                order.product.contract_definition.name, context=context
+                order.product.contract_definition_order.name, context=context
             )
             files_in_bytes.append(pdf_bytes_file)
 
@@ -652,7 +652,7 @@ class UtilsContractTestCase(TestCase):
         learners = factories.UserFactory.create_batch(2)
         organizations = factories.OrganizationFactory.create_batch(2)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             organizations=organizations,
         )
         signature_reference_choices = [
@@ -697,11 +697,11 @@ class UtilsContractTestCase(TestCase):
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.ContractFactory(
-            order=order, definition=order.product.contract_definition
+            order=order, definition=order.product.contract_definition_order
         )
 
         self.assertFalse(contract_utility.order_has_organization_owner(order))
@@ -716,11 +716,11 @@ class UtilsContractTestCase(TestCase):
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             state=enums.ORDER_STATE_COMPLETED,
         )
         factories.ContractFactory(
-            order=order, definition=order.product.contract_definition
+            order=order, definition=order.product.contract_definition_order
         )
 
         # When the organization has set some owners with access rights of "owner"
@@ -741,12 +741,12 @@ class UtilsContractTestCase(TestCase):
                 user = factories.UserFactory()
                 order = factories.OrderFactory(
                     owner=user,
-                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    product__contract_definition_order=factories.ContractDefinitionFactory(),
                     state=state,
                 )
                 factories.ContractFactory(
                     order=order,
-                    definition=order.product.contract_definition,
+                    definition=order.product.contract_definition_order,
                     signature_backend_reference="wfl_fake_dummy_id",
                     definition_checksum="1234",
                     context="context",
@@ -774,12 +774,12 @@ class UtilsContractTestCase(TestCase):
                 user = factories.UserFactory()
                 order = factories.OrderFactory(
                     owner=user,
-                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    product__contract_definition_order=factories.ContractDefinitionFactory(),
                     state=state,
                 )
                 factories.ContractFactory(
                     order=order,
-                    definition=order.product.contract_definition,
+                    definition=order.product.contract_definition_order,
                     signature_backend_reference="wfl_fake_dummy_id",
                     definition_checksum="1234",
                     context="context",
@@ -804,12 +804,12 @@ class UtilsContractTestCase(TestCase):
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             state=enums.ORDER_STATE_COMPLETED,
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             context="context",
@@ -847,7 +847,7 @@ class UtilsContractTestCase(TestCase):
         """
         organization = factories.OrganizationFactory()
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             organizations=[organization],
         )
         order = factories.OrderFactory(
@@ -889,7 +889,7 @@ class UtilsContractTestCase(TestCase):
         """
         organization = factories.OrganizationFactory()
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             organizations=[organization],
         )
         learners = factories.UserFactory.create_batch(3)

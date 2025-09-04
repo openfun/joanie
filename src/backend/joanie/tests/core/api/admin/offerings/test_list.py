@@ -67,7 +67,6 @@ class CourseProductRelationListAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertEqual(
-            response.json(),
             {
                 "count": 3,
                 "next": None,
@@ -106,7 +105,8 @@ class CourseProductRelationListAdminApiTest(TestCase):
                             "certificate_definition": str(
                                 offering.product.certificate_definition.id
                             ),
-                            "contract_definition": None,
+                            "contract_definition_order": None,
+                            "contract_definition_batch_order": None,
                             "quote_definition": None,
                             "target_courses": [
                                 str(target_course.id)
@@ -129,4 +129,5 @@ class CourseProductRelationListAdminApiTest(TestCase):
                     for offering in reversed(offerings)
                 ],
             },
+            response.json(),
         )

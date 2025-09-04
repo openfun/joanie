@@ -174,7 +174,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 organization = factories.OrganizationFactory()
                 offering = factories.OfferingFactory(
                     organizations=[organization],
-                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    product__contract_definition_order=factories.ContractDefinitionFactory(),
                 )
                 contract = factories.ContractFactory(
                     order__state=state,
@@ -209,7 +209,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts_to_sign = []
         other_contracts = []
@@ -274,7 +274,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts_to_sign = []
         other_contracts = []
@@ -344,7 +344,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts_to_sign = []
         other_contracts = []
@@ -415,7 +415,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts = []
         for offering in offerings:
@@ -447,7 +447,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts = []
         for offering in offerings:

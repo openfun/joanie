@@ -122,7 +122,6 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -181,6 +180,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
         # The user linked to the other enrollment can only see his/her enrollment
@@ -195,7 +195,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -258,6 +257,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -316,7 +316,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(len(content["results"]), 3)
 
         self.assertListEqual(
-            content["results"][2]["offerings"],
             [
                 {
                     "id": str(product2.offerings.last().id),
@@ -329,7 +328,8 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "name": str(product2.certificate_definition.name),
                             "title": str(product2.certificate_definition.title),
                         },
-                        "contract_definition": None,
+                        "contract_definition_order": None,
+                        "contract_definition_batch_order": None,
                         "quote_definition": None,
                         "id": str(product2.id),
                         "price": float(product2.price),
@@ -372,7 +372,8 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "name": str(product1.certificate_definition.name),
                             "title": str(product1.certificate_definition.title),
                         },
-                        "contract_definition": None,
+                        "contract_definition_order": None,
+                        "contract_definition_batch_order": None,
                         "quote_definition": None,
                         "state": {
                             "priority": product1.state["priority"],
@@ -405,6 +406,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     },
                 },
             ],
+            content["results"][2]["offerings"],
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -522,7 +524,6 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -577,6 +578,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     def test_api_enrollment_read_list_filtered_by_invalid_course_run_id(self):
@@ -727,7 +729,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -773,6 +774,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": enrollment.state,
                 "was_created_by_order": enrollment.was_created_by_order,
             },
+            response.json(),
         )
 
     def test_api_enrollment_read_detail_authenticated_owner_certificate(self):
@@ -804,7 +806,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         content = response.json()
 
         self.assertListEqual(
-            content["orders"],
             [
                 {
                     "id": str(order.id),
@@ -825,9 +826,9 @@ class EnrollmentApiTest(BaseAPITestCase):
                     else None,
                 }
             ],
+            content["orders"],
         )
         self.assertListEqual(
-            content["offerings"],
             [
                 {
                     "id": str(product.offerings.first().id),
@@ -839,7 +840,8 @@ class EnrollmentApiTest(BaseAPITestCase):
                             "name": product.certificate_definition.name,
                             "title": product.certificate_definition.title,
                         },
-                        "contract_definition": None,
+                        "contract_definition_order": None,
+                        "contract_definition_batch_order": None,
                         "quote_definition": None,
                         "id": str(product.id),
                         "instructions": "",
@@ -869,6 +871,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     },
                 },
             ],
+            content["offerings"],
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -943,7 +946,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         else:
             mock_set.assert_not_called()
         self.assertDictEqual(
-            content,
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -986,6 +988,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "set" if is_active else "",
                 "was_created_by_order": False,
             },
+            content,
         )
         self.assertNotIn("2000", content["created_on"])
 
@@ -1048,7 +1051,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             mock_set.assert_not_called()
 
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -1098,7 +1100,8 @@ class EnrollmentApiTest(BaseAPITestCase):
                                 "name": product.certificate_definition.name,
                                 "title": product.certificate_definition.title,
                             },
-                            "contract_definition": None,
+                            "contract_definition_order": None,
+                            "contract_definition_batch_order": None,
                             "quote_definition": None,
                             "id": str(product.id),
                             "instructions": "",
@@ -1131,6 +1134,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "set" if is_active else "",
                 "was_created_by_order": False,
             },
+            response.json(),
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value=True)
@@ -1219,7 +1223,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         self.assertFalse(mock_set.called)
         enrollment = models.Enrollment.objects.get()
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -1262,6 +1265,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "failed",
                 "was_created_by_order": False,
             },
+            response.json(),
         )
         mock_logger.assert_called_once_with(
             'No LMS configuration found for course run: "%s".', "http://unknown.com/"
@@ -1312,7 +1316,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         enrollment = models.Enrollment.objects.get()
         mock_set.assert_called_once_with(enrollment)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -1355,6 +1358,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "failed",
                 "was_created_by_order": False,
             },
+            response.json(),
         )
         mock_logger.assert_called_once_with(
             'Enrollment failed for course run "%s".', course_run.resource_link
@@ -1562,7 +1566,6 @@ class EnrollmentApiTest(BaseAPITestCase):
         #   to LMSHandler.set_enrollment response
         self.assertNotEqual(enrollment.id, data["id"])
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -1605,6 +1608,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "set" if is_active else "",
                 "was_created_by_order": False,
             },
+            response.json(),
         )
 
     def test_api_enrollment_create_for_closed_course_run(self):
@@ -1853,7 +1857,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             self.assertEqual(response.status_code, HTTPStatus.OK)
 
             self.assertDictEqual(
-                response.json(),
                 {
                     "id": str(enrollment.id),
                     "certificate_id": None,
@@ -1907,6 +1910,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     else "set",
                     "was_created_by_order": False,
                 },
+                response.json(),
             )
 
     # pylint: disable=too-many-locals
@@ -2076,7 +2080,6 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -2119,6 +2122,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "set",
                 "was_created_by_order": False,
             },
+            response.json(),
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
@@ -2161,7 +2165,6 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -2204,6 +2207,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "set",
                 "was_created_by_order": False,
             },
+            response.json(),
         )
 
         # Then user purchases a product containing the previously created course run and
@@ -2244,7 +2248,6 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -2287,6 +2290,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "set",
                 "was_created_by_order": True,
             },
+            response.json(),
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
@@ -2339,7 +2343,6 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -2382,6 +2385,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "set",
                 "was_created_by_order": True,
             },
+            response.json(),
         )
 
         # Then user purchases a product containing the previously created course run and
@@ -2405,7 +2409,6 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(enrollment.id),
                 "certificate_id": None,
@@ -2448,6 +2451,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 "state": "set",
                 "was_created_by_order": True,
             },
+            response.json(),
         )
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")

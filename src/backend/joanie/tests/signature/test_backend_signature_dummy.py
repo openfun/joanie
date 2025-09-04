@@ -431,11 +431,11 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         backend = DummySignatureBackend()
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             context="context",
@@ -461,11 +461,11 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         backend = DummySignatureBackend()
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             context="context",

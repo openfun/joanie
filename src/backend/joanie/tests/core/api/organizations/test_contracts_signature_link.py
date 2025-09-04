@@ -28,7 +28,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             is_superuser=random.choice([True, False]),
         )
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -72,7 +72,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         Authenticated users with the owner role should be able to sign contracts in bulk.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -116,14 +116,14 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         organization = factories.OrganizationFactory()
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         orders = factories.OrderFactory.create_batch(
             2,
             product=offering.product,
             course=offering.course,
             organization=organization,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -218,12 +218,12 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization, other_organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=0,
         )
         offering_2 = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=0,
         )
         access = factories.UserOrganizationAccessFactory(
@@ -323,7 +323,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
         [offering, offering_2] = factories.OfferingFactory.create_batch(
             2,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=0,
         )
         access = factories.UserOrganizationAccessFactory(
