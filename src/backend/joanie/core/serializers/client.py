@@ -839,8 +839,11 @@ class DefinitionResourcesProductSerializer(serializers.ModelSerializer):
     certificate_definition_id = serializers.SlugRelatedField(
         read_only=True, source="certificate_definition", slug_field="id"
     )
-    contract_definition_id = serializers.SlugRelatedField(
-        read_only=True, source="contract_definition", slug_field="id"
+    contract_definition_order_id = serializers.SlugRelatedField(
+        read_only=True, source="contract_definition_order", slug_field="id"
+    )
+    contract_definition_batch_order_id = serializers.SlugRelatedField(
+        read_only=True, source="contract_definition_batch_order", slug_field="id"
     )
     quote_definition_id = serializers.SlugRelatedField(
         read_only=True, source="quote_definition", slug_field="id"
@@ -850,7 +853,8 @@ class DefinitionResourcesProductSerializer(serializers.ModelSerializer):
         model = models.Product
         fields = [
             "id",
-            "contract_definition_id",
+            "contract_definition_order_id",
+            "contract_definition_batch_order_id",
             "certificate_definition_id",
             "quote_definition_id",
         ]
@@ -882,7 +886,8 @@ class ProductSerializer(serializers.ModelSerializer):
     target_courses = ProductTargetCourseRelationSerializer(
         read_only=True, many=True, source="target_course_relations"
     )
-    contract_definition = ContractDefinitionSerializer(read_only=True)
+    contract_definition_order = ContractDefinitionSerializer(read_only=True)
+    contract_definition_batch_order = ContractDefinitionSerializer(read_only=True)
     quote_definition = QuoteDefinitionSerializer(read_only=True)
 
     class Meta:
@@ -890,7 +895,8 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             "call_to_action",
             "certificate_definition",
-            "contract_definition",
+            "contract_definition_order",
+            "contract_definition_batch_order",
             "quote_definition",
             "id",
             "instructions",
