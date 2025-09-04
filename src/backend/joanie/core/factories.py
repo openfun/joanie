@@ -912,8 +912,8 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             enums.ORDER_STATE_REFUNDING,
             enums.ORDER_STATE_REFUNDED,
         ]:
-            if not self.product.contract_definition:
-                self.product.contract_definition = ContractDefinitionFactory()
+            if not self.product.contract_definition_order:
+                self.product.contract_definition_order = ContractDefinitionFactory()
                 self.product.save()
 
             is_signed = self.state not in [
@@ -923,7 +923,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             context = kwargs.get(
                 "context",
                 contract_definition.generate_document_context(
-                    contract_definition=self.product.contract_definition,
+                    contract_definition=self.product.contract_definition_order,
                     user=self.owner,
                     order=self,
                 )
@@ -956,7 +956,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
                 student_signed_on=student_signed_on,
                 submitted_for_signature_on=submitted_for_signature_on,
                 organization_signed_on=organization_signed_on,
-                definition=self.product.contract_definition,
+                definition=self.product.contract_definition_order,
                 context=context,
                 definition_checksum=definition_checksum,
                 signature_backend_reference=signature_backend_reference,
@@ -1210,7 +1210,9 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     offering = factory.SubFactory(
         OfferingFactory,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
-        product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
+        product__contract_definition_batch_order=factory.SubFactory(
+            ContractDefinitionFactory
+        ),
         product__quote_definition=factory.SubFactory(QuoteDefinitionFactory),
     )
     owner = factory.SubFactory(UserFactory)
@@ -1464,7 +1466,9 @@ class ContractFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         OrderFactory,
         state=enums.ORDER_STATE_COMPLETED,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
-        product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
+        product__contract_definition_order=factory.SubFactory(
+            ContractDefinitionFactory
+        ),
     )
     student_signed_on = None
     organization_signed_on = None
@@ -1475,7 +1479,7 @@ class ContractFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """
         Return the order product contract definition.
         """
-        return self.order.product.contract_definition
+        return self.order.product.contract_definition_order
 
     @factory.lazy_attribute
     def context(self):

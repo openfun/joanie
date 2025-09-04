@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add contract definition for batch order field to Product model
 - Add admin API endpoints for batch orders to confirm quote, purchase order
   and bank transfer
 - Add payment methods for batch orders
