@@ -27,7 +27,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         """
         user = factories.UserFactory()
         offering = factories.OfferingFactory(
-            product__contract_definition=None,
+            product__contract_definition_order=None,
+            product__contract_definition_batch_order=None,
             product__quote_definition=factories.QuoteDefinitionFactory(),
         )
         batch_order = factories.BatchOrderFactory(owner=user, offering=offering)
@@ -150,12 +151,12 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
 
         context = contract_definition.generate_document_context(
-            contract_definition=batch_order.offering.product.contract_definition,
+            contract_definition=batch_order.offering.product.contract_definition_batch_order,
             user=batch_order.owner,
             batch_order=batch_order,
         )
         contract = factories.ContractFactory(
-            definition=batch_order.offering.product.contract_definition,
+            definition=batch_order.offering.product.contract_definition_batch_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="fake_test_file_hash",
             context=context,
@@ -487,7 +488,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         the batch order
         """
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__quote_definition=None,
         )
 

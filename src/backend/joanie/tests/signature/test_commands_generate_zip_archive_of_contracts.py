@@ -154,7 +154,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         organization_course_provider = factories.OrganizationFactory()
         offering = factories.OfferingFactory(
             organizations=[organization_course_provider],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         options = random.choice(
             [
@@ -182,7 +182,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 main_invoice=payment_factories.InvoiceFactory(),
             )
             context = contract_definition.generate_document_context(
-                order.product.contract_definition, user, order
+                order.product.contract_definition_order, user, order
             )
             factories.ContractFactory(
                 order=order,
@@ -218,7 +218,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         options = random.choice(
             [
@@ -247,7 +247,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 main_invoice=payment_factories.InvoiceFactory(),
             )
             context = contract_definition.generate_document_context(
-                order.product.contract_definition, user, order
+                order.product.contract_definition_order, user, order
             )
             factories.ContractFactory(
                 order=order,
@@ -287,7 +287,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(
+            product__contract_definition_order=factories.ContractDefinitionFactory(
                 title="Contract definition 0"
             ),
         )
@@ -317,7 +317,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 ),
             )
             context = contract_definition.generate_document_context(
-                order.product.contract_definition, user, order
+                order.product.contract_definition_order, user, order
             )
             factories.ContractFactory(
                 order=order,
@@ -381,7 +381,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(
+            product__contract_definition_order=factories.ContractDefinitionFactory(
                 title="Contract definition 0"
             ),
         )
@@ -411,7 +411,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
                 ),
             )
             context = contract_definition.generate_document_context(
-                order.product.contract_definition, user, order
+                order.product.contract_definition_order, user, order
             )
             factories.ContractFactory(
                 order=order,
@@ -472,7 +472,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         zip_uuid = random.choice(
             [
@@ -504,7 +504,7 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
             main_invoice=payment_factories.InvoiceFactory(),
         )
         context = contract_definition.generate_document_context(
-            order.product.contract_definition, user, order
+            order.product.contract_definition_order, user, order
         )
         factories.ContractFactory(
             order=order,

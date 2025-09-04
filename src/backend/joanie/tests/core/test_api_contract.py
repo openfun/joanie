@@ -51,7 +51,7 @@ class ContractApiTest(BaseAPITestCase):
 
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory.create_batch(
             5,
@@ -296,7 +296,7 @@ class ContractApiTest(BaseAPITestCase):
         [org1, org2] = factories.OrganizationFactory.create_batch(2)
 
         offering_1 = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             organizations=[org1],
         )
         org1_contract = factories.ContractFactory(
@@ -306,7 +306,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         offering_2 = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             organizations=[org2],
         )
         org2_contract = factories.ContractFactory(
@@ -367,7 +367,7 @@ class ContractApiTest(BaseAPITestCase):
         [c1, c2] = factories.CourseFactory.create_batch(2)
 
         offering_1 = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             course=c1,
         )
         c1_contract = factories.ContractFactory(
@@ -377,7 +377,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         offering_2 = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             course=c2,
         )
         c2_contract = factories.ContractFactory(
@@ -436,7 +436,7 @@ class ContractApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         [p1, p2] = factories.ProductFactory.create_batch(
-            2, contract_definition=factories.ContractDefinitionFactory()
+            2, contract_definition_order=factories.ContractDefinitionFactory()
         )
 
         offering_1 = factories.OfferingFactory(product=p1)
@@ -504,7 +504,7 @@ class ContractApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
 
         offering_1 = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         contract_1 = factories.ContractFactory.create(
@@ -515,7 +515,7 @@ class ContractApiTest(BaseAPITestCase):
         )
 
         offering_2 = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         contract_2 = factories.ContractFactory.create(
@@ -527,7 +527,7 @@ class ContractApiTest(BaseAPITestCase):
 
         # Create random contracts that should not be returned
         other_offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory.create(
@@ -693,7 +693,7 @@ class ContractApiTest(BaseAPITestCase):
 
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=offering.product,
@@ -960,12 +960,12 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         address = order.main_invoice.recipient_address
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             context="context",
@@ -1010,7 +1010,7 @@ class ContractApiTest(BaseAPITestCase):
                 order = factories.OrderFactory(
                     owner=user,
                     state=state,
-                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    product__contract_definition_order=factories.ContractDefinitionFactory(),
                 )
                 contract = factories.ContractFactory(order=order)
                 token = self.get_user_token(user.username)
@@ -1043,7 +1043,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
         token = self.get_user_token(user.username)
@@ -1069,7 +1069,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
         token = self.get_user_token(user.username)
@@ -1095,7 +1095,7 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(order=order)
         token = self.get_user_token(user.username)
@@ -1124,11 +1124,11 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=owner,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             context="context",
@@ -1163,11 +1163,11 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=owner,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             context="context",
@@ -1365,7 +1365,7 @@ class ContractApiTest(BaseAPITestCase):
         )
         # Create our Offering shared by the 2 organizations above
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=0,
             organizations=[organizations[0], organizations[1]],
         )
@@ -1388,7 +1388,7 @@ class ContractApiTest(BaseAPITestCase):
                 ],
             )
             context = contract_definition.generate_document_context(
-                order.product.contract_definition, learners[index], order
+                order.product.contract_definition_order, learners[index], order
             )
             factories.ContractFactory(
                 order=order,
@@ -1456,7 +1456,7 @@ class ContractApiTest(BaseAPITestCase):
             organization=organization, user=requesting_user
         )
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=0,
             organizations=[organization],
         )
@@ -1480,7 +1480,7 @@ class ContractApiTest(BaseAPITestCase):
                 ],
             )
             context = contract_definition.generate_document_context(
-                order.product.contract_definition, user, order
+                order.product.contract_definition_order, user, order
             )
             factories.ContractFactory(
                 order=order,
@@ -1898,11 +1898,11 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             context="context",
@@ -1936,11 +1936,11 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="1234",
             context="context",
