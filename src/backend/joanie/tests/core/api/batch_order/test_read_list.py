@@ -66,7 +66,16 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                         "state": enums.BATCH_ORDER_STATE_QUOTED,
                         "total": float(bo.total),
                         "currency": settings.DEFAULT_CURRENCY,
-                        "offering_id": str(bo.offering.id),
+                        "offering": {
+                            "course": {
+                                "id": str(bo.offering.course.id),
+                                "title": bo.offering.course.title,
+                                "code": bo.offering.course.code,
+                                "cover": "_this_field_is_mocked",
+                            },
+                            "product_id": str(bo.offering.product.id),
+                            "product_title": bo.offering.product.title,
+                        },
                         "organization": {
                             "id": str(bo.organization.id),
                             "code": bo.organization.code,
