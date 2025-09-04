@@ -95,11 +95,17 @@ class OrderCreateApiTest(BaseAPITestCase):
         self, mock_sync, _mock_thumbnail
     ):
         """Any authenticated user should be able to create an order for a course."""
+        archived_course_run = factories.CourseRunFactory(
+            state=CourseState.ARCHIVED_CLOSED,
+            is_listed=False,
+        )
         course_run = factories.CourseRunFactory(
             state=CourseState.ONGOING_OPEN,
             is_listed=False,
         )
         course = course_run.course
+        course.course_runs.add(archived_course_run)
+
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             courses=[course],
@@ -2000,7 +2006,9 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
-                enrollment = factories.EnrollmentFactory(user=user)
+                enrollment = factories.EnrollmentFactory(
+                    user=user, course_run__state=CourseState.ONGOING_OPEN
+                )
                 course = enrollment.course_run.course
                 course_run = course.course_runs.first()
                 product = factories.ProductFactory(
@@ -2422,7 +2430,9 @@ class OrderCreateApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        course_run = factories.CourseRunFactory()
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+        )
         offering = factories.OfferingFactory(course__course_runs=[course_run])
         product = offering.product
         offering_rule = factories.OfferingRuleFactory(

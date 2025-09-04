@@ -61,6 +61,8 @@ def get_serialized_course_runs(offering, visibility=None):
     course_runs = course.course_runs.all()
     serialized_course_runs = []
     for course_run in course_runs:
+        if course_run.is_archived:
+            continue
         if serialized_runs := course_run.get_serialized(
             visibility=visibility,
             certifying=certifying,

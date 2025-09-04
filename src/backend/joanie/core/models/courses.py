@@ -160,6 +160,14 @@ class CourseState(Mapping):
         """Make it easy to compare two course states."""
         return self._d["priority"] < other["priority"]
 
+    @property
+    def is_archived(self):
+        """Return True if the course state is archived."""
+        return self._d["priority"] in [
+            CourseState.ARCHIVED_OPEN,
+            CourseState.ARCHIVED_CLOSED,
+        ]
+
 
 class Organization(parler_models.TranslatableModel, BaseModel):
     """
@@ -1146,6 +1154,11 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         return self.compute_state(
             self.start, self.end, self.enrollment_start, self.enrollment_end
         )
+
+    @property
+    def is_archived(self):
+        """Return True if the course run is archived."""
+        return self.state.is_archived
 
     def clean(self):
         """
