@@ -128,11 +128,11 @@ class BaseSignatureBackendTestCase(TestCase):
         user = factories.UserFactory()
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id",
             definition_checksum="fake_test_file_hash",
             context="content",

@@ -34,7 +34,8 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
         offering = factories.OfferingFactory(
             product__price=100,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__certificate_definition=factories.CertificateDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
         )
@@ -89,7 +90,12 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                     "certificate_definition": str(
                         offering.product.certificate_definition.id
                     ),
-                    "contract_definition": str(offering.product.contract_definition.id),
+                    "contract_definition_order": str(
+                        offering.product.contract_definition_order.id
+                    ),
+                    "contract_definition_batch_order": str(
+                        offering.product.contract_definition_batch_order.id
+                    ),
                     "quote_definition": str(offering.product.quote_definition.id),
                     "description": offering.product.description,
                     "id": str(offering.product.id),
@@ -273,7 +279,8 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                     "certificate_definition": str(
                         offering.product.certificate_definition.id
                     ),
-                    "contract_definition": None,
+                    "contract_definition_order": None,
+                    "contract_definition_batch_order": None,
                     "quote_definition": None,
                     "description": offering.product.description,
                     "id": str(offering.product.id),

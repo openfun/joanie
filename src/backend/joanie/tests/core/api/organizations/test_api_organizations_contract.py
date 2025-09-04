@@ -39,7 +39,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory.create_batch(
             5,
@@ -90,7 +90,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
             offering = factories.OfferingFactory(
                 organizations=[organization],
-                product__contract_definition=factories.ContractDefinitionFactory(),
+                product__contract_definition_order=factories.ContractDefinitionFactory(),
             )
             factories.ContractFactory.create_batch(
                 5,
@@ -210,7 +210,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         unsigned_contracts = factories.ContractFactory.create_batch(
             5,
@@ -326,12 +326,12 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
         offering_1 = factories.OfferingFactory(
             organizations=[*organizations, other_organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         offering_2 = factories.OfferingFactory(
             organizations=[organizations[0]],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         contracts_1 = factories.ContractFactory.create_batch(
@@ -351,7 +351,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         # Create random contracts that should not be returned
         other_offering = factories.OfferingFactory(
             organizations=[organizations[1]],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory.create_batch(
@@ -452,7 +452,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=offering.product,
@@ -493,7 +493,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
             offering = factories.OfferingFactory(
                 organizations=[organization],
-                product__contract_definition=factories.ContractDefinitionFactory(),
+                product__contract_definition_order=factories.ContractDefinitionFactory(),
             )
             factories.ContractFactory.create_batch(
                 5,
@@ -599,7 +599,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
             offering = factories.OfferingFactory(
                 organizations=[organization],
-                product__contract_definition=factories.ContractDefinitionFactory(),
+                product__contract_definition_order=factories.ContractDefinitionFactory(),
             )
             factories.ContractFactory.create_batch(
                 5,
@@ -647,7 +647,7 @@ class OrganizationContractApiTest(BaseAPITestCase):
 
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=offering.product,
