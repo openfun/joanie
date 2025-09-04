@@ -77,7 +77,8 @@ class OfferingApiTest(BaseAPITestCase):
             factories.UserCourseAccessFactory(user=user, course=course)
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL,
-            contract_definition=factories.ContractDefinitionFactory(),
+            contract_definition_order=factories.ContractDefinitionFactory(),
+            contract_definition_batch_order=factories.ContractDefinitionFactory(),
             quote_definition=factories.QuoteDefinitionFactory(),
         )
         product.instructions = (
@@ -110,7 +111,6 @@ class OfferingApiTest(BaseAPITestCase):
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(
-            content["results"][0],
             {
                 "id": str(offering.id),
                 "created_on": offering.created_on.isoformat().replace("+00:00", "Z"),
@@ -143,11 +143,17 @@ class OfferingApiTest(BaseAPITestCase):
                         "name": offering.product.certificate_definition.name,
                         "title": offering.product.certificate_definition.title,
                     },
-                    "contract_definition": {
-                        "id": str(product.contract_definition.id),
-                        "description": product.contract_definition.description,
-                        "language": product.contract_definition.language,
-                        "title": product.contract_definition.title,
+                    "contract_definition_order": {
+                        "id": str(product.contract_definition_order.id),
+                        "description": product.contract_definition_order.description,
+                        "language": product.contract_definition_order.language,
+                        "title": product.contract_definition_order.title,
+                    },
+                    "contract_definition_batch_order": {
+                        "id": str(product.contract_definition_batch_order.id),
+                        "description": product.contract_definition_batch_order.description,
+                        "language": product.contract_definition_batch_order.language,
+                        "title": product.contract_definition_batch_order.title,
                     },
                     "quote_definition": {
                         "id": str(product.quote_definition.id),
@@ -244,6 +250,7 @@ class OfferingApiTest(BaseAPITestCase):
                     for organization in offering.organizations.all()
                 ],
             },
+            content["results"][0],
         )
 
     def test_api_offering_read_list_filtered_by_course_anonymous(self):
@@ -628,7 +635,8 @@ class OfferingApiTest(BaseAPITestCase):
         offering = factories.OfferingFactory(
             course=course,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__quote_definition=quote_definition,
         )
         factories.UserCourseAccessFactory(user=user, course=course)
@@ -650,7 +658,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         content = response.json()
         self.assertEqual(
-            content,
             {
                 "id": str(offering.id),
                 "created_on": offering.created_on.isoformat().replace("+00:00", "Z"),
@@ -669,11 +676,17 @@ class OfferingApiTest(BaseAPITestCase):
                         "name": offering.product.certificate_definition.name,
                         "title": offering.product.certificate_definition.title,
                     },
-                    "contract_definition": {
-                        "id": str(offering.product.contract_definition.id),
-                        "description": offering.product.contract_definition.description,
-                        "language": offering.product.contract_definition.language,
-                        "title": offering.product.contract_definition.title,
+                    "contract_definition_order": {
+                        "id": str(offering.product.contract_definition_order.id),
+                        "description": offering.product.contract_definition_order.description,
+                        "language": offering.product.contract_definition_order.language,
+                        "title": offering.product.contract_definition_order.title,
+                    },
+                    "contract_definition_batch_order": {
+                        "id": str(offering.product.contract_definition_batch_order.id),
+                        "description": offering.product.contract_definition_batch_order.description,
+                        "language": offering.product.contract_definition_batch_order.language,
+                        "title": offering.product.contract_definition_batch_order.title,
                     },
                     "quote_definition": {
                         "id": str(offering.product.quote_definition.id),
@@ -775,6 +788,7 @@ class OfferingApiTest(BaseAPITestCase):
                     "has_seats_left": True,
                 },
             },
+            content,
         )
 
     def test_api_offering_read_offering_rules(self):
@@ -1854,7 +1868,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 3.00,
                 "discount": None,
@@ -1876,6 +1889,7 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -1942,7 +1956,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 3.00,
                 "discount": "-50%",
@@ -1964,6 +1977,7 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -2015,7 +2029,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 3.00,
                 "discount": None,
@@ -2030,6 +2043,7 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -2085,7 +2099,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 3.00,
                 "discount": "-50%",
@@ -2100,6 +2113,7 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -2216,7 +2230,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(
-            response.json(),
             {
                 "price": 10.00,
                 "discount": "-10%",
@@ -2238,6 +2251,7 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
         self.assertEqual(
             response_relation_path.status_code, HTTPStatus.OK, response.json()
@@ -2329,7 +2343,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 10.00,
                 "discount": f"-1 {get_default_currency_symbol()}",
@@ -2351,6 +2364,7 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
         self.assertEqual(
             response_relation_path.status_code, HTTPStatus.OK, response.json()
@@ -2435,7 +2449,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 100.00,
                 "discount": "-10%",
@@ -2450,6 +2463,7 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
 
         self.assertEqual(
@@ -2514,7 +2528,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(
-            response.json(),
             [
                 {
                     "id": "00000000-0000-0000-0000-000000000001",
@@ -2524,6 +2537,7 @@ class OfferingApiTest(BaseAPITestCase):
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
+            response.json(),
         )
         self.assertEqual(
             response_relation_path.status_code, HTTPStatus.OK, response.json()
@@ -2579,7 +2593,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(
-            response.json(),
             [
                 {
                     "id": "00000000-0000-0000-0000-000000000001",
@@ -2603,6 +2616,7 @@ class OfferingApiTest(BaseAPITestCase):
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
+            response.json(),
         )
         self.assertEqual(
             response_relation_path.status_code, HTTPStatus.OK, response.json()
@@ -2657,7 +2671,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             [
                 {
                     "id": "00000000-0000-0000-0000-000000000001",
@@ -2667,6 +2680,7 @@ class OfferingApiTest(BaseAPITestCase):
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
+            response.json(),
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -2729,7 +2743,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             [
                 {
                     "id": "00000000-0000-0000-0000-000000000001",
@@ -2746,6 +2759,7 @@ class OfferingApiTest(BaseAPITestCase):
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
+            response.json(),
         )
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
@@ -2829,7 +2843,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
         self.assertEqual(
-            response.json(),
             [
                 {
                     "code": organization.code,
@@ -2845,6 +2858,7 @@ class OfferingApiTest(BaseAPITestCase):
                 }
                 for organization in offering.organizations.all()
             ],
+            response.json(),
         )
         self.assertEqual(
             response_relation_path.status_code,

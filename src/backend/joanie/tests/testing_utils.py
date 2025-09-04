@@ -100,7 +100,7 @@ class Demo:
             product = factories.ProductFactory(
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
                 courses=[course],
-                contract_definition=contract_definition,
+                contract_definition_order=contract_definition,
             )
             target_course_list = factories.CourseFactory.create_batch(
                 2,
@@ -165,7 +165,7 @@ class Demo:
             product = factories.ProductFactory(
                 type=enums.PRODUCT_TYPE_CERTIFICATE,
                 courses=[course],
-                contract_definition=None,
+                contract_definition_order=None,
             )
             self.log(f"Successfully create product certificate on course {course.code}")
             return product
@@ -296,7 +296,7 @@ class Demo:
 
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             submitted_for_signature_on=django_timezone.now(),
             student_signed_on=django_timezone.now(),
         )
@@ -567,7 +567,7 @@ class Demo:
         )
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             student_signed_on=None,
         )
         self.log(
@@ -586,7 +586,7 @@ class Demo:
 
         factories.ContractFactory(
             order=learner_signed_order,
-            definition=learner_signed_order.product.contract_definition,
+            definition=learner_signed_order.product.contract_definition_order,
             submitted_for_signature_on=django_timezone.now(),
             student_signed_on=django_timezone.now(),
         )
@@ -603,7 +603,7 @@ class Demo:
         )
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             submitted_for_signature_on=django_timezone.now(),
             student_signed_on=django_timezone.now(),
         )
@@ -625,7 +625,7 @@ class Demo:
 
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             student_signed_on=django_timezone.now(),
             organization_signed_on=django_timezone.now(),
             organization_signatory=organization_owner,

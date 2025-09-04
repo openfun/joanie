@@ -8691,11 +8691,12 @@
                         "description": "primary key for the record as UUID",
                         "nullable": true
                     },
-                    "contract_definition": {
+                    "contract_definition_order": {
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID",
-                        "nullable": true
+                        "nullable": true,
+                        "title": "Contract definition for single order"
                     },
                     "quote_definition": {
                         "type": "string",
@@ -8795,12 +8796,21 @@
                         "readOnly": true,
                         "nullable": true
                     },
-                    "contract_definition": {
+                    "contract_definition_order": {
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID",
                         "readOnly": true,
-                        "nullable": true
+                        "nullable": true,
+                        "title": "Contract definition for single order"
+                    },
+                    "contract_definition_batch_order": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Contract definition for batch order"
                     },
                     "quote_definition": {
                         "type": "string",
@@ -8822,7 +8832,8 @@
                 "required": [
                     "call_to_action",
                     "certificate_definition",
-                    "contract_definition",
+                    "contract_definition_batch_order",
+                    "contract_definition_order",
                     "description",
                     "id",
                     "price",
@@ -8867,11 +8878,12 @@
                         "description": "primary key for the record as UUID",
                         "nullable": true
                     },
-                    "contract_definition": {
+                    "contract_definition_order": {
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID",
-                        "nullable": true
+                        "nullable": true,
+                        "title": "Contract definition for single order"
                     },
                     "quote_definition": {
                         "type": "string",
@@ -10661,11 +10673,12 @@
                         "description": "primary key for the record as UUID",
                         "nullable": true
                     },
-                    "contract_definition": {
+                    "contract_definition_order": {
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID",
-                        "nullable": true
+                        "nullable": true,
+                        "title": "Contract definition for single order"
                     },
                     "quote_definition": {
                         "type": "string",

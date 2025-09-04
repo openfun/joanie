@@ -105,7 +105,7 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase):
 
         batch_order = factories.BatchOrderFactory(
             offering__product__quote_definition=factories.QuoteDefinitionFactory(),
-            offering__product__contract_definition=factories.ContractDefinitionFactory(),
+            offering__product__contract_definition_order=factories.ContractDefinitionFactory(),
             state=enums.BATCH_ORDER_STATE_COMPLETED,
             nb_seats=10,
         )

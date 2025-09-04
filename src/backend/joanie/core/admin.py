@@ -471,7 +471,7 @@ class ProductAdmin(
                     "instructions",
                     "call_to_action",
                     "price",
-                    "contract_definition",
+                    "contract_definition_order",
                     "related_courses",
                 )
             },

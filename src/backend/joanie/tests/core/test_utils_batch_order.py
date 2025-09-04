@@ -35,7 +35,8 @@ class UtilsBatchOrderTestCase(TestCase):
         organization_1, organization_2 = factories.OrganizationFactory.create_batch(2)
         offering = factories.OfferingFactory(
             organizations=[organization_1, organization_2],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=None,
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
         )
@@ -279,7 +280,7 @@ class UtilsBatchOrderTestCase(TestCase):
         offering = factories.OfferingFactory(
             product__price=10,
             product__title="Product 1",
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
         )
         offering.product.translations.create(

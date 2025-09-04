@@ -663,7 +663,7 @@ class OrderModelsTestCase(LoggingTestCase):
         factories.UserAddressFactory(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product=factories.ProductFactory(contract_definition=None),
+            product=factories.ProductFactory(contract_definition_order=None),
         )
 
         with (
@@ -788,7 +788,7 @@ class OrderModelsTestCase(LoggingTestCase):
         )
         contract = order.contract
         context = contract_definition.generate_document_context(
-            contract_definition=order.product.contract_definition,
+            contract_definition=order.product.contract_definition_order,
             user=order.owner,
             order=order,
         )
@@ -858,7 +858,7 @@ class OrderModelsTestCase(LoggingTestCase):
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_TO_SIGN,
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__target_courses=[
                 factories.CourseFactory.create(
                     course_runs=[
@@ -869,13 +869,13 @@ class OrderModelsTestCase(LoggingTestCase):
             main_invoice=InvoiceFactory(),
         )
         context = contract_definition.generate_document_context(
-            contract_definition=order.product.contract_definition,
+            contract_definition=order.product.contract_definition_order,
             user=user,
             order=order,
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id_1",
             definition_checksum="fake_test_file_hash_1",
             context=context,
@@ -930,7 +930,7 @@ class OrderModelsTestCase(LoggingTestCase):
             owner=user,
             # order is signed by the student, but the state is not updated accordingly
             state=enums.ORDER_STATE_TO_SIGN,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             payment_schedule=[
                 {
                     "amount": "200.00",
@@ -942,7 +942,7 @@ class OrderModelsTestCase(LoggingTestCase):
         now = django_timezone.now()
         factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_fake_dummy_id_1",
             definition_checksum="fake_test_file_hash_1",
             context="context",
@@ -1074,7 +1074,7 @@ class OrderModelsTestCase(LoggingTestCase):
         offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
-                contract_definition=factories.ContractDefinitionFactory(),
+                contract_definition_order=factories.ContractDefinitionFactory(),
                 title="You will know that you know you don't know",
                 price="1202.99",
                 target_courses=[
@@ -1272,7 +1272,7 @@ class OrderModelsTestCase(LoggingTestCase):
         if the order's contract is not signed by student.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         self.assertTrue(order.has_unsigned_contract)
         with self.assertRaises(Contract.DoesNotExist):

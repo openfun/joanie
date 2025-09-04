@@ -99,7 +99,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         product = factories.ProductFactory(
             title="You will know that you know you don't know",
             price="999.99",
-            contract_definition=definition,
+            contract_definition_order=definition,
             target_courses=[run.course],
         )
 

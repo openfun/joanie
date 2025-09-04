@@ -26,7 +26,7 @@ class OrderLifecycle(BaseAPITestCase):
         )
         product = factories.ProductFactory(
             target_courses=target_courses,
-            contract_definition=factories.ContractDefinitionFactory(),
+            contract_definition_order=factories.ContractDefinitionFactory(),
         )
         organization = product.offerings.first().organizations.first()
 
