@@ -77,7 +77,8 @@ class OfferingApiTest(BaseAPITestCase):
             factories.UserCourseAccessFactory(user=user, course=course)
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL,
-            contract_definition=factories.ContractDefinitionFactory(),
+            contract_definition_order=factories.ContractDefinitionFactory(),
+            contract_definition_batch_order=factories.ContractDefinitionFactory(),
             quote_definition=factories.QuoteDefinitionFactory(),
         )
         product.instructions = (
@@ -143,11 +144,17 @@ class OfferingApiTest(BaseAPITestCase):
                         "name": offering.product.certificate_definition.name,
                         "title": offering.product.certificate_definition.title,
                     },
-                    "contract_definition": {
-                        "id": str(product.contract_definition.id),
-                        "description": product.contract_definition.description,
-                        "language": product.contract_definition.language,
-                        "title": product.contract_definition.title,
+                    "contract_definition_order": {
+                        "id": str(product.contract_definition_order.id),
+                        "description": product.contract_definition_order.description,
+                        "language": product.contract_definition_order.language,
+                        "title": product.contract_definition_order.title,
+                    },
+                    "contract_definition_batch_order": {
+                        "id": str(product.contract_definition_batch_order.id),
+                        "description": product.contract_definition_batch_order.description,
+                        "language": product.contract_definition_batch_order.language,
+                        "title": product.contract_definition_batch_order.title,
                     },
                     "quote_definition": {
                         "id": str(product.quote_definition.id),
@@ -628,7 +635,8 @@ class OfferingApiTest(BaseAPITestCase):
         offering = factories.OfferingFactory(
             course=course,
             product__type=enums.PRODUCT_TYPE_CREDENTIAL,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__quote_definition=quote_definition,
         )
         factories.UserCourseAccessFactory(user=user, course=course)
@@ -669,11 +677,17 @@ class OfferingApiTest(BaseAPITestCase):
                         "name": offering.product.certificate_definition.name,
                         "title": offering.product.certificate_definition.title,
                     },
-                    "contract_definition": {
-                        "id": str(offering.product.contract_definition.id),
-                        "description": offering.product.contract_definition.description,
-                        "language": offering.product.contract_definition.language,
-                        "title": offering.product.contract_definition.title,
+                    "contract_definition_order": {
+                        "id": str(offering.product.contract_definition_order.id),
+                        "description": offering.product.contract_definition_order.description,
+                        "language": offering.product.contract_definition_order.language,
+                        "title": offering.product.contract_definition_order.title,
+                    },
+                    "contract_definition_batch_order": {
+                        "id": str(offering.product.contract_definition_batch_order.id),
+                        "description": offering.product.contract_definition_batch_order.description,
+                        "language": offering.product.contract_definition_batch_order.language,
+                        "title": offering.product.contract_definition_batch_order.title,
                     },
                     "quote_definition": {
                         "id": str(offering.product.quote_definition.id),

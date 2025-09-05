@@ -104,7 +104,7 @@ class OfferingViewSet(
         .select_related(
             "course",
             "product",
-            "product__contract_definition",
+            "product__contract_definition_order",
             "product__certificate_definition",
         )
         .prefetch_related("organizations")
@@ -330,7 +330,7 @@ class EnrollmentViewSet(
                     "course_run__course__offerings",
                     queryset=models.CourseProductRelation.objects.select_related(
                         "product",
-                        "product__contract_definition",
+                        "product__contract_definition_order",
                     ).filter(product__type=enums.PRODUCT_TYPE_CERTIFICATE),
                     to_attr="certificate_offerings",
                 ),

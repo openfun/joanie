@@ -77,7 +77,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         owner = factories.UserFactory()
         offering = factories.OfferingFactory(
             product__quote_definition=factories.QuoteDefinitionFactory(),
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=10,
         )
         company_keys = [
@@ -170,7 +170,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=10,
         )
         data = self.create_payload_batch_order(
@@ -195,7 +195,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         owner = factories.UserFactory()
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=10,
         )
         factories.OfferingRuleFactory(
@@ -229,7 +229,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             factories.OrganizationFactory.create_batch(2)
         )
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
             organizations=[organization, expected_organization],
@@ -272,7 +272,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         owner = factories.UserFactory()
         organization1, organization2 = factories.OrganizationFactory.create_batch(2)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
             organizations=[organization1, organization2],
@@ -311,7 +311,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         owner = factories.UserFactory()
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
         )
@@ -353,7 +353,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
         )
 
