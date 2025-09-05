@@ -462,6 +462,9 @@ class Base(Configuration):
         environ_prefix=None,
     )
 
+    # Quote reference
+    JOANIE_PREFIX_QUOTE_REFERENCE = values.Value("FUN")
+
     # CORS
     CORS_ALLOW_CREDENTIALS = True
     CORS_ALLOW_ALL_ORIGINS = values.BooleanValue(False)
