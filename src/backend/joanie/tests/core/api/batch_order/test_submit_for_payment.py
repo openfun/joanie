@@ -118,11 +118,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
-            {
-                "detail": (
-                    f"The batch order is not ready to submit for payment: {batch_order.state}."
-                )
-            },
+            {"detail": ("This batch order cannot be submitted to payment")},
         )
 
     def test_api_batch_order_submit_for_payment_if_state_not_in_signing_of_failed_payment(
@@ -149,19 +145,10 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
                     HTTP_AUTHORIZATION=f"Bearer {token}",
                 )
 
-                self.assertEqual(
-                    response.status_code,
-                    HTTPStatus.UNPROCESSABLE_ENTITY,
-                    response.json(),
-                )
-                self.assertEqual(
-                    response.json(),
-                    {
-                        "detail": (
-                            "The batch order is not ready to submit for payment: "
-                            f"{batch_order.state}."
-                        )
-                    },
+                self.assertContains(
+                    response,
+                    "This batch order cannot be submitted to payment",
+                    status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                 )
 
     def test_api_batch_order_submit_for_payment_should_fail_if_not_owned(self):
@@ -189,8 +176,8 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
     def test_api_batch_order_submit_for_payment(self, mock_create_payment):
         """
         Authenticated user should be able to submit for payment his batch order
-        when the state is in signing or failed payment. He should get in return the payment
-        informations.
+        when the state is in signing or failed payment and the payment method is by credit card.
+        He should get in return the payment informations.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -226,3 +213,41 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
                     },
                 )
                 mock_create_payment.reset_mock()
+
+    def test_api_batch_order_submit_for_payment_with_other_than_card_payment(self):
+        """
+        Authenticated user should not be able to submit for payment a batch order if the
+        payment method is by purchase order or by bank transfer even if it's in state
+        `signing` or `failed_payment`.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        for state in [
+            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+            enums.BATCH_ORDER_STATE_SIGNING,
+        ]:
+            for payment_method in [
+                enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+            ]:
+                with self.subTest(state=state, payment_method=payment_method):
+                    batch_order = factories.BatchOrderFactory(
+                        owner=user, state=enums.BATCH_ORDER_STATE_DRAFT
+                    )
+                    batch_order.organization = factories.OrganizationFactory()
+                    batch_order.payment_method = payment_method
+                    batch_order.state = state
+                    batch_order.save()
+
+                    response = self.client.post(
+                        f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-payment/",
+                        content_type="application/json",
+                        HTTP_AUTHORIZATION=f"Bearer {token}",
+                    )
+
+                    self.assertContains(
+                        response,
+                        "This batch order cannot be submitted to payment",
+                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    )
