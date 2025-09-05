@@ -25,18 +25,34 @@ COURSE_FALLBACK_DATA = {
     "name": _("<COURSE_NAME>"),
     "code": _("<COURSE_CODE>"),
     "effort": _("<COURSE_EFFORT>"),
-    "price": _("<COURSE_PRICE>"),
-    "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
 }
 
 CUSTOMER_FALLBACK_DATA = {
     "representative_name": _("<CUSTOMER_REPRESENTATIVE_NAME>"),
     "identification_number": _("<CUSTOMER_IDENTIFICATION_NUMBER>"),
+    "vat_registration": _("<CUSTOMER_VAT_REGISTRATION>"),
     "company_name": _("<CUSTOMER_COMPANY_NAME>"),
     "address": _("<CUSTOMER_ADDRESS>"),
     "postcode": _("<CUSTOMER_POSTCODE>"),
     "country": _("<CUSTOMER_COUNTRY>"),
     "city": _("<CUSTOMER_CITY>"),
+    "billing_address": {
+        "address": _("<BILLING_ADDRESS>"),
+        "postcode": _("<BILLING_POSTCODE>"),
+        "city": _("<BILLING_CITY>"),
+        "country": _("<BILLING_COUNTRY>"),
+        "company_name": _("<BILLING_COMPANY_NAME>"),
+        "contact_name": _("<BILLING_CONTACT_NAME>"),
+        "contact_email": _("<BILLING_CONTACT_EMAIL>"),
+    },
+    "administrative_firstname": _("<ADMIN_FIRSTNAME>"),
+    "administrative_lastname": _("<ADMIN_LASTNAME>"),
+    "administrative_profession": _("<ADMIN_PROFESSION>"),
+    "administrative_email": _("<ADMIN_EMAIL>"),
+    "administrative_telephone": _("<ADMIN_TELEPHONE>"),
+    "funding_entity": _("<FUNDING_ENTITY>"),
+    "funding_amount": _("<FUNDING_AMOUNT>"),
+    "currency": _("<CURRENCY>"),
 }
 
 ORGANIZATION_FALLBACK_DATA = {
@@ -133,8 +149,6 @@ def prepare_course_context(language_code, batch_order):
         ),
         "code": batch_order.offering.course.code,
         "effort": course_effort,
-        "price": str(batch_order.total),
-        "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
     }
 
 
@@ -143,11 +157,29 @@ def prepare_customer_context(batch_order):
     return {
         "representative_name": batch_order.owner.name,
         "identification_number": batch_order.identification_number,
+        "vat_registration": batch_order.vat_registration,
         "company_name": batch_order.company_name,
         "address": batch_order.address,
         "postcode": batch_order.postcode,
         "country": str(batch_order.country.code),
         "city": batch_order.city,
+        "billing_address": {
+            "address": batch_order.billing_address["address"],
+            "postcode": batch_order.billing_address["postcode"],
+            "city": batch_order.billing_address["city"],
+            "country": batch_order.billing_address["country"],
+            "company_name": batch_order.billing_address["company_name"],
+            "contact_name": batch_order.billing_address["contact_name"],
+            "contact_email": batch_order.billing_address["contact_email"],
+        },
+        "administrative_firstname": batch_order.administrative_firstname,
+        "administrative_lastname": batch_order.administrative_lastname,
+        "administrative_profession": batch_order.administrative_profession,
+        "administrative_email": batch_order.administrative_email,
+        "administrative_telephone": batch_order.administrative_telephone,
+        "funding_entity": batch_order.funding_entity,
+        "funding_amount": batch_order.funding_amount,
+        "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
     }
 
 

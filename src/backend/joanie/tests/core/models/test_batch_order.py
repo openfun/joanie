@@ -20,23 +20,6 @@ from joanie.tests.base import LoggingTestCase
 class BatchOrderModelsTestCase(LoggingTestCase):
     """Test suite for batch order model."""
 
-    def test_models_batch_order_nb_seats_matches_trainees_count(self):
-        """
-        Ensure that the number of reserved seats (`nb_seats`) matches the number of trainees
-        in the `trainees` list when saving a BatchOrder instance.
-        """
-
-        with self.assertRaises(ValidationError) as context:
-            factories.BatchOrderFactory(
-                nb_seats=2,
-                trainees=[{"first_name": "John", "last_name": "Doe"}],
-            )
-
-        self.assertTrue(
-            "The number of trainees must match the number of seats."
-            in str(context.exception)
-        )
-
     def test_models_batch_order_when_the_product_has_no_contract_definition(self):
         """
         When product does not have a contract definition, submitting to signature
@@ -45,6 +28,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         user = factories.UserFactory()
         offering = factories.OfferingFactory(
             product__contract_definition=None,
+            product__quote_definition=factories.QuoteDefinitionFactory(),
         )
         batch_order = factories.BatchOrderFactory(owner=user, offering=offering)
 
@@ -380,13 +364,13 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertEqual(
             billing_address,
             CompanyBillingAddress(
-                address=batch_order.address,
-                postcode=batch_order.postcode,
-                city=batch_order.city,
-                country=batch_order.country,
-                first_name=batch_order.owner.first_name,
+                address=batch_order.billing_address["address"],
+                postcode=batch_order.billing_address["postcode"],
+                city=batch_order.billing_address["city"],
+                country=batch_order.billing_address["country"],
+                first_name=batch_order.billing_address["contact_name"],
                 language=batch_order.owner.language,
-                last_name=batch_order.owner.last_name,
+                last_name="",
             ),
         )
 
@@ -496,3 +480,23 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         validate_success_payment(batch_order)
 
         self.assertTrue(batch_order.is_paid)
+
+    def test_models_batch_order_when_product_has_no_quote_definition(self):
+        """
+        When the product has not quote definition, it should not be possible to create
+        the batch order
+        """
+        offering = factories.OfferingFactory(
+            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=None,
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.BatchOrderFactory(
+                owner=factories.UserFactory(), offering=offering
+            )
+
+        self.assertTrue(
+            "Your product doesn't have a quote definition attached, "
+            "aborting create batch order." in str(context.exception)
+        )
