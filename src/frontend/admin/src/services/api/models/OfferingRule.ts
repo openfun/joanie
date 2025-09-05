@@ -1,5 +1,6 @@
 import { Offering } from "@/services/api/models/Offerings";
 import { Discount } from "@/services/api/models/Discount";
+import { Voucher } from "@/services/api/models/Voucher";
 
 export type OfferingRule = {
   id: string;
@@ -11,6 +12,7 @@ export type OfferingRule = {
   is_active: boolean;
   can_edit: boolean;
   discount: Discount | null;
+  voucher: Voucher | null;
 };
 
 export type OfferingRuleDummy = Omit<OfferingRule, "id"> & {
@@ -25,4 +27,5 @@ export type DTOOfferingRule = {
   is_active: OfferingRule["is_active"];
   offering: Offering["id"];
   discount_id?: Discount["id"] | null;
+  voucher_id?: Voucher["id"] | null;
 };
