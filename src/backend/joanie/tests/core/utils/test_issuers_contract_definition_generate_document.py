@@ -70,6 +70,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             ### Terms and conditions
             Terms and Conditions Content
             """,
+            name=enums.CONTRACT_DEFINITION_DEFAULT,
         )
 
         organization = factories.OrganizationFactory(
@@ -218,6 +219,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             ## Terms and conditions
             Terms and Conditions Content
             """,
+            name=enums.CONTRACT_DEFINITION_UNICAMP,
         )
 
         context = contract_definition_utility.generate_document_context(

@@ -569,7 +569,8 @@ class UtilsContractTestCase(TestCase):
         requesting_user = factories.UserFactory()
         offering = factories.OfferingFactory(
             product__contract_definition_order=factories.ContractDefinitionFactory(
-                title="Contract definition title"
+                title="Contract definition title",
+                name=enums.CONTRACT_DEFINITION_DEFAULT,
             )
         )
         signature_reference_choices = [

@@ -7,7 +7,7 @@ from io import BytesIO
 
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core import factories
+from joanie.core import enums, factories
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -141,6 +141,7 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             ## Terms and conditions
             Here are the terms and conditions of the current contract
             """,
+            name=enums.CONTRACT_DEFINITION_DEFAULT,
         )
         token = self.get_user_token(user.username)
 

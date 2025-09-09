@@ -960,7 +960,9 @@ class ContractApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(
+                name=enums.CONTRACT_DEFINITION_DEFAULT,
+            ),
         )
         address = order.main_invoice.recipient_address
         contract = factories.ContractFactory(

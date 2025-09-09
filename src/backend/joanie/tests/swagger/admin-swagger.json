@@ -6672,10 +6672,12 @@
             "AdminContractDefinitionNameEnum": {
                 "enum": [
                     "contract_definition_default",
-                    "contract_definition_unicamp"
+                    "contract_definition_unicamp",
+                    "professional_training_agreement_default",
+                    "professional_training_agreement_unicamp"
                 ],
                 "type": "string",
-                "description": "* `contract_definition_default` - Contract Definition Default\n* `contract_definition_unicamp` - Contract Definition Unicamp"
+                "description": "* `contract_definition_default` - Contract Definition Default\n* `contract_definition_unicamp` - Contract Definition Unicamp\n* `professional_training_agreement_default` - Professional Training Agreement Default\n* `professional_training_agreement_unicamp` - Professional Training Agreement Unicamp"
             },
             "AdminContractDefinitionRequest": {
                 "type": "object",
