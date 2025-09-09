@@ -30,6 +30,8 @@ from joanie.core.enums import (
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
+    PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT,
+    PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP,
     QUOTE_DEFAULT,
 )
 from joanie.core.factories import (
@@ -511,6 +513,52 @@ class DebugContractTemplateView(DebugPdfTemplateView):
         context. If the Contract does not exist, we will use a basic fallback for the document
         context. Otherwise, if no primary key is provided, we return the basic fallback document
         context.
+        """
+        if not pk:
+            return contract_definition.generate_document_context()
+
+        contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
+
+        return contract.context
+
+
+class DebugProfessionalTrainingAgreementDefaultTemplateView(DebugPdfTemplateView):
+    """
+    Debug view to check the layout of the "professional_training_agreement_default" template
+    of a Contract.
+    """
+
+    model = Contract
+    issuer_document = PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT
+
+    def get_document_context(self, pk=None):
+        """
+        Base method to prepare the document context to render in the debug view.
+        When a primary key is passed, it will render the generated document, else,
+        it uses default placeholders.
+        """
+        if not pk:
+            return contract_definition.generate_document_context()
+
+        contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
+
+        return contract.context
+
+
+class DebugProfessionalTrainingAgreementUnicampTemplateView(DebugPdfTemplateView):
+    """
+    Debug view to check the layout of the "professional_training_agreement_unicamp" template
+    of a Contract.
+    """
+
+    model = Contract
+    issuer_document = PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP
+
+    def get_document_context(self, pk=None):
+        """
+        Base method to prepare the document context to render in the debug view.
+        When a primary key is passed, it will render the generated document, else,
+        it uses default placeholders.
         """
         if not pk:
             return contract_definition.generate_document_context()
