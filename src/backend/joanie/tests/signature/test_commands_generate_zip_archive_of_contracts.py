@@ -288,7 +288,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         offering = factories.OfferingFactory(
             organizations=[organization],
             product__contract_definition_order=factories.ContractDefinitionFactory(
-                title="Contract definition 0"
+                title="Contract definition 0",
+                name=enums.CONTRACT_DEFINITION_DEFAULT,
             ),
         )
         zip_uuid = uuid4()
@@ -382,7 +383,8 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         offering = factories.OfferingFactory(
             organizations=[organization],
             product__contract_definition_order=factories.ContractDefinitionFactory(
-                title="Contract definition 0"
+                title="Contract definition 0",
+                name=enums.CONTRACT_DEFINITION_DEFAULT,
             ),
         )
         zip_uuid = uuid4()
