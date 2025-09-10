@@ -132,7 +132,7 @@ def prepare_organization_context(
     return organization_context
 
 
-def prepare_course_context(language_code, order=None):
+def prepare_course_context(language_code, order=None, batch_order=None):
     """Prepare course context for the document generation"""
     course_context = {
         "name": _("<COURSE_NAME>"),
@@ -144,11 +144,28 @@ def prepare_course_context(language_code, order=None):
         "currency": get_default_currency_symbol(),
     }
 
-    if order:
-        course_dates = order.get_equivalent_course_run_dates()
+    if order or batch_order:
+        if batch_order:
+            course_effort = batch_order.offering.course.effort
+            course_code = batch_order.offering.course.code
+            course_name = batch_order.offering.product.safe_translation_getter(
+                "title", language_code=language_code
+            )
+        else:
+            course_effort = order.course.effort
+            course_code = order.course.code
+            course_name = order.product.safe_translation_getter(
+                "title", language_code=language_code
+            )
+        price = str(order.total) if order else str(batch_order.total)
+        course_dates = (
+            order.get_equivalent_course_run_dates()
+            if order
+            else batch_order.get_equivalent_course_run_dates()
+        )
         course_start = course_dates["start"]
         course_end = course_dates["end"]
-        course_effort = order.course.effort
+
         # Transform duration value to ISO 8601 format
         if isinstance(course_effort, timedelta):
             course_effort = duration_iso_string(course_effort)
@@ -160,14 +177,12 @@ def prepare_course_context(language_code, order=None):
 
         course_context.update(
             {
-                "name": order.product.safe_translation_getter(
-                    "title", language_code=language_code
-                ),
-                "code": order.course.code,
+                "name": course_name,
+                "code": course_code,
                 "start": course_start,
                 "end": course_end,
                 "effort": course_effort,
-                "price": str(order.total),
+                "price": price,
             }
         )
 
@@ -313,7 +328,7 @@ def generate_document_context(
         batch_order=batch_order,
     )
     course_context = prepare_course_context(
-        language_code=contract_language, order=order
+        language_code=contract_language, order=order, batch_order=batch_order
     )
     student_context = prepare_student_context(user=user)
     contract_context = prepare_contract_definition_context(
