@@ -2259,6 +2259,51 @@ class BatchOrder(BaseModel):
         self.create_main_invoice()
         self.save(update_fields=["total"])
 
+    @property
+    def target_course_runs(self):
+        """
+        Retrieve all course runs related to the offering's product instance.
+
+        Returns:
+
+            - all course runs related to target courses for which the product/course
+              relation (offering) does not specify a list of eligible course runs (see course_runs
+              field on the ProductTargetCourseRelation model)
+
+            - only the course runs specified on the product/course relation (offering) for target
+              courses on which a list of eligible course runs was specified on the
+              product/course relation.
+
+        """
+        target_course_relations_with_course_runs = (
+            self.offering.product.target_course_relations.filter(
+                course_runs__isnull=False
+            ).only("pk")
+        )
+
+        return CourseRun.objects.filter(
+            models.Q(product_relations__in=target_course_relations_with_course_runs)
+            | models.Q(
+                course__in=self.offering.product.target_courses.exclude(
+                    product_target_relations__in=target_course_relations_with_course_runs
+                )
+            )
+        )
+
+    def get_equivalent_course_run_dates(self, ignore_archived=False):
+        """
+        Return a dict of dates equivalent to course run dates
+        by aggregating dates of all target course runs as follows:
+        - start: Pick the earliest start date
+        - end: Pick the latest end date
+        - enrollment_start: Pick the latest enrollment start date
+        - enrollment_end: Pick the earliest enrollment end date
+        """
+        return aggregate_course_runs_dates(
+            self.target_course_runs,
+            ignore_archived=ignore_archived,
+        )
+
     # pylint: disable=no-member
     def submit_for_signature(self, user: User):
         """
