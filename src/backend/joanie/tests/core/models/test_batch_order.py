@@ -1,9 +1,11 @@
 """Test suite for batch order model."""
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from unittest import mock
 
+from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import override_settings
@@ -17,6 +19,7 @@ from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import LoggingTestCase
 
 
+# pylint: disable=too-many-public-methods
 class BatchOrderModelsTestCase(LoggingTestCase):
     """Test suite for batch order model."""
 
@@ -270,6 +273,89 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             _mock_submit_for_signature.call_args[1]["file_bytes"], bytes
         )
 
+    def test_models_batch_order_submit_for_signature_check_contract_context_course_section(
+        self,
+    ):
+        """
+        When we call `submit_for_signature`, it will generate the context for the batch order's
+        contract of the batch order. We should find the values for the course section where
+        the `course_start`, `course_end`, `course_price` and `course_effort` are string type.
+        """
+        user = factories.UserFactory()
+        factories.SiteConfigFactory(
+            site=Site.objects.get_current(),
+            terms_and_conditions="## Terms ",
+        )
+        organization = factories.OrganizationFactory()
+        factories.OrganizationAddressFactory(organization=organization)
+        offering = factories.OfferingFactory(
+            organizations=[organization],
+            product=factories.ProductFactory(
+                quote_definition=factories.QuoteDefinitionFactory(),
+                contract_definition_batch_order=factories.ContractDefinitionFactory(),
+                title="You know nothing Jon Snow",
+                target_courses=[
+                    factories.CourseFactory(
+                        course_runs=[
+                            factories.CourseRunFactory(
+                                start="2024-02-01T10:00:00+00:00",
+                                end="2024-05-31T20:00:00+00:00",
+                                enrollment_start="2024-02-01T12:00:00+00:00",
+                                enrollment_end="2024-02-01T12:00:00+00:00",
+                            )
+                        ]
+                    )
+                ],
+            ),
+            course=factories.CourseFactory(
+                organizations=[organization],
+                effort=timedelta(hours=13, minutes=30, seconds=12),
+            ),
+        )
+        batch_order = factories.BatchOrderFactory(
+            owner=user,
+            offering=offering,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+
+        batch_order.submit_for_signature(user=user)
+
+        contract = batch_order.contract
+        course_dates = batch_order.get_equivalent_course_run_dates()
+
+        # Course effort check
+        self.assertIsInstance(batch_order.offering.course.effort, timedelta)
+        self.assertIsInstance(contract.context["course"]["effort"], str)
+        self.assertEqual(
+            batch_order.offering.course.effort,
+            timedelta(hours=13, minutes=30, seconds=12),
+        )
+        self.assertEqual(contract.context["course"]["effort"], "P0DT13H30M12S")
+
+        # Course start check
+        self.assertIsInstance(course_dates["start"], datetime)
+        self.assertIsInstance(contract.context["course"]["start"], str)
+        self.assertEqual(
+            course_dates["start"], datetime(2024, 2, 1, 10, 0, tzinfo=timezone.utc)
+        )
+        self.assertEqual(
+            contract.context["course"]["start"], "2024-02-01T10:00:00+00:00"
+        )
+
+        # Course end check
+        self.assertIsInstance(course_dates["end"], datetime)
+        self.assertIsInstance(contract.context["course"]["end"], str)
+        self.assertEqual(
+            course_dates["end"], datetime(2024, 5, 31, 20, 0, tzinfo=timezone.utc)
+        )
+        self.assertEqual(contract.context["course"]["end"], "2024-05-31T20:00:00+00:00")
+
+        # Pricing check
+        self.assertIsInstance(batch_order.total, Decimal)
+        self.assertIsInstance(contract.context["course"]["price"], str)
+        self.assertEqual(batch_order.total, Decimal("100.00"))
+        self.assertEqual(contract.context["course"]["price"], "100.00")
+
     def test_models_batch_order_in_state_assigned_without_organization(self):
         """
         A batch order cannot be in state assigned if it's not attached
@@ -501,3 +587,44 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             "Your product doesn't have a quote definition attached, "
             "aborting create batch order." in str(context.exception)
         )
+
+    def test_models_batch_order_get_equivalent_course_run_dates(self):
+        """
+        Check that batch order's product dates are processed
+        by aggregating target course runs dates as expected.
+        """
+        earliest_start_date = django_timezone.now() - timedelta(days=1)
+        latest_end_date = django_timezone.now() + timedelta(days=2)
+        latest_enrollment_start_date = django_timezone.now() - timedelta(days=2)
+        earliest_enrollment_end_date = django_timezone.now() + timedelta(days=1)
+        courses = (
+            factories.CourseRunFactory(
+                start=earliest_start_date,
+                end=latest_end_date,
+                enrollment_start=latest_enrollment_start_date - timedelta(days=1),
+                enrollment_end=earliest_enrollment_end_date + timedelta(days=1),
+            ).course,
+            factories.CourseRunFactory(
+                start=earliest_start_date + timedelta(days=1),
+                end=latest_end_date - timedelta(days=1),
+                enrollment_start=latest_enrollment_start_date,
+                enrollment_end=earliest_enrollment_end_date,
+            ).course,
+        )
+        product = factories.ProductFactory(
+            target_courses=courses,
+            quote_definition=factories.QuoteDefinitionFactory(),
+            contract_definition_batch_order=factories.ContractDefinitionFactory(
+                name=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP
+            ),
+        )
+        batch_order = factories.BatchOrderFactory(offering__product=product)
+
+        expected_result = {
+            "start": earliest_start_date,
+            "end": latest_end_date,
+            "enrollment_start": latest_enrollment_start_date,
+            "enrollment_end": earliest_enrollment_end_date,
+        }
+
+        self.assertEqual(batch_order.get_equivalent_course_run_dates(), expected_result)
