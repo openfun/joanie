@@ -398,7 +398,7 @@ class Base(Configuration):
     # URL of the educational platform
     JOANIE_URL_EDUCATIONAL_PLATFORM = values.Value(
         None,
-        environ_name="JOANIE_EDUCATIONAL_PLATFORM",
+        environ_name="JOANIE_URL_EDUCATIONAL_PLATFORM",
         environ_prefix=None,
     )
 

@@ -46,6 +46,7 @@ from joanie.core.factories import (
 )
 from joanie.core.models import Certificate, Contract, CourseState, Quote
 from joanie.core.utils import contract_definition, issuers, quotes
+from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.sentry import decrypt_data
 from joanie.payment import get_payment_backend
 from joanie.payment.enums import INVOICE_TYPE_INVOICE
@@ -525,6 +526,53 @@ class DebugContractTemplateView(DebugPdfTemplateView):
         contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
 
         return contract.context
+
+
+class DebugProfessionalTrainingAgreementDefaultTemplateView(DebugPdfTemplateView):
+    """
+    Debug view to check the layout of the "professional_training_agreement_default" template
+    of a Contract.
+    """
+
+    model = Contract
+    issuer_document = PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT
+
+    def get_document_context(self, pk=None):
+        """
+        Base method to prepare the document context to render in the debug view.
+        When a primary key is passed, it will render the generated document, else,
+        it uses default placeholders.
+        """
+        if not pk:
+            return contract_definition.generate_document_context()
+
+        contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
+
+        return contract.context
+
+
+class DebugProfessionalTrainingAgreementUnicampTemplateView(DebugPdfTemplateView):
+    """
+    Debug view to check the layout of the "professional_training_agreement_unicamp" template
+    of a Contract.
+    """
+
+    model = Contract
+    issuer_document = PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP
+
+    def get_document_context(self, pk=None):
+        """
+        Base method to prepare the document context to render in the debug view.
+        When a primary key is passed, it will render the generated document, else,
+        it uses default placeholders.
+        """
+        if not pk:
+            return contract_definition.generate_document_context()
+
+        contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
+        context_with_images = embed_images_in_context(contract.context)
+
+        return context_with_images
 
 
 class DebugQuoteTemplateView(DebugPdfTemplateView):
