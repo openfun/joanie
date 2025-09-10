@@ -28,6 +28,8 @@ from joanie.debug.views import (
     DebugMicrocredentialDegreeDefaultTemplateView,
     DebugMicrocredentialDegreeUnicampTemplateView,
     DebugPaymentTemplateView,
+    DebugProfessionalTrainingAgreementDefaultTemplateView,
+    DebugProfessionalTrainingAgreementUnicampTemplateView,
     DebugQuoteTemplateView,
 )
 
@@ -81,6 +83,16 @@ urlpatterns = [
         "__debug__/pdf-templates/contract",
         DebugContractTemplateView.as_view(),
         name="debug.contract.definition",
+    ),
+    path(
+        "__debug__/pdf-templates/professional-training-agreement-default",
+        DebugProfessionalTrainingAgreementDefaultTemplateView.as_view(),
+        name="debug.professional_training_agreement_default",
+    ),
+    path(
+        "__debug__/pdf-templates/professional-training-agreement-unicamp",
+        DebugProfessionalTrainingAgreementUnicampTemplateView.as_view(),
+        name="debug.professional_training_agreement_unicamp",
     ),
     path(
         "__debug__/pdf-templates/quote",
