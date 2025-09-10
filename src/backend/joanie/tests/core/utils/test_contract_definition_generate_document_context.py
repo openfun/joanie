@@ -786,3 +786,156 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         # Initial context should not be modified
         self.assertNotIn("logo", context["organization"])
         self.assertIsNone(context["organization"]["logo_id"])
+
+    @override_settings(JOANIE_URL_EDUCATIONAL_PLATFORM="www.example-testing.acme")
+    def test_utils_contract_definition_prepare_document_context_with_batch_order(self):
+        """
+        When we call `generate_document_context` utility method with a batch order, the
+        organization, course, contract definition and batch order's information should
+        be found. The section about the student's address is not completed because it
+        is only used in the context of a single order.
+        """
+        organization = factories.OrganizationFactory(
+            dpo_email="johnnydoes@example.fr",
+            contact_email="contact@example.fr",
+            contact_phone="0123456789",
+            enterprise_code="1234",
+            activity_category_code="abcd1234",
+            representative="Mister Example",
+            representative_profession="Educational representative",
+            signatory_representative="Big boss",
+            signatory_representative_profession="Director",
+        )
+        address_organization = factories.OrganizationAddressFactory(
+            organization=organization,
+            owner=None,
+            is_main=True,
+            is_reusable=True,
+        )
+        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+        product = factories.ProductFactory(
+            target_courses=[run.course],
+            quote_definition=factories.QuoteDefinitionFactory(),
+            contract_definition_batch_order=factories.ContractDefinitionFactory(
+                name=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP,
+                title="Professional Training Agreement",
+                description="Professional Training Agreement description",
+                body="Article of the professional training agreement",
+                appendix="Appendices",
+                language="en-us",
+            ),
+        )
+        owner = factories.UserFactory(
+            email="johndoe@example.fr",
+            first_name="John Doe",
+            last_name="",
+            phone_number="0123456789",
+        )
+        batch_order = factories.BatchOrderFactory(
+            owner=owner,
+            organization=organization,
+            offering__product=product,
+            offering__course=factories.CourseFactory(
+                organizations=[organization],
+                effort=timedelta(hours=10, minutes=30, seconds=12),
+            ),
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+
+        expected_context = {
+            "contract": {
+                "body": "<p>Article of the professional training agreement</p>",
+                "appendix": "<p>Appendices</p>",
+                "description": "Professional Training Agreement description",
+                "title": "Professional Training Agreement",
+                "language": "en-us",
+            },
+            "course": {
+                "name": batch_order.offering.product.title,
+                "code": batch_order.offering.course.code,
+                "start": run.start.isoformat(),
+                "end": run.end.isoformat(),
+                "effort": "P0DT10H30M12S",
+                "price": "100.00",
+                "currency": "€",
+            },
+            "student": {
+                "name": owner.get_full_name(),
+                "address": {
+                    "address": "<STUDENT_ADDRESS_STREET_NAME>",
+                    "city": "<STUDENT_ADDRESS_CITY>",
+                    "country": "<STUDENT_ADDRESS_COUNTRY>",
+                    "last_name": "<STUDENT_LAST_NAME>",
+                    "first_name": "<STUDENT_FIRST_NAME>",
+                    "postcode": "<STUDENT_ADDRESS_POSTCODE>",
+                    "title": "<STUDENT_ADDRESS_TITLE>",
+                    "is_main": True,
+                },
+                "email": owner.email,
+                "phone_number": owner.phone_number,
+                "payment_schedule": None,
+            },
+            "batch_order": {
+                "company_name": batch_order.company_name,
+                "company_address": batch_order.address,
+                "company_postcode": batch_order.postcode,
+                "company_city": batch_order.city,
+                "company_country": batch_order.country.code,
+                "company_identification_number": batch_order.identification_number,
+                "company_vat_registration": batch_order.vat_registration,
+                "company_administrative_firstname": batch_order.administrative_firstname,
+                "company_administrative_lastname": batch_order.administrative_lastname,
+                "company_administrative_profession": batch_order.administrative_profession,
+                "company_administrative_telephone": batch_order.administrative_telephone,
+                "company_administrative_email": batch_order.administrative_email,
+                "number_seats": batch_order.nb_seats,
+                "total": str(batch_order.total),
+                "billing_address": {
+                    "address": batch_order.billing_address["address"],
+                    "postcode": batch_order.billing_address["postcode"],
+                    "city": batch_order.billing_address["city"],
+                    "country": batch_order.billing_address["country"],
+                    "company_name": batch_order.billing_address["company_name"],
+                    "contact_name": batch_order.billing_address["contact_name"],
+                    "contact_email": batch_order.billing_address["contact_email"],
+                },
+                "url_educational_platform": "www.example-testing.acme",
+            },
+            "organization": {
+                "address": {
+                    "id": str(address_organization.id),
+                    "address": address_organization.address,
+                    "city": address_organization.city,
+                    "country": str(address_organization.country),
+                    "last_name": address_organization.last_name,
+                    "first_name": address_organization.first_name,
+                    "postcode": address_organization.postcode,
+                    "title": address_organization.title,
+                    "is_main": address_organization.is_main,
+                },
+                "logo_id": "",
+                "name": organization.title,
+                "representative": organization.representative,
+                "representative_profession": organization.representative_profession,
+                "enterprise_code": organization.enterprise_code,
+                "activity_category_code": organization.activity_category_code,
+                "signatory_representative": organization.signatory_representative,
+                "signatory_representative_profession": (
+                    organization.signatory_representative_profession
+                ),
+                "contact_phone": organization.contact_phone,
+                "contact_email": organization.contact_email,
+                "dpo_email": organization.dpo_email,
+            },
+        }
+
+        context = contract_definition.generate_document_context(
+            contract_definition=batch_order.offering.product.contract_definition_batch_order,
+            user=batch_order.owner,
+            batch_order=batch_order,
+        )
+
+        organization_logo = DocumentImage.objects.get()
+        expected_context["organization"]["logo_id"] = str(organization_logo.id)
+
+        self.assertEqual(context, expected_context)
