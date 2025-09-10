@@ -292,3 +292,117 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         self.assertIn("[SignatureField#1]", document_text)
         self.assertIn("University representative's signature", document_text)
         self.assertIn("[SignatureField#2]", document_text)
+
+    def test_utils_issuers_contract_definition_generate_document_for_batch_order(self):
+        """
+        Issuer `generate_document` should generate the contract for the batch order.
+        """
+        organization = factories.OrganizationFactory(
+            title="University X",
+            dpo_email="dpojohnnydoes@example.fr",
+            contact_email="contact@example.fr",
+            contact_phone="0123456789",
+            enterprise_code="ENTRCODE1234",
+            activity_category_code="ACTCATCODE1234",
+            representative="John Doe",
+            representative_profession="Educational representative",
+            signatory_representative="Big boss",
+            signatory_representative_profession="Director",
+        )
+        factories.OrganizationAddressFactory(
+            organization=organization,
+            owner=None,
+            address="1 Rue de l'Université",
+            postcode="75000",
+            city="Paris",
+            country="FR",
+            is_reusable=True,
+            is_main=True,
+        )
+        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+        product = factories.ProductFactory(
+            title="You know nothing Jon Snow",
+            target_courses=[run.course],
+            quote_definition=factories.QuoteDefinitionFactory(),
+            contract_definition_batch_order=factories.ContractDefinitionFactory(
+                name=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP,
+                title="Professional Training Agreement",
+                description="Professional Training Agreement description",
+                body="Article of the professional training agreement",
+                appendix="Appendices",
+                language="en-us",
+            ),
+        )
+        course = factories.CourseFactory(code="00002", effort=timedelta(hours=404))
+        offering = factories.OfferingFactory(
+            product=product, course=course, organizations=[organization]
+        )
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            offering=offering,
+            nb_seats=13,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+            vat_registration="VAT_NUMBER_123",
+            company_name="Acme Org",
+            address="Street of awesomeness",
+            postcode="00000",
+            city="Unknown City",
+            country="FR",
+            administrative_firstname="Jon",
+            administrative_lastname="Snow",
+            administrative_profession="Buyer",
+            administrative_email="jonsnow@example.acme",
+        )
+
+        file_bytes = issuers.generate_document(
+            name=batch_order.contract.definition.name,
+            context=batch_order.contract.context,
+        )
+
+        document_text = pdf_extract_text(BytesIO(file_bytes)).replace("\n", " ")
+
+        self.assertIn("Professional Training Agreement", document_text)
+        self.assertIn("Professional Training Agreement description", document_text)
+        self.assertIn(
+            "The current contract is formed between "
+            "the University and the Company, as identified below:",
+            document_text,
+        )
+
+        # - Organization information should be displayed
+        self.assertIn("University X", document_text)
+        self.assertIn("1 Rue de l'Université, 75000 Paris (FR)", document_text)
+        self.assertIn("ENTRCODE1234", document_text)
+        self.assertIn("ACTCATCODE1234", document_text)
+        self.assertIn("John Doe - Educational representative", document_text)
+        self.assertIn("Big boss - Director", document_text)
+        self.assertIn("contact@example.fr - 0123456789", document_text)
+        self.assertIn("dpojohnnydoes@example.fr", document_text)
+
+        # - Batch order Company's information should be displayed
+        self.assertIn("Acme Org", document_text)
+        self.assertIn("Street of awesomeness", document_text)
+        self.assertIn("00000", document_text)
+        self.assertIn("Unknown City", document_text)
+        self.assertIn("FR", document_text)
+        self.assertIn("Jon Snow, Buyer", document_text)
+        self.assertIn("jonsnow@example.acme", document_text)
+
+        # - Course information should be displayed
+        self.assertIn("00002", document_text)
+        self.assertIn("You know nothing Jon Snow", document_text)
+        self.assertIn("404 hours", document_text)
+        self.assertIn("100.00 €", document_text)
+
+        # - Appendices should be displayed
+        self.assertIn("Appendices", document_text)
+        # - Payment schedule should not be displayed
+        self.assertNotIn("Payment schedule", document_text)
+        # - Syllabus should not be displayed
+        self.assertNotIn("Syllabus", document_text)
+
+        # - Signature slots should be displayed
+        self.assertIn("Company's signatory signature", document_text)
+        self.assertIn("[SignatureField#1]", document_text)
+        self.assertIn("University representative's signature", document_text)
+        self.assertIn("[SignatureField#2]", document_text)
