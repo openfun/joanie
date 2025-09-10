@@ -1274,6 +1274,19 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 self.quote.has_purchase_order = True
                 self.quote.save()
 
+            # Add course run for the courses
+            if not self.offering.product.target_courses.exists():
+                CourseRunFactory(
+                    course=self.offering.course,
+                    is_gradable=True,
+                    state=CourseState.ONGOING_OPEN,
+                    end=django_timezone.now() + timedelta(days=200),
+                )
+                ProductTargetCourseRelationFactory(
+                    product=self.offering.product,
+                    course=self.offering.course,
+                    is_graded=True,
+                )
             # Add the total to the batch order and marks the quote as signed by organization
             self.freeze_total(total=Decimal("100.00"))
             self.submit_for_signature(self.owner)
