@@ -78,7 +78,7 @@ test.describe("Course form", async () => {
     ).toBeVisible();
 
     await expect(page.getByLabel("Organizations")).toBeVisible();
-    await page.getByTestId("search-add-button").click();
+    await page.getByTestId("organizations-search-add-button").click();
     await page
       .getByRole("heading", { name: "close Add an organization" })
       .click();
@@ -114,7 +114,7 @@ test.describe("Course form", async () => {
       page.getByRole("button", { name: store.organizations[1].title }),
     ).toBeVisible();
 
-    await page.getByTestId("search-add-button").click();
+    await page.getByTestId("organizations-search-add-button").click();
     await page
       .getByRole("heading", { name: "close Add an organization" })
       .click();
