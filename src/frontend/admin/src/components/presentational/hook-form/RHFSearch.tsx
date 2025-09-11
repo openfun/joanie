@@ -69,7 +69,7 @@ export function RHFSearch<T>({
       <>
         {enableAdd && (
           <IconButton
-            data-testid="search-add-button"
+            data-testid={`${props.name}-search-add-button`}
             onClick={onAddClick}
             size="small"
           >
