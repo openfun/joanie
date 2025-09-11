@@ -414,7 +414,7 @@ test.describe("Offering", () => {
       .first()
       .click();
     await page.getByRole("heading", { name: "Add an offering rule" }).click();
-    await page.getByTestId("search-add-button").click();
+    await page.getByTestId("discount_id-search-add-button").click();
     await expect(
       page.getByRole("heading", { name: "Add a discount" }),
     ).toBeVisible();
@@ -452,13 +452,13 @@ test.describe("Offering", () => {
       .first()
       .click();
     await page.getByRole("heading", { name: "Add an offering rule" }).click();
-    await page.getByTestId("search-add-button").click();
+    await page.getByTestId("discount_id-search-add-button").click();
     await expect(
       page.getByRole("heading", { name: "Add a discount" }),
     ).toBeVisible();
     await page.getByRole("spinbutton", { name: "Rate (%)" }).fill("10");
     await page.getByRole("button", { name: "Submit" }).click();
-    await page.getByTestId("search-add-button").click();
+    await page.getByTestId("discount_id-search-add-button").click();
     await expect(
       page.getByRole("heading", { name: "Add a discount" }),
     ).toBeVisible();
