@@ -32,6 +32,11 @@ for your training, feel free to use this template as a base.
         <p>{% translate "The current quote is formed between the University and the Company, as identified below:" %}
         </p>
         <dl>
+          <dt>
+            <p>
+              {% translate "Quote reference:" %} {{ quote.reference }}
+            </p>
+          </dt>
           <dt>{% translate 'University (hereinafter "the University"): '%}</dt>
           <dd>
             <ul>
@@ -107,15 +112,7 @@ for your training, feel free to use this template as a base.
               {% endif %}
               <li>{% translate "Teaching Format: Online Only" %}</li>
               <li>{% translate "For number of seats: " %} {{ batch_order.nb_seats }}</li>
-              <li>{% translate "Price of the course: " %}
-                {% with price=course.price|floatformat:2 currency=course.currency %}
-                {% if price %}
-                  {{ price }} {{ currency }}
-                {% else %}
-                  {{ course.price|default:"-" }}
-                {% endif %}
-                {% endwith %}
-              </li>
+              <li>{% translate "Price of the course: " %}</li>
             </ul>
           </dd>
         </dl>

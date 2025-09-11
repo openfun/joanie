@@ -6,8 +6,6 @@ from django.conf import settings
 from django.utils.duration import duration_iso_string
 from django.utils.translation import gettext as _
 
-from babel.numbers import get_currency_symbol
-
 from joanie.core.models import DocumentImage
 from joanie.core.utils import file_checksum
 
@@ -15,6 +13,7 @@ QUOTE_FALLBACK_DATA = {
     "title": _("<QUOTE_TITLE>"),
     "description": _("<QUOTE_DESCRIPTION>"),
     "body": _("&lt;QUOTE_BODY&gt;"),
+    "reference": _("<REFERENCE>"),
 }
 
 BATCH_ORDER_FALLBACK_DATA = {
@@ -25,8 +24,6 @@ COURSE_FALLBACK_DATA = {
     "name": _("<COURSE_NAME>"),
     "code": _("<COURSE_CODE>"),
     "effort": _("<COURSE_EFFORT>"),
-    "price": _("<COURSE_PRICE>"),
-    "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
 }
 
 CUSTOMER_FALLBACK_DATA = {
@@ -133,8 +130,6 @@ def prepare_course_context(language_code, batch_order):
         ),
         "code": batch_order.offering.course.code,
         "effort": course_effort,
-        "price": str(batch_order.total),
-        "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
     }
 
 
@@ -175,6 +170,7 @@ def generate_document_context(quote_definition=None, batch_order=None):
                     "title": quote_definition.title,
                     "description": quote_definition.description,
                     "body": quote_definition.get_body_in_html(),
+                    "reference": batch_order.quote.reference,
                 },
                 "batch_order": {
                     "nb_seats": batch_order.nb_seats,
