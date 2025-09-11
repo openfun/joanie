@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add payment methods for batch orders
 - Add unique reference for a quote once generated
 
 ## [3.0.3] - 2025-09-04

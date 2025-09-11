@@ -184,6 +184,16 @@ class Quote(BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def tag_organization_signed_on(self):
+        """Updates the quote with the datetime of signature from the organization"""
+        self.organization_signed_on = timezone.now()
+        self.save()
+
+    def tag_has_purchase_order(self):
+        """Updates the quote with the reception of the purchase order"""
+        self.has_purchase_order = True
+        self.save()
+
     @property
     def is_signed_by_organization(self):
         """
@@ -206,11 +216,17 @@ class Quote(BaseModel):
         """
 
         download_quote = False
+        confirm_quote = False
+        confirm_bank_transfer = False
 
         if user.is_authenticated:
             abilities = self.batch_order.organization.get_abilities(user=user)
             download_quote = abilities.get("download_quote", False)
+            confirm_quote = abilities.get("confirm_quote", False)
+            confirm_bank_transfer = abilities.get("confirm_bank_transfer", False)
 
         return {
             "download_quote": download_quote,
+            "confirm_quote": confirm_quote,
+            "confirm_bank_transfer": confirm_bank_transfer,
         }

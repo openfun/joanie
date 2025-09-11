@@ -10,11 +10,11 @@ from django.test.utils import override_settings
 from parler.utils.context import switch_language
 
 from joanie.core import enums, factories
+from joanie.core.helpers import send_mail_vouchers
 from joanie.core.utils.batch_order import (
     assign_organization,
     get_active_offering_rule,
     send_mail_invitation_link,
-    send_mail_vouchers,
     validate_success_payment,
 )
 from joanie.payment.models import Invoice, Transaction
@@ -28,13 +28,15 @@ class UtilsBatchOrderTestCase(TestCase):
         The utility assign organization should assign the organization with least binding orders
         on the offering. It should also add the active offering rule of the offering
         on the batch order and finally it should initiate the flow. After this call, the batch
-        order should have : a main invoice, a contract, a total and it should be in state
-        `assigned`.
+        order should have : a quote, a contract and it should be in state `quoted`.
+        The main invoice and the total should still be None, since they are input later in the
+        workflow process.
         """
         organization_1, organization_2 = factories.OrganizationFactory.create_batch(2)
         offering = factories.OfferingFactory(
             organizations=[organization_1, organization_2],
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
         )
         organization_1.courses.add(offering.course)
@@ -62,10 +64,11 @@ class UtilsBatchOrderTestCase(TestCase):
 
         self.assertEqual(batch_order.organization, organization_2)
         self.assertEqual(batch_order.offering_rules.first(), offering_rule)
-        self.assertIsNotNone(batch_order.main_invoice)
+        self.assertIsNone(batch_order.main_invoice)
         self.assertIsNotNone(batch_order.contract)
-        self.assertEqual(batch_order.total, D("80.00"))
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_ASSIGNED)
+        self.assertIsNotNone(batch_order.quote)
+        self.assertEqual(batch_order.total, D("0.00"))
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
 
     def test_utils_batch_order_get_active_offering_rule_not_found(self):
         """
@@ -277,6 +280,7 @@ class UtilsBatchOrderTestCase(TestCase):
             product__price=10,
             product__title="Product 1",
             product__contract_definition=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
         )
         offering.product.translations.create(
             language_code="fr-fr",
@@ -296,7 +300,7 @@ class UtilsBatchOrderTestCase(TestCase):
         batch_order.offering_rules.add(offering_rule)
         batch_order.generate_orders()
 
-        send_mail_vouchers(batch_order)
+        send_mail_vouchers(str(batch_order.id))
 
         # Verify that the orders and vouchers are created
         self.assertEqual(batch_order.orders.count(), 2)
@@ -328,7 +332,7 @@ class UtilsBatchOrderTestCase(TestCase):
             user.language = "fr-fr"
             user.save()
 
-            send_mail_vouchers(batch_order)
+            send_mail_vouchers(str(batch_order.id))
 
             email_content = " ".join(mail.outbox[0].body.split())
             self.assertIn("Bonjour", email_content)
@@ -340,7 +344,7 @@ class UtilsBatchOrderTestCase(TestCase):
             user.language = "de-de"
             user.save()
 
-            send_mail_vouchers(batch_order)
+            send_mail_vouchers(str(batch_order.id))
 
             email_content = " ".join(mail.outbox[0].body.split())
             self.assertIn("Hello", email_content)
