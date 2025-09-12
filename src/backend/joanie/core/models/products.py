@@ -2132,6 +2132,8 @@ class BatchOrder(BaseModel):
         editable=True,
         encoder=DjangoJSONEncoder,
         default=list,
+        blank=True,
+        null=True,
     )
     funding_entity = models.CharField(
         verbose_name=_("funding entity name"),
