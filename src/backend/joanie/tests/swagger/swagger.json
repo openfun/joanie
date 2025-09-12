@@ -7357,21 +7357,14 @@
                         ],
                         "readOnly": true
                     },
-                    "product_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "primary key for the record as UUID",
-                        "readOnly": true
-                    },
-                    "product_title": {
+                    "product": {
                         "type": "string",
                         "readOnly": true
                     }
                 },
                 "required": [
                     "course",
-                    "product_id",
-                    "product_title"
+                    "product"
                 ]
             },
             "OfferingLight": {
