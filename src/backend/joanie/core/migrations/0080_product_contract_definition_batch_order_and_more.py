@@ -32,7 +32,7 @@ def rollback_to_contract_definition(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0079_remove_batchorder_voucher'),
+        ('core', '0079_alter_batchorder_trainees'),
     ]
 
     operations = [
@@ -49,5 +49,9 @@ class Migration(migrations.Migration):
         migrations.RunPython(
             migrate_to_contract_definition_order,
             rollback_to_contract_definition,
+        ),
+        migrations.RemoveField(
+            model_name='product',
+            name='contract_definition',
         ),
     ]
