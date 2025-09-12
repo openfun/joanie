@@ -61,7 +61,6 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "administrative_telephone": "<ADMIN_TELEPHONE>",
                 "funding_entity": "<FUNDING_ENTITY>",
                 "funding_amount": "<FUNDING_AMOUNT>",
-                "currency": "<CURRENCY>",
             },
             "organization": {
                 "address": {
@@ -159,7 +158,6 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "administrative_telephone": batch_order.administrative_telephone,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
-                "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
             },
             "organization": {
                 "address": {

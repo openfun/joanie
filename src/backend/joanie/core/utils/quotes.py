@@ -51,7 +51,6 @@ CUSTOMER_FALLBACK_DATA = {
     "administrative_telephone": _("<ADMIN_TELEPHONE>"),
     "funding_entity": _("<FUNDING_ENTITY>"),
     "funding_amount": _("<FUNDING_AMOUNT>"),
-    "currency": _("<CURRENCY>"),
 }
 
 ORGANIZATION_FALLBACK_DATA = {
@@ -178,7 +177,6 @@ def prepare_customer_context(batch_order):
         "administrative_telephone": batch_order.administrative_telephone,
         "funding_entity": batch_order.funding_entity,
         "funding_amount": batch_order.funding_amount,
-        "currency": get_currency_symbol(settings.DEFAULT_CURRENCY),
     }
 
 
