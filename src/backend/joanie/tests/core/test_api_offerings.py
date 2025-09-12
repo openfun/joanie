@@ -2750,3 +2750,105 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
         self.assertEqual(response_relation_path.json(), response.json())
+
+    def test_api_offering_get_organizations_not_authenticated(self):
+        """
+        Unauthenticated user should not be able to get the list of organizations that
+        delivers the offering.
+        """
+        [organization_1, organization_2] = factories.OrganizationFactory.create_batch(2)
+        offering = factories.OfferingFactory(
+            organizations=[organization_1, organization_2]
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{offering.course.code}/"
+            f"products/{offering.product.id}/get-organizations/",
+        )
+        response_relation_path = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/get-organizations/"
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertEqual(
+            response_relation_path.status_code,
+            HTTPStatus.UNAUTHORIZED,
+            response_relation_path.json(),
+        )
+
+    def test_api_offering_get_organizations_invalid_offering_id(self):
+        """
+        Authenticated user should get an error if passing an invalid id for the offering
+        to get the list of organizations.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        response = self.client.get(
+            "/api/v1.0/courses/invalid_id/products/invalid_id/get-organizations/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        response_relation_path = self.client.get(
+            "/api/v1.0/offerings/invalid_id/get-organizations/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertEqual(
+            response_relation_path.status_code,
+            HTTPStatus.NOT_FOUND,
+            response_relation_path.json(),
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_offering_get_organizations(self, _):
+        """
+        Authenticated user should be able to get the list of organizations that
+        delivers the offering.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        [organization_1, organization_2] = factories.OrganizationFactory.create_batch(2)
+        offering = factories.OfferingFactory(
+            organizations=[organization_1, organization_2]
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{offering.course.code}/"
+            f"products/{offering.product.id}/get-organizations/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        response_relation_path = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/get-organizations/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "code": organization.code,
+                    "id": str(organization.id),
+                    "logo": "_this_field_is_mocked",
+                    "title": organization.title,
+                    "address": None,
+                    "enterprise_code": organization.enterprise_code,
+                    "activity_category_code": (organization.activity_category_code),
+                    "contact_email": organization.contact_email,
+                    "contact_phone": organization.contact_phone,
+                    "dpo_email": organization.dpo_email,
+                }
+                for organization in offering.organizations.all()
+            ],
+        )
+        self.assertEqual(
+            response_relation_path.status_code,
+            HTTPStatus.OK,
+            response_relation_path.json(),
+        )
+        self.assertEqual(response.json(), response_relation_path.json())

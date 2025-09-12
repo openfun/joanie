@@ -589,7 +589,6 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Admin class for the Batch Order model"""
 
-    form = forms.BatchOrderAdminForm
     # Custom actions
     actions = (
         ACTION_NAME_CANCEL,
@@ -629,6 +628,11 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "offering_rules",
         "orders_generated",
         "quote",
+        "quote_signed",
+        "purchase_order_received",
+        "billing_address",
+        "funding_entity",
+        "funding_amount",
     )
     fieldsets = (
         (
@@ -642,6 +646,13 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                     "city",
                     "postcode",
                     "country",
+                    "vat_registration",
+                    "administrative_firstname",
+                    "administrative_lastname",
+                    "administrative_profession",
+                    "administrative_email",
+                    "administrative_telephone",
+                    "payment_method",
                 )
             },
         ),
@@ -651,9 +662,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 "fields": (
                     "relation",
                     "organization",
-                    "voucher",
                     "nb_seats",
-                    "trainees",
                     "total",
                 )
             },
@@ -668,6 +677,10 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                     "offering_rules",
                     "orders_generated",
                     "quote",
+                    "quote_signed",
+                    "purchase_order_received",
+                    "funding_entity",
+                    "funding_amount",
                 )
             },
         ),
@@ -691,7 +704,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         if batch_order.state != enums.BATCH_ORDER_STATE_DRAFT:
             actions.remove(ACTION_NAME_ASSIGN_ORGANIZATION)
 
-        if batch_order.state != enums.BATCH_ORDER_STATE_ASSIGNED:
+        if batch_order.state != enums.BATCH_ORDER_STATE_QUOTED:
             actions.remove(ACTION_NAME_SUBMIT_TO_SIGNATURE)
 
         if batch_order.state not in [
@@ -723,6 +736,19 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         """Returns boolean value whether the orders are generated or not."""
         return obj.orders.exists()
 
+    @admin.display(boolean=True, description="Quote signed")
+    def quote_signed(self, obj):
+        """Returns boolean valye whether the quote is signed by organization or not."""
+        return obj.quote.organization_signed_on is not None
+
+    @admin.display(boolean=True, description="Purchase order received")
+    def purchase_order_received(self, obj):
+        """
+        Returns boolean value whether the purchase order is received when the payment
+        method is with purchase order.
+        """
+        return obj.quote.has_received_purchase_order
+
     @admin.action(description=_("Cancel batch order"))
     def cancel(self, request, instance):  # pylint: disable=no-self-use
         """Cancel batch orders"""
@@ -751,8 +777,6 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     def submit_to_signature(self, request, queryset):
         """
         Custom action to submit to signature the contract of the batch order.
-        When the contract is not yet signed and if the list of trainees has changed,
-        the admin user can call this method again to update the initial contract.
         """
         for batch_order in queryset:
             if not batch_order.is_signable:
@@ -764,7 +788,10 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 )
                 continue
 
-            if batch_order.offering_rules.exists():
+            if (
+                batch_order.offering_rules.exists()
+                and batch_order.offering_rules.first().available_seats
+            ):
                 if (
                     batch_order.offering_rules.first().available_seats
                     < batch_order.nb_seats
