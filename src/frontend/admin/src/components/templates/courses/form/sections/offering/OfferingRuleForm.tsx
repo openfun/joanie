@@ -14,6 +14,7 @@ import { DiscountSelect } from "@/components/presentational/discount/DiscountSel
 import { RHFDateTimePicker } from "@/components/presentational/hook-form/RHFDateTimePicker";
 import { useOfferingRule } from "@/hooks/useOfferingRule/useOfferingRule";
 import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
+import { VoucherSelect } from "@/components/presentational/voucher/VoucherSelect";
 
 const messages = defineMessages({
   descriptionInputLabel: {
@@ -46,6 +47,11 @@ const messages = defineMessages({
     defaultMessage: "Discount",
     description: "The input label for the discount select",
   },
+  voucherLabel: {
+    id: "components.templates.products.form.sections.OfferingRules.OfferingRuleForm.voucherLabel",
+    defaultMessage: "Voucher",
+    description: "The input label for the voucher select",
+  },
 });
 
 export type OfferingRuleFormValues = {
@@ -53,6 +59,7 @@ export type OfferingRuleFormValues = {
   nb_seats?: number | null | undefined;
   is_active: boolean;
   discount_id?: string | null | undefined;
+  voucher_id?: string | null | undefined;
 };
 
 type Props = {
@@ -88,6 +95,7 @@ export function OfferingRuleForm({
     end: Yup.string().nullable(),
     is_active: Yup.boolean().required(),
     discount_id: Yup.string().nullable(),
+    voucher_id: Yup.string().nullable(),
   });
 
   const data = item ?? offeringRule;
@@ -156,6 +164,12 @@ export function OfferingRuleForm({
               name="discount_id"
               label={intl.formatMessage(messages.discountLabel)}
               helperText={form.formState.errors.discount_id?.message}
+            />
+          </Grid2>
+          <Grid2 size={12}>
+            <VoucherSelect
+              name="voucher_id"
+              label={intl.formatMessage(messages.voucherLabel)}
             />
           </Grid2>
           <Grid2 size={12}>

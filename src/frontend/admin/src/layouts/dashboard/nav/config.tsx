@@ -8,6 +8,7 @@ import ProductionQuantityLimitsRoundedIcon from "@mui/icons-material/ProductionQ
 import GavelIcon from "@mui/icons-material/Gavel";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import GradingIcon from "@mui/icons-material/Grading";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { PATH_ADMIN } from "@/utils/routes/path";
 
 const navTranslations = defineMessages({
@@ -45,6 +46,11 @@ const navTranslations = defineMessages({
     id: "layouts.dashboard.nav.config.productNavTitle",
     defaultMessage: "Products",
     description: "Title for the Product nav item",
+  },
+  voucherNavTitle: {
+    id: "layouts.dashboard.nav.config.voucherNavTitle",
+    defaultMessage: "Vouchers",
+    description: "Title for the Voucher nav item",
   },
   ordersNavTitle: {
     id: "layouts.dashboard.nav.config.ordersNavTitle",
@@ -107,6 +113,12 @@ export const navConfig: NavConfig[] = [
         path: PATH_ADMIN.products.list,
         prefix: PATH_ADMIN.products.root,
         icon: <ProductionQuantityLimitsRoundedIcon />,
+      },
+      {
+        title: navTranslations.voucherNavTitle,
+        path: PATH_ADMIN.vouchers.list,
+        prefix: PATH_ADMIN.vouchers.root,
+        icon: <LocalOfferIcon />,
       },
       {
         title: navTranslations.ordersNavTitle,

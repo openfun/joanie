@@ -209,7 +209,10 @@ test.describe("Product form", () => {
     await page.goto(PATH_ADMIN.products.list);
     await page.getByRole("button", { name: "Add" }).click();
     await page.getByText("Microcredential", { exact: true }).click();
-    await page.getByTestId("search-add-button").nth(0).click();
+    await page
+      .getByTestId("contract_definition-search-add-button")
+      .nth(0)
+      .click();
     await expect(
       page.getByRole("heading", { name: "close Add a contract" }),
     ).toBeVisible();

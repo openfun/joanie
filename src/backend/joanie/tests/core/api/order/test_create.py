@@ -2501,9 +2501,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(product__price=100)
         voucher = factories.VoucherFactory(
-            offering_rule__discount=factories.DiscountFactory(rate=0.1),
-            offering_rule__course_product_relation=offering,
-            offering_rule__nb_seats=1,
+            discount=factories.DiscountFactory(rate=0.1),
             multiple_use=False,
             multiple_users=False,
         )
@@ -2540,9 +2538,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(product__price=100)
         voucher = factories.VoucherFactory(
-            offering_rule__discount=factories.DiscountFactory(rate=0.1),
-            offering_rule__course_product_relation=offering,
-            offering_rule__nb_seats=1,
+            discount=factories.DiscountFactory(rate=0.1),
             multiple_use=False,
             multiple_users=False,
         )
