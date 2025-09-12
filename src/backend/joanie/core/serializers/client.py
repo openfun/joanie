@@ -1016,19 +1016,21 @@ class OfferingBatchOrderSerializer(serializers.ModelSerializer):
     """Convenient serializer for the offering model to use for the Batch Order"""
 
     course = CourseLightSerializer(read_only=True, exclude_abilities=True)
-    product_title = serializers.SerializerMethodField(read_only=True)
+    product = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.CourseProductRelation
         fields = [
             "course",
-            "product_id",
-            "product_title",
+            "product",
         ]
 
-    def get_product_title(self, instance):
-        """Return the product's title of the instance."""
-        return instance.product.title
+    def get_product(self, instance):
+        """Return simple product representation."""
+        return {
+            "id": str(instance.product.id),
+            "title": instance.product.title,
+        }
 
 
 class OfferingLightSerializer(CachedModelSerializer):
@@ -1620,7 +1622,6 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         Verify that the number of available seats in offering rules of the offering
         is sufficient to meet the required seats specified in the batch order.
         """
-        # breakpoint()
         organization = get_object_or_404(
             models.Organization, id=self.initial_data.get("organization_id")
         )

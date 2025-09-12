@@ -73,8 +73,10 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                                 "code": bo.offering.course.code,
                                 "cover": "_this_field_is_mocked",
                             },
-                            "product_id": str(bo.offering.product.id),
-                            "product_title": bo.offering.product.title,
+                            "product": {
+                                "id": str(bo.offering.product.id),
+                                "title": bo.offering.product.title,
+                            },
                         },
                         "organization": {
                             "id": str(bo.organization.id),

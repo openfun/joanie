@@ -88,8 +88,10 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                         "code": batch_order.offering.course.code,
                         "cover": "_this_field_is_mocked",
                     },
-                    "product_id": str(batch_order.offering.product.id),
-                    "product_title": batch_order.offering.product.title,
+                    "product": {
+                        "id": str(batch_order.offering.product.id),
+                        "title": batch_order.offering.product.title,
+                    },
                 },
                 "organization": {
                     "id": str(batch_order.organization.id),
