@@ -82,7 +82,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
-                contract_definition=factories.ContractDefinitionFactory(
+                contract_definition_order=factories.ContractDefinitionFactory(
                     title="CONTRACT DEFINITION 1",
                     description="Contract definition description",
                     body="Articles de la convention",
@@ -107,7 +107,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         )
 
         context = contract_definition.generate_document_context(
-            contract_definition=order.product.contract_definition,
+            contract_definition=order.product.contract_definition_order,
             user=user,
             order=order,
         )
@@ -481,7 +481,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
-                contract_definition=factories.ContractDefinitionFactory(
+                contract_definition_order=factories.ContractDefinitionFactory(
                     title="CONTRACT DEFINITION 1",
                     description="Contract definition description",
                     body="Articles de la convention",
@@ -521,7 +521,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         course_dates = order.get_equivalent_course_run_dates()
 
         context = contract_definition.generate_document_context(
-            contract_definition=order.product.contract_definition,
+            contract_definition=order.product.contract_definition_order,
             user=user,
             order=order,
         )
@@ -618,7 +618,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
-                contract_definition=factories.ContractDefinitionFactory(
+                contract_definition_order=factories.ContractDefinitionFactory(
                     title="CONTRACT DEFINITION 4",
                     description="Contract definition description",
                     body="""

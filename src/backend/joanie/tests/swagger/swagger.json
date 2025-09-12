@@ -6810,7 +6810,13 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "contract_definition_id": {
+                    "contract_definition_order_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "readOnly": true
+                    },
+                    "contract_definition_batch_order_id": {
                         "type": "string",
                         "format": "uuid",
                         "description": "primary key for the record as UUID",
@@ -6831,7 +6837,8 @@
                 },
                 "required": [
                     "certificate_definition_id",
-                    "contract_definition_id",
+                    "contract_definition_batch_order_id",
+                    "contract_definition_order_id",
                     "id",
                     "quote_definition_id"
                 ]
@@ -8626,7 +8633,15 @@
                         ],
                         "readOnly": true
                     },
-                    "contract_definition": {
+                    "contract_definition_order": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ContractDefinition"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "contract_definition_batch_order": {
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/ContractDefinition"
@@ -8692,7 +8707,8 @@
                 "required": [
                     "call_to_action",
                     "certificate_definition",
-                    "contract_definition",
+                    "contract_definition_batch_order",
+                    "contract_definition_order",
                     "id",
                     "instructions",
                     "price",
