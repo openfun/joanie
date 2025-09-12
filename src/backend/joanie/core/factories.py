@@ -913,7 +913,9 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             enums.ORDER_STATE_REFUNDED,
         ]:
             if not self.product.contract_definition_order:
-                self.product.contract_definition_order = ContractDefinitionFactory()
+                self.product.contract_definition_order = ContractDefinitionFactory(
+                    name=enums.CONTRACT_DEFINITION_DEFAULT
+                )
                 self.product.save()
 
             is_signed = self.state not in [
@@ -1211,7 +1213,8 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         OfferingFactory,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition_batch_order=factory.SubFactory(
-            ContractDefinitionFactory
+            ContractDefinitionFactory,
+            name=enums.PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT,
         ),
         product__quote_definition=factory.SubFactory(QuoteDefinitionFactory),
     )
@@ -1271,6 +1274,19 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 self.quote.has_purchase_order = True
                 self.quote.save()
 
+            # Add course run for the courses
+            if not self.offering.product.target_courses.exists():
+                CourseRunFactory(
+                    course=self.offering.course,
+                    is_gradable=True,
+                    state=CourseState.ONGOING_OPEN,
+                    end=django_timezone.now() + timedelta(days=200),
+                )
+                ProductTargetCourseRelationFactory(
+                    product=self.offering.product,
+                    course=self.offering.course,
+                    is_graded=True,
+                )
             # Add the total to the batch order and marks the quote as signed by organization
             self.freeze_total(total=Decimal("100.00"))
             self.submit_for_signature(self.owner)
@@ -1467,7 +1483,7 @@ class ContractFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         state=enums.ORDER_STATE_COMPLETED,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
         product__contract_definition_order=factory.SubFactory(
-            ContractDefinitionFactory
+            ContractDefinitionFactory, name=enums.CONTRACT_DEFINITION_DEFAULT
         ),
     )
     student_signed_on = None
