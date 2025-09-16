@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Changed background color for micro-credential default template
+
 ## [3.0.3] - 2025-09-04
 
 ### Changed
