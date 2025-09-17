@@ -15,9 +15,9 @@ from joanie.core import enums, models
 from joanie.core.filters.base import MultipleValueFilter
 from joanie.core.utils import get_default_currency_symbol
 
-from .enrollment import EnrollmentAdminFilterSet
-from .skill import SkillAdminFilterSet
-from .teacher import TeacherAdminFilterSet
+from .enrollment import EnrollmentAdminFilterSet  # pylint: disable=unused-import
+from .skill import SkillAdminFilterSet  # pylint: disable=unused-import
+from .teacher import TeacherAdminFilterSet  # pylint: disable=unused-import
 
 
 class OrganizationAdminFilterSet(filters.FilterSet):
