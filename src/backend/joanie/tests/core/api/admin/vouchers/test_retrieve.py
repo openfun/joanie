@@ -42,7 +42,6 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "id": str(voucher.id),
                 "created_on": format_date(voucher.created_on),
@@ -57,7 +56,9 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "is_active": True,
                 "multiple_use": voucher.multiple_use,
                 "multiple_users": voucher.multiple_users,
+                "orders_count": voucher.orders.count(),
             },
+            response.json(),
         )
 
     def test_api_admin_vouchers_retrieve(self):
@@ -71,7 +72,6 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
-        content = response.json()
         expected_content = {
             "id": str(voucher.id),
             "created_on": format_date(voucher.created_on),
@@ -86,9 +86,9 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
             "is_active": True,
             "multiple_use": voucher.multiple_use,
             "multiple_users": voucher.multiple_users,
+            "orders_count": voucher.orders.count(),
         }
-
-        self.assertEqual(content, expected_content)
+        self.assertEqual(expected_content, response.json())
 
     def test_api_admin_vouchers_retrieve_with_discount(self):
         """Admin users should be able to retrieve a voucher with a discount."""
@@ -103,7 +103,6 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
-        content = response.json()
         expected_content = {
             "id": str(voucher.id),
             "created_on": format_date(voucher.created_on),
@@ -118,9 +117,9 @@ class VouchersAdminApiRetrieveTestCase(BaseAPITestCase):
             "is_active": True,
             "multiple_use": voucher.multiple_use,
             "multiple_users": voucher.multiple_users,
+            "orders_count": voucher.orders.count(),
         }
-
-        self.assertEqual(content, expected_content)
+        self.assertEqual(expected_content, response.json())
 
     def test_api_admin_vouchers_retrieve_non_existing(self):
         """Admin users should receive a 404 when trying to retrieve a non-existing voucher."""

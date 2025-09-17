@@ -44,7 +44,6 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -64,9 +63,11 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
                         "multiple_users": False,
                         "created_on": format_date(voucher.created_on),
                         "updated_on": format_date(voucher.updated_on),
+                        "orders_count": voucher.orders.count(),
                     }
                 ],
             },
+            response.json(),
         )
 
     def test_api_admin_vouchers_list(self):
@@ -102,12 +103,13 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
                     "multiple_users": False,
                     "created_on": format_date(voucher.created_on),
                     "updated_on": format_date(voucher.updated_on),
+                    "orders_count": voucher.orders.count(),
                 }
                 for voucher in vouchers
             ],
         }
 
-        self.assertEqual(content, expected_content)
+        self.assertEqual(expected_content, content)
 
     def test_api_admin_vouchers_list_pagination(self):
         """Pagination should work as expected."""
@@ -126,19 +128,19 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
             content["next"],
         )
         self.assertIsNone(content["previous"])
-        self.assertEqual(len(content["results"]), 2)
+        self.assertEqual(2, len(content["results"]))
 
         response = self.client.get("/api/v1.0/admin/vouchers/?page_size=2&page=2")
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
-        self.assertEqual(content["count"], 5)
+        self.assertEqual(5, content["count"])
         self.assertEqual(
-            content["next"],
             "http://testserver/api/v1.0/admin/vouchers/?page=3&page_size=2",
+            content["next"],
         )
         self.assertEqual(
-            content["previous"],
             "http://testserver/api/v1.0/admin/vouchers/?page_size=2",
+            content["previous"],
         )
-        self.assertEqual(len(content["results"]), 2)
+        self.assertEqual(2, len(content["results"]))
