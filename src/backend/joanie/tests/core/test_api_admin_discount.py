@@ -1,3 +1,4 @@
+# pylint: disable=too-many-instance-attributes
 """
 Test suite for Discount Admin API.
 """
@@ -134,17 +135,28 @@ class DiscountAdminApiListFilterTest(TestCase):
         """
         Set up the test case.
         """
+
+        self.amount_10 = factories.DiscountFactory(amount=10)
+        self.amount_100 = factories.DiscountFactory(amount=100)
+        self.amount_101 = factories.DiscountFactory(amount=101)
+        self.rate_10 = factories.DiscountFactory(rate=0.1)
+        self.rate_11 = factories.DiscountFactory(rate=0.11)
+        self.amount_20 = factories.DiscountFactory(amount=20)
+        self.amount_200 = factories.DiscountFactory(amount=200)
+        self.amount_201 = factories.DiscountFactory(amount=201)
+        self.rate_20 = factories.DiscountFactory(rate=0.2)
+        self.rate_21 = factories.DiscountFactory(rate=0.21)
         self.discounts = [
-            factories.DiscountFactory(amount=10),
-            factories.DiscountFactory(amount=100),
-            factories.DiscountFactory(amount=101),
-            factories.DiscountFactory(rate=0.1),
-            factories.DiscountFactory(rate=0.11),
-            factories.DiscountFactory(amount=20),
-            factories.DiscountFactory(amount=200),
-            factories.DiscountFactory(amount=201),
-            factories.DiscountFactory(rate=0.2),
-            factories.DiscountFactory(rate=0.21),
+            self.amount_10,
+            self.amount_100,
+            self.amount_101,
+            self.rate_10,
+            self.rate_11,
+            self.amount_20,
+            self.amount_200,
+            self.amount_201,
+            self.rate_20,
+            self.rate_21,
         ]
 
     def _test_discounts_results(self, response, expected_discounts):
@@ -170,7 +182,7 @@ class DiscountAdminApiListFilterTest(TestCase):
             },
         )
 
-    def test_api_admin_discount_list_filtered_by_number(self):
+    def test_api_admin_discount_list_filtered_by_numbers(self):
         """
         Authenticated admin user should be able to get the list of discounts
         filtered by number.
@@ -183,11 +195,34 @@ class DiscountAdminApiListFilterTest(TestCase):
         self._test_discounts_results(
             response,
             [
-                self.discounts[0],
-                self.discounts[1],
-                self.discounts[2],
-                self.discounts[3],
-                self.discounts[4],
+                self.amount_10,
+                self.amount_100,
+                self.amount_101,
+                self.rate_10,
+                self.rate_11,
+            ],
+        )
+
+    def test_api_admin_discount_list_filtered_by_number(self):
+        """
+        Authenticated admin user should be able to get the list of discounts
+        filtered by number.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/discounts/?query=1")
+
+        self._test_discounts_results(
+            response,
+            [
+                self.amount_10,
+                self.amount_100,
+                self.amount_101,
+                self.rate_10,
+                self.rate_11,
+                self.amount_201,
+                self.rate_21,
             ],
         )
 
@@ -204,12 +239,12 @@ class DiscountAdminApiListFilterTest(TestCase):
         self._test_discounts_results(
             response,
             [
-                self.discounts[0],
-                self.discounts[1],
-                self.discounts[2],
-                self.discounts[5],
-                self.discounts[6],
-                self.discounts[7],
+                self.amount_10,
+                self.amount_100,
+                self.amount_101,
+                self.amount_20,
+                self.amount_200,
+                self.amount_201,
             ],
         )
 
@@ -226,10 +261,27 @@ class DiscountAdminApiListFilterTest(TestCase):
         self._test_discounts_results(
             response,
             [
-                self.discounts[3],
-                self.discounts[4],
-                self.discounts[8],
-                self.discounts[9],
+                self.rate_10,
+                self.rate_11,
+                self.rate_20,
+                self.rate_21,
+            ],
+        )
+
+    def test_api_admin_discount_list_filtered_by_specific_rate(self):
+        """
+        Authenticated admin user should be able to get the list of discounts
+        filtered by type (%).
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/discounts/?query=21")
+
+        self._test_discounts_results(
+            response,
+            [
+                self.rate_21,
             ],
         )
 
@@ -243,4 +295,4 @@ class DiscountAdminApiListFilterTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/discounts/?query=20€")
 
-        self._test_discounts_results(response, [self.discounts[5]])
+        self._test_discounts_results(response, [self.amount_20])
