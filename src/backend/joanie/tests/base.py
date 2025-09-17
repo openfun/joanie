@@ -74,7 +74,11 @@ class BaseAPITestCase(PerfRecTestCaseMixin, TestCase):
         """
         Assert that the response status code is equal to the expected status code.
         """
-        self.assertEqual(response.status_code, status_code, response.json())
+        try:
+            response_content = response.json()
+        except ValueError:
+            response_content = response.content
+        self.assertEqual(response.status_code, status_code, response_content)
 
 
 class LoggingTestCase(PerfRecTestCaseMixin, TestCase):

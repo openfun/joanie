@@ -6,9 +6,11 @@ import uuid
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest import mock
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.core.cache import cache
 from django.test import override_settings
 from django.utils import timezone
 
@@ -22,6 +24,12 @@ class OfferingApiTest(BaseAPITestCase):
     """Test the API of the CourseProductRelation resource."""
 
     maxDiff = None
+
+    def setUp(self):
+        """
+        Reset the cache so that no throttles will be active
+        """
+        cache.clear()
 
     def test_api_offering_read_list_anonymous(self):
         """
@@ -1852,9 +1860,8 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-plan/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 3.00,
                 "discount": None,
@@ -1876,9 +1883,10 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
 
-        self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
         self.assertEqual(response_relation_path.json(), response.json())
 
     @override_settings(
@@ -2105,13 +2113,15 @@ class OfferingApiTest(BaseAPITestCase):
         self.assertEqual(response_relation_path.status_code, HTTPStatus.OK)
         self.assertEqual(response_relation_path.json(), response.json())
 
+    @patch("joanie.core.api.client.ValidateVoucherThrottle.get_rate")
     def test_api_offering_voucher_payment_plan_authenticated_invalid_voucher(
-        self,
+        self, mock_get_rate
     ):
         """
         Authenticated users should not be able to retrieve a payment schedule and the estimated
         discounted price with an invalid voucher code.
         """
+        mock_get_rate.return_value = "5/minute"
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory()
@@ -2137,19 +2147,15 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
-        self.assertEqual(
-            response_relation_path.status_code, HTTPStatus.NOT_FOUND, response.json()
-        )
-        self.assertEqual(
-            response_with_query_params.status_code,
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(
+            response_with_query_params,
             HTTPStatus.NOT_FOUND,
-            response.json(),
         )
-        self.assertEqual(
-            response_relation_path_with_query_param.status_code,
+        self.assertStatusCodeEqual(
+            response_relation_path_with_query_param,
             HTTPStatus.NOT_FOUND,
-            response.json(),
         )
 
     @override_settings(
@@ -2158,13 +2164,16 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
+    @patch("joanie.core.api.client.ValidateVoucherThrottle.get_rate")
     def test_api_offering_voucher_payment_plan_anonymous(
         self,
+        mock_get_rate,
     ):
         """
         Anonymous users should be able to retrieve a payment schedule and the estimated
         discounted price with a voucher code.
         """
+        mock_get_rate.return_value = "5/minute"
         course = factories.CourseFactory()
         course_run = factories.CourseRunFactory(
             enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
@@ -2214,9 +2223,8 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-plan/?voucher_code={voucher.code}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 10.00,
                 "discount": "-10%",
@@ -2238,19 +2246,15 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
-        )
-        self.assertEqual(
-            response_relation_path.status_code, HTTPStatus.OK, response.json()
-        )
-        self.assertEqual(response_relation_path.json(), response.json())
-        self.assertEqual(
-            response_with_query_params.status_code, HTTPStatus.OK, response.json()
-        )
-        self.assertEqual(response_with_query_params.json(), response.json())
-        self.assertEqual(
-            response_relation_with_query_params.status_code,
-            HTTPStatus.OK,
             response.json(),
+        )
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+        self.assertStatusCodeEqual(response_with_query_params, HTTPStatus.OK)
+        self.assertEqual(response_with_query_params.json(), response.json())
+        self.assertStatusCodeEqual(
+            response_relation_with_query_params,
+            HTTPStatus.OK,
         )
         self.assertEqual(response_relation_with_query_params.json(), response.json())
 
@@ -2260,14 +2264,17 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
+    @patch("joanie.core.api.client.ValidateVoucherThrottle.get_rate")
     def test_api_offering_voucher_payment_plan_with_credential_product_id_with_voucher_code(
         self,
+        mock_get_rate,
     ):
         """
         Authenticated users should be able to retrieve a payment schedule with the estimated
         discounted price of a voucher code for a single offering if a product id is provided
         and the product is a credential. If there are archived course runs, they should be ignored.
         """
+        mock_get_rate.return_value = "5/minute"
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         mocked_now = datetime(2025, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
@@ -2329,7 +2336,6 @@ class OfferingApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 10.00,
                 "discount": f"-1 {get_default_currency_symbol()}",
@@ -2351,19 +2357,15 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
-        )
-        self.assertEqual(
-            response_relation_path.status_code, HTTPStatus.OK, response.json()
-        )
-        self.assertEqual(response_relation_path.json(), response.json())
-        self.assertEqual(
-            response_with_query_params.status_code, HTTPStatus.OK, response.json()
-        )
-        self.assertEqual(response_with_query_params.json(), response.json())
-        self.assertEqual(
-            response_relation_path_with_query_param.status_code,
-            HTTPStatus.OK,
             response.json(),
+        )
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+        self.assertStatusCodeEqual(response_with_query_params, HTTPStatus.OK)
+        self.assertEqual(response_with_query_params.json(), response.json())
+        self.assertStatusCodeEqual(
+            response_relation_path_with_query_param,
+            HTTPStatus.OK,
         )
         self.assertEqual(
             response_relation_path_with_query_param.json(), response.json()
@@ -2375,13 +2377,16 @@ class OfferingApiTest(BaseAPITestCase):
         },
         DEFAULT_CURRENCY="EUR",
     )
+    @patch("joanie.core.api.client.ValidateVoucherThrottle.get_rate")
     def test_api_offering_voucher_payment_plan_with_certificate_product_id_with_voucher_code(
         self,
+        mock_get_rate,
     ):
         """
         Authenticated users should be able to retrieve a payment schedule for
         a single offering if a product id is provided and the product is a certificate.
         """
+        mock_get_rate.return_value = "5/minute"
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         course_run = factories.CourseRunFactory(
@@ -2433,9 +2438,8 @@ class OfferingApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "price": 100.00,
                 "discount": "-10%",
@@ -2450,26 +2454,80 @@ class OfferingApiTest(BaseAPITestCase):
                     },
                 ],
             },
+            response.json(),
         )
 
-        self.assertEqual(
-            response_relation_path.status_code, HTTPStatus.OK, response.json()
-        )
-        self.assertEqual(
-            response_relation_path.status_code, HTTPStatus.OK, response.json()
-        )
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
         self.assertEqual(response_relation_path.json(), response.json())
-        self.assertEqual(
-            response_with_query_params.status_code, HTTPStatus.OK, response.json()
-        )
+        self.assertStatusCodeEqual(response_with_query_params, HTTPStatus.OK)
         self.assertEqual(response_with_query_params.json(), response.json())
-        self.assertEqual(
-            response_relation_path_with_query_param.status_code,
+        self.assertStatusCodeEqual(
+            response_relation_path_with_query_param,
             HTTPStatus.OK,
-            response.json(),
         )
         self.assertEqual(
             response_relation_path_with_query_param.json(), response.json()
+        )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            100: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    @patch("joanie.core.api.client.ValidateVoucherThrottle.get_rate")
+    def test_api_offering_voucher_payment_plan_throttling(
+        self,
+        mock_get_rate,
+    ):
+        """
+        Authenticated users should be able to retrieve a payment schedule for
+        a single offering if a product id is provided and the product is a certificate.
+        """
+
+        mock_get_rate.return_value = "5/minute"
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        authorization = f"Bearer {token}"
+        offering = factories.OfferingFactory()
+
+        def assert_throttled(url, data=None):
+            get_args = {
+                "path": url,
+                "HTTP_AUTHORIZATION": authorization,
+                "data": data,
+            }
+            for _ in range(5):
+                response = self.client.get(**get_args)
+                self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
+
+            response = self.client.get(**get_args)
+            self.assertStatusCodeEqual(response, HTTPStatus.TOO_MANY_REQUESTS)
+            cache.clear()
+
+        assert_throttled(
+            url=(
+                f"/api/v1.0/courses/{offering.course.code}/"
+                f"products/{offering.product.id}/payment-plan/"
+            ),
+            data={"voucher_code": "invalid_code"},
+        )
+
+        assert_throttled(
+            url=f"/api/v1.0/offerings/{offering.id}/payment-plan/",
+            data={"voucher_code": "invalid_code"},
+        )
+
+        assert_throttled(
+            url=(
+                f"/api/v1.0/courses/{offering.course.code}/"
+                f"products/{offering.product.id}/payment-plan/?voucher_code=invalid_code"
+            )
+        )
+
+        assert_throttled(
+            url=f"/api/v1.0/offerings/{offering.id}/payment-plan/?voucher_code=invalid_code"
         )
 
     @override_settings(
@@ -2512,9 +2570,8 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             [
                 {
                     "id": "00000000-0000-0000-0000-000000000001",
@@ -2524,10 +2581,9 @@ class OfferingApiTest(BaseAPITestCase):
                     "state": enums.PAYMENT_STATE_PENDING,
                 },
             ],
+            response.json(),
         )
-        self.assertEqual(
-            response_relation_path.status_code, HTTPStatus.OK, response.json()
-        )
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
 
     @override_settings(
         JOANIE_PAYMENT_SCHEDULE_LIMITS={
