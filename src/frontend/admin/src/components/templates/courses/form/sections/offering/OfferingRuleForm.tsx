@@ -46,6 +46,11 @@ const messages = defineMessages({
     defaultMessage: "Discount",
     description: "The input label for the discount select",
   },
+  voucherLabel: {
+    id: "components.templates.products.form.sections.OfferingRules.OfferingRuleForm.voucherLabel",
+    defaultMessage: "Voucher",
+    description: "The input label for the voucher select",
+  },
 });
 
 export type OfferingRuleFormValues = {
@@ -53,6 +58,7 @@ export type OfferingRuleFormValues = {
   nb_seats?: number | null | undefined;
   is_active: boolean;
   discount_id?: string | null | undefined;
+  voucher_id?: string | null | undefined;
 };
 
 type Props = {
@@ -88,6 +94,7 @@ export function OfferingRuleForm({
     end: Yup.string().nullable(),
     is_active: Yup.boolean().required(),
     discount_id: Yup.string().nullable(),
+    voucher_id: Yup.string().nullable(),
   });
 
   const data = item ?? offeringRule;

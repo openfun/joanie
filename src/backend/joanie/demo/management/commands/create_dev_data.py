@@ -11,9 +11,40 @@ class Command(BaseCommand):
 
     help = "Create simple data"
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--certificate",
+            action="store_true",
+            default=False,
+            help="Create a certificate product.",
+        )
+        parser.add_argument(
+            "--certificate-discount",
+            action="store_true",
+            default=False,
+            help="Create a certificate product with a discount.",
+        )
+        parser.add_argument(
+            "--credential",
+            action="store_true",
+            default=False,
+            help="Create a credential product.",
+        )
+        parser.add_argument(
+            "--credential-discount",
+            action="store_true",
+            default=False,
+            help="Create a credential product with a discount.",
+        )
+
     def handle(self, *args, **options):
         def log(message):
             """Log message"""
             self.stdout.write(self.style.SUCCESS(message))
 
-        Demo(log=log).generate_simple()
+        Demo(log=log).generate_simple(
+            create_certificate=options.get("certificate"),
+            create_certificate_discount=options.get("certificate_discount"),
+            create_credential=options.get("credential"),
+            create_credential_discount=options.get("credential_discount"),
+        )

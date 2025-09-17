@@ -6,7 +6,6 @@ from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import transaction
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 
@@ -41,14 +40,10 @@ from joanie.core.utils.offering import (
     get_generated_certificates,
     get_orders,
 )
-from joanie.core.utils.organization import get_least_active_organization
-from joanie.core.utils.payment_schedule import (
-    get_transaction_references_to_refund,
-    has_installment_paid,
-)
+from joanie.core.utils.payment_schedule import get_transaction_references_to_refund
 from joanie.payment import get_payment_backend
 
-from .enrollment import EnrollmentViewSet
+from .enrollment import EnrollmentViewSet  # pylint: disable=unused-import
 
 
 class AliasOrderingFilter(OrderingFilter):
@@ -927,13 +922,7 @@ class OrganizationAddressViewSet(
         return super().destroy(request, *args, **kwargs)
 
 
-class DiscountViewSet(
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
+class DiscountViewSet(viewsets.ModelViewSet):
     """Admin Discount Viewset"""
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
@@ -941,3 +930,12 @@ class DiscountViewSet(
     serializer_class = serializers.AdminDiscountSerializer
     queryset = models.Discount.objects.all()
     filterset_class = filters.DiscountAdminFilterSet
+
+
+class VoucherViewSet(viewsets.ModelViewSet):
+    """Admin Voucher Viewset"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminVoucherSerializer
+    queryset = models.Voucher.objects.all()

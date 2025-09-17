@@ -153,7 +153,7 @@ dev-data: ## flush db then create a simpler dataset for dev purpose
 	@$(MANAGE) flush --no-input
 	@${MAKE} superuser
 	@$(MANAGE) set_default_site --domain=$(LOCALTUNNEL_DOMAIN) --name=$(LOCALTUNNEL_DOMAIN)
-	@$(MANAGE) create_dev_data
+	@$(MANAGE) create_dev_data ${ARGS}
 	@$(MANAGE) generate_jwt_tokens
 .PHONY: dev-data
 

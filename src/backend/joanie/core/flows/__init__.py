@@ -1,3 +1,4 @@
+# pylint: disable=unused-import
 """
 Viewflow Flows of Joanie "Core" application
 https://github.com/viewflow/viewflow

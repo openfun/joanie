@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add Voucher admin API
+
 ### Changed
 
 - Changed background color for micro-credential default template
@@ -56,6 +60,7 @@ and this project adheres to
 - Add Offer rules to ProductRelationSerializer
 - Add cron task to sync offering rules
 - Language tab for offering rule
+- Add Voucher admin API
 
 ### Changed
 
