@@ -73,16 +73,22 @@ class VouchersAdminApiUpdateTestCase(BaseAPITestCase):
         self.assertFalse(voucher.multiple_users)
 
         self.assertEqual(
-            response.json(),
             {
                 "id": str(voucher.id),
                 "code": "NEW_CODE",
-                "discount_id": str(voucher.discount.id) if voucher.discount else None,
+                "discount": {
+                    "id": str(voucher.discount.id),
+                    "is_used": voucher.discount.usage_count,
+                    "amount": voucher.discount.amount,
+                    "rate": voucher.discount.rate,
+                },
                 "multiple_use": False,
                 "multiple_users": False,
                 "created_on": format_date(voucher.created_on),
                 "updated_on": format_date(voucher.updated_on),
+                "orders_count": voucher.orders.count(),
             },
+            response.json(),
         )
 
     def test_api_admin_vouchers_partial_update(self):
@@ -106,7 +112,7 @@ class VouchersAdminApiUpdateTestCase(BaseAPITestCase):
 
         # Check that the voucher is updated in the database
         voucher.refresh_from_db()
-        self.assertEqual(voucher.code, "NEW_CODE")
+        self.assertEqual("NEW_CODE", voucher.code)
 
     def test_api_admin_vouchers_update_with_invalid_data(self):
         """Admin users should not be able to update a voucher with invalid data."""
@@ -145,8 +151,8 @@ class VouchersAdminApiUpdateTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
-            response.json(),
             {"code": ["Voucher with this code already exists."]},
+            response.json(),
         )
 
     def test_api_admin_vouchers_update_non_existing(self):

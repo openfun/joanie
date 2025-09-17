@@ -44,7 +44,6 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -53,16 +52,21 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
                     {
                         "id": str(voucher.id),
                         "code": voucher.code,
-                        "discount_id": str(voucher.discount.id)
-                        if voucher.discount
-                        else None,
+                        "discount": {
+                            "id": str(voucher.discount.id),
+                            "is_used": voucher.discount.usage_count,
+                            "amount": voucher.discount.amount,
+                            "rate": voucher.discount.rate,
+                        },
                         "multiple_use": False,
                         "multiple_users": False,
                         "created_on": format_date(voucher.created_on),
                         "updated_on": format_date(voucher.updated_on),
+                        "orders_count": voucher.orders.count(),
                     }
                 ],
             },
+            response.json(),
         )
 
     def test_api_admin_vouchers_list(self):
@@ -87,19 +91,23 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
                 {
                     "id": str(voucher.id),
                     "code": voucher.code,
-                    "discount_id": str(voucher.discount.id)
-                    if voucher.discount
-                    else None,
+                    "discount": {
+                        "id": str(voucher.discount.id),
+                        "is_used": voucher.discount.usage_count,
+                        "amount": voucher.discount.amount,
+                        "rate": voucher.discount.rate,
+                    },
                     "multiple_use": False,
                     "multiple_users": False,
                     "created_on": format_date(voucher.created_on),
                     "updated_on": format_date(voucher.updated_on),
+                    "orders_count": voucher.orders.count(),
                 }
                 for voucher in vouchers
             ],
         }
 
-        self.assertEqual(content, expected_content)
+        self.assertEqual(expected_content, content)
 
     def test_api_admin_vouchers_list_pagination(self):
         """Pagination should work as expected."""
@@ -124,13 +132,13 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
-        self.assertEqual(content["count"], 5)
+        self.assertEqual(5, content["count"])
         self.assertEqual(
-            content["next"],
             "http://testserver/api/v1.0/admin/vouchers/?page=3&page_size=2",
+            content["next"],
         )
         self.assertEqual(
-            content["previous"],
             "http://testserver/api/v1.0/admin/vouchers/?page_size=2",
+            content["previous"],
         )
-        self.assertEqual(len(content["results"]), 2)
+        self.assertEqual(2, len(content["results"]))
