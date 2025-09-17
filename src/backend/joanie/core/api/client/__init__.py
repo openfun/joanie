@@ -26,6 +26,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 
 from joanie.core import enums, filters, models, permissions, serializers
 from joanie.core.api.base import NestedGenericViewSet
@@ -79,6 +80,15 @@ class CourseRunViewSet(
             queryset = queryset.filter(course=course_id)
 
         return queryset
+
+
+class ValidateVoucherThrottle(UserRateThrottle):
+    """
+    Provides rate-limiting functionality for validating vouchers.
+    See settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']["validate_voucher"] for configuration.
+    """
+
+    scope = "validate_voucher"
 
 
 class OfferingViewSet(
@@ -222,7 +232,12 @@ class OfferingViewSet(
             data=response.data.get("payment_schedule"), status=HTTPStatus.OK
         )
 
-    @action(detail=True, methods=["GET"], url_path="payment-plan")
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="payment-plan",
+        throttle_classes=[ValidateVoucherThrottle],
+    )
     def payment_plan(self, request, *args, **kwargs):
         """
         Return information on the payment schedule, the price, the discount if any
