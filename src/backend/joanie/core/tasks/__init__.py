@@ -11,7 +11,7 @@ from joanie.core.models import BatchOrder
 from joanie.core.utils.batch_order import send_mail_vouchers
 from joanie.core.utils.contract import update_signatories_for_contracts
 
-from .payment_schedule import *
+from .payment_schedule import *  # pylint: disable=unused-wildcard-import
 
 logger = getLogger(__name__)
 
