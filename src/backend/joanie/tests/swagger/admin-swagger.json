@@ -8407,7 +8407,8 @@
                     },
                     "owner_name": {
                         "type": "string",
-                        "description": "Return the full name of the order's owner if available,\notherwise fallback to the username",
+                        "nullable": true,
+                        "description": "Return the name of the order's owner if available,\notherwise return None.",
                         "readOnly": true
                     },
                     "product_title": {
@@ -8436,6 +8437,14 @@
                     },
                     "discount": {
                         "type": "string",
+                        "nullable": true,
+                        "description": "Return the discount if available, otherwise return None.",
+                        "readOnly": true
+                    },
+                    "voucher": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Return the voucher code of the order if available,\notherwise return None.",
                         "readOnly": true
                     }
                 },
@@ -8451,7 +8460,8 @@
                     "state",
                     "total",
                     "total_currency",
-                    "updated_on"
+                    "updated_on",
+                    "voucher"
                 ]
             },
             "AdminOrderPayment": {

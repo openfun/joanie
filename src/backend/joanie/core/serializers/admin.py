@@ -1355,6 +1355,8 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
+    discount = serializers.SerializerMethodField(read_only=True)
+    voucher = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Order
@@ -1371,6 +1373,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "total",
             "total_currency",
             "discount",
+            "voucher",
         )
         read_only_fields = fields
 
@@ -1378,12 +1381,33 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         """Return the code of currency used by the instance"""
         return get_default_currency_symbol()
 
-    def get_owner_name(self, instance) -> str:
+    def get_owner_name(self, instance) -> str | None:
         """
-        Return the full name of the order's owner if available,
-        otherwise fallback to the username
+        Return the name of the order's owner if available,
+        otherwise return None.
         """
-        return instance.owner.name
+        if instance.owner:
+            return instance.owner.name
+        return None
+
+    def get_discount(self, instance) -> str | None:
+        """Return the discount if available, otherwise return None."""
+        if instance.discount:
+            return str(instance.discount)
+
+        if instance.voucher:
+            return str(instance.voucher.discount)
+
+        return None
+
+    def get_voucher(self, instance) -> str | None:
+        """
+        Return the voucher code of the order if available,
+        otherwise return None.
+        """
+        if instance.voucher:
+            return instance.voucher.code
+        return None
 
 
 class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods
@@ -2068,3 +2092,7 @@ class AdminVoucherSerializer(serializers.ModelSerializer):
             "created_on",
             "updated_on",
         ]
+
+    def to_representation(self, instance):
+        serializer = AdminVoucherDetailSerializer(instance)
+        return serializer.data
