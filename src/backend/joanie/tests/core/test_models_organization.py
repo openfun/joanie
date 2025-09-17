@@ -59,6 +59,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": False,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -76,6 +78,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": False,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -93,6 +97,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": True,
                 "sign_contracts": True,
                 "download_quote": True,
+                "confirm_quote": True,
+                "confirm_bank_transfer": True,
             },
         )
 
@@ -110,6 +116,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": True,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -130,6 +138,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": False,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -151,6 +161,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "manage_accesses": False,
                 "sign_contracts": False,
                 "download_quote": False,
+                "confirm_quote": False,
+                "confirm_bank_transfer": False,
             },
         )
 
@@ -162,7 +174,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 organization = factories.OrganizationFactory()
                 offering = factories.OfferingFactory(
                     organizations=[organization],
-                    product__contract_definition=factories.ContractDefinitionFactory(),
+                    product__contract_definition_order=factories.ContractDefinitionFactory(),
                 )
                 contract = factories.ContractFactory(
                     order__state=state,
@@ -197,7 +209,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts_to_sign = []
         other_contracts = []
@@ -262,7 +274,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts_to_sign = []
         other_contracts = []
@@ -332,7 +344,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts_to_sign = []
         other_contracts = []
@@ -403,7 +415,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts = []
         for offering in offerings:
@@ -435,7 +447,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         offerings = factories.OfferingFactory.create_batch(
             3,
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contracts = []
         for offering in offerings:

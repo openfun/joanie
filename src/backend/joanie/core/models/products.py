@@ -36,6 +36,7 @@ from joanie.core.fields.schedule import (
 )
 from joanie.core.flows.batch_order import BatchOrderFlow
 from joanie.core.flows.order import OrderFlow
+from joanie.core.helpers import generate_orders as generate_batch_order_orders
 from joanie.core.models.accounts import Address, User
 from joanie.core.models.activity_logs import ActivityLog
 from joanie.core.models.base import BaseModel
@@ -49,6 +50,7 @@ from joanie.core.models.courses import (
     Enrollment,
     Organization,
 )
+from joanie.core.models.quotes import Quote
 from joanie.core.utils import (
     contract_definition as contract_definition_utility,
 )
@@ -120,9 +122,18 @@ class Product(parler_models.TranslatableModel, BaseModel):
         blank=True,
         null=True,
     )
-    contract_definition = models.ForeignKey(
+    contract_definition_order = models.ForeignKey(
         "ContractDefinition",
-        verbose_name=_("Contract definition"),
+        related_name="contract_definition_order",
+        verbose_name=_("Contract definition for single order"),
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
+    contract_definition_batch_order = models.ForeignKey(
+        "ContractDefinition",
+        related_name="contract_definition_batch_order",
+        verbose_name=_("Contract definition for batch order"),
         on_delete=models.PROTECT,
         blank=True,
         null=True,
@@ -1263,7 +1274,7 @@ class Order(BaseModel):
         try:
             return self.contract.student_signed_on is None  # pylint: disable=no-member
         except Contract.DoesNotExist:
-            return self.product.contract_definition is not None
+            return self.product.contract_definition_order is not None
 
     # pylint: disable=too-many-branches
     # ruff: noqa: PLR0912
@@ -1583,7 +1594,7 @@ class Order(BaseModel):
         to delete at the signature provider the ongoing procedure and create a new contract
         to submit.
         """
-        if not self.product.contract_definition_id:
+        if not self.product.contract_definition_order_id:
             message = "No contract definition attached to the contract's product."
             logger.error(
                 message,
@@ -1601,7 +1612,7 @@ class Order(BaseModel):
             logger.error(message, extra={"context": {"order": self.to_dict()}})
             raise ValidationError(message)
 
-        contract_definition = self.product.contract_definition
+        contract_definition = self.product.contract_definition_order
 
         if self.contract.student_signed_on:
             message = "Contract is already signed by the student, cannot resubmit."
@@ -1863,9 +1874,9 @@ class Order(BaseModel):
 
         self.freeze_target_courses()
 
-        if self.product.contract_definition and not self.has_contract:
+        if self.product.contract_definition_order and not self.has_contract:
             Contract.objects.create(
-                order=self, definition=self.product.contract_definition
+                order=self, definition=self.product.contract_definition_order
             )
 
         self.flow.update()
@@ -2027,6 +2038,7 @@ class BatchOrder(BaseModel):
         blank=True,
         null=True,
     )
+    # Deprecated `voucher` field
     voucher = models.ForeignKey(
         to="Voucher",
         verbose_name=_("voucher"),
@@ -2057,6 +2069,16 @@ class BatchOrder(BaseModel):
         help_text=_("company identification number like SIRET in France"),
         max_length=255,
     )
+    # Company's information
+    vat_registration = models.CharField(
+        verbose_name=_("Tax registration number"),
+        help_text=_(
+            "company's vat identification number like Numero de TVA intracommunautaire in France"
+        ),
+        max_length=255,
+        blank=True,
+        null=True,
+    )
     company_name = models.CharField(
         verbose_name=_("company name"),
         help_text=_("company name"),
@@ -2072,18 +2094,72 @@ class BatchOrder(BaseModel):
         verbose_name=_("city"), help_text=_("company city"), max_length=255
     )
     country = CountryField(verbose_name=_("company country"))
+    # Billing
+    billing_address = models.JSONField(
+        verbose_name=_("billing address of the company"),
+        help_text=_("billing address if different from company's address"),
+        editable=False,
+        encoder=DjangoJSONEncoder,
+        default=dict,
+    )
+    # Administrative contact for follow up
+    administrative_firstname = models.CharField(
+        verbose_name=_("Administrative firstname"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    administrative_lastname = models.CharField(
+        verbose_name=_("Administrative lastname"), max_length=100, blank=True, null=True
+    )
+    administrative_profession = models.CharField(
+        verbose_name=_("Administrative profession representative"),
+        help_text=_("administrative profession representative"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+    administrative_email = models.CharField(
+        verbose_name=_("Administrative email"), max_length=100, blank=True, null=True
+    )
+    administrative_telephone = models.CharField(
+        verbose_name=_("Administrative phone number"),
+        max_length=40,
+        blank=True,
+        null=True,
+    )
     nb_seats = models.PositiveSmallIntegerField(
         verbose_name=_("Number of seats"),
         help_text=_("The number of seats to reserve"),
         default=1,
         validators=[MinValueValidator(1)],
     )
+    # Deprecated `trainees` field, not required anymore for creation of batch order
     trainees = models.JSONField(
         verbose_name=_("trainees"),
         help_text=_("trainees name list"),
         editable=True,
         encoder=DjangoJSONEncoder,
         default=list,
+        blank=True,
+        null=True,
+    )
+    funding_entity = models.CharField(
+        verbose_name=_("funding entity name"),
+        help_text=_("funding entity's name that helps financially the payment"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
+    funding_amount = models.DecimalField(
+        _("funding amount"),
+        editable=False,
+        help_text=_("funding amount of the batch order from the funding entity"),
+        decimal_places=2,
+        max_digits=9,
+        default=0.00,
+        blank=True,
+        validators=[MinValueValidator(0.0)],
     )
     total = models.DecimalField(
         _("total"),
@@ -2106,17 +2182,35 @@ class BatchOrder(BaseModel):
         related_name="batch_orders",
         blank=True,
     )
+    payment_method = models.CharField(
+        default=enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+        choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
+        db_index=True,
+    )
 
     # pylint:disable=no-member
     def clean(self):
         """
-        Ensure that the number of reserved seats (`nb_seats`) matches the number of trainees
-        in the `trainees` list when saving a BatchOrder instance.
+        If no billing address was given on creation, it means that the billing address does
+        not differenciates from the buyer's company address.
         """
-        if len(self.trainees) != self.nb_seats:
+        if not self.relation.product.quote_definition:
             raise ValidationError(
-                _("The number of trainees must match the number of seats.")
+                "Your product doesn't have a quote definition attached, "
+                "aborting create batch order."
             )
+
+        if not self.billing_address:
+            self.billing_address = {
+                "company_name": self.company_name,
+                "identification_number": self.identification_number,
+                "address": self.address,
+                "city": self.city,
+                "postcode": self.postcode,
+                "country": self.country.code,
+                "contact_name": f"{self.administrative_firstname} {self.administrative_lastname}",
+                "contact_email": self.administrative_email,
+            }
 
         return super().clean()
 
@@ -2134,47 +2228,81 @@ class BatchOrder(BaseModel):
 
     def init_flow(self):
         """
-        Transition batch order to assigned state, creates a main invoice,
-        generates a contract.
+        Initialize the flow of the and transition to `quoted` state,
+        finally it creates the contract and the quote.
         """
-        self.freeze_total()
-        self.create_main_invoice()
+        self.flow.update()  # Transition to assigned
 
         # Generate the contract
-        if self.relation.product.contract_definition and not self.contract:
+        if self.relation.product.contract_definition_batch_order and not self.contract:
             self.contract = Contract.objects.create(
-                definition=self.relation.product.contract_definition
+                definition=self.relation.product.contract_definition_batch_order
             )
-        self.flow.update()
+
+        # Generate the quote
+        if self.relation.product.quote_definition:
+            self.quote = Quote.objects.create(  # pylint:disable=attribute-defined-outside-init
+                batch_order=self,
+                definition=self.relation.product.quote_definition,
+            )
+
+        self.flow.update()  # Transition to quoted
         self.save()
 
-    def get_discounted_price(self):
+    def freeze_total(self, total):
         """
-        When a voucher is used, return the discounted price. Otherwise,
-        return the total price, considering the offering rule discount if applicable.
-        If neither a voucher nor an offering rule group discount exists,
-        return the total amount based on the number of seats taken.
+        Freeze the total price for the batch order. It can only be done when the quote's
+        batch order is signed by the organization.
         """
-        price_per_seat = Money(self.relation.product.price).as_decimal()
-        total = self.nb_seats * price_per_seat
-
-        if self.voucher:
-            discount = self.voucher.discount or self.voucher.offering_rule.discount
-            if discount:
-                return calculate_price(total, discount)
-
-        for offering_rule in self.offering_rules.all():
-            if discount := offering_rule.discount:
-                return calculate_price(total, discount)
-
-        return total
-
-    def freeze_total(self):
-        """
-        Freeze the total price for the batch order.
-        """
-        self.total = self.get_discounted_price()
+        self.quote.tag_organization_signed_on()
+        self.total = round(Money(total).as_decimal(), 2)
+        self.create_main_invoice()
         self.save(update_fields=["total"])
+
+    @property
+    def target_course_runs(self):
+        """
+        Retrieve all course runs related to the offering's product instance.
+
+        Returns:
+
+            - all course runs related to target courses for which the product/course
+              relation (offering) does not specify a list of eligible course runs (see course_runs
+              field on the ProductTargetCourseRelation model)
+
+            - only the course runs specified on the product/course relation (offering) for target
+              courses on which a list of eligible course runs was specified on the
+              product/course relation.
+
+        """
+        target_course_relations_with_course_runs = (
+            self.offering.product.target_course_relations.filter(
+                course_runs__isnull=False
+            ).only("pk")
+        )
+
+        return CourseRun.objects.filter(
+            models.Q(product_relations__in=target_course_relations_with_course_runs)
+            | models.Q(
+                course__in=self.offering.product.target_courses.exclude(
+                    product_target_relations__in=target_course_relations_with_course_runs
+                )
+            )
+        )
+
+    def get_equivalent_course_run_dates(self, ignore_archived=False):
+        """
+        Return a dict of dates equivalent to course run dates
+        by aggregating dates of all target course runs as follows:
+        - start: Pick the earliest start date
+        - end: Pick the latest end date
+        - enrollment_start: Pick the latest enrollment start date
+        - enrollment_end: Pick the earliest enrollment end date
+        """
+        return aggregate_course_runs_dates(
+            self.target_course_runs,
+            ignore_archived=ignore_archived,
+        )
 
     # pylint: disable=no-member
     def submit_for_signature(self, user: User):
@@ -2185,7 +2313,7 @@ class BatchOrder(BaseModel):
         of type convention. Also, if the document's validity has been reached, we will resubmit
         a newer version for it to be eligble to be signed.
         """
-        if not self.relation.product.contract_definition_id:
+        if not self.relation.product.contract_definition_batch_order_id:
             message = "No contract definition attached to the contract's product."
             logger.error(
                 message,
@@ -2198,12 +2326,17 @@ class BatchOrder(BaseModel):
             )
             raise ValidationError(message)
 
-        if not self.is_assigned:
-            raise ValidationError(
-                _(
-                    f"Your batch order cannot be submitted for signature, state: {self.state}"
-                )
+        if not self.is_signable:
+            message = "The batch order isn't eligible to be signed"
+            logger.error(
+                message,
+                extra={
+                    "context": {
+                        "batch_order": self.to_dict(),
+                    }
+                },
             )
+            raise ValidationError(message)
 
         if self.is_signed_by_owner:
             message = "Contract is already signed by the buyer, cannot resubmit."
@@ -2212,7 +2345,7 @@ class BatchOrder(BaseModel):
             )
             raise PermissionDenied(message)
 
-        contract_definition = self.relation.product.contract_definition
+        contract_definition = self.relation.product.contract_definition_batch_order
         context = contract_definition_utility.generate_document_context(
             contract_definition=contract_definition,
             user=user,
@@ -2254,40 +2387,8 @@ class BatchOrder(BaseModel):
         )
 
     def generate_orders(self):
-        """
-        Generate orders and vouchers once the batch order has been paid.
-        """
-        if not self.is_paid:
-            message = "The batch order is not yet paid."
-            logger.error(
-                message,
-                extra={
-                    "context": {
-                        "batch_order": self.to_dict(),
-                        "relation": self.relation.to_dict(),
-                    }
-                },
-            )
-            raise ValidationError(message)
-
-        discount, _ = Discount.objects.get_or_create(rate=1)
-
-        for _ in range(self.nb_seats):
-            order = Order.objects.create(
-                owner=None,
-                product=self.relation.product,
-                course=self.relation.course,
-                organization=self.organization,
-            )
-            if self.offering_rules.exists():
-                order.offering_rules.add(self.offering_rules.first())
-
-            order.voucher = Voucher.objects.create(
-                discount=discount, multiple_use=False, multiple_users=False
-            )
-            order.flow.assign()
-            self.orders.add(order)
-            order.flow.update()
+        """Generate orders of the batch order"""
+        return generate_batch_order_orders(str(self.id))
 
     @property
     def vouchers(self):
@@ -2300,13 +2401,42 @@ class BatchOrder(BaseModel):
         return self.organization is not None
 
     @property
-    def is_eligible_to_get_sign(self):
+    def uses_purchase_order(self):
+        """Return boolean value whether the batch order's payment method is with purchase order"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+
+    @property
+    def uses_bank_transfer(self):
+        """Return boolean value whether the batch order's payment method is bank transfer"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_BANK_TRANSFER
+
+    @property
+    def uses_card_payment(self):
+        """Return boolean value whether the batch order's payment method is with credit card"""
+        return self.payment_method == enums.BATCH_ORDER_WITH_CARD_PAYMENT
+
+    @property
+    def can_be_signed(self):
+        """Return boolean value whether the batch order can be signed"""
+        if self.uses_purchase_order:
+            return self.quote.has_received_purchase_order
+        return self.quote.organization_signed_on and not self.is_signed_by_owner
+
+    @property
+    def is_signable(self):
         """Return boolean value whether the batch order contract can be signed"""
-        return self.state in [
-            enums.BATCH_ORDER_STATE_ASSIGNED,
-            enums.BATCH_ORDER_STATE_TO_SIGN,
-            enums.BATCH_ORDER_STATE_QUOTED,
-        ]
+        if self.state in [
+            enums.BATCH_ORDER_STATE_DRAFT,
+            enums.BATCH_ORDER_STATE_CANCELED,
+        ]:
+            return False
+
+        if self.uses_purchase_order:
+            return (
+                self.quote.is_signed_by_organization
+                and self.quote.has_received_purchase_order
+            )
+        return self.quote.is_signed_by_organization
 
     @property
     def is_submitted_to_signature(self):
@@ -2327,8 +2457,11 @@ class BatchOrder(BaseModel):
 
     @property
     def is_ready_for_payment(self):
-        """Return boolean value whether the batch order can be submitted to payment"""
-        if self.has_quote:  # the payment is done through the quote
+        """
+        Return boolean value whether the batch order can be submitted to payment through our
+        payment backend.
+        """
+        if self.uses_purchase_order:
             return False
 
         return self.is_signed_by_owner is True and self.state in [
@@ -2350,7 +2483,7 @@ class BatchOrder(BaseModel):
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.
         """
-        if self.has_quote:
+        if self.uses_purchase_order:
             return self.quote.has_received_purchase_order
 
         child_invoice = self.invoices.filter(
@@ -2372,11 +2505,16 @@ class BatchOrder(BaseModel):
         """Return boolean value whether the batch order is related to a quote"""
         return hasattr(self, "quote")
 
+    @property
+    def is_canceled(self):
+        """Returns boolean value whether the batch order is canceled or not."""
+        return self.state == enums.BATCH_ORDER_STATE_CANCELED
+
     def cancel_orders(self):
         """
         Cancel all orders associated with this batch order and delete their linked vouchers.
         """
-        if self.state != enums.BATCH_ORDER_STATE_CANCELED:
+        if not self.is_canceled:
             message = "You must cancel the batch order before canceling the orders"
             logger.error(
                 message,
@@ -2397,15 +2535,28 @@ class BatchOrder(BaseModel):
         """
         Create a billing address for the batch order
         """
-        return CompanyBillingAddress(
-            address=self.address,
-            postcode=self.postcode,
-            city=self.city,
-            country=self.country,
-            language=self.owner.language,
-            first_name=self.owner.first_name,
-            last_name="",
-        )
+        if self.billing_address:
+            data = {
+                "address": self.billing_address["address"],
+                "postcode": self.billing_address["postcode"],
+                "city": self.billing_address["city"],
+                "country": self.billing_address["country"],
+                "language": self.owner.language,
+                "first_name": self.billing_address["contact_name"],
+                "last_name": "",
+            }
+        else:
+            data = {
+                "address": self.address,
+                "postcode": self.postcode,
+                "city": self.city,
+                "country": self.country.code,
+                "language": self.owner.language,
+                "first_name": f"{self.administrative_firstname} {self.administrative_lastname}",
+                "last_name": "",
+            }
+
+        return CompanyBillingAddress(**data)
 
     def create_main_invoice(self):
         """

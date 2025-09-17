@@ -406,7 +406,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "type",
             "instructions",
             "certificate_definition",
-            "contract_definition",
+            "contract_definition_order",
             "quote_definition",
             "target_courses",
             "certification_level",
@@ -461,7 +461,8 @@ class AdminProductLightSerializer(serializers.ModelSerializer):
             "price_currency",
             "type",
             "certificate_definition",
-            "contract_definition",
+            "contract_definition_order",
+            "contract_definition_batch_order",
             "quote_definition",
             "target_courses",
         ]
@@ -1069,7 +1070,8 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
     """Serializer for Product details"""
 
     certificate_definition = AdminCertificateDefinitionSerializer(read_only=True)
-    contract_definition = AdminContractDefinitionSerializer(read_only=True)
+    contract_definition_order = AdminContractDefinitionSerializer(read_only=True)
+    contract_definition_batch_order = AdminContractDefinitionSerializer(read_only=True)
     quote_definition = AdminQuoteDefinitionSerializer(read_only=True)
     target_courses = serializers.SerializerMethodField(read_only=True)
     price = serializers.DecimalField(
@@ -1092,7 +1094,8 @@ class AdminProductDetailSerializer(serializers.ModelSerializer):
             "price",
             "price_currency",
             "certificate_definition",
-            "contract_definition",
+            "contract_definition_order",
+            "contract_definition_batch_order",
             "quote_definition",
             "target_courses",
             "offerings",
@@ -1705,6 +1708,26 @@ class AdminOrderListExportSerializer(serializers.ListSerializer):
             yield writer.writerow(row.values())
 
 
+class AdminBatchOrderBillingAddressSerializer(serializers.Serializer):
+    """
+    Serializer for the billing address of a batch order
+    """
+
+    company_name = serializers.CharField(required=True)
+    identification_number = serializers.CharField(required=True)
+    address = serializers.CharField(required=True)
+    postcode = serializers.CharField(required=True)
+    country = serializers.CharField(required=True)
+    contact_email = serializers.CharField(required=True)
+    contact_name = serializers.CharField(required=True)
+
+    def create(self, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+    def update(self, instance, validated_data):
+        """Only there to avoid a NotImplementedError"""
+
+
 class AdminBatchOrderSerializer(serializers.ModelSerializer):
     """Admin Batch Order Serializer"""
 
@@ -1729,20 +1752,33 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
     )
-    voucher = serializers.SlugRelatedField(
-        queryset=models.Voucher.objects.all(),
-        slug_field="code",
-        required=False,
-    )
     country = CountryField(required=False)
     nb_seats = serializers.IntegerField(
         min_value=1,
         help_text="The number of seats to reserve",
     )
-    trainees = serializers.JSONField(default=list)
     offering_rules = AdminOfferingRuleSerializer(read_only=True, many=True)
     vouchers = serializers.SerializerMethodField(read_only=True)
     quote = AdminQuoteSerializer(read_only=True)
+    payment_method = serializers.ChoiceField(
+        choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
+        required=True,
+    )
+    administrative_firstname = serializers.CharField(required=True)
+    administrative_lastname = serializers.CharField(required=True)
+    administrative_profession = serializers.CharField(required=True)
+    administrative_email = serializers.CharField(required=True)
+    administrative_telephone = serializers.CharField(required=True)
+    billing_address = AdminBatchOrderBillingAddressSerializer(required=False)
+    funding_entity = serializers.CharField(required=False)
+    funding_amount = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        required=False,
+    )
 
     class Meta:
         model = models.BatchOrder
@@ -1757,16 +1793,24 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "contract_id",
             "company_name",
             "identification_number",
+            "vat_registration",
             "address",
             "postcode",
             "city",
             "country",
             "nb_seats",
-            "trainees",
-            "voucher",
             "vouchers",
             "offering_rules",
             "quote",
+            "payment_method",
+            "administrative_firstname",
+            "administrative_lastname",
+            "administrative_profession",
+            "administrative_email",
+            "administrative_telephone",
+            "billing_address",
+            "funding_entity",
+            "funding_amount",
         ]
         read_only_fields = [
             "id",

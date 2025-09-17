@@ -18,6 +18,7 @@ from joanie.core.factories import (
     OfferingFactory,
     OrderFactory,
     ProductFactory,
+    QuoteDefinitionFactory,
     UserAddressFactory,
     UserFactory,
 )
@@ -1339,7 +1340,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             product=ProductFactory(
                 price=Decimal("200.00"),
                 title="Product 1",
-                contract_definition=ContractDefinitionFactory(),
+                contract_definition_batch_order=ContractDefinitionFactory(),
+                quote_definition=QuoteDefinitionFactory(),
             )
         )
         offering.product.translations.create(language_code="fr-fr", title="Produit 1")

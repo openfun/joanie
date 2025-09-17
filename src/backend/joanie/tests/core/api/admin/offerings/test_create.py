@@ -121,7 +121,8 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
                     "call_to_action": product.call_to_action,
                     "type": product.type,
                     "certificate_definition": str(product.certificate_definition.id),
-                    "contract_definition": None,
+                    "contract_definition_order": None,
+                    "contract_definition_batch_order": None,
                     "quote_definition": None,
                     "target_courses": [
                         str(target_course.id)
@@ -244,7 +245,8 @@ class CourseProductRelationCreateAdminApiTest(TestCase):
                     "call_to_action": product.call_to_action,
                     "type": product.type,
                     "certificate_definition": str(product.certificate_definition.id),
-                    "contract_definition": None,
+                    "contract_definition_order": None,
+                    "contract_definition_batch_order": None,
                     "quote_definition": None,
                     "target_courses": [
                         str(target_course.id)

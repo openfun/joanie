@@ -66,7 +66,6 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.assertEqual(
-            response.json(),
             {
                 "id": str(offering.id),
                 "uri": offering.uri,
@@ -98,7 +97,8 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
                     "certificate_definition": str(
                         offering.product.certificate_definition.id
                     ),
-                    "contract_definition": None,
+                    "contract_definition_order": None,
+                    "contract_definition_batch_order": None,
                     "quote_definition": None,
                     "target_courses": [
                         str(target_course.id)
@@ -118,4 +118,5 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
                     )
                 ],
             },
+            response.json(),
         )

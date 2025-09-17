@@ -334,7 +334,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         organizations = factories.OrganizationFactory.create_batch(2)
         offering = factories.OfferingFactory(
             product__certificate_definition=factories.CertificateDefinitionFactory(),
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
             organizations=organizations,
         )
@@ -366,7 +366,6 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -421,9 +420,10 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                         "enrollment_id": None,
                         "product": {
                             "id": str(offering.product.id),
-                            "contract_definition_id": str(
-                                offering.product.contract_definition_id
+                            "contract_definition_order_id": str(
+                                offering.product.contract_definition_order_id
                             ),
+                            "contract_definition_batch_order_id": None,
                             "certificate_definition_id": str(
                                 offering.product.certificate_definition_id
                             ),
@@ -435,6 +435,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     def test_api_courses_order_get_list_filtering_filter_by_product_when_product_is_in_two_courses(

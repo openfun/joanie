@@ -92,7 +92,9 @@ class LyraBackend(BasePaymentBackend):
                 "address": billing_address.address,
                 "zipCode": billing_address.postcode,
                 "city": billing_address.city,
-                "country": billing_address.country.code,
+                "country": billing_address.country.code
+                if hasattr(billing_address.country, "code")
+                else billing_address.country,
                 "language": order.owner.language,
             }
 

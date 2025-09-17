@@ -331,6 +331,8 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "manage_accesses": is_owner_or_admin,
             "sign_contracts": role == enums.OWNER,
             "download_quote": role == enums.OWNER,
+            "confirm_quote": role == enums.OWNER,
+            "confirm_bank_transfer": role == enums.OWNER,
         }
 
     def signature_backend_references_to_sign(self, **kwargs):
@@ -1357,11 +1359,11 @@ class Enrollment(BaseModel):
                     ),
                     (
                         models.Q(
-                            product__contract_definition__isnull=False,
+                            product__contract_definition_order__isnull=False,
                             contract__student_signed_on__isnull=False,
                         )
                         | models.Q(
-                            product__contract_definition__isnull=True,
+                            product__contract_definition_order__isnull=True,
                         )
                     ),
                     state__in=enums.ORDER_STATE_ALLOW_ENROLLMENT,

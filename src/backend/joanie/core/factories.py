@@ -912,8 +912,10 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             enums.ORDER_STATE_REFUNDING,
             enums.ORDER_STATE_REFUNDED,
         ]:
-            if not self.product.contract_definition:
-                self.product.contract_definition = ContractDefinitionFactory()
+            if not self.product.contract_definition_order:
+                self.product.contract_definition_order = ContractDefinitionFactory(
+                    name=enums.CONTRACT_DEFINITION_DEFAULT
+                )
                 self.product.save()
 
             is_signed = self.state not in [
@@ -923,7 +925,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             context = kwargs.get(
                 "context",
                 contract_definition.generate_document_context(
-                    contract_definition=self.product.contract_definition,
+                    contract_definition=self.product.contract_definition_order,
                     user=self.owner,
                     order=self,
                 )
@@ -956,7 +958,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
                 student_signed_on=student_signed_on,
                 submitted_for_signature_on=submitted_for_signature_on,
                 organization_signed_on=organization_signed_on,
-                definition=self.product.contract_definition,
+                definition=self.product.contract_definition_order,
                 context=context,
                 definition_checksum=definition_checksum,
                 signature_backend_reference=signature_backend_reference,
@@ -1188,11 +1190,17 @@ class OrderTargetCourseRelationFactory(
     position = factory.fuzzy.FuzzyInteger(0, 1000)
 
 
-class TraineeFactory(factory.DictFactory):
-    """Factory to create trainees for batch orders"""
+class QuoteDefinitionFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create a quote definition"""
 
-    first_name = factory.Faker("first_name")
-    last_name = factory.Faker("last_name")
+    class Meta:
+        model = models.QuoteDefinition
+
+    body = factory.Faker("paragraphs", nb=3)
+    description = factory.Faker("paragraph", nb_sentences=5)
+    language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
+    name = factory.fuzzy.FuzzyChoice([name[0] for name in enums.QUOTE_NAME_CHOICES])
+    title = factory.Sequence(lambda n: f"Quote definition {n}")
 
 
 class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
@@ -1204,7 +1212,11 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     offering = factory.SubFactory(
         OfferingFactory,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
-        product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
+        product__contract_definition_batch_order=factory.SubFactory(
+            ContractDefinitionFactory,
+            name=enums.PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT,
+        ),
+        product__quote_definition=factory.SubFactory(QuoteDefinitionFactory),
     )
     owner = factory.SubFactory(UserFactory)
     identification_number = factory.Faker("random_number", digits=14, fix_len=True)
@@ -1221,16 +1233,6 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """Set organization based on the course relations"""
         offerings = self.offering.product.offerings
         return offerings.first().organizations.order_by("?").first()
-
-    @factory.lazy_attribute
-    def total(self):
-        """Calculate total based on seats and product price"""
-        return self.nb_seats * self.offering.product.price
-
-    @factory.lazy_attribute
-    def trainees(self):
-        """Generate trainees based on nb_seats"""
-        return TraineeFactory.create_batch(self.nb_seats)
 
     @factory.post_generation
     def state(self, create, extracted, **kwargs):
@@ -1253,10 +1255,12 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
         # Initialize flow for all non-draft states
         self.init_flow()
+        self.quote.context = quote_utils.generate_document_context(
+            quote_definition=self.relation.product.quote_definition, batch_order=self
+        )
+        self.quote.save()
 
-        if extracted in [enums.BATCH_ORDER_STATE_QUOTED]:
-            QuoteFactory(batch_order=self)
-            self.flow.update()
+        self.flow.update()
 
         if extracted in [
             enums.BATCH_ORDER_STATE_TO_SIGN,
@@ -1265,6 +1269,26 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
+            if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                self.quote.organization_signed_on = django_timezone.now()
+                self.quote.has_purchase_order = True
+                self.quote.save()
+
+            # Add course run for the courses
+            if not self.offering.product.target_courses.exists():
+                CourseRunFactory(
+                    course=self.offering.course,
+                    is_gradable=True,
+                    state=CourseState.ONGOING_OPEN,
+                    end=django_timezone.now() + timedelta(days=200),
+                )
+                ProductTargetCourseRelationFactory(
+                    product=self.offering.product,
+                    course=self.offering.course,
+                    is_graded=True,
+                )
+            # Add the total to the batch order and marks the quote as signed by organization
+            self.freeze_total(total=Decimal("100.00"))
             self.submit_for_signature(self.owner)
             self.flow.update()
 
@@ -1307,18 +1331,23 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
         self.save()
 
-
-class QuoteDefinitionFactory(DebugModelFactory, factory.django.DjangoModelFactory):
-    """A factory to create a quote definition"""
-
-    class Meta:
-        model = models.QuoteDefinition
-
-    body = factory.Faker("paragraphs", nb=3)
-    description = factory.Faker("paragraph", nb_sentences=5)
-    language = factory.fuzzy.FuzzyChoice([lang[0] for lang in settings.LANGUAGES])
-    name = factory.fuzzy.FuzzyChoice([name[0] for name in enums.QUOTE_NAME_CHOICES])
-    title = factory.Sequence(lambda n: f"Quote definition {n}")
+    @factory.post_generation
+    # pylint: disable=method-hidden, unused-argument
+    def billing_address(self, create, extracted, **kwargs):
+        """
+        Add the billing address for the batch order. We assume that use the same one as their
+        company's address.
+        """
+        self.billing_address = {
+            "company_name": self.company_name,
+            "identification_number": self.identification_number,
+            "address": self.address,
+            "postcode": self.postcode,
+            "country": self.country.code,  # pylint: disable=no-member
+            "city": self.city,
+            "contact_email": "janedoe@example.org",
+            "contact_name": "Jane Doe",
+        }
 
 
 class QuoteFactory(DebugModelFactory, factory.django.DjangoModelFactory):
@@ -1453,7 +1482,9 @@ class ContractFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         OrderFactory,
         state=enums.ORDER_STATE_COMPLETED,
         product__type=enums.PRODUCT_TYPE_CREDENTIAL,
-        product__contract_definition=factory.SubFactory(ContractDefinitionFactory),
+        product__contract_definition_order=factory.SubFactory(
+            ContractDefinitionFactory, name=enums.CONTRACT_DEFINITION_DEFAULT
+        ),
     )
     student_signed_on = None
     organization_signed_on = None
@@ -1464,7 +1495,7 @@ class ContractFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """
         Return the order product contract definition.
         """
-        return self.order.product.contract_definition
+        return self.order.product.contract_definition_order
 
     @factory.lazy_attribute
     def context(self):

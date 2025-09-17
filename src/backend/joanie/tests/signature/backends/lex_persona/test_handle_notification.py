@@ -356,11 +356,11 @@ class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",
@@ -431,11 +431,11 @@ class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context={"body": "content"},
@@ -520,11 +520,11 @@ class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
         user = factories.UserFactory(email="johnnydo@example.fr")
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",
@@ -598,12 +598,12 @@ class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
         `submitted_for_signature_on` to None.
         """
         user = factories.UserFactory(email="johnnydo@example.fr")
+        definition = factories.ContractDefinitionFactory()
         batch_order = factories.BatchOrderFactory(
-            owner=user,
-            offering__product__contract_definition=factories.ContractDefinitionFactory(),
+            owner=user, offering__product__contract_definition_batch_order=definition
         )
         batch_order.contract = factories.ContractFactory(
-            definition=batch_order.offering.product.contract_definition,
+            definition=batch_order.offering.product.contract_definition_batch_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",

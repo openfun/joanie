@@ -519,7 +519,7 @@ class EnrollmentModelsTestCase(TestCase):
         )
 
         product = factories.ProductFactory(
-            contract_definition=factories.ContractDefinitionFactory(),
+            contract_definition_order=factories.ContractDefinitionFactory(),
             target_courses=[course_run.course],
             price="0.00",
         )
@@ -533,7 +533,7 @@ class EnrollmentModelsTestCase(TestCase):
         )
         factories.ContractFactory(
             order=order,
-            definition=product.contract_definition,
+            definition=product.contract_definition_order,
         )
         order.init_flow()
 
@@ -560,7 +560,7 @@ class EnrollmentModelsTestCase(TestCase):
         # Defining the student signature allows to create needed objects for further enrollment
         factories.ContractFactory(
             order=order,
-            definition=product.contract_definition,
+            definition=product.contract_definition_order,
             submitted_for_signature_on=timezone.now(),
             student_signed_on=timezone.now(),
         )

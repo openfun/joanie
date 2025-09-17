@@ -41,10 +41,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
             state=enums.BATCH_ORDER_STATE_ASSIGNED,
             owner=user,
             nb_seats=2,
-            trainees=[
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
 
         with self.record_performance():
@@ -65,9 +62,22 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                     {
                         "id": str(bo.id),
                         "owner": user.username,
+                        "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                        "state": enums.BATCH_ORDER_STATE_QUOTED,
                         "total": float(bo.total),
                         "currency": settings.DEFAULT_CURRENCY,
-                        "offering_id": str(bo.offering.id),
+                        "offering": {
+                            "course": {
+                                "id": str(bo.offering.course.id),
+                                "title": bo.offering.course.title,
+                                "code": bo.offering.course.code,
+                                "cover": "_this_field_is_mocked",
+                            },
+                            "product": {
+                                "id": str(bo.offering.product.id),
+                                "title": bo.offering.product.title,
+                            },
+                        },
                         "organization": {
                             "id": str(bo.organization.id),
                             "code": bo.organization.code,
@@ -80,9 +90,13 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                             "contact_email": bo.organization.contact_email,
                             "dpo_email": bo.organization.dpo_email,
                         },
-                        "main_invoice_reference": bo.main_invoice.reference,
+                        "main_invoice_reference": None,
                         "contract_id": str(bo.contract.id),
-                        "quote": None,
+                        "quote": {
+                            "id": str(bo.quote.id),
+                            "has_purchase_order": False,
+                            "organization_signed_on": None,
+                        },
                         "company_name": bo.company_name,
                         "identification_number": bo.identification_number,
                         "address": bo.address,
@@ -90,11 +104,24 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                         "city": bo.city,
                         "country": bo.country.code,
                         "nb_seats": 2,
-                        "trainees": [
-                            {"last_name": "Doe", "first_name": "John"},
-                            {"last_name": "Doe", "first_name": "Jane"},
-                        ],
                         "offering_rule_ids": [],
+                        "billing_address": {
+                            "company_name": bo.company_name,
+                            "identification_number": bo.identification_number,
+                            "address": bo.address,
+                            "postcode": bo.postcode,
+                            "country": bo.billing_address["country"],
+                            "contact_name": "Jane Doe",
+                            "contact_email": "janedoe@example.org",
+                        },
+                        "vat_registration": None,
+                        "administrative_email": None,
+                        "administrative_firstname": None,
+                        "administrative_lastname": None,
+                        "administrative_telephone": None,
+                        "administrative_profession": None,
+                        "funding_entity": bo.funding_entity,
+                        "funding_amount": float(bo.funding_amount),
                     },
                 ],
             },

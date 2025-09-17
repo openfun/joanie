@@ -33,7 +33,7 @@ class ContractModelTestCase(BaseAPITestCase):
         factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         data = {
             "order": order,
@@ -148,7 +148,7 @@ class ContractModelTestCase(BaseAPITestCase):
         factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order, student_signed_on=None, submitted_for_signature_on=None
@@ -168,7 +168,7 @@ class ContractModelTestCase(BaseAPITestCase):
         factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(
             order=order,
@@ -194,7 +194,7 @@ class ContractModelTestCase(BaseAPITestCase):
         factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory(
@@ -221,7 +221,7 @@ class ContractModelTestCase(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             product=factories.ProductFactory(
-                contract_definition=factories.ContractDefinitionFactory()
+                contract_definition_order=factories.ContractDefinitionFactory()
             ),
         )
 
@@ -252,7 +252,7 @@ class ContractModelTestCase(BaseAPITestCase):
         factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory(
@@ -280,7 +280,7 @@ class ContractModelTestCase(BaseAPITestCase):
         factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
 
         factories.ContractFactory(
@@ -356,7 +356,7 @@ class ContractModelTestCase(BaseAPITestCase):
         factories.UserAddressFactory.create(owner=user)
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         factories.ContractFactory(order=order, context=None, definition_checksum=None)
         contract = models.Contract.objects.get()
@@ -495,7 +495,7 @@ class ContractModelTestCase(BaseAPITestCase):
         'submitted_for_signature_on'.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(order=order)
 
@@ -519,11 +519,11 @@ class ContractModelTestCase(BaseAPITestCase):
         and 'submitted_for_signature_on'.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",
@@ -547,11 +547,11 @@ class ContractModelTestCase(BaseAPITestCase):
         the validity period to be signed, it should return True to get signed.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",
@@ -571,11 +571,11 @@ class ContractModelTestCase(BaseAPITestCase):
         period to be signed, it should return False to get signed.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",
@@ -594,7 +594,7 @@ class ContractModelTestCase(BaseAPITestCase):
         return False to get signed.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
@@ -630,7 +630,7 @@ class ContractModelTestCase(BaseAPITestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=offering.product,
@@ -651,7 +651,7 @@ class ContractModelTestCase(BaseAPITestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=offering.product,
@@ -672,7 +672,7 @@ class ContractModelTestCase(BaseAPITestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
         )
         contract = factories.ContractFactory(
             order__product=offering.product,
@@ -698,11 +698,11 @@ class ContractModelTestCase(BaseAPITestCase):
         and for the field `submitted_for_signature_on` is set to None.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",
@@ -722,11 +722,11 @@ class ContractModelTestCase(BaseAPITestCase):
         and when the field `organization_signed_on` is set to None.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",
@@ -746,11 +746,11 @@ class ContractModelTestCase(BaseAPITestCase):
         fields `student_signed_on` and `organization_signed_on` are set to None.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         contract = factories.ContractFactory(
             order=order,
-            definition=order.product.contract_definition,
+            definition=order.product.contract_definition_order,
             signature_backend_reference="wfl_id_fake",
             definition_checksum="fake_test_file_hash",
             context="content",

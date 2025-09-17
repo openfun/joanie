@@ -132,7 +132,7 @@ def prepare_organization_context(
     return organization_context
 
 
-def prepare_course_context(language_code, order=None):
+def prepare_course_context(language_code, order=None, batch_order=None):
     """Prepare course context for the document generation"""
     course_context = {
         "name": _("<COURSE_NAME>"),
@@ -144,11 +144,28 @@ def prepare_course_context(language_code, order=None):
         "currency": get_default_currency_symbol(),
     }
 
-    if order:
-        course_dates = order.get_equivalent_course_run_dates()
+    if order or batch_order:
+        if batch_order:
+            course_effort = batch_order.offering.course.effort
+            course_code = batch_order.offering.course.code
+            course_name = batch_order.offering.product.safe_translation_getter(
+                "title", language_code=language_code
+            )
+        else:
+            course_effort = order.course.effort
+            course_code = order.course.code
+            course_name = order.product.safe_translation_getter(
+                "title", language_code=language_code
+            )
+        price = str(order.total) if order else str(batch_order.total)
+        course_dates = (
+            order.get_equivalent_course_run_dates()
+            if order
+            else batch_order.get_equivalent_course_run_dates()
+        )
         course_start = course_dates["start"]
         course_end = course_dates["end"]
-        course_effort = order.course.effort
+
         # Transform duration value to ISO 8601 format
         if isinstance(course_effort, timedelta):
             course_effort = duration_iso_string(course_effort)
@@ -160,14 +177,12 @@ def prepare_course_context(language_code, order=None):
 
         course_context.update(
             {
-                "name": order.product.safe_translation_getter(
-                    "title", language_code=language_code
-                ),
-                "code": order.course.code,
+                "name": course_name,
+                "code": course_code,
                 "start": course_start,
                 "end": course_end,
                 "effort": course_effort,
-                "price": str(order.total),
+                "price": price,
             }
         )
 
@@ -223,38 +238,66 @@ def prepare_contract_definition_context(language_code, contract_definition):
     return contract_definition_context
 
 
-def prepare_company_context(batch_order):
+def prepare_batch_order_context(batch_order):
     """Prepare batch order company informations for document generation"""
-    company_context = {
-        "name": _("<COMPANY_NAME>"),
-        "address": _("<COMPANY_ADDRESS>"),
-        "post_code": _("<COMPANY_POSTCODE>"),
-        "city": _("<COMPANY_CITY>"),
-        "identification_number": _("<COMPANY_IDENTIFICATION_NUMBER>"),
+    batch_order_context = {
+        "company_name": _("<COMPANY_NAME>"),
+        "company_address": _("<COMPANY_ADDRESS>"),
+        "company_postcode": _("<COMPANY_POSTCODE>"),
+        "company_city": _("<COMPANY_CITY>"),
+        "company_country": _("<COMPANY_COUNTRY>"),
+        "company_identification_number": _("<COMPANY_IDENTIFICATION_NUMBER>"),
+        "company_vat_registration": _("<VAT_REGISTRATION>"),
+        "company_administrative_firstname": _("<ADMIN_FIRSTNAME>"),
+        "company_administrative_lastname": _("<ADMIN_LASTNAME>"),
+        "company_administrative_profession": _("<ADMIN_PROFESSION>"),
+        "company_administrative_telephone": _("<ADMIN_TELEPHONE>"),
+        "company_administrative_email": _("<ADMIN_EMAIL>"),
         "number_seats": _("<NUMBER_OF_SEATS_RESERVED>"),
-        "trainees": None,
+        "total": _("<TOTAL>"),
+        "billing_address": {
+            "address": _("<BILLING_ADDRESS>"),
+            "postcode": _("<BILLING_POSTCODE>"),
+            "city": _("<BILLING_CITY>"),
+            "country": _("<BILLING_COUNTRY>"),
+            "company_name": _("<BILLING_COMPANY_NAME>"),
+            "contact_name": _("<BILLING_CONTACT>"),
+            "contact_email": _("<BILLING_EMAIL>"),
+        },
+        "url_educational_platform": _("<URL_EDUCATIONAL_PLATFORM>"),
     }
 
     if batch_order:
-        company_context.update(
+        batch_order_context.update(
             {
-                "name": batch_order.company_name,
-                "address": batch_order.address,
-                "postcode": batch_order.postcode,
-                "city": batch_order.city,
-                "identification_number": batch_order.identification_number,
+                "company_name": batch_order.company_name,
+                "company_address": batch_order.address,
+                "company_postcode": batch_order.postcode,
+                "company_city": batch_order.city,
+                "company_country": batch_order.country.code,
+                "company_identification_number": batch_order.identification_number,
+                "company_vat_registration": batch_order.vat_registration,
+                "company_administrative_firstname": batch_order.administrative_firstname,
+                "company_administrative_lastname": batch_order.administrative_lastname,
+                "company_administrative_profession": batch_order.administrative_profession,
+                "company_administrative_telephone": batch_order.administrative_telephone,
+                "company_administrative_email": batch_order.administrative_email,
                 "number_seats": batch_order.nb_seats,
-                "trainees": [
-                    {
-                        "first_name": trainee["first_name"],
-                        "last_name": trainee["last_name"],
-                    }
-                    for trainee in batch_order.trainees
-                ],
+                "total": str(batch_order.total),
+                "billing_address": {
+                    "address": batch_order.billing_address["address"],
+                    "postcode": batch_order.billing_address["postcode"],
+                    "city": batch_order.billing_address["city"],
+                    "country": batch_order.billing_address["country"],
+                    "company_name": batch_order.billing_address["company_name"],
+                    "contact_name": batch_order.billing_address["contact_name"],
+                    "contact_email": batch_order.billing_address["contact_email"],
+                },
+                "url_educational_platform": settings.JOANIE_URL_EDUCATIONAL_PLATFORM,
             }
         )
 
-    return company_context
+    return batch_order_context
 
 
 # ruff: noqa: PLR0912, PLR0915
@@ -285,13 +328,13 @@ def generate_document_context(
         batch_order=batch_order,
     )
     course_context = prepare_course_context(
-        language_code=contract_language, order=order
+        language_code=contract_language, order=order, batch_order=batch_order
     )
     student_context = prepare_student_context(user=user)
     contract_context = prepare_contract_definition_context(
         language_code=contract_language, contract_definition=contract_definition
     )
-    company_context = prepare_company_context(batch_order=batch_order)
+    batch_order_context = prepare_batch_order_context(batch_order=batch_order)
 
     if order:
         user_address = order.main_invoice.recipient_address
@@ -325,7 +368,7 @@ def generate_document_context(
         "course": course_context,
         "student": student_context,
         "organization": organization_context,
-        "company": company_context,
+        "batch_order": batch_order_context,
     }
 
     return apply_contract_definition_context_processors(context)

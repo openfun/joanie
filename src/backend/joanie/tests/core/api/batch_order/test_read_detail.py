@@ -62,10 +62,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
             state=enums.BATCH_ORDER_STATE_ASSIGNED,
             owner=user,
             nb_seats=2,
-            trainees=[
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
 
         with self.record_performance():
@@ -80,9 +77,22 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
             {
                 "id": str(batch_order.id),
                 "owner": user.username,
+                "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                "state": enums.BATCH_ORDER_STATE_QUOTED,
                 "total": float(batch_order.total),
                 "currency": settings.DEFAULT_CURRENCY,
-                "offering_id": str(batch_order.offering.id),
+                "offering": {
+                    "course": {
+                        "id": str(batch_order.offering.course.id),
+                        "title": batch_order.offering.course.title,
+                        "code": batch_order.offering.course.code,
+                        "cover": "_this_field_is_mocked",
+                    },
+                    "product": {
+                        "id": str(batch_order.offering.product.id),
+                        "title": batch_order.offering.product.title,
+                    },
+                },
                 "organization": {
                     "id": str(batch_order.organization.id),
                     "code": batch_order.organization.code,
@@ -95,9 +105,13 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                     "contact_email": batch_order.organization.contact_email,
                     "dpo_email": batch_order.organization.dpo_email,
                 },
-                "main_invoice_reference": batch_order.main_invoice.reference,
+                "main_invoice_reference": None,
                 "contract_id": str(batch_order.contract.id),
-                "quote": None,
+                "quote": {
+                    "id": str(batch_order.quote.id),
+                    "has_purchase_order": False,
+                    "organization_signed_on": None,
+                },
                 "company_name": batch_order.company_name,
                 "identification_number": batch_order.identification_number,
                 "address": batch_order.address,
@@ -105,10 +119,23 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                 "city": batch_order.city,
                 "country": batch_order.country.code,
                 "nb_seats": 2,
-                "trainees": [
-                    {"last_name": "Doe", "first_name": "John"},
-                    {"last_name": "Doe", "first_name": "Jane"},
-                ],
                 "offering_rule_ids": [],
+                "billing_address": {
+                    "company_name": batch_order.company_name,
+                    "identification_number": batch_order.identification_number,
+                    "address": batch_order.address,
+                    "postcode": batch_order.postcode,
+                    "country": batch_order.billing_address["country"],
+                    "contact_email": "janedoe@example.org",
+                    "contact_name": "Jane Doe",
+                },
+                "vat_registration": None,
+                "administrative_email": None,
+                "administrative_firstname": None,
+                "administrative_lastname": None,
+                "administrative_telephone": None,
+                "administrative_profession": None,
+                "funding_entity": batch_order.funding_entity,
+                "funding_amount": float(batch_order.funding_amount),
             },
         )

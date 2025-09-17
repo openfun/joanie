@@ -395,6 +395,12 @@ class Base(Configuration):
         environ_name="JOANIE_INVOICE_COMPANY_CONTEXT",
         environ_prefix=None,
     )
+    # URL of the educational platform
+    JOANIE_URL_EDUCATIONAL_PLATFORM = values.Value(
+        None,
+        environ_name="JOANIE_URL_EDUCATIONAL_PLATFORM",
+        environ_prefix=None,
+    )
 
     AUTH_USER_MODEL = "core.User"
 
@@ -461,6 +467,9 @@ class Base(Configuration):
         environ_name="JOANIE_ORDER_UPDATE_DELAY_LIMIT_IN_SECONDS",
         environ_prefix=None,
     )
+
+    # Quote reference
+    JOANIE_PREFIX_QUOTE_REFERENCE = values.Value("FUN")
 
     # CORS
     CORS_ALLOW_CREDENTIALS = True

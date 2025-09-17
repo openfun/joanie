@@ -1,0 +1,154 @@
+{% load i18n %}
+{% load static %}
+{% load extra_tags %}
+
+{% comment %}
+This template aims to be used as a contract for training built by Unicamp© brand.
+Surely you will need to create a new contract template for your training, feel free to use
+this template as a base.
+{% endcomment %}
+<html>
+  {% if debug %}
+  <head>
+    <style>
+      {{ css|safe }}
+    </style>
+  </head>
+  {% endif %}
+  <body class="document">
+    <header class="document--header">
+        {% block header %}
+          {% include 'contract_definition/fragment_logo.html' with organization=organization %}
+        {% endblock %}
+    </header>
+      <main class="document-content">
+          <header class="content--header">
+              <h1>{{ contract.title }}</h1>
+              <p>{{ contract.description|linebreaks }}</p>
+          </header>
+            <section class="content--context">
+              <p>{% translate "The current contract is formed between the University and the Company, as identified below:" %}</p>
+                <dl>
+                  <dt>{% translate 'University (hereinafter "the University"): '%}</dt>
+                  <dd>
+                      <ul>
+                          <li>{% translate "Name of the University: "%}{{ organization.name }}</li>
+                          {% if organization.address %}
+                          <li>{% translate "Head office address: "%}{{ organization.address.address }}, {{ organization.address.postcode }} {{ organization.address.city }} ({{ organization.address.country }})</li>
+                          {% endif %}
+                          <li>{% translate "SIRET number: "%}{{ organization.enterprise_code|default:"-" }}</li>
+                          <li>{% translate "Activity Declaration N°: "%}{{ organization.activity_category_code|default:"-" }}</li>
+                          <li>{% translate "Legal Representative: "%}{{ organization.representative }}
+                              {%if organization.representative_profession %} - {{ organization.representative_profession }} {%endif%}
+                          </li>
+                          {% if organization.signatory_representative %}
+                          <li>{% translate "Delegated signatory: "%}{{ organization.signatory_representative }} - {{ organization.signatory_representative_profession }}</li>
+                          {% endif %}
+                          <li>{% translate "Administrative contact: "%}
+                              {% if organization.contact_email and organization.contact_phone %}
+                              {{ organization.contact_email }} - {{ organization.contact_phone }}
+                              {% elif not organization.contact_email and not organization.contact_phone %}
+                              -
+                              {% else %}
+                              {{ organization.contact_email|default:organization.contact_phone }}
+                              {% endif %}
+                          </li>
+                          <li>{% translate "Data Protection Officer contact: "%}{{ organization.dpo_email|default:"-" }}</li>
+                      </ul>
+                  </dd>
+                  <dt>{% translate 'Buying Organization (hereinafter "the Company"):' %}</dt>
+                    <dd>
+                       <ul>
+                          <li>{% translate "Registered company name: " %}{{ batch_order.company_name }}</li>
+                          <li>{% translate "Address: " %}
+                              {{ batch_order.company_address }}, {{ batch_order.company_city }}, {{ batch_order.company_country }}
+                          </li>
+                          <li>{% translate "Postal address: " %}{{ batch_order.company_postcode }}</li>
+                          <li>{% translate "SIRET number: " %}{{ batch_order.company_identification_number|default:"-" }}</li>
+                          <li>{% translate "Legal administrative representative: " %}{{ batch_order.company_administrative_firstname  }} {{ batch_order.company_administrative_lastname  }}, {{ batch_order.company_administrative_profession }}
+                              {{ batch_order.company_administrative_email }} {{ batch_order.company_administrative_telephone }}</li>
+                          <li>{% translate "Billing Address: " %}
+                            {{ batch_order.billing_address.company_name }},
+                            {{ batch_order.billing_address.address }}{{ batch_order.billing_address.postcode }},
+                            {{ batch_order.billing_address.city }}, {{ batch_order.billing_address.country }}
+                          </li>
+                      </ul>
+                    </dd>
+                </dl>
+            </section>
+          <article class="content-articles">
+              <h3>{% translate "Article 1 : Training Description" %}</h3>
+              <ul>
+                <li>{% translate "Course number: " %}{{ course.code }}</li>
+                <li>{% translate "Name of the Course: " %}{{ course.name }}</li>
+                <li>{% translate "Session start date: " %}
+                    {% with start=course.start|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
+                    {% if start %}
+                    {{ start }}
+                    {% else %}
+                    {{ course.start|default:"-" }}
+                    {% endif %}
+                    {% endwith %}
+                </li>
+                <li>{% translate "Session end date: " %}
+                    {% with end=course.end|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
+                    {% if end %}
+                    {{ end }}
+                    {% else %}
+                    {{ course.end|default:"-" }}
+                    {% endif %}
+                    {% endwith %}
+                </li>
+                <li>{% translate "Total duration of the course: " %}
+                    {% with duration=course.effort|iso8601_to_duration:"hours" %}
+                    {% if duration %}
+                    {% blocktranslate with duration=duration count duration=duration trimmed%}
+                    {{ duration }} hour
+                    {% plural %}
+                    {{ duration }} hours
+                    {% endblocktranslate %}
+                    {% else %}
+                    {{ course.effort|default:"-" }}
+                    {% endif %}
+                    {% endwith %}
+                </li>
+                <li>{% translate "Number of participating trainees: " %}{{ batch_order.number_seats }}</li>
+                {% with currency=course.currency %}
+                  <li>{% translate "Total price for training: " %}{{ batch_order.total }} {{ currency }}</li>
+                {% endwith %}
+                  <li>{% translate "Location: Training delivered exclusively online at: " %}
+                    <a href="{{ batch_order.url_educational_platform }}">{{ batch_order.url_educational_platform }}</a>
+                  </li>
+                  <li>{% translate "Modalities: Online training, combining synchronous and asynchronous activities " %}</li>
+              </ul>
+              {% if contract %}
+                  {{ contract.body|safe }}
+              {% endif %}
+              <section class="content-signatures">
+                  <div class="signature_zone">
+                      <p>{% translate "Company's signatory signature :" %}</p>
+                      <div class="signature-recipient">
+                          [SignatureField#1]
+                      </div>
+                  </div>
+                  <div class="signature_zone">
+                      <p>{% translate "University representative's signature :" %}</p>
+                      <div class="signature-recipient">
+                          [SignatureField#2]
+                      </div>
+                  </div>
+              </section>
+              {% if contract.appendix or syllabus %}
+                <h2>{% translate "Appendices" %}</h2>
+              {% endif %}
+              {% if contract.appendix %}
+                {{ contract.appendix|safe }}
+              {% endif %}
+              {% if syllabus %}
+                <h3>{% translate "Catalog syllabus" %}</h3>
+                {% include "contract_definition/fragment_appendice_syllabus.html" with syllabus=syllabus %}
+              {% endif %}
+          </article>
+      </main>
+    </body>
+</html>

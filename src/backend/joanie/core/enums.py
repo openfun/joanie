@@ -148,13 +148,24 @@ ENROLLMENT_STATE_CHOICES = (
     ),
 )
 
-# For contract names choices
+# For contract names choices for single order
 CONTRACT_DEFINITION_DEFAULT = "contract_definition_default"
 CONTRACT_DEFINITION_UNICAMP = "contract_definition_unicamp"
+# For contract names choices for batch orders
+PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT = "professional_training_agreement_default"
+PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP = "professional_training_agreement_unicamp"
 
 CONTRACT_NAME_CHOICES = (
     (CONTRACT_DEFINITION_DEFAULT, _("Contract Definition Default")),
     (CONTRACT_DEFINITION_UNICAMP, _("Contract Definition Unicamp")),
+    (
+        PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT,
+        _("Professional Training Agreement Default"),
+    ),
+    (
+        PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP,
+        _("Professional Training Agreement Unicamp"),
+    ),
 )
 
 # For contract signature state choices
@@ -271,6 +282,17 @@ BATCH_ORDER_STATE_CHOICES = (
     (BATCH_ORDER_STATE_FAILED_PAYMENT, _("Failed payment")),
     (BATCH_ORDER_STATE_CANCELED, _("Canceled")),
     (BATCH_ORDER_STATE_COMPLETED, _("Completed")),
+)
+
+# Batch order accepted payment methods
+BATCH_ORDER_WITH_PURCHASE_ORDER = "purchase_order"
+BATCH_ORDER_WITH_BANK_TRANSFER = "bank_transfer"
+BATCH_ORDER_WITH_CARD_PAYMENT = "card_payment"
+
+BATCH_ORDER_PAYMENT_METHOD_CHOICES = (
+    (BATCH_ORDER_WITH_PURCHASE_ORDER, _("Purchase order")),
+    (BATCH_ORDER_WITH_BANK_TRANSFER, _("Bank transfer")),
+    (BATCH_ORDER_WITH_CARD_PAYMENT, _("Card payment")),
 )
 
 # For Quotes of batch orders

@@ -29,7 +29,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         Anonymous user should not be able to submit for signature an order.
         """
         order = factories.OrderFactory(
-            product__contract_definition=factories.ContractDefinitionFactory()
+            product__contract_definition_order=factories.ContractDefinitionFactory()
         )
         factories.ContractFactory(order=order)
 
@@ -128,7 +128,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             owner=user,
             state=enums.ORDER_STATE_COMPLETED,
-            product=factories.ProductFactory(contract_definition=None),
+            product=factories.ProductFactory(contract_definition_order=None),
         )
         token = self.get_user_token(user.username)
 
@@ -160,7 +160,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
         order = factories.OrderFactory(
             owner=user,
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__target_courses=target_courses,
         )
         order.init_flow(billing_address=BillingAddressDictFactory())

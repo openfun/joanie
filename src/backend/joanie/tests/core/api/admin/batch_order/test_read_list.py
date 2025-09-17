@@ -36,7 +36,9 @@ class BatchOrdersAdminApiListTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         batch_orders = factories.BatchOrderFactory.create_batch(
-            3, state=enums.BATCH_ORDER_STATE_ASSIGNED
+            3,
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
 
         expected_return = [
@@ -49,7 +51,7 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "country": batch_order.country.code,
                 "currency": settings.DEFAULT_CURRENCY,
                 "identification_number": batch_order.identification_number,
-                "main_invoice_reference": str(batch_order.main_invoice.reference),
+                "main_invoice_reference": None,
                 "nb_seats": batch_order.nb_seats,
                 "organization": {
                     "code": batch_order.organization.code,
@@ -60,11 +62,32 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "postcode": batch_order.postcode,
                 "offering": str(batch_order.offering.id),
                 "total": float(batch_order.total),
-                "trainees": batch_order.trainees,
-                "voucher": None,
                 "vouchers": [],
                 "offering_rules": [],
-                "quote": None,
+                "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                "billing_address": {
+                    "company_name": batch_order.company_name,
+                    "identification_number": batch_order.identification_number,
+                    "address": batch_order.address,
+                    "postcode": batch_order.postcode,
+                    "country": batch_order.billing_address["country"],
+                    "contact_email": "janedoe@example.org",
+                    "contact_name": "Jane Doe",
+                },
+                "vat_registration": None,
+                "administrative_email": None,
+                "administrative_firstname": None,
+                "administrative_lastname": None,
+                "administrative_telephone": None,
+                "administrative_profession": None,
+                "quote": {
+                    "definition_title": batch_order.quote.definition.title,
+                    "has_purchase_order": False,
+                    "id": str(batch_order.quote.id),
+                    "organization_signed_on": None,
+                },
+                "funding_entity": batch_order.funding_entity,
+                "funding_amount": batch_order.funding_amount,
             }
             for batch_order in batch_orders
         ]

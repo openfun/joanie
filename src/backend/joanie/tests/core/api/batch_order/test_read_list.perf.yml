@@ -2,6 +2,10 @@ BatchOrderReadListAPITest.test_api_batch_order_read_authenticated_get_list:
 - db: 'SELECT COUNT(*) AS "__count" FROM "joanie_batch_order" INNER JOIN "joanie_user" ON ("joanie_batch_order"."owner_id" = "joanie_user"."id") WHERE "joanie_user"."username" = #'
 - db: 'SELECT ... FROM "joanie_batch_order" INNER JOIN "joanie_user" ON ("joanie_batch_order"."owner_id" = "joanie_user"."id") INNER JOIN "joanie_course_product_relation" ON ("joanie_batch_order"."relation_id" = "joanie_course_product_relation"."id") LEFT OUTER JOIN "joanie_organization" ON ("joanie_batch_order"."organization_id" = "joanie_organization"."id") LEFT OUTER JOIN "joanie_contract" ON ("joanie_batch_order"."contract_id" = "joanie_contract"."id") WHERE "joanie_user"."username" = # ORDER BY "joanie_batch_order"."created_on" ASC LIMIT #'
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
+- db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.CourseTranslation.#.en-us
+- db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
+- cache|get: parler.core.ProductTranslation.#.en-us
 - cache|get: parler.core.OrganizationTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_address" WHERE ("joanie_address"."organization_id" = #::uuid AND "joanie_address"."is_main" AND "joanie_address"."is_reusable") ORDER BY "joanie_address"."created_on" DESC LIMIT #'
 - db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."batch_order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'

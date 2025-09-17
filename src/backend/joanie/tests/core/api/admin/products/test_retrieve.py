@@ -23,13 +23,15 @@ class ProductAdminApiRetrieveTest(TestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
-        contract_definition = factories.ContractDefinitionFactory()
+        contract_definition_order = factories.ContractDefinitionFactory()
+        contract_definition_batch_order = factories.ContractDefinitionFactory()
         skill = factories.SkillFactory(title="Python")
         teacher = factories.TeacherFactory(first_name="Joanie", last_name="Cunningham")
         quote_definition = factories.QuoteDefinitionFactory()
         product = factories.ProductFactory(
             quote_definition=quote_definition,
-            contract_definition=contract_definition,
+            contract_definition_order=contract_definition_order,
+            contract_definition_batch_order=contract_definition_batch_order,
             skills=[skill],
             teachers=[teacher],
             certification_level=3,
@@ -90,14 +92,23 @@ class ProductAdminApiRetrieveTest(TestCase):
                 "template": product.certificate_definition.template,
                 "title": product.certificate_definition.title,
             },
-            "contract_definition": {
-                "id": str(contract_definition.id),
-                "title": contract_definition.title,
-                "description": contract_definition.description,
-                "name": contract_definition.name,
-                "language": contract_definition.language,
-                "body": contract_definition.body,
-                "appendix": contract_definition.appendix,
+            "contract_definition_order": {
+                "id": str(contract_definition_order.id),
+                "title": contract_definition_order.title,
+                "description": contract_definition_order.description,
+                "name": contract_definition_order.name,
+                "language": contract_definition_order.language,
+                "body": contract_definition_order.body,
+                "appendix": contract_definition_order.appendix,
+            },
+            "contract_definition_batch_order": {
+                "id": str(contract_definition_batch_order.id),
+                "title": contract_definition_batch_order.title,
+                "description": contract_definition_batch_order.description,
+                "name": contract_definition_batch_order.name,
+                "language": contract_definition_batch_order.language,
+                "body": contract_definition_batch_order.body,
+                "appendix": contract_definition_batch_order.appendix,
             },
             "quote_definition": {
                 "id": str(quote_definition.id),
@@ -188,8 +199,11 @@ class ProductAdminApiRetrieveTest(TestCase):
                         "certificate_definition": str(
                             offering.product.certificate_definition.id
                         ),
-                        "contract_definition": str(
-                            offering.product.contract_definition.id
+                        "contract_definition_order": str(
+                            offering.product.contract_definition_order.id
+                        ),
+                        "contract_definition_batch_order": str(
+                            offering.product.contract_definition_batch_order.id
                         ),
                         "quote_definition": str(offering.product.quote_definition.id),
                         "target_courses": [
@@ -209,4 +223,4 @@ class ProductAdminApiRetrieveTest(TestCase):
                 }
             ],
         }
-        self.assertEqual(content, expected_result)
+        self.assertEqual(expected_result, content)

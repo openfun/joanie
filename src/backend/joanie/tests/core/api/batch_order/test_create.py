@@ -20,46 +20,6 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
 
-    def test_api_batch_order_create_fails_number_seats_does_not_match_trainees(self):
-        """
-        Authenticated user shouldn't be able to create a batch order if the number of
-        seats is not equal to number of trainees declared in the payload.
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            product__price=123,
-        )
-
-        data = {
-            "offering_id": offering.id,
-            "nb_seats": 3,
-            "company_name": "Acme Org",
-            "identification_number": "123",
-            "address": "Street of awesomeness",
-            "city": "Paradise",
-            "postcode": "2900",
-            "country": "FR",
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
-        }
-
-        response = self.client.post(
-            "/api/v1.0/batch-orders/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-            content_type="application/json",
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
-        self.assertEqual(
-            response.json(),
-            {"__all__": ["The number of trainees must match the number of seats."]},
-        )
-
     def test_api_batch_order_create_fails_when_missing_company_informations(self):
         """
         Authenticated user shouldn't be able to create a batch order if the company's informations
@@ -68,17 +28,20 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=456,
         )
 
         data = {
             "offering_id": offering.id,
             "nb_seats": 2,
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+            "vat_registration": "987654321",
         }
 
         response = self.client.post(
@@ -108,7 +71,8 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
         )
 
@@ -121,10 +85,22 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             "city": "Paradise",
             "postcode": "2900",
             "country": "FR",
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "organization_id": offering.organizations.first().id,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "jane@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -141,43 +117,39 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertEqual(batch_order.owner, user)
         self.assertEqual(batch_order.offering, offering)
         self.assertEqual(batch_order.nb_seats, 2)
-        self.assertEqual(batch_order.trainees, data["trainees"])
         self.assertEqual(batch_order.company_name, data["company_name"])
         self.assertIsNotNone(batch_order.organization)
-        self.assertEqual(batch_order.total, Decimal("20.00"))
+        self.assertEqual(batch_order.total, Decimal("0.00"))
 
-    def test_api_batch_order_create_authenticated_with_voucher_code(self):
+    def test_api_batch_order_create_authenticated_without_billing_address(self):
         """
-        Authenticated user should be able to create a batch order and use a voucher code to
-        have a reduction on the total price.
+        Authenticated user should be able to create a batch order. When they don't pass a
+        specific billing address into the payload, it should use the company's address as
+        the billing address.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            product__price=100,
-        )
-        voucher = factories.VoucherFactory(
-            discount=factories.DiscountFactory(rate=0.2),
-            multiple_use=False,
-            multiple_users=False,
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
         )
 
         data = {
             "offering_id": offering.id,
-            "nb_seats": 3,
+            "nb_seats": 2,
             "company_name": "Acme Org",
             "identification_number": "123",
             "address": "Street of awesomeness",
             "city": "Paradise",
             "postcode": "2900",
             "country": "FR",
-            "voucher": voucher.code,
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-                {"first_name": "Joanie", "last_name": "Gioani"},
-            ],
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "organization_id": offering.organizations.first().id,
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -188,16 +160,23 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        batch_order = models.BatchOrder.objects.get()
 
-        batch_order = models.BatchOrder.objects.get(owner=user)
-
-        self.assertEqual(batch_order.owner, user)
-        self.assertEqual(batch_order.offering, offering)
-        self.assertEqual(batch_order.nb_seats, 3)
-        self.assertEqual(batch_order.trainees, data["trainees"])
-        self.assertEqual(batch_order.company_name, data["company_name"])
-        self.assertIsNotNone(batch_order.organization)
-        self.assertEqual(batch_order.total, Decimal("240.00"))
+        self.assertDictEqual(
+            batch_order.billing_address,
+            {
+                "company_name": batch_order.company_name,
+                "identification_number": batch_order.identification_number,
+                "address": batch_order.address,
+                "city": batch_order.city,
+                "postcode": batch_order.postcode,
+                "country": batch_order.country.code,
+                "contact_email": batch_order.administrative_email,
+                "contact_name": (
+                    f"{batch_order.administrative_firstname} {batch_order.administrative_lastname}"
+                ),
+            },
+        )
 
     def test_api_batch_order_create_authenticated_fails_offering_rule_no_more_seats_available(
         self,
@@ -209,7 +188,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=10,
         )
         factories.OfferingRuleFactory(
@@ -227,10 +206,21 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             "city": "Paradise",
             "postcode": "2900",
             "country": "FR",
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-            ],
+            "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "jane@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -268,9 +258,6 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             "city": "Paradise",
             "postcode": "2900",
             "country": "FR",
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-            ],
         }
 
         response = self.client.post(
@@ -281,58 +268,6 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
-
-    def test_api_batch_order_create_authenticated_when_offering_rule_for_relation_has_discount(
-        self,
-    ):
-        """
-        When the offering rule has a discount and enough available seats, the batch order
-        should be created with the discounted price.
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        offering = factories.OfferingFactory(
-            product__contract_definition=factories.ContractDefinitionFactory(),
-            product__price=10,
-        )
-        offering_rule = factories.OfferingRuleFactory(
-            discount=factories.DiscountFactory(rate=0.1),
-            course_product_relation=offering,
-            is_active=True,
-            nb_seats=4,
-        )
-        data = {
-            "offering_id": offering.id,
-            "nb_seats": 3,
-            "company_name": "Acme Org",
-            "identification_number": "123",
-            "address": "Street of awesomeness",
-            "city": "Paradise",
-            "postcode": "2900",
-            "country": "FR",
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-                {"first_name": "Jane", "last_name": "Doe"},
-                {"first_name": "Joanie", "last_name": "Richie"},
-            ],
-        }
-
-        response = self.client.post(
-            "/api/v1.0/batch-orders/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-            content_type="application/json",
-            data=data,
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
-
-        batch_order = models.BatchOrder.objects.get(owner=user)
-
-        self.assertEqual(batch_order.owner, user)
-        self.assertEqual(batch_order.offering, offering)
-        self.assertEqual(batch_order.nb_seats, 3)
-        self.assertEqual(batch_order.offering_rules.first(), offering_rule)
-        self.assertEqual(batch_order.total, Decimal("27.00"))
 
     def test_api_batch_order_create_auto_assign_organization_with_least_orders(self):
         """
@@ -347,7 +282,8 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization, expected_organization],
-            product__contract_definition=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
         )
 
         ignored_states = [
@@ -389,9 +325,21 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             "city": "Paradise",
             "postcode": "2900",
             "country": "FR",
-            "trainees": [
-                {"first_name": "John", "last_name": "Doe"},
-            ],
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "janedoe@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
         }
 
         response = self.client.post(
@@ -406,3 +354,51 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         batch_order = models.BatchOrder.objects.get(relation=offering)
 
         self.assertEqual(batch_order.organization, expected_organization)
+
+    def test_api_batch_order_create_with_product_without_quote_definition(self):
+        """
+        Authenticated user cannot create a batch order when the product is not attached
+        to a quote definition.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=None,
+        )
+
+        data = {
+            "offering_id": offering.id,
+            "nb_seats": 2,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            "organization_id": offering.organizations.first().id,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "jane@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+        }
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
