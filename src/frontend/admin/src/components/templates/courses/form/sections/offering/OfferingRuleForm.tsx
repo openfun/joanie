@@ -14,7 +14,6 @@ import { DiscountSelect } from "@/components/presentational/discount/DiscountSel
 import { RHFDateTimePicker } from "@/components/presentational/hook-form/RHFDateTimePicker";
 import { useOfferingRule } from "@/hooks/useOfferingRule/useOfferingRule";
 import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
-import { VoucherSelect } from "@/components/presentational/voucher/VoucherSelect";
 
 const messages = defineMessages({
   descriptionInputLabel: {
@@ -164,12 +163,6 @@ export function OfferingRuleForm({
               name="discount_id"
               label={intl.formatMessage(messages.discountLabel)}
               helperText={form.formState.errors.discount_id?.message}
-            />
-          </Grid2>
-          <Grid2 size={12}>
-            <VoucherSelect
-              name="voucher_id"
-              label={intl.formatMessage(messages.voucherLabel)}
             />
           </Grid2>
           <Grid2 size={12}>

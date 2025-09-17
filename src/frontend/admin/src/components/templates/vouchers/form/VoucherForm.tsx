@@ -16,6 +16,7 @@ import { useFormSubmit } from "@/hooks/form/useFormSubmit";
 import { ServerSideErrorForm } from "@/types/utils";
 import { genericUpdateFormError } from "@/utils/forms";
 import { useVouchers } from "@/hooks/useVouchers/useVouchers";
+import { DiscountSelect } from "@/components/presentational/discount/DiscountSelect";
 
 const messages = defineMessages({
   generalSubtitle: {
@@ -30,8 +31,8 @@ const messages = defineMessages({
   },
   discountIdLabel: {
     id: "components.templates.vouchers.form.discountIdLabel",
-    defaultMessage: "Discount (ID)",
-    description: "Label for the discount_id field",
+    defaultMessage: "Discount",
+    description: "Label for the discount field",
   },
   discountIdHelp: {
     id: "components.templates.vouchers.form.discountIdHelp",
@@ -160,11 +161,9 @@ export function VoucherForm({ voucher, fromVoucher, ...props }: Props) {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <RHFTextField
+              <DiscountSelect
                 name="discount_id"
                 label={intl.formatMessage(messages.discountIdLabel)}
-                helperText={intl.formatMessage(messages.discountIdHelp)}
-                placeholder="<discount-id>"
               />
             </Grid>
 

@@ -13,6 +13,7 @@ import { usePaginatedTableResource } from "@/components/presentational/table/use
 import { Voucher, VoucherQuery } from "@/services/api/models/Voucher";
 import { useVouchers } from "@/hooks/useVouchers/useVouchers";
 import { VoucherFilters } from "@/components/templates/vouchers/filters/VoucherFilters";
+import { getDiscountLabel } from "@/services/api/models/Discount";
 
 const messages = defineMessages({
   codeHeader: {
@@ -71,6 +72,7 @@ export function VouchersList(props: Props) {
       field: "discount",
       headerName: intl.formatMessage(messages.discountHeader),
       flex: 1,
+      renderCell: (cell) => getDiscountLabel(cell.row.discount),
     },
     {
       field: "multiple_use",
