@@ -10,8 +10,8 @@ from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
 
-from .certificate import CertificateViewSetFilter
-from .enrollment import EnrollmentViewSetFilter
+from .certificate import CertificateViewSetFilter  # pylint: disable=unused-import
+from .enrollment import EnrollmentViewSetFilter  # pylint: disable=unused-import
 
 
 class OrderViewSetFilter(filters.FilterSet):

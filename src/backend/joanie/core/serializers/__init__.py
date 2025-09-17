@@ -1,5 +1,5 @@
+# pylint: disable=wildcard-import,unused-wildcard-import
 """Serializers for Joanie Core app."""
-# pylint: disable=wildcard-import
 
 from .admin import *
 from .base import *

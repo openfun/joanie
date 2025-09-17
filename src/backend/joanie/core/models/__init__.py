@@ -1,6 +1,6 @@
+# pylint: disable=wildcard-import,unused-wildcard-import
 """Make models.py a module containing one file per model as it was getting too long."""
 
-# pylint: disable=wildcard-import
 from .accounts import *
 from .activity_logs import *
 from .certifications import *

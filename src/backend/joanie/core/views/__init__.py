@@ -1,3 +1,4 @@
+# pylint: disable=unused-wildcard-import
 """Views of the ``core`` app of the Joanie project."""
 
 from .certificate import *
