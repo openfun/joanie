@@ -348,14 +348,16 @@ class DiscountAdminFilterSet(filters.FilterSet):
             return Q(amount__icontains=amount)
 
         def rate_filter(rate, exact=False):
+            exact_rate = rate
             try:
-                rate = int(rate) / 100
+                exact_rate = int(exact_rate) / 100
             except ValueError:
                 pass
 
-            if exact and rate:
-                return Q(rate=rate)
-            return Q(rate__icontains=rate)
+            if exact and exact_rate:
+                return Q(rate=exact_rate)
+
+            return Q(rate__icontains=rate) | Q(rate__icontains=exact_rate)
 
         currency_symbol = get_default_currency_symbol()
         if currency_symbol in value:
