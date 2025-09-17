@@ -61,7 +61,6 @@ class VouchersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertEqual(voucher.multiple_use, False)
         self.assertEqual(voucher.multiple_users, False)
         self.assertEqual(
-            response.json(),
             {
                 "id": str(voucher.id),
                 "code": "TEST_VOUCHER",
@@ -76,7 +75,9 @@ class VouchersAdminApiCreateTestCase(BaseAPITestCase):
                 "multiple_users": False,
                 "created_on": format_date(voucher.created_on),
                 "updated_on": format_date(voucher.updated_on),
+                "orders_count": voucher.orders.count(),
             },
+            response.json(),
         )
 
     def test_api_admin_vouchers_create_with_invalid_data(self):
@@ -90,8 +91,8 @@ class VouchersAdminApiCreateTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
-            response.json(),
             {"discount": ["This field cannot be null."]},
+            response.json(),
         )
 
     def test_api_admin_vouchers_create_with_duplicate_code(self):

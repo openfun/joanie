@@ -107,12 +107,13 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "total": float(order.total),
                     "total_currency": get_default_currency_symbol(),
                     "discount": order.discount,
+                    "voucher": order.voucher,
                 }
                 for order in sorted(orders, key=lambda x: x.created_on, reverse=True)
             ],
         }
 
-        self.assertEqual(content, expected_content)
+        self.assertEqual(expected_content, content)
 
     def test_api_admin_orders_list_filter_by_course_ids(self):
         """
