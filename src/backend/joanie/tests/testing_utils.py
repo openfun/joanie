@@ -1,5 +1,5 @@
 # ruff: noqa: S311, PLR0913, PLR0915
-# pylint:disable=too-many-lines
+# pylint: disable=too-many-lines
 """Test utils module."""
 
 import random
@@ -698,7 +698,13 @@ class Demo:
                 order.set_installment_refunded(order.payment_schedule[0]["id"])
                 order.cancel_remaining_installments()
 
-    def generate_simple(self):  # pylint: disable=too-many-locals,too-many-statements
+    def generate_simple(
+        self,
+        create_certificate=False,
+        create_certificate_discount=False,
+        create_credential=False,
+        create_credential_discount=False,
+    ):  # pylint: disable=too-many-locals,too-many-statements
         """Generate simple fake data."""
         translation.activate("en-us")
 
@@ -738,16 +744,32 @@ class Demo:
             amount=10,
             rate=None,
         )
+        factories.VoucherFactory(
+            discount=factories.DiscountFactory(rate=0.3),
+            code="Liam30",
+            multiple_use=True,
+            multiple_users=True,
+        )
 
-        item_options = [
-            "Certificate product",
-            "Certificate product with discount",
-            "Credential product",
-            "Credential product with discount",
-        ]
-        items = select_multiple(item_options)
+        if (
+            not create_credential
+            and not create_certificate
+            and not create_certificate_discount
+            and not create_credential_discount
+        ):
+            item_options = [
+                "Certificate product",
+                "Certificate product with discount",
+                "Credential product",
+                "Credential product with discount",
+            ]
+            items = select_multiple(item_options)
+            create_certificate = "Certificate product" in items
+            create_certificate_discount = "Certificate product with discount" in items
+            create_credential = "Credential product" in items
+            create_credential_discount = "Credential product with discount" in items
 
-        if "Certificate product" in items:
+        if create_certificate:
             course = factories.CourseFactory(
                 code="00000",
                 title="Course for certificate",
@@ -788,7 +810,7 @@ class Demo:
 
             course_run_certificate.save()
 
-        if "Certificate product with discount" in items:
+        if create_certificate_discount:
             course = factories.CourseFactory(
                 code="00001",
                 title="Course for certificate with discount",
@@ -848,7 +870,7 @@ class Demo:
 
             course_run_certificate_discount.save()
 
-        if "Credential product" in items:
+        if create_credential:
             course = factories.CourseFactory(
                 code="00002",
                 title="Course for credential",
@@ -880,6 +902,7 @@ class Demo:
                 ),
                 quote_definition=factories.QuoteDefinitionFactory(),
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
+                contract_definition=factories.ContractDefinitionFactory(),
                 title="Credential Product",
                 courses=[course_run_credential.course],
                 target_courses=[
@@ -890,9 +913,20 @@ class Demo:
             self.log(f'Successfully created "{credential_product.title}" product')
             self.log("")
 
+            credential_offering = models.CourseProductRelation.objects.get(
+                course=credential_product.courses.first(),
+                product=credential_product,
+            )
+            batch_order = factories.BatchOrderFactory(
+                state=enums.BATCH_ORDER_STATE_COMPLETED,
+                offering=credential_offering,
+                nb_seats=1,
+            )
+            batch_order.generate_orders()
+
             course_run_credential.save()
 
-        if "Credential product with discount" in items:
+        if create_credential_discount:
             course = factories.CourseFactory(
                 code="00003",
                 title="Course for credential with discount",
@@ -926,6 +960,7 @@ class Demo:
                 ),
                 quote_definition=factories.QuoteDefinitionFactory(),
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
+                contract_definition=factories.ContractDefinitionFactory(),
                 title="Credential Product with discount",
                 courses=[course_run_credential_discount.course],
                 target_courses=[
@@ -959,6 +994,13 @@ class Demo:
                 course_product_relation=credential_discount_offering,
                 discount=discount,
             )
+
+            batch_order = factories.BatchOrderFactory(
+                state=enums.BATCH_ORDER_STATE_COMPLETED,
+                offering=credential_discount_offering,
+                nb_seats=1,
+            )
+            batch_order.generate_orders()
             self.log("Successfully created offering rule")
             self.log("")
 
