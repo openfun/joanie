@@ -12,6 +12,10 @@ and this project adheres to
 
 - Changed background color for micro-credential default template
 
+### Fixed
+
+- Style issues in micro-credentials templates
+
 ## [3.0.3] - 2025-09-04
 
 ### Changed
