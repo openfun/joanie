@@ -7,14 +7,14 @@ from importlib import reload
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.urls import clear_url_caches
+from django.urls import clear_url_caches, reverse
 from django.utils import timezone as django_timezone
 from django.utils import translation
 
 from beaupy import select_multiple
 
 from joanie.core import enums, factories, models
-from joanie.core.models import CourseState
+from joanie.core.models import Certificate, CourseState
 from joanie.demo.defaults import NB_DEV_OBJECTS
 from joanie.payment import factories as payment_factories
 
@@ -948,3 +948,52 @@ class Demo:
             self.log("")
 
             course_run_credential_discount.save()
+
+        # Create microcredential certificates of each options (default and unicamp)
+        course = factories.CourseFactory(
+            organizations=[organization],
+            title="Course for certificate",
+        )
+        skills = [
+            factories.SkillFactory(title=title)
+            for title in ["Python", "Django", "JavaScript", "React"]
+        ]
+        certificate_templates = [
+            (
+                enums.MICROCREDENTIAL_DEGREE_DEFAULT,
+                "debug.certificate_definition.microcredential_degree_default",
+            ),
+            (
+                enums.MICROCREDENTIAL_DEGREE_UNICAMP,
+                "debug.certificate_definition.microcredential_degree_unicamp",
+            ),
+        ]
+
+        certificates = []
+
+        for template_name, url_name in certificate_templates:
+            certificate_definition = factories.CertificateDefinitionFactory(
+                template=template_name
+            )
+            order = factories.OrderGeneratorFactory(
+                state="completed",
+                organization=organization,
+                product__type="credential",
+                product__certification_level=2,
+                product__certificate_definition=certificate_definition,
+                product__teachers=factories.TeacherFactory.create_batch(2),
+                product__skills=skills,
+                course=course,
+            )
+            certificate = Certificate.objects.create(
+                order=order,
+                organization=organization,
+                certificate_definition=certificate_definition,
+            )
+            certificates.append((certificate, url_name))
+
+        for certificate, url_name in certificates:
+            url = reverse(url_name)
+            self.log(
+                f"Successfully created certificate: http://localhost:8071{url}?pk={certificate.id}"
+            )
