@@ -5726,6 +5726,21 @@
                     "administrative_telephone": {
                         "type": "string"
                     },
+                    "signatory_firstname": {
+                        "type": "string"
+                    },
+                    "signatory_lastname": {
+                        "type": "string"
+                    },
+                    "signatory_profession": {
+                        "type": "string"
+                    },
+                    "signatory_email": {
+                        "type": "string"
+                    },
+                    "signatory_telephone": {
+                        "type": "string"
+                    },
                     "billing_address": {
                         "$ref": "#/components/schemas/BatchOrderBillingAddress"
                     },
@@ -5764,6 +5779,11 @@
                     "postcode",
                     "quote",
                     "relation",
+                    "signatory_email",
+                    "signatory_firstname",
+                    "signatory_lastname",
+                    "signatory_profession",
+                    "signatory_telephone",
                     "state",
                     "total"
                 ]
@@ -5974,6 +5994,26 @@
                         "type": "string",
                         "minLength": 1
                     },
+                    "signatory_firstname": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "signatory_lastname": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "signatory_profession": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "signatory_email": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "signatory_telephone": {
+                        "type": "string",
+                        "minLength": 1
+                    },
                     "billing_address": {
                         "$ref": "#/components/schemas/BatchOrderBillingAddressRequest"
                     },
@@ -5995,7 +6035,12 @@
                     "nb_seats",
                     "payment_method",
                     "postcode",
-                    "relation_id"
+                    "relation_id",
+                    "signatory_email",
+                    "signatory_firstname",
+                    "signatory_lastname",
+                    "signatory_profession",
+                    "signatory_telephone"
                 ]
             },
             "Certificate": {

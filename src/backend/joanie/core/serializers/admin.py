@@ -1769,6 +1769,11 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
     administrative_profession = serializers.CharField(required=True)
     administrative_email = serializers.CharField(required=True)
     administrative_telephone = serializers.CharField(required=True)
+    signatory_firstname = serializers.CharField(required=True)
+    signatory_lastname = serializers.CharField(required=True)
+    signatory_profession = serializers.CharField(required=True)
+    signatory_email = serializers.CharField(required=True)
+    signatory_telephone = serializers.CharField(required=True)
     billing_address = AdminBatchOrderBillingAddressSerializer(required=False)
     funding_entity = serializers.CharField(required=False)
     funding_amount = serializers.DecimalField(
@@ -1808,6 +1813,11 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "administrative_profession",
             "administrative_email",
             "administrative_telephone",
+            "signatory_firstname",
+            "signatory_lastname",
+            "signatory_profession",
+            "signatory_email",
+            "signatory_telephone",
             "billing_address",
             "funding_entity",
             "funding_amount",

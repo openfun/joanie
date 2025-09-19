@@ -10,6 +10,42 @@ from joanie.tests.base import BaseAPITestCase
 class BatchOrderCreateAPITest(BaseAPITestCase):
     """Tests for BatchOrder Create API"""
 
+    def create_payload_batch_order(self, offering, nb_seats, payment_method):
+        """
+        Create batch order required payload data.
+        """
+        return {
+            "offering_id": offering.id,
+            "nb_seats": nb_seats,
+            "company_name": "Acme Org",
+            "identification_number": "123",
+            "address": "Street of awesomeness",
+            "city": "Paradise",
+            "postcode": "2900",
+            "country": "FR",
+            "payment_method": payment_method,
+            "organization_id": offering.organizations.first().id,
+            "billing_address": {
+                "company_name": " Acme Corp",
+                "identification_number": "456",
+                "address": "Street of Hogwarts",
+                "postcode": "75000",
+                "country": "FR",
+                "contact_email": "jane@example.org",
+                "contact_name": "Jane Doe",
+            },
+            "administrative_firstname": "John",
+            "administrative_lastname": "Wick",
+            "administrative_profession": "Human Resources",
+            "administrative_email": "example@example.org",
+            "administrative_telephone": "0123456789",
+            "signatory_firstname": "Jane",
+            "signatory_lastname": "Doe",
+            "signatory_profession": "General Directory",
+            "signatory_email": "example2@example.org",
+            "signatory_telephone": "0987654321",
+        }
+
     def test_api_batch_order_create_anonymous(self):
         """Anonymous user shouldn't be able to create a batch order"""
 
@@ -28,6 +64,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=456,
         )
@@ -41,6 +78,11 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             "administrative_profession": "Human Resources",
             "administrative_email": "example@example.org",
             "administrative_telephone": "0123456789",
+            "signatory_firstname": "Jane",
+            "signatory_lastname": "Doe",
+            "signatory_profession": "General Directory",
+            "signatory_email": "example2@example.org",
+            "signatory_telephone": "0987654321",
             "vat_registration": "987654321",
         }
 
@@ -71,43 +113,19 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
             product__price=10,
         )
 
-        data = {
-            "offering_id": offering.id,
-            "nb_seats": 2,
-            "company_name": "Acme Org",
-            "identification_number": "123",
-            "address": "Street of awesomeness",
-            "city": "Paradise",
-            "postcode": "2900",
-            "country": "FR",
-            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-            "organization_id": offering.organizations.first().id,
-            "billing_address": {
-                "company_name": " Acme Corp",
-                "identification_number": "456",
-                "address": "Street of Hogwarts",
-                "postcode": "75000",
-                "country": "FR",
-                "contact_email": "jane@example.org",
-                "contact_name": "Jane Doe",
-            },
-            "administrative_firstname": "John",
-            "administrative_lastname": "Wick",
-            "administrative_profession": "Human Resources",
-            "administrative_email": "example@example.org",
-            "administrative_telephone": "0123456789",
-        }
-
         response = self.client.post(
             "/api/v1.0/batch-orders/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
-            data=data,
+            data=self.create_payload_batch_order(
+                offering, 2, enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+            ),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
@@ -117,7 +135,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertEqual(batch_order.owner, user)
         self.assertEqual(batch_order.offering, offering)
         self.assertEqual(batch_order.nb_seats, 2)
-        self.assertEqual(batch_order.company_name, data["company_name"])
+        self.assertEqual(batch_order.company_name, "Acme Org")
         self.assertIsNotNone(batch_order.organization)
         self.assertEqual(batch_order.total, Decimal("0.00"))
 
@@ -130,27 +148,15 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
         )
 
-        data = {
-            "offering_id": offering.id,
-            "nb_seats": 2,
-            "company_name": "Acme Org",
-            "identification_number": "123",
-            "address": "Street of awesomeness",
-            "city": "Paradise",
-            "postcode": "2900",
-            "country": "FR",
-            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-            "organization_id": offering.organizations.first().id,
-            "administrative_firstname": "John",
-            "administrative_lastname": "Wick",
-            "administrative_profession": "Human Resources",
-            "administrative_email": "example@example.org",
-            "administrative_telephone": "0123456789",
-        }
+        data = self.create_payload_batch_order(
+            offering, 2, enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+        )
+        del data["billing_address"]
 
         response = self.client.post(
             "/api/v1.0/batch-orders/",
@@ -188,6 +194,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__price=10,
         )
@@ -197,31 +204,10 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             nb_seats=1,
         )
 
-        data = {
-            "offering_id": offering.id,
-            "nb_seats": 2,
-            "company_name": "Acme Org",
-            "identification_number": "123",
-            "address": "Street of awesomeness",
-            "city": "Paradise",
-            "postcode": "2900",
-            "country": "FR",
-            "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
-            "billing_address": {
-                "company_name": " Acme Corp",
-                "identification_number": "456",
-                "address": "Street of Hogwarts",
-                "postcode": "75000",
-                "country": "FR",
-                "contact_email": "jane@example.org",
-                "contact_name": "Jane Doe",
-            },
-            "administrative_firstname": "John",
-            "administrative_lastname": "Wick",
-            "administrative_profession": "Human Resources",
-            "administrative_email": "example@example.org",
-            "administrative_telephone": "0123456789",
-        }
+        data = self.create_payload_batch_order(
+            offering, 2, enums.BATCH_ORDER_WITH_BANK_TRANSFER
+        )
+        del data["organization_id"]
 
         response = self.client.post(
             "/api/v1.0/batch-orders/",
@@ -282,6 +268,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         )
         offering = factories.OfferingFactory(
             organizations=[organization, expected_organization],
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
         )
@@ -316,31 +303,10 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 state=state,
             )
 
-        data = {
-            "offering_id": offering.id,
-            "nb_seats": 1,
-            "company_name": "Acme Org",
-            "identification_number": "123",
-            "address": "Street of awesomeness",
-            "city": "Paradise",
-            "postcode": "2900",
-            "country": "FR",
-            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-            "billing_address": {
-                "company_name": " Acme Corp",
-                "identification_number": "456",
-                "address": "Street of Hogwarts",
-                "postcode": "75000",
-                "country": "FR",
-                "contact_email": "janedoe@example.org",
-                "contact_name": "Jane Doe",
-            },
-            "administrative_firstname": "John",
-            "administrative_lastname": "Wick",
-            "administrative_profession": "Human Resources",
-            "administrative_email": "example@example.org",
-            "administrative_telephone": "0123456789",
-        }
+        data = self.create_payload_batch_order(
+            offering, 2, enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+        )
+        del data["organization_id"]
 
         response = self.client.post(
             "/api/v1.0/batch-orders/",
@@ -363,42 +329,18 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=None,
         )
-
-        data = {
-            "offering_id": offering.id,
-            "nb_seats": 2,
-            "company_name": "Acme Org",
-            "identification_number": "123",
-            "address": "Street of awesomeness",
-            "city": "Paradise",
-            "postcode": "2900",
-            "country": "FR",
-            "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-            "organization_id": offering.organizations.first().id,
-            "billing_address": {
-                "company_name": " Acme Corp",
-                "identification_number": "456",
-                "address": "Street of Hogwarts",
-                "postcode": "75000",
-                "country": "FR",
-                "contact_email": "jane@example.org",
-                "contact_name": "Jane Doe",
-            },
-            "administrative_firstname": "John",
-            "administrative_lastname": "Wick",
-            "administrative_profession": "Human Resources",
-            "administrative_email": "example@example.org",
-            "administrative_telephone": "0123456789",
-        }
 
         response = self.client.post(
             "/api/v1.0/batch-orders/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
-            data=data,
+            data=self.create_payload_batch_order(
+                offering, 2, enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+            ),
         )
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
