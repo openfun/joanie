@@ -253,6 +253,11 @@ def prepare_batch_order_context(batch_order):
         "company_administrative_profession": _("<ADMIN_PROFESSION>"),
         "company_administrative_telephone": _("<ADMIN_TELEPHONE>"),
         "company_administrative_email": _("<ADMIN_EMAIL>"),
+        "signatory_firstname": _("<SIGNATORY_FIRSTNAME>"),
+        "signatory_lastname": _("<SIGNATORY_LASTNAME>"),
+        "signatory_email": _("<SIGNATORY_EMAIL>"),
+        "signatory_telephone": _("<SIGNATORY_TELEPHONE>"),
+        "signatory_profession": _("<SIGNATORY_PROFESSION>"),
         "number_seats": _("<NUMBER_OF_SEATS_RESERVED>"),
         "total": _("<TOTAL>"),
         "billing_address": {
@@ -282,6 +287,11 @@ def prepare_batch_order_context(batch_order):
                 "company_administrative_profession": batch_order.administrative_profession,
                 "company_administrative_telephone": batch_order.administrative_telephone,
                 "company_administrative_email": batch_order.administrative_email,
+                "signatory_firstname": batch_order.signatory_firstname,
+                "signatory_lastname": batch_order.signatory_lastname,
+                "signatory_email": batch_order.signatory_email,
+                "signatory_telephone": batch_order.signatory_telephone,
+                "signatory_profession": batch_order.signatory_profession,
                 "number_seats": batch_order.nb_seats,
                 "total": str(batch_order.total),
                 "billing_address": {

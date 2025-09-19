@@ -352,6 +352,11 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             administrative_lastname="Snow",
             administrative_profession="Buyer",
             administrative_email="jonsnow@example.acme",
+            signatory_firstname="Janette",
+            signatory_lastname="Doe",
+            signatory_email="janette@example.acme",
+            signatory_telephone="0987654321",
+            signatory_profession="Manager",
         )
 
         file_bytes = issuers.generate_document(
@@ -385,8 +390,13 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         self.assertIn("00000", document_text)
         self.assertIn("Unknown City", document_text)
         self.assertIn("FR", document_text)
-        self.assertIn("Jon Snow, Buyer", document_text)
+        # Administrative representative part
+        self.assertIn("Jon Snow - Buyer", document_text)
         self.assertIn("jonsnow@example.acme", document_text)
+        # Signatory part
+        self.assertIn("Janette Doe", document_text)
+        self.assertIn("janette@example.acme", document_text)
+        self.assertIn("0987654321", document_text)
 
         # - Course information should be displayed
         self.assertIn("00002", document_text)
