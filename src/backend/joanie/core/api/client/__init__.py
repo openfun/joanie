@@ -829,24 +829,6 @@ class BatchOrderViewSet(
         request=None,
         responses={
             (200, "application/json"): OpenApiTypes.OBJECT,
-        },
-    )
-    @action(detail=True, methods=["POST"], url_path="submit-for-signature")
-    def submit_for_signature(self, request, pk=None):  # pylint: disable=unused-argument
-        """
-        Create the contract from the product's contract definition and get the invitation
-        link to sign it.
-        """
-        batch_order = self.get_object()
-
-        invitation_link = batch_order.submit_for_signature(request.user)
-
-        return JsonResponse({"invitation_link": invitation_link}, status=HTTPStatus.OK)
-
-    @extend_schema(
-        request=None,
-        responses={
-            (200, "application/json"): OpenApiTypes.OBJECT,
             404: serializers.ErrorResponseSerializer,
             422: serializers.ErrorResponseSerializer,
         },
@@ -1294,6 +1276,39 @@ class OrganizationViewSet(
         batch_order.flow.update()
 
         return Response(status=HTTPStatus.OK)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="batch_order_id",
+                description="Batch order id in string, must be provided.",
+                required=True,
+                type=OpenApiTypes.UUID,
+                many=False,
+            ),
+        ],
+    )
+    @action(methods=["POST"], detail=True, url_path="submit-for-signature")
+    def submit_for_signature(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Sends an email to the batch order owner with the invitation signature link to sign
+        the contract.
+        """
+        organization = self.get_object()
+        batch_order_id = request.data.get("batch_order_id")
+
+        batch_order = get_object_or_404(
+            models.BatchOrder, id=batch_order_id, organization=organization
+        )
+
+        if not batch_order.is_signable:
+            raise ValidationError(_("Batch order is not eligible to get signed."))
+
+        invitation_link = batch_order.submit_for_signature(batch_order.owner)
+
+        send_mail_invitation_link(batch_order, invitation_link)
+
+        return Response(status=HTTPStatus.ACCEPTED)
 
 
 class OrganizationAccessViewSet(
