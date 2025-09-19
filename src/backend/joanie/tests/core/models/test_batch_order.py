@@ -23,40 +23,6 @@ from joanie.tests.base import LoggingTestCase
 class BatchOrderModelsTestCase(LoggingTestCase):
     """Test suite for batch order model."""
 
-    def test_models_batch_order_when_the_product_has_no_contract_definition(self):
-        """
-        When product does not have a contract definition, submitting to signature
-        should fail and raise an error.
-        """
-        user = factories.UserFactory()
-        offering = factories.OfferingFactory(
-            product__contract_definition_order=None,
-            product__contract_definition_batch_order=None,
-            product__quote_definition=factories.QuoteDefinitionFactory(),
-        )
-        batch_order = factories.BatchOrderFactory(owner=user, offering=offering)
-
-        with (
-            self.assertRaises(ValidationError) as context,
-            self.assertLogs("joanie") as logger,
-        ):
-            batch_order.submit_for_signature(user=user)
-
-        self.assertTrue(
-            "No contract definition attached to the contract's product"
-            in str(context.exception)
-        )
-        self.assertLogsEquals(
-            logger.records,
-            [
-                (
-                    "ERROR",
-                    "No contract definition attached to the contract's product.",
-                    {"batch_order": dict, "relation__product": dict},
-                ),
-            ],
-        )
-
     @mock.patch("joanie.core.utils.issuers.generate_document")
     def test_models_batch_order_submit_for_signature_creates_a_contract(
         self, mock_issuer_generate_document
@@ -585,6 +551,29 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         self.assertTrue(
             "Your product doesn't have a quote definition attached, "
+            "aborting create batch order." in str(context.exception)
+        )
+
+    def test_models_batch_order_when_product_has_no_contract_definition_for_batch_order(
+        self,
+    ):
+        """
+        When the product has not contract definition for batch order, it should not be possible
+        to create the batch order
+        """
+        offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=None,
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            factories.BatchOrderFactory(
+                owner=factories.UserFactory(), offering=offering
+            )
+
+        self.assertTrue(
+            "Your product doesn't have a contract definition for batch orders attached, "
             "aborting create batch order." in str(context.exception)
         )
 
