@@ -333,6 +333,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "download_quote": role == enums.OWNER,
             "confirm_quote": role == enums.OWNER,
             "confirm_bank_transfer": role == enums.OWNER,
+            "can_submit_for_signature_batch_order": role == enums.OWNER,
         }
 
     def signature_backend_references_to_sign(self, **kwargs):

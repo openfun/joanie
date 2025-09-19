@@ -34,7 +34,10 @@ from joanie.core.models import CourseProductRelation
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers, webhooks
-from joanie.core.utils.batch_order import validate_success_payment
+from joanie.core.utils.batch_order import (
+    send_mail_invitation_link,
+    validate_success_payment,
+)
 from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.offering import get_serialized_course_runs
 from joanie.core.utils.organization import get_least_active_organization
@@ -1294,6 +1297,44 @@ class OrganizationViewSet(
         batch_order.flow.update()
 
         return Response(status=HTTPStatus.OK)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="batch_order_id",
+                description="Batch order id in string, must be provided.",
+                required=True,
+                type=OpenApiTypes.UUID,
+                many=False,
+            ),
+        ],
+    )
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="submit-for-signature-batch-order",
+        permission_classes=[permissions.CanSubmitForSignatureBatchOrder],
+    )
+    def submit_for_signature_batch_order(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Sends an email to the batch order owner with the invitation signature link to sign
+        the contract.
+        """
+        organization = self.get_object()
+        batch_order_id = request.data.get("batch_order_id")
+
+        batch_order = get_object_or_404(
+            models.BatchOrder, id=batch_order_id, organization=organization
+        )
+
+        if not batch_order.is_signable:
+            raise ValidationError(_("Batch order is not eligible to get signed."))
+
+        invitation_link = batch_order.submit_for_signature(batch_order.owner)
+
+        send_mail_invitation_link(batch_order, invitation_link)
+
+        return Response(status=HTTPStatus.ACCEPTED)
 
 
 class OrganizationAccessViewSet(
