@@ -60,17 +60,14 @@ this template as a base.
                     <dd>
                        <ul>
                           <li>{% translate "Registered company name: " %}{{ batch_order.company_name }}</li>
-                          <li>{% translate "Address: " %}
-                              {{ batch_order.company_address }}, {{ batch_order.company_city }}, {{ batch_order.company_country }}
-                          </li>
-                          <li>{% translate "Postal address: " %}{{ batch_order.company_postcode }}</li>
-                          <li>{% translate "SIRET number: " %}{{ batch_order.company_identification_number|default:"-" }}</li>
-                          <li>{% translate "Legal administrative representative: " %}{{ batch_order.company_administrative_firstname  }} {{ batch_order.company_administrative_lastname  }}, {{ batch_order.company_administrative_profession }}
-                              {{ batch_order.company_administrative_email }} {{ batch_order.company_administrative_telephone }}</li>
-                          <li>{% translate "Billing Address: " %}
+                          <li>{% translate "Address: " %}{{ batch_order.company_address }}, {{ batch_order.company_postcode }} {{ batch_order.company_city }} ({{ batch_order.company_country }})</li>
+                          <li>{% translate "SIRET number: "%}{{ batch_order.company_identification_number|default:"-" }}</li>
+                          <li>{% translate "Authorized administrative signatory: "%}{{ batch_order.signatory_firstname }} {{ batch_order.signatory_lastname }} - {{ batch_order.signatory_profession }} - {{ batch_order.signatory_email }} - {{ batch_order.signatory_telephone }}</li>
+                          <li>{% translate "Legal administrative representative: "%}{{ batch_order.company_administrative_firstname  }} {{ batch_order.company_administrative_lastname  }} - {{ batch_order.company_administrative_profession }} -
+                              {{ batch_order.company_administrative_email }} - {{ batch_order.company_administrative_telephone }}</li>
+                          <li>{% translate "Billing Address: "%}
                             {{ batch_order.billing_address.company_name }},
-                            {{ batch_order.billing_address.address }}{{ batch_order.billing_address.postcode }},
-                            {{ batch_order.billing_address.city }}, {{ batch_order.billing_address.country }}
+                            {{ batch_order.billing_address.address }}, {{ batch_order.billing_address.postcode }} {{ batch_order.billing_address.city }} ({{ batch_order.billing_address.country }})
                           </li>
                       </ul>
                     </dd>
