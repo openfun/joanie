@@ -80,6 +80,11 @@ class BatchOrdersAdminApiListTestCase(TestCase):
                 "administrative_lastname": None,
                 "administrative_telephone": None,
                 "administrative_profession": None,
+                "signatory_email": None,
+                "signatory_firstname": None,
+                "signatory_lastname": None,
+                "signatory_telephone": None,
+                "signatory_profession": None,
                 "quote": {
                     "definition_title": batch_order.quote.definition.title,
                     "has_purchase_order": False,
