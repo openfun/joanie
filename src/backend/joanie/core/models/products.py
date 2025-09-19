@@ -2128,6 +2128,22 @@ class BatchOrder(BaseModel):
         blank=True,
         null=True,
     )
+    # Signatory informations to sign contract
+    signatory_firstname = models.CharField(
+        verbose_name=_("Signatory firstname"), max_length=100, blank=True, null=True
+    )
+    signatory_lastname = models.CharField(
+        verbose_name=_("Signatory lastname"), max_length=100, blank=True, null=True
+    )
+    signatory_email = models.CharField(
+        verbose_name=_("Signatory email"), max_length=100, blank=True, null=True
+    )
+    signatory_telephone = models.CharField(
+        verbose_name=_("Signatory telephone"), max_length=100, blank=True, null=True
+    )
+    signatory_profession = models.CharField(
+        verbose_name=_("Signatory profession"), max_length=100, blank=True, null=True
+    )
     nb_seats = models.PositiveSmallIntegerField(
         verbose_name=_("Number of seats"),
         help_text=_("The number of seats to reserve"),
@@ -2194,10 +2210,20 @@ class BatchOrder(BaseModel):
         If no billing address was given on creation, it means that the billing address does
         not differenciates from the buyer's company address.
         """
+        if not self.relation.product.contract_definition_batch_order:
+            raise ValidationError(
+                _(
+                    "You product doesn't have a contract definition for batch orders attached, "
+                    "aborting create batch order."
+                )
+            )
+
         if not self.relation.product.quote_definition:
             raise ValidationError(
-                "Your product doesn't have a quote definition attached, "
-                "aborting create batch order."
+                _(
+                    "Your product doesn't have a quote definition attached, "
+                    "aborting create batch order."
+                )
             )
 
         if not self.billing_address:
@@ -2327,7 +2353,7 @@ class BatchOrder(BaseModel):
             raise ValidationError(message)
 
         if not self.is_signable:
-            message = "The batch order isn't eligible to be signed"
+            message = _("The batch order isn't eligible to be signed")
             logger.error(
                 message,
                 extra={
@@ -2339,7 +2365,7 @@ class BatchOrder(BaseModel):
             raise ValidationError(message)
 
         if self.is_signed_by_owner:
-            message = "Contract is already signed by the buyer, cannot resubmit."
+            message = _("Contract is already signed by the buyer, cannot resubmit.")
             logger.error(
                 message, extra={"context": {"contract": self.contract.to_dict()}}
             )

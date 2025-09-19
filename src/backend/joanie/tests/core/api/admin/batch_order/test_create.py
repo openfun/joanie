@@ -40,6 +40,11 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             "administrative_profession": "Human Resources",
             "administrative_email": "example@example.org",
             "administrative_telephone": "0123456789",
+            "signatory_firstname": "Jane",
+            "signatory_lastname": "Doe",
+            "signatory_profession": "General Directory",
+            "signatory_email": "example2@example.org",
+            "signatory_telephone": "0987654321",
         }
 
     def test_api_admin_batch_orders_create_anonymous(self):
@@ -78,7 +83,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         offering = factories.OfferingFactory(
             product__quote_definition=factories.QuoteDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
-            product__price=10,
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
         )
         company_keys = [
             "company_name",
@@ -170,8 +175,8 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
-            product__price=10,
         )
         data = self.create_payload_batch_order(
             None, offering, 2, enums.BATCH_ORDER_WITH_CARD_PAYMENT
@@ -195,8 +200,8 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
 
         owner = factories.UserFactory()
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
-            product__price=10,
         )
         factories.OfferingRuleFactory(
             course_product_relation=offering,
@@ -229,9 +234,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             factories.OrganizationFactory.create_batch(2)
         )
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
-            product__price=10,
             organizations=[organization, expected_organization],
         )
         factories.OfferingRuleFactory(
@@ -272,9 +277,9 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         owner = factories.UserFactory()
         organization1, organization2 = factories.OrganizationFactory.create_batch(2)
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
-            product__price=10,
             organizations=[organization1, organization2],
         )
         factories.OfferingRuleFactory(
@@ -312,8 +317,8 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         owner = factories.UserFactory()
         offering = factories.OfferingFactory(
             product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
-            product__price=10,
         )
         factories.OfferingRuleFactory(
             course_product_relation=offering,
@@ -353,6 +358,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
         self.client.login(username=admin.username, password="password")
 
         offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
         )
@@ -374,6 +380,11 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             "administrative_profession": "Human Resources",
             "administrative_email": "example@example.org",
             "administrative_telephone": "0123456789",
+            "signatory_firstname": "Jane",
+            "signatory_lastname": "Doe",
+            "signatory_profession": "General Directory",
+            "signatory_email": "example2@example.org",
+            "signatory_telephone": "0987654321",
         }
 
         response = self.client.post(
