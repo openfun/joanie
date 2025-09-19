@@ -527,45 +527,6 @@
                 }
             }
         },
-        "/api/v1.0/batch-orders/{id}/submit-for-signature/": {
-            "post": {
-                "operationId": "batch_orders_submit_for_signature_create",
-                "description": "Create the contract from the product's contract definition and get the invitation\nlink to sign it.",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "description": "primary key for the record as UUID"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "batch-orders"
-                ],
-                "security": [
-                    {
-                        "DelegatedJWTAuthentication": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {}
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/api/v1.0/certificates/": {
             "get": {
                 "operationId": "certificates_list",

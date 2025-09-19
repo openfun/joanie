@@ -832,24 +832,6 @@ class BatchOrderViewSet(
         request=None,
         responses={
             (200, "application/json"): OpenApiTypes.OBJECT,
-        },
-    )
-    @action(detail=True, methods=["POST"], url_path="submit-for-signature")
-    def submit_for_signature(self, request, pk=None):  # pylint: disable=unused-argument
-        """
-        Create the contract from the product's contract definition and get the invitation
-        link to sign it.
-        """
-        batch_order = self.get_object()
-
-        invitation_link = batch_order.submit_for_signature(request.user)
-
-        return JsonResponse({"invitation_link": invitation_link}, status=HTTPStatus.OK)
-
-    @extend_schema(
-        request=None,
-        responses={
-            (200, "application/json"): OpenApiTypes.OBJECT,
             404: serializers.ErrorResponseSerializer,
             422: serializers.ErrorResponseSerializer,
         },
