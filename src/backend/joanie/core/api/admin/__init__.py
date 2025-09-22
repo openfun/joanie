@@ -675,6 +675,7 @@ class OrderViewSet(
         "owner_name": "owner__first_name",
         "product_title": "product__translations__title",
         "organization_title": "organization__translations__title",
+        "voucher": "voucher__code",
     }
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
