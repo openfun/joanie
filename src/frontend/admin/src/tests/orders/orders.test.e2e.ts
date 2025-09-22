@@ -570,6 +570,9 @@ test.describe("Order list", () => {
     await expect(
       page.getByRole("columnheader", { name: "Discount" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Voucher" }),
+    ).toBeVisible();
   });
 
   test("Check all the orders are presents", async ({ page }) => {
