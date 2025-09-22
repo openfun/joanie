@@ -322,6 +322,7 @@ class OrderAdminFilterSet(filters.FilterSet):
             | Q(owner__username__icontains=value)
             | Q(owner__first_name__icontains=value)
             | Q(owner__last_name__icontains=value)
+            | Q(voucher__code__icontains=value)
         ).distinct()
 
 
