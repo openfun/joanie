@@ -899,6 +899,29 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         self.assertEqual(content["count"], 5)
         self.assertListEqual(sorted(response_ids), sorted(expected_ids))
 
+    def test_api_admin_orders_list_filter_by_voucher(self):
+        """
+        Authenticated admin user should be able to list all existing orders filtered by
+        voucher code.
+        """
+        voucher = factories.VoucherFactory(code="voucher_code")
+        factories.OrderFactory.create_batch(3)
+        order_voucher = factories.OrderFactory(voucher=voucher)
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 4)
+
+        response = self.client.get(f"/api/v1.0/admin/orders/?query={voucher.code}")
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        content = response.json()
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(order_voucher.id))
+
     def test_api_admin_orders_list_pagination(self):
         """Pagination should work as expected."""
         orders = factories.OrderFactory.create_batch(3)
