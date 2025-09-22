@@ -62,6 +62,11 @@ const messages = defineMessages({
     defaultMessage: "Discount",
     description: "Label for the discount header inside the table",
   },
+  voucher: {
+    id: "components.templates.orders.list.voucher",
+    defaultMessage: "Voucher",
+    description: "Label for the voucher header inside the table",
+  },
 });
 
 type Props = DefaultTableProps<OrderListItem>;
@@ -133,7 +138,11 @@ export function OrdersList(props: Props) {
       field: "discount",
       headerName: intl.formatMessage(messages.discount),
       flex: 1,
-      sortable: false,
+    },
+    {
+      field: "voucher",
+      headerName: intl.formatMessage(messages.voucher),
+      flex: 1,
     },
   ];
 

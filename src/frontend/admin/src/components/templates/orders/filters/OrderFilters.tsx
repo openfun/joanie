@@ -27,7 +27,7 @@ const messages = defineMessages({
     id: "components.templates.orders.filters.OrderFilters.searchPlaceholder",
     description: "Text for the search input placeholder",
     defaultMessage:
-      "Search by product title, owner (full name or email), organization (code or title), course code",
+      "Search by product title, owner (full name or email), organization (code or title), course code, voucher",
   },
 });
 

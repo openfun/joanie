@@ -76,6 +76,8 @@ export type OrderListQuery = ResourcesQuery & {
   organizationId?: string;
   ownerId?: string;
   state?: string;
+  discount?: string;
+  voucher?: string;
 };
 
 const listProps: UseResourcesProps<OrderListItem, OrderListQuery> = {
