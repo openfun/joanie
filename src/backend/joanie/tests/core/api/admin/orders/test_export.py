@@ -36,6 +36,7 @@ def expected_csv_content(order):
         "Price": str(order.total),
         "Currency": settings.DEFAULT_CURRENCY,
         "Discount": "",
+        "Voucher": "",
         "Waived withdrawal right": yes_no(order.has_waived_withdrawal_right),
         "Certificate generated for this order": yes_no(hasattr(order, "certificate")),
         "Contract": "",
@@ -144,7 +145,7 @@ class OrdersAdminApiExportTestCase(TestCase):
         csv_header = csv_content.pop(0)
         expected_headers = expected_csv_content(orders[0]).keys()
 
-        self.assertEqual(csv_header.split(","), list(expected_headers))
+        self.assertEqual(list(expected_headers), csv_header.split(","))
 
         for order, csv_line in zip(orders, csv_content, strict=False):
             self.assertEqual(
