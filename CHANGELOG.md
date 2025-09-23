@@ -15,6 +15,7 @@ and this project adheres to
 ### Fixed
 
 - Style issues in micro-credentials templates
+- Handle long title and more teachers in micro-credentials templates
 
 ## [3.0.3] - 2025-09-04
 
