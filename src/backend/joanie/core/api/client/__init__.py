@@ -861,9 +861,17 @@ class BatchOrderViewSet(
         """
         batch_order = self.get_object()
 
+        if not batch_order.uses_card_payment:
+            return Response(
+                _(
+                    f"Aborting, your batch order payment method : {batch_order.payment_method}"
+                ),
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
         if not batch_order.is_ready_for_payment:
             return Response(
-                {"detail": ("This batch order cannot be submitted to payment")},
+                {"detail": _("This batch order cannot be submitted to payment")},
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
