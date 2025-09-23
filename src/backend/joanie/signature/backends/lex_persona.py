@@ -50,14 +50,22 @@ class LexPersonaBackend(BaseSignatureBackend):
 
         consent_page_id = self.get_setting("CONSENT_PAGE_ID")
 
+        if isinstance(order, models.BatchOrder):
+            email, firstname = (
+                order.signatory_email,
+                f"{order.signatory_firstname} {order.signatory_lastname}",
+            )
+        else:
+            # Currently, we only have the `full_name` from OpenEdx that we set in the user's
+            # `first_name` in Joanie. We don't have yet the `last_name` and `first_name` that
+            # are separated in our database. In order to prepare the awaited payload for the
+            # signature provider, we set a dot : ".", for the `lastName` key.
+            email, firstname = order.owner.email, order.owner.first_name
+
         return [
             {
-                "email": order.owner.email,
-                "firstName": order.owner.first_name,
-                # Currently, we only have the `full_name` from OpenEdx that we set in the user's
-                # `first_name` in Joanie. We don't have yet the `last_name` and `first_name` that
-                # are separated in our database. In order to prepare the awaited payload for the
-                # signature provider, we set a dot : ".", for the `lastName` key.
+                "email": email,
+                "firstName": firstname,
                 "lastName": ".",
                 "country": country.upper(),
                 "preferred_locale": order.owner.language.lower(),
