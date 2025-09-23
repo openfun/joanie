@@ -839,25 +839,6 @@ class BatchOrderViewSet(
 
         return Response(status=HTTPStatus.ACCEPTED)
 
-    @action(methods=["POST"], detail=True, url_path="validate-payment")
-    def validate_payment(self, request, pk=None):  # pylint:disable=unused-argument
-        """Validates the payment for the batch order if its state is in `signing` or `pending`"""
-        batch_order = self.get_object()
-
-        if not batch_order.is_eligible_to_validate_payment:
-            raise ValidationError(
-                "Your batch order is not in a state to validate the payment"
-            )
-
-        if batch_order.is_signed_by_owner:
-            # Normally it transitions to `pending` when submitting to payment through
-            # the backend payment
-            batch_order.flow.update()
-
-        validate_success_payment(batch_order)
-
-        return Response(status=HTTPStatus.NO_CONTENT)
-
     @action(methods=["POST"], detail=True, url_path="generate-orders")
     def generate_orders(self, request, pk=None):  # pylint:disable=unused-argument
         """
