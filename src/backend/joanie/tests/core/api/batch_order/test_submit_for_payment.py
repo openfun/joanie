@@ -217,37 +217,30 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
     def test_api_batch_order_submit_for_payment_with_other_than_card_payment(self):
         """
         Authenticated user should not be able to submit for payment a batch order if the
-        payment method is by purchase order or by bank transfer even if it's in state
-        `signing` or `failed_payment`.
+        payment method is other than card payment.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
 
-        for state in [
-            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
-            enums.BATCH_ORDER_STATE_SIGNING,
+        for payment_method in [
+            enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            enums.BATCH_ORDER_WITH_BANK_TRANSFER,
         ]:
-            for payment_method in [
-                enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-                enums.BATCH_ORDER_WITH_BANK_TRANSFER,
-            ]:
-                with self.subTest(state=state, payment_method=payment_method):
-                    batch_order = factories.BatchOrderFactory(
-                        owner=user, state=enums.BATCH_ORDER_STATE_DRAFT
-                    )
-                    batch_order.organization = factories.OrganizationFactory()
-                    batch_order.payment_method = payment_method
-                    batch_order.state = state
-                    batch_order.save()
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    owner=user,
+                    state=enums.BATCH_ORDER_STATE_SIGNING,
+                    payment_method=payment_method,
+                )
 
-                    response = self.client.post(
-                        f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-payment/",
-                        content_type="application/json",
-                        HTTP_AUTHORIZATION=f"Bearer {token}",
-                    )
+                response = self.client.post(
+                    f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-payment/",
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
 
-                    self.assertContains(
-                        response,
-                        "This batch order cannot be submitted to payment",
-                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                    )
+                self.assertContains(
+                    response,
+                    f"Aborting, your batch order payment method : {batch_order.payment_method}",
+                    status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                )
