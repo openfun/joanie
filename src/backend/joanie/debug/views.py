@@ -441,8 +441,13 @@ class DebugCertificateTemplateView(DebugPdfTemplateView):
             "site": {"name": "example.com", "hostname": "https://example.com"},
             "verification_link": f"http://localhost:8071/en-us/certificates/{cert_id}",
             "microcertification_terms_url": "https://example.com/terms",
-            "course": {"name": "Full Stack Pancake, Full Stack Developer"},
-            "teachers": ["Jane Doe", "Jun Doe"],
+            "course": {
+                "name": (
+                    "Reading, Structuring, and Interpreting Data to Build the Foundations of a "
+                    "Predictive Model: AI and Machine Learning"
+                )
+            },
+            "teachers": ["Jane Doe", "Jun Doe", "Ninten Doe", "Jude Doe"],
             "skills": ["Python", "Django", "JavaScript", "React"],
             "certification_level": 3,
         }
