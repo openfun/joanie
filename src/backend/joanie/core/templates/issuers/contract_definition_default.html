@@ -75,7 +75,7 @@ this template as a base.
                 <li>{% translate "Course number: " %}{{ course.code }}</li>
                 <li>{% translate "Name of the Course: " %}{{ course.name }}</li>
                 <li>{% translate "Session start date: " %}
-                    {% with start=course.start|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
+                    {% with start=course.start|date:"SHORT_DATE_FORMAT" %}
                     {% if start %}
                     {{ start }}
                     {% else %}
@@ -84,7 +84,7 @@ this template as a base.
                     {% endwith %}
                 </li>
                 <li>{% translate "Session end date: " %}
-                    {% with end=course.end|iso8601_to_date:"SHORT_DATETIME_FORMAT" %}
+                    {% with end=course.end|date:"SHORT_DATE_FORMAT" %}
                     {% if end %}
                     {{ end }}
                     {% else %}
