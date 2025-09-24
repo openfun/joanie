@@ -500,8 +500,9 @@ class DebugContractUnicampTemplateView(DebugPdfTemplateView):
             return contract_definition.generate_document_context()
 
         contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
+        context_with_images = embed_images_in_context(contract.context)
 
-        return contract.context
+        return context_with_images
 
 
 class DebugContractTemplateView(DebugPdfTemplateView):
