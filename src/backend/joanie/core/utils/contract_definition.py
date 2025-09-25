@@ -346,7 +346,6 @@ def generate_document_context(
     contract_context = prepare_contract_definition_context(
         language_code=contract_language, contract_definition=contract_definition
     )
-    batch_order_context = prepare_batch_order_context(batch_order=batch_order)
 
     if order:
         user_address = order.main_invoice.recipient_address
@@ -378,10 +377,13 @@ def generate_document_context(
     context = {
         "contract": contract_context,
         "course": course_context,
-        "student": student_context,
         "organization": organization_context,
-        "batch_order": batch_order_context,
     }
+
+    if batch_order:
+        context["batch_order"] = prepare_batch_order_context(batch_order=batch_order)
+    else:
+        context["student"] = student_context
 
     return apply_contract_definition_context_processors(context)
 
