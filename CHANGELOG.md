@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [3.0.4] - 2025-09-25
+
 ### Changed
 
 - Changed background color for micro-credential default template
@@ -717,7 +719,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v3.0.3...main
+[unreleased]: https://github.com/openfun/joanie/compare/v3.0.4...main
+[3.0.4]: https://github.com/openfun/joanie/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/openfun/joanie/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/openfun/joanie/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/openfun/joanie/compare/v3.0.0...v3.0.1
