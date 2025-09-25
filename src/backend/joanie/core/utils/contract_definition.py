@@ -9,6 +9,8 @@ from django.utils.duration import duration_iso_string
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
 
+from babel.dates import format_date
+
 from joanie.core.models import DocumentImage
 from joanie.core.utils import (
     file_checksum,
@@ -171,9 +173,9 @@ def prepare_course_context(language_code, order=None, batch_order=None):
             course_effort = duration_iso_string(course_effort)
         # Transform date value to ISO 8601 format
         if isinstance(course_start, date):
-            course_start = course_start.isoformat()
+            course_start = format_course_date(course_start, language_code)
         if isinstance(course_end, date):
-            course_end = course_end.isoformat()
+            course_end = format_course_date(course_end, language_code)
 
         course_context.update(
             {
@@ -395,3 +397,15 @@ def embed_images_in_context(context):
 
     del edited_context["organization"]["logo_id"]
     return edited_context
+
+
+def format_course_date(course_date: date, language_code: str):
+    """
+    Convenient method to format the date with locale-aware formatting of a course date.
+    For example, if the language code is "fr-fr" the short format will be : "DD/MM/YYYY".
+    Otherwise, when the language code is "en-us", the format will be : "MM/DD/YYYY".
+    """
+    formatted_course_date = format_date(
+        course_date, format="short", locale=language_code.replace("-", "_")
+    )
+    return formatted_course_date
