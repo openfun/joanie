@@ -13,7 +13,10 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, DocumentImage
 from joanie.core.utils import contract_definition, image_to_base64, issuers
-from joanie.core.utils.contract_definition import ORGANIZATION_FALLBACK_LOGO
+from joanie.core.utils.contract_definition import (
+    ORGANIZATION_FALLBACK_LOGO,
+    format_course_date,
+)
 from joanie.payment.factories import InvoiceFactory
 
 PROCESSOR_PATH = "joanie.tests.core.utils.test_contract_definition_generate_document_context._processor_for_test_suite"  # pylint: disable=line-too-long
@@ -79,6 +82,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             is_reusable=True,
         )
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+        language_code = "en-us"
         offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
@@ -87,7 +91,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     description="Contract definition description",
                     body="Articles de la convention",
                     appendix="Conditions générales de vente",
-                    language="en-us",
+                    language=language_code,
                     name=enums.CONTRACT_DEFINITION_DEFAULT,
                 ),
                 title="You will know that you know you don't know",
@@ -106,6 +110,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(recipient_address=user_address),
         )
+        course_dates = order.get_equivalent_course_run_dates()
 
         context = contract_definition.generate_document_context(
             contract_definition=order.product.contract_definition_order,
@@ -126,8 +131,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "course": {
                 "name": order.product.title,
                 "code": offering.course.code,
-                "start": run.start.isoformat(),
-                "end": run.end.isoformat(),
+                "start": format_course_date(course_dates["start"], language_code),
+                "end": format_course_date(course_dates["end"], language_code),
                 "effort": "P0DT10H30M12S",
                 "price": "999.99",
                 "currency": "€",
@@ -555,7 +560,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     title="CONTRACT DEFINITION 1",
                     description="Contract definition description",
                     body="Articles de la convention",
-                    language="en-us",
+                    language="fr-fr",
                 ),
                 title="You will know that you know you don't know",
                 price="999.99",
@@ -618,9 +623,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertEqual(
             course_dates["start"], datetime(2024, 2, 1, 10, 0, tzinfo=timezone.utc)
         )
-        self.assertEqual(
-            contract.context["course"]["start"], "2024-02-01T10:00:00+00:00"
-        )
+        self.assertEqual(contract.context["course"]["start"], "01/02/2024")
         # Course end check
         self.assertIsInstance(course_dates["end"], datetime)
         self.assertIsInstance(context["course"]["end"], str)
@@ -628,7 +631,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertEqual(
             course_dates["end"], datetime(2024, 5, 31, 20, 0, tzinfo=timezone.utc)
         )
-        self.assertEqual(contract.context["course"]["end"], "2024-05-31T20:00:00+00:00")
+        self.assertEqual(contract.context["course"]["end"], "31/05/2024")
         # Pricing check
         self.assertIsInstance(order.total, Decimal)
         self.assertIsInstance(context["course"]["price"], str)
@@ -755,9 +758,9 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertRegex(document_text, r"John Doe")
         self.assertRegex(document_text, r"Terms and conditions")
         self.assertRegex(document_text, r"Session start date")
-        self.assertRegex(document_text, r"01/01/2024 9 a.m.")
+        self.assertRegex(document_text, r"01/01/2024")
         self.assertRegex(document_text, r"Session end date")
-        self.assertRegex(document_text, r"03/31/2024 6 p.m")
+        self.assertRegex(document_text, r"31/03/2024")
         self.assertRegex(document_text, r"Price of the course")
         self.assertRegex(document_text, r"999.99 €")
         self.assertRegex(document_text, r"Appendices")
@@ -827,6 +830,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             is_main=True,
             is_reusable=True,
         )
+        language_code = "en-us"
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         product = factories.ProductFactory(
             target_courses=[run.course],
@@ -837,7 +841,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 description="Professional Training Agreement description",
                 body="Article of the professional training agreement",
                 appendix="Appendices",
-                language="en-us",
+                language=language_code,
             ),
         )
         owner = factories.UserFactory(
@@ -856,7 +860,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             ),
             state=enums.BATCH_ORDER_STATE_TO_SIGN,
         )
-
+        course_dates = batch_order.get_equivalent_course_run_dates()
         expected_context = {
             "contract": {
                 "body": "<p>Article of the professional training agreement</p>",
@@ -868,8 +872,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "course": {
                 "name": batch_order.offering.product.title,
                 "code": batch_order.offering.course.code,
-                "start": run.start.isoformat(),
-                "end": run.end.isoformat(),
+                "start": format_course_date(course_dates["start"], language_code),
+                "end": format_course_date(course_dates["end"], language_code),
                 "effort": "P0DT10H30M12S",
                 "price": "100.00",
                 "currency": "€",
@@ -958,4 +962,4 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         organization_logo = DocumentImage.objects.get()
         expected_context["organization"]["logo_id"] = str(organization_logo.id)
 
-        self.assertEqual(context, expected_context)
+        self.assertEqual(expected_context, context)

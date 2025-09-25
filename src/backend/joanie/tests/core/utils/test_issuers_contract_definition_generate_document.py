@@ -1,6 +1,6 @@
 """Test suite for utility method to generate document of Contract Definition in PDF bytes format"""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from io import BytesIO
 
 from django.contrib.sites.models import Site
@@ -12,21 +12,8 @@ from joanie.core import enums, factories
 from joanie.core.models import CourseState
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
+from joanie.core.utils.contract_definition import format_course_date
 from joanie.payment.factories import InvoiceFactory
-
-
-def format_datetime(datetime_value):
-    """
-    Format a datetime value to a string with a specific format, including minutes if present.
-    """
-    string_format = f"%m/%d/%Y %-I{':%M' if datetime_value.minute else ''} %p"
-
-    return (
-        datetime_value.strftime(string_format)
-        .lower()
-        .replace("am", "a.m.")
-        .replace("pm", "p.m.")
-    )
 
 
 class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
@@ -35,44 +22,30 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
     format.
     """
 
-    def test_format_datetime(self):
-        """
-        Test the format_datetime utility function.
-        """
-        self.assertEqual(
-            format_datetime(datetime(2022, 1, 1, 12, 30)), "01/01/2022 12:30 p.m."
-        )
-        self.assertEqual(
-            format_datetime(datetime(2022, 1, 1, 12, 0)), "01/01/2022 12 p.m."
-        )
-
     # ruff : noqa : PLR0915
-    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-statements, too-many-locals
     def test_utils_issuers_contract_definition_generate_document(self):
         """
         Issuer 'generate document' method should generate a contract definition document.
         """
+        # Prepare User and Organization Data
         user = factories.UserFactory(
             email="student@example.fr",
             first_name="Rooky",
             last_name="The Student",
             phone_number="0612345678",
         )
-
-        definition = factories.ContractDefinitionFactory(
-            title="Contract Definition Title",
-            description="Contract Definition Description",
-            body="""
-            ## Contract Definition Body
-            Lorem ipsum sit body est
-            """,
-            appendix="""
-            ### Terms and conditions
-            Terms and Conditions Content
-            """,
-            name=enums.CONTRACT_DEFINITION_DEFAULT,
+        user_address = factories.UserAddressFactory(
+            owner=user,
+            first_name="Rocky",
+            last_name="The Student",
+            address="1 Rue de l'Apprenant",
+            postcode="58000",
+            city="Nevers",
+            country="FR",
+            title="Office",
+            is_main=False,
         )
-
         organization = factories.OrganizationFactory(
             title="University X",
             activity_category_code="8542Z",
@@ -85,7 +58,6 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             contact_email="contact@university-x.xyz",
             dpo_email="dpo@university-x.xyz",
         )
-
         factories.OrganizationAddressFactory(
             organization=organization,
             owner=None,
@@ -96,6 +68,22 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             is_reusable=True,
             is_main=True,
         )
+        # Prepare the order
+        language_code = "fr-fr"
+        definition = factories.ContractDefinitionFactory(
+            title="Contract Definition Title",
+            description="Contract Definition Description",
+            body="""
+            ## Contract Definition Body
+            Lorem ipsum sit body est
+            """,
+            appendix="""
+            ### Terms and conditions
+            Terms and Conditions Content
+            """,
+            name=enums.CONTRACT_DEFINITION_DEFAULT,
+            language=language_code,
+        )
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         product = factories.ProductFactory(
             title="You will know that you know you don't know",
@@ -103,38 +91,20 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             contract_definition_order=definition,
             target_courses=[run.course],
         )
-
         course = factories.CourseFactory(code="UX-00001", effort=timedelta(hours=404))
-
         offering = factories.OfferingFactory(
             product=product, course=course, organizations=[organization]
         )
-
-        order = factories.OrderFactory(
+        order = factories.OrderGeneratorFactory(
             owner=user,
             product=offering.product,
             course=offering.course,
             organization=organization,
-            state=enums.ORDER_STATE_COMPLETED,
-            main_invoice=InvoiceFactory(
-                recipient_address=factories.UserAddressFactory(
-                    owner=user,
-                    address="1 Rue de l'Apprenant",
-                    postcode="58000",
-                    city="Nevers",
-                    country="FR",
-                )
-            ),
+            state=enums.ORDER_STATE_SIGNING,
+            main_invoice=InvoiceFactory(recipient_address=user_address),
         )
-        contract = factories.ContractFactory(
-            order=order,
-            context=contract_definition_utility.generate_document_context(
-                contract_definition=definition, user=user, order=order
-            ),
-            definition_checksum="1234",
-        )
-        contract.refresh_from_db()
-        order.generate_schedule()
+        # Prepare start and end course dates
+        course_dates = order.get_equivalent_course_run_dates()
 
         file_bytes = issuers.generate_document(
             name=order.contract.definition.name,
@@ -169,8 +139,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         # - Course information should be displayed
         self.assertIn("UX-00001", document_text)
         self.assertIn("You will know that you know you don't know", document_text)
-        self.assertIn(format_datetime(run.start), document_text, document_text)
-        self.assertIn(format_datetime(run.end), document_text, document_text)
+        self.assertIn(
+            format_course_date(course_dates["start"], language_code), document_text
+        )
+        self.assertIn(
+            format_course_date(course_dates["end"], language_code), document_text
+        )
         self.assertIn("404 hours", document_text)
         self.assertIn("999.99 €", document_text)
 
@@ -320,6 +294,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             is_main=True,
         )
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+        language_code = "en-us"
         product = factories.ProductFactory(
             title="You know nothing Jon Snow",
             target_courses=[run.course],
@@ -330,7 +305,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
                 description="Professional Training Agreement description",
                 body="Article of the professional training agreement",
                 appendix="Appendices",
-                language="en-us",
+                language=language_code,
             ),
         )
         course = factories.CourseFactory(code="00002", effort=timedelta(hours=404))
@@ -358,6 +333,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             signatory_telephone="0987654321",
             signatory_profession="Manager",
         )
+        course_dates = batch_order.get_equivalent_course_run_dates()
 
         file_bytes = issuers.generate_document(
             name=batch_order.contract.definition.name,
@@ -401,6 +377,12 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         # - Course information should be displayed
         self.assertIn("00002", document_text)
         self.assertIn("You know nothing Jon Snow", document_text)
+        self.assertIn(
+            format_course_date(course_dates["start"], language_code), document_text
+        )
+        self.assertIn(
+            format_course_date(course_dates["end"], language_code), document_text
+        )
         self.assertIn("404 hours", document_text)
         self.assertIn("100.00 €", document_text)
 

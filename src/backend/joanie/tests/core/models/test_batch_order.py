@@ -258,7 +258,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             organizations=[organization],
             product=factories.ProductFactory(
                 quote_definition=factories.QuoteDefinitionFactory(),
-                contract_definition_batch_order=factories.ContractDefinitionFactory(),
+                contract_definition_batch_order=factories.ContractDefinitionFactory(
+                    language="fr-fr"
+                ),
                 title="You know nothing Jon Snow",
                 target_courses=[
                     factories.CourseFactory(
@@ -304,9 +306,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertEqual(
             course_dates["start"], datetime(2024, 2, 1, 10, 0, tzinfo=timezone.utc)
         )
-        self.assertEqual(
-            contract.context["course"]["start"], "2024-02-01T10:00:00+00:00"
-        )
+        self.assertEqual(contract.context["course"]["start"], "01/02/2024")
 
         # Course end check
         self.assertIsInstance(course_dates["end"], datetime)
@@ -314,7 +314,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertEqual(
             course_dates["end"], datetime(2024, 5, 31, 20, 0, tzinfo=timezone.utc)
         )
-        self.assertEqual(contract.context["course"]["end"], "2024-05-31T20:00:00+00:00")
+        self.assertEqual(contract.context["course"]["end"], "31/05/2024")
 
         # Pricing check
         self.assertIsInstance(batch_order.total, Decimal)
