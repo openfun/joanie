@@ -652,6 +652,12 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         batch_order = factories.BatchOrderFactory(
             owner=user,
             state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            signatory_firstname="John",
+            signatory_lastname="Doe",
+            signatory_email="johndoe@example.acme",
+        )
+        signatory_fullname = (
+            f"{batch_order.signatory_firstname} {batch_order.signatory_lastname}"
         )
         accesses = factories.UserOrganizationAccessFactory.create_batch(
             3, organization=batch_order.organization, role="owner"
@@ -669,8 +675,8 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
             "currentRecipientEmails": [],
             "currentRecipientUsers": [],
             "description": "Contract Definition",
-            "email": batch_order.owner.email,
-            "firstName": batch_order.owner.first_name,
+            "email": batch_order.signatory_email,
+            "firstName": signatory_fullname,
             "groupId": "grp_id_fake",
             "id": workflow_id,
             "lastName": ".",
@@ -738,8 +744,8 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                                     {
                                         "consentPageId": "cop_id_fake",
                                         "country": batch_order.country.code.upper(),  # pylint: disable=line-too-long
-                                        "email": user.email,
-                                        "firstName": user.first_name,
+                                        "email": batch_order.signatory_email,
+                                        "firstName": signatory_fullname,
                                         "lastName": ".",
                                         "preferred_locale": user.language.lower(),
                                     }

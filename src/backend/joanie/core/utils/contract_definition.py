@@ -9,6 +9,8 @@ from django.utils.duration import duration_iso_string
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
 
+from babel.dates import format_date
+
 from joanie.core.models import DocumentImage
 from joanie.core.utils import (
     file_checksum,
@@ -171,9 +173,9 @@ def prepare_course_context(language_code, order=None, batch_order=None):
             course_effort = duration_iso_string(course_effort)
         # Transform date value to ISO 8601 format
         if isinstance(course_start, date):
-            course_start = course_start.isoformat()
+            course_start = format_course_date(course_start, language_code)
         if isinstance(course_end, date):
-            course_end = course_end.isoformat()
+            course_end = format_course_date(course_end, language_code)
 
         course_context.update(
             {
@@ -253,6 +255,11 @@ def prepare_batch_order_context(batch_order):
         "company_administrative_profession": _("<ADMIN_PROFESSION>"),
         "company_administrative_telephone": _("<ADMIN_TELEPHONE>"),
         "company_administrative_email": _("<ADMIN_EMAIL>"),
+        "signatory_firstname": _("<SIGNATORY_FIRSTNAME>"),
+        "signatory_lastname": _("<SIGNATORY_LASTNAME>"),
+        "signatory_email": _("<SIGNATORY_EMAIL>"),
+        "signatory_telephone": _("<SIGNATORY_TELEPHONE>"),
+        "signatory_profession": _("<SIGNATORY_PROFESSION>"),
         "number_seats": _("<NUMBER_OF_SEATS_RESERVED>"),
         "total": _("<TOTAL>"),
         "billing_address": {
@@ -282,6 +289,11 @@ def prepare_batch_order_context(batch_order):
                 "company_administrative_profession": batch_order.administrative_profession,
                 "company_administrative_telephone": batch_order.administrative_telephone,
                 "company_administrative_email": batch_order.administrative_email,
+                "signatory_firstname": batch_order.signatory_firstname,
+                "signatory_lastname": batch_order.signatory_lastname,
+                "signatory_email": batch_order.signatory_email,
+                "signatory_telephone": batch_order.signatory_telephone,
+                "signatory_profession": batch_order.signatory_profession,
                 "number_seats": batch_order.nb_seats,
                 "total": str(batch_order.total),
                 "billing_address": {
@@ -334,7 +346,6 @@ def generate_document_context(
     contract_context = prepare_contract_definition_context(
         language_code=contract_language, contract_definition=contract_definition
     )
-    batch_order_context = prepare_batch_order_context(batch_order=batch_order)
 
     if order:
         user_address = order.main_invoice.recipient_address
@@ -366,10 +377,13 @@ def generate_document_context(
     context = {
         "contract": contract_context,
         "course": course_context,
-        "student": student_context,
         "organization": organization_context,
-        "batch_order": batch_order_context,
     }
+
+    if batch_order:
+        context["batch_order"] = prepare_batch_order_context(batch_order=batch_order)
+    else:
+        context["student"] = student_context
 
     return apply_contract_definition_context_processors(context)
 
@@ -385,3 +399,15 @@ def embed_images_in_context(context):
 
     del edited_context["organization"]["logo_id"]
     return edited_context
+
+
+def format_course_date(course_date: date, language_code: str):
+    """
+    Convenient method to format the date with locale-aware formatting of a course date.
+    For example, if the language code is "fr-fr" the short format will be : "DD/MM/YYYY".
+    Otherwise, when the language code is "en-us", the format will be : "MM/DD/YYYY".
+    """
+    formatted_course_date = format_date(
+        course_date, format="short", locale=language_code.replace("-", "_")
+    )
+    return formatted_course_date

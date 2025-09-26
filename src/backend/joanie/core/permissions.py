@@ -71,6 +71,18 @@ class CanConfirmOrganizationBankTransfer(IsAuthenticated):
         return abilities.get("confirm_bank_transfer", False)
 
 
+class CanSubmitForSignatureBatchOrder(IsAuthenticated):
+    """
+    Check if the authenticated user is allowed to submit for signature the contract of a batch
+    order for an organization.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        """Check permission for a given object."""
+        abilities = obj.get_abilities(request.user)
+        return abilities.get("can_submit_for_signature_batch_order", False)
+
+
 class HasAPIKey(permissions.BasePermission):
     """Permission class to grant access to our remote endpoints API."""
 

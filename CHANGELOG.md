@@ -21,6 +21,7 @@ and this project adheres to
 
 ### Changed
 
+- Batch order signatory to sign the contract of a signature procedure
 - Changed background color for micro-credential default template
 
 ### Fixed

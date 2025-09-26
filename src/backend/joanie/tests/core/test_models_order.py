@@ -1074,7 +1074,9 @@ class OrderModelsTestCase(LoggingTestCase):
         offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
-                contract_definition_order=factories.ContractDefinitionFactory(),
+                contract_definition_order=factories.ContractDefinitionFactory(
+                    language="fr-fr",
+                ),
                 title="You will know that you know you don't know",
                 price="1202.99",
                 target_courses=[
@@ -1134,18 +1136,14 @@ class OrderModelsTestCase(LoggingTestCase):
         self.assertEqual(
             course_dates["start"], datetime(2024, 2, 1, 10, 0, tzinfo=timezone.utc)
         )
-        self.assertEqual(
-            contract.context["course"]["start"], "2024-02-01T10:00:00+00:00"
-        )
-
+        self.assertEqual(contract.context["course"]["start"], "01/02/2024")
         # Course end check
         self.assertIsInstance(course_dates["end"], datetime)
         self.assertIsInstance(contract.context["course"]["end"], str)
         self.assertEqual(
             course_dates["end"], datetime(2024, 5, 31, 20, 0, tzinfo=timezone.utc)
         )
-        self.assertEqual(contract.context["course"]["end"], "2024-05-31T20:00:00+00:00")
-
+        self.assertEqual(contract.context["course"]["end"], "31/05/2024")
         # Pricing check
         self.assertIsInstance(order.total, Decimal)
         self.assertIsInstance(contract.context["course"]["price"], str)

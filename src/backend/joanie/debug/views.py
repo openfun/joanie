@@ -108,19 +108,41 @@ class DebugInvitationSignatureLink(TemplateView):
 
     def get_context_data(self, **kwargs):
         """Generates sample datas to have a valid debug email"""
-        batch_order = factories.BatchOrderFactory(state=BATCH_ORDER_STATE_TO_SIGN)
-        context = super().get_context_data(**kwargs)
-        context["title"] = "👨‍💻Development email preview"
-        context["email"] = batch_order.owner.email
-        context["fullname"] = batch_order.owner.name
-        context["product_title"] = batch_order.offering.product.title
-        context["invitation_link"] = "http://localhost:8071/"
-        context["site"] = {
-            "name": settings.JOANIE_CATALOG_NAME,
-            "url": settings.JOANIE_CATALOG_BASE_URL,
-        }
+        product = ProductFactory(
+            quote_definition=factories.QuoteDefinitionFactory(),
+            contract_definition_batch_order=factories.ContractDefinitionFactory(),
+        )
+        product.set_current_language("en-us")
+        product.title = "Test product"
+        product.set_current_language("fr-fr")
+        product.title = "Test produit"
+        product.save()
+        batch_order = factories.BatchOrderFactory(
+            offering__product=product,
+            state=BATCH_ORDER_STATE_TO_SIGN,
+            signatory_firstname="John",
+            signatory_lastname="Doe",
+            signatory_email="debug_signatory@acme.org",
+        )
+        current_language = translation.get_language()
+        with translation.override(current_language):
+            product_title = batch_order.offering.product.safe_translation_getter(
+                "title", language_code=current_language
+            )
+            context = super().get_context_data(**kwargs)
+            context["title"] = "👨‍💻Development email invitation link preview"
+            context["email"] = batch_order.signatory_email
+            context["fullname"] = (
+                f"{batch_order.signatory_firstname} {batch_order.signatory_lastname}"
+            )
+            context["product_title"] = product_title
+            context["invitation_link"] = "http://localhost:8071/"
+            context["site"] = {
+                "name": "www.fun-mooc.fr",
+                "url": settings.JOANIE_CATALOG_BASE_URL,
+            }
 
-        return context
+            return context
 
 
 class DebugInvitationSignatureLinkHtml(DebugInvitationSignatureLink):
@@ -500,8 +522,9 @@ class DebugContractUnicampTemplateView(DebugPdfTemplateView):
             return contract_definition.generate_document_context()
 
         contract = Contract.objects.get(pk=pk, definition__name=self.issuer_document)
+        context_with_images = embed_images_in_context(contract.context)
 
-        return contract.context
+        return context_with_images
 
 
 class DebugContractTemplateView(DebugPdfTemplateView):

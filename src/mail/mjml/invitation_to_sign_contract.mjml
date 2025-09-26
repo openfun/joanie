@@ -37,8 +37,7 @@
         <mj-column>
           <mj-text padding="0">
             {% blocktranslate %}
-            Once your contract is signed, please contact the support team to guide you with payment
-            details.
+              If you have issues for signing the document, please contact the support team.
             {% endblocktranslate %}
           </mj-text>
         </mj-column>

@@ -13,7 +13,10 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 from joanie.core import enums, factories
 from joanie.core.models import CourseState, DocumentImage
 from joanie.core.utils import contract_definition, image_to_base64, issuers
-from joanie.core.utils.contract_definition import ORGANIZATION_FALLBACK_LOGO
+from joanie.core.utils.contract_definition import (
+    ORGANIZATION_FALLBACK_LOGO,
+    format_course_date,
+)
 from joanie.payment.factories import InvoiceFactory
 
 PROCESSOR_PATH = "joanie.tests.core.utils.test_contract_definition_generate_document_context._processor_for_test_suite"  # pylint: disable=line-too-long
@@ -79,6 +82,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             is_reusable=True,
         )
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
+        language_code = "en-us"
         offering = factories.OfferingFactory(
             organizations=[organization],
             product=factories.ProductFactory(
@@ -87,7 +91,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     description="Contract definition description",
                     body="Articles de la convention",
                     appendix="Conditions générales de vente",
-                    language="en-us",
+                    language=language_code,
                     name=enums.CONTRACT_DEFINITION_DEFAULT,
                 ),
                 title="You will know that you know you don't know",
@@ -106,6 +110,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             state=enums.ORDER_STATE_COMPLETED,
             main_invoice=InvoiceFactory(recipient_address=user_address),
         )
+        course_dates = order.get_equivalent_course_run_dates()
 
         context = contract_definition.generate_document_context(
             contract_definition=order.product.contract_definition_order,
@@ -126,8 +131,8 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "course": {
                 "name": order.product.title,
                 "code": offering.course.code,
-                "start": run.start.isoformat(),
-                "end": run.end.isoformat(),
+                "start": format_course_date(course_dates["start"], language_code),
+                "end": format_course_date(course_dates["end"], language_code),
                 "effort": "P0DT10H30M12S",
                 "price": "999.99",
                 "currency": "€",
@@ -154,32 +159,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     }
                     for installment in order.payment_schedule
                 ],
-            },
-            "batch_order": {
-                "company_name": "<COMPANY_NAME>",
-                "company_address": "<COMPANY_ADDRESS>",
-                "company_postcode": "<COMPANY_POSTCODE>",
-                "company_city": "<COMPANY_CITY>",
-                "company_country": "<COMPANY_COUNTRY>",
-                "company_identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
-                "company_vat_registration": "<VAT_REGISTRATION>",
-                "company_administrative_firstname": "<ADMIN_FIRSTNAME>",
-                "company_administrative_lastname": "<ADMIN_LASTNAME>",
-                "company_administrative_profession": "<ADMIN_PROFESSION>",
-                "company_administrative_telephone": "<ADMIN_TELEPHONE>",
-                "company_administrative_email": "<ADMIN_EMAIL>",
-                "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
-                "total": "<TOTAL>",
-                "billing_address": {
-                    "address": "<BILLING_ADDRESS>",
-                    "postcode": "<BILLING_POSTCODE>",
-                    "city": "<BILLING_CITY>",
-                    "country": "<BILLING_COUNTRY>",
-                    "company_name": "<BILLING_COMPANY_NAME>",
-                    "contact_name": "<BILLING_CONTACT>",
-                    "contact_email": "<BILLING_EMAIL>",
-                },
-                "url_educational_platform": "<URL_EDUCATIONAL_PLATFORM>",
             },
             "organization": {
                 "address": {
@@ -270,32 +249,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "phone_number": str(user.phone_number),
                 "payment_schedule": None,
             },
-            "batch_order": {
-                "company_name": "<COMPANY_NAME>",
-                "company_address": "<COMPANY_ADDRESS>",
-                "company_postcode": "<COMPANY_POSTCODE>",
-                "company_city": "<COMPANY_CITY>",
-                "company_country": "<COMPANY_COUNTRY>",
-                "company_identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
-                "company_vat_registration": "<VAT_REGISTRATION>",
-                "company_administrative_firstname": "<ADMIN_FIRSTNAME>",
-                "company_administrative_lastname": "<ADMIN_LASTNAME>",
-                "company_administrative_profession": "<ADMIN_PROFESSION>",
-                "company_administrative_telephone": "<ADMIN_TELEPHONE>",
-                "company_administrative_email": "<ADMIN_EMAIL>",
-                "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
-                "total": "<TOTAL>",
-                "billing_address": {
-                    "address": "<BILLING_ADDRESS>",
-                    "postcode": "<BILLING_POSTCODE>",
-                    "city": "<BILLING_CITY>",
-                    "country": "<BILLING_COUNTRY>",
-                    "company_name": "<BILLING_COMPANY_NAME>",
-                    "contact_name": "<BILLING_CONTACT>",
-                    "contact_email": "<BILLING_EMAIL>",
-                },
-                "url_educational_platform": "<URL_EDUCATIONAL_PLATFORM>",
-            },
             "organization": {
                 "address": {
                     "address": "<ORGANIZATION_ADDRESS_STREET_NAME>",
@@ -374,32 +327,6 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "email": "<STUDENT_EMAIL>",
                 "phone_number": "<STUDENT_PHONE_NUMBER>",
                 "payment_schedule": None,
-            },
-            "batch_order": {
-                "company_name": "<COMPANY_NAME>",
-                "company_address": "<COMPANY_ADDRESS>",
-                "company_postcode": "<COMPANY_POSTCODE>",
-                "company_city": "<COMPANY_CITY>",
-                "company_country": "<COMPANY_COUNTRY>",
-                "company_identification_number": "<COMPANY_IDENTIFICATION_NUMBER>",
-                "company_vat_registration": "<VAT_REGISTRATION>",
-                "company_administrative_firstname": "<ADMIN_FIRSTNAME>",
-                "company_administrative_lastname": "<ADMIN_LASTNAME>",
-                "company_administrative_profession": "<ADMIN_PROFESSION>",
-                "company_administrative_telephone": "<ADMIN_TELEPHONE>",
-                "company_administrative_email": "<ADMIN_EMAIL>",
-                "number_seats": "<NUMBER_OF_SEATS_RESERVED>",
-                "total": "<TOTAL>",
-                "billing_address": {
-                    "address": "<BILLING_ADDRESS>",
-                    "postcode": "<BILLING_POSTCODE>",
-                    "city": "<BILLING_CITY>",
-                    "country": "<BILLING_COUNTRY>",
-                    "company_name": "<BILLING_COMPANY_NAME>",
-                    "contact_name": "<BILLING_CONTACT>",
-                    "contact_email": "<BILLING_EMAIL>",
-                },
-                "url_educational_platform": "<URL_EDUCATIONAL_PLATFORM>",
             },
             "organization": {
                 "address": {
@@ -540,7 +467,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     title="CONTRACT DEFINITION 1",
                     description="Contract definition description",
                     body="Articles de la convention",
-                    language="en-us",
+                    language="fr-fr",
                 ),
                 title="You will know that you know you don't know",
                 price="999.99",
@@ -603,9 +530,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertEqual(
             course_dates["start"], datetime(2024, 2, 1, 10, 0, tzinfo=timezone.utc)
         )
-        self.assertEqual(
-            contract.context["course"]["start"], "2024-02-01T10:00:00+00:00"
-        )
+        self.assertEqual(contract.context["course"]["start"], "01/02/2024")
         # Course end check
         self.assertIsInstance(course_dates["end"], datetime)
         self.assertIsInstance(context["course"]["end"], str)
@@ -613,7 +538,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertEqual(
             course_dates["end"], datetime(2024, 5, 31, 20, 0, tzinfo=timezone.utc)
         )
-        self.assertEqual(contract.context["course"]["end"], "2024-05-31T20:00:00+00:00")
+        self.assertEqual(contract.context["course"]["end"], "31/05/2024")
         # Pricing check
         self.assertIsInstance(order.total, Decimal)
         self.assertIsInstance(context["course"]["price"], str)
@@ -740,9 +665,9 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertRegex(document_text, r"John Doe")
         self.assertRegex(document_text, r"Terms and conditions")
         self.assertRegex(document_text, r"Session start date")
-        self.assertRegex(document_text, r"01/01/2024 9 a.m.")
+        self.assertRegex(document_text, r"01/01/2024")
         self.assertRegex(document_text, r"Session end date")
-        self.assertRegex(document_text, r"03/31/2024 6 p.m")
+        self.assertRegex(document_text, r"31/03/2024")
         self.assertRegex(document_text, r"Price of the course")
         self.assertRegex(document_text, r"999.99 €")
         self.assertRegex(document_text, r"Appendices")
@@ -812,6 +737,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             is_main=True,
             is_reusable=True,
         )
+        language_code = "en-us"
         run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
         product = factories.ProductFactory(
             target_courses=[run.course],
@@ -822,17 +748,10 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 description="Professional Training Agreement description",
                 body="Article of the professional training agreement",
                 appendix="Appendices",
-                language="en-us",
+                language=language_code,
             ),
         )
-        owner = factories.UserFactory(
-            email="johndoe@example.fr",
-            first_name="John Doe",
-            last_name="",
-            phone_number="0123456789",
-        )
         batch_order = factories.BatchOrderFactory(
-            owner=owner,
             organization=organization,
             offering__product=product,
             offering__course=factories.CourseFactory(
@@ -841,7 +760,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             ),
             state=enums.BATCH_ORDER_STATE_TO_SIGN,
         )
-
+        course_dates = batch_order.get_equivalent_course_run_dates()
         expected_context = {
             "contract": {
                 "body": "<p>Article of the professional training agreement</p>",
@@ -853,27 +772,11 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             "course": {
                 "name": batch_order.offering.product.title,
                 "code": batch_order.offering.course.code,
-                "start": run.start.isoformat(),
-                "end": run.end.isoformat(),
+                "start": format_course_date(course_dates["start"], language_code),
+                "end": format_course_date(course_dates["end"], language_code),
                 "effort": "P0DT10H30M12S",
                 "price": "100.00",
                 "currency": "€",
-            },
-            "student": {
-                "name": owner.get_full_name(),
-                "address": {
-                    "address": "<STUDENT_ADDRESS_STREET_NAME>",
-                    "city": "<STUDENT_ADDRESS_CITY>",
-                    "country": "<STUDENT_ADDRESS_COUNTRY>",
-                    "last_name": "<STUDENT_LAST_NAME>",
-                    "first_name": "<STUDENT_FIRST_NAME>",
-                    "postcode": "<STUDENT_ADDRESS_POSTCODE>",
-                    "title": "<STUDENT_ADDRESS_TITLE>",
-                    "is_main": True,
-                },
-                "email": owner.email,
-                "phone_number": owner.phone_number,
-                "payment_schedule": None,
             },
             "batch_order": {
                 "company_name": batch_order.company_name,
@@ -888,6 +791,11 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "company_administrative_profession": batch_order.administrative_profession,
                 "company_administrative_telephone": batch_order.administrative_telephone,
                 "company_administrative_email": batch_order.administrative_email,
+                "signatory_firstname": batch_order.signatory_firstname,
+                "signatory_lastname": batch_order.signatory_lastname,
+                "signatory_email": batch_order.signatory_email,
+                "signatory_telephone": batch_order.signatory_telephone,
+                "signatory_profession": batch_order.signatory_profession,
                 "number_seats": batch_order.nb_seats,
                 "total": str(batch_order.total),
                 "billing_address": {
@@ -938,4 +846,4 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         organization_logo = DocumentImage.objects.get()
         expected_context["organization"]["logo_id"] = str(organization_logo.id)
 
-        self.assertEqual(context, expected_context)
+        self.assertEqual(expected_context, context)

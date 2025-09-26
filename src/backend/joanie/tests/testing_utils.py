@@ -1,4 +1,5 @@
 # ruff: noqa: S311, PLR0913, PLR0915
+# pylint:disable=too-many-lines
 """Test utils module."""
 
 import random
@@ -871,6 +872,13 @@ class Demo:
             self.log("")
 
             credential_product = factories.ProductFactory(
+                contract_definition_batch_order=factories.ContractDefinitionFactory(
+                    name=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP
+                ),
+                contract_definition_order=factories.ContractDefinitionFactory(
+                    name=enums.CONTRACT_DEFINITION_UNICAMP
+                ),
+                quote_definition=factories.QuoteDefinitionFactory(),
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
                 title="Credential Product",
                 courses=[course_run_credential.course],
@@ -910,6 +918,13 @@ class Demo:
             self.log("")
 
             credential_product_discount = factories.ProductFactory(
+                contract_definition_batch_order=factories.ContractDefinitionFactory(
+                    name=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP
+                ),
+                contract_definition_order=factories.ContractDefinitionFactory(
+                    name=enums.CONTRACT_DEFINITION_UNICAMP
+                ),
+                quote_definition=factories.QuoteDefinitionFactory(),
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
                 title="Credential Product with discount",
                 courses=[course_run_credential_discount.course],
