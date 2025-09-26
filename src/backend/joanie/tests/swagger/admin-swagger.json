@@ -6094,7 +6094,7 @@
         "/api/v1.0/admin/vouchers/": {
             "get": {
                 "operationId": "vouchers_list",
-                "description": "Admin Voucher Viewset",
+                "description": "List vouchers with optional filtering and ordering.",
                 "parameters": [
                     {
                         "name": "page",
@@ -6112,6 +6112,13 @@
                         "description": "Number of results to return per page.",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
