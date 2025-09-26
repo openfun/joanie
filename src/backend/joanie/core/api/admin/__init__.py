@@ -1033,3 +1033,4 @@ class VoucherViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminVoucherSerializer
     queryset = models.Voucher.objects.all()
+    filterset_class = filters.VoucherAdminFilterSet
