@@ -1,3 +1,4 @@
+# pylint: disable=unused-import
 """Course run utils module"""
 
 from .aggregate_course_runs_dates import aggregate_course_runs_dates

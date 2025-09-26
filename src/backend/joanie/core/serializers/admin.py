@@ -1355,6 +1355,8 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
+    discount = serializers.SerializerMethodField(read_only=True)
+    voucher = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Order
@@ -1371,6 +1373,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "total",
             "total_currency",
             "discount",
+            "voucher",
         )
         read_only_fields = fields
 
@@ -1378,12 +1381,33 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         """Return the code of currency used by the instance"""
         return get_default_currency_symbol()
 
-    def get_owner_name(self, instance) -> str:
+    def get_owner_name(self, instance) -> str | None:
         """
-        Return the full name of the order's owner if available,
-        otherwise fallback to the username
+        Return the name of the order's owner if available,
+        otherwise return None.
         """
-        return instance.owner.name
+        if instance.owner:
+            return instance.owner.name
+        return None
+
+    def get_discount(self, instance) -> str | None:
+        """Return the discount if available, otherwise return None."""
+        if instance.discount:
+            return str(instance.discount)
+
+        if instance.voucher:
+            return str(instance.voucher.discount)
+
+        return None
+
+    def get_voucher(self, instance) -> str | None:
+        """
+        Return the voucher code of the order if available,
+        otherwise return None.
+        """
+        if instance.voucher:
+            return instance.voucher.code
+        return None
 
 
 class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods
@@ -1409,6 +1433,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("total", _("Price")),
             ("total_currency", _("Currency")),
             ("discount", _("Discount")),
+            ("voucher", _("Voucher")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
@@ -1463,6 +1488,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     enrollment_created_on = serializers.SerializerMethodField(read_only=True)
     total_currency = serializers.SerializerMethodField(read_only=True)
     discount = serializers.SerializerMethodField(read_only=True)
+    voucher = serializers.SerializerMethodField(read_only=True)
     has_waived_withdrawal_right = serializers.SerializerMethodField(read_only=True)
     certificate = serializers.SerializerMethodField(read_only=True)
 
@@ -1533,6 +1559,13 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         otherwise return an empty string
         """
         return instance.discount or ""
+
+    def get_voucher(self, instance) -> str:
+        """
+        Return the voucher code when available on the order,
+        otherwise return an empty string
+        """
+        return instance.voucher.code if instance.voucher else ""
 
     def get_has_waived_withdrawal_right(self, instance) -> str:
         """
@@ -1997,3 +2030,68 @@ class AdminEnrollmentSerializer(serializers.ModelSerializer):
             validated_data.pop("was_created_by_order", None)
 
         return super().update(instance, validated_data)
+
+
+class AdminVoucherDetailSerializer(serializers.ModelSerializer):
+    """Detail serializer for Voucher model."""
+
+    discount = AdminDiscountSerializer()
+    orders_count = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Voucher
+        fields = [
+            "id",
+            "created_on",
+            "updated_on",
+            "code",
+            "discount",
+            "is_active",
+            "multiple_use",
+            "multiple_users",
+            "orders_count",
+        ]
+        read_only_fields = [
+            "id",
+            "created_on",
+            "updated_on",
+        ]
+
+    def get_orders_count(self, instance) -> int:
+        """Return the number of orders associated with this voucher."""
+        return instance.orders.count()
+
+
+class AdminVoucherSerializer(serializers.ModelSerializer):
+    """Serializer for Voucher model."""
+
+    discount_id = serializers.SlugRelatedField(
+        slug_field="id",
+        source="discount",
+        queryset=models.Discount.objects.all(),
+        many=False,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = models.Voucher
+        fields = [
+            "id",
+            "created_on",
+            "updated_on",
+            "code",
+            "is_active",
+            "discount_id",
+            "multiple_use",
+            "multiple_users",
+        ]
+        read_only_fields = [
+            "id",
+            "created_on",
+            "updated_on",
+        ]
+
+    def to_representation(self, instance):
+        serializer = AdminVoucherDetailSerializer(instance)
+        return serializer.data

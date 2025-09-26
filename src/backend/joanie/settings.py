@@ -299,6 +299,13 @@ class Base(Configuration):
         "PAGE_SIZE": 20,
         "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
         "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+        "DEFAULT_THROTTLE_RATES": {
+            "validate_voucher": values.Value(
+                "3/minute",
+                environ_name="JOANIE_VALIDATE_VOUCHER_THROTTLE_RATE",
+                environ_prefix=None,
+            )
+        },
     }
 
     SPECTACULAR_SETTINGS = {

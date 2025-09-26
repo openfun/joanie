@@ -41,7 +41,7 @@ test.describe("Course run form", () => {
     const courseRunSearchLocator = page.getByTestId("course-runs-search");
     await expect(courseRunSearchLocator).toBeVisible();
     await expect(
-      courseRunSearchLocator.getByTestId("search-add-button"),
+      courseRunSearchLocator.getByTestId("course-search-add-button"),
     ).toBeVisible();
     // When we arrive in form, nothing is selected, so the edit course mode is disabled
     await expect(
