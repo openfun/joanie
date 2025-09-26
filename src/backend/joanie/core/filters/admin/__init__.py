@@ -337,28 +337,46 @@ class DiscountAdminFilterSet(filters.FilterSet):
 
     query = filters.CharFilter(method="filter_by_query")
 
-    def filter_by_query(self, queryset, _name, value):
+    def filter_by_query(self, queryset, _name, value, prefix=None):
         """
         Filter resource by looking for amount and rate which contains provided value in
         "query" query parameter.
         """
+        prefix = f"{prefix}__" if prefix else ""
 
         def amount_filter(amount, exact=False):
+            lookups = {}
+            if not amount or not amount.isdigit():
+                lookups[f"{prefix}amount__isnull"] = False
+                return Q(**lookups)
+
             if exact and amount:
-                return Q(amount=amount)
-            return Q(amount__icontains=amount)
+                lookups[f"{prefix}amount"] = amount
+            else:
+                lookups[f"{prefix}amount__icontains"] = amount
+            return Q(**lookups)
 
         def rate_filter(rate, exact=False):
+            lookups = {}
+            if not rate or not rate.isdigit():
+                lookups[f"{prefix}rate__isnull"] = False
+                return Q(**lookups)
+
             exact_rate = rate
             try:
                 exact_rate = int(exact_rate) / 100
+                if exact_rate:
+                    exact_rate = f"{exact_rate:.2f}"
             except ValueError:
                 pass
 
             if exact and exact_rate:
-                return Q(rate=exact_rate)
+                lookups[f"{prefix}rate"] = exact_rate
+                return Q(**lookups)
 
-            return Q(rate__icontains=rate) | Q(rate__icontains=exact_rate)
+            lookups[f"{prefix}rate__icontains"] = rate
+            alt_lookups = {f"{prefix}rate": exact_rate}
+            return Q(**lookups) | Q(**alt_lookups)
 
         currency_symbol = get_default_currency_symbol()
         if currency_symbol in value:
@@ -371,3 +389,28 @@ class DiscountAdminFilterSet(filters.FilterSet):
             queryset = queryset.filter(amount_filter(value) | rate_filter(value))
 
         return queryset.distinct()
+
+
+class VoucherAdminFilterSet(DiscountAdminFilterSet):
+    """
+    VoucherAdminFilterSet allows to filter this resource with a query for code and discount.
+    """
+
+    class Meta:
+        model = models.Voucher
+        fields: List[str] = ["query"]
+
+    query = filters.CharFilter(method="filter_by_query")
+
+    def filter_by_query(self, queryset, _name, value, prefix=None):
+        """
+        Filter resource by looking for code and discount which contains provided value in
+        "query" query parameter.
+        """
+        if not value.isdigit():
+            return queryset.filter(Q(code__icontains=value))
+
+        discount_queryset = super().filter_by_query(
+            queryset, _name, value, prefix="discount"
+        )
+        return queryset.filter(Q(code__icontains=value)).union(discount_queryset)

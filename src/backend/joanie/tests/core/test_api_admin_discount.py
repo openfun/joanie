@@ -165,7 +165,6 @@ class DiscountAdminApiListFilterTest(TestCase):
         """
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "count": len(expected_discounts),
                 "next": None,
@@ -180,6 +179,7 @@ class DiscountAdminApiListFilterTest(TestCase):
                     for discount in expected_discounts
                 ],
             },
+            response.json(),
         )
 
     def test_api_admin_discount_list_filtered_by_numbers(self):
@@ -199,7 +199,6 @@ class DiscountAdminApiListFilterTest(TestCase):
                 self.amount_100,
                 self.amount_101,
                 self.rate_10,
-                self.rate_11,
             ],
         )
 

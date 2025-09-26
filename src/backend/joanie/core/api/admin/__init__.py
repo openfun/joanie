@@ -1014,3 +1014,23 @@ class VoucherViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
     serializer_class = serializers.AdminVoucherSerializer
     queryset = models.Voucher.objects.all()
+    filterset_class = filters.VoucherAdminFilterSet
+    ordering = "-created_on"
+
+    def list(self, request, *args, **kwargs):
+        """
+        List vouchers with optional filtering and ordering.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        if not "ordering" in request.query_params:
+            queryset = queryset.order_by(self.ordering)
+        else:
+            queryset = queryset.order_by(request.query_params["ordering"])
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
