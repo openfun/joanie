@@ -136,7 +136,6 @@ class MoodleLMSBackend(BaseLMSBackend):
             raise MoodleUserCreateException() from e
 
     # pylint: disable=too-many-branches
-    # ruff: noqa: PLR0912
     def set_enrollment(self, enrollment):
         """Activate/deactivate an enrollment."""
         try:

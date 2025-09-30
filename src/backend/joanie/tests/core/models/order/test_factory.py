@@ -43,7 +43,6 @@ class TestOrderGeneratorFactory(TestCase):
     """Test suite for the OrderGeneratorFactory."""
 
     # pylint: disable=too-many-arguments,too-many-positional-arguments
-    # ruff: noqa: PLR0913
     def check_order(
         self,
         state,
