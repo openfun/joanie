@@ -162,7 +162,6 @@ class OrdersAdminApiRefundTestCase(BaseAPITestCase):
             100: (20, 30, 30, 20),
         },
     )
-    # ruff : noqa : PLR0915
     # pylint: disable=too-many-statements
     def test_api_admin_orders_refund_an_order(self):
         """

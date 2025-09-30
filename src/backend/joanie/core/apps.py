@@ -11,6 +11,7 @@ class CoreConfig(AppConfig):
     name = "joanie.core"
     verbose_name = _("Joanie's core application")
 
+    # ruff : noqa : PLC0415
     # pylint: disable=import-outside-toplevel
     def ready(self):
         """Register signals."""

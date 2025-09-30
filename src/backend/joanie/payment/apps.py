@@ -10,9 +10,10 @@ class PaymentConfig(AppConfig):
     name = "joanie.payment"
     verbose_name = _("Joanie payment application")
 
+    # ruff : noqa : PLC0415
     # pylint: disable=import-outside-toplevel, unused-import
     def ready(self):
         """Import credit card post delete receiver."""
-        from joanie.payment.models import (  # ,
+        from joanie.payment.models import (
             credit_card_post_delete_receiver,
         )

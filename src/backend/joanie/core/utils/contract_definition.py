@@ -71,6 +71,7 @@ def prepare_organization_context(
     language_code, contract_definition, order=None, batch_order=None
 ):
     """Prepare organization context for the document generation."""
+    # ruff : noqa : PLC0415
     # pylint: disable=cyclic-import, import-outside-toplevel
     from joanie.core.models import Address
     from joanie.core.serializers.client import AddressSerializer
@@ -312,7 +313,6 @@ def prepare_batch_order_context(batch_order):
     return batch_order_context
 
 
-# ruff: noqa: PLR0912, PLR0915
 # pylint: disable=import-outside-toplevel, too-many-locals, too-many-statements, too-many-branches
 def generate_document_context(
     contract_definition=None, user=None, order=None, batch_order=None
@@ -326,6 +326,7 @@ def generate_document_context(
     We can use this method to preview a contract definition, or to generate its context when all
     the parameters are set.
     """
+    # ruff : noqa : PLC0415
     # pylint: disable=cyclic-import
     from joanie.core.serializers.client import AddressSerializer
 
