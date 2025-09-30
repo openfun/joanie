@@ -1,4 +1,3 @@
-# ruff: noqa: SLF001
 """Serializers for api."""
 
 from rest_framework import serializers

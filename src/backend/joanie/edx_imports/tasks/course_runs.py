@@ -1,6 +1,6 @@
 """Celery tasks for importing data from the Open edX database to the Joanie database."""
 # pylint: disable=too-many-locals,too-many-branches,broad-exception-caught
-# ruff: noqa: SLF001,PLR0912,BLE001
+# ruff: noqa: BLE001
 
 from logging import getLogger
 

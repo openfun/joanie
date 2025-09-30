@@ -3,7 +3,6 @@
 import re
 
 # pylint: disable=too-many-statements,not-callable,too-many-locals
-# ruff: noqa: PLR0915,SLF001
 from datetime import datetime
 from http import HTTPStatus
 from logging import getLogger

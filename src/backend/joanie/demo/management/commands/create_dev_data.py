@@ -1,4 +1,3 @@
-# ruff: noqa: S311, PLR0913, PLR0915
 """Management command to initialize simple data"""
 
 from django.core.management.base import BaseCommand
