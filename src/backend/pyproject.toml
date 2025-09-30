@@ -70,7 +70,7 @@ dependencies = [
     "whitenoise==6.11.0",
     # edx_imports
     "pymysql==1.1.2",
-    "SQLAlchemy==2.0.43",
+    "SQLAlchemy==2.0.40",
     "hashids==1.1.0",
     "PyMongo==3.13.0",
 ]
@@ -106,7 +106,7 @@ dev = [
     "ruff==0.13.2",
     "types-requests==2.32.4.20250913",
     # edx_imports
-    "sqlacodegen==3.1.1",
+    "sqlacodegen==3.0.0",
 ]
 
 [tool.setuptools]
