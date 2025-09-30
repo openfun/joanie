@@ -14,7 +14,9 @@
         "hashids",
         "PyMongo",
         "django-storages",
-        "boto3"
+        "boto3",
+        "SQLAlchemy",
+        "sqlacodegen"
       ]
     },
     {
