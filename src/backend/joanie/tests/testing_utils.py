@@ -902,7 +902,6 @@ class Demo:
                 ),
                 quote_definition=factories.QuoteDefinitionFactory(),
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
-                contract_definition=factories.ContractDefinitionFactory(),
                 title="Credential Product",
                 courses=[course_run_credential.course],
                 target_courses=[
@@ -960,7 +959,6 @@ class Demo:
                 ),
                 quote_definition=factories.QuoteDefinitionFactory(),
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
-                contract_definition=factories.ContractDefinitionFactory(),
                 title="Credential Product with discount",
                 courses=[course_run_credential_discount.course],
                 target_courses=[
