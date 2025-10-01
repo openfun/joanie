@@ -2566,6 +2566,58 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
 
+    def test_api_order_create_voucher_full_discount_rate_for_credential_product_type(
+        self,
+    ):
+        """
+        When an authenticated user uses a full discount voucher with the rate of 1 to make an
+        order on a credential product, the created order's total should be at 0, the state should
+        be 'completed' and a main invoice should be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        voucher = factories.VoucherFactory(discount__rate=1)
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=self._get_fee_order_data(voucher_code=voucher.code),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+
+        order = models.Order.objects.get()
+        self.assertEqual(order.total, 0)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+        self.assertIsNotNone(order.main_invoice)
+
+    def test_api_order_create_voucher_full_discount_rate_for_enrollment_certificate_product_type(
+        self,
+    ):
+        """
+        When an authenticated user uses a full discount voucher with the rate of 1 to make an
+        order on a certificate product, the created order's total should be at 0, the state should
+        be 'completed' and a main invoice should be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        voucher = factories.VoucherFactory(discount__rate=1)
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=self._get_fee_enrollment_order_data(user, voucher_code=voucher.code),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+
+        order = models.Order.objects.get()
+        self.assertEqual(order.total, 0)
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+        self.assertIsNotNone(order.main_invoice)
+
     @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
     def test_api_order_create_with_voucher_code_from_batch_order_already_used(
         self, mock_enroll_user_to_course_run

@@ -1236,6 +1236,16 @@ class Order(BaseModel):
         return not self.total
 
     @property
+    def has_full_discount(self):
+        """
+        Return True if the order's voucher discount rate is 1.
+        """
+        try:
+            return self.voucher.discount.rate == 1
+        except AttributeError:
+            return False
+
+    @property
     def has_payment_method(self):
         """
         Return True if the order has a payment method.
@@ -1869,7 +1879,7 @@ class Order(BaseModel):
         """
         self.freeze_total()
         self.flow.assign()
-        if not self.is_free:
+        if not self.is_free or self.has_full_discount:
             self._create_main_invoice(billing_address)
 
         self.freeze_target_courses()
