@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Orders with a voucher discount of 100% should always
+  create a main invoice
+
 ### Added
 
 - Add professional training agreement templates for batch order

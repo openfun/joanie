@@ -1440,3 +1440,36 @@ class OrderModelsTestCase(LoggingTestCase):
         order.freeze_total()
 
         self.assertEqual(order.total, Decimal("90.00"))
+
+    def test_models_order_property_has_full_discount_when_discount_is_amount(self):
+        """
+        The property `has_full_discount` should return False when the voucher's discount on the
+        order is an amount.
+        """
+        order = factories.OrderFactory(
+            voucher=factories.VoucherFactory(discount__amount=10)
+        )
+
+        self.assertFalse(order.has_full_discount)
+
+    def test_models_order_property_has_full_discount_when_rate_is_not_one(self):
+        """
+        The property `has_full_discount` should return False when the voucher's discount rate
+        on the order is not equal to 1
+        """
+        order = factories.OrderFactory(
+            voucher=factories.VoucherFactory(discount__rate=0.99)
+        )
+
+        self.assertFalse(order.has_full_discount)
+
+    def test_models_order_property_has_full_discount(self):
+        """
+        The property `has_full_discount` should return True when the voucher's discount rate
+        on the order is equal to 1.
+        """
+        order = factories.OrderFactory(
+            voucher=factories.VoucherFactory(discount__rate=1)
+        )
+
+        self.assertTrue(order.has_full_discount)
