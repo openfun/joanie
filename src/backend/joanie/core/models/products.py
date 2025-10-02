@@ -1286,6 +1286,11 @@ class Order(BaseModel):
         except Contract.DoesNotExist:
             return self.product.contract_definition_order is not None
 
+    @property
+    def from_batch_order(self) -> bool:
+        """Returns boolean value whether the order is from a batch order"""
+        return self.batch_order is not None
+
     # pylint: disable=too-many-branches
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
