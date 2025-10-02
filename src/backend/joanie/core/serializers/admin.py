@@ -1304,6 +1304,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
     credit_card = AdminCreditCardSerializer(read_only=True)
     has_waived_withdrawal_right = serializers.BooleanField(read_only=True)
+    from_batch_order = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Order
@@ -1325,12 +1326,19 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "payment_schedule",
             "credit_card",
             "has_waived_withdrawal_right",
+            "from_batch_order",
         )
         read_only_fields = fields
 
     def get_total_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
+
+    def get_from_batch_order(self, instance):
+        """
+        Returns boolean value whether the order is created from a batch order.
+        """
+        return bool(instance.batch_order)
 
 
 class AdminOrderLightSerializer(serializers.ModelSerializer):
@@ -1357,6 +1365,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
     total_currency = serializers.SerializerMethodField(read_only=True)
     discount = serializers.SerializerMethodField(read_only=True)
     voucher = serializers.SerializerMethodField(read_only=True)
+    from_batch_order = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Order
@@ -1374,6 +1383,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "total_currency",
             "discount",
             "voucher",
+            "from_batch_order",
         )
         read_only_fields = fields
 
@@ -1408,6 +1418,12 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         if instance.voucher:
             return instance.voucher.code
         return None
+
+    def get_from_batch_order(self, instance):
+        """
+        Returns boolean value whether the order is created from a batch order.
+        """
+        return bool(instance.batch_order)
 
 
 class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods
