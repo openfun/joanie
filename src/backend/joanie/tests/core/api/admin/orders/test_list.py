@@ -108,6 +108,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "total_currency": get_default_currency_symbol(),
                     "discount": str(order.voucher.discount) if order.voucher else None,
                     "voucher": order.voucher.code if order.voucher else None,
+                    "from_batch_order": False,
                 }
                 for order in sorted(orders, key=lambda x: x.created_on, reverse=True)
             ],
@@ -172,6 +173,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "total_currency": get_default_currency_symbol(),
                     "discount": "-50%",
                     "voucher": order_voucher.voucher.code,
+                    "from_batch_order": False,
                 },
                 {
                     "course_code": order_rule.course.code,
@@ -187,6 +189,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "total_currency": get_default_currency_symbol(),
                     "discount": "-10% (100.00 €) Deal!",
                     "voucher": None,
+                    "from_batch_order": False,
                 },
             ],
         }

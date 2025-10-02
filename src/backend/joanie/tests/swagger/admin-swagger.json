@@ -8295,6 +8295,11 @@
                     "has_waived_withdrawal_right": {
                         "type": "boolean",
                         "readOnly": true
+                    },
+                    "from_batch_order": {
+                        "type": "boolean",
+                        "description": "Returns boolean value whether the order is from a batch order",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -8304,6 +8309,7 @@
                     "created_on",
                     "credit_card",
                     "enrollment",
+                    "from_batch_order",
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice",
@@ -8451,6 +8457,11 @@
                         "nullable": true,
                         "description": "Return the voucher code of the order if available,\notherwise return None.",
                         "readOnly": true
+                    },
+                    "from_batch_order": {
+                        "type": "boolean",
+                        "description": "Returns boolean value whether the order is from a batch order",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -8458,6 +8469,7 @@
                     "created_on",
                     "discount",
                     "enrollment_id",
+                    "from_batch_order",
                     "id",
                     "organization_title",
                     "owner_name",
