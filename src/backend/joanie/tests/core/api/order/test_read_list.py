@@ -10,6 +10,7 @@ from django.core.cache import cache
 from joanie.core import enums, factories
 from joanie.core.models import CourseState
 from joanie.core.serializers import fields
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -75,9 +76,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "title": course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "created_on": order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(order.created_on),
                         "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "id": str(order.id),
@@ -112,6 +111,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "owner": order.owner.username,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                         "target_enrollments": [],
                         "total": float(product.price),
@@ -150,9 +150,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "title": other_order.course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "created_on": other_order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(other_order.created_on),
                         "credit_card_id": str(other_order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
@@ -188,6 +186,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(other_order.product.id),
                         "state": other_order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                         "payment_schedule": [],
                     }
@@ -244,6 +243,99 @@ class OrderListApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
+    def test_api_order_read_list_from_batch_order(self, _mock_thumbnail):
+        """
+        When an order is created from a batch order, the key in the response `from_batch_order`
+        should return True
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=1,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        organization_address = batch_order.organization.addresses.filter(
+            is_main=True
+        ).first()
+        # Let's simulate that the order from the batch order is given to the requesting
+        # user ( a user can only see his/her orders )
+        order = batch_order.orders.first()
+        order.owner = user
+        order.flow.update()
+
+        response = self.client.get(
+            "/api/v1.0/orders/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertDictEqual(
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate_id": None,
+                        "contract": None,
+                        "course": {
+                            "code": order.course.code,
+                            "id": str(order.course.id),
+                            "title": order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
+                        "created_on": format_date(order.created_on),
+                        "credit_card_id": None,
+                        "enrollment": None,
+                        "target_enrollments": [],
+                        "main_invoice_reference": None,
+                        "offering_rule_ids": [],
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "organization": {
+                            "id": str(order.organization.id),
+                            "code": order.organization.code,
+                            "title": order.organization.title,
+                            "logo": "_this_field_is_mocked",
+                            "address": {
+                                "id": str(organization_address.id),
+                                "address": organization_address.address,
+                                "city": organization_address.city,
+                                "country": organization_address.country,
+                                "first_name": organization_address.first_name,
+                                "is_main": organization_address.is_main,
+                                "last_name": organization_address.last_name,
+                                "postcode": organization_address.postcode,
+                                "title": organization_address.title,
+                            }
+                            if organization_address
+                            else None,
+                            "enterprise_code": order.organization.enterprise_code,
+                            "activity_category_code": order.organization.activity_category_code,
+                            "contact_phone": order.organization.contact_phone,
+                            "contact_email": order.organization.contact_email,
+                            "dpo_email": order.organization.dpo_email,
+                        },
+                        "owner": user.username,
+                        "total": 0,
+                        "total_currency": settings.DEFAULT_CURRENCY,
+                        "product_id": str(order.product.id),
+                        "state": order.state,
+                        "from_batch_order": True,
+                        "target_courses": [],
+                        "payment_schedule": [],
+                    }
+                ],
+            },
+            response.json(),
+        )
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
     def test_api_order_read_list_filtered_by_product_id(self, _mock_thumbnail):
         """Authenticated user should be able to filter their orders by product id."""
         [product_1, product_2] = factories.ProductFactory.create_batch(2)
@@ -283,9 +375,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "title": order.course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "created_on": order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(order.created_on),
                         "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
@@ -321,6 +411,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -398,9 +489,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "certificate_id": None,
                         "contract": None,
                         "course": None,
-                        "created_on": order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(order.created_on),
                         "credit_card_id": str(order.credit_card.id),
                         "payment_schedule": [],
                         "enrollment": {
@@ -411,42 +500,32 @@ class OrderListApiTest(BaseAPITestCase):
                                     "id": str(enrollment_1.course_run.course.id),
                                     "title": enrollment_1.course_run.course.title,
                                 },
-                                "end": enrollment_1.course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
-                                )
+                                "end": format_date(enrollment_1.course_run.end)
                                 if enrollment_1.course_run.end
                                 else None,
-                                "enrollment_end": (
-                                    enrollment_1.course_run.enrollment_end.isoformat().replace(
-                                        "+00:00", "Z"
-                                    )
+                                "enrollment_end": format_date(
+                                    enrollment_1.course_run.enrollment_end
                                 )
                                 if enrollment_1.course_run.enrollment_end
                                 else None,
-                                "enrollment_start": (
-                                    enrollment_1.course_run.enrollment_start.isoformat().replace(
-                                        "+00:00", "Z"
-                                    )
+                                "enrollment_start": format_date(
+                                    enrollment_1.course_run.enrollment_start
                                 )
                                 if enrollment_1.course_run.enrollment_start
                                 else None,
                                 "id": str(enrollment_1.course_run.id),
                                 "languages": enrollment_1.course_run.languages,
                                 "resource_link": enrollment_1.course_run.resource_link,
-                                "start": enrollment_1.course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
-                                )
+                                "start": format_date(enrollment_1.course_run.start)
                                 if enrollment_1.course_run.start
                                 else None,
                                 "state": {
                                     "call_to_action": enrollment_1.course_run.state.get(
                                         "call_to_action"
                                     ),
-                                    "datetime": enrollment_1.course_run.state.get(
-                                        "datetime"
+                                    "datetime": format_date(
+                                        enrollment_1.course_run.state.get("datetime")
                                     )
-                                    .isoformat()
-                                    .replace("+00:00", "Z")
                                     if enrollment_1.course_run.state.get("datetime")
                                     else None,
                                     "priority": enrollment_1.course_run.state.get(
@@ -497,6 +576,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -568,9 +648,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "title": order.course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "created_on": order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(order.created_on),
                         "credit_card_id": str(order.credit_card.id),
                         "payment_schedule": [],
                         "enrollment": None,
@@ -607,6 +685,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -664,9 +743,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "contract": None,
                         "course": None,
                         "payment_schedule": [],
-                        "created_on": order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(order.created_on),
                         "credit_card_id": str(order.credit_card.id),
                         "enrollment": {
                             "course_run": {
@@ -676,34 +753,24 @@ class OrderListApiTest(BaseAPITestCase):
                                     "id": str(enrollment.course_run.course.id),
                                     "title": enrollment.course_run.course.title,
                                 },
-                                "end": enrollment.course_run.end.isoformat().replace(
-                                    "+00:00", "Z"
+                                "end": format_date(enrollment.course_run.end),
+                                "enrollment_end": format_date(
+                                    enrollment.course_run.enrollment_end
                                 ),
-                                "enrollment_end": (
-                                    enrollment.course_run.enrollment_end.isoformat().replace(
-                                        "+00:00", "Z"
-                                    )
-                                ),
-                                "enrollment_start": (
-                                    enrollment.course_run.enrollment_start.isoformat().replace(
-                                        "+00:00", "Z"
-                                    )
+                                "enrollment_start": format_date(
+                                    enrollment.course_run.enrollment_start
                                 ),
                                 "id": str(enrollment.course_run.id),
                                 "languages": enrollment.course_run.languages,
                                 "resource_link": enrollment.course_run.resource_link,
-                                "start": enrollment.course_run.start.isoformat().replace(
-                                    "+00:00", "Z"
-                                ),
+                                "start": format_date(enrollment.course_run.start),
                                 "state": {
                                     "call_to_action": enrollment.course_run.state.get(
                                         "call_to_action"
                                     ),
-                                    "datetime": enrollment.course_run.state.get(
-                                        "datetime"
-                                    )
-                                    .isoformat()
-                                    .replace("+00:00", "Z"),
+                                    "datetime": format_date(
+                                        enrollment.course_run.state.get("datetime")
+                                    ),
                                     "priority": enrollment.course_run.state.get(
                                         "priority"
                                     ),
@@ -711,9 +778,7 @@ class OrderListApiTest(BaseAPITestCase):
                                 },
                                 "title": enrollment.course_run.title,
                             },
-                            "created_on": enrollment.created_on.isoformat().replace(
-                                "+00:00", "Z"
-                            ),
+                            "created_on": format_date(enrollment.created_on),
                             "id": str(enrollment.id),
                             "is_active": enrollment.is_active,
                             "state": enrollment.state,
@@ -751,6 +816,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                         "target_enrollments": [],
                     }
@@ -929,9 +995,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "title": order.course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "created_on": order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(order.created_on),
                         "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
@@ -967,6 +1031,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -1018,9 +1083,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "title": order.course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "created_on": order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(order.created_on),
                         "credit_card_id": str(order.credit_card.id),
                         "enrollment": None,
                         "target_enrollments": [],
@@ -1056,6 +1119,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -1111,9 +1175,7 @@ class OrderListApiTest(BaseAPITestCase):
                             "title": order.course.title,
                             "cover": "_this_field_is_mocked",
                         },
-                        "created_on": order.created_on.strftime(
-                            "%Y-%m-%dT%H:%M:%S.%fZ"
-                        ),
+                        "created_on": format_date(order.created_on),
                         "credit_card_id": None,
                         "enrollment": None,
                         "target_enrollments": [],
@@ -1149,6 +1211,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],

@@ -1385,6 +1385,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "payment_schedule",
             "has_waived_withdrawal_right",
             "voucher_code",
+            "from_batch_order",
         ]
         read_only_fields = fields
 

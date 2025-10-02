@@ -75,6 +75,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 "total_currency",
                 "payment_schedule",
                 "has_waived_withdrawal_right",
+                "from_batch_order",
             ],
         )
         headers = (
