@@ -5,12 +5,11 @@ Test suite for CourseAccess Admin API.
 import uuid
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class CourseAccessAdminApiTest(TestCase):
+class CourseAccessAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for CourseAccess Admin API.
     """
@@ -22,7 +21,7 @@ class CourseAccessAdminApiTest(TestCase):
         course = factories.CourseFactory()
         response = self.client.get(f"/api/v1.0/admin/courses/{course.id}/accesses/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -94,7 +93,7 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(course.accesses.count(), 1)
         course_access = course.accesses.first()
         content = response.json()
@@ -130,7 +129,7 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_course_accesses_request_create_with_unknown_course_id(self):
@@ -175,7 +174,7 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(), {"role": ['"invalid_role" is not a valid choice.']}
         )
@@ -201,7 +200,7 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -261,7 +260,7 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         content = response.json()
         self.assertEqual(content, {"user_id": ["This field is required."]})
 
@@ -283,7 +282,7 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_course_accesses_request_partial_update(self):
@@ -306,7 +305,7 @@ class CourseAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -338,5 +337,5 @@ class CourseAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/courses/{course.id}/accesses/{course_access.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(course.accesses.count(), 0)

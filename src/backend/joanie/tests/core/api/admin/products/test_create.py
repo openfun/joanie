@@ -4,12 +4,11 @@ Test suite for Product Admin API.
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class ProductAdminApiCreateTest(TestCase):
+class ProductAdminApiCreateTest(BaseAPITestCase):
     """
     Test suite for the create Product Admin API endpoint.
     """
@@ -34,7 +33,7 @@ class ProductAdminApiCreateTest(TestCase):
 
         response = self.client.post("/api/v1.0/admin/products/", data=data)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")
@@ -57,7 +56,7 @@ class ProductAdminApiCreateTest(TestCase):
 
         response = self.client.post("/api/v1.0/admin/products/", data=data)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")
@@ -80,7 +79,7 @@ class ProductAdminApiCreateTest(TestCase):
 
         response = self.client.post("/api/v1.0/admin/products/", data=data)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")

@@ -5,11 +5,12 @@ Tests for CourseRun web hook.
 from http import HTTPStatus
 
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from joanie.core.factories import CourseFactory, CourseRunFactory
 from joanie.core.models import Course, CourseRun
 from joanie.lms_handler.serializers import SyncCourseRunSerializer
+from joanie.tests.base import BaseAPITestCase
 
 
 @override_settings(
@@ -25,7 +26,7 @@ from joanie.lms_handler.serializers import SyncCourseRunSerializer
     ],
     TIME_ZONE="UTC",
 )
-class SyncCourseRunApiTestCase(TestCase):
+class SyncCourseRunApiTestCase(BaseAPITestCase):
     """Test calls to sync a course run via API endpoint."""
 
     def test_api_course_run_sync_missing_signature(self):
@@ -43,7 +44,7 @@ class SyncCourseRunApiTestCase(TestCase):
             "/api/v1.0/course-runs-sync", data, content_type="application/json"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(response.json(), {"detail": "Missing authentication."})
         self.assertEqual(CourseRun.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
@@ -66,7 +67,7 @@ class SyncCourseRunApiTestCase(TestCase):
             HTTP_AUTHORIZATION="invalid authorization",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(response.json(), {"detail": "Invalid authentication."})
         self.assertEqual(CourseRun.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
@@ -93,7 +94,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(), {"resource_link": ["This field is required."]}
         )
@@ -124,7 +125,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {
@@ -163,7 +164,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
@@ -201,7 +202,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
@@ -239,7 +240,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
@@ -270,7 +271,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.json(), {"languages": ["This field is required."]})
         self.assertEqual(CourseRun.objects.count(), 0)
 
@@ -295,7 +296,7 @@ class SyncCourseRunApiTestCase(TestCase):
                 "SIG-HMAC-SHA256 313cefea7a14f26ed7dc249719bc5a86bce36b0c63a9d27b2e30e3a616e108d6"
             ),
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
@@ -333,7 +334,7 @@ class SyncCourseRunApiTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
@@ -364,7 +365,7 @@ class SyncCourseRunApiTestCase(TestCase):
                 "SIG-HMAC-SHA256 1de9b46133a91eec3515d0df40f586b642cff16b79aa9d5fe4f7679a33767967"
             ),
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 
@@ -418,7 +419,7 @@ class SyncCourseRunApiTestCase(TestCase):
                 "SIG-HMAC-SHA256 338f7c262254e8220fea54467526f8f1f4562ee3adf1e3a71abaf23a20b739e4"
             ),
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(CourseRun.objects.count(), 1)
 

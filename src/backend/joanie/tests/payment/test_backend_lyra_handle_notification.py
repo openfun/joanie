@@ -40,6 +40,7 @@ from joanie.tests.payment.base_payment import BasePaymentTestCase
         },
     },
 )
+# pylint: disable=too-many-ancestors
 class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase):
     """Test case of Lyra Backend Handle Notification"""
 
@@ -67,7 +68,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertStatusCodeEqual(response, 400)
         self.assertEqual(response.json(), "Cannot parse notification.")
 
     @patch("joanie.payment.backends.lyra.LyraBackend._check_hash")
@@ -90,7 +91,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertStatusCodeEqual(response, 400)
 
         self.assertEqual(
             response.json(),
@@ -129,7 +130,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         mock_do_on_payment_failure.assert_called_once_with(
             order, first_installment["id"]
@@ -170,7 +171,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
@@ -220,7 +221,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         # Email has been sent
         self._check_installment_paid_email_sent(order.owner.email, order)
@@ -259,7 +260,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
@@ -317,7 +318,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
@@ -371,7 +372,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]
@@ -429,7 +430,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         card_id = json_answer["transactions"][0]["paymentMethodToken"]
         initial_issuer_transaction_identifier = json_answer["transactions"][0][
@@ -474,7 +475,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         card_id = json_answer["transactions"][0]["paymentMethodToken"]
         initial_issuer_transaction_identifier = json_answer["transactions"][0][
@@ -508,7 +509,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         shared_card_token_id = json_answer_2["transactions"][0]["paymentMethodToken"]
         card.refresh_from_db()
@@ -540,7 +541,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertStatusCodeEqual(response, 400)
 
         self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
@@ -567,7 +568,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         self.assertFalse(CreditCard.objects.filter(owners=user).exists())
 
@@ -607,7 +608,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         mock_send_mail_refused_debit.assert_called_once_with(
             order, first_installment["id"]
@@ -649,7 +650,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertEqual(len(mail.outbox), 1)
@@ -698,7 +699,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertEqual(len(mail.outbox), 1)
@@ -749,7 +750,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertEqual(len(mail.outbox), 1)
@@ -785,7 +786,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         mock_do_on_batch_order_payment_failure.assert_called_once_with(
             batch_order=batch_order,
@@ -822,7 +823,7 @@ class HandleNotificationLyraBackendTestCase(BasePaymentTestCase, LoggingTestCase
             content_type="application/x-www-form-urlencoded",
         )
 
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertStatusCodeEqual(response, 200)
 
         transaction_id = json_answer["transactions"][0]["uuid"]
         billing_details = json_answer["customer"]["billingDetails"]

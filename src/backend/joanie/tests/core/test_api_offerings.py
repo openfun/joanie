@@ -38,7 +38,7 @@ class OfferingApiTest(BaseAPITestCase):
         """
         response = self.client.get("/api/v1.0/offerings/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -56,7 +56,7 @@ class OfferingApiTest(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/offerings/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -115,7 +115,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(
@@ -269,7 +269,7 @@ class OfferingApiTest(BaseAPITestCase):
         course = factories.CourseFactory()
         response = self.client.get(f"/api/v1.0/courses/{course.id}/products/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -304,7 +304,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
 
@@ -324,7 +324,7 @@ class OfferingApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id}/products/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -356,7 +356,7 @@ class OfferingApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{access.course.id}/products/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 3)
 
@@ -366,7 +366,7 @@ class OfferingApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(len(content["results"]), 1)
 
@@ -378,7 +378,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 2)
 
@@ -429,7 +429,7 @@ class OfferingApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/{access.course.id}/products/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 3)
 
@@ -440,7 +440,7 @@ class OfferingApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(len(content["results"]), 2)
 
@@ -452,7 +452,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
 
@@ -494,7 +494,7 @@ class OfferingApiTest(BaseAPITestCase):
         )
 
         response = self.client.get(f"/api/v1.0/offerings/{offering.id}/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_offering_read_detail_anonymous_with_course_id(self):
         """
@@ -504,7 +504,7 @@ class OfferingApiTest(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/courses/{uuid.uuid4()}/products/{uuid.uuid4()}/"
         )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_offering_read_detail_with_product_id_anonymous(self):
         """
@@ -531,7 +531,7 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(content["id"], str(offering.id))
@@ -544,7 +544,7 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.code}/products/{product.id}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         # Then cache should be language sensitive
         with self.record_performance():
@@ -624,7 +624,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -662,7 +662,7 @@ class OfferingApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -843,7 +843,7 @@ class OfferingApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -879,7 +879,7 @@ class OfferingApiTest(BaseAPITestCase):
         )
 
         content = response.json()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertEqual(
             content["rules"],
@@ -916,7 +916,7 @@ class OfferingApiTest(BaseAPITestCase):
             f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
 
@@ -944,7 +944,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -970,7 +970,7 @@ class OfferingApiTest(BaseAPITestCase):
             f"/api/v1.0/offerings/{offering.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -1014,7 +1014,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -1058,7 +1058,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -1112,7 +1112,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -1159,7 +1159,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -1214,7 +1214,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -1277,7 +1277,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(
@@ -1312,7 +1312,7 @@ class OfferingApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -1661,7 +1661,7 @@ class OfferingApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(len(content["results"]), 1)
             self.assertEqual(content["results"][0].get("id"), str(offering.id))
@@ -1672,7 +1672,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["count"], 1)
@@ -1684,7 +1684,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -1718,7 +1718,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["results"][0].get("id"), str(offering.id))
@@ -1728,7 +1728,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["results"][0].get("id"), str(offering.id))
@@ -1739,7 +1739,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["results"][0].get("id"), str(offering.id))
@@ -1749,7 +1749,7 @@ class OfferingApiTest(BaseAPITestCase):
             "/api/v1.0/offerings/?query=veryFakeCourseCode",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -1793,7 +1793,7 @@ class OfferingApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(len(content["results"]), 1)
             self.assertEqual(content["results"][0].get("id"), str(offering.id))
@@ -1804,7 +1804,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(len(content["results"]), 1)
         self.assertEqual(content["count"], 1)
@@ -1816,7 +1816,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -1962,7 +1962,7 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-plan/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             {
                 "price": 3.00,
@@ -2035,7 +2035,7 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-plan/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             {
                 "price": 3.00,
@@ -2105,7 +2105,7 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-plan/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             {
                 "price": 3.00,
@@ -2354,7 +2354,7 @@ class OfferingApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             {
                 "price": 10.00,
@@ -2656,7 +2656,7 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-schedule/",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             [
                 {
@@ -2734,7 +2734,7 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             [
                 {
@@ -2806,7 +2806,7 @@ class OfferingApiTest(BaseAPITestCase):
                 f"/api/v1.0/offerings/{offering.id}/payment-schedule/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             [
                 {
@@ -2848,7 +2848,7 @@ class OfferingApiTest(BaseAPITestCase):
             f"/api/v1.0/offerings/{offering.id}/get-organizations/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response_relation_path.status_code,
             HTTPStatus.UNAUTHORIZED,
@@ -2872,7 +2872,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(
             response_relation_path.status_code,
             HTTPStatus.NOT_FOUND,
@@ -2906,7 +2906,7 @@ class OfferingApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             [
                 {

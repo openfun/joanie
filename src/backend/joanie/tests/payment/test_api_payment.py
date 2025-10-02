@@ -34,7 +34,7 @@ class PaymentApiTestCase(BaseAPITestCase):
             data={"id": "pay_0000"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.data, "Payment does not exist")
         mock_notification.assert_called_once()
 
@@ -51,6 +51,6 @@ class PaymentApiTestCase(BaseAPITestCase):
             data={"id": "pay_0000"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertIsNone(response.data)
         mock_notification.assert_called_once()

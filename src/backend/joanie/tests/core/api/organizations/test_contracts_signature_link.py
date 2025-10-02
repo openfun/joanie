@@ -97,7 +97,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
             "https://dummysignaturebackend.fr/?reference=",
@@ -151,7 +151,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
             data={"contract_ids": [orders[0].contract.id]},
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
             "https://dummysignaturebackend.fr/?reference=",
@@ -303,7 +303,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             data={"offering_ids": [offering.id]},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
             "https://dummysignaturebackend.fr/?reference=",
@@ -364,7 +364,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertIn(
             "https://dummysignaturebackend.fr/?reference=",
@@ -382,7 +382,7 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {"detail": "Some contracts are not available for this organization."},

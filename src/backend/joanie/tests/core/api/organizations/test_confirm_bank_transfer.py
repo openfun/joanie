@@ -19,7 +19,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
             data={"batch_order_id": batch_order.id},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organization_confirm_bank_transfer_get(self):
         """
@@ -38,9 +38,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_bank_transfer_partially_update(self):
         """
@@ -59,9 +57,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_bank_transfer_put(self):
         """
@@ -80,9 +76,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_bank_transfer_delete(self):
         """
@@ -101,9 +95,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_bank_transfer_invalid_id(self):
         """
@@ -121,7 +113,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organization_confirm_bank_transfer_not_owned(self):
         """
@@ -140,7 +132,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organization_confirm_bank_transfer_not_owner_role(
         self,
@@ -207,7 +199,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+            self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_organization_confirm_bank_transfer_authenticated(self):
         """
@@ -235,7 +227,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
 
         batch_order.refresh_from_db()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
         # The orders should be generated with the voucher codes
         self.assertTrue(batch_order.orders.exists())

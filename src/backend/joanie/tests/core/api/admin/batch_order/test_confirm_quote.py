@@ -3,12 +3,11 @@
 from decimal import Decimal as D
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import enums, factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
+class BatchOrdersAdminConfirmQuoteApiTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API confirm quote endpoint."""
 
     def test_api_admin_batch_order_confirm_quote_anonymous(self):
@@ -23,7 +22,7 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_batch_order_confirm_quote_lambda_user(self):
         """
@@ -39,7 +38,7 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_batch_order_confirm_quote_get_method(self):
         """
@@ -55,9 +54,7 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
             data={"total": "123.45"},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_quote_update_method(self):
         """
@@ -73,9 +70,7 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
             data={"total": "123.45"},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_quote_post_method(self):
         """
@@ -91,9 +86,7 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
             data={"total": "123.45"},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_quote_delete_method(self):
         """
@@ -109,9 +102,7 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
             data={"total": "123.45"},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_quote_invalid_id(self):
         """
@@ -126,7 +117,7 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
             data={"total": "123.45"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_admin_batch_order_confirm_quote_state_other_than_quoted(self):
         """
@@ -212,6 +203,6 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(TestCase):
 
         batch_order = models.BatchOrder.objects.get()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertIsNotNone(batch_order.quote.organization_signed_on)
         self.assertEqual(batch_order.total, D("123.45"))

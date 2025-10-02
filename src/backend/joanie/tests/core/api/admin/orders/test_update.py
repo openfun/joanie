@@ -2,12 +2,11 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrdersAdminApiUpdateTestCase(TestCase):
+class OrdersAdminApiUpdateTestCase(BaseAPITestCase):
     """Test suite for the admin orders API update endpoint."""
 
     maxDiff = None
@@ -22,7 +21,7 @@ class OrdersAdminApiUpdateTestCase(TestCase):
 
         response = self.client.put(f"/api/v1.0/admin/orders/{order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_orders_partial_update(self):
         """Update partially an order should be not allowed."""
@@ -34,4 +33,4 @@ class OrdersAdminApiUpdateTestCase(TestCase):
 
         response = self.client.patch(f"/api/v1.0/admin/orders/{order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)

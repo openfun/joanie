@@ -21,7 +21,7 @@ class BatchOrderUpdateAPITest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_batch_order_update_authenticated_batch_order_should_fail(self):
         """Authenticated user shouldn't be able to update an existing batch order that he owns."""
@@ -38,9 +38,7 @@ class BatchOrderUpdateAPITest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_batch_order_update_authenticated_batch_order_not_owned_should_fail(
         self,
@@ -61,9 +59,7 @@ class BatchOrderUpdateAPITest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_batch_order_update_authenticated_by_admin_user_should_fail(self):
         """
@@ -82,6 +78,4 @@ class BatchOrderUpdateAPITest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)

@@ -35,7 +35,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             },
         )
         self.assertEqual(models.Product.objects.count(), 0)
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_admin_product_create_success_enrollment(self):
         """A user with permissions should be able to create a product of type enrollment."""
@@ -88,7 +88,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             },
         )
         self.assertEqual(models.Product.objects.count(), 0)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertContains(response, "errorlist")
         self.assertContains(
             response,
@@ -191,7 +191,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             reverse("admin:core_product_change", args=(product.pk,)),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertContains(response, product.title)
 
         # - Check that there is a sortable product target course relation section
@@ -288,7 +288,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             reverse("admin:core_product_change", args=(product.pk,)),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertContains(response, product.title)
 
         # - Check there are links to go to related courses admin change view
@@ -338,7 +338,7 @@ class ProductAdminTestCase(BaseAPITestCase):
             reverse("admin:core_product_change", args=(product.pk,)),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertContains(response, product.title)
 
         # - Check there are links to go to related courses admin change view

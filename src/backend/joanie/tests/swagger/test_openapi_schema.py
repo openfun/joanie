@@ -5,10 +5,10 @@ Test suite for generated openapi schema.
 import json
 from http import HTTPStatus
 
-from django.test import TestCase
+from joanie.tests.base import BaseAPITestCase
 
 
-class OpenApiSchemaTest(TestCase):
+class OpenApiSchemaTest(BaseAPITestCase):
     """
     Test suite for generated openapi schema.
     """
@@ -21,7 +21,7 @@ class OpenApiSchemaTest(TestCase):
         """
         response = self.client.get("/v1.0/swagger.json")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         with open(
             "joanie/tests/swagger/swagger.json", encoding="utf-8"
         ) as expected_schema:
@@ -33,7 +33,7 @@ class OpenApiSchemaTest(TestCase):
         """
         response = self.client.get("/v1.0/admin-swagger.json")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         with open(
             "joanie/tests/swagger/admin-swagger.json", encoding="utf-8"
         ) as expected_schema:

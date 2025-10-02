@@ -25,7 +25,7 @@ class OrganizationApiCreateTest(BaseAPITestCase):
 
         response = self.client.post("/api/v1.0/organizations/", data=data)
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertFalse(models.Organization.objects.exists())
 
     def test_api_organization_create_authenticated(self):
@@ -49,5 +49,5 @@ class OrganizationApiCreateTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertFalse(models.Organization.objects.exists())

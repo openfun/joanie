@@ -17,7 +17,7 @@ class BatchOrderDeleteAPITest(BaseAPITestCase):
             f"/api/v1.0/batch-orders/{batch_order.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_batch_order_delete_authenticated_method_not_allowed(self):
         """It should not be possible to delete a batch order"""
@@ -31,6 +31,4 @@ class BatchOrderDeleteAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)

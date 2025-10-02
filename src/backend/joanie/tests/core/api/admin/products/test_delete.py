@@ -4,12 +4,11 @@ Test suite for Product Admin API.
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class ProductAdminApiDeleteTest(TestCase):
+class ProductAdminApiDeleteTest(BaseAPITestCase):
     """
     Test suite for the delete Product Admin API endpoint.
     """
@@ -26,4 +25,4 @@ class ProductAdminApiDeleteTest(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/products/{product.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)

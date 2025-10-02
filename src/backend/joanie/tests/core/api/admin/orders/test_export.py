@@ -4,12 +4,12 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
-from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import enums, factories
 from joanie.core.models import Course, Order
 from joanie.tests import format_date_export
+from joanie.tests.base import BaseAPITestCase
 from joanie.tests.testing_utils import Demo
 
 
@@ -95,7 +95,7 @@ def expected_csv_content(order):
     return content
 
 
-class OrdersAdminApiExportTestCase(TestCase):
+class OrdersAdminApiExportTestCase(BaseAPITestCase):
     """Test suite for the admin orders API export endpoint."""
 
     maxDiff = None
@@ -106,7 +106,7 @@ class OrdersAdminApiExportTestCase(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/orders/export/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_orders_export_csv_lambda_user(self):
         """
@@ -117,7 +117,7 @@ class OrdersAdminApiExportTestCase(TestCase):
 
         response = self.client.get("/api/v1.0/admin/orders/export/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_orders_export_csv(self):
         """
@@ -134,7 +134,7 @@ class OrdersAdminApiExportTestCase(TestCase):
         with mock.patch("django.utils.timezone.now", return_value=now):
             response = self.client.get("/api/v1.0/admin/orders/export/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response["Content-Type"], "text/csv")
         self.assertEqual(
             response["Content-Disposition"],

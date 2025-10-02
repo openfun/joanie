@@ -31,7 +31,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         order.refresh_from_db()
         self.assertNotEqual(order.state, enums.ORDER_STATE_CANCELED)
 
@@ -48,7 +48,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_order_withdraw_authenticated_not_owned(self):
         """
@@ -63,7 +63,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
@@ -97,7 +97,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 

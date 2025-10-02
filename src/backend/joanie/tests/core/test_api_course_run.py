@@ -68,7 +68,7 @@ class CourseRunApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(
@@ -119,7 +119,7 @@ class CourseRunApiTest(BaseAPITestCase):
         with self.record_performance():
             response = self.client.get(f"/api/v1.0/course-runs/{course_run.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -175,7 +175,7 @@ class CourseRunApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{courses[0].id}/course-runs/{course_run.id}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

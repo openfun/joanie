@@ -3,12 +3,11 @@
 from http import HTTPStatus
 from unittest import mock
 
-from django.test import TestCase
-
 from joanie.core import enums, factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrdersAdminApiDeleteTestCase(TestCase):
+class BatchOrdersAdminApiDeleteTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API delete endpoint."""
 
     maxDiff = None
@@ -19,7 +18,7 @@ class BatchOrdersAdminApiDeleteTestCase(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_batch_order_delete_authenticated_not_admin_user(self):
         """Authenticated not admin user should not be able to cancel a batch order"""
@@ -30,7 +29,7 @@ class BatchOrdersAdminApiDeleteTestCase(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_batch_order_delete_authenticated(self):
         """
@@ -58,7 +57,7 @@ class BatchOrdersAdminApiDeleteTestCase(TestCase):
                     content_type="application/json",
                 )
 
-                self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+                self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
                 # Only in `completed` state we should cancel the orders else they are not generated
                 if state == enums.BATCH_ORDER_STATE_COMPLETED:
                     for order in batch_order.orders.all():
@@ -104,7 +103,7 @@ class BatchOrdersAdminApiDeleteTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         # The order should not be linked to the voucher and the order's owner should be unenrolled
         #  from the course run
         for order in batch_order.orders.all():

@@ -42,7 +42,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         """
         response = self.client.get("/api/v1.0/admin/orders/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -57,7 +57,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/orders/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -84,7 +84,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         with self.record_performance():
             response = self.client.get("/api/v1.0/admin/orders/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         expected_content = {
@@ -128,7 +128,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/orders/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 4)
 
@@ -136,7 +136,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             response = self.client.get(
                 f"/api/v1.0/admin/orders/?course_ids={order.course.id}"
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(order.id))
@@ -146,7 +146,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"?course_ids={orders[0].course.id}"
             f"&course_ids={orders[1].course.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -189,7 +189,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/orders/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 4)
 
@@ -197,7 +197,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             response = self.client.get(
                 f"/api/v1.0/admin/orders/?product_ids={order.product.id}"
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(order.id))
@@ -208,7 +208,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"?product_ids={orders[0].product.id}"
             f"&product_ids={orders[1].product.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -251,7 +251,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/orders/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 4)
 
@@ -259,7 +259,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             response = self.client.get(
                 f"/api/v1.0/admin/orders/?organization_ids={order.organization.id}"
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(order.id))
@@ -270,7 +270,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"?organization_ids={orders[0].organization.id}"
             f"&organization_ids={orders[1].organization.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -315,7 +315,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/orders/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 4)
 
@@ -323,7 +323,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             response = self.client.get(
                 f"/api/v1.0/admin/orders/?owner_ids={order.owner.id}"
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(order.id))
@@ -334,7 +334,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"?owner_ids={orders[0].owner.id}"
             f"&owner_ids={orders[1].owner.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -378,7 +378,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         for [state, _] in enums.ORDER_STATE_CHOICES:
             response = self.client.get(f"/api/v1.0/admin/orders/?state={state}")
             order = Order.objects.get(state=state)
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(order.id))
@@ -450,7 +450,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         )
 
         response = self.client.get("/api/v1.0/admin/orders/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
@@ -492,7 +492,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         for query in queries:
             with self.subTest(query=query):
                 response = self.client.get(f"/api/v1.0/admin/orders/?query={query}")
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
                 content = response.json()
                 self.assertEqual(content["count"], 1)
                 self.assertEqual(content["results"][0]["id"], str(order.id))
@@ -508,12 +508,12 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/orders/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
         response = self.client.get(f"/api/v1.0/admin/orders/?ids={orders[0].id}")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(orders[0].id))
@@ -521,7 +521,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/admin/orders/?ids={orders[0].id}&ids={orders[1].id}&ids={orders[1].id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(orders[1].id))
@@ -556,7 +556,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"/api/v1.0/admin/orders/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(order_certificate.id))
@@ -584,7 +584,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"/api/v1.0/admin/orders/?product_type={enums.PRODUCT_TYPE_CREDENTIAL}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(order_credential.id))
@@ -610,7 +610,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"/api/v1.0/admin/orders/?product_type={enums.PRODUCT_TYPE_ENROLLMENT}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(order_enrollment.id))
@@ -656,7 +656,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"&product_type={enums.PRODUCT_TYPE_CREDENTIAL}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 4)
         self.assertCountEqual(
@@ -674,7 +674,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"&product_type={enums.PRODUCT_TYPE_CREDENTIAL}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertCountEqual(
@@ -698,7 +698,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             "/api/v1.0/admin/orders/?product_type=invalid_product_type"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -725,7 +725,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"/api/v1.0/admin/orders/?created_on={isoformat_searched_date}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(content["count"], 0)
@@ -751,7 +751,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"/api/v1.0/admin/orders/?created_on={isoformat_searched_date}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
 
@@ -784,7 +784,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"&created_on_date_range_before={isoformat_before_date}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         self.assertEqual(content["count"], 0)
@@ -814,7 +814,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"&created_on_date_range_before={isoformat_before_date}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         expected_ids_1 = [str(order.id) for order in orders_1]
@@ -850,7 +850,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"created_on_date_range_after={isoformat_after_date}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         response_ids = [order["id"] for order in content["results"]]
@@ -887,7 +887,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             f"created_on_date_range_before={isoformat_before_date}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         response_ids = [order["id"] for order in content["results"]]
@@ -912,7 +912,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/orders/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 4)
 
@@ -933,7 +933,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         response = self.client.get("/api/v1.0/admin/orders/?page_size=2")
         order_ids = [str(order.id) for order in orders]
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -949,7 +949,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         # Get page 2
         response = self.client.get("/api/v1.0/admin/orders/?page_size=2&page=2")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -982,7 +982,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
         )
         order_ids = [str(order.id) for order in orders]
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -1001,7 +1001,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             "/api/v1.0/admin/orders/?ordering=-updated_on&page_size=2&page=2"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)

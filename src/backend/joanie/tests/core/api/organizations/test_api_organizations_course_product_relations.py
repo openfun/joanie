@@ -34,7 +34,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organizations[0].id}/offerings/",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organizations_offerings_read_list_with_accesses(self):
         """
@@ -69,7 +69,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 5)
         self.assertEqual(
@@ -102,7 +102,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -127,7 +127,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organizations[0].id}/offerings/{offerings[0].id}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organizations_offerings_read_details_with_accesses(
         self,
@@ -170,7 +170,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(str(offerings[0].id), content["id"])
 
@@ -203,7 +203,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 ),
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organizations_offerings_create_authenticated(self):
         """
@@ -249,7 +249,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(models.CourseProductRelation.objects.count(), 0)
 
     def test_api_organizations_offerings_update_authenticated(self):
@@ -275,7 +275,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         offering.refresh_from_db()
         self.assertEqual(offering.course.id, course.id)
 
@@ -300,7 +300,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         offering.refresh_from_db()
         self.assertEqual(offering.course.id, course.id)
 
@@ -326,7 +326,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         offering.refresh_from_db()
         self.assertEqual(offering.course.id, course.id)
 
@@ -350,7 +350,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         offering.refresh_from_db()
         self.assertEqual(offering.course.id, course.id)
 
@@ -373,7 +373,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertTrue(
             models.CourseProductRelation.objects.filter(id=offering.id).exists()
         )
@@ -395,7 +395,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertTrue(
             models.CourseProductRelation.objects.filter(id=offering.id).exists()
         )
@@ -483,7 +483,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organization_1.id}/offerings/?query={query}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0].get("id"), str(offering_1.id))
@@ -496,7 +496,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -507,7 +507,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0].get("id"), str(offering_2.id))
@@ -519,7 +519,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -532,7 +532,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization_1.id}/offerings/?query=fake",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -541,7 +541,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization_3.id}/offerings/?query=",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -588,7 +588,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             f"offerings/?query={offering_1.course.code}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0].get("id"), str(offering_1.id))
@@ -601,7 +601,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -612,7 +612,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0].get("id"), str(offering_2.id))
@@ -624,7 +624,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -638,7 +638,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -648,7 +648,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -701,7 +701,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertCountEqual(
@@ -716,7 +716,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
@@ -731,7 +731,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -757,7 +757,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organization_2.id}/offerings/?query={query}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 2)
             self.assertCountEqual(
@@ -771,7 +771,7 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertCountEqual(
@@ -786,6 +786,6 @@ class OrganizationCourseProductRelationApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)

@@ -6,12 +6,12 @@ Test suite for CourseProductRelation retrieve Admin API.
 from http import HTTPStatus
 
 from django.conf import settings
-from django.test import TestCase
 
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class CourseProductRelationRetrieveAdminApiTest(TestCase):
+class CourseProductRelationRetrieveAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for CourseProductRelation retrieve Admin API.
     """
@@ -27,7 +27,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -43,7 +43,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -63,7 +63,7 @@ class CourseProductRelationRetrieveAdminApiTest(TestCase):
             f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertEqual(
             {

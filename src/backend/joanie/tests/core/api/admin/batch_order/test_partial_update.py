@@ -2,12 +2,11 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrderAdminApiPartialUpdateTestCase(TestCase):
+class BatchOrderAdminApiPartialUpdateTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API partial update endpoint."""
 
     def test_api_admin_batch_orders_partial_update_anonymous(self):
@@ -19,7 +18,7 @@ class BatchOrderAdminApiPartialUpdateTestCase(TestCase):
             f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_batch_orders_partial_update_authenticated(self):
         """Authenticated user should not be able to partial update a batch order."""
@@ -32,7 +31,7 @@ class BatchOrderAdminApiPartialUpdateTestCase(TestCase):
             f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_batch_orders_partial_update_authenticated_admin(self):
         """Authenticated admin user should not be able to partial update a batch order."""
@@ -45,6 +44,4 @@ class BatchOrderAdminApiPartialUpdateTestCase(TestCase):
             f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)

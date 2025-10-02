@@ -29,7 +29,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
         response = self.client.get(
             f"/api/v1.0/organizations/{access.organization.id!s}/accesses/"
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -56,7 +56,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["results"], [])
 
     def test_api_organization_accesses_list_authenticated_member(self):
@@ -108,7 +108,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 4)
         self.assertCountEqual(
@@ -166,7 +166,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 5)
         self.assertCountEqual(
@@ -224,7 +224,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 5)
         self.assertCountEqual(
@@ -257,7 +257,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id!s}/accesses/",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -277,7 +277,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -302,7 +302,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/organizations/{access.organization.id!s}/accesses/{access.id!s}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -326,7 +326,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organization.id!s}/accesses/{access.id!s}/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             self.assertEqual(
                 response.json(),
                 {"detail": "You do not have permission to perform this action."},
@@ -353,7 +353,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 f"/api/v1.0/organizations/{organization.id!s}/accesses/{access.id!s}/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
@@ -385,7 +385,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
@@ -417,7 +417,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
@@ -446,7 +446,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     # Create
 
@@ -462,7 +462,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 "role": random.choice(["member", "administrator", "owner"]),
             },
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -483,7 +483,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(
             response.json(),
             {
@@ -513,7 +513,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(
             response.json(),
             {
@@ -543,7 +543,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(OrganizationAccess.objects.count(), 2)
         self.assertTrue(OrganizationAccess.objects.filter(user=other_user).exists())
 
@@ -565,7 +565,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertFalse(OrganizationAccess.objects.filter(user=other_user).exists())
 
     def test_api_organization_accesses_create_owner_all_roles(self):
@@ -589,7 +589,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
             self.assertEqual(OrganizationAccess.objects.count(), i + 2)
             self.assertTrue(OrganizationAccess.objects.filter(user=other_user).exists())
 
@@ -613,7 +613,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 data={**old_values, field: value},
                 content_type="application/json",
             )
-            self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+            self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -642,7 +642,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -675,7 +675,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -715,9 +715,9 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             if (
                 new_data["role"] == old_values["role"]
             ):  # we are not not really updating the role
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
@@ -758,7 +758,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -798,9 +798,9 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             )
             # We are not allowed or not really updating the role
             if field == "role" or new_data["role"] == old_values["role"]:
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
@@ -841,9 +841,9 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             if (
                 new_data["role"] == old_values["role"]
             ):  # we are not really updating the role
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
@@ -884,7 +884,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -910,7 +910,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         access.refresh_from_db()
         self.assertEqual(access.role, "owner")
 
@@ -924,7 +924,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         access.refresh_from_db()
         self.assertEqual(access.role, new_role)
 
@@ -948,7 +948,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 data={field: value},
                 content_type="application/json",
             )
-            self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+            self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -977,7 +977,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1010,7 +1010,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1048,9 +1048,9 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
             if field == "role" and value == old_values["role"]:
                 # We are not really updating the role
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
@@ -1091,7 +1091,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1129,9 +1129,9 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
             if field == "role":
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1169,9 +1169,9 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
 
             if field == "role" and value == old_values["role"]:
                 # We are not really updating the role
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
@@ -1212,7 +1212,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = OrganizationAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1237,7 +1237,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         access.refresh_from_db()
         self.assertEqual(access.role, "owner")
 
@@ -1251,7 +1251,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         access.refresh_from_db()
         self.assertEqual(access.role, new_role)
 
@@ -1265,7 +1265,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/organizations/{access.organization.id!s}/accesses/{access.id!s}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(OrganizationAccess.objects.count(), 1)
 
     def test_api_organization_accesses_delete_authenticated(self):
@@ -1282,7 +1282,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(OrganizationAccess.objects.count(), 1)
 
     def test_api_organization_accesses_delete_members(self):
@@ -1303,7 +1303,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(OrganizationAccess.objects.count(), 2)
 
     def test_api_organization_accesses_delete_administrators(self):
@@ -1326,7 +1326,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(OrganizationAccess.objects.count(), 1)
 
     def test_api_organization_accesses_delete_owners_except_owners(self):
@@ -1349,7 +1349,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(OrganizationAccess.objects.count(), 1)
 
     def test_api_organization_accesses_delete_owners_for_owners(self):
@@ -1372,7 +1372,7 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(OrganizationAccess.objects.count(), 2)
 
     def test_api_organization_accesses_delete_owners_last_owner(self):
@@ -1393,5 +1393,5 @@ class OrganizationAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(OrganizationAccess.objects.count(), 1)

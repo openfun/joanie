@@ -22,7 +22,7 @@ class OrganizationApiDeleteTest(BaseAPITestCase):
 
         response = self.client.delete(f"/api/v1.0/organizations/{organization.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(models.Organization.objects.count(), 1)
 
     def test_api_organization_delete_authenticated_no_access(self):
@@ -42,7 +42,7 @@ class OrganizationApiDeleteTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Organization.objects.count(), 1)
 
     def test_api_organization_delete_authenticated_with_access(self):
@@ -68,5 +68,5 @@ class OrganizationApiDeleteTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Organization.objects.count(), 1)

@@ -2,12 +2,11 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
+class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API confirm purchase order endpoint."""
 
     def test_api_admin_batch_order_confirm_purchase_order_anonymous(self):
@@ -20,7 +19,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_batch_order_confirm_purchase_order_lambda_user(self):
         """Lambda user should not be able to confirm a purchase order."""
@@ -34,7 +33,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_batch_order_confirm_purchase_order_get_method(self):
         """
@@ -49,9 +48,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_purchase_order_update_method(self):
         """
@@ -66,9 +63,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_purchase_order_post_method(self):
         """
@@ -83,9 +78,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_purchase_order_delete_method(self):
         """
@@ -100,9 +93,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_purchase_order_invalid_id(self):
         """
@@ -116,7 +107,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_admin_batch_order_confirm_purchase_order_quote_not_signed_nor_total(
         self,
@@ -202,6 +193,6 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(TestCase):
                     )
                 else:
                     batch_order.refresh_from_db()
-                    self.assertEqual(response.status_code, HTTPStatus.OK)
+                    self.assertStatusCodeEqual(response, HTTPStatus.OK)
                     self.assertTrue(batch_order.quote.has_purchase_order)
                     self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)

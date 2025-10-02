@@ -2,11 +2,13 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.urls import reverse
 
+from joanie.tests.base import BaseAPITestCase
 
-class BackofficeRedirectViewTestCase(TestCase):
+
+class BackofficeRedirectViewTestCase(BaseAPITestCase):
     """
     The BackOfficeRedirectView test suite.
     """
@@ -23,7 +25,7 @@ class BackofficeRedirectViewTestCase(TestCase):
 
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
+        self.assertStatusCodeEqual(response, HTTPStatus.MOVED_PERMANENTLY)
         self.assertEqual(
             response["Location"],
             "https://bo.joanie.test/admin/core/organizations/",

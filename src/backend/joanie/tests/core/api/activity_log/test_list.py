@@ -21,7 +21,7 @@ class ActivityLogListApiTest(BaseAPITestCase):
         factories.ActivityLogFactory()
         response = self.client.get("/api/v1.0/activity-logs/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_activity_log_list_user(self):
         """
@@ -37,7 +37,7 @@ class ActivityLogListApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

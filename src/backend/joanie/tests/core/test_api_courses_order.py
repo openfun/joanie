@@ -137,7 +137,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(), {"count": 0, "next": None, "previous": None, "results": []}
         )
@@ -176,7 +176,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
         self.assertEqual(
             response.json(), {"count": 0, "next": None, "previous": None, "results": []}
@@ -198,7 +198,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(), {"count": 0, "next": None, "previous": None, "results": []}
         )
@@ -219,7 +219,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(), {"count": 0, "next": None, "previous": None, "results": []}
         )
@@ -303,7 +303,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(response.json()["results"][0]["id"], str(order.id))
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[0].id))
@@ -363,7 +363,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertDictEqual(
             {
@@ -497,7 +497,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[0].id))
         self.assertEqual(
@@ -520,7 +520,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[1].id))
         self.assertEqual(
@@ -592,7 +592,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[0].id))
         self.assertEqual(
@@ -623,7 +623,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(response.json()["results"][0]["course_id"], str(courses[1].id))
         self.assertEqual(
@@ -697,7 +697,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
         self.assertEqual(
             response.json()["results"][0]["product"]["id"], str(product.id)
@@ -714,7 +714,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course_2.id}/orders/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
         # Give requesting user the access to the organization
@@ -727,7 +727,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(
             response.json()["results"][0]["product"]["id"], str(product.id)
@@ -797,7 +797,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course_1.id}/orders/?offering_id={offering_2.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
         with self.record_performance():
@@ -805,7 +805,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course_2.id}/orders/?offering_id={offering_1.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
     def test_api_courses_order_get_list_must_have_organization_access_to_get_results(
@@ -840,7 +840,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.id}/orders/?offering_id={offering.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
         with self.record_performance():
@@ -848,7 +848,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
         with self.record_performance():
@@ -857,7 +857,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"?organization_id={organization.id}&product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 0)
 
         # Create the organization access for the requesting user to get results
@@ -868,7 +868,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.id}/orders/?offering_id={offering.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(
             response.json()["results"][0]["product"]["id"], str(product.id)
@@ -880,7 +880,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.id}/orders/?product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(
             response.json()["results"][0]["product"]["id"], str(product.id)
@@ -893,7 +893,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                 f"?organization_id={organization.id}&product_id={product.id}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(
             response.json()["results"][0]["product"]["id"], str(product.id)
@@ -928,7 +928,7 @@ class NestedOrderCourseViewSetAPITest(BaseAPITestCase):
                     HTTP_AUTHORIZATION=f"Bearer {token}",
                 )
 
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
                 if state in enums.ORDER_STATES_BINDING:
                     self.assertEqual(response.json()["count"], 1)
                     self.assertEqual(

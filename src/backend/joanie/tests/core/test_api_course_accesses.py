@@ -27,7 +27,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
         access = factories.UserCourseAccessFactory()
 
         response = self.client.get(f"/api/v1.0/courses/{access.course.id!s}/accesses/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -53,7 +53,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["results"], [])
 
     def test_api_course_accesses_list_authenticated_instructor(self):
@@ -95,7 +95,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 5)
         self.assertCountEqual(
@@ -141,7 +141,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 6)
         self.assertCountEqual(
@@ -189,7 +189,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 6)
         self.assertCountEqual(
@@ -235,7 +235,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 6)
         self.assertCountEqual(
@@ -266,7 +266,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/courses/{course.id!s}/accesses/",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -286,7 +286,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -311,7 +311,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/courses/{access.course.id!s}/accesses/{access.id!s}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -333,7 +333,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 f"/api/v1.0/courses/{course.id!s}/accesses/{access.id!s}/",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             self.assertEqual(
                 response.json(),
                 {"detail": "You do not have permission to perform this action."},
@@ -359,7 +359,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
@@ -391,7 +391,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
@@ -421,7 +421,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
@@ -451,7 +451,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertTrue(content.pop("abilities")["get"])
             self.assertEqual(
@@ -478,7 +478,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     # Create
 
@@ -496,7 +496,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 ),
             },
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -519,7 +519,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(
             response.json(),
             {"detail": ("You are not allowed to manage accesses for this course.")},
@@ -547,7 +547,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(
             response.json(),
             {"detail": ("You are not allowed to manage accesses for this course.")},
@@ -575,7 +575,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(
             response.json(),
             {"detail": ("You are not allowed to manage accesses for this course.")},
@@ -601,7 +601,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(CourseAccess.objects.count(), 2)
         self.assertTrue(CourseAccess.objects.filter(user=other_user).exists())
 
@@ -623,7 +623,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             },
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertFalse(CourseAccess.objects.filter(user=other_user).exists())
 
     def test_api_course_accesses_create_owner_all_roles(self):
@@ -647,7 +647,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
             self.assertEqual(CourseAccess.objects.count(), i + 2)
             self.assertTrue(CourseAccess.objects.filter(user=other_user).exists())
 
@@ -671,7 +671,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 data={**old_values, field: value},
                 content_type="application/json",
             )
-            self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+            self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -698,7 +698,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -729,7 +729,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -760,7 +760,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -799,9 +799,9 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             if (
                 new_data["role"] == old_values["role"]
             ):  # we are not not really updating the role
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
@@ -840,7 +840,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -878,9 +878,9 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             )
             # We are not allowed or not really updating the role
             if field == "role" or new_data["role"] == old_values["role"]:
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
@@ -920,9 +920,9 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             if (
                 new_data["role"] == old_values["role"]
             ):  # we are not really updating the role
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
@@ -959,7 +959,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -985,7 +985,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         access.refresh_from_db()
         self.assertEqual(access.role, "owner")
 
@@ -999,7 +999,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         access.refresh_from_db()
         self.assertEqual(access.role, new_role)
 
@@ -1023,7 +1023,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 data={field: value},
                 content_type="application/json",
             )
-            self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+            self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1050,7 +1050,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1081,7 +1081,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1112,7 +1112,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1149,9 +1149,9 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
             if field == "role" and value == old_values["role"]:
                 # We are not really updating the role
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
@@ -1190,7 +1190,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
@@ -1227,9 +1227,9 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
             if field == "role":
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
             self.assertEqual(updated_values, old_values)
@@ -1266,9 +1266,9 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
 
             if field == "role" and value == old_values["role"]:
                 # We are not really updating the role
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+                self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
             else:
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
@@ -1305,7 +1305,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
             access.refresh_from_db()
             updated_values = CourseAccessSerializer(instance=access).data
@@ -1331,7 +1331,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         access.refresh_from_db()
         self.assertEqual(access.role, "owner")
 
@@ -1345,7 +1345,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         access.refresh_from_db()
         self.assertEqual(access.role, new_role)
 
@@ -1359,7 +1359,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             f"/api/v1.0/courses/{access.course.id!s}/accesses/{access.id!s}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(CourseAccess.objects.count(), 1)
 
     def test_api_course_accesses_delete_authenticated(self):
@@ -1376,7 +1376,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(CourseAccess.objects.count(), 1)
 
     def test_api_course_accesses_delete_instructors(self):
@@ -1397,7 +1397,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(CourseAccess.objects.count(), 2)
 
     def test_api_course_accesses_delete_managers(self):
@@ -1418,7 +1418,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(CourseAccess.objects.count(), 2)
 
     def test_api_course_accesses_delete_administrators(self):
@@ -1441,7 +1441,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(CourseAccess.objects.count(), 1)
 
     def test_api_course_accesses_delete_owners_except_owners(self):
@@ -1464,7 +1464,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(CourseAccess.objects.count(), 1)
 
     def test_api_course_accesses_delete_owners_for_owners(self):
@@ -1485,7 +1485,7 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(CourseAccess.objects.count(), 2)
 
     def test_api_course_accesses_delete_owners_last_owner(self):
@@ -1506,5 +1506,5 @@ class CourseAccessesAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(CourseAccess.objects.count(), 1)

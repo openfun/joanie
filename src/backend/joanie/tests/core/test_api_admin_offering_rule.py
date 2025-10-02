@@ -27,7 +27,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         offering = factories.OfferingFactory()
         response = self.client.get(f"{self.base_url}/{offering.id}/offering-rules/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -57,7 +57,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
         with self.record_performance():
             response = self.client.get(f"{self.base_url}/{offering.id}/offering-rules/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         expected_return = [
             {
@@ -96,7 +96,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         response = self.client.get(f"{self.base_url}/{offering.id}/offering-rules/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -114,7 +114,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
         response = self.client.get(
             f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/"
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -140,7 +140,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
                 f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         expected_return = {
             "id": str(offering_rule.id),
@@ -186,7 +186,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             HTTP_ACCEPT_LANGUAGE="en-us",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         # Should return the default translation of description
         self.assertEqual(response.json()["description"], "An offering rule")
 
@@ -195,7 +195,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         # Should return the French translation of description
         self.assertEqual(response.json()["description"], "Une règle d'achat")
 
@@ -204,7 +204,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             HTTP_ACCEPT_LANGUAGE="de-de",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         # Should return the fallback translation of description (English)
         self.assertEqual(response.json()["description"], "An offering rule")
 
@@ -221,7 +221,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             content_type="application/json",
             data=data,
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -248,7 +248,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertIsNone(content["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
         self.assertTrue(content["is_enabled"])
@@ -296,7 +296,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
                 data=data,
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         content = response.json()
         self.assertEqual(content["nb_seats"], data["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
@@ -314,7 +314,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
         response = self.client.put(
             f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/"
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -339,7 +339,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
                 content_type="application/json",
                 data=data,
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["nb_seats"], data["nb_seats"])
         self.assertEqual(content["is_active"], data["is_active"])
@@ -370,7 +370,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertIsNone(content["description"])
 
     # patch
@@ -385,7 +385,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
         response = self.client.patch(
             f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/"
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -411,7 +411,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
                 content_type="application/json",
                 data=data,
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["nb_seats"], offering_rule.nb_seats)
         self.assertEqual(content["is_active"], data["is_active"])
@@ -449,7 +449,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertIsNone(content["description"])
 
     def test_admin_api_offering_rule_patch_authenticated_empty_nb_seats(self):
@@ -473,7 +473,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
                 content_type="application/json",
                 data=data,
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["nb_seats"], None)
         self.assertEqual(content["is_active"], data["is_active"])
@@ -496,7 +496,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
         response = self.client.delete(
             f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/"
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         with self.record_performance():
             self.assertEqual(
@@ -516,7 +516,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             response = self.client.delete(
                 f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
             )
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertFalse(
             models.OfferingRule.objects.filter(id=offering_rule.id).exists()
         )
@@ -535,7 +535,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
                 f"{self.base_url}/{offering.id}/offering-rules/{offering_rule.id}/",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertFalse(
             models.OfferingRule.objects.filter(id=offering_rule.id).exists()
         )
@@ -563,7 +563,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         content = response.json()
 
@@ -592,7 +592,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         content = response.json()
 
@@ -649,7 +649,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["start"], data["start"])
         self.assertEqual(content["end"], data["end"])
 
@@ -693,7 +693,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
                 content = response.json()
 
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
                 self.assertFalse(content["is_active"])
                 self.assertFalse(content["is_enabled"])
 
@@ -706,7 +706,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
                 content = response.json()
 
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
                 self.assertTrue(content["is_active"])
                 self.assertTrue(content["is_enabled"])
 
@@ -748,7 +748,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
                 content = response.json()
 
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
                 self.assertTrue(content["is_active"])
                 self.assertFalse(content["is_enabled"])
 
@@ -812,7 +812,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             data={"discount_id": str(discount.id)},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content["discount"],
@@ -842,7 +842,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             data={"discount_id": str(new_discount.id)},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content["discount"],
@@ -873,7 +873,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertIsNone(content["discount"])
 
     def test_admin_api_offering_rule_update_to_remove_start(self):
@@ -896,7 +896,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertIsNone(content["start"])
         offering_rule.refresh_from_db()
         self.assertIsNone(offering_rule.start)
@@ -920,7 +920,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             data={"discount_id": "fake_discount_id"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_admin_offering_rule_create_with_discount(self):
         """
@@ -945,7 +945,7 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(
             content["discount"],
             {
@@ -974,4 +974,4 @@ class OfferingRuleAdminApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)

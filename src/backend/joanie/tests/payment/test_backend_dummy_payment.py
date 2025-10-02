@@ -46,9 +46,12 @@ from joanie.tests.base import ActivityLogMixingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
-@override_settings(JOANIE_CATALOG_NAME="Test Catalog")
-@override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
-class DummyPaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase):  # pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-ancestors
+@override_settings(
+    JOANIE_CATALOG_NAME="Test Catalog",
+    JOANIE_CATALOG_BASE_URL="https://richie.education",
+)
+class DummyPaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase):
     """Test case for the Dummy Payment Backend"""
 
     def setUp(self):

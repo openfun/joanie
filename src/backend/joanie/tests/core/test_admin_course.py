@@ -37,7 +37,7 @@ class CourseAdminTestCase(BaseAPITestCase):
                 reverse("admin:core_course_change", args=(course.pk,)),
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertContains(response, course.title)
 
         html = lxml.html.fromstring(response.content)

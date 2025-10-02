@@ -7,12 +7,12 @@ import uuid
 from http import HTTPStatus
 
 from django.conf import settings
-from django.test import TestCase
 
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class CourseProductRelationUpdateAdminApiTest(TestCase):
+class CourseProductRelationUpdateAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for CourseProductRelation update Admin API.
     """
@@ -37,7 +37,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -62,7 +62,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -93,7 +93,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         offering.refresh_from_db()
 
         self.assertEqual(
@@ -166,7 +166,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -187,7 +187,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -212,7 +212,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         offering.refresh_from_db()
         self.assertEqual(
             response.json(),
@@ -293,7 +293,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         assert response.json() == {
             "id": str(offering.id),
@@ -369,7 +369,7 @@ class CourseProductRelationUpdateAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         assert response.json() == {
             "organization_ids": [

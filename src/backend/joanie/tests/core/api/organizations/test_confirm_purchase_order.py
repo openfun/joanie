@@ -19,7 +19,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             data={"quote_id": quote.id},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organization_confirm_purchase_order_get(self):
         """Authenticated user should not be able to confirm a purchase order with the get method"""
@@ -35,9 +35,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_purchase_order_create(self):
         """
@@ -55,9 +53,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_purchase_order_put(self):
         """Authenticated user should not be able to confirm a purchase order with the put method"""
@@ -73,9 +69,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_purchase_order_delete(self):
         """
@@ -93,9 +87,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_purchase_order_invalid_id(self):
         """
@@ -112,7 +104,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organization_confirm_purchase_order_not_owned(self):
         """
@@ -131,7 +123,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organization_confirm_purchase_order_not_owner_role(
         self,
@@ -194,7 +186,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
 
     def test_api_organization_confirm_purchase_order_has_purchase_order(self):
         """
@@ -222,7 +214,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
 
     def test_api_organization_confirm_purchase_order_but_payment_method_other_than_purchase_order(
         self,
@@ -258,7 +250,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+            self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
 
     def test_api_organization_confirm_purchase_order_authenticated(self):
         """
@@ -290,6 +282,6 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
         quote.refresh_from_db()
         batch_order.refresh_from_db()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(quote.has_purchase_order, True)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)

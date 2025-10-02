@@ -30,7 +30,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/cancel/",
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         order.refresh_from_db()
         self.assertNotEqual(order.state, enums.ORDER_STATE_CANCELED)
 
@@ -46,7 +46,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_order_cancel_authenticated_not_owned(self):
         """
@@ -60,7 +60,7 @@ class OrderCancelApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         order.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -125,10 +125,10 @@ class OrderCancelApiTest(BaseAPITestCase):
                     self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
                     self.assertEqual(mock_sync.call_count, 0)
                 elif state == enums.ORDER_STATE_TO_OWN:
-                    self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+                    self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
                     self.assertEqual(mock_sync.call_count, 0)
                 else:
-                    self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+                    self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
                     self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
                     # The credit card should be deleted
                     self.assertIsNone(order.credit_card)

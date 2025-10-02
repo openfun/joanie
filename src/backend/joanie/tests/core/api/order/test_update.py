@@ -93,7 +93,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 content_type="application/json",
                 **headers,
             )
-            self.assertEqual(response.status_code, error_code)
+            self.assertStatusCodeEqual(response, error_code)
 
             # With partial object
             response = self.client.patch(
@@ -102,7 +102,7 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 content_type="application/json",
                 **headers,
             )
-            self.assertEqual(response.status_code, error_code)
+            self.assertStatusCodeEqual(response, error_code)
 
             # Check that nothing was modified
             self.assertEqual(models.Order.objects.count(), 2)

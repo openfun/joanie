@@ -5,12 +5,11 @@ Test suite for Product Admin API.
 import random
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import enums, factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
-class ProductAdminApiListTest(TestCase):
+class ProductAdminApiListTest(BaseAPITestCase):
     """
     Test suite for the list Product Admin API endpoint.
     """
@@ -23,7 +22,7 @@ class ProductAdminApiListTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/products/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -38,7 +37,7 @@ class ProductAdminApiListTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/products/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -55,7 +54,7 @@ class ProductAdminApiListTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/products/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], product_count)
 
@@ -74,7 +73,7 @@ class ProductAdminApiListTest(TestCase):
             response = self.client.get(f"/api/v1.0/admin/products/?type={product_type}")
 
             product = models.Product.objects.get(type=product_type)
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(product.id))
@@ -108,12 +107,12 @@ class ProductAdminApiListTest(TestCase):
         products = factories.ProductFactory.create_batch(3)
 
         response = self.client.get("/api/v1.0/admin/products/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
         response = self.client.get(f"/api/v1.0/admin/products/?ids={products[0].id}")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(products[0].id))
@@ -121,7 +120,7 @@ class ProductAdminApiListTest(TestCase):
         response = self.client.get(
             f"/api/v1.0/admin/products/?ids={products[0].id}&ids={products[1].id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(products[1].id))

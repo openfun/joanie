@@ -6,7 +6,6 @@ and search fields with learners values (email, first name,username)
 import random
 from http import HTTPStatus
 
-from django.test import TestCase
 from django.urls import reverse
 
 from joanie.core.enums import ORDER_STATE_COMPLETED
@@ -18,9 +17,10 @@ from joanie.core.factories import (
     OrganizationFactory,
     UserFactory,
 )
+from joanie.tests.base import BaseAPITestCase
 
 
-class CertificateAdminTestCase(TestCase):
+class CertificateAdminTestCase(BaseAPITestCase):
     """
     Test suite for admin certificate viewset search fields and with required organization filter.
     """
@@ -75,7 +75,7 @@ class CertificateAdminTestCase(TestCase):
 
         response = self.client.get(certificate_search_url)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTemplateUsed("admin/core/certificate/change_list.html")
         self.assertContains(
             response,
@@ -94,7 +94,7 @@ class CertificateAdminTestCase(TestCase):
 
         response = self.client.get(certificate_search_url, search_parameters)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTemplateUsed("admin/core/certificate/change_list.html")
         self.assertContains(response, str(self.learner_1.username))
         self.assertContains(response, str(self.organization_1))
@@ -128,7 +128,7 @@ class CertificateAdminTestCase(TestCase):
 
         response = self.client.get(certificate_search_url, search_parameters)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertNotContains(response, str(self.organization_2))
         self.assertNotContains(response, str(self.certificate_enrollment.enrollment))
         self.assertNotContains(response, str(self.certificate_order.order))
@@ -152,7 +152,7 @@ class CertificateAdminTestCase(TestCase):
         }
         response = self.client.get(certificate_search_url, search_parameters)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertContains(response, str(self.certificate_order.order))
         # showing that there is 1 result to tick
         self.assertContains(response, "0 of 1 selected")
@@ -182,7 +182,7 @@ class CertificateAdminTestCase(TestCase):
 
         response = self.client.get(certificate_search_url, search_parameters)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertContains(response, str(self.certificate_enrollment.enrollment))
         self.assertContains(response, selected_string_search)
         # Showing that there is 1 result to tick

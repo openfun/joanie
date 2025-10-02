@@ -20,7 +20,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_batch_order_submit_for_payment_get_method_not_allowed(self):
         """
@@ -37,9 +37,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_batch_order_submit_for_payment_put_method_not_allowed(self):
         """
@@ -56,9 +54,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_batch_order_submit_for_payment_patch_method_not_allowed(self):
         """
@@ -75,9 +71,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_batch_order_submit_for_payment_delete_method_not_allowed(self):
         """
@@ -94,9 +88,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_batch_order_submit_for_payment_should_have_contract_signed(self):
         """
@@ -115,7 +107,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {"detail": ("This batch order cannot be submitted to payment")},
@@ -166,7 +158,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     @mock.patch.object(
         DummyPaymentBackend,
@@ -202,7 +194,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
 
                 batch_order.refresh_from_db()
 
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
                 self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_PENDING)
                 self.assertEqual(
                     response.json(),

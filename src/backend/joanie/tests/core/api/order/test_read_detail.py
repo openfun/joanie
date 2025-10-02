@@ -31,7 +31,7 @@ class OrderReadApiTest(BaseAPITestCase):
         order = factories.OrderFactory(product=product)
 
         response = self.client.get(f"/api/v1.0/orders/{order.id}/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(),
@@ -77,7 +77,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -195,7 +195,7 @@ class OrderReadApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
         self.assertDictEqual(
             response.json(), {"detail": "No Order matches the given query."}

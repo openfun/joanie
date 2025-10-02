@@ -14,7 +14,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
     def test_api_admin_teacher_list_anonymous(self):
         """Anonymous users should not be able to list teachers."""
         response = self.client.get("/api/v1.0/admin/teachers/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_teacher_list_non_admin(self):
         """Non admin users should not be able to list teachers."""
@@ -22,7 +22,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
         self.client.login(username=user.username, password="password")
         response = self.client.get("/api/v1.0/admin/teachers/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_teacher_list_admin(self):
         """Admin users should be able to list teachers."""
@@ -32,7 +32,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
         response = self.client.get("/api/v1.0/admin/teachers/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(
             response.json()["results"][0],
@@ -51,7 +51,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
         response = self.client.get(f"/api/v1.0/admin/teachers/{teacher.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -69,7 +69,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
             "/api/v1.0/admin/teachers/",
             data={"first_name": "Joanie", "last_name": "Cunningham"},
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(models.Teacher.objects.count(), 1)
         self.assertEqual(response.json()["first_name"], "Joanie")
         self.assertEqual(response.json()["last_name"], "Cunningham")
@@ -85,7 +85,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
             data={"first_name": "Arthur", "last_name": "Fonzarelli"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         teacher.refresh_from_db()
         self.assertEqual(teacher.first_name, "Arthur")
         self.assertEqual(teacher.last_name, "Fonzarelli")
@@ -100,7 +100,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
             content_type="application/json",
             data={"first_name": "Richie"},
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         teacher.refresh_from_db()
         self.assertEqual(teacher.first_name, "Richie")
 
@@ -112,7 +112,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
         self.assertEqual(models.Teacher.objects.count(), 1)
 
         response = self.client.delete(f"/api/v1.0/admin/teachers/{teacher.id}/")
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(models.Teacher.objects.count(), 0)
 
     def test_api_admin_teacher_list_ordering_first_name(self):
@@ -126,14 +126,14 @@ class TeacherAdminApiTest(BaseAPITestCase):
 
         # Test ascending order
         response = self.client.get("/api/v1.0/admin/teachers/?ordering=first_name")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         first_names = [teacher["first_name"] for teacher in results]
         self.assertEqual(first_names, ["Joanie", "Marsha", "Richie"])
 
         # Test descending order
         response = self.client.get("/api/v1.0/admin/teachers/?ordering=-first_name")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         first_names = [teacher["first_name"] for teacher in results]
         self.assertEqual(first_names, ["Richie", "Marsha", "Joanie"])
@@ -149,14 +149,14 @@ class TeacherAdminApiTest(BaseAPITestCase):
 
         # Test ascending order
         response = self.client.get("/api/v1.0/admin/teachers/?ordering=last_name")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         last_names = [teacher["last_name"] for teacher in results]
         self.assertEqual(last_names, ["Cunningham", "Fonzarelli", "Simms"])
 
         # Test descending order
         response = self.client.get("/api/v1.0/admin/teachers/?ordering=-last_name")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         last_names = [teacher["last_name"] for teacher in results]
         self.assertEqual(last_names, ["Simms", "Fonzarelli", "Cunningham"])
@@ -173,7 +173,7 @@ class TeacherAdminApiTest(BaseAPITestCase):
 
         # Test filtering by last_name
         response = self.client.get("/api/v1.0/admin/teachers/?query=Cunning")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(len(response.json()["results"]), 2)
         first_names = [teacher["first_name"] for teacher in response.json()["results"]]
         last_names = [teacher["last_name"] for teacher in response.json()["results"]]

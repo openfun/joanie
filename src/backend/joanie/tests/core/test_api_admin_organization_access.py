@@ -6,12 +6,12 @@ import uuid
 from http import HTTPStatus
 from unittest import mock
 
-from django.test import TestCase
-
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrganizationAccessAdminApiTest(TestCase):
+# pylint: disable=too-many-public-methods
+class OrganizationAccessAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for OrganizationAccess Admin API.
     """
@@ -25,7 +25,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -103,7 +103,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(organization.accesses.count(), 1)
         organization_access = organization.accesses.first()
         content = response.json()
@@ -139,7 +139,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_organization_accesses_request_create_with_unknown_course_id(
@@ -186,7 +186,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(), {"role": ['"invalid_role" is not a valid choice.']}
         )
@@ -212,7 +212,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -274,7 +274,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         content = response.json()
         self.assertEqual(content, {"user_id": ["This field is required."]})
 
@@ -296,7 +296,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(response.json(), {"user_id": ["Resource does not exist."]})
 
     def test_admin_api_organization_accesses_request_partial_update(self):
@@ -319,7 +319,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -351,7 +351,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/{organization_access.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(organization.accesses.count(), 0)
 
     @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
@@ -376,7 +376,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(organization.accesses.count(), 1)
         self.assertTrue(mock_update_organization_signatories.delay.called)
         mock_update_organization_signatories.delay.assert_called_with(
@@ -393,7 +393,7 @@ class OrganizationAccessAdminApiTest(TestCase):
                 "role": enums.MEMBER,
             },
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(organization.accesses.count(), 2)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
         self.assertFalse(mock_update_organization_signatories.delay.called)
@@ -409,7 +409,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(organization.accesses.count(), 3)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
         self.assertFalse(mock_update_organization_signatories.delay.called)
@@ -438,7 +438,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.count(), 1)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
         self.assertTrue(mock_update_organization_signatories.delay.called)
@@ -459,7 +459,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.count(), 2)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 2)
         self.assertTrue(mock_update_organization_signatories.delay.called)
@@ -497,7 +497,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.count(), 3)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 2)
         self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
@@ -516,7 +516,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.count(), 3)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
         self.assertEqual(organization.accesses.filter(role=enums.ADMIN).count(), 1)
@@ -549,7 +549,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
         self.assertFalse(mock_update_organization_signatories.delay.called)
         mock_update_organization_signatories.delay.reset_mock()
@@ -563,7 +563,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertFalse(mock_update_organization_signatories.delay.called)
 
     @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
@@ -589,7 +589,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.count(), 1)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
         self.assertTrue(mock_update_organization_signatories.delay.called)
@@ -609,7 +609,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.count(), 2)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 2)
         self.assertTrue(mock_update_organization_signatories.delay.called)
@@ -646,7 +646,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.count(), 3)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 2)
         self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
@@ -664,7 +664,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.count(), 3)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
         self.assertEqual(organization.accesses.filter(role=enums.ADMIN).count(), 1)
@@ -697,7 +697,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 1)
         self.assertFalse(mock_update_organization_signatories.delay.called)
         mock_update_organization_signatories.delay.reset_mock()
@@ -710,7 +710,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertFalse(mock_update_organization_signatories.delay.called)
 
     @mock.patch("joanie.core.api.admin.update_organization_signatories_contracts_task")
@@ -743,7 +743,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_1.id}/",
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(organization.accesses.filter(role=enums.OWNER).count(), 1)
         self.assertTrue(mock_update_organization_signatories.delay.called)
         mock_update_organization_signatories.delay.assert_called_with(
@@ -755,7 +755,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_2.id}/",
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(organization.accesses.filter(role=enums.MEMBER).count(), 0)
         self.assertFalse(mock_update_organization_signatories.delay.called)
         mock_update_organization_signatories.delay.reset_mock()
@@ -764,7 +764,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/accesses/{access_3.id}/",
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(organization.accesses.filter(role=enums.ADMIN).count(), 0)
         self.assertFalse(mock_update_organization_signatories.delay.called)
         mock_update_organization_signatories.delay.reset_mock()
@@ -793,7 +793,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(), {"role": ['"invalid_fake_role" is not a valid choice.']}
         )
@@ -822,7 +822,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(), {"role": ['"invalid_fake_role" is not a valid choice.']}
         )
@@ -848,7 +848,7 @@ class OrganizationAccessAdminApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(
             response.json(),
             {"detail": "An organization should keep at least one owner."},

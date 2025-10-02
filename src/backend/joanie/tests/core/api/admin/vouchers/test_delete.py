@@ -49,7 +49,7 @@ class VouchersAdminApiDeleteTestCase(BaseAPITestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/vouchers/{voucher.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
 
         # Check that the voucher is deleted from the database
         self.assertEqual(models.Voucher.objects.count(), 0)
@@ -86,7 +86,7 @@ class VouchersAdminApiDeleteTestCase(BaseAPITestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/vouchers/{voucher.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
 
         # Check that the voucher is deleted from the database
         self.assertEqual(models.Voucher.objects.count(), 0)

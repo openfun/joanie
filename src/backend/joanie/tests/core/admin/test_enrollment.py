@@ -2,7 +2,6 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
 from django.urls import reverse
 
 from joanie.core.factories import (
@@ -12,9 +11,10 @@ from joanie.core.factories import (
     UserFactory,
 )
 from joanie.core.models import CourseState
+from joanie.tests.base import BaseAPITestCase
 
 
-class EnrollmentAdminTestCase(TestCase):
+class EnrollmentAdminTestCase(BaseAPITestCase):
     """
     Test suite for admin enrollment viewset search fields.
     """
@@ -65,7 +65,7 @@ class EnrollmentAdminTestCase(TestCase):
 
         response = self.client.get(enrollment_search_url, search_parameters)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTemplateUsed("admin/core/enrollment/change_list.html")
         self.assertContains(response, str(self.enrollment.user))
         self.assertContains(response, str(self.course_run.title))
@@ -85,7 +85,7 @@ class EnrollmentAdminTestCase(TestCase):
 
         response = self.client.get(enrollment_search_url, search_parameters)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTemplateUsed("admin/core/enrollment/change_list.html")
         self.assertContains(response, str(self.enrollment.user))
         self.assertContains(response, str(self.course_run.title))
@@ -105,7 +105,7 @@ class EnrollmentAdminTestCase(TestCase):
 
         response = self.client.get(enrollment_search_url, search_parameters)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTemplateUsed("admin/core/enrollment/change_list.html")
         self.assertContains(response, str(self.enrollment.user))
         self.assertContains(response, str(self.course_run.title))
@@ -125,7 +125,7 @@ class EnrollmentAdminTestCase(TestCase):
 
         response = self.client.get(enrollment_search_url, search_parameters)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTemplateUsed("admin/core/enrollment/change_list.html")
         self.assertContains(response, str(self.enrollment.user))
         self.assertContains(response, str(self.course_run.title))

@@ -5,13 +5,12 @@ Test suite for CourseProductRelation delete Admin API.
 from http import HTTPStatus
 from unittest import mock
 
-from django.test import TestCase
-
 from joanie.core import factories, models
 from joanie.core.serializers import fields
+from joanie.tests.base import BaseAPITestCase
 
 
-class CourseProductRelationDeleteAdminApiTest(TestCase):
+class CourseProductRelationDeleteAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for CourseProductRelation delete Admin API.
     """
@@ -27,7 +26,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -45,7 +44,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "You do not have permission to perform this action."},
@@ -69,7 +68,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         with self.assertRaises(models.CourseProductRelation.DoesNotExist):
             offering.refresh_from_db()
 
@@ -97,7 +96,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertDictEqual(
             response.json(),
             {"detail": "['You cannot delete this offering.']"},
@@ -125,7 +124,7 @@ class CourseProductRelationDeleteAdminApiTest(TestCase):
             f"/api/v1.0/admin/offerings/{offering.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         with self.assertRaises(models.CourseProductRelation.DoesNotExist):
             offering.refresh_from_db()
         with self.assertRaises(models.OfferingRule.DoesNotExist):

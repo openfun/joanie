@@ -23,7 +23,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
             "/api/v1.0/batch-orders/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -50,7 +50,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertDictEqual(
             response.json(),

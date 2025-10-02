@@ -4,13 +4,13 @@ from decimal import Decimal
 from http import HTTPStatus
 
 from django.conf import settings
-from django.test import TestCase
 
 from joanie.core import enums, factories
 from joanie.tests import format_date
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrdersAdminApiDetailTestCase(TestCase):
+class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API read detail endpoint."""
 
     maxDiff = None
@@ -23,7 +23,7 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
             f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_read_detail_batch_order_authenticated(self):
         """Authenticated user should not be able to read the detail of a batch order"""
@@ -36,7 +36,7 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
             f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_read_detail_batch_order_admin_authenticated(self):
         """Authenticated admin user should be able to read the detail of a batch order"""
@@ -50,7 +50,7 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -122,7 +122,7 @@ class BatchOrdersAdminApiDetailTestCase(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {

@@ -92,7 +92,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/enrollments/",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = json.loads(response.content)
 
         self.assertDictEqual(
@@ -120,7 +120,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             {
                 "count": 1,
@@ -192,7 +192,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertDictEqual(
             {
@@ -311,7 +311,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = json.loads(response.content)
         self.assertEqual(len(content["results"]), 3)
 
@@ -435,7 +435,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = json.loads(response.content)
 
         self.assertEqual(len(content["results"]), 1)
@@ -464,7 +464,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -483,7 +483,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -522,7 +522,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             {
                 "count": 1,
@@ -595,7 +595,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(), {"course_run_id": ["Enter a valid UUID."]}
         )
@@ -614,14 +614,14 @@ class EnrollmentApiTest(BaseAPITestCase):
             "/api/v1.0/enrollments/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
 
         response = self.client.get(
             "/api/v1.0/enrollments/?is_active=false",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(inactive_enrollment.id))
@@ -630,7 +630,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             "/api/v1.0/enrollments/?is_active=true",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(active_enrollment.id))
@@ -667,7 +667,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -677,7 +677,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
@@ -689,7 +689,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         )
 
         response = self.client.get(f"/api/v1.0/enrollments/{enrollment.id}/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(),
@@ -726,7 +726,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             f"/api/v1.0/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertDictEqual(
             {
@@ -802,7 +802,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertListEqual(
@@ -886,7 +886,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             f"/api/v1.0/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
         self.assertDictEqual(
             response.json(), {"detail": "No Enrollment matches the given query."}
@@ -899,7 +899,7 @@ class EnrollmentApiTest(BaseAPITestCase):
         response = self.client.post(
             "/api/v1.0/enrollments/", data=data, content_type="application/json"
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -936,7 +936,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         content = response.json()
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
@@ -1041,7 +1041,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(models.Enrollment.objects.count(), 1)
 
         enrollment = models.Enrollment.objects.get()
@@ -1176,7 +1176,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(),
@@ -1217,7 +1217,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
         self.assertFalse(mock_set.called)
@@ -1310,7 +1310,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
         enrollment = models.Enrollment.objects.get()
@@ -1379,7 +1379,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(),
@@ -1402,7 +1402,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(),
@@ -1434,7 +1434,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(),
@@ -1472,7 +1472,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                     content_type="application/json",
                     HTTP_AUTHORIZATION=f"Bearer {token}",
                 )
-                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
                 course_run_id = target_course_runs[0].id
                 self.assertDictEqual(
@@ -1506,7 +1506,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         course_run_id = target_course_runs[0].id
         self.assertDictEqual(
@@ -1553,7 +1553,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             data=data,
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         self.assertEqual(models.Enrollment.objects.count(), 1)
         enrollment = models.Enrollment.objects.get()
@@ -1633,7 +1633,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(),
@@ -1663,7 +1663,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(),
@@ -1690,7 +1690,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(),
@@ -1706,7 +1706,7 @@ class EnrollmentApiTest(BaseAPITestCase):
 
         response = self.client.delete(f"/api/v1.0/enrollments/{enrollment.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(),
@@ -1734,7 +1734,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             f"/api/v1.0/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Enrollment.objects.count(), 1)
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -1749,7 +1749,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             f"/api/v1.0/enrollments/{enrollment.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Enrollment.objects.count(), 1)
 
     @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
@@ -1777,7 +1777,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 data={"state": new_state[0]},
                 content_type="application/json",
             )
-            self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+            self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
             self.assertDictEqual(
                 response.json(),
@@ -1816,7 +1816,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+            self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
             self.assertDictEqual(
                 response.json(), {"detail": "No Enrollment matches the given query."}
@@ -1854,7 +1854,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 content_type="application/json",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             self.assertDictEqual(
                 {
@@ -1957,7 +1957,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             content_type="application/json",
             **headers,
         )
-        self.assertEqual(response.status_code, http_code)
+        self.assertStatusCodeEqual(response, http_code)
 
         # Check that nothing was modified
         self.assertEqual(models.Enrollment.objects.count(), 1)
@@ -2078,7 +2078,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             {
                 "id": str(enrollment.id),
@@ -2163,7 +2163,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             {
                 "id": str(enrollment.id),
@@ -2246,7 +2246,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             {
                 "id": str(enrollment.id),
@@ -2341,7 +2341,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             {
                 "id": str(enrollment.id),
@@ -2407,7 +2407,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {user_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             {
                 "id": str(enrollment.id),
@@ -2504,7 +2504,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
@@ -2536,7 +2536,7 @@ class EnrollmentApiTest(BaseAPITestCase):
                 f"/api/v1.0/enrollments/?query={query}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0].get("id"), str(enrollment_2.id))
@@ -2547,7 +2547,7 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -2557,6 +2557,6 @@ class EnrollmentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
