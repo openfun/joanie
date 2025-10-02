@@ -112,6 +112,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "owner": order.owner.username,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                         "target_enrollments": [],
                         "total": float(product.price),
@@ -188,6 +189,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(other_order.product.id),
                         "state": other_order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                         "payment_schedule": [],
                     }
@@ -238,6 +240,101 @@ class OrderListApiTest(BaseAPITestCase):
         self.assertEqual(len(content["results"]), 1)
         order_ids.remove(content["results"][0]["id"])
         self.assertEqual(order_ids, [])
+
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_read_list_from_batch_order(self, _mock_thumbnail):
+        """
+        When an order is created from a batch order, the key in the response `from_batch_order`
+        should return True
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=1,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        organization_address = batch_order.organization.addresses.filter(
+            is_main=True
+        ).first()
+        # Let's simulate that the order from the batch order is given to the requesting
+        # user ( a user can only see his/her orders )
+        order = batch_order.orders.first()
+        order.owner = user
+        order.flow.update()
+
+        response = self.client.get(
+            "/api/v1.0/orders/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertDictEqual(
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(order.id),
+                        "certificate_id": None,
+                        "contract": None,
+                        "course": {
+                            "code": order.course.code,
+                            "id": str(order.course.id),
+                            "title": order.course.title,
+                            "cover": "_this_field_is_mocked",
+                        },
+                        "created_on": order.created_on.strftime(
+                            "%Y-%m-%dT%H:%M:%S.%fZ"
+                        ),
+                        "credit_card_id": None,
+                        "enrollment": None,
+                        "target_enrollments": [],
+                        "main_invoice_reference": None,
+                        "offering_rule_ids": [],
+                        "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "organization": {
+                            "id": str(order.organization.id),
+                            "code": order.organization.code,
+                            "title": order.organization.title,
+                            "logo": "_this_field_is_mocked",
+                            "address": {
+                                "id": str(organization_address.id),
+                                "address": organization_address.address,
+                                "city": organization_address.city,
+                                "country": organization_address.country,
+                                "first_name": organization_address.first_name,
+                                "is_main": organization_address.is_main,
+                                "last_name": organization_address.last_name,
+                                "postcode": organization_address.postcode,
+                                "title": organization_address.title,
+                            }
+                            if organization_address
+                            else None,
+                            "enterprise_code": order.organization.enterprise_code,
+                            "activity_category_code": order.organization.activity_category_code,
+                            "contact_phone": order.organization.contact_phone,
+                            "contact_email": order.organization.contact_email,
+                            "dpo_email": order.organization.dpo_email,
+                        },
+                        "owner": user.username,
+                        "total": 0,
+                        "total_currency": settings.DEFAULT_CURRENCY,
+                        "product_id": str(order.product.id),
+                        "state": order.state,
+                        "from_batch_order": True,
+                        "target_courses": [],
+                        "payment_schedule": [],
+                    }
+                ],
+            },
+            response.json(),
+        )
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -321,6 +418,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -497,6 +595,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -607,6 +706,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -751,6 +851,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                         "target_enrollments": [],
                     }
@@ -967,6 +1068,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -1056,6 +1158,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],
@@ -1149,6 +1252,7 @@ class OrderListApiTest(BaseAPITestCase):
                         "total_currency": settings.DEFAULT_CURRENCY,
                         "product_id": str(order.product.id),
                         "state": order.state,
+                        "from_batch_order": False,
                         "target_courses": [],
                     }
                 ],

@@ -8,8 +8,7 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.core.cache import cache
 
-from joanie.core import factories
-from joanie.core.enums import ORDER_STATE_COMPLETED
+from joanie.core import enums, factories
 from joanie.core.models import CourseState
 from joanie.core.serializers import fields
 from joanie.tests import format_date
@@ -63,7 +62,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 ),
                 student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
             ),
-            state=ORDER_STATE_COMPLETED,
+            state=enums.ORDER_STATE_COMPLETED,
         )
         # Generate payment schedule
         order.generate_schedule()
@@ -106,6 +105,7 @@ class OrderReadApiTest(BaseAPITestCase):
                 "credit_card_id": str(order.credit_card.id),
                 "enrollment": None,
                 "state": order.state,
+                "from_batch_order": False,
                 "main_invoice_reference": order.main_invoice.reference,
                 "offering_rule_ids": [],
                 "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
@@ -200,3 +200,29 @@ class OrderReadApiTest(BaseAPITestCase):
         self.assertDictEqual(
             response.json(), {"detail": "No Order matches the given query."}
         )
+
+    def test_api_order_read_detail_from_batch_order(self):
+        """
+        When an authenticated user wants to read detail about his order from a batch order,
+        the key 'from_batch_order' should return True.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=1,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        # Let's simulate that the order from the batch order is given to the requesting
+        # user ( a user can only see his/her orders )
+        order = batch_order.orders.first()
+        order.owner = user
+        order.flow.update()
+
+        response = self.client.get(
+            f"/api/v1.0/orders/{order.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertTrue(response.json()["from_batch_order"])

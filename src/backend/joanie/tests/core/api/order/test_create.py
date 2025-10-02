@@ -219,6 +219,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "owner": "panoramix",
                 "product_id": str(product.id),
                 "state": order.state,
+                "from_batch_order": False,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -397,6 +398,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "owner": enrollment.user.username,
                 "product_id": str(product.id),
                 "state": enums.ORDER_STATE_COMPLETED,
+                "from_batch_order": False,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
@@ -1018,6 +1020,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "product_id": str(product.id),
                 "target_enrollments": [],
                 "state": enums.ORDER_STATE_COMPLETED,
+                "from_batch_order": False,
                 "target_courses": [
                     {
                         "code": target_course.code,
@@ -1350,6 +1353,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "state": enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+                "from_batch_order": False,
                 "target_enrollments": [],
                 "target_courses": [
                     {
@@ -1552,6 +1556,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "owner": user.username,
                 "product_id": str(product.id),
                 "state": enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+                "from_batch_order": False,
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "target_enrollments": [],
