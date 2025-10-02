@@ -82,7 +82,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
-            response.json(), {"detail": "Authentication credentials were not provided."}
+            {"detail": "Authentication credentials were not provided."}, response.json()
         )
 
     @mock.patch.object(
@@ -143,7 +143,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0]
         self.assertEqual(
-            synchronized_course_runs,
             [
                 {
                     "catalog_visibility": enums.COURSE_AND_SEARCH,
@@ -165,6 +164,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     f"/products/{product.id}/",
                 }
             ],
+            synchronized_course_runs,
         )
         # order has been created
         self.assertEqual(models.Order.objects.count(), 1)
@@ -172,7 +172,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
 
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(order.id),
                 "certificate_id": None,
@@ -268,12 +267,13 @@ class OrderCreateApiTest(BaseAPITestCase):
                     )
                 ],
             },
+            response.json(),
         )
 
         # user has been created
         self.assertEqual(models.User.objects.count(), 1)
         user = models.User.objects.get()
-        self.assertEqual(user.username, "panoramix")
+        self.assertEqual("panoramix", user.username)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -322,7 +322,6 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertEqual(list(order.target_courses.all()), [])
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(order.id),
                 "certificate_id": None,
@@ -403,6 +402,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "target_enrollments": [],
                 "target_courses": [],
             },
+            response.json(),
         )
 
     def test_api_order_create_authenticated_for_enrollment_invalid(self):
@@ -430,8 +430,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(),
             {"enrollment_id": f"Enrollment with id {data['enrollment_id']} not found."},
+            response.json(),
         )
         # no order has been created
         self.assertEqual(models.Order.objects.count(), 0)
@@ -474,12 +474,12 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
-            response.json(),
             {
                 "enrollment": [
                     "The enrollment should belong to the owner of this order."
                 ],
             },
+            response.json(),
         )
 
     def test_api_order_create_submit_authenticated_organization_not_passed(self):
@@ -510,8 +510,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
-            response.json(),
             [" 'Assign' transition conditions have not been met"],
+            response.json(),
         )
 
     def test_api_order_create_authenticated_organization_not_passed_one(self):
@@ -753,7 +753,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         order_id = response.json()["id"]
         order = models.Order.objects.get(id=order_id)
-        self.assertEqual(order.organization, expected_organization)
+        self.assertEqual(expected_organization, order.organization)
 
     def test_api_order_create_organization_with_least_orders_is_consistent(self):
         """
@@ -844,7 +844,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         order_id = response.json()["id"]
         order = models.Order.objects.get(id=order_id)
-        self.assertEqual(order.organization, organizations[0])
+        self.assertEqual(organizations[0], order.organization)
         self.assertEqual(organizations[0].order_set.count(), 6)
         self.assertEqual(organizations[1].order_set.count(), 6)
 
@@ -919,7 +919,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         order_id = response.json()["id"]
         order = models.Order.objects.get(id=order_id)
-        self.assertEqual(order.organization, expected_organization)
+        self.assertEqual(expected_organization, order.organization)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -973,7 +973,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         # - id, price and state has not been set according to data values
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(order.id),
                 "certificate_id": None,
@@ -1069,6 +1068,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "total": float(product.price),
                 "total_currency": settings.DEFAULT_CURRENCY,
             },
+            response.json(),
         )
 
     def test_api_order_create_authenticated_invalid_product(self):
@@ -1097,13 +1097,13 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
-            response.json(),
             {
                 "__all__": [
                     'This order cannot be linked to the product "balançoire", '
                     'the course "mathématiques".'
                 ]
             },
+            response.json(),
         )
 
         # Linking the course to the product should solve the problem
@@ -1185,8 +1185,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertFalse(models.Order.objects.exists())
         self.assertDictEqual(
-            response.json(),
             {"__all__": ["Either the course or the enrollment field is required."]},
+            response.json(),
         )
 
     def test_api_order_create_authenticated_product_course_unicity(self):
@@ -1219,8 +1219,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(),
             {"__all__": ["An order for this product and course already exists."]},
+            response.json(),
         )
 
         # But if we cancel the first order, user should be able to create a new order
@@ -1304,7 +1304,6 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(order.id),
                 "certificate_id": None,
@@ -1400,6 +1399,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     )
                 ],
             },
+            response.json(),
         )
 
     def test_api_order_create_authenticated_nb_seats(self):
@@ -1444,12 +1444,12 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(),
             {
                 "offering_rule": [
                     f"Maximum number of orders reached for product {product.title}"
                 ]
             },
+            response.json(),
         )
         self.assertEqual(
             models.Order.objects.filter(course=course, product=product).count(), 1
@@ -1508,7 +1508,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
 
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(order.id),
                 "certificate_id": None,
@@ -1600,6 +1599,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     )
                 ],
             },
+            response.json(),
         )
 
     def test_api_order_create_authenticated_no_seats(self):
@@ -1638,12 +1638,12 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(),
             {
                 "offering_rule": [
                     f"Maximum number of orders reached for product {offering.product.title}"
                 ]
             },
+            response.json(),
         )
         self.assertEqual(
             models.Order.objects.filter(product=product, course=course).count(), 0
@@ -1833,12 +1833,12 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(),
             {
                 "offering_rule": [
                     f"Maximum number of orders reached for product {product.title}"
                 ]
             },
+            response.json(),
         )
         self.assertEqual(
             models.Order.objects.filter(course=course, product=product).count(), 1
@@ -1926,8 +1926,8 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
-            response.json(),
             {"has_waived_withdrawal_right": "This field must be set to True."},
+            response.json(),
         )
 
         data.update({"has_waived_withdrawal_right": True})
@@ -1986,12 +1986,12 @@ class OrderCreateApiTest(BaseAPITestCase):
                 else:
                     self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
                     self.assertEqual(
-                        response.json(),
                         {
                             "__all__": [
                                 "An order for this product and course already exists."
                             ]
                         },
+                        response.json(),
                     )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -2055,7 +2055,6 @@ class OrderCreateApiTest(BaseAPITestCase):
                     self.assertEqual(mock_sync.call_count, 1)
                     synchronized_course_run = mock_sync.call_args_list[0][0][0][0]
                     self.assertEqual(
-                        synchronized_course_run,
                         {
                             "catalog_visibility": enums.COURSE_AND_SEARCH,
                             "certificate_discount": None,
@@ -2076,16 +2075,17 @@ class OrderCreateApiTest(BaseAPITestCase):
                             "price": None,
                             "resource_link": synchronized_course_run["resource_link"],
                         },
+                        synchronized_course_run,
                     )
                 else:
                     self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
                     self.assertEqual(
-                        response.json(),
                         {
                             "__all__": [
                                 "An order for this product and enrollment already exists."
                             ]
                         },
+                        response.json(),
                     )
 
     def test_api_order_create_when_offering_rule_is_active_and_nb_seats_is_none(self):
@@ -2410,12 +2410,12 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(),
             {
                 "offering_rule": [
                     f"Maximum number of orders reached for product {offering.product.title}"
                 ]
             },
+            response.json(),
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -2470,7 +2470,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(mock_sync.call_count, 1)
         synchronized_course_runs = mock_sync.call_args_list[0][0][0][0]
         self.assertEqual(
-            synchronized_course_runs,
             {
                 "catalog_visibility": enums.COURSE_AND_SEARCH,
                 "certificate_discount": None,
@@ -2490,6 +2489,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{offering.course.code}/products/{product.id}/",
             },
+            synchronized_course_runs,
         )
 
     def test_api_order_create_discount_voucher(self):
