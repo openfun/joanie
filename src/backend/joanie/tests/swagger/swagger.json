@@ -7696,6 +7696,10 @@
                     },
                     "has_waived_withdrawal_right": {
                         "type": "boolean"
+                    },
+                    "from_batch_order": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -7704,6 +7708,7 @@
                     "course",
                     "created_on",
                     "enrollment",
+                    "from_batch_order",
                     "has_waived_withdrawal_right",
                     "id",
                     "main_invoice_reference",

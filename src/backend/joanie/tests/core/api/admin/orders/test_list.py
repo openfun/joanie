@@ -108,12 +108,60 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "total_currency": get_default_currency_symbol(),
                     "discount": order.discount,
                     "voucher": order.voucher,
+                    "from_batch_order": False,
                 }
                 for order in sorted(orders, key=lambda x: x.created_on, reverse=True)
             ],
         }
 
         self.assertEqual(expected_content, content)
+
+    def test_api_admin_orders_list_from_batch_order(self):
+        """
+        Authenticated admin user can list orders from a batch order.
+        In the response, the key "from_batch_order" should return True.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=2,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+
+        response = self.client.get(
+            "/api/v1.0/admin/orders/",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertDictEqual(
+            {
+                "count": 2,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "course_code": order.course.code if order.course else None,
+                        "created_on": format_date(order.created_on),
+                        "updated_on": format_date(order.updated_on),
+                        "enrollment_id": None,
+                        "id": str(order.id),
+                        "organization_title": batch_order.organization.title,
+                        "owner_name": None,
+                        "product_title": order.product.title,
+                        "state": enums.ORDER_STATE_TO_OWN,
+                        "total": 0,
+                        "total_currency": get_default_currency_symbol(),
+                        "discount": "-100%",
+                        "voucher": order.voucher.code,
+                        "from_batch_order": True,
+                    }
+                    for order in batch_order.orders.all()
+                ],
+            },
+            response.json(),
+        )
 
     def test_api_admin_orders_list_filter_by_course_ids(self):
         """

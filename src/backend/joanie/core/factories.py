@@ -1269,7 +1269,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
-            if self.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+            if self.uses_purchase_order:
                 self.quote.organization_signed_on = django_timezone.now()
                 self.quote.has_purchase_order = True
                 self.quote.save()
@@ -1301,6 +1301,11 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             self.contract.student_signed_on = django_timezone.now()
             self.contract.save()
             self.flow.update()
+
+            if self.uses_purchase_order:
+                # Transition to `completed` once contract is signed with purchase order method
+                self.flow.update()
+                return
 
         if extracted in [
             enums.BATCH_ORDER_STATE_PENDING,

@@ -1361,6 +1361,7 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False,
         write_only=True,
     )
+    from_batch_order = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Order
@@ -1385,6 +1386,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "payment_schedule",
             "has_waived_withdrawal_right",
             "voucher_code",
+            "from_batch_order",
         ]
         read_only_fields = fields
 
@@ -1471,6 +1473,12 @@ class OrderSerializer(serializers.ModelSerializer):
         Return the currency used
         """
         return settings.DEFAULT_CURRENCY
+
+    def get_from_batch_order(self, instance):
+        """
+        Returns boolean value whether the order is created from a batch order.
+        """
+        return bool(instance.batch_order)
 
 
 class BatchOrderBillingAddressSerializer(serializers.Serializer):

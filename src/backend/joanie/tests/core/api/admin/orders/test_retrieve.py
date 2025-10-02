@@ -78,6 +78,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
+                "from_batch_order": False,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -267,6 +268,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
+                "from_batch_order": False,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -371,3 +373,23 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
             },
             response.json(),
         )
+
+    def test_api_admin_orders_from_batch_order(self):
+        """
+        Authenticated admin user can retrieve information on an order from a batch order.
+        In the response, the key "from_batch_order" should return True.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=1,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        order = batch_order.orders.first()
+
+        response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertTrue(response.json()["from_batch_order"])
