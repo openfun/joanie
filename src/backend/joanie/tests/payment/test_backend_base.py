@@ -96,9 +96,11 @@ class TestBasePaymentBackend(BasePaymentBackend):
         pass
 
 
-# pylint: disable=too-many-public-methods, too-many-lines
-@override_settings(JOANIE_CATALOG_NAME="Test Catalog")
-@override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
+# pylint: disable=too-many-public-methods, too-many-lines, too-many-ancestors
+@override_settings(
+    JOANIE_CATALOG_NAME="Test Catalog",
+    JOANIE_CATALOG_BASE_URL="https://richie.education",
+)
 class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase):
     """Test suite for the Base Payment Backend"""
 

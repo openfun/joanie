@@ -26,7 +26,7 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             f"/api/v1.0/contract_definitions/{str(contract_definition.id)}/preview_template/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         content = response.json()
         self.assertEqual(
@@ -150,7 +150,7 @@ class ContractDefinitionApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],

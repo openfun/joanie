@@ -21,7 +21,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{str(organization.id)}/quotes/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organization_quotes_list_without_access(self):
         """
@@ -40,7 +40,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -85,7 +85,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -129,7 +129,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{str(organization.id)}/quotes/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organizations_quotes_create_authenticated(self):
         """
@@ -144,9 +144,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organizations_quotes_update_anonymous(self):
         """
@@ -158,7 +156,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{str(organization.id)}/quotes/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organizations_quotes_update_authenticated(self):
         """
@@ -173,9 +171,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organizations_quotes_patch_anonymous(self):
         """
@@ -187,7 +183,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{str(organization.id)}/quotes/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organizations_quotes_patch_authenticated(self):
         """
@@ -202,9 +198,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organizations_quotes_delete_anonymous(self):
         """
@@ -216,7 +210,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{str(organization.id)}/quotes/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organizations_quotes_delete_authenticated(self):
         """
@@ -231,9 +225,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_quotes_retrieve_without_access(self):
         """
@@ -253,7 +245,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organizations_quotes_retrieve_with_accesses(self):
         """
@@ -274,7 +266,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -322,4 +314,4 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)

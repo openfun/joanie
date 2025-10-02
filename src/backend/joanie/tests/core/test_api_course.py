@@ -27,7 +27,7 @@ class CourseApiTest(BaseAPITestCase):
         factories.CourseFactory()
         response = self.client.get("/api/v1.0/courses/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -50,7 +50,7 @@ class CourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 2)
         self.assertCountEqual(
@@ -83,7 +83,7 @@ class CourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -156,7 +156,7 @@ class CourseApiTest(BaseAPITestCase):
         )
 
         # It should return courses[0] only
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(courses[0].id))
@@ -168,7 +168,7 @@ class CourseApiTest(BaseAPITestCase):
         )
 
         # It should return courses[1] and courses[2]
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
@@ -199,7 +199,7 @@ class CourseApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/?product_type={enums.PRODUCT_TYPE_CREDENTIAL}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
@@ -207,7 +207,7 @@ class CourseApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/?product_type={enums.PRODUCT_TYPE_ENROLLMENT}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -215,7 +215,7 @@ class CourseApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/?product_type={enums.PRODUCT_TYPE_CERTIFICATE}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -226,7 +226,7 @@ class CourseApiTest(BaseAPITestCase):
             f"/api/v1.0/courses/?product_type={enums.PRODUCT_TYPE_CREDENTIAL}",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 4)
 
@@ -238,7 +238,7 @@ class CourseApiTest(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/courses/{course.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -258,7 +258,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertDictEqual(
             response.json(), {"detail": "No Course matches the given query."}
         )
@@ -290,7 +290,7 @@ class CourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertTrue(content.pop("abilities")["get"])
         self.assertDictEqual(
@@ -348,7 +348,7 @@ class CourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(course.id))
 
@@ -363,7 +363,7 @@ class CourseApiTest(BaseAPITestCase):
 
         response = self.client.post("/api/v1.0/courses/", data=data)
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertFalse(models.Course.objects.exists())
 
     def test_api_course_create_authenticated(self):
@@ -387,7 +387,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertFalse(models.Course.objects.exists())
 
     def test_api_course_update_anonymous(self):
@@ -403,7 +403,7 @@ class CourseApiTest(BaseAPITestCase):
 
         response = self.client.put(f"/api/v1.0/courses/{course.id}/", data=data)
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -435,7 +435,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertDictEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
         course.refresh_from_db()
@@ -470,7 +470,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertDictEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
         course.refresh_from_db()
@@ -485,7 +485,7 @@ class CourseApiTest(BaseAPITestCase):
 
         response = self.client.delete(f"/api/v1.0/courses/{course.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(models.Course.objects.count(), 1)
 
     def test_api_course_delete_authenticated_without_access(self):
@@ -505,7 +505,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Course.objects.count(), 1)
 
     def test_api_course_delete_authenticated_with_access(self):
@@ -531,7 +531,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(models.Course.objects.count(), 1)
 
     def test_api_course_filter_query_by_course_title(self):
@@ -573,7 +573,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertCountEqual(
@@ -607,7 +607,7 @@ class CourseApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0].get("id"), str(course_2.id))
@@ -618,7 +618,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -628,7 +628,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -663,7 +663,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0].get("id"), str(course_1.id))
@@ -674,7 +674,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertCountEqual(
@@ -688,7 +688,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertCountEqual(
@@ -702,7 +702,7 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -712,6 +712,6 @@ class CourseApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)

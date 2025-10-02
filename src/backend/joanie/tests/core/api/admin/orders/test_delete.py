@@ -2,12 +2,11 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrdersAdminApiDeleteTestCase(TestCase):
+class OrdersAdminApiDeleteTestCase(BaseAPITestCase):
     """Test suite for the admin orders API delete endpoint."""
 
     maxDiff = None
@@ -22,7 +21,7 @@ class OrdersAdminApiDeleteTestCase(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
 
     def test_api_admin_orders_cancel_anonymous(self):
         """An anonymous user cannot cancel an order."""
@@ -30,7 +29,7 @@ class OrdersAdminApiDeleteTestCase(TestCase):
             with self.subTest(state=state):
                 order = factories.OrderFactory(state=state)
                 response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
-                self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+                self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_orders_cancel_authenticated_with_lambda_user(self):
         """
@@ -42,7 +41,7 @@ class OrdersAdminApiDeleteTestCase(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_orders_cancel_authenticated_non_existing(self):
         """
@@ -53,7 +52,7 @@ class OrdersAdminApiDeleteTestCase(TestCase):
 
         response = self.client.delete("/api/v1.0/admin/orders/unknown_id/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_admin_orders_cancel_authenticated(self):
         """
@@ -67,5 +66,5 @@ class OrdersAdminApiDeleteTestCase(TestCase):
                 order = factories.OrderFactory(state=state)
                 response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
                 order.refresh_from_db()
-                self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+                self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
                 self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)

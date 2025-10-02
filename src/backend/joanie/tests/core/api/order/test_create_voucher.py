@@ -52,7 +52,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, offering=offering)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         order = models.Order.objects.get()
         self.assertEqual(order.total, 90)
@@ -68,7 +68,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, user=user_1)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=response.json().get("id"))
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()
@@ -76,12 +76,12 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, user=user_1)
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         user_2 = factories.UserFactory(first_name="Jane", last_name="Doe")
         response = self.create_order(voucher, user=user_2)
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_order_create_voucher_multiple_use_single_user(self):
         """
@@ -97,7 +97,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, user=user_1, offering=offering_1)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=response.json().get("id"))
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()
@@ -107,7 +107,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, user=user_1, offering=offering_2)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=response.json().get("id"))
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()
@@ -116,7 +116,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         user_2 = factories.UserFactory()
         response = self.create_order(voucher, user=user_2, offering=offering_1)
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_order_create_voucher_single_use_multiple_user(self):
         """
@@ -132,7 +132,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, user=user_1, offering=offering_1)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=response.json().get("id"))
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()
@@ -142,12 +142,12 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, user=user_1, offering=offering_2)
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         user_2 = factories.UserFactory()
         response = self.create_order(voucher, user=user_2, offering=offering_1)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=response.json().get("id"))
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()
@@ -168,7 +168,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, user=user_1, offering=offering_1)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=response.json().get("id"))
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()
@@ -178,7 +178,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
 
         response = self.create_order(voucher, user=user_1, offering=offering_2)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=response.json().get("id"))
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()
@@ -187,7 +187,7 @@ class OrderCreateVoucherApiTest(BaseAPITestCase):
         user_2 = factories.UserFactory()
         response = self.create_order(voucher, user=user_2, offering=offering_1)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order = models.Order.objects.get(id=response.json().get("id"))
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()

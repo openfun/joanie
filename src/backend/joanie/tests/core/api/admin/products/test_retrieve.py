@@ -5,12 +5,12 @@ Test suite for Product Admin API.
 from http import HTTPStatus
 
 from django.conf import settings
-from django.test import TestCase
 
 from joanie.core import factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
-class ProductAdminApiRetrieveTest(TestCase):
+class ProductAdminApiRetrieveTest(BaseAPITestCase):
     """
     Test suite for the retrieve Product Admin API endpoint.
     """
@@ -60,7 +60,7 @@ class ProductAdminApiRetrieveTest(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/products/{product.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(product.id))
         expected_result = {

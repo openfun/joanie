@@ -20,7 +20,7 @@ class ActivityLogDeleteApiTest(BaseAPITestCase):
         activity_log = factories.ActivityLogFactory()
         response = self.client.delete(f"/api/v1.0/activity-logs/{activity_log.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_activity_log_delete_no_activity_logs(self):
         """
@@ -35,7 +35,7 @@ class ActivityLogDeleteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_activity_log_delete_with_activity_logs(self):
         """
@@ -50,4 +50,4 @@ class ActivityLogDeleteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)

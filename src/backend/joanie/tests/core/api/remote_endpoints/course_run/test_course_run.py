@@ -510,7 +510,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -547,7 +547,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             url, HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -599,7 +599,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             url, HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -652,7 +652,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             url, HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

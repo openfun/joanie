@@ -27,7 +27,7 @@ class OrderPaymentMethodApiTest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
         self.assertIsNone(order.credit_card)
@@ -53,7 +53,7 @@ class OrderPaymentMethodApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
         self.assertIsNone(order.credit_card)
@@ -139,7 +139,7 @@ class OrderPaymentMethodApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING)
         self.assertEqual(order.credit_card, credit_card)

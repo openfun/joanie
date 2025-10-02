@@ -6,12 +6,13 @@ import random
 from http import HTTPStatus
 
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from joanie.core import enums, factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
-class ContractDefinitionAdminApiTest(TestCase):
+class ContractDefinitionAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for Contract definition Admin API.
     """
@@ -24,7 +25,7 @@ class ContractDefinitionAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/contract-definitions/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -39,7 +40,7 @@ class ContractDefinitionAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/contract-definitions/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -56,7 +57,7 @@ class ContractDefinitionAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/contract-definitions/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], contract_definitions_count)
 
@@ -76,7 +77,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             f"/api/v1.0/admin/contract-definitions/?query={contract_definition_1.title}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -116,7 +117,7 @@ class ContractDefinitionAdminApiTest(TestCase):
                 f"/api/v1.0/admin/contract-definitions/?language={language}"
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["language"], language)
@@ -138,7 +139,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             "/api/v1.0/admin/contract-definitions/?language=invalid"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         content = response.json()
         self.assertEqual(
             content,
@@ -159,7 +160,7 @@ class ContractDefinitionAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/contract-definitions/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
@@ -167,7 +168,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             f"/api/v1.0/admin/contract-definitions/?ids={contract_definitions[0].id}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(contract_definitions[0].id))
@@ -177,7 +178,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             f"&ids={contract_definitions[1].id}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(contract_definitions[0].id))
@@ -197,7 +198,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             f"/api/v1.0/admin/contract-definitions/{contract_definition.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -230,7 +231,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Contract 001")
@@ -257,7 +258,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             data=payload,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(contract_definition.id))
         self.assertEqual(content["title"], "Updated Contract grade 1")
@@ -279,7 +280,7 @@ class ContractDefinitionAdminApiTest(TestCase):
             data={"title": "new title"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(contract_definition.id))
         self.assertEqual(content["title"], "new title")
@@ -296,5 +297,5 @@ class ContractDefinitionAdminApiTest(TestCase):
             f"/api/v1.0/admin/contract-definitions/{contract_definition.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertFalse(models.ContractDefinition.objects.exists())

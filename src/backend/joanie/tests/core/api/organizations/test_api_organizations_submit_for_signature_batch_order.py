@@ -29,7 +29,7 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
             data={"batch_order_id": str(batch_order.id)},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organization_submit_for_signature_batch_order_contract_get(self):
         """
@@ -49,9 +49,7 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_submit_for_signature_batch_order_contract_patch(self):
         """
@@ -71,9 +69,7 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_submit_for_signature_batch_order_contract_put(self):
         """
@@ -93,9 +89,7 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_submit_for_signature_batch_order_contract_delete(self):
         """
@@ -115,9 +109,7 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_submit_for_signature_batch_order_contract_invalid_id(
         self,
@@ -138,7 +130,7 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organization_submit_for_signature_batch_order_contract_not_owner_role(
         self,
@@ -214,7 +206,7 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
 
                 batch_order.refresh_from_db()
 
-                self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
+                self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
                 self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
 
                 # Check the method that sends the invitation link to sign is called

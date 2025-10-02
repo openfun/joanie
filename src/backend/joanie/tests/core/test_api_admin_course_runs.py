@@ -7,14 +7,13 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories, models
 from joanie.core.models import CourseRun
 from joanie.tests import format_date
+from joanie.tests.base import BaseAPITestCase
 
 
-class CourseRunAdminApiTest(TestCase):
+class CourseRunAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for Course run Admin API.
     """
@@ -27,7 +26,7 @@ class CourseRunAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/course-runs/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -42,7 +41,7 @@ class CourseRunAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/course-runs/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -59,7 +58,7 @@ class CourseRunAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/course-runs/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], course_runs_count)
 
@@ -74,14 +73,14 @@ class CourseRunAdminApiTest(TestCase):
         items = factories.CourseRunFactory.create_batch(course_runs_count)
 
         response = self.client.get("/api/v1.0/admin/course-runs/?query=")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], course_runs_count)
 
         response = self.client.get(
             f"/api/v1.0/admin/course-runs/?query={items[0].title}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
@@ -96,7 +95,7 @@ class CourseRunAdminApiTest(TestCase):
         item.translations.create(language_code="fr-fr", title="Session 1")
 
         response = self.client.get("/api/v1.0/admin/course-runs/?query=Course")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Course run 1")
@@ -104,7 +103,7 @@ class CourseRunAdminApiTest(TestCase):
         response = self.client.get(
             "/api/v1.0/admin/course-runs/?query=Session", HTTP_ACCEPT_LANGUAGE="fr-fr"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Session 1")
@@ -112,7 +111,7 @@ class CourseRunAdminApiTest(TestCase):
         response = self.client.get(
             "/api/v1.0/admin/course-runs/?query=Course", HTTP_ACCEPT_LANGUAGE="fr-fr"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Session 1")
@@ -121,7 +120,7 @@ class CourseRunAdminApiTest(TestCase):
         resource_link = "https://moodle.test/session1"
         item = factories.CourseRunFactory(resource_link=resource_link)
         response = self.client.get("/api/v1.0/admin/course-runs/?query=moodle.test")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["resource_link"], resource_link)
@@ -143,7 +142,7 @@ class CourseRunAdminApiTest(TestCase):
             response = self.client.get(
                 f"/api/v1.0/admin/course-runs/?course_ids={course.id}"
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(course_run.id))
@@ -154,7 +153,7 @@ class CourseRunAdminApiTest(TestCase):
             f"?course_ids={course_runs[0].course.id}"
             f"&course_ids={course_runs[1].course.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -206,7 +205,7 @@ class CourseRunAdminApiTest(TestCase):
                 f"/api/v1.0/admin/course-runs/?organization_ids={organization.id}"
             )
             course_run = CourseRun.objects.get(course__organizations__in=[organization])
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(course_run.id))
@@ -216,7 +215,7 @@ class CourseRunAdminApiTest(TestCase):
             f"?organization_ids={organizations[0].id}"
             f"&organization_ids={organizations[1].id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -225,7 +224,7 @@ class CourseRunAdminApiTest(TestCase):
         response = self.client.get(
             f"/api/v1.0/admin/course-runs/?organization_ids={other_organization.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -272,18 +271,18 @@ class CourseRunAdminApiTest(TestCase):
         non_gradable_run = factories.CourseRunFactory(is_gradable=False)
 
         response = self.client.get("/api/v1.0/admin/course-runs/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
         response = self.client.get("/api/v1.0/admin/course-runs/?is_gradable=true")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(gradable_run.id))
 
         response = self.client.get("/api/v1.0/admin/course-runs/?is_gradable=false")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(non_gradable_run.id))
@@ -299,18 +298,18 @@ class CourseRunAdminApiTest(TestCase):
         non_listed_run = factories.CourseRunFactory(is_listed=False)
 
         response = self.client.get("/api/v1.0/admin/course-runs/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
         response = self.client.get("/api/v1.0/admin/course-runs/?is_listed=true")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(listed_run.id))
 
         response = self.client.get("/api/v1.0/admin/course-runs/?is_listed=false")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(non_listed_run.id))
@@ -325,12 +324,12 @@ class CourseRunAdminApiTest(TestCase):
         items = factories.CourseRunFactory.create_batch(3)
 
         response = self.client.get("/api/v1.0/admin/course-runs/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
         response = self.client.get(f"/api/v1.0/admin/course-runs/?ids={items[0].id}")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(items[0].id))
@@ -338,7 +337,7 @@ class CourseRunAdminApiTest(TestCase):
         response = self.client.get(
             f"/api/v1.0/admin/course-runs/?ids={items[0].id}&ids={items[1].id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(items[1].id))
@@ -354,7 +353,7 @@ class CourseRunAdminApiTest(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/course-runs/{course_run.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertEqual(
             response.json(),
@@ -412,7 +411,7 @@ class CourseRunAdminApiTest(TestCase):
             "/api/v1.0/admin/course-runs/", content_type="application/json", data=data
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(
@@ -447,7 +446,7 @@ class CourseRunAdminApiTest(TestCase):
             data=payload,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(course_run.id))
         self.assertEqual(content["title"], "Updated Run 001")
@@ -470,7 +469,7 @@ class CourseRunAdminApiTest(TestCase):
             data={"title": "Updated Run 001"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(course_run.id))
         self.assertEqual(content["title"], "Updated Run 001")
@@ -485,7 +484,7 @@ class CourseRunAdminApiTest(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/course-runs/{course_run.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
 
     def test_admin_api_course_run_read_list_authenticated_with_nested_course_filter_name(
         self,
@@ -507,7 +506,7 @@ class CourseRunAdminApiTest(TestCase):
             f"/api/v1.0/admin/courses/{course.id}/course-runs/?query=is%20a",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(course_run.id))
@@ -515,7 +514,7 @@ class CourseRunAdminApiTest(TestCase):
             f"/api/v1.0/admin/courses/{course.id}/course-runs/?query=CourseRu",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
@@ -541,7 +540,7 @@ class CourseRunAdminApiTest(TestCase):
         response = self.client.get(
             f"/api/v1.0/admin/courses/{course.id}/course-runs/?start={now.strftime(format_time)}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(course_run.id))
@@ -553,7 +552,7 @@ class CourseRunAdminApiTest(TestCase):
                 f"?start={past_date.strftime(format_time)}"
             ),
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
 
@@ -564,7 +563,7 @@ class CourseRunAdminApiTest(TestCase):
                 f"?start={future_date.strftime(format_time)}"
             ),
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 
@@ -603,7 +602,7 @@ class CourseRunAdminApiTest(TestCase):
             response = self.client.get(
                 (f"/api/v1.0/admin/courses/{course.id}/course-runs/?state={state_id}"),
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], len(sorted_course_runs[state_id]))
             for course_run in sorted_course_runs[state_id]:
@@ -613,6 +612,6 @@ class CourseRunAdminApiTest(TestCase):
         response = self.client.get(
             f"/api/v1.0/admin/courses/{course.id}/course-runs/?state=-1",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)

@@ -54,7 +54,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_batch_order_create_fails_when_missing_company_informations(self):
         """
@@ -93,7 +93,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {
@@ -128,7 +128,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         batch_order = models.BatchOrder.objects.get(owner=user)
 
@@ -165,7 +165,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         batch_order = models.BatchOrder.objects.get()
 
         self.assertDictEqual(
@@ -216,7 +216,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {
@@ -253,7 +253,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_batch_order_create_auto_assign_organization_with_least_orders(self):
         """
@@ -315,7 +315,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         batch_order = models.BatchOrder.objects.get(relation=offering)
 
@@ -343,4 +343,4 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)

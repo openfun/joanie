@@ -20,7 +20,7 @@ class UserApiTest(BaseAPITestCase):
         factories.UserFactory()
         response = self.client.get("/api/v1.0/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_user_root_route(self):
         """
@@ -34,7 +34,7 @@ class UserApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_user_me_no_access(self):
         """
@@ -48,7 +48,7 @@ class UserApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -82,7 +82,7 @@ class UserApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -116,7 +116,7 @@ class UserApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

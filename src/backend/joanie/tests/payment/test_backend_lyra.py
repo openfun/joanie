@@ -46,6 +46,7 @@ from joanie.tests.base import LoggingTestCase
 from joanie.tests.payment.base_payment import BasePaymentTestCase
 
 
+# pylint: disable=too-many-ancestors
 @override_settings(
     JOANIE_CATALOG_NAME="Test Catalog",
     JOANIE_CATALOG_BASE_URL="https://richie.education",

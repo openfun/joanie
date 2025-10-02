@@ -11,20 +11,24 @@ DEBUG setting value, and some routes were available when they should not be.
 from http import HTTPStatus
 
 from django.core.cache import cache
-from django.test import TestCase
 from django.test.utils import override_settings
 
+from joanie.tests.base import BaseAPITestCase
 from joanie.tests.testing_utils import reload_urlconf
 
 
 @override_settings(DEBUG=True)
-class DebugEnabledUrlsTemplatePreviewTestCase(TestCase):
+class DebugEnabledUrlsTemplatePreviewTestCase(BaseAPITestCase):
     """
     Test case for debug urls routes to preview template
     (certificate, degree, invoice and contract definition) when DEBUG is enabled.
     """
 
     def setUp(self):
+        """
+        Reset the cache to always reach the site route.
+        Force URLs reload to take DEBUG into account
+        """
         super().setUp()
         # Reset the cache to always reach the site route.
         cache.clear()
@@ -40,7 +44,7 @@ class DebugEnabledUrlsTemplatePreviewTestCase(TestCase):
         """
         response = self.client.get(path="/__debug__/pdf-templates/certificate")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
     def test_debug_urls_template_preview_degree_when_debug_is_true(
         self,
@@ -51,7 +55,7 @@ class DebugEnabledUrlsTemplatePreviewTestCase(TestCase):
         """
         response = self.client.get(path="/__debug__/pdf-templates/degree")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
     def test_debug_urls_template_preview_invoice_when_debug_is_true(
         self,
@@ -62,7 +66,7 @@ class DebugEnabledUrlsTemplatePreviewTestCase(TestCase):
         """
         response = self.client.get(path="/__debug__/pdf-templates/invoice")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
     def test_debug_urls_template_preview_contract_definition_when_debug_is_true(
         self,
@@ -73,17 +77,21 @@ class DebugEnabledUrlsTemplatePreviewTestCase(TestCase):
         """
         response = self.client.get(path="/__debug__/pdf-templates/contract")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
 
 @override_settings(DEBUG=False)
-class DebugDisabledUrlsTemplatePreviewTestCase(TestCase):
+class DebugDisabledUrlsTemplatePreviewTestCase(BaseAPITestCase):
     """
     Test case for debug urls routes to preview template
     (certificate, degree, invoice and contract definition) when DEBUG is disabled.
     """
 
     def setUp(self):
+        """
+        Reset the cache to always reach the site route.
+        Force URLs reload to take DEBUG into account
+        """
         super().setUp()
         # Reset the cache to always reach the site route.
         cache.clear()
@@ -97,7 +105,7 @@ class DebugDisabledUrlsTemplatePreviewTestCase(TestCase):
         """
         response = self.client.get(path="/__debug__/pdf-templates/certificate")
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_debug_urls_template_preview_degree_when_debug_is_false(self):
         """
@@ -106,7 +114,7 @@ class DebugDisabledUrlsTemplatePreviewTestCase(TestCase):
         """
         response = self.client.get(path="/__debug__/pdf-templates/degree")
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_debug_urls_template_preview_invoice_when_debug_is_false(self):
         """
@@ -115,7 +123,7 @@ class DebugDisabledUrlsTemplatePreviewTestCase(TestCase):
         """
         response = self.client.get(path="/__debug__/pdf-templates/invoice")
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_debug_urls_template_preview_contract_definition_when_debug_is_false(
         self,
@@ -126,4 +134,4 @@ class DebugDisabledUrlsTemplatePreviewTestCase(TestCase):
         """
         response = self.client.get(path="/__debug__/pdf-templates/contract")
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)

@@ -64,7 +64,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         """
         response = self.client.get("/api/v1.0/admin/enrollments/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_enrollments_request_with_lambda_user(self):
         """
@@ -75,7 +75,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/enrollments/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_enrollments_list(self):
         """Authenticated admin user should be able to list all existing enrollments."""
@@ -89,7 +89,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         with self.record_performance():
             response = self.client.get("/api/v1.0/admin/enrollments/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
         expected_content = {
@@ -156,7 +156,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         with self.record_performance():
             response = self.client.get(f"/api/v1.0/admin/enrollments/{enrollment.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -232,7 +232,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         enrollment = factories.EnrollmentFactory(course_run=course_run)
 
         response = self.client.get("/api/v1.0/admin/enrollments/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 3)
 
         # Prepare queries to test
@@ -247,7 +247,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
 
         for query in queries:
             response = self.client.get(f"/api/v1.0/admin/enrollments/?query={query}")
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0]["id"], str(enrollment.id))
@@ -264,13 +264,13 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/enrollments/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 3)
 
         response = self.client.get(
             f"/api/v1.0/admin/enrollments/?course_run_ids={enrollments[0].course_run.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(enrollments[0].id))
@@ -280,7 +280,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             f"?course_run_ids={enrollments[0].course_run.id}"
             f"&course_run_ids={enrollments[2].course_run.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(enrollments[2].id))
@@ -298,13 +298,13 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/enrollments/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 3)
 
         response = self.client.get(
             f"/api/v1.0/admin/enrollments/?user_ids={enrollments[0].user.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(enrollments[0].id))
@@ -314,7 +314,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             f"?user_ids={enrollments[0].user.id}"
             f"&user_ids={enrollments[2].user.id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(enrollments[2].id))
@@ -332,13 +332,13 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/enrollments/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 3)
 
         response = self.client.get(
             f"/api/v1.0/admin/enrollments/?ids={enrollments[0].id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(enrollments[0].id))
@@ -348,7 +348,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             f"?ids={enrollments[0].id}"
             f"&ids={enrollments[2].id}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(enrollments[2].id))
@@ -367,17 +367,17 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/enrollments/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
 
         response = self.client.get("/api/v1.0/admin/enrollments/?is_active=false")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(inactive_enrollment.id))
 
         response = self.client.get("/api/v1.0/admin/enrollments/?is_active=true")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(active_enrollment.id))
@@ -400,17 +400,17 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/enrollments/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
 
         response = self.client.get("/api/v1.0/admin/enrollments/?state=set")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(set_enrollment.id))
 
         response = self.client.get("/api/v1.0/admin/enrollments/?state=failed")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(failed_enrollment.id))
@@ -443,7 +443,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
     def test_api_admin_enrollments_create_for_opened_course_run(self):
         """
@@ -468,7 +468,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
     def test_api_admin_enrollments_create_with_missing_user_id_should_fail(self):
         """
@@ -486,7 +486,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             data={"course_run": course_run.id, "is_active": True},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"__all__": ["You must provide a user_id to create/update an enrollment."]},
@@ -509,7 +509,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             data={"user": user.id, "is_active": True},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -537,7 +537,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             data={"user": user.id, "course_run": fake_course_run_id, "is_active": True},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -565,7 +565,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             data={"user": fake_user_id, "course_run": course_run.id, "is_active": True},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"__all__": [f'A user with the id "{fake_user_id}" does not exist.']},
@@ -599,7 +599,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -636,7 +636,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"__all__": ["You must provide a user_id to create/update an enrollment."]},
@@ -672,7 +672,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -711,7 +711,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"__all__": [f'A user with the id "{fake_user_id}" does not exist.']},
@@ -755,7 +755,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertFalse(response.json().get("is_active"))
         self.assertEqual(response.json().get("state"), enums.ENROLLMENT_STATE_SET)
         self.assertEqual(
@@ -799,7 +799,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         # We have to refresh enrollment as updated_on should have been updated
         enrollment.refresh_from_db()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -859,7 +859,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
         )
 
         enrollment.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -940,7 +940,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTrue(response.json().get("is_active"))
         self.assertTrue(response.json().get("state"), enrollment_state)
         self.assertEqual(
@@ -969,7 +969,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             data={"user": fake_user_id, "course_run": course_run.id, "is_active": True},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"__all__": [f'A user with the id "{fake_user_id}" does not exist.']},
@@ -997,7 +997,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             data={"user": user.id, "course_run": fake_course_run_id, "is_active": True},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -1026,7 +1026,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             data={"course_run": course_run.id, "is_active": True},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {"__all__": ["You must provide a user_id to create/update an enrollment."]},
@@ -1053,7 +1053,7 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             data={"user": user.id, "is_active": True},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -1073,4 +1073,4 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/enrollments/{enrollment.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)

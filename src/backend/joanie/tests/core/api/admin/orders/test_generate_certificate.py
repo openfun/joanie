@@ -5,7 +5,6 @@ from datetime import timedelta
 from http import HTTPStatus
 from unittest import mock
 
-from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import enums, factories
@@ -13,9 +12,10 @@ from joanie.core.models.certifications import Certificate
 from joanie.core.models.courses import CourseState, Enrollment
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
 from joanie.tests import format_date
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrdersAdminApiGenerateCertificateTestCase(TestCase):
+class OrdersAdminApiGenerateCertificateTestCase(BaseAPITestCase):
     """Test suite for the admin orders API generate certificate endpoint."""
 
     maxDiff = None
@@ -31,7 +31,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_orders_generate_certificate_lambda_user(self):
         """
@@ -46,7 +46,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_orders_generate_certificate_authenticated_get_method_not_allowed(
         self,
@@ -63,7 +63,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_orders_generate_certificate_authenticated_update_method_not_allowed(
         self,
@@ -81,7 +81,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_orders_generate_certificate_authenticated_partial_update_method_not_allowed(
         self,
@@ -99,7 +99,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_orders_generate_certificate_authenticated_delete_method_not_allowed(
         self,
@@ -117,7 +117,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_orders_generate_certificate_authenticated_unexisting(self):
         """
@@ -134,7 +134,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
         )
 
         self.assertFalse(Certificate.objects.exists())
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_admin_orders_generate_certificate_authenticated_with_no_certificate_definition(
         self,
@@ -156,7 +156,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
         )
 
         self.assertFalse(Certificate.objects.exists())
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertDictEqual(
             response.json(),
             {
@@ -196,7 +196,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
         )
 
         self.assertFalse(Certificate.objects.exists())
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertDictEqual(
             response.json(),
             {
@@ -256,7 +256,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+            self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
             self.assertDictEqual(
                 response.json(),
                 {
@@ -279,7 +279,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
             self.assertEqual(Certificate.objects.filter(order=order).count(), 1)
 
             certificate = Certificate.objects.get(order=order)
@@ -349,7 +349,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+            self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
             self.assertDictEqual(
                 response.json(),
                 {
@@ -370,7 +370,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
             self.assertEqual(Certificate.objects.all().count(), 1)
 
             certificate = Certificate.objects.get(order=order)
@@ -434,7 +434,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
             self.assertEqual(Certificate.objects.filter(order=order).count(), 1)
 
             certificate = Certificate.objects.get(order=order)
@@ -454,7 +454,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             self.assertEqual(
                 response.json(),
                 {
@@ -505,7 +505,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.CREATED)
+            self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
             self.assertEqual(Certificate.objects.filter(order=order).count(), 1)
 
             certificate = Certificate.objects.get(order=order)
@@ -525,7 +525,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
                 content_type="application/json",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             self.assertEqual(
                 response.json(),
                 {
@@ -565,7 +565,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertDictEqual(response.json(), {"details": "No graded courses found."})
 
     def test_api_admin_orders_generate_certificate_when_order_is_not_ready_for_grading(
@@ -600,7 +600,7 @@ class OrdersAdminApiGenerateCertificateTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertDictEqual(
             response.json(), {"details": "This order is not ready for gradation."}
         )

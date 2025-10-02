@@ -14,7 +14,7 @@ class SkillAdminApiTest(BaseAPITestCase):
     def test_api_admin_skill_list_anonymous(self):
         """Anonymous users should not be able to list skills."""
         response = self.client.get("/api/v1.0/admin/skills/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_skill_list_non_admin(self):
         """Non admin users should not be able to list skills."""
@@ -22,7 +22,7 @@ class SkillAdminApiTest(BaseAPITestCase):
         self.client.login(username=user.username, password="password")
         response = self.client.get("/api/v1.0/admin/skills/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_skill_list_admin(self):
         """Admin users should be able to list skills."""
@@ -32,7 +32,7 @@ class SkillAdminApiTest(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
         response = self.client.get("/api/v1.0/admin/skills/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(response.json()["results"][0]["title"], "Python")
 
@@ -44,7 +44,7 @@ class SkillAdminApiTest(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
         response = self.client.get(f"/api/v1.0/admin/skills/{skill.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -62,7 +62,7 @@ class SkillAdminApiTest(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
         response = self.client.get(f"/api/v1.0/admin/skills/{skill.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         # The default language is English
         self.assertEqual(response.json()["title"], "Unit testing")
@@ -91,7 +91,7 @@ class SkillAdminApiTest(BaseAPITestCase):
             content_type="application/json",
             data={"title": "Python"},
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(models.Skill.objects.count(), 1)
         self.assertEqual(response.json()["title"], "Python")
 
@@ -105,7 +105,7 @@ class SkillAdminApiTest(BaseAPITestCase):
             content_type="application/json",
             data={"title": "JavaScript"},
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         skill.refresh_from_db()
         self.assertEqual(skill.title, "JavaScript")
 
@@ -119,7 +119,7 @@ class SkillAdminApiTest(BaseAPITestCase):
             content_type="application/json",
             data={"title": "JavaScript"},
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         skill.refresh_from_db()
         self.assertEqual(skill.title, "JavaScript")
 
@@ -135,7 +135,7 @@ class SkillAdminApiTest(BaseAPITestCase):
             HTTP_ACCEPT_LANGUAGE="fr-fr",
             data={"title": "Test unitaire"},
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         skill.refresh_from_db()
 
         self.assertEqual(skill.title, "Unit testing")
@@ -156,7 +156,7 @@ class SkillAdminApiTest(BaseAPITestCase):
         self.assertEqual(models.Skill.objects.count(), 1)
 
         response = self.client.delete(f"/api/v1.0/admin/skills/{skill.id}/")
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(models.Skill.objects.count(), 0)
 
     def test_api_admin_skill_list_ordering(self):
@@ -171,7 +171,7 @@ class SkillAdminApiTest(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/admin/skills/?ordering=translations__title"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         titles = [skill["title"] for skill in results]
         self.assertEqual(titles, ["React", "VueJS"])
@@ -180,7 +180,7 @@ class SkillAdminApiTest(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/admin/skills/?ordering=-translations__title"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         titles = [skill["title"] for skill in results]
         self.assertEqual(titles, ["VueJS", "React"])
@@ -194,6 +194,6 @@ class SkillAdminApiTest(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
         response = self.client.get("/api/v1.0/admin/skills/?query=Vue")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(len(response.json()["results"]), 1)
         self.assertEqual(response.json()["results"][0]["title"], "VueJS")

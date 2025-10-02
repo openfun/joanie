@@ -3,13 +3,13 @@
 from http import HTTPStatus
 from unittest import mock
 
-from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
+class BatchOrdersAdminApiSubmitForSignatureTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API submit for signature endpoint."""
 
     def test_api_admin_batch_orders_submit_for_signature_anonymous(self):
@@ -22,7 +22,7 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_batch_orders_submit_for_signature_not_admin_user(self):
         """
@@ -37,7 +37,7 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_batch_orders_submit_for_signature_state_not_assigned_or_to_sign(
         self,
@@ -182,7 +182,7 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(TestCase):
 
                 batch_order.refresh_from_db()
 
-                self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
+                self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
                 self.assertFalse(
                     batch_order.offering_rules.filter(pk=offering_rule_1.id).exists()
                 )

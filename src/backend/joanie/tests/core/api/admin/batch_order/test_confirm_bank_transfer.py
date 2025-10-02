@@ -2,13 +2,12 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import enums, factories
 from joanie.payment.models import Invoice, Transaction
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrdersAdminConfirmBankTransferApiTestCase(TestCase):
+class BatchOrdersAdminConfirmBankTransferApiTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API confirm bank transfer order endpoint."""
 
     def test_api_admin_batch_order_confirm_bank_transfer_anonymous(self):
@@ -21,7 +20,7 @@ class BatchOrdersAdminConfirmBankTransferApiTestCase(TestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_batch_order_confirm_bank_transfer_lambda_user(self):
         """Lambda user should not be able to confirm a bank transfer."""
@@ -35,7 +34,7 @@ class BatchOrdersAdminConfirmBankTransferApiTestCase(TestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_batch_order_confirm_bank_transfer_get_method(self):
         """
@@ -50,9 +49,7 @@ class BatchOrdersAdminConfirmBankTransferApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_bank_transfer_update_method(self):
         """
@@ -67,9 +64,7 @@ class BatchOrdersAdminConfirmBankTransferApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_bank_transfer_post_method(self):
         """
@@ -84,9 +79,7 @@ class BatchOrdersAdminConfirmBankTransferApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_bank_transfer_delete_method(self):
         """
@@ -101,9 +94,7 @@ class BatchOrdersAdminConfirmBankTransferApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_batch_order_confirm_bank_transfer_invalid_id(self):
         """
@@ -117,7 +108,7 @@ class BatchOrdersAdminConfirmBankTransferApiTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_admin_batch_order_confirm_bank_transfer_payment_methods(self):
         """

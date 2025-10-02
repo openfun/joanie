@@ -5,15 +5,16 @@ import random
 import uuid
 from http import HTTPStatus
 
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.urls import reverse
 
 import lxml
 
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class CertificateVerificationViewTestCase(TestCase):
+class CertificateVerificationViewTestCase(BaseAPITestCase):
     """
     The CertificateVerificationView test suite.
     """
@@ -28,7 +29,7 @@ class CertificateVerificationViewTestCase(TestCase):
 
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_views_certificate_verification_view_allow_only_verifiable_certificates(
         self,
@@ -56,9 +57,9 @@ class CertificateVerificationViewTestCase(TestCase):
                 response = self.client.get(url)
 
                 if template in enums.VERIFIABLE_CERTIFICATES:
-                    self.assertEqual(response.status_code, HTTPStatus.OK)
+                    self.assertStatusCodeEqual(response, HTTPStatus.OK)
                 else:
-                    self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+                    self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     @override_settings(JOANIE_CATALOG_NAME="Test Catalog")
     @override_settings(JOANIE_CATALOG_BASE_URL="https://richie.education")
@@ -88,7 +89,7 @@ class CertificateVerificationViewTestCase(TestCase):
 
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         html = lxml.html.fromstring(response.content)
 

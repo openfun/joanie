@@ -23,7 +23,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organization_confirm_quote_get(self):
         """Authenticated user should not be able to confirm a quote with the get method"""
@@ -41,9 +41,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_quote_create(self):
         """Authenticated user should not be able to confirm a quote with the post method"""
@@ -61,9 +59,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_quote_put(self):
         """Authenticated user should not be able to confirm a quote with the put method"""
@@ -81,9 +77,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_quote_delete(self):
         """Authenticated user should not be able to confirm a quote with the delete method"""
@@ -101,9 +95,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_confirm_quote_invalid_id(self):
         """Authenticated user should not be able to confirm a quote with an invalid id."""
@@ -120,7 +112,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organization_confirm_quote_not_owned(self):
         """
@@ -144,7 +136,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organization_confirm_quote_with_organization_access_but_not_owner_role(
         self,
@@ -203,7 +195,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_organization_confirm_quote_authenticated(self):
         """
@@ -227,7 +219,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         batch_order.refresh_from_db()
         self.assertEqual(batch_order.total, Decimal("1234.56"))

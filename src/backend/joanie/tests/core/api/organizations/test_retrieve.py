@@ -23,7 +23,7 @@ class OrganizationApiRetrieveTest(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/organizations/{organization.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -43,7 +43,7 @@ class OrganizationApiRetrieveTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(
             response.json(), {"detail": "No Organization matches the given query."}
         )
@@ -71,7 +71,7 @@ class OrganizationApiRetrieveTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertTrue(content.pop("abilities")["get"])
         self.assertEqual(
@@ -123,7 +123,7 @@ class OrganizationApiRetrieveTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertTrue(content.pop("abilities")["get"])
         self.assertEqual(

@@ -2,14 +2,14 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
 from django.test.utils import override_settings
 
 from joanie.core import factories
 from joanie.tests import format_date
+from joanie.tests.base import BaseAPITestCase
 
 
-class EdxImportsCourseRunApiTest(TestCase):
+class EdxImportsCourseRunApiTest(BaseAPITestCase):
     """Test suite for remote API endpoints on course run in the edx_imports application."""
 
     maxDiff = None
@@ -17,7 +17,7 @@ class EdxImportsCourseRunApiTest(TestCase):
     def test_course_run_api_without_api_token(self):
         """Test course run API without API token should return 403."""
         response = self.client.get("/api/v1.0/edx_imports/course-run/")
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
     def test_course_run_api_with_invalid_api_token(self):
@@ -26,7 +26,7 @@ class EdxImportsCourseRunApiTest(TestCase):
             "/api/v1.0/edx_imports/course-run/",
             HTTP_AUTHORIZATION="Bearer invalid_secret_token_sample",
         )
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     @override_settings(JOANIE_AUTHORIZED_API_TOKENS=["valid_known_secret_token_sample"])
     def test_course_run_api_with_valid_api_token_but_no_resource_link_parameter(self):
@@ -37,7 +37,7 @@ class EdxImportsCourseRunApiTest(TestCase):
             "/api/v1.0/edx_imports/course-run/",
             HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(), {"detail": "Query parameter `resource_link` is required."}
         )
@@ -49,7 +49,7 @@ class EdxImportsCourseRunApiTest(TestCase):
             "/api/v1.0/edx_imports/course-run/?resource_link=unknown_resource_link",
             HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(
             response.json(), {"detail": "No CourseRun matches the given query."}
         )
@@ -64,7 +64,7 @@ class EdxImportsCourseRunApiTest(TestCase):
             f"/api/v1.0/edx_imports/course-run/?resource_link={resource_link}",
             HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -119,7 +119,7 @@ class EdxImportsCourseRunApiTest(TestCase):
             f"/api/v1.0/edx_imports/course-run/?resource_link={resource_link}",
             HTTP_AUTHORIZATION="Bearer valid_known_secret_token_sample",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

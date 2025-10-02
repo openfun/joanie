@@ -2,12 +2,11 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrdersAdminApiCreateTestCase(TestCase):
+class OrdersAdminApiCreateTestCase(BaseAPITestCase):
     """Test suite for the admin orders API create endpoint."""
 
     maxDiff = None
@@ -20,4 +19,4 @@ class OrdersAdminApiCreateTestCase(TestCase):
 
         response = self.client.post("/api/v1.0/admin/orders/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)

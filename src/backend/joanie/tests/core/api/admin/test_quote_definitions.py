@@ -15,7 +15,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
     def test_api_admin_quote_definition_list_anonymous(self):
         """Anonymous users should not be able to list quote definitions."""
         response = self.client.get("/api/v1.0/admin/quote-definitions/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_quote_definition_list_non_admin(self):
         """Non admin users should not be able to list quote definitions"""
@@ -24,7 +24,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/quote-definitions/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_quote_definition_list_admin(self):
         """Admin users should be able to list quote definitions."""
@@ -35,7 +35,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
 
         response = self.client.get("/api/v1.0/admin/quote-definitions/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 2)
 
     def test_api_admin_quote_definition_list_filter_query_by_title(self):
@@ -49,7 +49,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             f"/api/v1.0/admin/quote-definitions/?query={quote_definition.title}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
 
@@ -70,7 +70,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
                 f"/api/v1.0/admin/quote-definitions/?language={language}"
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
             content = response.json()
 
@@ -89,7 +89,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             "/api/v1.0/admin/quote-definitions/?language=invalid"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         content = response.json()
 
@@ -115,7 +115,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             f"/api/v1.0/admin/quote-definitions/?ids={quote_definition_1.id}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
 
@@ -127,7 +127,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             f"&ids={quote_definition_2.id}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
 
@@ -148,7 +148,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             f"/api/v1.0/admin/quote-definitions/{quote_definition.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -180,7 +180,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         content = response.json()
 
@@ -208,7 +208,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
 
@@ -229,7 +229,7 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             data={"language": "fr-fr"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         content = response.json()
 
@@ -249,5 +249,5 @@ class QuoteDefinitionAdminApiTest(BaseAPITestCase):
             f"/api/v1.0/admin/quote-definitions/{quote_definition.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertFalse(models.QuoteDefinition.objects.exists())

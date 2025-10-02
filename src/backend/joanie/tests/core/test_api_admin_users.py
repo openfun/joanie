@@ -5,12 +5,11 @@ Test suite for User Admin API.
 import random
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class UserAdminApiTest(TestCase):
+class UserAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for User Admin API.
     """
@@ -21,7 +20,7 @@ class UserAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_admin_api_user_request_with_lambda_user(self):
         """
@@ -32,7 +31,7 @@ class UserAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/users/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_admin_api_user_list(self):
         """
@@ -48,7 +47,7 @@ class UserAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 0)
 
     def test_admin_api_user_list_filter_by_query(self):
@@ -83,7 +82,7 @@ class UserAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 0)
 
         # Search by username
@@ -91,7 +90,7 @@ class UserAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 1)
         self.assertEqual(
             content["results"][0],
@@ -108,7 +107,7 @@ class UserAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 3)
 
         # Search by firstname
@@ -116,7 +115,7 @@ class UserAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 1)
         self.assertEqual(
             content["results"][0],
@@ -133,7 +132,7 @@ class UserAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
             [result["full_name"] for result in content["results"]],
@@ -172,14 +171,14 @@ class UserAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 0)
 
         response = self.client.get(f"/api/v1.0/admin/users/?ids={fonzie.id}")
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 1)
         self.assertEqual(
             content["results"][0],
@@ -197,7 +196,7 @@ class UserAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["count"], 2)
         self.assertEqual(
             content["results"],
@@ -308,7 +307,7 @@ class UserAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_admin_api_user_me_no_access(self):
         """
@@ -319,7 +318,7 @@ class UserAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -351,7 +350,7 @@ class UserAdminApiTest(TestCase):
         factories.UserCourseAccessFactory(user=admin)
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -383,7 +382,7 @@ class UserAdminApiTest(TestCase):
         factories.UserOrganizationAccessFactory(user=admin)
         response = self.client.get("/api/v1.0/admin/users/me/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

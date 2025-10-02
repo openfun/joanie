@@ -32,7 +32,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -51,7 +51,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertDictEqual(
             response.json(), {"reference": "This parameter is required."}
@@ -72,7 +72,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
         self.assertEqual(
             response.json(),
@@ -99,7 +99,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
         self.assertEqual(
             response.json(),
@@ -125,7 +125,7 @@ class OrderInvoiceApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],

@@ -39,7 +39,7 @@ class AddressAPITestCase(BaseAPITestCase):
         """Get user addresses not allowed without HTTP AUTH"""
         # Try to get addresses without Authorization
         response = self.client.get("/api/v1.0/addresses/")
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = json.loads(response.content)
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -52,7 +52,7 @@ class AddressAPITestCase(BaseAPITestCase):
             "/api/v1.0/addresses/",
             HTTP_AUTHORIZATION="Bearer nawak",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = json.loads(response.content)
         self.assertEqual(content["code"], "token_not_valid")
 
@@ -68,7 +68,7 @@ class AddressAPITestCase(BaseAPITestCase):
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = json.loads(response.content)
         self.assertEqual(content["code"], "token_not_valid")
 
@@ -82,7 +82,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
 
         with self.record_performance():
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertEqual(
             response.json(),
@@ -117,7 +117,7 @@ class AddressAPITestCase(BaseAPITestCase):
                 "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -156,7 +156,7 @@ class AddressAPITestCase(BaseAPITestCase):
             "/api/v1.0/addresses/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -173,7 +173,7 @@ class AddressAPITestCase(BaseAPITestCase):
             "/api/v1.0/addresses/?page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -194,7 +194,7 @@ class AddressAPITestCase(BaseAPITestCase):
             data=get_payload(address),
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = json.loads(response.content)
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
@@ -215,7 +215,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         content = json.loads(response.content)
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             content, {"detail": "Authentication credentials were not provided."}
         )
@@ -231,7 +231,7 @@ class AddressAPITestCase(BaseAPITestCase):
             data=get_payload(address),
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = json.loads(response.content)
         self.assertEqual(content["code"], "token_not_valid")
 
@@ -251,7 +251,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         content = json.loads(response.content)
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(content["code"], "token_not_valid")
 
     def test_api_address_create_with_expired_token(self):
@@ -272,7 +272,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         content = json.loads(response.content)
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(content["code"], "token_not_valid")
 
     def test_api_address_update_with_expired_token(self):
@@ -295,7 +295,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         content = json.loads(response.content)
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(content["code"], "token_not_valid")
 
     def test_api_address_create_with_bad_payload(self):
@@ -313,7 +313,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         content = json.loads(response.content)
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(content, {"country": ['"FRANCE" is not a valid choice.']})
         self.assertFalse(models.User.objects.exists())
 
@@ -325,7 +325,7 @@ class AddressAPITestCase(BaseAPITestCase):
             data=bad_payload,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         content = json.loads(response.content)
         self.assertEqual(content, {"title": ["This field is required."]})
 
@@ -344,7 +344,7 @@ class AddressAPITestCase(BaseAPITestCase):
             data=payload,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
         bad_payload = payload.copy()
         bad_payload["country"] = "FRANCE"
@@ -357,7 +357,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         content = json.loads(response.content)
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(content, {"country": ['"FRANCE" is not a valid choice.']})
 
         del bad_payload["title"]
@@ -370,7 +370,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
         content = json.loads(response.content)
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(content, {"title": ["This field is required."]})
 
     def test_api_address_update_with_bad_user(self):
@@ -387,7 +387,7 @@ class AddressAPITestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_address_update_to_demote_address(self):
         """
@@ -409,7 +409,7 @@ class AddressAPITestCase(BaseAPITestCase):
             data=payload,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             json.loads(response.content),
             {"__all__": ["Demote a main address is forbidden"]},
@@ -429,7 +429,7 @@ class AddressAPITestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         # panoramix was a unknown user, so a new user was created
         owner = models.User.objects.get()
@@ -449,7 +449,7 @@ class AddressAPITestCase(BaseAPITestCase):
             data=payload,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(models.Address.objects.count(), 1)
         address = models.Address.objects.get()
         self.assertEqual(address.title, payload["title"])
@@ -477,7 +477,7 @@ class AddressAPITestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         # new address has been successfully created but with a generated id and
         # is_reusable has been set to True
@@ -510,7 +510,7 @@ class AddressAPITestCase(BaseAPITestCase):
         response = self.client.delete(
             f"/api/v1.0/addresses/{address.id}/",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_address_delete_with_bad_authorization(self):
         """Delete address is not allowed with bad authorization"""
@@ -520,7 +520,7 @@ class AddressAPITestCase(BaseAPITestCase):
             f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION="Bearer nawak",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_address_delete_with_expired_token(self):
         """Delete address is not allowed with expired token"""
@@ -534,7 +534,7 @@ class AddressAPITestCase(BaseAPITestCase):
             f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_address_delete_with_bad_user(self):
         """User token has to match with owner of address to delete"""
@@ -546,7 +546,7 @@ class AddressAPITestCase(BaseAPITestCase):
             f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_address_delete(self):
         """Delete reusable address is allowed with valid token"""
@@ -557,7 +557,7 @@ class AddressAPITestCase(BaseAPITestCase):
             f"/api/v1.0/addresses/{address.id}/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertFalse(models.Address.objects.exists())
 
     def test_api_address_not_reusable_delete(self):
@@ -570,7 +570,7 @@ class AddressAPITestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(models.Address.objects.exists(), True)
 
     def test_api_address_delete_with_invoices(self):
@@ -588,7 +588,7 @@ class AddressAPITestCase(BaseAPITestCase):
         )
 
         address = models.Address.objects.first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {

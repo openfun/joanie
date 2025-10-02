@@ -29,7 +29,7 @@ class OrganizationApiUpdateTest(BaseAPITestCase):
             f"/api/v1.0/organizations/{organization.id}/", data=data
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -61,7 +61,7 @@ class OrganizationApiUpdateTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
         organization.refresh_from_db()
@@ -97,7 +97,7 @@ class OrganizationApiUpdateTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
         organization.refresh_from_db()

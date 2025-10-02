@@ -4,12 +4,11 @@ Test suite for Product Admin API.
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
-class ProductAdminApiTargetCoursesTest(TestCase):
+class ProductAdminApiTargetCoursesTest(BaseAPITestCase):
     """
     Test suite for nested target courses Product Admin API endpoints.
     """
@@ -28,7 +27,7 @@ class ProductAdminApiTargetCoursesTest(TestCase):
             content_type="application/json",
             data={"course": str(course.id)},
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertFalse(models.ProductTargetCourseRelation.objects.exists())
 
     def test_admin_api_product_add_target_course(self):
@@ -45,7 +44,7 @@ class ProductAdminApiTargetCoursesTest(TestCase):
             content_type="application/json",
             data={"course": str(course.id)},
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         relation = models.ProductTargetCourseRelation.objects.get()
         expected_result = {
             "id": str(relation.id),
@@ -84,7 +83,7 @@ class ProductAdminApiTargetCoursesTest(TestCase):
             content_type="application/json",
             data={"course": str(course.id), "course_runs": ""},
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         relation = models.ProductTargetCourseRelation.objects.get()
         expected_result = {
             "id": str(relation.id),
@@ -118,7 +117,7 @@ class ProductAdminApiTargetCoursesTest(TestCase):
         response = self.client.delete(
             f"/api/v1.0/admin/products/{product.id}/target-courses/{course.id}/",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(models.ProductTargetCourseRelation.objects.count(), 1)
 
     def test_admin_api_product_delete_target_course(self):
@@ -134,7 +133,7 @@ class ProductAdminApiTargetCoursesTest(TestCase):
         response = self.client.delete(
             f"/api/v1.0/admin/products/{product.id}/target-courses/{course.id}/",
         )
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(models.ProductTargetCourseRelation.objects.count(), 0)
         product.refresh_from_db()
         self.assertEqual(product.target_courses.count(), 0)
@@ -159,7 +158,7 @@ class ProductAdminApiTargetCoursesTest(TestCase):
             data={"is_graded": True},
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         relation.refresh_from_db()
         self.assertTrue(relation.is_graded)
 
@@ -183,7 +182,7 @@ class ProductAdminApiTargetCoursesTest(TestCase):
             data={"is_graded": True, "course_runs": ""},
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         relation.refresh_from_db()
         self.assertEqual(relation.course_runs.count(), 0)
 
@@ -211,7 +210,7 @@ class ProductAdminApiTargetCoursesTest(TestCase):
             },
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         offerings = models.ProductTargetCourseRelation.objects.filter(product=product)
         self.assertEqual(offerings.get(course=courses[1]).position, 0)
         self.assertEqual(offerings.get(course=courses[3]).position, 1)

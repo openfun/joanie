@@ -40,7 +40,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             f"/api/v1.0/orders/{order.id}/submit-installment-payment/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_order_submit_installment_payment_get_method_not_allowed_authenticated(
         self,
@@ -58,7 +58,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_order_submit_installment_payment_put_method_not_allowed_authenticated(
         self,
@@ -75,7 +75,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_order_submit_installment_payment_patch_method_not_allowed_authenticated(
         self,
@@ -93,7 +93,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_order_submit_installment_payment_delete_method_authenticated(self):
         """
@@ -109,7 +109,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_order_submit_installment_payment_order_in_draft_state(
         self,
@@ -130,7 +130,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {"detail": "The order is not in failed payment state."},
@@ -153,7 +153,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {"detail": "The order is not in failed payment state."},
@@ -176,7 +176,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {"detail": "The order is not in failed payment state."},
@@ -203,7 +203,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {"detail": "The order is not in failed payment state."},
@@ -226,7 +226,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {"detail": "The order is not in failed payment state."},
@@ -284,7 +284,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(response.json(), {"detail": "Credit card does not exist."})
 
     @mock.patch.object(
@@ -357,7 +357,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertFalse(mock_create_one_click_payment.called)
 
     @mock.patch.object(
@@ -436,7 +436,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTrue(response.json()["is_paid"])
         self.assertFalse(mock_create_payment.called)
 
@@ -490,7 +490,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {"detail": "No installment found with a refused payment state."},
@@ -563,7 +563,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertTrue(response.json()["is_paid"])
 
     @mock.patch.object(
@@ -629,7 +629,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
     @mock.patch.object(
         DummyPaymentBackend,
@@ -696,7 +696,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {
@@ -773,7 +773,7 @@ class OrderSubmitInstallmentPaymentApiTest(BaseAPITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {

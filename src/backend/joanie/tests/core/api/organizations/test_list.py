@@ -22,7 +22,7 @@ class OrganizationApiListTest(BaseAPITestCase):
         factories.OrganizationFactory()
         response = self.client.get("/api/v1.0/organizations/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -49,7 +49,7 @@ class OrganizationApiListTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         results = response.json()["results"]
         self.assertEqual(len(results), 2)
         self.assertCountEqual(
@@ -80,7 +80,7 @@ class OrganizationApiListTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -155,7 +155,7 @@ class OrganizationApiListTest(BaseAPITestCase):
             "/api/v1.0/organizations/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
@@ -165,7 +165,7 @@ class OrganizationApiListTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(organizations[0].id))
@@ -176,7 +176,7 @@ class OrganizationApiListTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)
 

@@ -4,16 +4,17 @@ import json
 from http import HTTPStatus
 
 from django.core import mail
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework.test import APIRequestFactory
 
 from joanie.core import enums, factories
 from joanie.payment.backends.dummy import DummyPaymentBackend
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrdersAdminApiRefundTestCase(TestCase):
+class OrdersAdminApiRefundTestCase(BaseAPITestCase):
     """Test suite for the admin orders API refund endpoint."""
 
     maxDiff = None
@@ -26,7 +27,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_orders_refund_request_with_lambda_user(self):
         """
@@ -38,7 +39,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_orders_refund_with_an_invalid_order_id(self):
         """
@@ -49,7 +50,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         response = self.client.post("/api/v1.0/admin/orders/invalid_id/refund/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_admin_orders_refund_with_get_method_is_not_allowed(self):
         """
@@ -62,7 +63,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
 
     def test_api_admin_orders_refund_with_put_method_is_not_allowed(self):
@@ -76,7 +77,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         response = self.client.put(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
 
     def test_api_admin_orders_refund_with_patch_method_is_not_allowed(self):
@@ -90,7 +91,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         response = self.client.patch(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
 
     def test_api_admin_orders_refund_with_delete_method_is_not_allowed(self):
@@ -103,7 +104,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
         self.assertEqual(order.state, enums.ORDER_STATE_PENDING_PAYMENT)
 
     def test_api_admin_orders_refund_an_order_not_possible_if_state_is_not_canceled(
@@ -135,7 +136,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
                 )
 
                 order.refresh_from_db()
-                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
                 self.assertEqual(order.state, state)
 
     def test_api_admin_orders_refund_an_order_not_possible_if_no_installment_is_paid(
@@ -152,7 +153,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
 
         response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     @override_settings(
         JOANIE_CATALOG_NAME="Test Catalog",
@@ -276,7 +277,7 @@ class OrdersAdminApiRefundTestCase(TestCase):
         response = self.client.post(f"/api/v1.0/admin/orders/{order.id}/refund/")
 
         order.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
+        self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
 
         # The first and second paid installments should now be set to `refunded`
         self.assertEqual(

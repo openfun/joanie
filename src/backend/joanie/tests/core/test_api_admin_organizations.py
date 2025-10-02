@@ -8,15 +8,15 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.core.files.base import ContentFile
-from django.test import TestCase
 
 import factory.django
 
 from joanie.core import factories
 from joanie.core.serializers import fields
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrganizationAdminApiTest(TestCase):
+class OrganizationAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for Organization Admin API.
     """
@@ -27,7 +27,7 @@ class OrganizationAdminApiTest(TestCase):
         """
         response = self.client.get("/api/v1.0/admin/organizations/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         content = response.json()
         self.assertEqual(
             content["detail"], "Authentication credentials were not provided."
@@ -42,7 +42,7 @@ class OrganizationAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/organizations/")
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         content = response.json()
         self.assertEqual(
             content["detail"], "You do not have permission to perform this action."
@@ -57,22 +57,22 @@ class OrganizationAdminApiTest(TestCase):
         self.client.login(username=admin.username, password="password")
 
         response = self.client.get("/api/v1.0/admin/organizations/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         response = self.client.get("/api/v1.0/admin/organizations/abc/")
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
         response = self.client.post("/api/v1.0/admin/organizations/")
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
         response = self.client.put("/api/v1.0/admin/organizations/")
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
         response = self.client.patch("/api/v1.0/admin/organizations/")
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
         response = self.client.delete("/api/v1.0/admin/organizations/")
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_admin_api_organization_list(self):
         """
@@ -86,7 +86,7 @@ class OrganizationAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/organizations/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertCountEqual(
             response.json(),
             {
@@ -122,21 +122,21 @@ class OrganizationAdminApiTest(TestCase):
         )
 
         response = self.client.get("/api/v1.0/admin/organizations/?query=")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], organization_count)
 
         response = self.client.get(
             f"/api/v1.0/admin/organizations/?query={organization.title}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
         response = self.client.get(
             f"/api/v1.0/admin/organizations/?query={organization.code}"
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
 
@@ -167,7 +167,7 @@ class OrganizationAdminApiTest(TestCase):
         item.translations.create(language_code="fr-fr", title="Université")
 
         response = self.client.get("/api/v1.0/admin/organizations/?query=Uni")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "University")
@@ -176,7 +176,7 @@ class OrganizationAdminApiTest(TestCase):
             "/api/v1.0/admin/organizations/?query=Université",
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Université")
@@ -185,7 +185,7 @@ class OrganizationAdminApiTest(TestCase):
             "/api/v1.0/admin/organizations/?query=university",
             HTTP_ACCEPT_LANGUAGE="fr-fr",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["title"], "Université")
@@ -200,14 +200,14 @@ class OrganizationAdminApiTest(TestCase):
         organizations = factories.OrganizationFactory.create_batch(3)
 
         response = self.client.get("/api/v1.0/admin/organizations/")
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
         response = self.client.get(
             f"/api/v1.0/admin/organizations/?ids={organizations[0].id}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 1)
         self.assertEqual(content["results"][0]["id"], str(organizations[0].id))
@@ -215,7 +215,7 @@ class OrganizationAdminApiTest(TestCase):
         response = self.client.get(
             f"/api/v1.0/admin/organizations/?ids={organizations[0].id}&ids={organizations[1].id}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertEqual(content["results"][0]["id"], str(organizations[1].id))
@@ -239,7 +239,7 @@ class OrganizationAdminApiTest(TestCase):
 
         response = self.client.get(f"/api/v1.0/admin/organizations/{organization.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         assert response.json() == {
             "id": str(organization.id),
@@ -330,7 +330,7 @@ class OrganizationAdminApiTest(TestCase):
 
         response = self.client.post("/api/v1.0/admin/organizations/", data=data)
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         content = response.json()
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["code"], "ORG-001")
@@ -362,7 +362,7 @@ class OrganizationAdminApiTest(TestCase):
             data=payload,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(organization.id))
         self.assertEqual(content["code"], "UPDATED-ORG-001")
@@ -384,7 +384,7 @@ class OrganizationAdminApiTest(TestCase):
             data={"title": "Updated Organization 001"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(organization.id))
         self.assertEqual(content["title"], "Updated Organization 001")
@@ -401,4 +401,4 @@ class OrganizationAdminApiTest(TestCase):
             f"/api/v1.0/admin/organizations/{organization.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)

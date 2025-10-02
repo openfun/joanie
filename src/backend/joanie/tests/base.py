@@ -76,8 +76,11 @@ class BaseAPITestCase(PerfRecTestCaseMixin, TestCase):
         """
         try:
             response_content = response.json()
-        except ValueError:
-            response_content = response.content
+        except (ValueError, TypeError):
+            try:
+                response_content = response.content
+            except AttributeError:
+                response_content = response.streaming_content
         self.assertEqual(response.status_code, status_code, response_content)
 
 

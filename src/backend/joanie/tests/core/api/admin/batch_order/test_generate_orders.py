@@ -4,10 +4,10 @@ from http import HTTPStatus
 from unittest import mock
 
 from joanie.core import enums, factories
-from joanie.tests.base import LoggingTestCase
+from joanie.tests.base import BaseAPITestCase, LoggingTestCase
 
 
-class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase):
+class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase, BaseAPITestCase):
     """Test suite for the admin batch orders API generate orders endpoint."""
 
     def test_api_admin_batch_orders_generate_orders_anonymous(self):
@@ -18,7 +18,7 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_batch_orders_generate_orders_not_admin_user(self):
         """Authenticated not admin user shouldn't be able to generate orders for a batch order"""
@@ -30,7 +30,7 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_batch_orders_generate_orders_should_raise_error(self):
         """
@@ -116,7 +116,7 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase):
                 content_type="application/json",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
+        self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
 
         batch_order.refresh_from_db()
 
@@ -158,7 +158,7 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase):
                 content_type="application/json",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
+        self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
 
         batch_order.refresh_from_db()
 

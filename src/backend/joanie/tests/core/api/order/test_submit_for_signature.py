@@ -38,7 +38,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION="Bearer fake",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         content = response.json()
         self.assertEqual(content["detail"], "Given token not valid for any token type")
@@ -68,7 +68,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
         content = response.json()
         self.assertEqual(content["detail"], "No Order matches the given query.")
@@ -98,18 +98,18 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
                 content = response.json()
 
                 if state in [enums.ORDER_STATE_TO_SIGN, enums.ORDER_STATE_SIGNING]:
-                    self.assertEqual(response.status_code, HTTPStatus.OK)
+                    self.assertStatusCodeEqual(response, HTTPStatus.OK)
                     self.assertIsNotNone(content.get("invitation_link"))
                 elif state in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_ASSIGNED]:
-                    self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                    self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
                     self.assertEqual(
                         content[0],
                         "No contract definition attached to the contract's product.",
                     )
                 elif state == enums.ORDER_STATE_TO_OWN:
-                    self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+                    self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
                 else:
-                    self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+                    self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
                     self.assertEqual(
                         content[0], "Cannot submit an order that is not to sign."
                     )
@@ -137,7 +137,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         content = response.json()
         self.assertEqual(
@@ -173,7 +173,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
 
         order.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertIsNotNone(order.contract)
         self.assertIsNotNone(order.contract.context)
         self.assertIsNotNone(order.contract.definition_checksum)
@@ -223,7 +223,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
 
         contract.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertNotEqual(contract.context, "content")
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertNotEqual(contract.signature_backend_reference, "wfl_fake_dummy_id")
@@ -265,7 +265,7 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         )
 
         contract.refresh_from_db()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertNotEqual(contract.signature_backend_reference, "wfl_dummy_test_id_1")
         self.assertNotEqual(contract.definition_checksum, "fake_test_file_hash")
         self.assertNotEqual(contract.context, "a new content")

@@ -57,7 +57,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             ],
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         mock_check_commercial_newsletter_subscription_webhook.delay.assert_called_once_with(
             ["user@example.com"]
         )
@@ -100,7 +100,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             ],
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         mock_check_commercial_newsletter_subscription_webhook.delay.assert_not_called()
 
     @override_settings(
@@ -141,7 +141,7 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             ],
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         mock_check_commercial_newsletter_subscription_webhook.delay.assert_not_called()
 
     @override_settings(
@@ -182,5 +182,5 @@ class RemoteEndpointsCourseRunApiTest(BaseAPITestCase):
             ],
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         mock_check_commercial_newsletter_subscription_webhook.delay.assert_not_called()

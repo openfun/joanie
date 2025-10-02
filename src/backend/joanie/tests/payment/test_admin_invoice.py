@@ -2,16 +2,16 @@
 
 from http import HTTPStatus
 
-from django.test import TestCase
 from django.urls import reverse
 
 import lxml.html
 
 from joanie.core import enums, factories
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
+from joanie.tests.base import BaseAPITestCase
 
 
-class InvoiceAdminTestCase(TestCase):
+class InvoiceAdminTestCase(BaseAPITestCase):
     """Invoice admin tests"""
 
     def test_admin_invoice_display_human_readable_type(self):
@@ -34,7 +34,7 @@ class InvoiceAdminTestCase(TestCase):
             reverse("admin:payment_invoice_change", args=(credit_note.pk,)),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         html_parser = lxml.html.HTMLParser(encoding="utf-8")
         html = lxml.html.fromstring(response.content, parser=html_parser)
@@ -61,7 +61,7 @@ class InvoiceAdminTestCase(TestCase):
             reverse("admin:payment_invoice_change", args=(order.main_invoice.pk,)),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         html_parser = lxml.html.HTMLParser(encoding="utf-8")
         html = lxml.html.fromstring(response.content, parser=html_parser)
@@ -100,7 +100,7 @@ class InvoiceAdminTestCase(TestCase):
 
         # - Invoice are ordered by creation date
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertContains(response, order.main_invoice.reference)
 
         # - Check there are links to go to invoice children admin change view
@@ -148,7 +148,7 @@ class InvoiceAdminTestCase(TestCase):
 
         # - Invoice are ordered by creation date
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         # - Check there are links to go to invoice children admin change view
         html_parser = lxml.html.HTMLParser(encoding="utf-8")

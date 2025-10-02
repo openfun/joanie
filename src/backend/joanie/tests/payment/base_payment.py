@@ -1,14 +1,14 @@
 """Common Base Payment backend test"""
 
 from django.core import mail
-from django.test import TestCase
 
 from parler.utils.context import switch_language
 
 from joanie.core.enums import ORDER_STATE_COMPLETED
+from joanie.tests.base import BaseAPITestCase
 
 
-class BasePaymentTestCase(TestCase):
+class BasePaymentTestCase(BaseAPITestCase):
     """Common method to test the Payment Backend"""
 
     maxDiff = None

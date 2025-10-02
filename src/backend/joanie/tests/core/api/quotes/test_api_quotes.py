@@ -16,7 +16,7 @@ class QuoteApiTest(BaseAPITestCase):
             "/api/v1.0/quotes/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_quotes_list_not_owned(self):
         """Authenticated user should not be able to list the quote where he is not the owner."""
@@ -28,7 +28,7 @@ class QuoteApiTest(BaseAPITestCase):
             "/api/v1.0/quotes/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -58,7 +58,7 @@ class QuoteApiTest(BaseAPITestCase):
         )
         expected_quotes = sorted(quotes, key=lambda x: x.created_on, reverse=True)
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -101,7 +101,7 @@ class QuoteApiTest(BaseAPITestCase):
             f"/api/v1.0/quotes/{quote.id}/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_quotes_retrieve_authenticated_invalid_id(self):
         """
@@ -114,7 +114,7 @@ class QuoteApiTest(BaseAPITestCase):
             "/api/v1.0/quotes/invalid_id/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_quotes_retrieve_authenticated_not_owned(self):
         """
@@ -128,7 +128,7 @@ class QuoteApiTest(BaseAPITestCase):
             f"/api/v1.0/quotes/{quote.id}/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_quotes_retrieve_authenticated(self):
         """
@@ -146,7 +146,7 @@ class QuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -185,9 +185,7 @@ class QuoteApiTest(BaseAPITestCase):
             data={},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_quotes_partially_update_not_allowed(self):
         """Authenticated user should not be able to partially update a quote."""
@@ -200,9 +198,7 @@ class QuoteApiTest(BaseAPITestCase):
             data={},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_quotes_update_not_allowed(self):
         """Authenticated user should not be able to update a quote."""
@@ -215,9 +211,7 @@ class QuoteApiTest(BaseAPITestCase):
             data={},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_quotes_delete_not_allowed(self):
         """Authenticated user should not be able to delete a quote."""
@@ -230,6 +224,4 @@ class QuoteApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)

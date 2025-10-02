@@ -3,12 +3,11 @@
 from decimal import Decimal
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import enums, factories, models
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrdersAdminApiCreateTestCase(TestCase):
+class BatchOrdersAdminApiCreateTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API create endpoint."""
 
     def create_payload_batch_order(self, owner, offering, nb_seats, payment_method):
@@ -56,7 +55,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_batch_orders_create_not_admin_user(self):
         """Authenticated not admin user should not be able to create a batch order"""
@@ -69,7 +68,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             data={},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_batch_orders_create_fails_when_missing_company_information(self):
         """
@@ -164,7 +163,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_admin_batch_orders_create_missing_owner(self):
         """
@@ -188,7 +187,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_admin_batch_orders_create_offering_rule_limited_seats(self):
         """
@@ -217,7 +216,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_admin_batch_orders_create_auto_assign_organization_with_least_orders(
         self,
@@ -260,7 +259,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         batch_order = models.BatchOrder.objects.get(owner=owner)
 
@@ -298,7 +297,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
 
         batch_order = models.BatchOrder.objects.get(owner=owner)
 
@@ -334,7 +333,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             ),
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(models.BatchOrder.objects.count(), 1)
 
         batch_order = models.BatchOrder.objects.get()
@@ -393,7 +392,7 @@ class BatchOrdersAdminApiCreateTestCase(TestCase):
             data=data,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         batch_order = models.BatchOrder.objects.get()
 
         self.assertDictEqual(

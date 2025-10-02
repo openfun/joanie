@@ -7,15 +7,15 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.core.cache import cache
-from django.test import TestCase
 from django.utils import timezone
 
 from joanie.core import enums, factories
 from joanie.core.models import Certificate, CourseProductRelation, CourseState
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
+from joanie.tests.base import BaseAPITestCase
 
 
-class AdminOfferingApiTest(TestCase):
+class AdminOfferingApiTestCase(BaseAPITestCase):
     """
     Test suite for Admin Offering API endpoints to generate certificates.
     """
@@ -41,7 +41,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_admin_api_offering_generate_certificates_lambda_user(self):
         """
@@ -65,7 +65,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_admin_api_offering_generate_certificates_authenticated_get_method(
         self,
@@ -91,7 +91,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_admin_api_offering_generate_certificates_authenticated_partially_update(
         self,
@@ -117,7 +117,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_admin_api_course_product_relatio_generate_certificates_authenticated_update(
         self,
@@ -143,7 +143,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_admin_api_offering_generate_certificates_authenticated_delete(
         self,
@@ -169,7 +169,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_admin_api_offering_generate_certificates_authenticated_create_status(
         self,
@@ -221,7 +221,7 @@ class AdminOfferingApiTest(TestCase):
                 content_type="application/json",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertDictEqual(
             response.json(),
             {
@@ -309,7 +309,7 @@ class AdminOfferingApiTest(TestCase):
             "count_exist_before_generation": 5,
         }
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertDictEqual(response.json(), expected_cache_data_response)
 
         # When the endpoint is requested again with the same offering id
@@ -378,7 +378,7 @@ class AdminOfferingApiTest(TestCase):
             )
             self.assertTrue(mock_generate_certificates_task.delay.called)
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(), {"details": "Some error occured with Celery"}
         )
@@ -405,7 +405,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_offering_check_certificates_generation_process_lambda(
         self,
@@ -430,7 +430,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_offering_check_certificates_generation_process_post_method(
         self,
@@ -456,7 +456,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_offering_check_certificates_generation_process_patch_method(
         self,
@@ -482,7 +482,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_offering_check_certificates_generation_process_put_method(
         self,
@@ -508,7 +508,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_admin_offering_check_certificates_generation_process_delete_method(
         self,
@@ -534,7 +534,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     @mock.patch("joanie.core.api.admin.generate_certificates_task")
     def test_api_admin_offering_check_certificates_generation_process_is_ongoing(
@@ -594,7 +594,7 @@ class AdminOfferingApiTest(TestCase):
         }
 
         self.assertTrue(mock_generate_certificates_task.delay.called)
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertDictEqual(response.json(), expected_cache_data_response)
 
         second_response = self.client.get(
@@ -655,7 +655,7 @@ class AdminOfferingApiTest(TestCase):
                 content_type="application/json",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertDictEqual(
             response.json(),
             {
@@ -731,7 +731,7 @@ class AdminOfferingApiTest(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertDictEqual(
             response.json(),
             {

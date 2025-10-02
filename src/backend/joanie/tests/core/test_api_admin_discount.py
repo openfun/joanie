@@ -5,12 +5,11 @@ Test suite for Discount Admin API.
 
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class DiscountAdminApiTest(TestCase):
+class DiscountAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for Discount Admin API.
     """
@@ -19,7 +18,7 @@ class DiscountAdminApiTest(TestCase):
         """Anonymous user should not be able to get the list of discounts"""
         response = self.client.get("/api/v1.0/admin/discounts/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
         )
@@ -34,7 +33,7 @@ class DiscountAdminApiTest(TestCase):
 
         response = self.client.get("/api/v1.0/admin/discounts/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json()["results"],
             [
@@ -62,7 +61,7 @@ class DiscountAdminApiTest(TestCase):
 
         response = self.client.delete(f"/api/v1.0/admin/discounts/{discount.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
 
     def test_api_admin_authenticated_discount_partially_update(self):
         """Authenticated admin user should not be able to partially update a discount"""
@@ -81,7 +80,7 @@ class DiscountAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["rate"], 0.1)
 
     def test_api_admin_authenticated_discount_update(self):
@@ -102,7 +101,7 @@ class DiscountAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(content["amount"], 33)
         self.assertIsNone(content["rate"])
 
@@ -119,12 +118,12 @@ class DiscountAdminApiTest(TestCase):
 
         content = response.json()
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(content["rate"], 0.2)
         self.assertIsNone(content["amount"])
 
 
-class DiscountAdminApiListFilterTest(TestCase):
+class DiscountAdminApiListFilterTest(BaseAPITestCase):
     """
     Test suite for Discount Admin API list filter.
     """
@@ -163,7 +162,7 @@ class DiscountAdminApiListFilterTest(TestCase):
         """
         Helper method to test the response of the API.
         """
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             {
                 "count": len(expected_discounts),

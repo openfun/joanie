@@ -5,12 +5,11 @@ Test suite for Product Admin API.
 import random
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class ProductAdminApiUpdateTest(TestCase):
+class ProductAdminApiUpdateTest(BaseAPITestCase):
     """
     Test suite for the update Product Admin API endpoint.
     """
@@ -40,7 +39,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data=payload,
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(product.id))
         self.assertEqual(content["price"], 100)
@@ -60,7 +59,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"price": 100.57, "price_currency": "EUR"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["id"], str(product.id))
         self.assertEqual(content["price"], 100.57)
@@ -81,7 +80,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"certification_level": "one"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {
@@ -97,7 +96,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"certification_level": 0},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {
@@ -113,7 +112,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"certification_level": 9},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {"certification_level": ["Ensure this value is less than or equal to 8."]},
@@ -125,7 +124,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"certification_level": 2},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         product.refresh_from_db()
         self.assertEqual(product.certification_level, 2)
 
@@ -135,7 +134,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"certification_level": None},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         product.refresh_from_db()
         self.assertEqual(product.certification_level, None)
 
@@ -155,7 +154,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"teachers": [str(teacher.id)]},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         product.refresh_from_db()
         self.assertEqual(product.teachers.count(), 1)
         self.assertEqual(product.teachers.first().id, teacher.id)
@@ -166,7 +165,7 @@ class ProductAdminApiUpdateTest(TestCase):
             content_type="application/json",
             data={"teachers": []},
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         product.refresh_from_db()
         self.assertEqual(product.teachers.count(), 0)
 
@@ -186,7 +185,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"skills": [str(skill.id)]},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         product.refresh_from_db()
         self.assertEqual(product.skills.count(), 1)
         self.assertEqual(product.skills.first().id, skill.id)
@@ -207,7 +206,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"instructions": ""},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["instructions"], "")
         product.refresh_from_db()
@@ -227,7 +226,7 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"instructions": "Test whitespace   "},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["instructions"], "Test whitespace   ")
 
@@ -237,6 +236,6 @@ class ProductAdminApiUpdateTest(TestCase):
             data={"instructions": "Test newline\n\n"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["instructions"], "Test newline\n\n")

@@ -3,12 +3,12 @@
 from http import HTTPStatus
 
 from django.conf import settings
-from django.test import TestCase
 
 from joanie.core import enums, factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class BatchOrdersAdminApiListTestCase(TestCase):
+class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
     """Test suite for the admin batch orders API read list endpoint."""
 
     def test_api_admin_read_list_batch_orders_anonymous(self):
@@ -17,7 +17,7 @@ class BatchOrdersAdminApiListTestCase(TestCase):
             "/api/v1.0/admin/batch-orders/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_admin_read_list_batch_orders_authenticated_user(self):
         """Authenticated user should not be able to list batch orders"""
@@ -28,7 +28,7 @@ class BatchOrdersAdminApiListTestCase(TestCase):
             "/api/v1.0/admin/batch-orders/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_api_admin_read_list_batch_orders_list_authenticated_admin(self):
         """Authenticated admin user should be able to list batch orders"""
@@ -101,5 +101,5 @@ class BatchOrdersAdminApiListTestCase(TestCase):
             "/api/v1.0/admin/batch-orders/",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["results"], expected_return)

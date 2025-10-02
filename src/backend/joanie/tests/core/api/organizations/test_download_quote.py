@@ -27,7 +27,7 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
             data={"quote_id": str(batch_order.quote.id)},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_organization_download_quote_create(self):
         """
@@ -44,9 +44,7 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
             data={"quote_id": str(quote.id)},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_download_quote_update(self):
         """
@@ -63,9 +61,7 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
             data={"quote_id": str(quote.id)},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_download_quote_partially_update(self):
         """
@@ -82,9 +78,7 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
             data={"quote_id": str(quote.id)},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_download_quote_delete(self):
         """
@@ -101,9 +95,7 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
             data={"quote_id": str(quote.id)},
         )
 
-        self.assertEqual(
-            response.status_code, HTTPStatus.METHOD_NOT_ALLOWED, response.json()
-        )
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_api_organization_download_quote_not_owned(self):
         """
@@ -121,7 +113,7 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
             data={"quote_id": str(quote.id)},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_organization_download_quote_authenticated_with_organization_access(
         self,
@@ -180,7 +172,7 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
 
         document_text = pdf_extract_text(BytesIO(b"".join(response.streaming_content)))
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],

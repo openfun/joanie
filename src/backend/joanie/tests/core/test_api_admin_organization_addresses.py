@@ -5,12 +5,11 @@ Test suite for Organization Address Admin API endpoints.
 import uuid
 from http import HTTPStatus
 
-from django.test import TestCase
-
 from joanie.core import factories
+from joanie.tests.base import BaseAPITestCase
 
 
-class OrganizationAddressAdminAPITest(TestCase):
+class OrganizationAddressAdminApiTestCase(BaseAPITestCase):
     """
     Test suite for Organization Address Admin API endpoints.
     """
@@ -109,7 +108,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(organization.addresses.count(), 1)
 
         organization_address = organization.addresses.first()
@@ -156,7 +155,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(
             response.json(), {"organization_id": "Resource does not exist."}
         )
@@ -188,7 +187,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(
             content,
@@ -258,7 +257,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(
             response.json(),
             {"detail": "No OrganizationAccess matches the given query."},
@@ -294,7 +293,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(
             response.json(), {"detail": "No Address matches the given query."}
         )
@@ -326,7 +325,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             response.json(),
             {
@@ -358,7 +357,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             f"/api/v1.0/admin/organizations/{address.organization.id}/addresses/{address.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NO_CONTENT)
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
         self.assertEqual(address.organization.accesses.count(), 0)
 
     def test_admin_api_organization_addresses_request_delete_with_wrong_address_id(
@@ -377,7 +376,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             f"/api/v1.0/admin/organizations/{organization_2.id}/addresses/{address.id}/"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(
             response.json(), {"detail": "No Address matches the given query."}
         )
@@ -400,7 +399,7 @@ class OrganizationAddressAdminAPITest(TestCase):
             data={"title": "Office"},
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertEqual(
             response.json(), {"detail": "No Address matches the given query."}
         )

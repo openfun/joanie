@@ -61,7 +61,7 @@ class CertificateApiTest(BaseAPITestCase):
         factories.OrderCertificateFactory.create_batch(2)
         response = self.client.get("/api/v1.0/certificates/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -97,7 +97,7 @@ class CertificateApiTest(BaseAPITestCase):
             "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json().get("count"), 4)
 
         content = response.json().get("results")
@@ -166,7 +166,7 @@ class CertificateApiTest(BaseAPITestCase):
                 "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertDictEqual(
             response.json(),
@@ -400,7 +400,7 @@ class CertificateApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         expected_results = [other_certificate, certificate_enrollment_1, certificate]
 
@@ -613,7 +613,7 @@ class CertificateApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertDictEqual(
             response.json(),
@@ -767,7 +767,7 @@ class CertificateApiTest(BaseAPITestCase):
                 "/api/v1.0/certificates/?type=foo", HTTP_AUTHORIZATION=f"Bearer {token}"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     @mock.patch.object(PageNumberPagination, "get_page_size", return_value=2)
     def test_api_certificate_read_list_pagination(self, _mock_page_size):
@@ -788,7 +788,7 @@ class CertificateApiTest(BaseAPITestCase):
             "/api/v1.0/certificates/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -805,7 +805,7 @@ class CertificateApiTest(BaseAPITestCase):
             "/api/v1.0/certificates/?page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -826,7 +826,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/certificates/{certificate.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -857,7 +857,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertDictEqual(
             response.json(), {"detail": "No Certificate matches the given query."}
         )
@@ -868,7 +868,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertDictEqual(
             response.json(),
@@ -949,7 +949,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
         self.assertDictEqual(
             response.json(), {"detail": "No Certificate matches the given query."}
         )
@@ -960,7 +960,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertDictEqual(
             response.json(),
@@ -1021,7 +1021,7 @@ class CertificateApiTest(BaseAPITestCase):
 
         response = self.client.get(f"/api/v1.0/certificates/{certificate.id}/download/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -1054,7 +1054,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
         self.assertDictEqual(
             response.json(),
@@ -1067,7 +1067,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],
@@ -1097,7 +1097,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
         self.assertDictEqual(
             response.json(),
@@ -1110,7 +1110,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.headers["Content-Type"], "application/pdf")
         self.assertEqual(
             response.headers["Content-Disposition"],
@@ -1138,7 +1138,7 @@ class CertificateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {"detail": f"Unable to generate certificate {str(certificate.id)}."},
@@ -1155,7 +1155,7 @@ class CertificateApiTest(BaseAPITestCase):
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
         self.assertDictEqual(response.json(), {"detail": 'Method "POST" not allowed.'})
 
@@ -1171,7 +1171,7 @@ class CertificateApiTest(BaseAPITestCase):
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
         self.assertDictEqual(response.json(), {"detail": 'Method "PUT" not allowed.'})
 
@@ -1187,7 +1187,7 @@ class CertificateApiTest(BaseAPITestCase):
             {"id": uuid.uuid4()},
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
 
         self.assertDictEqual(
             response.json(), {"detail": 'Method "DELETE" not allowed.'}

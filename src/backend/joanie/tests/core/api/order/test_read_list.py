@@ -31,7 +31,7 @@ class OrderListApiTest(BaseAPITestCase):
         response = self.client.get(
             "/api/v1.0/orders/",
         )
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
             response.json(), {"detail": "Authentication credentials were not provided."}
@@ -58,7 +58,7 @@ class OrderListApiTest(BaseAPITestCase):
             )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -132,7 +132,7 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = other_order.organization.addresses.filter(
             is_main=True
         ).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -209,7 +209,7 @@ class OrderListApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
         self.assertEqual(
@@ -226,7 +226,7 @@ class OrderListApiTest(BaseAPITestCase):
             "/api/v1.0/orders/?page_size=2&page=2", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
 
         self.assertEqual(content["count"], 3)
@@ -264,7 +264,7 @@ class OrderListApiTest(BaseAPITestCase):
         )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -343,7 +343,7 @@ class OrderListApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(response.json(), {"product_id": ["Enter a valid UUID."]})
 
     @mock.patch.object(
@@ -385,7 +385,7 @@ class OrderListApiTest(BaseAPITestCase):
         )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -519,7 +519,7 @@ class OrderListApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(), {"enrollment_id": ["Enter a valid UUID."]}
         )
@@ -550,7 +550,7 @@ class OrderListApiTest(BaseAPITestCase):
             )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -650,7 +650,7 @@ class OrderListApiTest(BaseAPITestCase):
             )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -804,7 +804,7 @@ class OrderListApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 3)
 
@@ -818,7 +818,7 @@ class OrderListApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
@@ -832,7 +832,7 @@ class OrderListApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
@@ -871,7 +871,7 @@ class OrderListApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -910,7 +910,7 @@ class OrderListApiTest(BaseAPITestCase):
         )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -999,7 +999,7 @@ class OrderListApiTest(BaseAPITestCase):
         )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -1092,7 +1092,7 @@ class OrderListApiTest(BaseAPITestCase):
         )
 
         organization_address = order.organization.addresses.filter(is_main=True).first()
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -1180,7 +1180,7 @@ class OrderListApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         response = response.json()
 
         self.assertEqual(len(response["results"]), 4)
@@ -1191,7 +1191,7 @@ class OrderListApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         response = response.json()
 
         self.assertEqual(len(response["results"]), 3)
@@ -1212,7 +1212,7 @@ class OrderListApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         response = response.json()
 
         self.assertEqual(len(response["results"]), 2)
@@ -1242,7 +1242,7 @@ class OrderListApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
             response.json(),
             {
@@ -1289,7 +1289,7 @@ class OrderListApiTest(BaseAPITestCase):
         )
 
         # We should find both orders of the user
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 2)
         self.assertCountEqual(
@@ -1319,7 +1319,7 @@ class OrderListApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 1)
             self.assertEqual(content["results"][0].get("id"), str(order_1.id))
@@ -1344,7 +1344,7 @@ class OrderListApiTest(BaseAPITestCase):
                 f"/api/v1.0/orders/?query={query}",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
             content = response.json()
             self.assertEqual(content["count"], 0)
 
@@ -1353,6 +1353,6 @@ class OrderListApiTest(BaseAPITestCase):
             "/api/v1.0/orders/?query=veryFakeProductTitle",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 0)

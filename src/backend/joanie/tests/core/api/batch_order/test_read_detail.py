@@ -26,7 +26,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_batch_order_read_authenticated_should_not_see_others_batch_not_owned(
         self,
@@ -44,7 +44,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -71,7 +71,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.json())
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {

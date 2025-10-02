@@ -23,7 +23,7 @@ class CourseContractApiTest(BaseAPITestCase):
         with self.record_performance():
             response = self.client.get(f"/api/v1.0/courses/{str(course.id)}/contracts/")
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_list_without_access(self):
         """
@@ -50,7 +50,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
             response.json(),
             {
@@ -114,7 +114,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         contracts = models.Contract.objects.filter(
             order__course=courses[0],
             order__state=enums.ORDER_STATE_COMPLETED,
@@ -235,7 +235,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 9)
 
@@ -246,7 +246,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -265,7 +265,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -281,7 +281,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -355,7 +355,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         self.assertEqual(content["count"], 8)
 
@@ -366,7 +366,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -382,7 +382,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         result_ids = [result["id"] for result in content["results"]]
@@ -398,7 +398,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         content = response.json()
         count = content["count"]
         self.assertEqual(count, 0)
@@ -415,7 +415,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_retrieve_without_access(self):
         """
@@ -444,7 +444,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     @mock.patch.object(
         fields.ThumbnailDetailField,
@@ -491,7 +491,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         assert response.json() == {
             "id": str(contract.id),
@@ -626,7 +626,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_create_authenticated(self):
         """Authenticated user cannot create an organization's contract."""
@@ -656,7 +656,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_update_authenticated(self):
         """Authenticated user cannot update an organization's contract."""
@@ -687,7 +687,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_patch_authenticated(self):
         """Authenticated user cannot patch an organization's contract."""
@@ -718,7 +718,7 @@ class CourseContractApiTest(BaseAPITestCase):
                 f"/api/v1.0/courses/{str(course.id)}/contracts/{str(contract.id)}/"
             )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
     def test_api_courses_contracts_delete_authenticated(self):
         """Authenticated user cannot delete an organization's contract."""

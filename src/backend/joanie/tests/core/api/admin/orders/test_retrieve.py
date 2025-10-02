@@ -72,7 +72,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
         with self.record_performance():
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             {
                 "id": str(order.id),
@@ -261,7 +261,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
         with self.record_performance():
             response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
 
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
             {
                 "id": str(order.id),

@@ -35,7 +35,7 @@ class ActivityLogCreateApiTest(BaseAPITestCase):
             "/api/v1.0/activity-logs/", data=data, content_type="application/json"
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
         self.assertEqual(ActivityLog.objects.count(), 0)
 
     def test_api_activity_log_create_user(self):
@@ -56,7 +56,7 @@ class ActivityLogCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {jwt_token}",
         )
 
-        self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
         self.assertEqual(ActivityLog.objects.count(), 0)
 
     @patch("joanie.core.api.client.check_signature")
@@ -78,7 +78,7 @@ class ActivityLogCreateApiTest(BaseAPITestCase):
             data=data,
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, HTTPStatus.CREATED)
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
         self.assertEqual(ActivityLog.objects.count(), 1)
         activity_log = ActivityLog.objects.first()
         self.assertEqual(activity_log.level, "info")
