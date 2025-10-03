@@ -725,7 +725,9 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         """Create a credit card for the order."""
         if self.product.price == 0:
             return None
-        from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+        # ruff : noqa : PLC0415
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        from joanie.payment.factories import (
             CreditCardFactory,
         )
 
@@ -775,7 +777,9 @@ class OrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 return extracted
 
             if self.state != enums.ORDER_STATE_DRAFT and not self.is_free:
-                from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                # ruff : noqa : PLC0415
+                # pylint: disable=import-outside-toplevel, cyclic-import
+                from joanie.payment.factories import (
                     InvoiceFactory,
                     TransactionFactory,
                 )
@@ -880,7 +884,9 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
                 return extracted
 
             if self.state not in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_TO_OWN]:
-                from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+                # ruff : noqa : PLC0415
+                # pylint: disable=import-outside-toplevel, cyclic-import
+                from joanie.payment.factories import (
                     InvoiceFactory,
                 )
 
@@ -979,7 +985,9 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             enums.ORDER_STATE_REFUNDING,
             enums.ORDER_STATE_REFUNDED,
         ]:
-            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+            # ruff : noqa : PLC0415
+            # pylint: disable=import-outside-toplevel, cyclic-import
+            from joanie.payment.factories import (
                 CreditCardFactory,
             )
 
@@ -1038,6 +1046,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             if extracted:
                 self.init_flow(billing_address=extracted)
             else:
+                # ruff : noqa : PLC0415
                 from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
                     BillingAddressDictFactory,
                 )
@@ -1075,7 +1084,9 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
             ]
             and not self.is_free
         ):
-            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel, cyclic-import
+            # ruff : noqa : PLC0415
+            # pylint: disable=import-outside-toplevel, cyclic-import
+            from joanie.payment.factories import (
                 TransactionFactory,
             )
 
@@ -1314,7 +1325,9 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             self.flow.failed_payment()
 
         if extracted == enums.BATCH_ORDER_STATE_COMPLETED:
-            from joanie.payment.factories import (  # pylint: disable=import-outside-toplevel
+            # ruff : noqa : PLC0415
+            # pylint: disable=import-outside-toplevel
+            from joanie.payment.factories import (
                 InvoiceFactory,
                 TransactionFactory,
             )

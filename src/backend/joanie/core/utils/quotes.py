@@ -96,6 +96,7 @@ def prepare_organization_logo(definition: "QuoteDefinition", organization):
 
 def prepare_organization_address(organization):
     """Return the serialized organization address"""
+    # ruff : noqa : PLC0415
     # pylint: disable=cyclic-import, import-outside-toplevel
     from joanie.core.models import Address
     from joanie.core.serializers.client import AddressSerializer

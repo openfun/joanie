@@ -1,4 +1,4 @@
-# ruff: noqa: SLF001, PLR0912
+# ruff: noqa: SLF001
 # pylint: disable=too-many-lines, too-many-branches
 """Client serializers for Joanie Core app."""
 

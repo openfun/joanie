@@ -1287,7 +1287,6 @@ class Order(BaseModel):
             return self.product.contract_definition_order is not None
 
     # pylint: disable=too-many-branches
-    # ruff: noqa: PLR0912
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
         error_dict = defaultdict(list)

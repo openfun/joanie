@@ -1,5 +1,5 @@
-# ruff: noqa: S311, PLR0913, PLR0915
-# pylint: disable=too-many-lines
+# ruff: noqa: PLR0913, PLR0915
+# pylint:disable=too-many-lines
 """Test utils module."""
 
 import random
