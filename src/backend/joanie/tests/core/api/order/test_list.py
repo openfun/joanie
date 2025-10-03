@@ -1,4 +1,4 @@
-"""Tests for the Order read list API."""
+"""Tests for the Order list API."""
 
 # pylint: disable=too-many-lines
 from http import HTTPStatus

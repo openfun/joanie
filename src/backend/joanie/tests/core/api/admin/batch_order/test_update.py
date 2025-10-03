@@ -14,9 +14,7 @@ class BatchOrderAdminApiUpdateTestCase(BaseAPITestCase):
 
         batch_order = factories.BatchOrderFactory()
 
-        response = self.client.put(
-            f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
-        )
+        response = self.client.put(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
@@ -27,9 +25,7 @@ class BatchOrderAdminApiUpdateTestCase(BaseAPITestCase):
 
         batch_order = factories.BatchOrderFactory()
 
-        response = self.client.put(
-            f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
-        )
+        response = self.client.put(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
@@ -40,8 +36,6 @@ class BatchOrderAdminApiUpdateTestCase(BaseAPITestCase):
 
         batch_order = factories.BatchOrderFactory()
 
-        response = self.client.put(
-            f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
-        )
+        response = self.client.put(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
