@@ -419,7 +419,7 @@ class OrderViewSet(
         """Try to create an order and a related payment if the payment is fee."""
         if voucher_code := request.data.get("voucher_code"):
             try:
-                voucher = models.Voucher.objects.get(code=voucher_code)
+                voucher = models.Voucher.objects.get(code=voucher_code, is_active=True)
             except models.Voucher.DoesNotExist:
                 return Response("Invalid voucher code", status=HTTPStatus.BAD_REQUEST)
 
