@@ -2797,6 +2797,23 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
+    def test_api_order_create_voucher_inactive(self):
+        """
+        When a voucher is inactive, the order should not be created.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        voucher = factories.VoucherFactory(discount__rate=1, is_active=False)
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=self._get_fee_enrollment_order_data(user, voucher_code=voucher.code),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+
     @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
     def test_api_order_create_with_voucher_code_from_a_batch_order(
         self, mock_enroll_user_to_course_run
