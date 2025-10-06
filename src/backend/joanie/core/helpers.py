@@ -104,5 +104,6 @@ def generate_orders(batch_order_id: str):
             discount=discount, multiple_use=False, multiple_users=False
         )
         order.flow.assign()
+        order.freeze_target_courses()
         batch_order.orders.add(order)
         order.flow.update()

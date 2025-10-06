@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 from joanie.core import enums, factories
-from joanie.core.models import CourseState
+from joanie.core.models import CourseState, Enrollment
 from joanie.core.serializers import fields
 from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
@@ -265,6 +265,9 @@ class OrderListApiTest(BaseAPITestCase):
         order.owner = user
         order.flow.update()
 
+        enrollment = Enrollment.objects.get()
+        product = batch_order.offering.product
+
         response = self.client.get(
             "/api/v1.0/orders/", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
@@ -289,7 +292,50 @@ class OrderListApiTest(BaseAPITestCase):
                         "created_on": format_date(order.created_on),
                         "credit_card_id": None,
                         "enrollment": None,
-                        "target_enrollments": [],
+                        "target_enrollments": [
+                            {
+                                "certificate_id": None,
+                                "course_run": {
+                                    "course": {
+                                        "code": enrollment.course_run.course.code,
+                                        "cover": "_this_field_is_mocked",
+                                        "id": str(enrollment.course_run.course.id),
+                                        "title": enrollment.course_run.course.title,
+                                    },
+                                    "start": format_date(enrollment.course_run.start),
+                                    "end": format_date(enrollment.course_run.end),
+                                    "enrollment_end": format_date(
+                                        enrollment.course_run.enrollment_end
+                                    ),
+                                    "enrollment_start": format_date(
+                                        enrollment.course_run.enrollment_start
+                                    ),
+                                    "id": str(enrollment.course_run.id),
+                                    "languages": enrollment.course_run.languages,
+                                    "resource_link": enrollment.course_run.resource_link,
+                                    "title": enrollment.course_run.title,
+                                    "state": {
+                                        "priority": enrollment.course_run.state[
+                                            "priority"
+                                        ],
+                                        "datetime": format_date(
+                                            enrollment.course_run.state["datetime"]
+                                        ),
+                                        "call_to_action": enrollment.course_run.state[
+                                            "call_to_action"
+                                        ],
+                                        "text": enrollment.course_run.state["text"],
+                                    },
+                                },
+                                "created_on": format_date(enrollment.created_on),
+                                "id": str(enrollment.id),
+                                "is_active": enrollment.is_active,
+                                "orders": [],
+                                "offerings": [],
+                                "state": enrollment.state,
+                                "was_created_by_order": enrollment.was_created_by_order,
+                            }
+                        ],
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
@@ -323,7 +369,50 @@ class OrderListApiTest(BaseAPITestCase):
                         "product_id": str(order.product.id),
                         "state": order.state,
                         "from_batch_order": True,
-                        "target_courses": [],
+                        "target_courses": [
+                            {
+                                "code": target_course.code,
+                                "course_runs": [
+                                    {
+                                        "id": str(course_run.id),
+                                        "title": course_run.title,
+                                        "resource_link": course_run.resource_link,
+                                        "state": {
+                                            "priority": course_run.state["priority"],
+                                            "datetime": format_date(
+                                                course_run.state["datetime"]
+                                            ),
+                                            "call_to_action": course_run.state[
+                                                "call_to_action"
+                                            ],
+                                            "text": course_run.state["text"],
+                                        },
+                                        "start": format_date(course_run.start),
+                                        "end": format_date(course_run.end),
+                                        "enrollment_start": format_date(
+                                            course_run.enrollment_start
+                                        ),
+                                        "enrollment_end": format_date(
+                                            course_run.enrollment_end
+                                        ),
+                                        "languages": course_run.languages,
+                                    }
+                                    for course_run in target_course.course_runs.all().order_by(
+                                        "start"
+                                    )
+                                ],
+                                "position": target_course.product_target_relations.get(
+                                    product=product
+                                ).position,
+                                "is_graded": target_course.product_target_relations.get(
+                                    product=product
+                                ).is_graded,
+                                "title": target_course.title,
+                            }
+                            for target_course in product.target_courses.all().order_by(
+                                "product_target_relations__position"
+                            )
+                        ],
                         "payment_schedule": [],
                     }
                 ],
