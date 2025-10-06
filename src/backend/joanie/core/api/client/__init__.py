@@ -425,10 +425,7 @@ class OrderViewSet(
 
             user = self.request.user
             if not voucher.is_usable_by(user.id):
-                return Response(
-                    f"Voucher already claimed by user {user.id}",
-                    status=HTTPStatus.BAD_REQUEST,
-                )
+                return Response("Unusable voucher code", status=HTTPStatus.BAD_REQUEST)
 
             try:
                 order = models.Order.objects.get(
