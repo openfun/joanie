@@ -1355,7 +1355,6 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         coerce_to_string=False, decimal_places=2, max_digits=9, min_value=D(0.00)
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
-    discount = serializers.SerializerMethodField(read_only=True)
     voucher = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -1388,16 +1387,6 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         """
         if instance.owner:
             return instance.owner.name
-        return None
-
-    def get_discount(self, instance) -> str | None:
-        """Return the discount if available, otherwise return None."""
-        if instance.discount:
-            return str(instance.discount)
-
-        if instance.voucher:
-            return str(instance.voucher.discount)
-
         return None
 
     def get_voucher(self, instance) -> str | None:
