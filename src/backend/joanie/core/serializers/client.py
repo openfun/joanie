@@ -1439,7 +1439,8 @@ class OrderSerializer(serializers.ModelSerializer):
             if offering_rule.is_enabled:
                 if "offering_rules" not in validated_data:
                     validated_data["offering_rules"] = []
-                validated_data["offering_rules"].append(offering_rule)
+                if not validated_data.get("voucher") or not offering_rule.discount:
+                    validated_data["offering_rules"].append(offering_rule)
 
         if seats_limitation and not seats_limitation.discount:
             raise serializers.ValidationError(
