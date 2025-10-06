@@ -106,10 +106,88 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "state": order.state,
                     "total": float(order.total),
                     "total_currency": get_default_currency_symbol(),
-                    "discount": order.discount,
-                    "voucher": order.voucher,
+                    "discount": str(order.voucher.discount) if order.voucher else None,
+                    "voucher": order.voucher.code if order.voucher else None,
                 }
                 for order in sorted(orders, key=lambda x: x.created_on, reverse=True)
+            ],
+        }
+
+        self.assertEqual(expected_content, content)
+
+    def test_api_admin_orders_list_discount(self):
+        """
+        Listed orders with discount should prioritize the display of the voucher
+        discount upon the offering rule one.
+        """
+        # Create two discounted orders, one with a voucher,
+        # and the other with an offering_rule
+        offering = factories.OfferingFactory(product__price=100)
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            discount=factories.DiscountFactory(rate=0.1),
+            description="Deal!",
+        )
+        voucher = factories.VoucherFactory(discount__rate=0.5)
+        order_rule, order_voucher = [
+            factories.OrderFactory(
+                course=offering.course,
+                product=offering.product,
+                offering_rules=[offering_rule],
+            ),
+            factories.OrderFactory(
+                course=offering.course,
+                product=offering.product,
+                offering_rules=[offering_rule],
+                voucher=voucher,
+            ),
+        ]
+
+        # Create an admin user
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        with self.record_performance():
+            response = self.client.get("/api/v1.0/admin/orders/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+
+        content = response.json()
+        expected_content = {
+            "count": 2,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "course_code": order_voucher.course.code,
+                    "created_on": format_date(order_voucher.created_on),
+                    "updated_on": format_date(order_voucher.updated_on),
+                    "enrollment_id": order_voucher.enrollment_id,
+                    "id": str(order_voucher.id),
+                    "organization_title": order_voucher.organization.title,
+                    "owner_name": order_voucher.owner.get_full_name(),
+                    "product_title": order_voucher.product.title,
+                    "state": order_voucher.state,
+                    "total": 100.00,
+                    "total_currency": get_default_currency_symbol(),
+                    "discount": "-50%",
+                    "voucher": order_voucher.voucher.code,
+                },
+                {
+                    "course_code": order_rule.course.code,
+                    "created_on": format_date(order_rule.created_on),
+                    "updated_on": format_date(order_rule.updated_on),
+                    "enrollment_id": order_rule.enrollment_id,
+                    "id": str(order_rule.id),
+                    "organization_title": order_rule.organization.title,
+                    "owner_name": order_rule.owner.get_full_name(),
+                    "product_title": order_rule.product.title,
+                    "state": order_rule.state,
+                    "total": 100.00,
+                    "total_currency": get_default_currency_symbol(),
+                    "discount": "-10% (100.00 €) Deal!",
+                    "voucher": None,
+                },
             ],
         }
 

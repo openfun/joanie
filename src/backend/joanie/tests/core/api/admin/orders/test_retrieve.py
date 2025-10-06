@@ -371,3 +371,218 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
             },
             response.json(),
         )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={100: (100,)},
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_api_admin_orders_retrieve_voucher(self):
+        """
+        An order with a voucher and a discount from an offering rule should
+        return the voucher discount.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering = factories.OfferingFactory(
+            product__price=100,
+            product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+            product__contract_definition_order=factories.ContractDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__certificate_definition=factories.CertificateDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=offering,
+            nb_seats=10,
+            description="Sales",
+        )
+        voucher = factories.VoucherFactory(
+            discount=factories.DiscountFactory(rate=0.5),
+            multiple_use=False,
+            multiple_users=False,
+        )
+        order = factories.OrderGeneratorFactory(
+            course=offering.course,
+            product=offering.product,
+            offering_rules=[offering_rule],
+            voucher=voucher,
+            organization=offering.organizations.first(),
+            state=enums.ORDER_STATE_COMPLETED,
+        )
+        order.freeze_total()
+
+        # Create certificate
+        factories.OrderCertificateFactory(
+            order=order, certificate_definition=order.product.certificate_definition
+        )
+        # Get the children invoice of the main invoice
+        child_invoice = Invoice.objects.get(
+            parent=order.main_invoice,
+            order=order,
+            transactions__reference__in=[str(order.payment_schedule[0]["id"])],
+        )
+        # Create a credit note
+        credit_note = InvoiceFactory(
+            parent=order.main_invoice,
+            total=D("1.00"),
+        )
+
+        with self.record_performance():
+            response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(
+            {
+                "id": str(order.id),
+                "created_on": format_date(order.created_on),
+                "state": order.state,
+                "owner": {
+                    "id": str(order.owner.id),
+                    "username": order.owner.username,
+                    "full_name": order.owner.get_full_name(),
+                    "email": order.owner.email,
+                },
+                "product": {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": str(
+                        offering.product.certificate_definition.id
+                    ),
+                    "contract_definition_order": str(
+                        offering.product.contract_definition_order.id
+                    ),
+                    "contract_definition_batch_order": str(
+                        offering.product.contract_definition_batch_order.id
+                    ),
+                    "quote_definition": str(offering.product.quote_definition.id),
+                    "description": offering.product.description,
+                    "id": str(offering.product.id),
+                    "price": float(offering.product.price),
+                    "price_currency": "EUR",
+                    "target_courses": [str(order.course.id)],
+                    "title": offering.product.title,
+                    "type": "credential",
+                },
+                "enrollment": None,
+                "course": {
+                    "id": str(order.course.id),
+                    "code": order.course.code,
+                    "title": order.course.title,
+                    "state": {
+                        "priority": order.course.state["priority"],
+                        "datetime": format_date(order.course.state["datetime"]),
+                        "call_to_action": order.course.state["call_to_action"],
+                        "text": order.course.state["text"],
+                    },
+                },
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                },
+                "offering_rules": [
+                    {
+                        "id": str(offering_rule.id),
+                        "description": offering_rule.description,
+                        "nb_seats": offering_rule.nb_seats,
+                        "is_active": offering_rule.is_active,
+                        "is_enabled": offering_rule.is_enabled,
+                        "nb_available_seats": offering_rule.nb_seats
+                        - offering_rule.get_nb_binding_orders(),
+                        "created_on": format_date(offering_rule.created_on),
+                        "can_edit": offering_rule.can_edit,
+                        "start": None,
+                        "end": None,
+                        "discount": None,
+                    }
+                ],
+                "total": float(order.total),
+                "total_currency": settings.DEFAULT_CURRENCY,
+                "contract": {
+                    "id": str(order.contract.id),
+                    "definition_title": order.contract.definition.title,
+                    "student_signed_on": format_date(order.contract.student_signed_on),
+                    "organization_signed_on": format_date(
+                        order.contract.organization_signed_on
+                    ),
+                    "submitted_for_signature_on": None,
+                },
+                "certificate": {
+                    "id": str(order.certificate.id),
+                    "definition_title": order.certificate.certificate_definition.title,
+                    "issued_on": format_date(order.certificate.issued_on),
+                },
+                "payment_schedule": [
+                    {
+                        "id": str(installment["id"]),
+                        "amount": float(installment["amount"]),
+                        "currency": "EUR",
+                        "due_date": format_date(installment["due_date"]),
+                        "state": installment["state"],
+                    }
+                    for installment in order.payment_schedule
+                ],
+                "main_invoice": {
+                    "id": str(order.main_invoice.id),
+                    "balance": float(order.main_invoice.balance),
+                    "created_on": format_date(order.main_invoice.created_on),
+                    "state": order.main_invoice.state,
+                    "children": [
+                        {
+                            "id": str(child_invoice.id),
+                            "balance": float(child_invoice.balance),
+                            "created_on": format_date(child_invoice.created_on),
+                            "invoiced_balance": float(child_invoice.invoiced_balance),
+                            "recipient_address": (
+                                f"{child_invoice.recipient_address.full_name}\n"
+                                f"{child_invoice.recipient_address.full_address}"
+                            ),
+                            "reference": child_invoice.reference,
+                            "state": child_invoice.state,
+                            "transactions_balance": float(
+                                child_invoice.transactions_balance
+                            ),
+                            "total": float(child_invoice.total),
+                            "total_currency": settings.DEFAULT_CURRENCY,
+                            "type": child_invoice.type,
+                            "updated_on": format_date(child_invoice.updated_on),
+                        },
+                        {
+                            "id": str(credit_note.id),
+                            "balance": float(credit_note.balance),
+                            "created_on": format_date(credit_note.created_on),
+                            "invoiced_balance": float(credit_note.invoiced_balance),
+                            "recipient_address": (
+                                f"{credit_note.recipient_address.full_name}\n"
+                                f"{credit_note.recipient_address.full_address}"
+                            ),
+                            "reference": credit_note.reference,
+                            "state": credit_note.state,
+                            "transactions_balance": float(
+                                credit_note.transactions_balance
+                            ),
+                            "total": float(credit_note.total),
+                            "total_currency": settings.DEFAULT_CURRENCY,
+                            "type": credit_note.type,
+                            "updated_on": format_date(credit_note.updated_on),
+                        },
+                    ],
+                    "invoiced_balance": float(order.main_invoice.invoiced_balance),
+                    "recipient_address": (
+                        f"{order.main_invoice.recipient_address.full_name}\n"
+                        f"{order.main_invoice.recipient_address.full_address}"
+                    ),
+                    "reference": order.main_invoice.reference,
+                    "transactions_balance": float(
+                        order.main_invoice.transactions_balance
+                    ),
+                    "total": float(order.main_invoice.total),
+                    "total_currency": settings.DEFAULT_CURRENCY,
+                    "type": order.main_invoice.type,
+                    "updated_on": format_date(order.main_invoice.updated_on),
+                },
+                "credit_card": None,
+                "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+            },
+            response.json(),
+        )

@@ -8444,8 +8444,6 @@
                     },
                     "discount": {
                         "type": "string",
-                        "nullable": true,
-                        "description": "Return the discount if available, otherwise return None.",
                         "readOnly": true
                     },
                     "voucher": {

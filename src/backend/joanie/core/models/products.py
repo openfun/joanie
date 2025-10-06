@@ -1936,6 +1936,9 @@ class Order(BaseModel):
         Return the discount applied to the order.
         It can be either from a voucher or an offering rule.
         """
+        if self.voucher:
+            return str(self.voucher.discount)
+
         for offering_rule in self.offering_rules.all():
             if discount := offering_rule.discount:
                 description = getattr(offering_rule, "description", None)

@@ -2492,15 +2492,25 @@ class OrderCreateApiTest(BaseAPITestCase):
             synchronized_course_runs,
         )
 
-    def test_api_order_create_discount_voucher(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_order_create_discount_voucher(self, _mock_thumbnail):
         """
         An order created with a voucher should have the total value of the discounted price.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         offering = factories.OfferingFactory(product__price=100)
-        voucher = factories.VoucherFactory(
+        factories.OfferingRuleFactory(
             discount=factories.DiscountFactory(rate=0.1),
+            course_product_relation=offering,
+            is_active=True,
+        )
+        voucher = factories.VoucherFactory(
+            discount=factories.DiscountFactory(rate=0.5),
             multiple_use=False,
             multiple_users=False,
         )
@@ -2521,10 +2531,111 @@ class OrderCreateApiTest(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
-
         order = models.Order.objects.get()
-        self.assertEqual(order.total, 90)
+        product = offering.product
+        course = offering.course
+        organization_address = order.organization.addresses.filter(is_main=True).first()
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+        self.assertDictEqual(
+            {
+                "id": str(order.id),
+                "certificate_id": None,
+                "contract": None,
+                "payment_schedule": [],
+                "course": {
+                    "code": course.code,
+                    "id": str(course.id),
+                    "title": course.title,
+                    "cover": "_this_field_is_mocked",
+                },
+                "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "credit_card_id": None,
+                "enrollment": None,
+                "main_invoice_reference": order.main_invoice.reference,
+                "offering_rule_ids": [
+                    str(offering_rule.id)
+                    for offering_rule in order.offering_rules.all()
+                ],
+                "has_waived_withdrawal_right": True,
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                    "logo": "_this_field_is_mocked",
+                    "address": {
+                        "id": str(organization_address.id),
+                        "address": organization_address.address,
+                        "city": organization_address.city,
+                        "country": organization_address.country,
+                        "first_name": organization_address.first_name,
+                        "is_main": organization_address.is_main,
+                        "last_name": organization_address.last_name,
+                        "postcode": organization_address.postcode,
+                        "title": organization_address.title,
+                    }
+                    if organization_address
+                    else None,
+                    "enterprise_code": order.organization.enterprise_code,
+                    "activity_category_code": order.organization.activity_category_code,
+                    "contact_phone": order.organization.contact_phone,
+                    "contact_email": order.organization.contact_email,
+                    "dpo_email": order.organization.dpo_email,
+                },
+                "owner": order.owner.username,
+                "product_id": str(product.id),
+                "state": order.state,
+                "total": 50,
+                "total_currency": settings.DEFAULT_CURRENCY,
+                "target_enrollments": [],
+                "target_courses": [
+                    {
+                        "code": target_course.code,
+                        "course_runs": [
+                            {
+                                "id": str(course_run.id),
+                                "title": course_run.title,
+                                "languages": course_run.languages,
+                                "resource_link": course_run.resource_link,
+                                "state": {
+                                    "priority": course_run.state["priority"],
+                                    "datetime": format_date(
+                                        course_run.state["datetime"]
+                                    ),
+                                    "call_to_action": course_run.state[
+                                        "call_to_action"
+                                    ],
+                                    "text": course_run.state["text"],
+                                },
+                                "start": format_date(course_run.start),
+                                "end": format_date(course_run.end),
+                                "enrollment_start": (
+                                    format_date(course_run.enrollment_start)
+                                ),
+                                "enrollment_end": format_date(
+                                    course_run.enrollment_end
+                                ),
+                            }
+                            for course_run in target_course.course_runs.all().order_by(
+                                "start"
+                            )
+                        ],
+                        "position": target_course.order_relations.get(
+                            order=order
+                        ).position,
+                        "is_graded": target_course.order_relations.get(
+                            order=order
+                        ).is_graded,
+                        "title": target_course.title,
+                    }
+                    for target_course in order.target_courses.all().order_by(
+                        "order_relations__position"
+                    )
+                ],
+            },
+            response.json(),
+        )
+
+        self.assertEqual(order.total, 50)
         self.assertEqual(order.voucher, voucher)
         voucher.refresh_from_db()
         self.assertFalse(voucher.is_usable_by(order.owner))
