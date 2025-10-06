@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -1025,7 +1026,18 @@ class VoucherViewSet(viewsets.ModelViewSet):
         if not "ordering" in request.query_params:
             queryset = queryset.order_by(self.ordering)
         else:
-            queryset = queryset.order_by(request.query_params["ordering"])
+            ordering = request.query_params["ordering"]
+            if "orders_count" in ordering:
+                queryset = queryset.annotate(
+                    orders_count=Count("orders", distinct=True)
+                ).order_by(ordering)
+            elif "discount" in ordering:
+                if "-" in ordering:
+                    queryset = queryset.order_by("-discount__amount", "-discount__rate")
+                else:
+                    queryset = queryset.order_by("discount__rate", "discount__amount")
+            else:
+                queryset = queryset.order_by(ordering)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
