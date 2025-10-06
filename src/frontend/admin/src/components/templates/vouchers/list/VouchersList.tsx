@@ -1,6 +1,7 @@
 import * as React from "react";
 import { GridColDef } from "@mui/x-data-grid";
 import { defineMessages, useIntl } from "react-intl";
+import CopyAllIcon from "@mui/icons-material/CopyAll";
 import {
   DefaultTableProps,
   TableComponent,
@@ -13,6 +14,7 @@ import { Voucher, VoucherQuery } from "@/services/api/models/Voucher";
 import { useVouchers } from "@/hooks/useVouchers/useVouchers";
 import { VoucherFilters } from "@/components/templates/vouchers/filters/VoucherFilters";
 import { getDiscountLabel } from "@/services/api/models/Discount";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 const messages = defineMessages({
   codeHeader: {
@@ -45,12 +47,18 @@ const messages = defineMessages({
     defaultMessage: "Orders count",
     description: "Label for the orders count header inside the table",
   },
+  copyCode: {
+    id: "components.templates.vouchers.list.copyCode",
+    defaultMessage: "Copy code",
+    description: "Label for the copy code button inside the table",
+  },
 });
 
 type Props = DefaultTableProps<Voucher>;
 
 export function VouchersList(props: Props) {
   const intl = useIntl();
+  const copyToClipboard = useCopyToClipboard();
 
   const paginatedResource = usePaginatedTableResource<Voucher, VoucherQuery>({
     useResource: useVouchers,
@@ -109,6 +117,17 @@ export function VouchersList(props: Props) {
       filters={<VoucherFilters {...paginatedResource.filtersProps} />}
       columns={columns}
       columnBuffer={3}
+      getOptions={(voucher) => {
+        const { code } = voucher;
+
+        return [
+          {
+            mainLabel: intl.formatMessage(messages.copyCode),
+            icon: <CopyAllIcon fontSize="small" />,
+            onClick: () => copyToClipboard(code),
+          },
+        ];
+      }}
       onRemoveClick={(voucher: Voucher) => {
         paginatedResource.methods.delete(voucher.id);
       }}
