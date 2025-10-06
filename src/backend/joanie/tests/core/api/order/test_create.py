@@ -2552,10 +2552,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "credit_card_id": None,
                 "enrollment": None,
                 "main_invoice_reference": order.main_invoice.reference,
-                "offering_rule_ids": [
-                    str(offering_rule.id)
-                    for offering_rule in order.offering_rules.all()
-                ],
+                "offering_rule_ids": [],
                 "has_waived_withdrawal_right": True,
                 "organization": {
                     "id": str(order.organization.id),

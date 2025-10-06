@@ -869,7 +869,12 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         Set offering rules if any
         """
         if extracted:
-            self.offering_rules.set(extracted)
+            if not self.voucher:
+                self.offering_rules.set(extracted)
+            else:
+                for offering_rule in extracted:
+                    if not offering_rule.discount:
+                        self.offering_rules.add(offering_rule)
 
     @factory.post_generation
     def main_invoice(self, create, extracted, **kwargs):

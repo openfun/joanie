@@ -395,6 +395,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
         offering_rule = factories.OfferingRuleFactory(
             course_product_relation=offering,
             nb_seats=10,
+            discount=factories.DiscountFactory(rate=0.1),
             description="Sales",
         )
         voucher = factories.VoucherFactory(
@@ -410,6 +411,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
             organization=offering.organizations.first(),
             state=enums.ORDER_STATE_COMPLETED,
         )
+
         order.freeze_total()
 
         # Create certificate
@@ -480,22 +482,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                     "code": order.organization.code,
                     "title": order.organization.title,
                 },
-                "offering_rules": [
-                    {
-                        "id": str(offering_rule.id),
-                        "description": offering_rule.description,
-                        "nb_seats": offering_rule.nb_seats,
-                        "is_active": offering_rule.is_active,
-                        "is_enabled": offering_rule.is_enabled,
-                        "nb_available_seats": offering_rule.nb_seats
-                        - offering_rule.get_nb_binding_orders(),
-                        "created_on": format_date(offering_rule.created_on),
-                        "can_edit": offering_rule.can_edit,
-                        "start": None,
-                        "end": None,
-                        "discount": None,
-                    }
-                ],
+                "offering_rules": [],
                 "total": float(order.total),
                 "total_currency": settings.DEFAULT_CURRENCY,
                 "contract": {
