@@ -50,9 +50,9 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
                             "amount": voucher.discount.amount,
                             "rate": voucher.discount.rate,
                         },
-                        "is_active": True,
-                        "multiple_use": False,
-                        "multiple_users": False,
+                        "is_active": voucher.is_active,
+                        "multiple_use": voucher.multiple_use,
+                        "multiple_users": voucher.multiple_users,
                         "created_on": format_date(voucher.created_on),
                         "updated_on": format_date(voucher.updated_on),
                         "orders_count": voucher.orders.count(),
@@ -158,12 +158,30 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
         Authenticated admin user should be able to get the list of vouchers
         ordered an attribute.
         """
-        abc_1 = factories.VoucherFactory(code="ABC_1", discount__amount=20)
-        def_1 = factories.VoucherFactory(code="DEF_1", discount__amount=25)
-        abc_2 = factories.VoucherFactory(code="ABC_2", discount__amount=60)
-        abc_1r = factories.VoucherFactory(code="ABC_1r", discount__rate=0.2)
-        def_1r = factories.VoucherFactory(code="DEF_1r", discount__rate=0.25)
-        abc_2r = factories.VoucherFactory(code="ABC_2r", discount__rate=0.6)
+        abc_1 = factories.VoucherFactory(
+            code="ABC_1", discount__amount=20, multiple_use=True, multiple_users=True
+        )
+        def_1 = factories.VoucherFactory(
+            code="DEF_1", discount__amount=25, multiple_use=True, multiple_users=True
+        )
+        abc_2 = factories.VoucherFactory(
+            code="ABC_2", discount__amount=60, multiple_use=True, multiple_users=True
+        )
+        abc_1r = factories.VoucherFactory(
+            code="ABC_1r", discount__rate=0.2, multiple_use=True, multiple_users=True
+        )
+        def_1r = factories.VoucherFactory(
+            code="DEF_1r", discount__rate=0.25, multiple_use=True, multiple_users=True
+        )
+        abc_2r = factories.VoucherFactory(
+            code="ABC_2r", discount__rate=0.6, multiple_use=True, multiple_users=True
+        )
+        factories.OrderFactory.create_batch(2, voucher=abc_1)
+        factories.OrderFactory.create_batch(3, voucher=def_1)
+        factories.OrderFactory.create_batch(4, voucher=abc_2)
+        factories.OrderFactory.create_batch(5, voucher=abc_1r)
+        factories.OrderFactory.create_batch(6, voucher=def_1r)
+        factories.OrderFactory.create_batch(7, voucher=abc_2r)
 
         self._test_vouchers_results(
             [abc_1, def_1, abc_2, abc_1r, def_1r, abc_2r], ordering="created_on"
@@ -177,4 +195,18 @@ class VouchersAdminApiListTestCase(BaseAPITestCase):
         )
         self._test_vouchers_results(
             [def_1r, def_1, abc_2r, abc_2, abc_1r, abc_1], ordering="-code"
+        )
+
+        self._test_vouchers_results(
+            [abc_1, def_1, abc_2, abc_1r, def_1r, abc_2r], ordering="orders_count"
+        )
+        self._test_vouchers_results(
+            [abc_2r, def_1r, abc_1r, abc_2, def_1, abc_1], ordering="-orders_count"
+        )
+
+        self._test_vouchers_results(
+            [abc_1r, def_1r, abc_2r, abc_1, def_1, abc_2], ordering="discount"
+        )
+        self._test_vouchers_results(
+            [abc_2r, def_1r, abc_1r, abc_2, def_1, abc_1], ordering="-discount"
         )

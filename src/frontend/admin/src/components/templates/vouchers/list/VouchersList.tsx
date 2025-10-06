@@ -61,7 +61,7 @@ export function VouchersList(props: Props) {
     {
       field: "code",
       headerName: intl.formatMessage(messages.codeHeader),
-      flex: 1,
+      flex: 4,
       renderCell: (cell) => (
         <CustomLink
           href={PATH_ADMIN.vouchers.edit(cell.row.id)}
@@ -74,7 +74,6 @@ export function VouchersList(props: Props) {
     {
       field: "discount",
       headerName: intl.formatMessage(messages.discountHeader),
-      sortable: false,
       flex: 1,
       renderCell: (cell) => getDiscountLabel(cell.row.discount),
     },
@@ -82,33 +81,24 @@ export function VouchersList(props: Props) {
       field: "is_active",
       headerName: intl.formatMessage(messages.isActiveHeader),
       flex: 1,
-      align: "center",
-      headerAlign: "center",
       renderCell: (cell) => (cell.row.is_active ? "✓" : "—"),
     },
     {
       field: "multiple_use",
       headerName: intl.formatMessage(messages.multipleUseHeader),
       flex: 1,
-      align: "center",
-      headerAlign: "center",
       renderCell: (cell) => (cell.row.multiple_use ? "✓" : "—"),
     },
     {
       field: "multiple_users",
       headerName: intl.formatMessage(messages.multipleUsersHeader),
       flex: 1,
-      align: "center",
-      headerAlign: "center",
       renderCell: (cell) => (cell.row.multiple_users ? "✓" : "—"),
     },
     {
       field: "orders_count",
       headerName: intl.formatMessage(messages.ordersCountHeader),
-      sortable: false,
-      maxWidth: 180,
-      align: "center",
-      headerAlign: "center",
+      flex: 1,
     },
   ];
 
