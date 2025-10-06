@@ -2675,6 +2675,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertEqual("Unusable voucher code", response.json())
 
     def test_api_order_create_voucher_full_discount_rate_for_credential_product_type(
         self,
