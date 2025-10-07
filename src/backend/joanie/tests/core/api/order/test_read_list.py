@@ -35,7 +35,8 @@ class OrderListApiTest(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
         self.assertDictEqual(
-            response.json(), {"detail": "Authentication credentials were not provided."}
+            {"detail": "Authentication credentials were not provided."},
+            response.json(),
         )
 
     @mock.patch.object(
@@ -61,7 +62,6 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -119,6 +119,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
         # The owner of the other order can only see his/her order
@@ -134,7 +135,6 @@ class OrderListApiTest(BaseAPITestCase):
         ).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -192,6 +192,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     def test_api_order_read_list_pagination(self):
@@ -447,7 +448,6 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -505,6 +505,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     def test_api_order_read_list_filtered_by_invalid_product_id(self):
@@ -567,7 +568,6 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -670,6 +670,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     def test_api_order_read_list_filtered_by_invalid_enrollment_id(self):
@@ -690,7 +691,8 @@ class OrderListApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(), {"enrollment_id": ["Enter a valid UUID."]}
+            {"enrollment_id": ["Enter a valid UUID."]},
+            response.json(),
         )
 
     @mock.patch.object(
@@ -721,7 +723,6 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -779,6 +780,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     @mock.patch.object(
@@ -820,7 +822,6 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -911,6 +912,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     def test_api_order_read_list_filtered_with_multiple_product_type(self):
@@ -1028,7 +1030,6 @@ class OrderListApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(),
             {
                 "product_type": [
                     (
@@ -1037,6 +1038,7 @@ class OrderListApiTest(BaseAPITestCase):
                     )
                 ]
             },
+            response.json(),
         )
 
     @mock.patch.object(
@@ -1067,7 +1069,6 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -1125,6 +1126,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     @mock.patch.object(
@@ -1155,7 +1157,6 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -1213,6 +1214,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     @mock.patch.object(
@@ -1247,7 +1249,6 @@ class OrderListApiTest(BaseAPITestCase):
         organization_address = order.organization.addresses.filter(is_main=True).first()
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -1305,6 +1306,7 @@ class OrderListApiTest(BaseAPITestCase):
                     }
                 ],
             },
+            response.json(),
         )
 
     @mock.patch.object(
@@ -1396,12 +1398,12 @@ class OrderListApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertDictEqual(
-            response.json(),
             {
                 "state": [
                     "Select a valid choice. invalid_state is not one of the available choices."
                 ]
             },
+            response.json(),
         )
 
     @mock.patch.object(
