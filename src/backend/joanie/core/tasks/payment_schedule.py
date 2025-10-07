@@ -51,7 +51,7 @@ def debit_pending_installment(order_id):
                     installment["id"],
                     order.id,
                 )
-                order.set_installment_error(installment)
+                order.set_installment_error(installment["id"])
                 continue
 
 

@@ -4,7 +4,7 @@ Test suite for order models
 
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest import mock
 
@@ -1390,6 +1390,33 @@ class OrderModelsTestCase(LoggingTestCase):
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
         self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_PAID)
+
+    def test_models_order_set_installment_error_in_payment_schedule(self):
+        """
+        When passing the installment object to `set_installment_error` because of an issue with
+        the payment provider, we should be able to mark the installment in error state.
+        We should pass the `installment_id` to the method instead.
+        """
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_PENDING,
+            payment_schedule=[
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "200.00",
+                    "due_date": date(2025, 10, 6),
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        with self.assertRaises(ValueError):
+            order.set_installment_error(order.payment_schedule)
+
+        order.set_installment_error(order.payment_schedule[0]["id"])
+
+        order.refresh_from_db()
+
+        self.assertEqual(order.payment_schedule[0]["state"], enums.PAYMENT_STATE_ERROR)
 
     def test_models_order_and_offering_rule_discounted_rate_get_discounted_price(self):
         """
