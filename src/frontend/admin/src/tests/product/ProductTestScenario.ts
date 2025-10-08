@@ -74,7 +74,7 @@ export const getProductScenarioStore = (): ProductStore => {
       ...restPayload
     } = payload;
 
-    const contractDefOrder = contractsDefinitions.find(
+    const contractDefinitionOrder = contractsDefinitions.find(
       (contractDefinition) =>
         contractDefinition.id === newContractDefinitionOrder,
     );
@@ -85,13 +85,13 @@ export const getProductScenarioStore = (): ProductStore => {
         ...item,
         ...restPayload,
         contract_definition_order:
-          contractDefOrder ?? item.contract_definition_order,
+          contractDefinitionOrder ?? item.contract_definition_order,
       };
     } else {
       newProduct = {
         id: faker.string.uuid(),
         ...restPayload,
-        contract_definition_order: contractDefOrder ?? null,
+        contract_definition_order: contractDefinitionOrder ?? null,
         certificate_definition: null,
         certification_level: null,
         teachers: [],
