@@ -42,13 +42,13 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 0,
                 "next": None,
                 "previous": None,
                 "results": [],
             },
+            response.json(),
         )
 
     def test_api_organizations_quotes_list_with_accesses(self):
@@ -87,7 +87,6 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 3,
                 "next": None,
@@ -102,6 +101,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                             "organization_id": str(quote.batch_order.organization.id),
                             "relation_id": str(quote.batch_order.relation.id),
                             "state": quote.batch_order.state,
+                            "payment_method": enums.BATCH_ORDER_WITH_CARD_PAYMENT,
                         },
                         "definition": {
                             "body": quote.definition.body,
@@ -117,6 +117,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                     for quote in expected_quotes
                 ],
             },
+            response.json(),
         )
 
     def test_api_organizations_quotes_create_anonymous(self):
@@ -268,7 +269,6 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(quote.id),
                 "batch_order": {
@@ -278,6 +278,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                     "organization_id": str(quote.batch_order.organization.id),
                     "relation_id": str(quote.batch_order.relation.id),
                     "state": quote.batch_order.state,
+                    "payment_method": enums.BATCH_ORDER_WITH_CARD_PAYMENT,
                 },
                 "definition": {
                     "body": quote.definition.body,
@@ -290,6 +291,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                 "has_purchase_order": False,
                 "organization_signed_on": None,
             },
+            response.json(),
         )
 
     def test_api_organizations_quotes_retrieve_with_accesses_using_organization_code(
