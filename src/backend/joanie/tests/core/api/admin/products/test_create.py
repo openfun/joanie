@@ -21,6 +21,8 @@ class ProductAdminApiCreateTest(BaseAPITestCase):
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
+        contract_definition_order = factories.ContractDefinitionFactory()
+        contract_definition_batch_order = factories.ContractDefinitionFactory()
         data = {
             "title": "Product 001",
             "price": "100.00",
@@ -29,6 +31,8 @@ class ProductAdminApiCreateTest(BaseAPITestCase):
             "call_to_action": "Purchase now",
             "description": "This is a product description",
             "instructions": "test instruction",
+            "contract_definition_order": str(contract_definition_order.id),
+            "contract_definition_batch_order": str(contract_definition_batch_order.id),
         }
 
         response = self.client.post("/api/v1.0/admin/products/", data=data)
@@ -38,6 +42,14 @@ class ProductAdminApiCreateTest(BaseAPITestCase):
         self.assertIsNotNone(content["id"])
         self.assertEqual(content["title"], "Product 001")
         self.assertEqual(content["instructions"], "test instruction")
+        self.assertEqual(
+            content["contract_definition_order"]["id"],
+            str(contract_definition_order.id),
+        )
+        self.assertEqual(
+            content["contract_definition_batch_order"]["id"],
+            str(contract_definition_batch_order.id),
+        )
 
     def test_admin_api_product_create_with_blank_description(self):
         """

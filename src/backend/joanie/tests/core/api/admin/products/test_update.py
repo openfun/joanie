@@ -23,6 +23,8 @@ class ProductAdminApiUpdateTest(BaseAPITestCase):
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
         product = factories.ProductFactory(price=200)
+        contract_definition_order = factories.ContractDefinitionFactory()
+        contract_definition_batch_order = factories.ContractDefinitionFactory()
         payload = {
             "title": "Product 001",
             "price": "100.00",
@@ -31,6 +33,8 @@ class ProductAdminApiUpdateTest(BaseAPITestCase):
             "call_to_action": "Purchase now",
             "description": "This is a product description",
             "instructions": "This is a test instruction",
+            "contract_definition_order": str(contract_definition_order.id),
+            "contract_definition_batch_order": str(contract_definition_batch_order.id),
         }
 
         response = self.client.put(
@@ -44,6 +48,14 @@ class ProductAdminApiUpdateTest(BaseAPITestCase):
         self.assertEqual(content["id"], str(product.id))
         self.assertEqual(content["price"], 100)
         self.assertEqual(content["instructions"], "This is a test instruction")
+        self.assertEqual(
+            content["contract_definition_order"]["id"],
+            str(contract_definition_order.id),
+        )
+        self.assertEqual(
+            content["contract_definition_batch_order"]["id"],
+            str(contract_definition_batch_order.id),
+        )
 
     def test_admin_api_product_update_partially(self):
         """
