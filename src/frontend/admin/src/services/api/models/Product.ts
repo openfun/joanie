@@ -24,7 +24,7 @@ export type BaseProduct = {
 export type Product = BaseProduct & {
   target_courses?: ProductTargetCourseRelation[];
   offerings?: Offering[];
-  contract_definition: Nullable<ContractDefinition>;
+  contract_definition_order: Nullable<ContractDefinition>;
   certificate_definition: Nullable<CertificateDefinition>;
   certification_level: Nullable<number>;
   teachers: Teacher[];
@@ -35,7 +35,7 @@ export type ProductSimple = BaseProduct & {
   target_courses?: string[];
   certificate_definition: Nullable<string>;
   offerings?: string[];
-  contract_definition: Nullable<string>;
+  contract_definition_order: Nullable<string>;
 };
 
 export enum ProductType {
@@ -53,7 +53,7 @@ export type ProductFormValues = ToFormValues<{
   price: number;
   instructions: string;
   price_currency: string;
-  contract_definition: Nullable<ContractDefinition>;
+  contract_definition_order: Nullable<ContractDefinition>;
 }>;
 export type ProductFormDefaultValues = {
   type: ProductType;
@@ -64,7 +64,7 @@ export type ProductFormDefaultValues = {
   price: Maybe<number>;
   instructions: string;
   price_currency: string;
-  contract_definition: Nullable<ContractDefinition>;
+  contract_definition_order: Nullable<ContractDefinition>;
 };
 
 export type ProductCertificationFormValues = {
@@ -91,14 +91,14 @@ export type DTOProduct = {
   call_to_action: string;
   price?: number;
   price_currency?: string;
-  contract_definition: Nullable<string>;
+  contract_definition_order: Nullable<string>;
 };
 
 export const transformProductToDTO = (
   product: Product | ProductFormMainValues,
 ): DTOProduct => ({
   ...product,
-  contract_definition: product.contract_definition?.id ?? null,
+  contract_definition_order: product.contract_definition_order?.id ?? null,
 });
 
 export const transformProductTargetCourseRelationToDTO = (

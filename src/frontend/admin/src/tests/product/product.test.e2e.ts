@@ -151,13 +151,15 @@ test.describe("Product form", () => {
     await description.click();
     await description.fill("Description");
 
-    await page.getByPlaceholder("Search a contract definition").click();
+    await page
+      .getByPlaceholder("Search a contract definition for orders")
+      .click();
     await page
       .getByRole("option", { name: store.contractsDefinitions[0].title })
       .click();
     await expect(
       page.getByText(
-        "This is a contract template that will be used when purchasing the product",
+        "This is a contract template that will be used when purchasing the product through an order",
       ),
     ).toBeVisible();
 
@@ -187,7 +189,7 @@ test.describe("Product form", () => {
     await expect(page.getByText("Test product")).toBeVisible();
   });
 
-  test("Create a new contract definition with the search input", async ({
+  test("Create a new contract definition order with the search input", async ({
     page,
   }) => {
     await mockPlaywrightCrud<ContractDefinition, DTOContractDefinition>({
@@ -210,7 +212,7 @@ test.describe("Product form", () => {
     await page.getByRole("button", { name: "Add" }).click();
     await page.getByText("Microcredential", { exact: true }).click();
     await page
-      .getByTestId("contract_definition-search-add-button")
+      .getByTestId("contract_definition_order-search-add-button")
       .nth(0)
       .click();
     await expect(
@@ -237,7 +239,7 @@ test.describe("Product form", () => {
       page.getByRole("heading", { name: "Add a contract" }),
     ).toBeHidden();
     await expect(
-      page.getByPlaceholder("Search a contract definition"),
+      page.getByPlaceholder("Search a contract definition for orders"),
     ).toHaveValue("Test contract");
   });
 
