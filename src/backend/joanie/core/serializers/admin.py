@@ -1426,6 +1426,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("total_currency", _("Currency")),
             ("discount", _("Discount")),
             ("voucher", _("Voucher")),
+            ("batch_order", _("Batch order")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
