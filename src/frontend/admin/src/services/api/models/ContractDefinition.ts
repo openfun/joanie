@@ -22,4 +22,6 @@ export type DTOContractDefinition = Optional<ContractDefinition, "id">;
 export enum ContractDefinitionTemplate {
   DEFAULT = "contract_definition_default",
   UNICAMP = "contract_definition_unicamp",
+  PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT = "professional_training_agreement_default",
+  PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP = "professional_training_agreement_unicamp",
 }
