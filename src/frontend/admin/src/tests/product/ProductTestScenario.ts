@@ -71,12 +71,18 @@ export const getProductScenarioStore = (): ProductStore => {
   ): Product {
     const {
       contract_definition_order: newContractDefinitionOrder,
+      contract_definition_batch_order: newContractDefinitionBatchOrder,
       ...restPayload
     } = payload;
 
     const contractDefinitionOrder = contractsDefinitions.find(
       (contractDefinition) =>
         contractDefinition.id === newContractDefinitionOrder,
+    );
+
+    const contractDefinitionBatchOrder = contractsDefinitions.find(
+      (contractDefinition) =>
+        contractDefinition.id === newContractDefinitionBatchOrder,
     );
 
     let newProduct: Product;
@@ -86,12 +92,15 @@ export const getProductScenarioStore = (): ProductStore => {
         ...restPayload,
         contract_definition_order:
           contractDefinitionOrder ?? item.contract_definition_order,
+        contract_definition_batch_order:
+          contractDefinitionBatchOrder ?? item.contract_definition_batch_order,
       };
     } else {
       newProduct = {
         id: faker.string.uuid(),
         ...restPayload,
         contract_definition_order: contractDefinitionOrder ?? null,
+        contract_definition_batch_order: contractDefinitionBatchOrder ?? null,
         certificate_definition: null,
         certification_level: null,
         teachers: [],
