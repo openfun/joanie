@@ -75,6 +75,23 @@ export const productFormMessages = defineMessages({
     defaultMessage: "Search a contract definition for orders",
     description: "placeholder text for the contract definition order input",
   },
+  contractDefinitionBatchOrder: {
+    id: "components.templates.products.form.translations.contractDefinitionBatchOrder",
+    defaultMessage: "Contract definition for batch orders",
+    description: "Label for the contract definition batch order input",
+  },
+  contractDefinitionBatchOrderHelper: {
+    id: "components.templates.products.form.translations.contractDefinitionBatchOrderHelper",
+    defaultMessage:
+      "This is a contract template that will be used when purchasing the product through a batch order",
+    description: "Helper text for the contract definition batch order input",
+  },
+  contractDefinitionBatchOrderPlaceholder: {
+    id: "components.templates.products.form.translations.contractDefinitionBatchOrderPlaceholder",
+    defaultMessage: "Search a contract definition for batch orders",
+    description:
+      "placeholder text for the contract definition batch order input",
+  },
   instructionsTitle: {
     id: "components.templates.products.form.translations.instructionsTitle",
     defaultMessage: "Product instructions",
