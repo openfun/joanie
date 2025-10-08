@@ -36,6 +36,7 @@ export function ContractDefinitionSearch(
     <>
       <RHFSearch
         {...props}
+        sx={{ marginBottom: 2 }}
         filterOptions={(x) => x}
         items={contractDefinitionsQuery.items}
         loading={contractDefinitionsQuery.states.fetching}
