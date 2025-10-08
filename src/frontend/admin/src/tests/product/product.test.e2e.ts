@@ -243,6 +243,60 @@ test.describe("Product form", () => {
     ).toHaveValue("Test contract");
   });
 
+  test("Create a new contract definition batchorder with the search input", async ({
+    page,
+  }) => {
+    await mockPlaywrightCrud<ContractDefinition, DTOContractDefinition>({
+      data: store.contractsDefinitions,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/contract-definitions/",
+      page,
+      optionsResult: CONTRACT_DEFINITION_OPTIONS_REQUEST_RESULT,
+      createCallback: (payload) => {
+        const contract: ContractDefinition = {
+          ...payload,
+          id: faker.string.uuid(),
+        };
+        store.contractsDefinitions.push(contract);
+        return contract;
+      },
+      searchResult: store.contractsDefinitions[1],
+    });
+    // Go to the page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("button", { name: "Add" }).click();
+    await page.getByText("Microcredential", { exact: true }).click();
+    await page
+      .getByTestId("contract_definition_batch_order-search-add-button")
+      .nth(0)
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "close Add a contract" }),
+    ).toBeVisible();
+    await page.getByLabel("Title", { exact: true }).click();
+    await page.getByLabel("Title", { exact: true }).fill("Test contract");
+    await page.getByRole("textbox", { name: "Description" }).click();
+    await page
+      .getByRole("textbox", { name: "Description" })
+      .fill("Test contract desc");
+    await page.getByLabel("Template name", { exact: true }).click();
+    await page
+      .getByRole("option", { name: "Contract Definition Default" })
+      .click();
+    const MdEditorBody = page
+      .getByLabel("Add a contract definition")
+      .getByTestId("md-editor-body")
+      .getByRole("textbox");
+    await MdEditorBody.click();
+    await MdEditorBody.fill("> Body");
+    await page.getByTestId("submit-button-contract-definition-form").click();
+    await expect(
+      page.getByRole("heading", { name: "Add a contract" }),
+    ).toBeHidden();
+    await expect(
+      page.getByPlaceholder("Search a contract definition for batch orders"),
+    ).toHaveValue("Test contract");
+  });
+
   test("Create and edit target course", async ({ page }) => {
     const product = store.products[0];
     product.target_courses = [];

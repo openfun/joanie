@@ -53,6 +53,9 @@ const Schema = Yup.object().shape({
   contract_definition_order: Yup.mixed<ContractDefinition>()
     .nullable()
     .defined(),
+  contract_definition_batch_order: Yup.mixed<ContractDefinition>()
+    .nullable()
+    .defined(),
 });
 
 export type ProductFormMainValues = Omit<
@@ -82,6 +85,8 @@ export function ProductFormMain({
     instructions: removeEOL(defaultProduct?.instructions),
     contract_definition_order:
       defaultProduct?.contract_definition_order ?? null,
+    contract_definition_batch_order:
+      defaultProduct?.contract_definition_batch_order ?? null,
   });
 
   const methods = useForm<ProductFormMainValues>({
@@ -202,6 +207,20 @@ export function ProductFormMain({
                 name="contract_definition_order"
                 label={intl.formatMessage(
                   productFormMessages.contractDefinitionOrder,
+                )}
+              />
+              <ContractDefinitionSearch
+                placeholder={intl.formatMessage(
+                  productFormMessages.contractDefinitionBatchOrderPlaceholder,
+                )}
+                enableAdd={true}
+                helperText={intl.formatMessage(
+                  productFormMessages.contractDefinitionBatchOrderHelper,
+                )}
+                enableEdit={true}
+                name="contract_definition_batch_order"
+                label={intl.formatMessage(
+                  productFormMessages.contractDefinitionBatchOrder,
                 )}
               />
             </Grid>
