@@ -36,7 +36,8 @@ def expected_csv_content(order):
         "Price": str(order.total),
         "Currency": settings.DEFAULT_CURRENCY,
         "Discount": "",
-        "Voucher": "",
+        "Voucher": order.voucher.code if order.batch_order else "",
+        "Batch order": "",
         "Waived withdrawal right": yes_no(order.has_waived_withdrawal_right),
         "Certificate generated for this order": yes_no(hasattr(order, "certificate")),
         "Contract": "",
@@ -47,10 +48,14 @@ def expected_csv_content(order):
         "Total (on invoice)": "",
         "Balance (on invoice)": "",
         "Billing state": "",
-        "Card type": order.credit_card.brand,
-        "Last card digits": order.credit_card.last_numbers,
+        "Card type": order.credit_card.brand if not order.batch_order else "",
+        "Last card digits": order.credit_card.last_numbers
+        if not order.batch_order
+        else "",
         "Card expiration date": (
             f"{order.credit_card.expiration_month}/{order.credit_card.expiration_year}"
+            if not order.batch_order
+            else ""
         ),
     }
 
@@ -75,6 +80,9 @@ def expected_csv_content(order):
         content["Organization signature date"] = format_date_export(
             order.contract.organization_signed_on
         )
+
+    if order.batch_order:
+        content["Batch order"] = str(order.batch_order.id)
 
     if order.main_invoice:
         content["Type"] = order.main_invoice.type
@@ -149,7 +157,7 @@ class OrdersAdminApiExportTestCase(BaseAPITestCase):
 
         for order, csv_line in zip(orders, csv_content, strict=False):
             self.assertEqual(
-                csv_line.split(","), list(expected_csv_content(order).values())
+                list(expected_csv_content(order).values()), csv_line.split(",")
             )
 
     def test_api_admin_orders_export_csv_filter(self):
