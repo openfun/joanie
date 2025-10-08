@@ -30,13 +30,13 @@ class QuoteApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 0,
                 "next": None,
                 "previous": None,
                 "results": [],
             },
+            response.json(),
         )
 
     def test_api_quotes_list_authenticated(self):
@@ -45,7 +45,10 @@ class QuoteApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         # Create quotes of batch orders
         factories.BatchOrderFactory.create_batch(
-            2, owner=user, state=enums.BATCH_ORDER_STATE_QUOTED
+            2,
+            owner=user,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
         )
 
         response = self.client.get(
@@ -54,13 +57,10 @@ class QuoteApiTest(BaseAPITestCase):
 
         quotes = models.Quote.objects.filter(
             batch_order__owner=user,
-            batch_order__state=enums.BATCH_ORDER_STATE_QUOTED,
-        )
-        expected_quotes = sorted(quotes, key=lambda x: x.created_on, reverse=True)
+        ).order_by("-created_on")
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 2,
                 "next": None,
@@ -75,6 +75,7 @@ class QuoteApiTest(BaseAPITestCase):
                             "organization_id": str(quote.batch_order.organization.id),
                             "relation_id": str(quote.batch_order.relation.id),
                             "state": quote.batch_order.state,
+                            "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
                         },
                         "definition": {
                             "body": quote.definition.body,
@@ -87,9 +88,10 @@ class QuoteApiTest(BaseAPITestCase):
                         "has_purchase_order": False,
                         "organization_signed_on": None,
                     }
-                    for quote in expected_quotes
+                    for quote in quotes
                 ],
             },
+            response.json(),
         )
 
     # Detail
@@ -139,6 +141,7 @@ class QuoteApiTest(BaseAPITestCase):
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_QUOTED,
             owner=user,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
 
         response = self.client.get(
@@ -148,7 +151,6 @@ class QuoteApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(
-            response.json(),
             {
                 "id": str(batch_order.quote.id),
                 "batch_order": {
@@ -160,6 +162,7 @@ class QuoteApiTest(BaseAPITestCase):
                     ),
                     "relation_id": str(batch_order.quote.batch_order.relation.id),
                     "state": batch_order.quote.batch_order.state,
+                    "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
                 },
                 "definition": {
                     "body": batch_order.quote.definition.body,
@@ -172,6 +175,7 @@ class QuoteApiTest(BaseAPITestCase):
                 "has_purchase_order": False,
                 "organization_signed_on": None,
             },
+            response.json(),
         )
 
     def test_api_quotes_create_not_allowed(self):

@@ -500,6 +500,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
             "state",
             "company_name",
             "relation_id",
+            "payment_method",
         ]
         read_only_fields = fields
 
