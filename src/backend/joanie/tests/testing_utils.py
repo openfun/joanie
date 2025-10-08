@@ -698,6 +698,18 @@ class Demo:
                 order.set_installment_refunded(order.payment_schedule[0]["id"])
                 order.cancel_remaining_installments()
 
+        # Create a batch order
+        batch_order = factories.BatchOrderFactory(
+            owner=student_user,
+            organization=organization,
+            nb_seats=1,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+        order = batch_order.orders.first()
+        order.owner = student_user
+        order.flow.update()
+
     def generate_simple(
         self,
         create_certificate=False,
