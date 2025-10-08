@@ -22,10 +22,11 @@ class CreateDevDemoTestCase(TestCase):
 
         nb_users = models.User.objects.count()
         expected_nb_users = 1  # admin
-        expected_nb_users += 5  # other organization owners
+        expected_nb_users += 6  # other organization owners
         expected_nb_users += 1  # organization_owner
         expected_nb_users += 1  # student_user
         expected_nb_users += 1  # second_user
+        expected_nb_users += 1  # from batch order creation
         self.assertEqual(nb_users, expected_nb_users)
         nb_product_certificate = NB_DEV_OBJECTS["product_certificate"]
         nb_product_certificate += 1  # product_certificate_enrollment
@@ -55,9 +56,11 @@ class CreateDevDemoTestCase(TestCase):
         nb_product = nb_product_credential + nb_product_certificate
         nb_product += 1  # Become a certified botanist gradeo
         nb_product += 1  # Another product type credential
+        nb_product += 2  # From batch order creation
         self.assertEqual(models.Product.objects.count(), nb_product)
 
         nb_organization = 1  # The school of glory
+        nb_organization += 3  # From batch order creation
         self.assertEqual(models.Organization.objects.count(), nb_organization)
 
         nb_courses = NB_DEV_OBJECTS["course"]
@@ -70,6 +73,7 @@ class CreateDevDemoTestCase(TestCase):
         nb_courses += nb_product_certificate * 1
         nb_courses += 1  # enrollment_certificate
         nb_courses += 1  # enrollment_certificate
+        nb_courses += 3  # From batch order creation
         self.assertEqual(models.Course.objects.count(), nb_courses)
 
         nb_enrollment = 1  # product_certificate_enrollment
@@ -77,6 +81,7 @@ class CreateDevDemoTestCase(TestCase):
         nb_enrollment += 1  # product_certificate_order_certificate
         nb_enrollment += 1  # enrollment_certificate
         nb_enrollment += 1  # product_certificate_order_certificate
+        nb_enrollment += 1  # Enrollment in order of batch order for student
         self.assertEqual(models.Enrollment.objects.count(), nb_enrollment)
 
         nb_certificate = 1  # enrollment_certificate
