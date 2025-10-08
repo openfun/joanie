@@ -61,18 +61,18 @@ export const productFormMessages = defineMessages({
   },
   contractDefinitionOrder: {
     id: "components.templates.products.form.translations.contractDefinitionOrder",
-    defaultMessage: "Contract definition",
+    defaultMessage: "Contract definition for orders",
     description: "Label for the contract definition order input",
   },
   contractDefinitionOrderHelper: {
     id: "components.templates.products.form.translations.contractDefinitionOrderHelper",
     defaultMessage:
-      "This is a contract template that will be used when purchasing the product",
+      "This is a contract template that will be used when purchasing the product through an order.",
     description: "Helper text for the contract definition order input",
   },
   contractDefinitionOrderPlaceholder: {
     id: "components.templates.products.form.translations.contractDefinitionOrderPlaceholder",
-    defaultMessage: "Search a contract definition",
+    defaultMessage: "Search a contract definition for orders",
     description: "placeholder text for the contract definition order input",
   },
   instructionsTitle: {
