@@ -407,6 +407,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "instructions",
             "certificate_definition",
             "contract_definition_order",
+            "contract_definition_batch_order",
             "quote_definition",
             "target_courses",
             "certification_level",
