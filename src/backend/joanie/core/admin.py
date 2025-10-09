@@ -553,7 +553,15 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
     actions = (ACTION_NAME_CANCEL,)
     autocomplete_fields = ["course", "enrollment", "organization", "owner", "product"]
-    list_display = ("id", "created_on", "organization", "owner", "product", "state")
+    list_display = (
+        "id",
+        "created_on",
+        "organization",
+        "owner",
+        "product",
+        "state",
+        "batch_order_link",
+    )
     list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
     readonly_fields = (
         "state",
@@ -561,6 +569,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "has_waived_withdrawal_right",
         "invoice",
         "certificate",
+        "batch_order_link",
     )
     search_fields = ["course__translations__title", "organization__translations__title"]
 
@@ -569,6 +578,14 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         """Cancel orders"""
         for order in queryset:
             order.flow.cancel()
+
+    @admin.display(description="Batch order")
+    def batch_order_link(self, obj):
+        """Retrieve the batch order related to the order"""
+        if obj.batch_order:
+            url = reverse("admin:core_batchorder_change", args=[obj.batch_order.id])
+            return format_html('<a href="{}">{}</a>', url, obj.batch_order.id)
+        return ""
 
     def invoice(self, obj):  # pylint: disable=no-self-use
         """Retrieve the root invoice related to the order."""
@@ -611,6 +628,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = (
         "id",
         "state",
+        "payment_method",
         "relation",  # keep relation because admin django only takes real fields, not properties
         "organization",
         "nb_seats",
@@ -835,7 +853,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 )
                 continue
 
-            # Transition to `pending` state if neeeded because normally
+            # Transition to `pending` state if needed because normally
             # we do this through the API when submitting to payment
             if batch_order.is_signed_by_owner:
                 batch_order.flow.update()
