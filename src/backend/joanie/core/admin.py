@@ -901,7 +901,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
 
 @admin.register(models.QuoteDefinition)
-class QuoteDefinitionAdmin(TranslatableAdmin):
+class QuoteDefinitionAdmin(admin.ModelAdmin):
     """Admin class for QuoteDefinition model"""
 
     list_display = ("title", "language")
