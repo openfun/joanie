@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add export csv for admin batch order viewset
+- Add quote definitions admin in the back office
+
 ### Fixed
 
 - Fix CSS in default and Unicamp micro-credentials after WeasyPrint update
