@@ -25,6 +25,7 @@ class ProductAdminApiUpdateTest(BaseAPITestCase):
         product = factories.ProductFactory(price=200)
         contract_definition_order = factories.ContractDefinitionFactory()
         contract_definition_batch_order = factories.ContractDefinitionFactory()
+        quote_definition = factories.QuoteDefinitionFactory()
         payload = {
             "title": "Product 001",
             "price": "100.00",
@@ -35,6 +36,7 @@ class ProductAdminApiUpdateTest(BaseAPITestCase):
             "instructions": "This is a test instruction",
             "contract_definition_order": str(contract_definition_order.id),
             "contract_definition_batch_order": str(contract_definition_batch_order.id),
+            "quote_definition": str(quote_definition.id),
         }
 
         response = self.client.put(
@@ -55,6 +57,10 @@ class ProductAdminApiUpdateTest(BaseAPITestCase):
         self.assertEqual(
             content["contract_definition_batch_order"]["id"],
             str(contract_definition_batch_order.id),
+        )
+        self.assertEqual(
+            content["quote_definition"]["id"],
+            str(quote_definition.id),
         )
 
     def test_admin_api_product_update_partially(self):
