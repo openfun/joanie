@@ -241,7 +241,7 @@ class QuoteDefinitionAdminFilterSet(filters.FilterSet):
         "query" query parameter.
         """
 
-        return queryset.filter(translations__title__icontains=value).distinct()
+        return queryset.filter(title__icontains=value).distinct()
 
 
 class UserAdminFilterSet(filters.FilterSet):

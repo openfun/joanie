@@ -12,21 +12,18 @@ from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 import markdown
-from parler import models as parler_models
 
 from joanie.core import enums
 from joanie.core.models.base import BaseModel, DocumentImage
 
 
-class QuoteDefinition(parler_models.TranslatableModel, BaseModel):
+class QuoteDefinition(BaseModel):
     """
     Quote definition describes the template and markdown to generate quotes.
     """
 
-    translations = parler_models.TranslatedFields(
-        title=models.CharField(_("title"), max_length=255, blank=True),
-        description=models.TextField(_("description"), max_length=500, blank=True),
-    )
+    title = models.CharField(_("title"), max_length=255)
+    description = models.TextField(_("description"), blank=True)
     body = models.TextField(_("body"), blank=True)
     language = models.CharField(
         max_length=10,
@@ -54,7 +51,7 @@ class QuoteDefinition(parler_models.TranslatableModel, BaseModel):
         verbose_name_plural = _("Quote definitions")
 
     def __str__(self):
-        return self.safe_translation_getter("title", any_language=True)
+        return self.title
 
     def save(self, *args, **kwargs):
         """Enforce validation each time an instance is saved."""
