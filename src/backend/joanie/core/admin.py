@@ -553,7 +553,15 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
     actions = (ACTION_NAME_CANCEL,)
     autocomplete_fields = ["course", "enrollment", "organization", "owner", "product"]
-    list_display = ("id", "created_on", "organization", "owner", "product", "state")
+    list_display = (
+        "id",
+        "created_on",
+        "organization",
+        "owner",
+        "product",
+        "state",
+        "from_batch_order",
+    )
     list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
     readonly_fields = (
         "state",
@@ -561,8 +569,14 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "has_waived_withdrawal_right",
         "invoice",
         "certificate",
+        "from_batch_order",
     )
     search_fields = ["course__translations__title", "organization__translations__title"]
+
+    @admin.display(boolean=True, description=_("From batch order"))
+    def from_batch_order(self, obj):
+        """Returns boolean value whether the orders are generated or not."""
+        return obj.from_batch_order
 
     @admin.action(description=_("Cancel selected orders"))
     def cancel(self, request, queryset):  # pylint: disable=no-self-use
