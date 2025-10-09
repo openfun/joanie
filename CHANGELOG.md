@@ -24,6 +24,7 @@ and this project adheres to
 - Add unique reference for a quote once generated
 - Add Voucher admin API
 - Add Voucher admin in the back office
+- Add quote definitions admin in the back office
 
 ## [3.0.4] - 2025-09-25
 
