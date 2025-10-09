@@ -553,7 +553,15 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
     actions = (ACTION_NAME_CANCEL,)
     autocomplete_fields = ["course", "enrollment", "organization", "owner", "product"]
-    list_display = ("id", "created_on", "organization", "owner", "product", "state")
+    list_display = (
+        "id",
+        "created_on",
+        "organization",
+        "owner",
+        "product",
+        "state",
+        "from_batch_order",
+    )
     list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
     readonly_fields = (
         "state",
@@ -561,8 +569,14 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "has_waived_withdrawal_right",
         "invoice",
         "certificate",
+        "from_batch_order",
     )
     search_fields = ["course__translations__title", "organization__translations__title"]
+
+    @admin.display(boolean=True, description=_("From batch order"))
+    def from_batch_order(self, obj):
+        """Returns boolean value whether the orders are generated or not."""
+        return obj.from_batch_order
 
     @admin.action(description=_("Cancel selected orders"))
     def cancel(self, request, queryset):  # pylint: disable=no-self-use
@@ -611,6 +625,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
     list_display = (
         "id",
         "state",
+        "payment_method",
         "relation",  # keep relation because admin django only takes real fields, not properties
         "organization",
         "nb_seats",
@@ -835,7 +850,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
                 )
                 continue
 
-            # Transition to `pending` state if neeeded because normally
+            # Transition to `pending` state if needed because normally
             # we do this through the API when submitting to payment
             if batch_order.is_signed_by_owner:
                 batch_order.flow.update()
