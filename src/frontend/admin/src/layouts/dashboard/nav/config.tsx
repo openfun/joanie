@@ -9,6 +9,7 @@ import GavelIcon from "@mui/icons-material/Gavel";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import GradingIcon from "@mui/icons-material/Grading";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 import { PATH_ADMIN } from "@/utils/routes/path";
 
 const navTranslations = defineMessages({
@@ -31,6 +32,11 @@ const navTranslations = defineMessages({
     id: "layouts.dashboard.nav.config.contractDefinitionNavTitle",
     defaultMessage: "Contracts definitions",
     description: "Title for the Contract definition nav item",
+  },
+  quoteDefinitionNavTitle: {
+    id: "layouts.dashboard.nav.config.quoteDefinitionNavTitle",
+    defaultMessage: "Quote definitions",
+    description: "Title for the Quote definition nav item",
   },
   courseNavTitle: {
     id: "layouts.dashboard.nav.config.courseNavTitle",
@@ -89,6 +95,12 @@ export const navConfig: NavConfig[] = [
         path: PATH_ADMIN.contract_definition.list,
         prefix: PATH_ADMIN.contract_definition.root,
         icon: <GavelIcon />,
+      },
+      {
+        title: navTranslations.quoteDefinitionNavTitle,
+        path: PATH_ADMIN.quote_definition.list,
+        prefix: PATH_ADMIN.quote_definition.root,
+        icon: <RequestQuoteIcon />,
       },
       {
         title: navTranslations.courseNavTitle,
