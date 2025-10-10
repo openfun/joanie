@@ -92,6 +92,22 @@ export const productFormMessages = defineMessages({
     description:
       "placeholder text for the contract definition batch order input",
   },
+  quoteDefinition: {
+    id: "components.templates.products.form.translations.quoteDefinition",
+    defaultMessage: "Quote definition",
+    description: "Label for the quote definition input",
+  },
+  quoteDefinitionHelper: {
+    id: "components.templates.products.form.translations.quoteDefinitionHelper",
+    defaultMessage:
+      "Template used to generate quotes from batch orders for this product.",
+    description: "Helper text for the quote definition input",
+  },
+  quoteDefinitionPlaceholder: {
+    id: "components.templates.products.form.translations.quoteDefinitionPlaceholder",
+    defaultMessage: "Search a quote definition",
+    description: "placeholder text for the quote definition input",
+  },
   instructionsTitle: {
     id: "components.templates.products.form.translations.instructionsTitle",
     defaultMessage: "Product instructions",
