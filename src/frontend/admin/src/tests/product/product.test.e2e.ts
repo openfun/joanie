@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { mockPlaywrightCrud } from "../useResourceHandler";
 import { CONTRACT_DEFINITION_OPTIONS_REQUEST_RESULT } from "../mocks/contract-definitions/contract-definition-mocks";
+import { QUOTE_DEFINITION_OPTIONS_REQUEST_RESULT } from "../mocks/quote-definitions/quote-definition-mocks";
 import {
   getProductScenarioStore,
   mockTargetCourses,
@@ -21,6 +22,10 @@ import {
   ContractDefinition,
   DTOContractDefinition,
 } from "@/services/api/models/ContractDefinition";
+import {
+  QuoteDefinition,
+  DTOQuoteDefinition,
+} from "@/services/api/models/QuoteDefinition";
 import { ProductTargetCourseRelationFactory } from "@/services/api/models/ProductTargetCourseRelation";
 import { delay } from "@/components/testing/utils";
 import { DTOSkill, Skill } from "@/services/api/models/Skill";
@@ -103,6 +108,13 @@ test.describe("Product form", () => {
       searchResult: store.contractsDefinitions[1],
     });
 
+    await mockPlaywrightCrud<QuoteDefinition, DTOQuoteDefinition>({
+      data: store.quoteDefinitions,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/quote-definitions/",
+      page,
+      searchResult: store.quoteDefinitions[1],
+    });
+
     await mockPlaywrightCrud<CertificateDefinition, DTOCertificateDefinition>({
       data: store.certificateDefinitions,
       routeUrl: "http://localhost:8071/api/v1.0/admin/certificate-definitions/",
@@ -160,6 +172,16 @@ test.describe("Product form", () => {
     await expect(
       page.getByText(
         "This is a contract template that will be used when purchasing the product through an order",
+      ),
+    ).toBeVisible();
+
+    await page.getByPlaceholder("Search a quote definition").click();
+    await page
+      .getByRole("option", { name: store.quoteDefinitions[0].title })
+      .click();
+    await expect(
+      page.getByText(
+        "Template used to generate quotes from batch orders for this product.",
       ),
     ).toBeVisible();
 
@@ -295,6 +317,55 @@ test.describe("Product form", () => {
     await expect(
       page.getByPlaceholder("Search a contract definition for batch orders"),
     ).toHaveValue("Test contract");
+  });
+
+  test("Create a new quote definition with the search input", async ({
+    page,
+  }) => {
+    await mockPlaywrightCrud<QuoteDefinition, DTOQuoteDefinition>({
+      data: store.quoteDefinitions,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/quote-definitions/",
+      page,
+      optionsResult: QUOTE_DEFINITION_OPTIONS_REQUEST_RESULT,
+      createCallback: (payload) => {
+        const quote: QuoteDefinition = {
+          ...payload,
+          id: faker.string.uuid(),
+        };
+        store.quoteDefinitions.push(quote);
+        return quote;
+      },
+      searchResult: store.quoteDefinitions[1],
+    });
+    // Go to the page
+    await page.goto(PATH_ADMIN.products.list);
+    await page.getByRole("button", { name: "Add" }).click();
+    await page.getByText("Microcredential", { exact: true }).click();
+    await page.getByTestId("quote_definition-search-add-button").nth(0).click();
+    await expect(
+      page.getByRole("heading", { name: "close Add a quote" }),
+    ).toBeVisible();
+    await page.getByLabel("Title", { exact: true }).click();
+    await page.getByLabel("Title", { exact: true }).fill("Test quote");
+    await page.getByRole("textbox", { name: "Description" }).click();
+    await page
+      .getByRole("textbox", { name: "Description" })
+      .fill("Test quote desc");
+    await page.getByLabel("Template name", { exact: true }).click();
+    await page.getByRole("option", { name: "Quote Default" }).click();
+    const MdEditorBody = page
+      .getByLabel("Add a quote definition")
+      .getByTestId("md-editor-body")
+      .getByRole("textbox");
+    await MdEditorBody.click();
+    await MdEditorBody.fill("> Body");
+    await page.getByTestId("submit-button-quote-definition-form").click();
+    await expect(
+      page.getByRole("heading", { name: "Add a quote" }),
+    ).toBeHidden();
+    await expect(
+      page.getByPlaceholder("Search a quote definition"),
+    ).toHaveValue("Test quote");
   });
 
   test("Create and edit target course", async ({ page }) => {
@@ -944,6 +1015,13 @@ test.describe("Product form page", () => {
       routeUrl: "http://localhost:8071/api/v1.0/admin/contract-definitions/",
       page,
       searchResult: store.contractsDefinitions[1],
+    });
+
+    await mockPlaywrightCrud<QuoteDefinition, DTOQuoteDefinition>({
+      data: store.quoteDefinitions,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/quote-definitions/",
+      page,
+      searchResult: store.quoteDefinitions[1],
     });
 
     await mockPlaywrightCrud<CertificateDefinition, DTOCertificateDefinition>({

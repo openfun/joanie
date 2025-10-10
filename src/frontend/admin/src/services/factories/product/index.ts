@@ -12,6 +12,7 @@ import { randomNumber } from "@/utils/numbers";
 import { ProductTargetCourseRelationFactory } from "@/services/api/models/ProductTargetCourseRelation";
 import { OfferingFactory } from "@/services/api/models/Offerings";
 import { ContractDefinitionFactory } from "@/services/factories/contract-definition";
+import { QuoteDefinitionFactory } from "@/services/factories/quote-definition";
 
 const build = (): Product => {
   return {
@@ -27,6 +28,7 @@ const build = (): Product => {
     offerings: OfferingFactory(2),
     contract_definition_order: ContractDefinitionFactory(),
     contract_definition_batch_order: ContractDefinitionFactory(),
+    quote_definition: QuoteDefinitionFactory(),
     certification_level: faker.number.int({ min: 1, max: 8 }),
     teachers: TeacherFactory(faker.number.int({ min: 1, max: 5 })),
     skills: SkillFactory(faker.number.int({ min: 1, max: 5 })),
@@ -75,6 +77,7 @@ const buildProductSimple = (): ProductSimple => {
     offerings: [faker.string.uuid(), faker.string.uuid()],
     contract_definition_order: faker.string.uuid(),
     contract_definition_batch_order: faker.string.uuid(),
+    quote_definition: faker.string.uuid(),
   };
 };
 
