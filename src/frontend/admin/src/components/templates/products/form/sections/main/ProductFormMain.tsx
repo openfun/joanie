@@ -29,7 +29,9 @@ import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { ProductFormInstructions } from "@/components/templates/products/form/sections/main/instructions/ProductFormInstructions";
 import { removeEOL } from "@/utils/string";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
+import { QuoteDefinition } from "@/services/api/models/QuoteDefinition";
 import { ContractDefinitionSearch } from "@/components/templates/contract-definition/inputs/ContractDefinitionSearch";
+import { QuoteDefinitionSearch } from "@/components/templates/quote-definition/inputs/QuoteDefinitionSearch";
 import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 import { useFormSubmit } from "@/hooks/form/useFormSubmit";
@@ -56,6 +58,7 @@ const Schema = Yup.object().shape({
   contract_definition_batch_order: Yup.mixed<ContractDefinition>()
     .nullable()
     .defined(),
+  quote_definition: Yup.mixed<QuoteDefinition>().nullable().defined(),
 });
 
 export type ProductFormMainValues = Omit<
@@ -87,6 +90,7 @@ export function ProductFormMain({
       defaultProduct?.contract_definition_order ?? null,
     contract_definition_batch_order:
       defaultProduct?.contract_definition_batch_order ?? null,
+    quote_definition: defaultProduct?.quote_definition ?? null,
   });
 
   const methods = useForm<ProductFormMainValues>({
@@ -223,6 +227,18 @@ export function ProductFormMain({
                 label={intl.formatMessage(
                   productFormMessages.contractDefinitionBatchOrder,
                 )}
+              />
+              <QuoteDefinitionSearch
+                placeholder={intl.formatMessage(
+                  productFormMessages.quoteDefinitionPlaceholder,
+                )}
+                enableAdd={true}
+                helperText={intl.formatMessage(
+                  productFormMessages.quoteDefinitionHelper,
+                )}
+                enableEdit={true}
+                name="quote_definition"
+                label={intl.formatMessage(productFormMessages.quoteDefinition)}
               />
             </Grid>
           </Grid>
