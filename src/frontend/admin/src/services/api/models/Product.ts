@@ -7,6 +7,7 @@ import { Offering } from "./Offerings";
 import { Maybe, Nullable, Optional, ToFormValues } from "@/types/utils";
 import { ProductFormMainValues } from "@/components/templates/products/form/sections/main/ProductFormMain";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
+import { QuoteDefinition } from "@/services/api/models/QuoteDefinition";
 import { Teacher } from "@/services/api/models/Teacher";
 import { Skill } from "@/services/api/models/Skill";
 
@@ -26,6 +27,7 @@ export type Product = BaseProduct & {
   offerings?: Offering[];
   contract_definition_order: Nullable<ContractDefinition>;
   contract_definition_batch_order: Nullable<ContractDefinition>;
+  quote_definition: Nullable<QuoteDefinition>;
   certificate_definition: Nullable<CertificateDefinition>;
   certification_level: Nullable<number>;
   teachers: Teacher[];
@@ -38,6 +40,7 @@ export type ProductSimple = BaseProduct & {
   offerings?: string[];
   contract_definition_order: Nullable<string>;
   contract_definition_batch_order: Nullable<string>;
+  quote_definition: Nullable<string>;
 };
 
 export enum ProductType {
@@ -57,6 +60,7 @@ export type ProductFormValues = ToFormValues<{
   price_currency: string;
   contract_definition_order: Nullable<ContractDefinition>;
   contract_definition_batch_order: Nullable<ContractDefinition>;
+  quote_definition: Nullable<QuoteDefinition>;
 }>;
 export type ProductFormDefaultValues = {
   type: ProductType;
@@ -69,6 +73,7 @@ export type ProductFormDefaultValues = {
   price_currency: string;
   contract_definition_order: Nullable<ContractDefinition>;
   contract_definition_batch_order: Nullable<ContractDefinition>;
+  quote_definition: Nullable<QuoteDefinition>;
 };
 
 export type ProductCertificationFormValues = {
@@ -97,6 +102,7 @@ export type DTOProduct = {
   price_currency?: string;
   contract_definition_order: Nullable<string>;
   contract_definition_batch_order: Nullable<string>;
+  quote_definition: Nullable<string>;
 };
 
 export const transformProductToDTO = (
@@ -106,6 +112,7 @@ export const transformProductToDTO = (
   contract_definition_order: product.contract_definition_order?.id ?? null,
   contract_definition_batch_order:
     product.contract_definition_batch_order?.id ?? null,
+  quote_definition: product.quote_definition?.id ?? null,
 });
 
 export const transformProductTargetCourseRelationToDTO = (
