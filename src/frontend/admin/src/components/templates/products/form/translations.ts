@@ -59,21 +59,54 @@ export const productFormMessages = defineMessages({
       "Used for the generation of the certificate of completion of the course",
     description: "Helper text for the definition input",
   },
-  contractDefinition: {
-    id: "components.templates.products.form.translations.contractDefinition",
-    defaultMessage: "Contract definition",
-    description: "Label for the contract definition input",
+  contractDefinitionOrder: {
+    id: "components.templates.products.form.translations.contractDefinitionOrder",
+    defaultMessage: "Contract definition for orders",
+    description: "Label for the contract definition order input",
   },
-  contractDefinitionHelper: {
-    id: "components.templates.products.form.translations.contractDefinitionHelper",
+  contractDefinitionOrderHelper: {
+    id: "components.templates.products.form.translations.contractDefinitionOrderHelper",
     defaultMessage:
-      "This is a contract template that will be used when purchasing the product",
-    description: "Helper text for the contract definition input",
+      "This is a contract template that will be used when purchasing the product through an order.",
+    description: "Helper text for the contract definition order input",
   },
-  contractDefinitionPlaceholder: {
-    id: "components.templates.products.form.translations.contractDefinitionPlaceholder",
-    defaultMessage: "Search a contract definition",
-    description: "placeholder text for the contract definition input",
+  contractDefinitionOrderPlaceholder: {
+    id: "components.templates.products.form.translations.contractDefinitionOrderPlaceholder",
+    defaultMessage: "Search a contract definition for orders",
+    description: "placeholder text for the contract definition order input",
+  },
+  contractDefinitionBatchOrder: {
+    id: "components.templates.products.form.translations.contractDefinitionBatchOrder",
+    defaultMessage: "Contract definition for batch orders",
+    description: "Label for the contract definition batch order input",
+  },
+  contractDefinitionBatchOrderHelper: {
+    id: "components.templates.products.form.translations.contractDefinitionBatchOrderHelper",
+    defaultMessage:
+      "This is a contract template that will be used when purchasing the product through a batch order",
+    description: "Helper text for the contract definition batch order input",
+  },
+  contractDefinitionBatchOrderPlaceholder: {
+    id: "components.templates.products.form.translations.contractDefinitionBatchOrderPlaceholder",
+    defaultMessage: "Search a contract definition for batch orders",
+    description:
+      "placeholder text for the contract definition batch order input",
+  },
+  quoteDefinition: {
+    id: "components.templates.products.form.translations.quoteDefinition",
+    defaultMessage: "Quote definition",
+    description: "Label for the quote definition input",
+  },
+  quoteDefinitionHelper: {
+    id: "components.templates.products.form.translations.quoteDefinitionHelper",
+    defaultMessage:
+      "This is a quote template that will be used when generating quotes for the product.",
+    description: "Helper text for the quote definition input",
+  },
+  quoteDefinitionPlaceholder: {
+    id: "components.templates.products.form.translations.quoteDefinitionPlaceholder",
+    defaultMessage: "Search a quote definition",
+    description: "placeholder text for the quote definition input",
   },
   instructionsTitle: {
     id: "components.templates.products.form.translations.instructionsTitle",

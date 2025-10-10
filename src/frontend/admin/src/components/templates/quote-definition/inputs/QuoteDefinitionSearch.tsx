@@ -7,17 +7,17 @@ import {
 } from "@/components/presentational/hook-form/RHFSearch";
 import { Maybe, Nullable } from "@/types/utils";
 import { useModal } from "@/components/presentational/modal/useModal";
-import { useContractDefinitions } from "@/hooks/useContractDefinitions/useContractDefinitions";
-import { ContractDefinition } from "@/services/api/models/ContractDefinition";
-import { CreateOrEditContractDefinitionModal } from "@/components/templates/contract-definition/modals/CreateOrEditContractDefinitionModal";
+import { useQuoteDefinitions } from "@/hooks/useQuoteDefinitions/useQuoteDefinitions";
+import { QuoteDefinition } from "@/services/api/models/QuoteDefinition";
+import { CreateOrEditQuoteDefinitionModal } from "@/components/templates/quote-definition/modals/CreateOrEditQuoteDefinitionModal";
 
-export function ContractDefinitionSearch(
-  props: RHFAutocompleteSearchProps<ContractDefinition>,
+export function QuoteDefinitionSearch(
+  props: RHFAutocompleteSearchProps<QuoteDefinition>,
 ) {
   const { setValue, getValues } = useFormContext();
-  const contract: Nullable<ContractDefinition> = getValues(props.name);
+  const quote: Nullable<QuoteDefinition> = getValues(props.name);
   const [query, setQuery] = useState("");
-  const contractDefinitionsQuery = useContractDefinitions({ query });
+  const quoteDefinitionsQuery = useQuoteDefinitions({ query });
   const [isCreateMode, setIsCreateMode] = useState(false);
   const modal = useModal();
 
@@ -26,7 +26,7 @@ export function ContractDefinitionSearch(
     modal.handleOpen();
   };
 
-  const afterSubmit = (def: ContractDefinition) => {
+  const afterSubmit = (def: QuoteDefinition) => {
     modal.handleClose();
     setIsCreateMode(false);
     setValue(props.name, def, { shouldTouch: true, shouldValidate: true });
@@ -38,23 +38,19 @@ export function ContractDefinitionSearch(
         {...props}
         sx={{ marginBottom: 2 }}
         filterOptions={(x) => x}
-        items={contractDefinitionsQuery.items}
-        loading={contractDefinitionsQuery.states.fetching}
+        items={quoteDefinitionsQuery.items}
+        loading={quoteDefinitionsQuery.states.fetching}
         onAddClick={onAddClick}
         onEditClick={modal.handleOpen}
         onFilter={setQuery}
-        getOptionLabel={(option: Maybe<ContractDefinition>) =>
-          option?.title ?? ""
-        }
+        getOptionLabel={(option: Maybe<QuoteDefinition>) => option?.title ?? ""}
         isOptionEqualToValue={(option, value) => option.id === value.id}
       />
 
-      <CreateOrEditContractDefinitionModal
+      <CreateOrEditQuoteDefinitionModal
         afterSubmit={afterSubmit}
-        contractDefinitionId={
-          !isCreateMode && contract && props.enableEdit
-            ? contract.id
-            : undefined
+        quoteDefinitionId={
+          !isCreateMode && quote && props.enableEdit ? quote.id : undefined
         }
         modalUtils={modal}
       />

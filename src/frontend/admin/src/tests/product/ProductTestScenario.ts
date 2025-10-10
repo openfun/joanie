@@ -17,6 +17,7 @@ import {
   ProductTargetCourseRelation,
 } from "@/services/api/models/ProductTargetCourseRelation";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
+import { QuoteDefinition } from "@/services/api/models/QuoteDefinition";
 import { DTOTeacher, Teacher } from "@/services/api/models/Teacher";
 import { DTOSkill, Skill } from "@/services/api/models/Skill";
 
@@ -24,6 +25,7 @@ type ProductStore = {
   products: Product[];
   certificateDefinitions: CertificateDefinition[];
   contractsDefinitions: ContractDefinition[];
+  quoteDefinitions: QuoteDefinition[];
   courses: Course[];
   skills: Skill[];
   teachers: Teacher[];
@@ -42,8 +44,13 @@ export const getProductScenarioStore = (): ProductStore => {
   });
 
   const contractsDefinitions = products.map((product) => {
-    return product.contract_definition!;
+    return product.contract_definition_order!;
   });
+
+  const quoteDefinitions = products.map((product) => {
+    return product.quote_definition!;
+  });
+
   const skills = products.map((product) => product.skills).flat();
   const teachers = products.map((product) => product.teachers).flat();
 
@@ -69,11 +76,25 @@ export const getProductScenarioStore = (): ProductStore => {
     payload: DTOProduct,
     item?: Product,
   ): Product {
-    const { contract_definition: newContractDefinition, ...restPayload } =
-      payload;
+    const {
+      contract_definition_order: newContractDefinitionOrder,
+      contract_definition_batch_order: newContractDefinitionBatchOrder,
+      quote_definition: newQuoteDefinition,
+      ...restPayload
+    } = payload;
 
-    const contractDef = contractsDefinitions.find(
-      (contractDefinition) => contractDefinition.id === newContractDefinition,
+    const contractDefinitionOrder = contractsDefinitions.find(
+      (contractDefinition) =>
+        contractDefinition.id === newContractDefinitionOrder,
+    );
+
+    const contractDefinitionBatchOrder = contractsDefinitions.find(
+      (contractDefinition) =>
+        contractDefinition.id === newContractDefinitionBatchOrder,
+    );
+
+    const quoteDefinition = quoteDefinitions.find(
+      (quoteDef) => quoteDef.id === newQuoteDefinition,
     );
 
     let newProduct: Product;
@@ -81,13 +102,19 @@ export const getProductScenarioStore = (): ProductStore => {
       newProduct = {
         ...item,
         ...restPayload,
-        contract_definition: contractDef ?? item.contract_definition,
+        contract_definition_order:
+          contractDefinitionOrder ?? item.contract_definition_order,
+        contract_definition_batch_order:
+          contractDefinitionBatchOrder ?? item.contract_definition_batch_order,
+        quote_definition: quoteDefinition ?? item.quote_definition,
       };
     } else {
       newProduct = {
         id: faker.string.uuid(),
         ...restPayload,
-        contract_definition: contractDef ?? null,
+        contract_definition_order: contractDefinitionOrder ?? null,
+        contract_definition_batch_order: contractDefinitionBatchOrder ?? null,
+        quote_definition: quoteDefinition ?? null,
         certificate_definition: null,
         certification_level: null,
         teachers: [],
@@ -163,6 +190,7 @@ export const getProductScenarioStore = (): ProductStore => {
     products,
     certificateDefinitions,
     contractsDefinitions,
+    quoteDefinitions,
     skills,
     teachers,
     courses,

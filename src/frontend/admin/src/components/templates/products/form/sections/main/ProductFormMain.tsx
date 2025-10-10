@@ -29,7 +29,9 @@ import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { ProductFormInstructions } from "@/components/templates/products/form/sections/main/instructions/ProductFormInstructions";
 import { removeEOL } from "@/utils/string";
 import { ContractDefinition } from "@/services/api/models/ContractDefinition";
+import { QuoteDefinition } from "@/services/api/models/QuoteDefinition";
 import { ContractDefinitionSearch } from "@/components/templates/contract-definition/inputs/ContractDefinitionSearch";
+import { QuoteDefinitionSearch } from "@/components/templates/quote-definition/inputs/QuoteDefinitionSearch";
 import { TranslatableForm } from "@/components/presentational/translatable-content/TranslatableForm";
 import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 import { useFormSubmit } from "@/hooks/form/useFormSubmit";
@@ -50,7 +52,13 @@ const Schema = Yup.object().shape({
   price_currency: Yup.string().required(),
   instructions: Yup.string().defined(),
   call_to_action: Yup.string().required(),
-  contract_definition: Yup.mixed<ContractDefinition>().nullable().defined(),
+  contract_definition_order: Yup.mixed<ContractDefinition>()
+    .nullable()
+    .defined(),
+  contract_definition_batch_order: Yup.mixed<ContractDefinition>()
+    .nullable()
+    .defined(),
+  quote_definition: Yup.mixed<QuoteDefinition>().nullable().defined(),
 });
 
 export type ProductFormMainValues = Omit<
@@ -78,7 +86,11 @@ export function ProductFormMain({
     price_currency: defaultProduct?.price_currency ?? "EUR",
     call_to_action: defaultProduct?.call_to_action ?? "",
     instructions: removeEOL(defaultProduct?.instructions),
-    contract_definition: defaultProduct?.contract_definition ?? null,
+    contract_definition_order:
+      defaultProduct?.contract_definition_order ?? null,
+    contract_definition_batch_order:
+      defaultProduct?.contract_definition_batch_order ?? null,
+    quote_definition: defaultProduct?.quote_definition ?? null,
   });
 
   const methods = useForm<ProductFormMainValues>({
@@ -190,17 +202,43 @@ export function ProductFormMain({
             <Grid size={12}>
               <ContractDefinitionSearch
                 placeholder={intl.formatMessage(
-                  productFormMessages.contractDefinitionPlaceholder,
+                  productFormMessages.contractDefinitionOrderPlaceholder,
                 )}
                 enableAdd={true}
                 helperText={intl.formatMessage(
-                  productFormMessages.contractDefinitionHelper,
+                  productFormMessages.contractDefinitionOrderHelper,
                 )}
                 enableEdit={true}
-                name="contract_definition"
+                name="contract_definition_order"
                 label={intl.formatMessage(
-                  productFormMessages.contractDefinition,
+                  productFormMessages.contractDefinitionOrder,
                 )}
+              />
+              <ContractDefinitionSearch
+                placeholder={intl.formatMessage(
+                  productFormMessages.contractDefinitionBatchOrderPlaceholder,
+                )}
+                enableAdd={true}
+                helperText={intl.formatMessage(
+                  productFormMessages.contractDefinitionBatchOrderHelper,
+                )}
+                enableEdit={true}
+                name="contract_definition_batch_order"
+                label={intl.formatMessage(
+                  productFormMessages.contractDefinitionBatchOrder,
+                )}
+              />
+              <QuoteDefinitionSearch
+                placeholder={intl.formatMessage(
+                  productFormMessages.quoteDefinitionPlaceholder,
+                )}
+                enableAdd={true}
+                helperText={intl.formatMessage(
+                  productFormMessages.quoteDefinitionHelper,
+                )}
+                enableEdit={true}
+                name="quote_definition"
+                label={intl.formatMessage(productFormMessages.quoteDefinition)}
               />
             </Grid>
           </Grid>
