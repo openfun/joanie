@@ -1285,11 +1285,6 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
-            if self.uses_purchase_order:
-                self.quote.organization_signed_on = django_timezone.now()
-                self.quote.has_purchase_order = True
-                self.quote.save()
-
             # Add course run for the courses
             if not self.offering.product.target_courses.exists():
                 CourseRunFactory(
@@ -1303,8 +1298,12 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                     course=self.offering.course,
                     is_graded=True,
                 )
+
             # Add the total to the batch order and marks the quote as signed by organization
             self.freeze_total(total=Decimal("100.00"))
+            if self.uses_purchase_order:
+                self.quote.has_purchase_order = True
+                self.quote.save()
             self.submit_for_signature(self.owner)
             self.flow.update()
 
