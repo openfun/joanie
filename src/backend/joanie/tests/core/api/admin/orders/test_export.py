@@ -184,3 +184,27 @@ class OrdersAdminApiExportTestCase(BaseAPITestCase):
             self.assertEqual(
                 csv_line.split(","), list(expected_csv_content(order).values())
             )
+
+    def test_api_admin_orders_export_csv_filter_from_batch_order(self):
+        """
+        Filter from batch order should be applied when exporting orders
+        as CSV.
+        """
+        Demo().generate()
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get(
+            "/api/v1.0/admin/orders/export/?from_batch_order=true"
+        )
+
+        csv_content = response.getvalue().decode().splitlines()
+        csv_content.pop(0)
+
+        orders = Order.objects.filter(batch_order__isnull=False)
+
+        for order, csv_line in zip(orders, csv_content, strict=False):
+            self.assertEqual(
+                csv_line.split(","), list(expected_csv_content(order).values())
+            )

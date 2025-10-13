@@ -1152,3 +1152,28 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
             "-organization_title",
             sorted([order.organization.title for order in orders], reverse=True),
         )
+
+    def test_api_admin_orders_filter_from_batch_order(self):
+        """
+        Authenticated admin user should be able to filter the orders whether or not
+        they were generated from a batch order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        factories.OrderFactory.create_batch(10)
+        factories.BatchOrderFactory(
+            nb_seats=3,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+
+        response = self.client.get("/api/v1.0/admin/orders/?from_batch_order=false")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 10)
+
+        response = self.client.get("/api/v1.0/admin/orders/?from_batch_order=true")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 3)

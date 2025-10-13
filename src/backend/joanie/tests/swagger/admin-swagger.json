@@ -3541,6 +3541,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "from_batch_order",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "ids",
                         "schema": {
                             "type": "string",

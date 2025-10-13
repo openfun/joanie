@@ -305,6 +305,17 @@ class OrderAdminFilterSet(filters.FilterSet):
     )
     created_on = filters.DateFilter(field_name="created_on", lookup_expr="date")
     created_on_date_range = filters.DateFromToRangeFilter(field_name="created_on")
+    from_batch_order = filters.BooleanFilter(method="filter_from_batch_order")
+
+    def filter_from_batch_order(self, queryset, _name, value):
+        """
+        Filter resource whether the order was generated from a batch order
+        """
+        if value is True:
+            return queryset.filter(batch_order__isnull=False)
+        if value is False:
+            return queryset.filter(batch_order__isnull=True)
+        return queryset
 
     def filter_by_query(self, queryset, _name, value):
         """
