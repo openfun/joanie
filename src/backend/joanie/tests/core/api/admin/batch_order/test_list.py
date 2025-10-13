@@ -5,6 +5,7 @@ from http import HTTPStatus
 from django.conf import settings
 
 from joanie.core import enums, factories
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -41,73 +42,29 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
 
-        expected_return = [
-            {
-                "id": str(batch_order.id),
-                "address": batch_order.address,
-                "city": batch_order.city,
-                "company_name": batch_order.company_name,
-                "contract": {
-                    "definition_title": batch_order.contract.definition.title,
-                    "id": str(batch_order.contract.id),
-                    "organization_signed_on": None,
-                    "student_signed_on": None,
-                    "submitted_for_signature_on": None,
-                },
-                "country": batch_order.country.code,
-                "currency": settings.DEFAULT_CURRENCY,
-                "identification_number": batch_order.identification_number,
-                "main_invoice_reference": None,
-                "nb_seats": batch_order.nb_seats,
-                "organization": {
-                    "code": batch_order.organization.code,
-                    "id": str(batch_order.organization.id),
-                    "title": batch_order.organization.title,
-                },
-                "owner": str(batch_order.owner.id),
-                "postcode": batch_order.postcode,
-                "offering": str(batch_order.offering.id),
-                "total": float(batch_order.total),
-                "vouchers": [],
-                "offering_rules": [],
-                "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-                "billing_address": {
-                    "company_name": batch_order.company_name,
-                    "identification_number": batch_order.identification_number,
-                    "address": batch_order.address,
-                    "postcode": batch_order.postcode,
-                    "country": batch_order.billing_address["country"],
-                    "city": batch_order.billing_address["city"],
-                    "contact_email": "janedoe@example.org",
-                    "contact_name": "Jane Doe",
-                },
-                "vat_registration": None,
-                "administrative_email": None,
-                "administrative_firstname": None,
-                "administrative_lastname": None,
-                "administrative_telephone": None,
-                "administrative_profession": None,
-                "signatory_email": None,
-                "signatory_firstname": None,
-                "signatory_lastname": None,
-                "signatory_telephone": None,
-                "signatory_profession": None,
-                "quote": {
-                    "definition_title": batch_order.quote.definition.title,
-                    "has_purchase_order": False,
-                    "id": str(batch_order.quote.id),
-                    "organization_signed_on": None,
-                },
-                "funding_entity": batch_order.funding_entity,
-                "funding_amount": batch_order.funding_amount,
-                "contract_submitted": False,
-            }
-            for batch_order in batch_orders
-        ]
-
         response = self.client.get(
             "/api/v1.0/admin/batch-orders/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
-        self.assertEqual(expected_return, response.json()["results"])
+        self.assertEqual(
+            [
+                {
+                    "id": str(batch_order.id),
+                    "company_name": batch_order.company_name,
+                    "owner_name": batch_order.owner.name,
+                    "organization_title": batch_order.organization.title,
+                    "product_title": batch_order.offering.product.title,
+                    "course_code": batch_order.offering.course.code,
+                    "nb_seats": batch_order.nb_seats,
+                    "state": batch_order.state,
+                    "created_on": format_date(batch_order.created_on),
+                    "updated_on": format_date(batch_order.updated_on),
+                    "total": float(batch_order.total),
+                    "total_currency": settings.DEFAULT_CURRENCY,
+                    "payment_method": batch_order.payment_method,
+                }
+                for batch_order in batch_orders
+            ],
+            response.json()["results"],
+        )
