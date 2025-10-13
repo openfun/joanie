@@ -35,7 +35,7 @@ dependencies = [
     "django-configurations==2.5.1",
     "django-cors-headers==4.9.0",
     "django-countries==7.6.1",
-    "django-filter==25.2",
+    "django-filter==25.1",
     "django-fsm==3.0.1",
     "django-money==3.5.4",
     "django-object-actions==5.0.0",
