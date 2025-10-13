@@ -52,7 +52,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedAdminBatchOrderList"
+                                    "$ref": "#/components/schemas/PaginatedAdminBatchOrderLightList"
                                 }
                             }
                         },
@@ -6369,6 +6369,18 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
                     "owner": {
                         "type": "string",
                         "format": "uuid",
@@ -6534,6 +6546,7 @@
                     "company_name",
                     "contract",
                     "contract_submitted",
+                    "created_on",
                     "currency",
                     "funding_amount",
                     "id",
@@ -6553,6 +6566,7 @@
                     "signatory_profession",
                     "signatory_telephone",
                     "total",
+                    "updated_on",
                     "vouchers"
                 ]
             },
@@ -6643,6 +6657,118 @@
                     "identification_number",
                     "postcode"
                 ]
+            },
+            "AdminBatchOrderLight": {
+                "type": "object",
+                "description": "Admin Batch Order Serializer",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "company name"
+                    },
+                    "owner_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "organization_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "title": "Number of seats",
+                        "description": "The number of seats to reserve"
+                    },
+                    "product_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "course_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminBatchOrderLightStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": -10000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "readOnly": true
+                    },
+                    "total_currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
+                        "readOnly": true
+                    },
+                    "payment_method": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentMethodEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "company_name",
+                    "course_code",
+                    "created_on",
+                    "id",
+                    "nb_seats",
+                    "organization_title",
+                    "owner_name",
+                    "payment_method",
+                    "product_title",
+                    "state",
+                    "total",
+                    "total_currency",
+                    "updated_on"
+                ]
+            },
+            "AdminBatchOrderLightStateEnum": {
+                "enum": [
+                    "draft",
+                    "assigned",
+                    "quoted",
+                    "to_sign",
+                    "signing",
+                    "pending",
+                    "process_payment",
+                    "failed_payment",
+                    "canceled",
+                    "completed"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "AdminBatchOrderRequest": {
                 "type": "object",
@@ -10106,7 +10232,7 @@
                 "type": "string",
                 "description": "* `owner` - owner\n* `administrator` - administrator\n* `member` - member"
             },
-            "PaginatedAdminBatchOrderList": {
+            "PaginatedAdminBatchOrderLightList": {
                 "type": "object",
                 "required": [
                     "count",
@@ -10132,7 +10258,7 @@
                     "results": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminBatchOrder"
+                            "$ref": "#/components/schemas/AdminBatchOrderLight"
                         }
                     }
                 }
