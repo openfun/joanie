@@ -5,6 +5,7 @@ from http import HTTPStatus
 from django.conf import settings
 
 from joanie.core import enums, factories
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -44,55 +45,18 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
             [
                 {
                     "id": str(batch_order.id),
-                    "address": batch_order.address,
-                    "city": batch_order.city,
                     "company_name": batch_order.company_name,
-                    "contract_id": str(batch_order.contract.id),
-                    "country": batch_order.country.code,
-                    "currency": settings.DEFAULT_CURRENCY,
-                    "identification_number": batch_order.identification_number,
-                    "main_invoice_reference": None,
+                    "owner_name": batch_order.owner.name,
+                    "organization_title": batch_order.organization.title,
+                    "product_title": batch_order.offering.product.title,
+                    "course_code": batch_order.offering.course.code,
                     "nb_seats": batch_order.nb_seats,
-                    "organization": {
-                        "code": batch_order.organization.code,
-                        "id": str(batch_order.organization.id),
-                        "title": batch_order.organization.title,
-                    },
-                    "owner": str(batch_order.owner.id),
-                    "postcode": batch_order.postcode,
-                    "offering": str(batch_order.offering.id),
+                    "state": batch_order.state,
+                    "created_on": format_date(batch_order.created_on),
+                    "updated_on": format_date(batch_order.updated_on),
                     "total": float(batch_order.total),
-                    "vouchers": [],
-                    "offering_rules": [],
-                    "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-                    "billing_address": {
-                        "company_name": batch_order.company_name,
-                        "identification_number": batch_order.identification_number,
-                        "address": batch_order.address,
-                        "postcode": batch_order.postcode,
-                        "country": batch_order.billing_address["country"],
-                        "contact_email": "janedoe@example.org",
-                        "contact_name": "Jane Doe",
-                    },
-                    "vat_registration": None,
-                    "administrative_email": None,
-                    "administrative_firstname": None,
-                    "administrative_lastname": None,
-                    "administrative_telephone": None,
-                    "administrative_profession": None,
-                    "signatory_email": None,
-                    "signatory_firstname": None,
-                    "signatory_lastname": None,
-                    "signatory_telephone": None,
-                    "signatory_profession": None,
-                    "quote": {
-                        "definition_title": batch_order.quote.definition.title,
-                        "has_purchase_order": False,
-                        "id": str(batch_order.quote.id),
-                        "organization_signed_on": None,
-                    },
-                    "funding_entity": batch_order.funding_entity,
-                    "funding_amount": batch_order.funding_amount,
+                    "total_currency": settings.DEFAULT_CURRENCY,
+                    "payment_method": batch_order.payment_method,
                 }
                 for batch_order in batch_orders
             ],

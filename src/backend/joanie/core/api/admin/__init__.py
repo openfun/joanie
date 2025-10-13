@@ -761,6 +761,7 @@ class OrderViewSet(
 
 
 class BatchOrderViewSet(
+    SerializerPerActionMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
@@ -773,6 +774,10 @@ class BatchOrderViewSet(
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_classes = {
+        "list": serializers.AdminBatchOrderLightSerializer,
+    }
+    default_serializer_class = serializers.AdminBatchOrderSerializer
     serializer_class = serializers.AdminBatchOrderSerializer
     queryset = models.BatchOrder.objects.all().select_related(
         "contract",
