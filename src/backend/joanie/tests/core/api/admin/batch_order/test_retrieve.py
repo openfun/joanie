@@ -50,6 +50,8 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
         self.assertDictEqual(
             {
                 "id": str(batch_order.id),
+                "created_on": format_date(batch_order.created_on),
+                "updated_on": format_date(batch_order.updated_on),
                 "address": batch_order.address,
                 "city": batch_order.city,
                 "company_name": batch_order.company_name,
@@ -70,7 +72,12 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "id": str(batch_order.organization.id),
                     "title": batch_order.organization.title,
                 },
-                "owner": str(batch_order.owner.id),
+                "owner": {
+                    "id": str(batch_order.owner.id),
+                    "email": batch_order.owner.email,
+                    "full_name": batch_order.owner.get_full_name(),
+                    "username": batch_order.owner.username,
+                },
                 "postcode": batch_order.postcode,
                 "offering": str(batch_order.offering.id),
                 "total": float(batch_order.total),
@@ -130,6 +137,8 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
         self.assertDictEqual(
             {
                 "id": str(batch_order.id),
+                "created_on": format_date(batch_order.created_on),
+                "updated_on": format_date(batch_order.updated_on),
                 "address": batch_order.address,
                 "city": batch_order.city,
                 "company_name": batch_order.company_name,
@@ -150,7 +159,12 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "id": str(batch_order.organization.id),
                     "title": batch_order.organization.title,
                 },
-                "owner": str(batch_order.owner.id),
+                "owner": {
+                    "id": str(batch_order.owner.id),
+                    "email": batch_order.owner.email,
+                    "full_name": batch_order.owner.get_full_name(),
+                    "username": batch_order.owner.username,
+                },
                 "postcode": batch_order.postcode,
                 "offering": str(batch_order.offering.id),
                 "total": float(batch_order.total),
