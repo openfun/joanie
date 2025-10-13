@@ -16,7 +16,8 @@
         "django-storages",
         "boto3",
         "SQLAlchemy",
-        "sqlacodegen"
+        "sqlacodegen",
+        "django-filter"
       ]
     },
     {
