@@ -5000,6 +5000,15 @@
                         },
                         "description": "Quote id in string, must be provided.",
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "total",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Batch order total",
+                        "required": true
                     }
                 ],
                 "tags": [
