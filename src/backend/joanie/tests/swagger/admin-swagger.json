@@ -430,6 +430,43 @@
                 }
             }
         },
+        "/api/v1.0/admin/batch-orders/export/": {
+            "get": {
+                "operationId": "batch_orders_export_retrieve",
+                "description": "Export batch orders to a CSV file.",
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/certificate-definitions/": {
             "get": {
                 "operationId": "certificate_definitions_list",
