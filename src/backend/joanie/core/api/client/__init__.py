@@ -1185,6 +1185,13 @@ class OrganizationViewSet(
                 type=OpenApiTypes.UUID,
                 many=False,
             ),
+            OpenApiParameter(
+                name="total",
+                description="Batch order total",
+                required=True,
+                type=OpenApiTypes.STR,
+                many=False,
+            ),
         ],
     )
     @action(
