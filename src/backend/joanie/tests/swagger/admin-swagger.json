@@ -12,6 +12,53 @@
                 "description": "Admin Batch Order Viewset",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "course_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_on",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_on_date_range_after",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_on_date_range_before",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
+                    {
                         "name": "ordering",
                         "required": false,
                         "in": "query",
@@ -19,6 +66,34 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "owner_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
                     },
                     {
                         "name": "page",
@@ -37,6 +112,60 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "payment_method",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "bank_transfer",
+                                "card_payment",
+                                "purchase_order"
+                            ]
+                        },
+                        "description": "* `purchase_order` - Purchase order\n* `bank_transfer` - Bank transfer\n* `card_payment` - Card payment"
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "state",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "assigned",
+                                "canceled",
+                                "completed",
+                                "draft",
+                                "failed_payment",
+                                "pending",
+                                "process_payment",
+                                "quoted",
+                                "signing",
+                                "to_sign"
+                            ]
+                        },
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
                     }
                 ],
                 "tags": [
