@@ -147,7 +147,7 @@ export function BatchOrdersList(props: Props) {
       <TableComponent
         {...paginatedResource.tableProps}
         {...props}
-        filters={undefined}
+        filters={<BatchOrderFilters {...paginatedResource.filtersProps} />}
         enableEdit={false}
         columns={columns}
         columnBuffer={5}
