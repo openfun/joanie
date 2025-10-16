@@ -47,7 +47,23 @@ const listProps: UseResourcesProps<BatchOrderListItem, BatchOrderListQuery> = {
   messages: useBatchOrdersMessages,
 };
 
+const resourceProps: UseResourcesProps<BatchOrder, BatchOrderQuery> = {
+  queryKey: ["batchOrders"],
+  apiInterface: () => ({
+    get: async (filters) => {
+      if (filters?.id) {
+        const { id, ...otherFilters } = filters;
+        return BatchOrderRepository.get(id, otherFilters);
+      }
+    },
+  }),
+  session: true,
+  messages: useBatchOrdersMessages,
+};
+
 export const useBatchOrders = (
   filters?: BatchOrderListQuery,
   queryOptions?: QueryOptions<BatchOrderListItem>,
 ) => useResourcesCustom({ ...listProps, filters, queryOptions });
+// eslint-disable-next-line react-hooks/rules-of-hooks
+export const useBatchOrder = useResource(resourceProps);
