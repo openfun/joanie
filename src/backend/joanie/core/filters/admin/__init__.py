@@ -333,6 +333,70 @@ class OrderAdminFilterSet(filters.FilterSet):
         ).distinct()
 
 
+class BatchOrderAdminFilterSet(filters.FilterSet):
+    """
+    FilterSet to filter batch orders by several criteria.
+    """
+
+    class Meta:
+        model = models.BatchOrder
+        fields: List[str] = ["query"]
+
+    query = filters.CharFilter(method="filter_by_query")
+    # Filter by course via the relation (offering)
+    course_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.Course.objects.all().only("pk"),
+        field_name="relation__course",
+        distinct=True,
+    )
+    # Filter by organization
+    organization_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.Organization.objects.all().only("pk"),
+        field_name="organization",
+        distinct=True,
+    )
+    # Filter by owner
+    owner_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.User.objects.all().only("pk"),
+        field_name="owner",
+        distinct=True,
+    )
+    # Filter by product via the relation (offering)
+    product_ids = filters.ModelMultipleChoiceFilter(
+        queryset=models.Product.objects.all().only("pk"),
+        field_name="relation__product",
+        distinct=True,
+    )
+    state = filters.ChoiceFilter(choices=enums.BATCH_ORDER_STATE_CHOICES)
+    payment_method = filters.ChoiceFilter(
+        choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES
+    )
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
+    created_on = filters.DateFilter(field_name="created_on", lookup_expr="date")
+    created_on_date_range = filters.DateFromToRangeFilter(field_name="created_on")
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter batch orders by looking for company name, product title, course title | code,
+        organization title | code, and owner fields (username, email, first/last name).
+        """
+
+        return (
+            queryset.filter(
+                Q(company_name__icontains=value)
+                | Q(relation__course__translations__title__icontains=value)
+                | Q(relation__course__code__icontains=value)
+                | Q(organization__translations__title__icontains=value)
+                | Q(organization__code__icontains=value)
+                | Q(relation__product__translations__title__icontains=value)
+                | Q(owner__email__icontains=value)
+                | Q(owner__username__icontains=value)
+                | Q(owner__first_name__icontains=value)
+                | Q(owner__last_name__icontains=value)
+            )
+        ).distinct()
+
+
 class DiscountAdminFilterSet(filters.FilterSet):
     """
     DiscountAdminFilterSet allows to filter this resource with a query for amount and rate.
