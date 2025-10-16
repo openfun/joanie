@@ -23,6 +23,41 @@ from joanie.tests.base import LoggingTestCase
 class BatchOrderModelsTestCase(LoggingTestCase):
     """Test suite for batch order model."""
 
+    def test_models_batch_order_freeze_total(self):
+        """
+        When calling the method `freeze_total` for a batch order, it should set the total amount,
+        mark the quote as signed, and create a main invoice.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+        )
+
+        batch_order.freeze_total("1234.56")
+
+        self.assertEqual(batch_order.total, Decimal("1234.56"))
+        self.assertIsNotNone(batch_order.quote.organization_signed_on)
+        self.assertIsNotNone(batch_order.main_invoice)
+
+    def test_models_batch_order_freeze_total_state_transition(self):
+        """
+        The batch order's state should transition from `quoted` to `to_sign` once the
+        the method `freeze_total` is called when the payment method is `card_payment` or
+        `bank_transfer`. Otherwise, when it's with purchase order, it should stay `quoted`.
+        """
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    state=enums.BATCH_ORDER_STATE_ASSIGNED,
+                    payment_method=payment_method,
+                )
+
+                batch_order.freeze_total("1234.56")
+
+                if payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
+                else:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
+
     @mock.patch("joanie.core.utils.issuers.generate_document")
     def test_models_batch_order_submit_for_signature_creates_a_contract(
         self, mock_issuer_generate_document

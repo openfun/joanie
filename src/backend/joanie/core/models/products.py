@@ -2295,12 +2295,17 @@ class BatchOrder(BaseModel):
     def freeze_total(self, total):
         """
         Freeze the total price for the batch order. It can only be done when the quote's
-        batch order is signed by the organization.
+        batch order is signed by the organization. When the batch order payment method is
+        `card_payment` or `bank_transfer`, the state should transition to `to_sign`, otherwise
+        with `purchase_order` it should stay in `quoted` state.
         """
         self.quote.tag_organization_signed_on()
         self.total = round(Money(total).as_decimal(), 2)
         self.create_main_invoice()
         self.save(update_fields=["total"])
+
+        if not self.uses_purchase_order:
+            self.flow.update()
 
     @property
     def target_course_runs(self):
