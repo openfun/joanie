@@ -3,6 +3,7 @@
 from http import HTTPStatus
 
 from joanie.core import enums, factories, models
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -76,6 +77,7 @@ class QuoteApiTest(BaseAPITestCase):
                             "relation_id": str(quote.batch_order.relation.id),
                             "state": quote.batch_order.state,
                             "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+                            "contract_submitted": False,
                         },
                         "definition": {
                             "body": quote.definition.body,
@@ -139,7 +141,7 @@ class QuoteApiTest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_QUOTED,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
             owner=user,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
@@ -163,6 +165,7 @@ class QuoteApiTest(BaseAPITestCase):
                     "relation_id": str(batch_order.quote.batch_order.relation.id),
                     "state": batch_order.quote.batch_order.state,
                     "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                    "contract_submitted": True,
                 },
                 "definition": {
                     "body": batch_order.quote.definition.body,
@@ -172,8 +175,10 @@ class QuoteApiTest(BaseAPITestCase):
                     "name": batch_order.quote.definition.name,
                     "title": batch_order.quote.definition.title,
                 },
-                "has_purchase_order": False,
-                "organization_signed_on": None,
+                "has_purchase_order": True,
+                "organization_signed_on": format_date(
+                    batch_order.quote.organization_signed_on
+                ),
             },
             response.json(),
         )

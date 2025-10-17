@@ -5945,10 +5945,15 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "contract_submitted": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "company_name",
+                    "contract_submitted",
                     "id",
                     "organization_id",
                     "owner_name",
