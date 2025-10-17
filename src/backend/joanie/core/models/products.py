@@ -2474,7 +2474,7 @@ class BatchOrder(BaseModel):
         return self.quote.is_signed_by_organization
 
     @property
-    def is_submitted_to_signature(self):
+    def contract_submitted(self):
         """Return boolean value whether the batch order contract is submitted to signature"""
         return (
             self.contract.student_signed_on is None
