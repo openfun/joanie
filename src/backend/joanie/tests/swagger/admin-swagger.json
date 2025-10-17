@@ -6404,11 +6404,12 @@
                         "type": "string",
                         "readOnly": true
                     },
-                    "contract_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "contract of type convention",
-                        "nullable": true,
+                    "contract": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminContract"
+                            }
+                        ],
                         "readOnly": true
                     },
                     "company_name": {
@@ -6519,6 +6520,10 @@
                         "minimum": 0.0,
                         "exclusiveMaximum": true,
                         "readOnly": true
+                    },
+                    "contract_submitted": {
+                        "type": "string",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6530,7 +6535,8 @@
                     "administrative_telephone",
                     "city",
                     "company_name",
-                    "contract_id",
+                    "contract",
+                    "contract_submitted",
                     "currency",
                     "funding_amount",
                     "id",
