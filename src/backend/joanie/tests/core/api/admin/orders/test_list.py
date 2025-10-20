@@ -76,6 +76,14 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                 product__courses=[course],
             ),
         ]
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_COMPLETED, nb_seats=1
+        )
+        batch_order.generate_orders()
+        order = batch_order.orders.first()
+        order.owner = factories.UserFactory()
+        order.flow.update()
+        orders.append(order)
 
         # Create an admin user
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -88,7 +96,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
 
         content = response.json()
         expected_content = {
-            "count": 2,
+            "count": 3,
             "next": None,
             "previous": None,
             "results": [
@@ -108,7 +116,9 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "total_currency": get_default_currency_symbol(),
                     "discount": str(order.voucher.discount) if order.voucher else None,
                     "voucher": order.voucher.code if order.voucher else None,
-                    "from_batch_order": False,
+                    "batch_order": str(order.batch_order.id)
+                    if order.batch_order
+                    else None,
                 }
                 for order in sorted(orders, key=lambda x: x.created_on, reverse=True)
             ],
@@ -173,7 +183,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "total_currency": get_default_currency_symbol(),
                     "discount": "-50%",
                     "voucher": order_voucher.voucher.code,
-                    "from_batch_order": False,
+                    "batch_order": None,
                 },
                 {
                     "course_code": order_rule.course.code,
@@ -189,7 +199,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "total_currency": get_default_currency_symbol(),
                     "discount": "-10% (100.00 €) Deal!",
                     "voucher": None,
-                    "from_batch_order": False,
+                    "batch_order": None,
                 },
             ],
         }
