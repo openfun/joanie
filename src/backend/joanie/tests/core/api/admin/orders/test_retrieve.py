@@ -78,7 +78,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
-                "from_batch_order": False,
+                "batch_order": None,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -268,7 +268,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
-                "from_batch_order": False,
+                "batch_order": None,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -374,6 +374,89 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
             response.json(),
         )
 
+    def test_api_admin_orders_retrieve_from_batch_order(self):
+        """
+        An admin user should be able to retrieve a single order from a batch order through
+        its id.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=1, state=enums.BATCH_ORDER_STATE_COMPLETED
+        )
+
+        batch_order.generate_orders()
+        order = batch_order.orders.first()
+        order.owner = factories.UserFactory()
+        order.flow.update()
+
+        with self.record_performance():
+            response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(
+            {
+                "id": str(order.id),
+                "created_on": format_date(order.created_on),
+                "state": order.state,
+                "batch_order": str(batch_order.id),
+                "owner": {
+                    "id": str(order.owner.id),
+                    "username": order.owner.username,
+                    "full_name": order.owner.get_full_name(),
+                    "email": order.owner.email,
+                },
+                "product": {
+                    "call_to_action": "let's go!",
+                    "certificate_definition": str(
+                        batch_order.offering.product.certificate_definition.id
+                    ),
+                    "contract_definition_order": None,
+                    "contract_definition_batch_order": str(
+                        batch_order.offering.product.contract_definition_batch_order.id
+                    ),
+                    "quote_definition": str(
+                        batch_order.offering.product.quote_definition.id
+                    ),
+                    "description": batch_order.offering.product.description,
+                    "id": str(batch_order.offering.product.id),
+                    "price": float(batch_order.offering.product.price),
+                    "price_currency": "EUR",
+                    "target_courses": [str(order.course.id)],
+                    "title": batch_order.offering.product.title,
+                    "type": "credential",
+                },
+                "enrollment": None,
+                "course": {
+                    "id": str(order.course.id),
+                    "code": order.course.code,
+                    "title": order.course.title,
+                    "state": {
+                        "priority": order.course.state["priority"],
+                        "datetime": format_date(order.course.state["datetime"]),
+                        "call_to_action": order.course.state["call_to_action"],
+                        "text": order.course.state["text"],
+                    },
+                },
+                "organization": {
+                    "id": str(order.organization.id),
+                    "code": order.organization.code,
+                    "title": order.organization.title,
+                },
+                "offering_rules": [],
+                "total": 0,
+                "total_currency": settings.DEFAULT_CURRENCY,
+                "contract": None,
+                "certificate": None,
+                "payment_schedule": [],
+                "main_invoice": None,
+                "credit_card": None,
+                "has_waived_withdrawal_right": False,
+            },
+            response.json(),
+        )
+
     @override_settings(
         JOANIE_PAYMENT_SCHEDULE_LIMITS={100: (100,)},
         DEFAULT_CURRENCY="EUR",
@@ -441,7 +524,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "id": str(order.id),
                 "created_on": format_date(order.created_on),
                 "state": order.state,
-                "from_batch_order": False,
+                "batch_order": None,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
