@@ -311,11 +311,7 @@ class OrderAdminFilterSet(filters.FilterSet):
         """
         Filter resource whether the order was generated from a batch order
         """
-        if value is True:
-            return queryset.filter(batch_order__isnull=False)
-        if value is False:
-            return queryset.filter(batch_order__isnull=True)
-        return queryset
+        return queryset.exclude(batch_order__isnull=value)
 
     def filter_by_query(self, queryset, _name, value):
         """

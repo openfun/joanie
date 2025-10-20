@@ -185,7 +185,7 @@ class OrdersAdminApiExportTestCase(BaseAPITestCase):
         )
         for order, csv_line in zip(orders, csv_content, strict=False):
             self.assertEqual(
-                csv_line.split(","), list(expected_csv_content(order).values())
+                list(expected_csv_content(order).values()), csv_line.split(",")
             )
 
     def test_api_admin_orders_export_csv_filter_from_batch_order(self):
@@ -209,5 +209,5 @@ class OrdersAdminApiExportTestCase(BaseAPITestCase):
 
         for order, csv_line in zip(orders, csv_content, strict=False):
             self.assertEqual(
-                csv_line.split(","), list(expected_csv_content(order).values())
+                list(expected_csv_content(order).values()), csv_line.split(",")
             )
