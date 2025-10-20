@@ -2758,7 +2758,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         mock_enroll_user_to_course_run.reset_mock()
         # Prepare the data where he attempts to use his voucher code a second time
         data = {
-            "organization_id": batch_order.organization.id,
             "product_id": batch_order.offering.product.id,
             "course_code": batch_order.offering.course.code,
             "voucher_code": voucher_codes[0],
@@ -2803,7 +2802,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         mock_enroll_user_to_course_run.reset_mock()
         # Let's now simulate that the second owner uses the wrong voucher code to claim an order
         data = {
-            "organization_id": batch_order.organization.id,
             "product_id": batch_order.offering.product.id,
             "course_code": batch_order.offering.course.code,
             "voucher_code": voucher_codes[0],
@@ -2835,6 +2833,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         order = models.Order.objects.get(owner=user)
         # The order should be marked as `completed`
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+        self.assertEqual(order.organization, batch_order.organization)
 
     @mock.patch(
         "joanie.core.flows.order.OrderFlow.complete",
@@ -2861,7 +2860,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         order = batch_order.orders.get(voucher__code=voucher_codes[0])
 
         data = {
-            "organization_id": batch_order.organization.id,
             "product_id": batch_order.offering.product.id,
             "course_code": batch_order.offering.course.code,
             "voucher_code": voucher_codes[0],
@@ -2880,6 +2878,7 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
+        self.assertEqual(order.organization, batch_order.organization)
         self.assertTrue(voucher.is_usable_by(user.id))
 
     def test_api_order_create_with_fake_voucher_code(self):
@@ -2897,7 +2896,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         )
 
         data = {
-            "organization_id": batch_order.organization.id,
             "product_id": batch_order.offering.product.id,
             "course_code": batch_order.offering.course.code,
             "voucher_code": "fake_voucher_code",
@@ -2929,6 +2927,65 @@ class OrderCreateApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
+    def test_api_order_claiming_order_with_voucher_code_from_batch_order_with_wrong_payload(
+        self,
+    ):
+        """
+        When the user uses the wrong course product relation in the payload to claim an order
+        from a batch order with a valid voucher code, it should not be possible to claim it.
+        It should return a 400 Bad Request.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        [offering, another_offering] = factories.OfferingFactory.create_batch(
+            2,
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+        )
+        batch_order = factories.BatchOrderFactory(
+            offering=offering,
+            nb_seats=1,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+        voucher_code = batch_order.vouchers[0]
+
+        response_wrong_relation = self.client.post(
+            "/api/v1.0/orders/",
+            data={
+                "product_id": another_offering.product.id,
+                "course_code": another_offering.course.code,
+                "voucher_code": voucher_code,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        response_wrong_product = self.client.post(
+            "/api/v1.0/orders/",
+            data={
+                "product_id": another_offering.product.id,
+                "course_code": batch_order.offering.course.code,
+                "voucher_code": voucher_code,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        response_wrong_course_code = self.client.post(
+            "/api/v1.0/orders/",
+            data={
+                "product_id": batch_order.offering.product.id,
+                "course_code": another_offering.course.code,
+                "voucher_code": voucher_code,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response_wrong_relation, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response_wrong_product, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response_wrong_course_code, HTTPStatus.BAD_REQUEST)
+
     @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
     def test_api_order_create_with_voucher_code_from_a_batch_order(
         self, mock_enroll_user_to_course_run
@@ -2951,7 +3008,6 @@ class OrderCreateApiTest(BaseAPITestCase):
         voucher_codes = batch_order.vouchers
 
         data = {
-            "organization_id": batch_order.organization.id,
             "product_id": batch_order.offering.product.id,
             "course_code": batch_order.offering.course.code,
             "voucher_code": voucher_codes[0],
@@ -2972,6 +3028,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         voucher = models.Voucher.objects.get(code=voucher_codes[0])
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+        self.assertEqual(order.organization, batch_order.organization)
         self.assertFalse(voucher.is_usable_by(user.id))
 
     @mock.patch.object(
@@ -2997,9 +3054,15 @@ class OrderCreateApiTest(BaseAPITestCase):
         batch_order.generate_orders()
         product = batch_order.offering.product
 
+        data = {
+            "product_id": batch_order.offering.product.id,
+            "course_code": batch_order.offering.course.code,
+            "voucher_code": batch_order.vouchers[0],
+        }
+
         response = self.client.post(
             "/api/v1.0/orders/",
-            data={"voucher_code": batch_order.vouchers[0]},
+            data=data,
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )

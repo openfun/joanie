@@ -11,6 +11,8 @@ from joanie.core.utils.order import (
     delete_stuck_certificate_order,
     delete_stuck_orders,
     delete_stuck_signing_order,
+    get_prepaid_order,
+    verify_voucher,
 )
 
 
@@ -147,3 +149,60 @@ class UtilsOrderTestCase(TestCase):
         self.assertEqual(deleted_orders_in_to_save_payment_state, 2)
         # Check that the orders we created to control still exists
         self.assertListEqual(kept_orders, list(models.Order.objects.all().reverse()))
+
+    def test_utils_verify_voucher(self):
+        """
+        The method `verify_voucher` will verify if the passed voucher code exists and is active
+        into our database before letting a user use it. It returns the voucher if found, else
+        it returns None.
+        """
+        active_voucher = factories.VoucherFactory(is_active=True)
+        non_active_voucher = factories.VoucherFactory(is_active=False)
+
+        self.assertTrue(verify_voucher(active_voucher.code))
+        self.assertIsNone(verify_voucher(non_active_voucher.code))
+        self.assertIsNone(verify_voucher("random_code"))
+
+    def test_utils_get_prepaid_order(self):
+        """
+        The method `get_prepaid_order` should return the order in state `to_own` that was
+        generated from a batch order. When the course and product and voucher code information
+        are correct, it should return the Order object, else it returns None.
+        """
+        [offering_1, offering_2] = factories.OfferingFactory.create_batch(
+            2,
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+        batch_order = factories.BatchOrderFactory(
+            offering=offering_1,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+        order = batch_order.orders.all()[0]
+
+        self.assertIsNone(
+            get_prepaid_order(
+                offering_2.course.code, offering_2.product.id, order.voucher.code
+            )
+        )
+        self.assertIsNone(
+            get_prepaid_order(
+                offering_1.course.code, offering_2.product.id, order.voucher.code
+            )
+        )
+        self.assertIsNone(
+            get_prepaid_order(
+                offering_2.course.code, offering_1.product.id, order.voucher.code
+            )
+        )
+        self.assertIsNone(
+            get_prepaid_order(
+                offering_1.course.code, offering_1.product.id, "random_code"
+            )
+        )
+        self.assertTrue(
+            get_prepaid_order(
+                offering_1.course.code, offering_1.product.id, order.voucher.code
+            )
+        )
