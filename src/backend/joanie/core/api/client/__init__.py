@@ -1187,7 +1187,7 @@ class OrganizationViewSet(
             ),
             OpenApiParameter(
                 name="total",
-                description="Total of the batch order",
+                description="Batch order total",
                 required=True,
                 type=OpenApiTypes.STR,
                 many=False,
