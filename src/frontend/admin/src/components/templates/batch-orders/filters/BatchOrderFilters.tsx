@@ -96,7 +96,7 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
               <Grid size={12}>
                 <RHFSelect
                   data-testid="select-batch-order-state-filter"
-                  isFilterContext={true as any}
+                  isFilterContext={true}
                   fullWidth={true}
                   name="state"
                   label={intl.formatMessage(messages.stateLabel)}
