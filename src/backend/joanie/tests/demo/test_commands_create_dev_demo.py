@@ -11,7 +11,6 @@ from joanie.demo.defaults import NB_DEV_OBJECTS
 class CreateDevDemoTestCase(TestCase):
     """Test case for the management command 'create_demo'"""
 
-    # ruff: noqa: PLR0915
     @override_settings(DEBUG=True)
     def test_commands_create_dev_demo(self):  # pylint: disable=too-many-statements
         """The create_dev_demo management command should create objects as expected."""
