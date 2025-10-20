@@ -27,7 +27,6 @@ class CreateDevDemoTestCase(TestCase):
         expected_nb_users += 1  # organization_owner
         expected_nb_users += 1  # student_user
         expected_nb_users += 1  # second_user
-        expected_nb_users += 1  # from batch order creation
         self.assertEqual(nb_users, expected_nb_users)
         nb_product_certificate = NB_DEV_OBJECTS["product_certificate"]
         nb_product_certificate += 1  # product_certificate_enrollment
@@ -57,11 +56,11 @@ class CreateDevDemoTestCase(TestCase):
         nb_product = nb_product_credential + nb_product_certificate
         nb_product += 1  # Become a certified botanist gradeo
         nb_product += 1  # Another product type credential
-        nb_product += 2  # From batch order creation
+        nb_product += 1  # From batch order creation
         self.assertEqual(models.Product.objects.count(), nb_product)
 
         nb_organization = 1  # The school of glory
-        nb_organization += 3  # From batch order creation
+        nb_organization += 2  # From batch order creation
         self.assertEqual(models.Organization.objects.count(), nb_organization)
 
         nb_courses = NB_DEV_OBJECTS["course"]
@@ -74,7 +73,7 @@ class CreateDevDemoTestCase(TestCase):
         nb_courses += nb_product_certificate * 1
         nb_courses += 1  # enrollment_certificate
         nb_courses += 1  # enrollment_certificate
-        nb_courses += 3  # From batch order creation
+        nb_courses += 2  # From batch order creation
         self.assertEqual(models.Course.objects.count(), nb_courses)
 
         nb_enrollment = 1  # product_certificate_enrollment
