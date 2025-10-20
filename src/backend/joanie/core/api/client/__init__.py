@@ -41,6 +41,10 @@ from joanie.core.utils.batch_order import (
 )
 from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.offering import get_serialized_course_runs
+from joanie.core.utils.order import (
+    get_prepaid_order,
+    verify_voucher,
+)
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.core.utils.signature import check_signature
@@ -412,30 +416,28 @@ class OrderViewSet(
         """Force the order's "owner" field to the logged-in user."""
         serializer.save(owner=self.request.user)
 
-    # ruff: noqa: PLR0915
     # pylint: disable=too-many-statements, too-many-return-statements, too-many-locals
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Try to create an order and a related payment if the payment is fee."""
         if voucher_code := request.data.get("voucher_code"):
-            try:
-                voucher = models.Voucher.objects.get(code=voucher_code, is_active=True)
-            except models.Voucher.DoesNotExist:
+            voucher = verify_voucher(voucher_code)
+            if not voucher:
                 return Response("Invalid voucher code", status=HTTPStatus.BAD_REQUEST)
 
-            user = self.request.user
-            if not voucher.is_usable_by(user.id):
+            if not voucher.is_usable_by(self.request.user.id):
                 return Response("Unusable voucher code", status=HTTPStatus.BAD_REQUEST)
 
-            try:
-                order = models.Order.objects.get(
-                    voucher__code=voucher_code,
-                    voucher__discount__rate=1,
-                    state=enums.ORDER_STATE_TO_OWN,
-                )
-                order.owner = user
+            # Check if the voucher comes from a batch order
+            if order := get_prepaid_order(
+                course_code=request.data.get("course_code"),
+                product_id=request.data.get("product_id"),
+                voucher_code=voucher.code,
+            ):
+                order.owner = self.request.user
                 order.flow.update()
                 is_completed = order.state == enums.ORDER_STATE_COMPLETED
+
                 if not is_completed:
                     return Response(
                         f"Failed to transition — order is in {order.state}",
@@ -444,8 +446,6 @@ class OrderViewSet(
                 return Response(
                     serializers.OrderSerializer(order).data, status=HTTPStatus.OK
                 )
-            except models.Order.DoesNotExist:
-                pass
 
         enrollment = None
         if enrollment_id := request.data.get("enrollment_id"):
