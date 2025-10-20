@@ -1343,6 +1343,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
             invoice = InvoiceFactory(
                 batch_order=self,
+                order=None,
                 parent=self.main_invoice,
                 total=0,
             )
