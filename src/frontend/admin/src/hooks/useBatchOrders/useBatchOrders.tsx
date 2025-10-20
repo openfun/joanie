@@ -21,6 +21,13 @@ export const useBatchOrdersMessages = defineMessages({
     defaultMessage:
       "An error occurred while fetching batch orders. Please retry later.",
   },
+  errorDelete: {
+    id: "hooks.useBatchOrders.errorDelete",
+    description:
+      "Error message shown to the user when batch order deletion request fails.",
+    defaultMessage:
+      "An error occurred while deleting the batch order. Please retry later.",
+  },
   errorNotFound: {
     id: "hooks.useBatchOrders.errorNotFound",
     description: "Error message shown to the user when no batch order matches.",
@@ -55,6 +62,12 @@ const resourceProps: UseResourcesProps<BatchOrder, BatchOrderQuery> = {
         const { id, ...otherFilters } = filters;
         return BatchOrderRepository.get(id, otherFilters);
       }
+    },
+    delete: async (id: string) => {
+      return BatchOrderRepository.delete(id);
+    },
+    confirmQuote: async (id: string, total: string) => {
+      return BatchOrderRepository.confirmQuote(id, total);
     },
   }),
   session: true,

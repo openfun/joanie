@@ -7,6 +7,7 @@ import {
 } from "@/tests/useResourceHandler";
 import {
   BatchOrderListItem,
+  BatchOrderStatesEnum,
   transformBatchOrdersToListItems,
 } from "@/services/api/models/BatchOrder";
 import { PATH_ADMIN } from "@/utils/routes/path";
@@ -150,6 +151,54 @@ test.describe("Batch Order view", () => {
     await expect(page.getByLabel("Number of seats")).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toBeVisible();
     await expect(page.getByLabel("Total")).toBeVisible();
+  });
+
+  test("Cancel batch order", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_DRAFT;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+
+      if (methods === "DELETE") {
+        batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_CANCELED;
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "draft",
+    );
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Cancel order
+
+    await expect(
+      page.getByRole("menuitem", { name: "Cancel this batch order" }),
+    ).toBeVisible();
+    await page
+      .getByRole("menuitem", { name: "Cancel this batch order" })
+      .click();
+
+    // Check after operation
+    await expect(page.getByText("Operation completed")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "canceled",
+    );
   });
 });
 

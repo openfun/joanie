@@ -6,6 +6,7 @@ import { batchOrdersBreadcrumbsTranslation } from "@/translations/pages/batch-or
 import { LoadingContent } from "@/components/presentational/loading/LoadingContent";
 import { useBatchOrder } from "@/hooks/useBatchOrders/useBatchOrders";
 import { BatchOrderView } from "@/components/templates/batch-orders/view/BatchOrderView";
+import BatchOrderActionsButton from "@/components/templates/batch-orders/buttons/BatchOrderActions";
 
 const messages = defineMessages({
   pageTitle: {
@@ -24,6 +25,11 @@ export default function BatchOrderViewPage() {
   return (
     <DashboardLayoutPage
       title={intl.formatMessage(messages.pageTitle)}
+      actions={
+        batchOrderQuery.item && (
+          <BatchOrderActionsButton batchOrder={batchOrderQuery.item} />
+        )
+      }
       breadcrumbs={[
         {
           name: intl.formatMessage(
