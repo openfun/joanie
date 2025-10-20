@@ -560,7 +560,7 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "owner",
         "product",
         "state",
-        "from_batch_order",
+        "batch_order_link",
     )
     list_filter = [OwnerFilter, OrganizationFilter, ProductFilter, "state"]
     readonly_fields = (
@@ -569,20 +569,23 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "has_waived_withdrawal_right",
         "invoice",
         "certificate",
-        "from_batch_order",
+        "batch_order_link",
     )
     search_fields = ["course__translations__title", "organization__translations__title"]
-
-    @admin.display(boolean=True, description=_("From batch order"))
-    def from_batch_order(self, obj):
-        """Returns boolean value whether the orders are generated or not."""
-        return obj.from_batch_order
 
     @admin.action(description=_("Cancel selected orders"))
     def cancel(self, request, queryset):  # pylint: disable=no-self-use
         """Cancel orders"""
         for order in queryset:
             order.flow.cancel()
+
+    @admin.display(description="Batch order")
+    def batch_order_link(self, obj):
+        """Retrieve the batch order related to the order"""
+        if obj.batch_order:
+            url = reverse("admin:core_batchorder_change", args=[obj.batch_order.id])
+            return format_html('<a href="{}">{}</a>', url, obj.batch_order.id)
+        return ""
 
     def invoice(self, obj):  # pylint: disable=no-self-use
         """Retrieve the root invoice related to the order."""
