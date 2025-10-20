@@ -37,7 +37,7 @@ def expected_csv_content(order):
         "Currency": settings.DEFAULT_CURRENCY,
         "Discount": "",
         "Voucher": order.voucher.code if order.batch_order else "",
-        "From batch order": str(order.batch_order.id) if order.batch_order else "",
+        "Batch order": "",
         "Waived withdrawal right": yes_no(order.has_waived_withdrawal_right),
         "Certificate generated for this order": yes_no(hasattr(order, "certificate")),
         "Contract": "",
@@ -80,6 +80,9 @@ def expected_csv_content(order):
         content["Organization signature date"] = format_date_export(
             order.contract.organization_signed_on
         )
+
+    if order.batch_order:
+        content["Batch order"] = str(order.batch_order.id)
 
     if order.main_invoice:
         content["Type"] = order.main_invoice.type

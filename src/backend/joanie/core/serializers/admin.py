@@ -1425,7 +1425,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("total_currency", _("Currency")),
             ("discount", _("Discount")),
             ("voucher", _("Voucher")),
-            ("from_batch_order", _("From batch order")),
+            ("batch_order", _("Batch order")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
@@ -1481,7 +1481,6 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     total_currency = serializers.SerializerMethodField(read_only=True)
     discount = serializers.SerializerMethodField(read_only=True)
     voucher = serializers.SerializerMethodField(read_only=True)
-    from_batch_order = serializers.SerializerMethodField(read_only=True)
     has_waived_withdrawal_right = serializers.SerializerMethodField(read_only=True)
     certificate = serializers.SerializerMethodField(read_only=True)
 
@@ -1559,13 +1558,6 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         otherwise return an empty string
         """
         return instance.voucher.code if instance.voucher else ""
-
-    def get_from_batch_order(self, instance) -> str:
-        """
-        Returns the batch order id when the order was generated from,
-        otherwise returns an empty string.
-        """
-        return str(instance.batch_order.id) if instance.batch_order else ""
 
     def get_has_waived_withdrawal_right(self, instance) -> str:
         """
