@@ -15,30 +15,26 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
 
     maxDiff = None
 
-    def test_api_admin_read_detail_batch_order_anonymous(self):
+    def test_api_admin_batch_order_read_anonymous(self):
         """Anonymous user should not be able to read detail of a batch order"""
         batch_order = factories.BatchOrderFactory()
 
-        response = self.client.get(
-            f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
-        )
+        response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
-    def test_api_admin_read_detail_batch_order_authenticated(self):
+    def test_api_admin_batch_order_read_authenticated(self):
         """Authenticated user should not be able to read the detail of a batch order"""
         user = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=user.username, password="password")
 
         batch_order = factories.BatchOrderFactory()
 
-        response = self.client.get(
-            f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
-        )
+        response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
-    def test_api_admin_read_detail_batch_order_admin_authenticated(self):
+    def test_api_admin_batch_order_read_admin_authenticated(self):
         """Authenticated admin user should be able to read the detail of a batch order"""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -52,9 +48,10 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(batch_order.id),
+                "created_on": format_date(batch_order.created_on),
+                "updated_on": format_date(batch_order.updated_on),
                 "address": batch_order.address,
                 "city": batch_order.city,
                 "company_name": batch_order.company_name,
@@ -69,7 +66,12 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "id": str(batch_order.organization.id),
                     "title": batch_order.organization.title,
                 },
-                "owner": str(batch_order.owner.id),
+                "owner": {
+                    "id": str(batch_order.owner.id),
+                    "email": batch_order.owner.email,
+                    "full_name": batch_order.owner.get_full_name(),
+                    "username": batch_order.owner.username,
+                },
                 "postcode": batch_order.postcode,
                 "offering": str(batch_order.offering.id),
                 "total": float(batch_order.total),
@@ -105,9 +107,10 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
             },
+            response.json(),
         )
 
-    def test_api_admin_read_detail_batch_order_with_quote(self):
+    def test_api_admin_batch_order_read_with_quote(self):
         """
         Admin user should be able to get the detail of a batch order with a quote
         """
@@ -124,9 +127,10 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(batch_order.id),
+                "created_on": format_date(batch_order.created_on),
+                "updated_on": format_date(batch_order.updated_on),
                 "address": batch_order.address,
                 "city": batch_order.city,
                 "company_name": batch_order.company_name,
@@ -141,7 +145,12 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "id": str(batch_order.organization.id),
                     "title": batch_order.organization.title,
                 },
-                "owner": str(batch_order.owner.id),
+                "owner": {
+                    "id": str(batch_order.owner.id),
+                    "email": batch_order.owner.email,
+                    "full_name": batch_order.owner.get_full_name(),
+                    "username": batch_order.owner.username,
+                },
                 "postcode": batch_order.postcode,
                 "offering": str(batch_order.offering.id),
                 "total": float(batch_order.total),
@@ -179,4 +188,5 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
             },
+            response.json(),
         )

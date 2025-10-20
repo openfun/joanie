@@ -2423,7 +2423,7 @@ class BatchOrder(BaseModel):
     @property
     def vouchers(self):
         """Return the exhaustive list of voucher codes generated from the orders"""
-        return [order.voucher.code for order in self.orders.all()]
+        return [order.voucher.code for order in self.orders.all() if order.voucher]
 
     @property
     def is_assigned(self):
