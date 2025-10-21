@@ -12,6 +12,7 @@ and this project adheres to
 
 - Orders with a voucher discount of 100% should always
   create a main invoice
+- Prevent duplicate order generation for batch orders
 
 ### Added
 

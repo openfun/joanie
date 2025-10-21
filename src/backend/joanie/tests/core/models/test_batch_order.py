@@ -405,6 +405,23 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
             self.assertEqual(order.voucher.discount.rate, 1)
 
+    def test_models_batch_order_generate_orders_with_orders_already_generated(self):
+        """
+        If we try to generate orders for a batch order that has already generated them,
+        it should raise a validation error.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            batch_order.generate_orders()
+
+        self.assertTrue(
+            "The batch order has already generated orders." in str(context.exception)
+        )
+
     def test_models_batch_order_create_billing_address(self):
         """
         When we call the method to create a billing address, it should take
