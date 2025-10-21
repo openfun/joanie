@@ -75,6 +75,19 @@ def generate_orders(batch_order_id: str):
     Voucher = apps.get_model("core", "Voucher")
 
     batch_order = BatchOrder.objects.get(pk=batch_order_id)
+    if batch_order.has_orders_generated:
+        message = "The batch order has already generated orders."
+        logger.error(
+            message,
+            extra={
+                "context": {
+                    "batch_order": batch_order.to_dict(),
+                    "relation": batch_order.relation.to_dict(),
+                }
+            },
+        )
+        raise ValidationError(message)
+
     if not batch_order.is_paid:
         message = "The batch order is not yet paid."
         logger.error(
