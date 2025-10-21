@@ -749,7 +749,7 @@ class OrderViewSet(
         Export orders to a CSV file.
         """
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = serializers.AdminOrderListExportSerializer(
+        serializer = serializers.AdminCSVExportListSerializer(
             queryset.iterator(), child=self.get_serializer()
         )
         now = timezone.now().strftime("%d-%m-%Y_%H-%M-%S")
@@ -773,6 +773,9 @@ class BatchOrderViewSet(
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_classes = {
+        "export": serializers.AdminBatchOrderExportSerializer,
+    }
     serializer_class = serializers.AdminBatchOrderSerializer
     queryset = models.BatchOrder.objects.all().select_related(
         "contract",
@@ -951,6 +954,29 @@ class BatchOrderViewSet(
         batch_order.flow.update()
 
         return Response(status=HTTPStatus.OK)
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "text/csv"): OpenApiTypes.OBJECT,
+            404: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["GET"], detail=False)
+    def export(self, request):
+        """
+        Export batch orders to a CSV file.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = serializers.AdminCSVExportListSerializer(
+            queryset.iterator(), child=self.get_serializer()
+        )
+        now = timezone.now().strftime("%d-%m-%Y_%H-%M-%S")
+        return StreamingHttpResponse(
+            serializer.csv_stream(),
+            content_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="orders_{now}.csv"'},
+        )
 
 
 class OrganizationAddressViewSet(
