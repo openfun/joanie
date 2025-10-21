@@ -1,8 +1,10 @@
 """Test suite for the Organizations Quote API"""
 
 from http import HTTPStatus
+from unittest import mock
 
 from joanie.core import enums, factories, models
+from joanie.core.serializers import fields
 from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
@@ -52,7 +54,12 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
             response.json(),
         )
 
-    def test_api_organizations_quotes_list_with_accesses(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_organizations_quotes_list_with_accesses(self, _mock_thumbnail):
         """
         Authenticated user with access to the organization can query organization's quotes
         """
@@ -100,7 +107,19 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                             "company_name": quote.batch_order.company_name,
                             "id": str(quote.batch_order.id),
                             "organization_id": str(quote.batch_order.organization.id),
-                            "relation_id": str(quote.batch_order.relation.id),
+                            "relation": {
+                                "id": str(quote.batch_order.offering.id),
+                                "course": {
+                                    "id": str(quote.batch_order.offering.course.id),
+                                    "title": quote.batch_order.offering.course.title,
+                                    "code": quote.batch_order.offering.course.code,
+                                    "cover": "_this_field_is_mocked",
+                                },
+                                "product": {
+                                    "id": str(quote.batch_order.offering.product.id),
+                                    "title": quote.batch_order.offering.product.title,
+                                },
+                            },
                             "state": quote.batch_order.state,
                             "payment_method": enums.BATCH_ORDER_WITH_CARD_PAYMENT,
                             "contract_submitted": False,
@@ -250,7 +269,12 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
-    def test_api_organizations_quotes_retrieve_with_accesses(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_organizations_quotes_retrieve_with_accesses(self, _mock_thumbnail):
         """
         Authenticated user with access to the organization can retrieve an organization's quote
         """
@@ -278,7 +302,19 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                     "company_name": quote.batch_order.company_name,
                     "id": str(quote.batch_order.id),
                     "organization_id": str(quote.batch_order.organization.id),
-                    "relation_id": str(quote.batch_order.relation.id),
+                    "relation": {
+                        "id": str(quote.batch_order.offering.id),
+                        "course": {
+                            "id": str(quote.batch_order.offering.course.id),
+                            "title": quote.batch_order.offering.course.title,
+                            "code": quote.batch_order.offering.course.code,
+                            "cover": "_this_field_is_mocked",
+                        },
+                        "product": {
+                            "id": str(quote.batch_order.offering.product.id),
+                            "title": quote.batch_order.offering.product.title,
+                        },
+                    },
                     "state": quote.batch_order.state,
                     "payment_method": enums.BATCH_ORDER_WITH_CARD_PAYMENT,
                     "contract_submitted": True,

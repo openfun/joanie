@@ -476,6 +476,28 @@ class ContractSerializer(AbilitiesModelSerializer):
         read_only_fields = fields
 
 
+class OfferingBatchOrderSerializer(serializers.ModelSerializer):
+    """Convenient serializer for the offering model to use for the Batch Order"""
+
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
+    product = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "id",
+            "course",
+            "product",
+        ]
+
+    def get_product(self, instance):
+        """Return simple product representation."""
+        return {
+            "id": str(instance.product.id),
+            "title": instance.product.title,
+        }
+
+
 class BatchOrderLightSerializer(serializers.ModelSerializer):
     """Read only Batch Order light serializer"""
 
@@ -484,11 +506,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
         slug_field="id",
         source="organization",
     )
-    relation_id = serializers.SlugRelatedField(
-        queryset=models.CourseProductRelation.objects.all(),
-        slug_field="id",
-        source="relation",
-    )
+    relation = OfferingBatchOrderSerializer(read_only=True)
     owner_name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -499,7 +517,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
             "organization_id",
             "state",
             "company_name",
-            "relation_id",
+            "relation",
             "payment_method",
             "contract_submitted",
         ]
@@ -1018,27 +1036,6 @@ class OfferingRulePropertySerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         """Only there to avoid a NotImplementedError"""
-
-
-class OfferingBatchOrderSerializer(serializers.ModelSerializer):
-    """Convenient serializer for the offering model to use for the Batch Order"""
-
-    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
-    product = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = models.CourseProductRelation
-        fields = [
-            "course",
-            "product",
-        ]
-
-    def get_product(self, instance):
-        """Return simple product representation."""
-        return {
-            "id": str(instance.product.id),
-            "title": instance.product.title,
-        }
 
 
 class OfferingLightSerializer(CachedModelSerializer):

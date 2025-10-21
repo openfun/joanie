@@ -82,6 +82,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                 "total": float(batch_order.total),
                 "currency": settings.DEFAULT_CURRENCY,
                 "offering": {
+                    "id": str(batch_order.offering.id),
                     "course": {
                         "id": str(batch_order.offering.course.id),
                         "title": batch_order.offering.course.title,
