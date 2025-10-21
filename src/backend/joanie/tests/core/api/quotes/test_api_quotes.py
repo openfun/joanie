@@ -1,8 +1,10 @@
 """Test suite for the Quote API client viewset"""
 
 from http import HTTPStatus
+from unittest import mock
 
 from joanie.core import enums, factories, models
+from joanie.core.serializers import fields
 from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
@@ -40,7 +42,12 @@ class QuoteApiTest(BaseAPITestCase):
             response.json(),
         )
 
-    def test_api_quotes_list_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_quotes_list_authenticated(self, _mock_thumbnail):
         """Authenticated user can list quotes where he is the owner."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -74,7 +81,19 @@ class QuoteApiTest(BaseAPITestCase):
                             "company_name": quote.batch_order.company_name,
                             "id": str(quote.batch_order.id),
                             "organization_id": str(quote.batch_order.organization.id),
-                            "relation_id": str(quote.batch_order.relation.id),
+                            "relation": {
+                                "id": str(quote.batch_order.offering.id),
+                                "course": {
+                                    "id": str(quote.batch_order.offering.course.id),
+                                    "title": quote.batch_order.offering.course.title,
+                                    "code": quote.batch_order.offering.course.code,
+                                    "cover": "_this_field_is_mocked",
+                                },
+                                "product": {
+                                    "id": str(quote.batch_order.offering.product.id),
+                                    "title": quote.batch_order.offering.product.title,
+                                },
+                            },
                             "state": quote.batch_order.state,
                             "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
                             "contract_submitted": False,
@@ -134,7 +153,12 @@ class QuoteApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
-    def test_api_quotes_retrieve_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_quotes_retrieve_authenticated(self, _mock_thumbnail):
         """
         Authenticated user should be able to retrieve a quote if he is the owner
         """
@@ -162,7 +186,19 @@ class QuoteApiTest(BaseAPITestCase):
                     "organization_id": str(
                         batch_order.quote.batch_order.organization.id
                     ),
-                    "relation_id": str(batch_order.quote.batch_order.relation.id),
+                    "relation": {
+                        "id": str(batch_order.offering.id),
+                        "course": {
+                            "id": str(batch_order.offering.course.id),
+                            "title": batch_order.offering.course.title,
+                            "code": batch_order.offering.course.code,
+                            "cover": "_this_field_is_mocked",
+                        },
+                        "product": {
+                            "id": str(batch_order.offering.product.id),
+                            "title": batch_order.offering.product.title,
+                        },
+                    },
                     "state": batch_order.quote.batch_order.state,
                     "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
                     "contract_submitted": True,
