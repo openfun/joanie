@@ -520,6 +520,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
             "relation",
             "payment_method",
             "contract_submitted",
+            "nb_seats",
         ]
         read_only_fields = fields
 

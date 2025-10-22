@@ -5952,12 +5952,19 @@
                     "contract_submitted": {
                         "type": "string",
                         "readOnly": true
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "title": "Number of seats",
+                        "description": "The number of seats to reserve"
                     }
                 },
                 "required": [
                     "company_name",
                     "contract_submitted",
                     "id",
+                    "nb_seats",
                     "organization_id",
                     "owner_name",
                     "payment_method",
