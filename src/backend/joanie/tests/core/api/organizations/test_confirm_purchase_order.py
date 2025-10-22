@@ -170,9 +170,6 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             state=enums.BATCH_ORDER_STATE_QUOTED,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        quote = batch_order.quote
-        quote.organization_signed_on = None
-        quote.save()
 
         access = factories.UserOrganizationAccessFactory(
             organization=batch_order.organization, role=enums.OWNER
@@ -181,7 +178,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
 
         response = self.client.patch(
             f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-purchase-order/",
-            data={"quote_id": str(quote.id)},
+            data={"quote_id": str(batch_order.quote.id)},
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
         )
@@ -198,9 +195,8 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             state=enums.BATCH_ORDER_STATE_QUOTED,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        quote = batch_order.quote
-        quote.tag_organization_signed_on()
-        quote.tag_has_purchase_order()
+        batch_order.freeze_total("100.00")
+        batch_order.quote.tag_has_purchase_order()
 
         access = factories.UserOrganizationAccessFactory(
             organization=batch_order.organization, role=enums.OWNER
@@ -209,7 +205,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
 
         response = self.client.patch(
             f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-purchase-order/",
-            data={"quote_id": str(quote.id)},
+            data={"quote_id": str(batch_order.quote.id)},
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
         )
@@ -223,34 +219,34 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
         Authenticated user with the permission cannot confirm a purchase order if the payment
         method of the batch order is other than `purchase_order`.
         """
-
         for payment_method in [
             payment_method[0]
             for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES
             if payment_method[0] != enums.BATCH_ORDER_WITH_PURCHASE_ORDER
         ]:
-            batch_order = factories.BatchOrderFactory(
-                nb_seats=1,
-                state=enums.BATCH_ORDER_STATE_QUOTED,
-                payment_method=payment_method,
-            )
-            quote = batch_order.quote
-            quote.tag_organization_signed_on()
-            quote.tag_has_purchase_order()
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    nb_seats=1,
+                    state=enums.BATCH_ORDER_STATE_QUOTED,
+                    payment_method=payment_method,
+                )
+                organization = batch_order.organization
+                batch_order.freeze_total("100.00")
+                batch_order.quote.tag_has_purchase_order()
 
-            access = factories.UserOrganizationAccessFactory(
-                organization=batch_order.organization, role=enums.OWNER
-            )
-            token = self.generate_token_from_user(access.user)
+                access = factories.UserOrganizationAccessFactory(
+                    organization=organization, role=enums.OWNER
+                )
+                token = self.generate_token_from_user(access.user)
 
-            response = self.client.patch(
-                f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-purchase-order/",
-                data={"quote_id": str(quote.id)},
-                HTTP_AUTHORIZATION=f"Bearer {token}",
-                content_type="application/json",
-            )
+                response = self.client.patch(
+                    f"/api/v1.0/organizations/{organization.id}/confirm-purchase-order/",
+                    data={"quote_id": str(batch_order.quote.id)},
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                    content_type="application/json",
+                )
 
-            self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
+                self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
 
     def test_api_organization_confirm_purchase_order_authenticated(self):
         """
@@ -264,8 +260,7 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             state=enums.BATCH_ORDER_STATE_QUOTED,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        quote = batch_order.quote
-        quote.tag_organization_signed_on()
+        batch_order.freeze_total("100.00")
 
         access = factories.UserOrganizationAccessFactory(
             organization=batch_order.organization, role=enums.OWNER
@@ -274,14 +269,13 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
 
         response = self.client.patch(
             f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-purchase-order/",
-            data={"quote_id": str(quote.id)},
+            data={"quote_id": str(batch_order.quote.id)},
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
         )
 
-        quote.refresh_from_db()
         batch_order.refresh_from_db()
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
-        self.assertEqual(quote.has_purchase_order, True)
+        self.assertEqual(batch_order.quote.has_purchase_order, True)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
