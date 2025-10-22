@@ -58,21 +58,25 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                 else:
                     self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
 
+    @override_settings(
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
+    )
     @mock.patch("joanie.core.utils.issuers.generate_document")
     def test_models_batch_order_submit_for_signature_creates_a_contract(
         self, mock_issuer_generate_document
     ):
         """
-        The batch order's contract is not yet completed tag submissions values until it has
-        been submitted to signature. The contract should be first generated when the batch
-        order is initialized. At the end of submitting the contract we should get in
-        return the invitation link to sign it.
+        The batch order contract does not contain completed tag submission values
+        until it has been submitted for signature. Once submitted, all submission
+        values are stored, and an invitation link to sign is returned.
+
+        Since we use the DummyBackendSignature, the buyer is automatically signed
+        when the contract is submitted for signature.
         """
         batch_order = factories.BatchOrderFactory(
             nb_seats=2, state=enums.BATCH_ORDER_STATE_QUOTED
         )
-        batch_order.quote.organization_signed_on = django_timezone.now()
-        batch_order.quote.save()
+        batch_order.freeze_total("100.00")
 
         self.assertIsNotNone(batch_order.contract)
         self.assertIsNotNone(batch_order.contract.definition)
@@ -86,7 +90,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         batch_order.refresh_from_db()
         self.assertIsNotNone(batch_order.contract)
-        self.assertIsNone(batch_order.contract.student_signed_on)
+        self.assertIsNotNone(batch_order.contract.student_signed_on)
         self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
         self.assertIsNotNone(batch_order.contract.context)
         self.assertIsNotNone(batch_order.contract.definition)
@@ -107,8 +111,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
 
         batch_order.refresh_from_db()
-        # We should see that the company has signed the contract
-        self.assertIsNotNone(batch_order.contract.student_signed_on)
+        # We should see that the organization has signed the contract
+        self.assertIsNotNone(batch_order.contract.organization_signed_on)
 
     def test_models_batch_order_submit_for_signature_a_contract_already_signed_by_buyer(
         self,
@@ -142,6 +146,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
     @override_settings(
         JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
     )
     def test_models_batch_order_submit_for_signature_same_context_but_passed_validity_period(
         self,
@@ -153,34 +158,32 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         and 'signature_backend_reference'.
         """
         batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
-
         context = contract_definition.generate_document_context(
             contract_definition=batch_order.offering.product.contract_definition_batch_order,
             user=batch_order.owner,
             batch_order=batch_order,
         )
-        contract = factories.ContractFactory(
-            definition=batch_order.offering.product.contract_definition_batch_order,
-            signature_backend_reference="wfl_fake_dummy_id",
-            definition_checksum="fake_test_file_hash",
-            context=context,
-            submitted_for_signature_on=django_timezone.now() - timedelta(days=16),
-        )
-        batch_order.contract = contract
-        batch_order.save()
+        contract = batch_order.contract
+        contract.context = context
+        contract.submitted_for_signature_on = django_timezone.now() - timedelta(days=16)
+        contract.save()
+
+        batch_order.refresh_from_db()
 
         with self.assertLogs("joanie") as logger:
             invitation_url = batch_order.submit_for_signature(user=batch_order.owner)
 
-        batch_order.contract.refresh_from_db()
+        contract.refresh_from_db()
+
         self.assertEqual(
-            contract.context, json.loads(DjangoJSONEncoder().encode(context))
+            json.loads(DjangoJSONEncoder().encode(context)),
+            contract.context,
         )
         self.assertIn("https://dummysignaturebackend.fr/?reference=", invitation_url)
         self.assertIn("fake_dummy_file_hash", contract.definition_checksum)
         self.assertNotEqual("wfl_fake_dummy_id", contract.signature_backend_reference)
         self.assertIsNotNone(contract.submitted_for_signature_on)
-        self.assertIsNone(contract.student_signed_on)
+        self.assertIsNotNone(contract.student_signed_on)
         self.assertLogsEquals(
             logger.records,
             [
@@ -198,11 +201,13 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                     "INFO",
                     f"Document signature refused for the contract '{contract.id}'",
                 ),
+                ("INFO", f"Student signed the contract '{contract.id}'"),
             ],
         )
 
     @override_settings(
         JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
+        JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
     )
     def test_models_batch_order_submit_for_signature_contract_context_has_changed_and_still_valid(
         self,
@@ -214,6 +219,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         and 'signature_backend_reference'. The newer contract can get sign by the buyer.
         """
         batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
+
+        batch_order.submit_for_signature(user=batch_order.owner)
         # Force change the product title so it modifies the contract's context when compared
         # before submitting a newer version
         batch_order.offering.product.title = "Product 123"
@@ -232,7 +239,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
         self.assertIn("fake_dummy_file_hash", batch_order.contract.definition_checksum)
         self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
-        self.assertIsNone(batch_order.contract.student_signed_on)
+        # When using the `DummySignatureBackend`, we mark the contract buyer's signature as signed
+        self.assertIsNotNone(batch_order.contract.student_signed_on)
 
         backend = get_signature_backend()
 
@@ -241,8 +249,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
 
         batch_order.contract.refresh_from_db()
-
-        self.assertIsNotNone(batch_order.contract.student_signed_on)
+        # The organization should be marked as signed
+        self.assertIsNotNone(batch_order.contract.organization_signed_on)
 
     @mock.patch(
         "joanie.signature.backends.dummy.DummySignatureBackend.submit_for_signature",
@@ -318,8 +326,11 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         batch_order = factories.BatchOrderFactory(
             owner=user,
             offering=offering,
-            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
+        batch_order.freeze_total("100.00")
+        batch_order.quote.tag_has_purchase_order()
 
         batch_order.submit_for_signature(user=user)
 
@@ -419,22 +430,23 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self,
     ):
         """
-        Orders can be generated if the batch order's quote has received the purchase order.
+        When batch order's payment method is with `purchase_order`, once the
+        contract is signed by the buyer, it transitions to completed and generates the orders.
         """
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
             nb_seats=5,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
+        # All the steps allowing the state of batch order to transition to `completed``
         batch_order.freeze_total("100.00")
-        batch_order.quote.has_purchase_order = True
-        batch_order.quote.save()
+        batch_order.quote.tag_has_purchase_order()
+        batch_order.submit_for_signature(batch_order.owner)
 
-        batch_order.flow.update()
-
-        batch_order.generate_orders()
+        batch_order.refresh_from_db()
 
         self.assertEqual(batch_order.orders.count(), 5)
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
         for order in batch_order.orders.all():
             self.assertIsNone(order.owner)
             self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
