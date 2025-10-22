@@ -540,14 +540,12 @@ class QuoteDefinitionSerializer(serializers.ModelSerializer):
 class QuoteSerializer(serializers.ModelSerializer):
     """Read only serializer for Quote model."""
 
-    definition = QuoteDefinitionSerializer()
     batch_order = BatchOrderLightSerializer(read_only=True)
 
     class Meta:
         model = models.Quote
         fields = [
             "id",
-            "definition",
             "organization_signed_on",
             "has_purchase_order",
             "batch_order",
