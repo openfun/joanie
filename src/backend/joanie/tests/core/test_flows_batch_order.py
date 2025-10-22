@@ -59,35 +59,54 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
 
-    def test_flow_batch_order_to_sign_because_submit_for_signature(self):
+    def test_flow_batch_order_to_sign(self):
         """
-        Before submitting to signature the contract, we should first mark the quote
-        as signed by the organization. Only then, when submitting to signature the contract,
-        it should change the state to `to_sign`.
-        It means that the contract is submitted and requests a signature from the buyer.
+        Depending the batch order's payment method, when it uses `bank_transfer` or `card_payment`,
+        the state transitions from `quoted` to `to_sign` when calling `freeze_total`.
+        Otherwise, when it uses `purchase_order`, it must first confirm the purchase order to
+        transition to `to_sign`.
         """
-        batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_ASSIGNED
-        )
-        batch_order.quote.organization_signed_on = timezone.now()
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    state=enums.BATCH_ORDER_STATE_QUOTED
+                )
 
-        batch_order.submit_for_signature(user=batch_order.owner)
+                batch_order.freeze_total("100.00")
 
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
+                if batch_order.uses_purchase_order:
+                    batch_order.quote.tag_has_purchase_order()
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
+                else:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
 
     def test_flow_batch_order_signing(self):
         """
         When the contract has been signed by the buyer, the state of the batch order
-        should transition to signing.
+        should transition to `signing` when the payment method is `bank_transfer` or `card_payment`.
+        Otherwise, it transitions to `completed` with `purchase_order`.
         """
-        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
-        batch_order.contract.student_signed_on = timezone.now()
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    state=enums.BATCH_ORDER_STATE_TO_SIGN, payment_method=payment_method
+                )
+                batch_order.submit_for_signature(user=batch_order.owner)
+                # batch_order.contract.student_signed_on = timezone.now()
 
-        batch_order.flow.update()
+                batch_order.flow.update()
 
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
-        self.assertIsNotNone(batch_order.contract.student_signed_on)
-        self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
+                batch_order.refresh_from_db()
+
+                if batch_order.uses_purchase_order:
+                    self.assertEqual(
+                        batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED
+                    )
+                else:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
+
+                self.assertIsNotNone(batch_order.contract.student_signed_on)
+                self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
 
     def test_flow_batch_order_pending(self):
         """
@@ -154,52 +173,40 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
 
                 self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)
 
-    def test_flow_batch_order_assigned_to_complete_related_with_quote_and_purchase_order(
+    def test_flow_batch_order_assigned_to_completed_related_with_quote_and_purchase_order(
         self,
     ):
         """
-        When the quote related to the batch order has received the purchase order,
-        and the buyer has signed the convention (contract), then the flow can update to
-        `completed`. That way, we can generate the orders for a batch order related to a quote.
+        When a batch order uses the payment method `purchase_order`, once the quote has received
+        the purchase order, and the buyer has signed the convention (contract), then the flow
+        updates to `completed`. During that transition from `signing` to `completed` state,
+        it generates the orders.
         """
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
-
-        batch_order.quote.organization_signed_on = timezone.now()
+        # Simulate that the quote is signed by organization
         batch_order.freeze_total("100.00")
-
         # Simulate that we have received the purchase order
-        batch_order.quote.has_purchase_order = True
-        batch_order.quote.save()
-
-        # Submit for signature the convention, should transition `to_sign``
-        batch_order.submit_for_signature(batch_order.owner)
+        batch_order.quote.tag_has_purchase_order()
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
 
-        # Simulate that the buyer has signed the convention
-        batch_order.contract.student_signed_on = timezone.now()
-        batch_order.flow.update()
+        # Submit for signature the convention, should transition `signing``
+        batch_order.submit_for_signature(batch_order.owner)
 
-        # Should transition to `signing`
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
-
-        # Should transition to `completed`, because it is paid through quote purchase order
-        batch_order.flow.update()
-
+        batch_order.refresh_from_db()
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
         self.assertTrue(batch_order.orders.exists())
 
-    def test_flow_batch_order_assigned_to_complete_related_with_quote_and_bank_transfer(
+    def test_flow_batch_order_assigned_to_completed_related_with_quote_and_bank_transfer(
         self,
     ):
         """
-        When the batch order's payment method is by bank transfer, it should transition in this
-        order : assigned, to quoted, to sign, signing, pending, completed.
+        When the batch order's payment method is by `bank_transfer`, it should transition in this
+        order : from `assigned`, to `quoted`, to `to_sign`, `signing`, then `pending`, and finally
+        to `completed`.
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_ASSIGNED,
@@ -218,9 +225,8 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
         # Submit the contract to get signed, and make the buyer sign it
         batch_order.submit_for_signature(batch_order.owner)
-        batch_order.contract.student_signed_on = timezone.now()
-        batch_order.flow.update()
 
+        batch_order.refresh_from_db()
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
 
         batch_order.flow.update()
