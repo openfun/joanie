@@ -45,16 +45,26 @@ class DummySignatureBackend(BaseSignatureBackend):
 
     def get_signature_invitation_link(self, recipient_email: str, reference_ids: list):
         """
-        Dummy method that prepares an invitation link. The invitation link contains
-        the contract reference and the targeted event type. Those information can be
-        used by API consumers to manually send the notification event
-        to confirm the signature.
+        Dummy method that prepares an invitation link.
+        When this method is called for a single order, the invitation link includes
+        the contract reference and the targeted event type. This information can be
+        used by API consumers to manually trigger the notification event
+        confirming the signature.
+        When called with a contract from a batch order, it will automatically
+        update the buyer's signature on the contract by triggering the notification
+        event confirming the signature. Otherwise, if it's the organization's turn,
+        the standard behavior is kept — returning the invitation link and letting
+        API consumers manually trigger the notification event confirming the signature.
         """
         reference_id = reference_ids[0]
         contract = Contract.objects.get(signature_backend_reference=reference_id)
         event_target = (
             "finished" if contract.student_signed_on is not None else "signed"
         )
+        # Case for batch order's contract
+        if contract.batch_orders.exists() and event_target == "signed":
+            self.confirm_signature(reference_id)
+
         return (
             f"https://dummysignaturebackend.fr/?reference={reference_id}"
             f"&eventTarget={event_target}"
@@ -66,6 +76,13 @@ class DummySignatureBackend(BaseSignatureBackend):
         """
         if not reference_id.startswith(self.prefix_workflow):
             raise ValidationError(f"Cannot delete workflow {reference_id}.")
+
+        # For case of batch order, we should take away the signature of the buyer because
+        # it's marked when calling `get_signature_invitation_link`
+        contract = models.Contract.objects.get(signature_backend_reference=reference_id)
+        if contract.batch_orders.exists():
+            contract.student_signed_on = None
+            contract.save()
 
         self.reset_contract(reference_id)
 
