@@ -8888,9 +8888,6 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
-                    "definition": {
-                        "$ref": "#/components/schemas/QuoteDefinition"
-                    },
                     "organization_signed_on": {
                         "type": "string",
                         "format": "date-time",
@@ -8915,7 +8912,6 @@
                 },
                 "required": [
                     "batch_order",
-                    "definition",
                     "has_purchase_order",
                     "id",
                     "organization_signed_on"
