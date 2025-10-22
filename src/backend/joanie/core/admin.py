@@ -855,7 +855,7 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
             # Transition to `pending` state if needed because normally
             # we do this through the API when submitting to payment
-            if batch_order.is_signed_by_owner:
+            if batch_order.is_signed_by_buyer:
                 batch_order.flow.update()
 
             validate_success_payment(batch_order)
