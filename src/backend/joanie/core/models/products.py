@@ -2418,7 +2418,7 @@ class BatchOrder(BaseModel):
             self.flow.update()
 
         return backend_signature.get_signature_invitation_link(
-            self.owner.email, [self.contract.signature_backend_reference]
+            self.signatory_email, [self.contract.signature_backend_reference]
         )
 
     def generate_orders(self):
