@@ -97,6 +97,7 @@ class QuoteApiTest(BaseAPITestCase):
                             "state": quote.batch_order.state,
                             "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
                             "contract_submitted": False,
+                            "nb_seats": quote.batch_order.nb_seats,
                         },
                         "has_purchase_order": False,
                         "organization_signed_on": None,
@@ -194,6 +195,7 @@ class QuoteApiTest(BaseAPITestCase):
                     "state": batch_order.quote.batch_order.state,
                     "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
                     "contract_submitted": True,
+                    "nb_seats": batch_order.nb_seats,
                 },
                 "has_purchase_order": True,
                 "organization_signed_on": format_date(
