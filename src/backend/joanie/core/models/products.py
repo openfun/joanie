@@ -2415,7 +2415,6 @@ class BatchOrder(BaseModel):
                 order=self,
             )
             self.contract.tag_submission_for_signature(reference, checksum, context)
-            self.flow.update()
 
         return backend_signature.get_signature_invitation_link(
             self.signatory_email, [self.contract.signature_backend_reference]
@@ -2476,10 +2475,7 @@ class BatchOrder(BaseModel):
     @property
     def contract_submitted(self):
         """Return boolean value whether the batch order contract is submitted to signature"""
-        return (
-            self.contract.student_signed_on is None
-            and self.contract.submitted_for_signature_on is not None
-        )
+        return self.contract.submitted_for_signature_on is not None
 
     @property
     def is_signed_by_buyer(self):
