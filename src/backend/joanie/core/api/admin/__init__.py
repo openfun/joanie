@@ -922,7 +922,6 @@ class BatchOrderViewSet(
             )
 
         batch_order.quote.tag_has_purchase_order()
-        batch_order.flow.update()
 
         return Response(status=HTTPStatus.OK)
 
