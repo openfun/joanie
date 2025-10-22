@@ -98,14 +98,6 @@ class QuoteApiTest(BaseAPITestCase):
                             "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
                             "contract_submitted": False,
                         },
-                        "definition": {
-                            "body": quote.definition.body,
-                            "description": quote.definition.description,
-                            "id": str(quote.definition.id),
-                            "language": quote.definition.language,
-                            "name": quote.definition.name,
-                            "title": quote.definition.title,
-                        },
                         "has_purchase_order": False,
                         "organization_signed_on": None,
                     }
@@ -202,14 +194,6 @@ class QuoteApiTest(BaseAPITestCase):
                     "state": batch_order.quote.batch_order.state,
                     "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
                     "contract_submitted": True,
-                },
-                "definition": {
-                    "body": batch_order.quote.definition.body,
-                    "description": batch_order.quote.definition.description,
-                    "id": str(batch_order.quote.definition.id),
-                    "language": batch_order.quote.definition.language,
-                    "name": batch_order.quote.definition.name,
-                    "title": batch_order.quote.definition.title,
                 },
                 "has_purchase_order": True,
                 "organization_signed_on": format_date(
