@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from unittest import mock
 
+from django.conf import settings
+
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
 from joanie.tests import format_date
@@ -98,6 +100,8 @@ class QuoteApiTest(BaseAPITestCase):
                             "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
                             "contract_submitted": False,
                             "nb_seats": quote.batch_order.nb_seats,
+                            "total": float(quote.batch_order.total),
+                            "total_currency": settings.DEFAULT_CURRENCY,
                         },
                         "has_purchase_order": False,
                         "organization_signed_on": None,
@@ -196,6 +200,8 @@ class QuoteApiTest(BaseAPITestCase):
                     "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
                     "contract_submitted": True,
                     "nb_seats": batch_order.nb_seats,
+                    "total": float(batch_order.total),
+                    "total_currency": settings.DEFAULT_CURRENCY,
                 },
                 "has_purchase_order": True,
                 "organization_signed_on": format_date(
