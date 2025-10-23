@@ -85,7 +85,7 @@ class BatchOrderFlow:
         """
         A batch order state can be set to signing when we validate that the buyer has signed.
         """
-        return self.instance.is_signed_by_owner
+        return self.instance.is_signed_by_buyer
 
     @state.transition(
         source=enums.BATCH_ORDER_STATE_TO_SIGN,

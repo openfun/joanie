@@ -1212,10 +1212,11 @@ class OrganizationViewSet(
         if not total:
             raise ValidationError("Missing total value. It's required.")
 
-        quote = get_object_or_404(
+        batch_order = get_object_or_404(
             models.Quote, id=quote_id, batch_order__organization=organization
-        )
-        quote.batch_order.freeze_total(total)
+        ).batch_order
+
+        batch_order.freeze_total(total)
 
         return Response(status=HTTPStatus.OK)
 

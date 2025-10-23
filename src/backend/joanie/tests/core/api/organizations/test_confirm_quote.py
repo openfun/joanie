@@ -182,7 +182,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
         """
         batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_QUOTED)
         access = factories.UserOrganizationAccessFactory(
-            organization=batch_order.organization, role="owner"
+            organization=batch_order.organization, role=enums.OWNER
         )
         token = self.generate_token_from_user(access.user)
 
@@ -202,25 +202,35 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
         Authenticated user with owner role in his organization should be able to confirm a quote
         if he has access to the organization and adds the total into the payload.
         It should confirm the quote as signed by the organization, it also adds the value
-        on the batch order `total` field.
+        on the batch order `total` field. When the batch order's payment method is purchase order,
+        the state stays `quoted`, otherwise it can transition to `to_sign`.
         """
-        batch_order = factories.BatchOrderFactory(
-            nb_seats=1, state=enums.BATCH_ORDER_STATE_QUOTED
-        )
-        access = factories.UserOrganizationAccessFactory(
-            organization=batch_order.organization, role="owner"
-        )
-        token = self.generate_token_from_user(access.user)
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    nb_seats=1,
+                    state=enums.BATCH_ORDER_STATE_QUOTED,
+                    payment_method=payment_method,
+                )
+                access = factories.UserOrganizationAccessFactory(
+                    organization=batch_order.organization, role=enums.OWNER
+                )
+                token = self.generate_token_from_user(access.user)
 
-        response = self.client.patch(
-            f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-quote/",
-            data={"quote_id": str(batch_order.quote.id), "total": "1234.56"},
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-            content_type="application/json",
-        )
+                response = self.client.patch(
+                    f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-quote/",
+                    data={"quote_id": str(batch_order.quote.id), "total": "1234.56"},
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                    content_type="application/json",
+                )
 
-        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+                batch_order.refresh_from_db()
 
-        batch_order.refresh_from_db()
-        self.assertEqual(batch_order.total, Decimal("1234.56"))
-        self.assertIsNotNone(batch_order.quote.organization_signed_on)
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
+                self.assertEqual(batch_order.total, Decimal("1234.56"))
+                self.assertIsNotNone(batch_order.quote.organization_signed_on)
+
+                if payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
+                else:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)

@@ -489,7 +489,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
         slug_field="id",
         source="relation",
     )
-    owner_name = serializers.SerializerMethodField()
+    owner_name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -501,6 +501,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
             "company_name",
             "relation_id",
             "payment_method",
+            "contract_submitted",
         ]
         read_only_fields = fields
 

@@ -3,6 +3,7 @@
 from http import HTTPStatus
 
 from joanie.core import enums, factories, models
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -102,6 +103,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                             "relation_id": str(quote.batch_order.relation.id),
                             "state": quote.batch_order.state,
                             "payment_method": enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+                            "contract_submitted": False,
                         },
                         "definition": {
                             "body": quote.definition.body,
@@ -258,7 +260,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(user=user, organization=organization)
 
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_QUOTED, organization=organization
+            state=enums.BATCH_ORDER_STATE_TO_SIGN, organization=organization
         )
         quote = batch_order.quote
 
@@ -279,6 +281,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                     "relation_id": str(quote.batch_order.relation.id),
                     "state": quote.batch_order.state,
                     "payment_method": enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+                    "contract_submitted": True,
                 },
                 "definition": {
                     "body": quote.definition.body,
@@ -289,7 +292,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                     "title": quote.definition.title,
                 },
                 "has_purchase_order": False,
-                "organization_signed_on": None,
+                "organization_signed_on": format_date(quote.organization_signed_on),
             },
             response.json(),
         )

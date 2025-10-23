@@ -1774,6 +1774,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         slug_field="id",
         write_only=False,
     )
+    contract = AdminContractSerializer(read_only=True)
     organization = AdminOrganizationLightSerializer(read_only=True)
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
@@ -1821,7 +1822,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "relation",
             "organization",
             "main_invoice_reference",
-            "contract_id",
+            "contract",
             "company_name",
             "identification_number",
             "vat_registration",
@@ -1847,6 +1848,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "billing_address",
             "funding_entity",
             "funding_amount",
+            "contract_submitted",
         ]
         read_only_fields = [
             "id",
@@ -1857,6 +1859,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "offering_rules",
             "vouchers",
             "quote",
+            "contract_submitted",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:

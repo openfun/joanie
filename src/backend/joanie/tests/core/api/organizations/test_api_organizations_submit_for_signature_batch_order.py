@@ -6,10 +6,7 @@ signatory member with the client API
 from http import HTTPStatus
 from unittest import mock
 
-from django.utils import timezone
-
 from joanie.core import enums, factories, models
-from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -189,13 +186,10 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
                     organization=organization, role=enums.OWNER
                 )
                 token = self.generate_token_from_user(access.user)
+                batch_order.freeze_total("100.00")
 
-                batch_order.quote.organization_signed_on = timezone.now()
-                batch_order.quote.save()
-
-                if payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
-                    batch_order.quote.has_purchase_order = True
-                    batch_order.quote.save()
+                if batch_order.uses_purchase_order:
+                    batch_order.quote.tag_has_purchase_order()
 
                 response = self.client.post(
                     f"/api/v1.0/organizations/{organization.id}/submit-for-signature-batch-order/",
@@ -207,24 +201,13 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
                 batch_order.refresh_from_db()
 
                 self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
-                self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
-
-                # Check the method that sends the invitation link to sign is called
-                self.assertTrue(mock_send_mail_invitation_link.assert_called_once)
-                mock_send_mail_invitation_link.reset_mock()
-
-                # Simulate that the buyer signed the contract of the batch order
-                backend = get_signature_backend()
-                backend.confirm_signature(
-                    reference=batch_order.contract.signature_backend_reference
-                )
-
-                batch_order.refresh_from_db()
-
-                self.assertIsNotNone(batch_order.contract.student_signed_on)
-                if payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                if batch_order.uses_purchase_order:
                     self.assertEqual(
                         batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED
                     )
                 else:
                     self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
+                self.assertIsNotNone(batch_order.contract.student_signed_on)
+                # Check the method that sends the invitation link to sign is called
+                self.assertTrue(mock_send_mail_invitation_link.assert_called_once)
+                mock_send_mail_invitation_link.reset_mock()

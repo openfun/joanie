@@ -52,13 +52,18 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(batch_order.id),
                 "address": batch_order.address,
                 "city": batch_order.city,
                 "company_name": batch_order.company_name,
-                "contract_id": str(batch_order.contract.id),
+                "contract": {
+                    "definition_title": batch_order.contract.definition.title,
+                    "id": str(batch_order.contract.id),
+                    "organization_signed_on": None,
+                    "student_signed_on": None,
+                    "submitted_for_signature_on": None,
+                },
                 "country": batch_order.country.code,
                 "currency": settings.DEFAULT_CURRENCY,
                 "identification_number": batch_order.identification_number,
@@ -104,7 +109,9 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "signatory_profession": None,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
+                "contract_submitted": False,
             },
+            response.json(),
         )
 
     def test_api_admin_read_detail_batch_order_with_quote(self):
@@ -124,13 +131,18 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(batch_order.id),
                 "address": batch_order.address,
                 "city": batch_order.city,
                 "company_name": batch_order.company_name,
-                "contract_id": str(batch_order.contract.id),
+                "contract": {
+                    "definition_title": batch_order.contract.definition.title,
+                    "id": str(batch_order.contract.id),
+                    "organization_signed_on": None,
+                    "student_signed_on": None,
+                    "submitted_for_signature_on": None,
+                },
                 "country": batch_order.country.code,
                 "currency": settings.DEFAULT_CURRENCY,
                 "identification_number": batch_order.identification_number,
@@ -178,5 +190,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "signatory_profession": None,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
+                "contract_submitted": False,
             },
+            response.json(),
         )

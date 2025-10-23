@@ -3,7 +3,7 @@
 from decimal import Decimal as D
 from http import HTTPStatus
 
-from joanie.core import enums, factories, models
+from joanie.core import enums, factories
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -190,19 +190,31 @@ class BatchOrdersAdminConfirmQuoteApiTestCase(BaseAPITestCase):
         """
         Authenticated admin user should be able to confirm a quote. Once they have confirmed the
         quote, the organization signed on field should be set and the total of the batch order.
+        When the batch order's payment method `card_payment` or `bank_transfer`, the state
+        transitions to `to_sign`, otherwise with `purchase_order` is stays in `quoted`.
         """
         user = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=user.username, password="password")
-        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_QUOTED)
 
-        response = self.client.patch(
-            f"/api/v1.0/admin/batch-orders/{batch_order.id}/confirm-quote/",
-            content_type="application/json",
-            data={"total": "123.45"},
-        )
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    state=enums.BATCH_ORDER_STATE_QUOTED,
+                    payment_method=payment_method,
+                )
 
-        batch_order = models.BatchOrder.objects.get()
+                response = self.client.patch(
+                    f"/api/v1.0/admin/batch-orders/{batch_order.id}/confirm-quote/",
+                    content_type="application/json",
+                    data={"total": "123.45"},
+                )
 
-        self.assertStatusCodeEqual(response, HTTPStatus.OK)
-        self.assertIsNotNone(batch_order.quote.organization_signed_on)
-        self.assertEqual(batch_order.total, D("123.45"))
+                batch_order.refresh_from_db()
+
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
+                self.assertIsNotNone(batch_order.quote.organization_signed_on)
+                self.assertEqual(batch_order.total, D("123.45"))
+                if payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
+                else:
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)

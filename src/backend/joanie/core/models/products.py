@@ -2295,12 +2295,17 @@ class BatchOrder(BaseModel):
     def freeze_total(self, total):
         """
         Freeze the total price for the batch order. It can only be done when the quote's
-        batch order is signed by the organization.
+        batch order is signed by the organization. When the batch order payment method is
+        `card_payment` or `bank_transfer`, the state should transition to `to_sign`, otherwise
+        with `purchase_order` it should stay in `quoted` state.
         """
         self.quote.tag_organization_signed_on()
         self.total = round(Money(total).as_decimal(), 2)
         self.create_main_invoice()
         self.save(update_fields=["total"])
+
+        if not self.uses_purchase_order:
+            self.flow.update()
 
     @property
     def target_course_runs(self):
@@ -2368,7 +2373,7 @@ class BatchOrder(BaseModel):
             )
             raise ValidationError(message)
 
-        if self.is_signed_by_owner:
+        if self.is_signed_by_buyer:
             message = _("Contract is already signed by the buyer, cannot resubmit.")
             logger.error(
                 message, extra={"context": {"contract": self.contract.to_dict()}}
@@ -2410,10 +2415,9 @@ class BatchOrder(BaseModel):
                 order=self,
             )
             self.contract.tag_submission_for_signature(reference, checksum, context)
-            self.flow.update()
 
         return backend_signature.get_signature_invitation_link(
-            self.owner.email, [self.contract.signature_backend_reference]
+            self.signatory_email, [self.contract.signature_backend_reference]
         )
 
     def generate_orders(self):
@@ -2450,7 +2454,7 @@ class BatchOrder(BaseModel):
         """Return boolean value whether the batch order can be signed"""
         if self.uses_purchase_order:
             return self.quote.has_received_purchase_order
-        return self.quote.organization_signed_on and not self.is_signed_by_owner
+        return self.quote.organization_signed_on and not self.is_signed_by_buyer
 
     @property
     def is_signable(self):
@@ -2469,15 +2473,12 @@ class BatchOrder(BaseModel):
         return self.quote.is_signed_by_organization
 
     @property
-    def is_submitted_to_signature(self):
+    def contract_submitted(self):
         """Return boolean value whether the batch order contract is submitted to signature"""
-        return (
-            self.contract.student_signed_on is None
-            and self.contract.submitted_for_signature_on is not None
-        )
+        return self.contract.submitted_for_signature_on is not None
 
     @property
-    def is_signed_by_owner(self):
+    def is_signed_by_buyer(self):
         """Return boolean value whether the batch order contract is signed by the owner"""
         return (
             self.contract
@@ -2494,7 +2495,7 @@ class BatchOrder(BaseModel):
         if self.uses_purchase_order:
             return False
 
-        return self.is_signed_by_owner is True and self.state in [
+        return self.is_signed_by_buyer is True and self.state in [
             enums.BATCH_ORDER_STATE_SIGNING,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
         ]
