@@ -508,6 +508,15 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
     )
     relation = OfferingBatchOrderSerializer(read_only=True)
     owner_name = serializers.SerializerMethodField(read_only=True)
+    total = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        required=False,
+    )
+    total_currency = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -521,12 +530,20 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
             "payment_method",
             "contract_submitted",
             "nb_seats",
+            "total",
+            "total_currency",
         ]
         read_only_fields = fields
 
     def get_owner_name(self, instance) -> str:
         """Returns owner fullname of batch order"""
         return instance.owner.name
+
+    def get_total_currency(self, *args, **kwargs) -> str:
+        """
+        Return the currency used
+        """
+        return settings.DEFAULT_CURRENCY
 
 
 class QuoteDefinitionSerializer(serializers.ModelSerializer):

@@ -5958,6 +5958,19 @@
                         "readOnly": true,
                         "title": "Number of seats",
                         "description": "The number of seats to reserve"
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true,
+                        "readOnly": true
+                    },
+                    "total_currency": {
+                        "type": "string",
+                        "description": "Return the currency used",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5969,7 +5982,9 @@
                     "owner_name",
                     "payment_method",
                     "relation",
-                    "state"
+                    "state",
+                    "total",
+                    "total_currency"
                 ]
             },
             "BatchOrderRequest": {
