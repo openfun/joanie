@@ -3992,6 +3992,151 @@
                 }
             }
         },
+        "/api/v1.0/organizations/{organization_id}/agreements/": {
+            "get": {
+                "operationId": "organizations_agreements_list",
+                "description": "Nested Organization and Agreements (contracts) related to batch orders inside organization\nroute.\n\nIt allows to list & retrieve organization's agreements (contracts) if the user is\nan administrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/agreements/\n    Return list of all organization's contracts\n\nGET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/\n    Return an organization's contract if one matches the provided id\n\nYou can use query params to filter by signature state when retrieving the list, or by\noffering id.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "offering_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "signature_state",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "half_signed",
+                                "signed",
+                                "unsigned"
+                            ]
+                        },
+                        "description": "* `unsigned` - Unsigned\n* `half_signed` - Partially signed\n* `signed` - Signed"
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAgreementBatchOrderList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/organizations/{organization_id}/agreements/{id}/": {
+            "get": {
+                "operationId": "organizations_agreements_retrieve",
+                "description": "Nested Organization and Agreements (contracts) related to batch orders inside organization\nroute.\n\nIt allows to list & retrieve organization's agreements (contracts) if the user is\nan administrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/agreements/\n    Return list of all organization's contracts\n\nGET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/\n    Return an organization's contract if one matches the provided id\n\nYou can use query params to filter by signature state when retrieving the list, or by\noffering id.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgreementBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/organizations/{organization_id}/contracts/": {
             "get": {
                 "operationId": "organizations_contracts_list",
@@ -5629,6 +5774,30 @@
                     "last_name",
                     "postcode",
                     "title"
+                ]
+            },
+            "AgreementBatchOrder": {
+                "type": "object",
+                "description": "Small serializer for Contracts models related to Batch Orders (agreements)",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "batch_order": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/BatchOrderLight"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "batch_order",
+                    "id"
                 ]
             },
             "BatchOrder": {
@@ -8190,6 +8359,37 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Address"
+                        }
+                    }
+                }
+            },
+            "PaginatedAgreementBatchOrderList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AgreementBatchOrder"
                         }
                     }
                 }

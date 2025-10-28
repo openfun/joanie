@@ -546,6 +546,20 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
         return settings.DEFAULT_CURRENCY
 
 
+class AgreementBatchOrderSerializer(AbilitiesModelSerializer):
+    """Small serializer for Contracts models related to Batch Orders (agreements)"""
+
+    batch_order = BatchOrderLightSerializer(read_only=True)
+
+    class Meta:
+        model = models.Contract
+        fields = [
+            "id",
+            "batch_order",
+        ]
+        read_only_fields = fields
+
+
 class QuoteDefinitionSerializer(serializers.ModelSerializer):
     """Read only serializer for QuoteDefinition model."""
 
