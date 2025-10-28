@@ -5065,6 +5065,14 @@
                         "description": "List of contract ids to sign, if not provided all the available contracts will be signed."
                     },
                     {
+                        "in": "query",
+                        "name": "from_batch_order",
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "description": "Retrieve contracts links for batch orders"
+                    },
+                    {
                         "in": "path",
                         "name": "id",
                         "schema": {
