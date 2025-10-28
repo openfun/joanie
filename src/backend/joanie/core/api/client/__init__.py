@@ -1100,6 +1100,12 @@ class OrganizationViewSet(
                 type=OpenApiTypes.UUID,
                 many=True,
             ),
+            OpenApiParameter(
+                name="from_batch_order",
+                description="Retrieve contracts links for batch orders",
+                required=False,
+                type=OpenApiTypes.BOOL,
+            ),
         ],
     )
     @action(
@@ -1115,12 +1121,14 @@ class OrganizationViewSet(
         organization = self.get_object()
         contract_ids = request.query_params.getlist("contract_ids")
         offering_ids = request.query_params.getlist("offering_ids")
+        from_batch_order = request.query_params.get("from_batch_order", False)
 
         try:
             (signature_link, ids) = organization.contracts_signature_link(
                 request.user,
                 contract_ids=contract_ids,
                 offering_ids=offering_ids,
+                from_batch_order=from_batch_order,
             )
         except NoContractToSignError as error:
             return Response({"detail": f"{error}"}, status=HTTPStatus.BAD_REQUEST)
