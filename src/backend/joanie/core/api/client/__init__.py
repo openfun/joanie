@@ -1644,6 +1644,96 @@ class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return Response(self.serializer_class(request.user, context=context).data)
 
 
+class GenericAgreementViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
+    """
+    Agreement ViewSet that returns information on Contracts related to Batch Orders.
+    Only authenticated users that have access to organization can get information.
+
+    GET /.*/agreements/
+    GET /.*/agreements/<uuid:contract_id>
+    """
+
+    lookup_field = "pk"
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.AgreementBatchOrderSerializer
+    filterset_class = filters.AgreementFilter
+    ordering = ["-organization_signed_on", "-created_on"]
+    queryset = (
+        models.Contract.objects.exclude(
+            batch_order__state=enums.BATCH_ORDER_STATE_CANCELED
+        )
+        .select_related(
+            "definition",
+            "organization_signatory",
+        )
+        .prefetch_related(
+            "batch_order__organization",
+            "batch_order__offering__course",
+            "batch_order__owner",
+            "batch_order__offering__product",
+        )
+    )
+
+
+class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementViewSet):
+    """
+    Nested Organization and Agreements (contracts) related to batch orders inside organization
+    route.
+
+    It allows to list & retrieve organization's agreements (contracts) if the user is
+    an administrator or an owner of the organization.
+
+    GET /api/organizations/<organization_id|organization_code>/agreements/
+        Return list of all organization's contracts
+
+    GET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/
+        Return an organization's contract if one matches the provided id
+
+    You can use query params to filter by signature state when retrieving the list, or by
+    offering id.
+    """
+
+    lookup_fields = ["batch_order__organization__pk", "pk"]
+    lookup_url_kwargs = ["organization_id", "pk"]
+
+    def _lookup_by_organization_code_or_pk(self):
+        """
+        Override `lookup_fields` to lookup by organization code or pk according to
+        the `organization_id` kwarg is a valid UUID or not.
+        """
+        try:
+            uuid.UUID(self.kwargs["organization_id"])
+        except ValueError:
+            self.lookup_fields[0] = "batch_order__organization__code__iexact"
+
+    def initial(self, request, *args, **kwargs):
+        """
+        Runs anything that needs to occur prior to calling method handler.
+        """
+        super().initial(request, *args, **kwargs)
+        self._lookup_by_organization_code_or_pk()
+
+    def get_queryset(self):
+        """
+        Customize the queryset to get only user's agreements.
+        """
+        queryset = super().get_queryset()
+
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        additional_filter = {
+            "batch_order__organization__accesses__user__username": username,
+        }
+
+        return queryset.filter(**additional_filter)
+
+
 class GenericContractViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
