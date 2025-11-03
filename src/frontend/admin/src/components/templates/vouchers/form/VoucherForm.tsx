@@ -26,7 +26,7 @@ const messages = defineMessages({
   },
   codeLabel: {
     id: "components.templates.vouchers.form.codeLabel",
-    defaultMessage: "Voucher code",
+    defaultMessage: "Voucher code (leave empty to auto-generate one)",
     description: "Label for the code field",
   },
   discountIdLabel: {
@@ -94,7 +94,7 @@ export function VoucherForm({ voucher, fromVoucher, ...props }: Props) {
   const base = voucher ?? fromVoucher;
 
   const RegisterSchema = Yup.object().shape({
-    code: Yup.string().required(),
+    code: Yup.string(),
     discount_id: Yup.string().defined().nullable(),
     is_active: Yup.boolean().required(),
     multiple_use: Yup.boolean().required(),
@@ -168,7 +168,6 @@ export function VoucherForm({ voucher, fromVoucher, ...props }: Props) {
               <RHFTextField
                 name="code"
                 label={intl.formatMessage(messages.codeLabel)}
-                required
               />
             </Grid>
 
