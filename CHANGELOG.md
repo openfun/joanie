@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [3.1.0] - 2025-11-03
+
 ### Fixed
 
 - Orders with a voucher discount of 100% should always
@@ -737,7 +739,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v3.0.4...main
+[unreleased]: https://github.com/openfun/joanie/compare/v3.1.0...main
+[3.1.0]: https://github.com/openfun/joanie/compare/v3.0.4...v3.1.0
 [3.0.4]: https://github.com/openfun/joanie/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/openfun/joanie/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/openfun/joanie/compare/v3.0.1...v3.0.2
