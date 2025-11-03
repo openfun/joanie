@@ -869,14 +869,14 @@ class BatchOrderViewSet(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
-        batch_order.flow.update()
-
         payment_backend = get_payment_backend()
         payment_infos = payment_backend.create_payment(
             order=batch_order,
             billing_address=batch_order.create_billing_address(),
             installment=None,
         )
+
+        batch_order.flow.process_payment()
 
         return Response(payment_infos, status=HTTPStatus.OK)
 

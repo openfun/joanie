@@ -83,9 +83,10 @@ class BatchOrderFlow:
 
     def _can_be_state_signing(self):
         """
-        A batch order state can be set to signing when we validate that the buyer has signed.
+        A batch order state can be set to signing when we have submitted to signature
+        the contract.
         """
-        return self.instance.is_signed_by_buyer
+        return self.instance.contract_submitted
 
     @state.transition(
         source=enums.BATCH_ORDER_STATE_TO_SIGN,
@@ -109,7 +110,6 @@ class BatchOrderFlow:
     @state.transition(
         source=[
             enums.BATCH_ORDER_STATE_SIGNING,
-            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
         ],
         target=enums.BATCH_ORDER_STATE_PENDING,
         conditions=[_can_be_state_pending],
@@ -119,8 +119,29 @@ class BatchOrderFlow:
         Mark batch order instance as "pending" for payment.
         """
 
+    def _can_be_state_process_payment(self):
+        """Verify if a batch order can transition to `process_payment`"""
+        return (
+            self.instance.can_be_submitted_to_payment
+            or self.instance.is_ready_for_payment
+        )
+
     @state.transition(
-        source=enums.BATCH_ORDER_STATE_PENDING,
+        source=[
+            enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+        ],
+        target=enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
+        conditions=[_can_be_state_process_payment],
+    )
+    def process_payment(self):
+        """Mark batch order instance as "process payment" """
+
+    @state.transition(
+        source=[
+            enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
+        ],
         target=enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
     )
     def failed_payment(self):
@@ -147,6 +168,7 @@ class BatchOrderFlow:
         source=[
             enums.BATCH_ORDER_STATE_SIGNING,
             enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
         ],
         target=enums.BATCH_ORDER_STATE_COMPLETED,
         conditions=[_can_be_state_completed],

@@ -201,7 +201,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                     "INFO",
                     f"Document signature refused for the contract '{contract.id}'",
                 ),
-                ("INFO", f"Student signed the contract '{contract.id}'"),
+                ("INFO", f"Buyer signed the contract '{contract.id}'"),
             ],
         )
 
