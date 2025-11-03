@@ -413,7 +413,7 @@ class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
         self.assertIsNotNone(contract.submitted_for_signature_on)
         self.assertLogsEquals(
             logger.records,
-            [("INFO", f"Student signed the contract '{contract.id}'")],
+            [("INFO", f"Buyer signed the contract '{contract.id}'")],
         )
 
     @override_settings(
@@ -657,5 +657,5 @@ class LexPersonaBackendHandleNotificationTestCase(LoggingTestCase):
         self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
         self.assertLogsEquals(
             logger.records,
-            [("INFO", f"Student signed the contract '{batch_order.contract.id}'")],
+            [("INFO", f"Buyer signed the contract '{batch_order.contract.id}'")],
         )
