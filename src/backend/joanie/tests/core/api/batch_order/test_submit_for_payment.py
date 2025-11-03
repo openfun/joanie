@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from unittest import mock
 
+from django.utils import timezone
+
 from joanie.core import enums, factories
 from joanie.payment.backends.dummy import DummyPaymentBackend
 from joanie.tests.base import BaseAPITestCase
@@ -98,7 +100,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         batch_order = factories.BatchOrderFactory(
-            owner=user, state=enums.BATCH_ORDER_STATE_TO_SIGN
+            owner=user, state=enums.BATCH_ORDER_STATE_QUOTED
         )
 
         response = self.client.post(
@@ -113,7 +115,7 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             {"detail": ("This batch order cannot be submitted to payment")},
         )
 
-    def test_api_batch_order_submit_for_payment_if_state_not_in_signing_of_failed_payment(
+    def test_api_batch_order_submit_for_payment_if_state_other_then_signing_or_failed_payment(
         self,
     ):
         """
@@ -126,10 +128,22 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
         for state in [
             enums.BATCH_ORDER_STATE_DRAFT,
             enums.BATCH_ORDER_STATE_ASSIGNED,
+            enums.BATCH_ORDER_STATE_TO_SIGN,
+            enums.BATCH_ORDER_STATE_QUOTED,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
             with self.subTest(state=state):
-                batch_order = factories.BatchOrderFactory(owner=user, state=state)
+                if state == enums.BATCH_ORDER_STATE_TO_SIGN:
+                    batch_order = factories.BatchOrderFactory(
+                        owner=user, state=enums.BATCH_ORDER_STATE_QUOTED
+                    )
+                    batch_order.freeze_total("100.00")
+                    batch_order.submitted_for_signature_on = timezone.now()
+                    batch_order.contract.student_signed_on = timezone.now()
+                    batch_order.flow.update()
+                else:
+                    batch_order = factories.BatchOrderFactory(owner=user, state=state)
 
                 response = self.client.post(
                     f"/api/v1.0/batch-orders/{batch_order.id}/submit-for-payment/",
@@ -168,14 +182,14 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
     def test_api_batch_order_submit_for_payment(self, mock_create_payment):
         """
         Authenticated user should be able to submit for payment his batch order
-        when the state is in signing or failed payment and the payment method is by credit card.
+        when the state is in pending or failed payment and the payment method is by credit card.
         He should get in return the payment informations.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         for state in [
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
-            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
         ]:
             with self.subTest(state=state):
                 batch_order = factories.BatchOrderFactory(owner=user, state=state)
@@ -195,7 +209,9 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
                 batch_order.refresh_from_db()
 
                 self.assertStatusCodeEqual(response, HTTPStatus.OK)
-                self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_PENDING)
+                self.assertEqual(
+                    batch_order.state, enums.BATCH_ORDER_STATE_PROCESS_PAYMENT
+                )
                 self.assertEqual(
                     response.json(),
                     {
