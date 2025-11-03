@@ -121,6 +121,7 @@ class VouchersAdminApiUpdateTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         voucher = factories.VoucherFactory()
+        old_code = voucher.code
 
         data = {"code": ""}
 
@@ -130,9 +131,12 @@ class VouchersAdminApiUpdateTestCase(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
-        content = response.json()
-        self.assertIn("code", content)
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+
+        # Check that the voucher is updated in the database
+        voucher.refresh_from_db()
+        self.assertNotEqual("", voucher.code)
+        self.assertEqual(old_code, voucher.code)
 
     def test_api_admin_vouchers_update_with_duplicate_code(self):
         """Admin users should not be able to update a voucher with a duplicate code."""

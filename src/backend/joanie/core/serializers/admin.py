@@ -2093,6 +2093,12 @@ class AdminVoucherSerializer(serializers.ModelSerializer):
             "updated_on",
         ]
 
+    def to_internal_value(self, data):
+        """Remove code from data if empty."""
+        if not data.get("code"):
+            data.pop("code", None)
+        return super().to_internal_value(data)
+
     def to_representation(self, instance):
         serializer = AdminVoucherDetailSerializer(instance)
         return serializer.data
