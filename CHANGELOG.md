@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Generate unique code in voucher create page
+
 ## [3.1.0] - 2025-11-03
 
 ### Fixed

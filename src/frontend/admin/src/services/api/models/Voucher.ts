@@ -13,7 +13,7 @@ export type Voucher = {
 
 export type DTOVoucher = {
   id?: Voucher["id"];
-  code?: Voucher["code"];
+  code?: Voucher["code"] | null;
   discount_id?: Discount["id"] | null;
   multiple_use: Voucher["multiple_use"];
   multiple_users: Voucher["multiple_users"];
