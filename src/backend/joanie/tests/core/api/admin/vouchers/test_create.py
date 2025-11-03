@@ -114,3 +114,84 @@ class VouchersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         content = response.json()
         self.assertIn("code", content)
+
+    def test_api_admin_vouchers_create_with_empty_code(self):
+        """Admin users should be able to create a voucher with an empty code."""
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        discount = factories.DiscountFactory()
+
+        data = {
+            "code": "",
+            "discount_id": str(discount.id),
+        }
+
+        response = self.client.post("/api/v1.0/admin/vouchers/", data)
+
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+
+        self.assertEqual(models.Voucher.objects.count(), 1)
+        voucher = models.Voucher.objects.first()
+        self.assertIsNotNone(voucher.code)
+        self.assertEqual(voucher.discount, discount)
+        self.assertEqual(voucher.multiple_use, False)
+        self.assertEqual(voucher.multiple_users, False)
+        self.assertEqual(
+            {
+                "id": str(voucher.id),
+                "code": voucher.code,
+                "discount": {
+                    "id": str(discount.id),
+                    "is_used": discount.usage_count,
+                    "amount": discount.amount,
+                    "rate": discount.rate,
+                },
+                "is_active": True,
+                "multiple_use": False,
+                "multiple_users": False,
+                "created_on": format_date(voucher.created_on),
+                "updated_on": format_date(voucher.updated_on),
+                "orders_count": voucher.orders.count(),
+            },
+            response.json(),
+        )
+
+    def test_api_admin_vouchers_create_without_code(self):
+        """Admin users should be able to create a voucher without code."""
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+        discount = factories.DiscountFactory()
+
+        data = {
+            "discount_id": str(discount.id),
+        }
+
+        response = self.client.post("/api/v1.0/admin/vouchers/", data)
+
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+
+        self.assertEqual(models.Voucher.objects.count(), 1)
+        voucher = models.Voucher.objects.first()
+        self.assertIsNotNone(voucher.code)
+        self.assertEqual(voucher.discount, discount)
+        self.assertEqual(voucher.multiple_use, False)
+        self.assertEqual(voucher.multiple_users, False)
+        self.assertEqual(
+            {
+                "id": str(voucher.id),
+                "code": voucher.code,
+                "discount": {
+                    "id": str(discount.id),
+                    "is_used": discount.usage_count,
+                    "amount": discount.amount,
+                    "rate": discount.rate,
+                },
+                "is_active": True,
+                "multiple_use": False,
+                "multiple_users": False,
+                "created_on": format_date(voucher.created_on),
+                "updated_on": format_date(voucher.updated_on),
+                "orders_count": voucher.orders.count(),
+            },
+            response.json(),
+        )
