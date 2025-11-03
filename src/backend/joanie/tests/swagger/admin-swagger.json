@@ -6518,7 +6518,8 @@
                         "readOnly": true
                     },
                     "contract_submitted": {
-                        "type": "string",
+                        "type": "boolean",
+                        "description": "Return boolean value whether the batch order contract is submitted to signature",
                         "readOnly": true
                     }
                 },

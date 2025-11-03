@@ -5913,7 +5913,7 @@
                     "state": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/State062Enum"
+                                "$ref": "#/components/schemas/State7d2Enum"
                             }
                         ],
                         "readOnly": true
@@ -6097,7 +6097,7 @@
                     "state": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/State062Enum"
+                                "$ref": "#/components/schemas/State7d2Enum"
                             }
                         ],
                         "readOnly": true
@@ -6124,7 +6124,8 @@
                         "readOnly": true
                     },
                     "contract_submitted": {
-                        "type": "string",
+                        "type": "boolean",
+                        "description": "Return boolean value whether the batch order contract is submitted to signature",
                         "readOnly": true
                     },
                     "nb_seats": {
@@ -9224,7 +9225,7 @@
                     "organization_signed_on"
                 ]
             },
-            "State062Enum": {
+            "State7d2Enum": {
                 "enum": [
                     "draft",
                     "assigned",
@@ -9232,12 +9233,13 @@
                     "to_sign",
                     "signing",
                     "pending",
+                    "process_payment",
                     "failed_payment",
                     "canceled",
                     "completed"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "User": {
                 "type": "object",

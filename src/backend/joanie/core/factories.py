@@ -1251,7 +1251,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         return offerings.first().organizations.order_by("?").first()
 
     @factory.post_generation
-    def state(self, create, extracted, **kwargs):
+    def state(self, create, extracted, **kwargs):  # pylint: disable=too-many-branches
         """
         Handle state transitions after creation and create related objects
         depending the state
@@ -1282,6 +1282,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             enums.BATCH_ORDER_STATE_TO_SIGN,
             enums.BATCH_ORDER_STATE_SIGNING,
             enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
@@ -1310,12 +1311,12 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         if extracted in [
             enums.BATCH_ORDER_STATE_SIGNING,
             enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
             self.contract.student_signed_on = django_timezone.now()
             self.contract.save()
-            self.flow.update()
 
             if self.uses_purchase_order:
                 # Transition to `completed` once contract is signed with purchase order method
@@ -1324,14 +1325,17 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
         if extracted in [
             enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
-            self.flow.pending()
             self.flow.update()
 
         if extracted == enums.BATCH_ORDER_STATE_FAILED_PAYMENT:
             self.flow.failed_payment()
+
+        if extracted == enums.BATCH_ORDER_STATE_PROCESS_PAYMENT:
+            self.flow.process_payment()
 
         if extracted == enums.BATCH_ORDER_STATE_COMPLETED:
             # ruff : noqa : PLC0415
@@ -1340,6 +1344,9 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 InvoiceFactory,
                 TransactionFactory,
             )
+
+            if self.uses_card_payment and self.is_ready_for_payment:
+                self.flow.process_payment()
 
             invoice = InvoiceFactory(
                 batch_order=self,

@@ -201,13 +201,13 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
                 batch_order.refresh_from_db()
 
                 self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
+                self.assertIsNotNone(batch_order.contract.student_signed_on)
                 if batch_order.uses_purchase_order:
                     self.assertEqual(
                         batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED
                     )
                 else:
-                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
-                self.assertIsNotNone(batch_order.contract.student_signed_on)
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_PENDING)
                 # Check the method that sends the invitation link to sign is called
                 self.assertTrue(mock_send_mail_invitation_link.assert_called_once)
                 mock_send_mail_invitation_link.reset_mock()

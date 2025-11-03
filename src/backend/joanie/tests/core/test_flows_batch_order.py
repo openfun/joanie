@@ -83,16 +83,16 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
     def test_flow_batch_order_signing(self):
         """
         When the contract has been signed by the buyer, the state of the batch order
-        should transition to `signing` when the payment method is `bank_transfer` or `card_payment`.
-        Otherwise, it transitions to `completed` with `purchase_order`.
+        should transition to `pending` when the payment method is `bank_transfer`
+        or `card_payment`. Otherwise, it transitions to `completed` with `purchase_order`.
         """
         for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
             with self.subTest(payment_method=payment_method):
                 batch_order = factories.BatchOrderFactory(
                     state=enums.BATCH_ORDER_STATE_TO_SIGN, payment_method=payment_method
                 )
+                # The dummy backend signature marks the signature of the student
                 batch_order.submit_for_signature(user=batch_order.owner)
-                # batch_order.contract.student_signed_on = timezone.now()
 
                 batch_order.flow.update()
 
@@ -103,7 +103,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
                         batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED
                     )
                 else:
-                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
+                    self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_PENDING)
 
                 self.assertIsNotNone(batch_order.contract.student_signed_on)
                 self.assertIsNotNone(batch_order.contract.submitted_for_signature_on)
@@ -129,18 +129,18 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_FAILED_PAYMENT)
 
-    def test_flow_batch_order_failed_payment_to_pending(self):
+    def test_flow_batch_order_failed_payment_to_process_payment(self):
         """
-        When the payment has failed for the batch order, it can go back into pending state
+        When the payment has failed for the batch order, it can go to `process_payment` state
         when the buyer attemps to fix the payment.
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_FAILED_PAYMENT
         )
 
-        batch_order.flow.update()
+        batch_order.flow.process_payment()
 
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_PENDING)
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_PROCESS_PAYMENT)
 
     def test_flow_batch_order_completed(self):
         """
@@ -172,6 +172,26 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
                 batch_order.flow.cancel()
 
                 self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)
+
+    def test_flow_batch_order_process_payment(self):
+        """
+        We can mark a batch order into `process_payment` when it uses the `card_payment` payment
+        method and is either `failed_payment`, `signing`, `pending` state.
+        """
+        for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                batch_order = factories.BatchOrderFactory(state=state)
+                if state in [
+                    enums.BATCH_ORDER_STATE_PENDING,
+                    enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+                ]:
+                    batch_order.flow.process_payment()
+                    self.assertEqual(
+                        batch_order.state, enums.BATCH_ORDER_STATE_PROCESS_PAYMENT
+                    )
+                else:
+                    with self.assertRaises(fsm.TransitionNotAllowed):
+                        batch_order.flow.process_payment()
 
     def test_flow_batch_order_assigned_to_completed_related_with_quote_and_purchase_order(
         self,
@@ -205,7 +225,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
     ):
         """
         When the batch order's payment method is by `bank_transfer`, it should transition in this
-        order : from `assigned`, to `quoted`, to `to_sign`, `signing`, then `pending`, and finally
+        order : from `assigned`, to `quoted`, to `to_sign`, `signing` to `pending`, and finally
         to `completed`.
         """
         batch_order = factories.BatchOrderFactory(
@@ -223,15 +243,14 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
 
         # It should transition to `to_sign` state
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
-        # Submit the contract to get signed, and make the buyer sign it
+        # Submit the contract to get signed, and make the buyer sign it.
+        # When we submit for signature with the dummy backend signature, it triggers
+        # the signature of the student and trigger the notification event.
+        # The state becomes directly to `pending`.
         batch_order.submit_for_signature(batch_order.owner)
 
         batch_order.refresh_from_db()
-        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
 
-        batch_order.flow.update()
-
-        # Should transition to pending
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_PENDING)
 
         # Simulate that the bank transfer has been confirmed by the organization
