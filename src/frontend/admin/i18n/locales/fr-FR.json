@@ -476,8 +476,8 @@
     "message": "Ajouter une règle d'offre"
   },
   "components.templates.courses.form.offering.row.addOfferingRuleModalFormTitle": {
-    "description": "Title for the edit offering rule modal",
-    "message": "Modifier une règle d'offre"
+    "description": "Title for the add offering rule modal",
+    "message": "Ajouter une règle d'offre"
   },
   "components.templates.courses.form.offering.row.alreadyCertificateGenerationInProgress": {
     "description": "Text when hovering over the action to generate certificates, but a generation is already in progress",
@@ -490,6 +490,10 @@
   "components.templates.courses.form.offering.row.deleteOfferingRuleModalContent": {
     "description": "Content for the delete offering rule modal",
     "message": "Êtes-vous sûr de vouloir supprimer cette règle d'offre ?"
+  },
+  "components.templates.courses.form.offering.row.editOfferingRuleModalFormTitle": {
+    "description": "Title for the edit offering rule modal",
+    "message": "Modifier une règle d'offre"
   },
   "components.templates.courses.form.offering.row.generateCertificate": {
     "description": "Label for the generate certificate action",
@@ -517,11 +521,11 @@
   },
   "components.templates.courses.form.productRelation.row.discountLabel": {
     "description": "Discount label",
-    "message": "Réduction :"
+    "message": "Réduction : "
   },
   "components.templates.courses.form.productRelation.row.endLabel": {
     "description": "End date label",
-    "message": "Au :"
+    "message": "Jusqu'au : "
   },
   "components.templates.courses.form.productRelation.row.mainTitleOfferingRule": {
     "description": "Title for the offering rule row",
@@ -537,7 +541,7 @@
   },
   "components.templates.courses.form.productRelation.row.startLabel": {
     "description": "Start date label",
-    "message": "Du :"
+    "message": "Du : "
   },
   "components.templates.courses.form.productRelation.row.subTitleOfferingRule": {
     "description": "Sub title for the offering rule row",
@@ -765,7 +769,7 @@
   },
   "components.templates.orders.filters.OrderFilters.searchPlaceholder": {
     "description": "Text for the search input placeholder",
-    "message": "Rechercher par titre du produit, propriétaire (nom complet ou e-mail), établissement (code ou titre), code du cours"
+    "message": "Rechercher par titre du produit, propriétaire (nom complet ou e-mail), établissement (code ou titre), code du cours, coupon"
   },
   "components.templates.orders.list.createdOn": {
     "description": "Label for the created on header inside the table",
@@ -802,6 +806,10 @@
   "components.templates.orders.list.updatedOn": {
     "description": "Label for the updated on header inside the table",
     "message": "Mise à jour le"
+  },
+  "components.templates.orders.list.voucher": {
+    "description": "Label for the voucher header inside the table",
+    "message": "Coupon"
   },
   "components.templates.orders.view.billingAddress": {
     "description": "Billing address field",
@@ -1455,6 +1463,78 @@
     "description": "Title for the credential product type",
     "message": "Micro-certification"
   },
+  "components.templates.vouchers.filters.VoucherFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Rechercher par code ou réduction"
+  },
+  "components.templates.vouchers.form.codeLabel": {
+    "description": "Label for the code field",
+    "message": "Code promo (laisser vide pour en générer un)"
+  },
+  "components.templates.vouchers.form.discountIdHelp": {
+    "description": "Help text for the discount_id field",
+    "message": "Identifiant de la réduction associée. Laisser vide s’il n’y en a pas."
+  },
+  "components.templates.vouchers.form.discountIdLabel": {
+    "description": "Label for the discount field",
+    "message": "Réduction"
+  },
+  "components.templates.vouchers.form.generalSubtitle": {
+    "description": "Subtitle of the general section of the voucher form",
+    "message": "Informations principales"
+  },
+  "components.templates.vouchers.form.isActiveHelp": {
+    "description": "Help text for the is_active field",
+    "message": "Si activé, le coupon peut être utilisé."
+  },
+  "components.templates.vouchers.form.isActiveLabel": {
+    "description": "Label for the is_active field",
+    "message": "Est actif"
+  },
+  "components.templates.vouchers.form.multipleUseHelp": {
+    "description": "Help text for the multiple_use field",
+    "message": "Si activé, le même utilisateur peut utiliser ce coupon plusieurs fois."
+  },
+  "components.templates.vouchers.form.multipleUseLabel": {
+    "description": "Label for the multiple_use field",
+    "message": "Utilisable plusieurs fois par l'utilisateur"
+  },
+  "components.templates.vouchers.form.multipleUsersHelp": {
+    "description": "Help text for the multiple_users field",
+    "message": "Si activé, plusieurs utilisateurs distincts peuvent utiliser ce coupon."
+  },
+  "components.templates.vouchers.form.multipleUsersLabel": {
+    "description": "Label for the multiple_users field",
+    "message": "Utilisable par plusieurs utilisateurs"
+  },
+  "components.templates.vouchers.list.codeHeader": {
+    "description": "Label for the code header inside the table",
+    "message": "Code"
+  },
+  "components.templates.vouchers.list.copyCode": {
+    "description": "Label for the copy code button inside the table",
+    "message": "Copier le code"
+  },
+  "components.templates.vouchers.list.discountHeader": {
+    "description": "Label for the discount header inside the table",
+    "message": "Réduction"
+  },
+  "components.templates.vouchers.list.isActiveHeader": {
+    "description": "Label for the is active header inside the table",
+    "message": "Est actif"
+  },
+  "components.templates.vouchers.list.multipleUseHeader": {
+    "description": "Label for the multiple use header inside the table",
+    "message": "Utilisation multiple"
+  },
+  "components.templates.vouchers.list.multipleUsersHeader": {
+    "description": "Label for the multiple users header inside the table",
+    "message": "Plusieurs utilisateurs"
+  },
+  "components.templates.vouchers.list.ordersCountHeader": {
+    "description": "Label for the orders count header inside the table",
+    "message": "Nombre de commandes"
+  },
   "dashboard.nav.DashboardNavThemeMenu.buttonAriaLabel": {
     "description": "Aria label of button to open color scheme menu",
     "message": "Ouvrir le menu des modes d'apparence"
@@ -1751,6 +1831,26 @@
     "description": "Error message shown to the user when user update request fails.",
     "message": "Une erreur s'est produite lors de la mise à jour de l'utilisateur. Veuillez réessayer plus tard."
   },
+  "hooks.useVouchers.errorCreate": {
+    "description": "Error message shown to the user when voucher creation request fails.",
+    "message": "Une erreur s'est produite lors de la création du coupon. Veuillez réessayer plus tard."
+  },
+  "hooks.useVouchers.errorDelete": {
+    "description": "Error message shown to the user when voucher deletion request fails.",
+    "message": "Une erreur s'est produite lors de la suppression du coupon. Veuillez réessayer plus tard."
+  },
+  "hooks.useVouchers.errorGet": {
+    "description": "Error message shown to the user when vouchers fetch request fails.",
+    "message": "Une erreur s'est produite lors du chargement des coupons. Veuillez réessayer plus tard."
+  },
+  "hooks.useVouchers.errorNotFound": {
+    "description": "Error message shown to the user when no voucher matches.",
+    "message": "Coupon introuvable"
+  },
+  "hooks.useVouchers.errorUpdate": {
+    "description": "Error message shown to the user when voucher update request fails.",
+    "message": "Une erreur s'est produite lors de la mise à jour du coupon. Veuillez réessayer plus tard."
+  },
   "layouts.dashboard.nav.account.administrator": {
     "description": "administrator label",
     "message": "Administrateur"
@@ -1806,6 +1906,10 @@
   "layouts.dashboard.nav.config.productNavTitle": {
     "description": "Title for the Product nav item",
     "message": "Produits"
+  },
+  "layouts.dashboard.nav.config.voucherNavTitle": {
+    "description": "Title for the Voucher nav item",
+    "message": "Coupons"
   },
   "layouts.dashboard.nav.header.DashboardNavHeader": {
     "description": "aria-label for the go back home link",
@@ -2082,6 +2186,34 @@
   "pages.admin.products.list.pageTitle": {
     "description": "Label for the product list page title",
     "message": "Produits"
+  },
+  "pages.admin.vouchers.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the vouchers create page",
+    "message": "Créer"
+  },
+  "pages.admin.vouchers.breadcrumbsTranslations.editBreadcrumb": {
+    "description": "Breadcrumb label for the vouchers edit page",
+    "message": "Modifier"
+  },
+  "pages.admin.vouchers.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the vouchers list page",
+    "message": "Liste"
+  },
+  "pages.admin.vouchers.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the vouchers root page",
+    "message": "Coupons"
+  },
+  "pages.admin.vouchers.create.pageTitle": {
+    "description": "Label for the create voucher page title",
+    "message": "Ajouter un coupon"
+  },
+  "pages.admin.vouchers.edit.pageTitle": {
+    "description": "Label for the edit voucher page title",
+    "message": "Modifier le coupon : {voucherName}"
+  },
+  "pages.admin.vouchers.list.pageTitle": {
+    "description": "Label for the voucher list page title",
+    "message": "Coupons"
   },
   "translations.common.commonTranslations.add": {
     "description": "Common add label",
