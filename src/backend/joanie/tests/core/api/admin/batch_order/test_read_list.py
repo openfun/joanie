@@ -77,6 +77,7 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
                     "address": batch_order.address,
                     "postcode": batch_order.postcode,
                     "country": batch_order.billing_address["country"],
+                    "city": batch_order.billing_address["city"],
                     "contact_email": "janedoe@example.org",
                     "contact_name": "Jane Doe",
                 },
