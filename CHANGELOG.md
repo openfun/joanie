@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Rename contract_definition to contract_definition_order in the back office
+
 ## [3.1.1] - 2025-11-03
 
 ### Changed

@@ -187,7 +187,7 @@ test.describe("Product form", () => {
     await expect(page.getByText("Test product")).toBeVisible();
   });
 
-  test("Create a new contract definition with the search input", async ({
+  test("Create a new contract definition order with the search input", async ({
     page,
   }) => {
     await mockPlaywrightCrud<ContractDefinition, DTOContractDefinition>({
@@ -210,7 +210,7 @@ test.describe("Product form", () => {
     await page.getByRole("button", { name: "Add" }).click();
     await page.getByText("Microcredential", { exact: true }).click();
     await page
-      .getByTestId("contract_definition-search-add-button")
+      .getByTestId("contract_definition_order-search-add-button")
       .nth(0)
       .click();
     await expect(
