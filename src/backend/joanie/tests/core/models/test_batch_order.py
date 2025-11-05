@@ -15,6 +15,7 @@ from joanie.core import enums, factories, models
 from joanie.core.utils import contract_definition
 from joanie.core.utils.batch_order import validate_success_payment
 from joanie.core.utils.billing_address import CompanyBillingAddress
+from joanie.payment.models import Invoice
 from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import LoggingTestCase
 
@@ -22,6 +23,26 @@ from joanie.tests.base import LoggingTestCase
 # pylint: disable=too-many-public-methods
 class BatchOrderModelsTestCase(LoggingTestCase):
     """Test suite for batch order model."""
+
+    def test_models_batch_order_init_flow(self):
+        """
+        When calling init_flow method of batch order the following objects should be
+        generated : the contract (agreement) without a context, the quote with its
+        context and the state should end in `quoted`
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_DRAFT,
+        )
+        organization = batch_order.offering.organizations.first()
+        batch_order.organization = organization
+
+        batch_order.init_flow()
+
+        batch_order.refresh_from_db()
+
+        self.assertIsNotNone(batch_order.contract)
+        self.assertIsNotNone(batch_order.quote.context)
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
 
     def test_models_batch_order_freeze_total(self):
         """
@@ -57,6 +78,25 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                     self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
                 else:
                     self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
+
+    def test_models_batch_order_create_main_invoice(self):
+        """
+        The batch order's main invoice should only be created once we freeze the total of the
+        batch order
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+        )
+
+        self.assertIsNone(batch_order.main_invoice)
+
+        batch_order.freeze_total("100.00")
+
+        self.assertTrue(
+            Invoice.objects.filter(
+                batch_order_id=batch_order.id, parent__isnull=True
+            ).exists()
+        )
 
     @override_settings(
         JOANIE_SIGNATURE_BACKEND="joanie.signature.backends.dummy.DummySignatureBackend",
@@ -490,22 +530,6 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                 last_name="",
             ),
         )
-
-    def test_models_batch_order_create_main_invoice_should_be_none(self):
-        """
-        When we initialize the flow of a batch order, it should not create a main invoice,
-        since we don't have yet the total price. So when we call the property `main_invoice`,
-        it should return None.
-        """
-        batch_order = factories.BatchOrderFactory(
-            nb_seats=2,
-            offering__product__price=100,
-            state=enums.BATCH_ORDER_STATE_DRAFT,
-        )
-
-        batch_order.init_flow()
-
-        self.assertIsNone(batch_order.main_invoice)
 
     def test_models_batch_order_property_vouchers(self):
         """
