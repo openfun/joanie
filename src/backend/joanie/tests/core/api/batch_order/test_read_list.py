@@ -112,6 +112,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                             "address": bo.address,
                             "postcode": bo.postcode,
                             "country": bo.billing_address["country"],
+                            "city": bo.billing_address["city"],
                             "contact_name": "Jane Doe",
                             "contact_email": "janedoe@example.org",
                         },

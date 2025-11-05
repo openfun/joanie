@@ -31,6 +31,7 @@ class BatchOrdersAdminApiCreateTestCase(BaseAPITestCase):
                 "address": "Street of Hogwarts",
                 "postcode": "75000",
                 "country": "FR",
+                "city": "Paris",
                 "contact_name": "Jane Doe",
                 "contact_email": "janedoe@example.org",
             },

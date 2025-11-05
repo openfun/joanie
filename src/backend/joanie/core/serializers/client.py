@@ -1523,6 +1523,7 @@ class BatchOrderBillingAddressSerializer(serializers.Serializer):
     country = serializers.CharField(required=True)
     contact_email = serializers.CharField(required=True)
     contact_name = serializers.CharField(required=True)
+    city = serializers.CharField(required=True)
 
     def create(self, validated_data):
         """Only there to avoid a NotImplementedError"""
