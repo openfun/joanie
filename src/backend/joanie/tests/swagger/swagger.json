@@ -6019,10 +6019,14 @@
                     },
                     "contact_name": {
                         "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
                     }
                 },
                 "required": [
                     "address",
+                    "city",
                     "company_name",
                     "contact_email",
                     "contact_name",
@@ -6062,10 +6066,15 @@
                     "contact_name": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "city": {
+                        "type": "string",
+                        "minLength": 1
                     }
                 },
                 "required": [
                     "address",
+                    "city",
                     "company_name",
                     "contact_email",
                     "contact_name",
