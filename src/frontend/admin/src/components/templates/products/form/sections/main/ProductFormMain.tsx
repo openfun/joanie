@@ -45,7 +45,7 @@ type Props = WizardStepProps & {
 const Schema = Yup.object().shape({
   title: Yup.string().required(),
   type: Yup.string<ProductType>().required(),
-  description: Yup.string().required(),
+  description: Yup.string(),
   price: Yup.number().min(0.0).required(),
   price_currency: Yup.string().required(),
   instructions: Yup.string().defined(),
@@ -73,7 +73,7 @@ export function ProductFormMain({
   const getDefaultValues = (): ProductFormDefaultValues => ({
     title: defaultProduct?.title ?? "",
     type: defaultProduct?.type ?? productType,
-    description: removeEOL(defaultProduct?.description),
+    description: removeEOL(defaultProduct?.description) ?? "",
     price: defaultProduct?.price,
     price_currency: defaultProduct?.price_currency ?? "EUR",
     call_to_action: defaultProduct?.call_to_action ?? "",
@@ -181,7 +181,6 @@ export function ProductFormMain({
             <Grid size={12}>
               <RHFTextField
                 name="description"
-                required
                 multiline
                 minRows={3}
                 label={intl.formatMessage(commonTranslations.description)}
