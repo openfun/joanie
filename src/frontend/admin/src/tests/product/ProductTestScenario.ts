@@ -42,7 +42,7 @@ export const getProductScenarioStore = (): ProductStore => {
   });
 
   const contractsDefinitions = products.map((product) => {
-    return product.contract_definition!;
+    return product.contract_definition_order!;
   });
   const skills = products.map((product) => product.skills).flat();
   const teachers = products.map((product) => product.teachers).flat();
@@ -69,11 +69,14 @@ export const getProductScenarioStore = (): ProductStore => {
     payload: DTOProduct,
     item?: Product,
   ): Product {
-    const { contract_definition: newContractDefinition, ...restPayload } =
-      payload;
+    const {
+      contract_definition_order: newContractDefinitionOrder,
+      ...restPayload
+    } = payload;
 
-    const contractDef = contractsDefinitions.find(
-      (contractDefinition) => contractDefinition.id === newContractDefinition,
+    const contractDefOrder = contractsDefinitions.find(
+      (contractDefinition) =>
+        contractDefinition.id === newContractDefinitionOrder,
     );
 
     let newProduct: Product;
@@ -81,13 +84,14 @@ export const getProductScenarioStore = (): ProductStore => {
       newProduct = {
         ...item,
         ...restPayload,
-        contract_definition: contractDef ?? item.contract_definition,
+        contract_definition_order:
+          contractDefOrder ?? item.contract_definition_order,
       };
     } else {
       newProduct = {
         id: faker.string.uuid(),
         ...restPayload,
-        contract_definition: contractDef ?? null,
+        contract_definition_order: contractDefOrder ?? null,
         certificate_definition: null,
         certification_level: null,
         teachers: [],
