@@ -218,9 +218,9 @@ test.describe("Product form", () => {
     ).toBeVisible();
     await page.getByLabel("Title", { exact: true }).click();
     await page.getByLabel("Title", { exact: true }).fill("Test contract");
-    await page.getByLabel("Description", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Description" }).click();
     await page
-      .getByLabel("Description", { exact: true })
+      .getByRole("textbox", { name: "Description" })
       .fill("Test contract desc");
     await page.getByLabel("Template name", { exact: true }).click();
     await page
