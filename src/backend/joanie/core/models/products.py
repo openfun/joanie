@@ -59,6 +59,7 @@ from joanie.core.utils import (
     issuers,
     webhooks,
 )
+from joanie.core.utils import quotes as quote_utility
 from joanie.core.utils.billing_address import CompanyBillingAddress
 from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
@@ -2283,6 +2284,11 @@ class BatchOrder(BaseModel):
                 batch_order=self,
                 definition=self.relation.product.quote_definition,
             )
+            # Generate the quote's context before create
+            self.quote.context = quote_utility.generate_document_context(
+                self.relation.product.quote_definition, self
+            )
+            self.quote.save()
 
         self.flow.update()  # Transition to quoted
         self.save()
