@@ -1307,16 +1307,16 @@
     "description": "Title for the course runs selection section",
     "message": "Sélection des sessions de cours"
   },
-  "components.templates.products.form.translations.contractDefinition": {
-    "description": "Label for the contract definition input",
-    "message": "Modèle de contrat"
+  "components.templates.products.form.translations.contractDefinitionOrder": {
+    "description": "Label for the contract definition order input",
+    "message": "Définition de contrat"
   },
-  "components.templates.products.form.translations.contractDefinitionHelper": {
-    "description": "Helper text for the contract definition input",
+  "components.templates.products.form.translations.contractDefinitionOrderHelper": {
+    "description": "Helper text for the contract definition order input",
     "message": "Il s'agit d'un modèle de contrat qui sera utilisé lors de l'achat du produit"
   },
-  "components.templates.products.form.translations.contractDefinitionPlaceholder": {
-    "description": "placeholder text for the contract definition input",
+  "components.templates.products.form.translations.contractDefinitionOrderPlaceholder": {
+    "description": "placeholder text for the contract definition order input",
     "message": "Rechercher un modèle de contrat"
   },
   "components.templates.products.form.translations.definition": {

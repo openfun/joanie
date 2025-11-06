@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [3.1.2] - 2025-11-06
+
 ### Fixed
 
 - Rename contract_definition to contract_definition_order in the back office
@@ -749,7 +751,8 @@ and this project adheres to
 - First working version serving sellable micro-credentials for multiple
   organizations synchronized to a remote catalog
 
-[unreleased]: https://github.com/openfun/joanie/compare/v3.1.1...main
+[unreleased]: https://github.com/openfun/joanie/compare/v3.1.2...main
+[3.1.2]: https://github.com/openfun/joanie/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/openfun/joanie/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/openfun/joanie/compare/v3.0.4...v3.1.0
 [3.0.4]: https://github.com/openfun/joanie/compare/v3.0.3...v3.0.4
