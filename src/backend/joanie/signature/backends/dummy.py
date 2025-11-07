@@ -62,7 +62,7 @@ class DummySignatureBackend(BaseSignatureBackend):
             "finished" if contract.student_signed_on is not None else "signed"
         )
         # Case for batch order's contract
-        if contract.batch_orders.exists() and event_target == "signed":
+        if contract.batch_order and event_target == "signed":
             self.confirm_signature(reference_id)
 
         return (
@@ -80,7 +80,7 @@ class DummySignatureBackend(BaseSignatureBackend):
         # For case of batch order, we should take away the signature of the buyer because
         # it's marked when calling `get_signature_invitation_link`
         contract = models.Contract.objects.get(signature_backend_reference=reference_id)
-        if contract.batch_orders.exists():
+        if contract.batch_order:
             contract.student_signed_on = None
             contract.save()
 
