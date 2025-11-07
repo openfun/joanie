@@ -6405,11 +6405,7 @@
                         "readOnly": true
                     },
                     "contract": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/AdminContract"
-                            }
-                        ],
+                        "type": "string",
                         "readOnly": true
                     },
                     "company_name": {

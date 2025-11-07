@@ -5670,9 +5670,6 @@
                     },
                     "contract_id": {
                         "type": "string",
-                        "format": "uuid",
-                        "description": "contract of type convention",
-                        "nullable": true,
                         "readOnly": true
                     },
                     "company_name": {

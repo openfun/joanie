@@ -1774,7 +1774,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         slug_field="id",
         write_only=False,
     )
-    contract = AdminContractSerializer(read_only=True)
+    contract = serializers.SerializerMethodField(read_only=True)
     organization = AdminOrganizationLightSerializer(read_only=True)
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
@@ -1855,7 +1855,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "total",
             "currency",
             "main_invoice_reference",
-            "contract_id",
+            "contract",
             "offering_rules",
             "vouchers",
             "quote",
@@ -1871,6 +1871,12 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
     def get_vouchers(self, instance) -> list:
         """Return the voucher codes generated"""
         return instance.vouchers
+
+    def get_contract(self, instance):
+        """Return serialized information of the contract related to the batch order"""
+        if contract := getattr(instance, "contract", None):
+            return AdminContractSerializer(contract).data
+        return None
 
     def to_internal_value(self, data):
         """
