@@ -172,7 +172,7 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
             )
 
         contracts = models.Contract.objects.filter(
-            batch_orders__organization=organizations[0]
+            batch_order__organization=organizations[0]
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
@@ -188,33 +188,33 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
                             "sign": contract.get_abilities(user)["sign"],
                         },
                         "batch_order": {
-                            "id": str(contract.batch_orders.first().id),
-                            "contract_submitted": contract.batch_orders.first().contract_submitted,
-                            "nb_seats": contract.batch_orders.first().nb_seats,
-                            "owner_name": contract.batch_orders.first().owner.get_full_name(),
+                            "id": str(contract.batch_order.id),
+                            "contract_submitted": contract.batch_order.contract_submitted,
+                            "nb_seats": contract.batch_order.nb_seats,
+                            "owner_name": contract.batch_order.owner.get_full_name(),
                             "organization_id": str(
-                                contract.batch_orders.first().organization.id
+                                contract.batch_order.organization.id
                             ),
-                            "state": contract.batch_orders.first().state,
-                            "company_name": contract.batch_orders.first().company_name,
-                            "payment_method": contract.batch_orders.first().payment_method,
-                            "total": float(contract.batch_orders.first().total),
+                            "state": contract.batch_order.state,
+                            "company_name": contract.batch_order.company_name,
+                            "payment_method": contract.batch_order.payment_method,
+                            "total": float(contract.batch_order.total),
                             "total_currency": settings.DEFAULT_CURRENCY,
                             "relation": {
-                                "id": str(contract.batch_orders.first().offering.id),
+                                "id": str(contract.batch_order.offering.id),
                                 "course": {
                                     "id": str(
-                                        contract.batch_orders.first().offering.course.id
+                                        contract.batch_order.offering.course.id
                                     ),
-                                    "title": contract.batch_orders.first().offering.course.title,
-                                    "code": contract.batch_orders.first().offering.course.code,
+                                    "title": contract.batch_order.offering.course.title,
+                                    "code": contract.batch_order.offering.course.code,
                                     "cover": "_this_field_is_mocked",
                                 },
                                 "product": {
                                     "id": str(
-                                        contract.batch_orders.first().offering.product.id
+                                        contract.batch_order.offering.product.id
                                     ),
-                                    "title": contract.batch_orders.first().offering.product.title,
+                                    "title": contract.batch_order.offering.product.title,
                                 },
                             },
                         },

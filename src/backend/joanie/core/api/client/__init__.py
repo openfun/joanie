@@ -1653,16 +1653,16 @@ class GenericAgreementViewSet(
     filterset_class = filters.AgreementFilter
     ordering = ["-student_signed_on", "-created_on"]
     queryset = (
-        models.Contract.objects.exclude(batch_orders__state=enums.ORDER_STATE_CANCELED)
+        models.Contract.objects.exclude(batch_order__state=enums.ORDER_STATE_CANCELED)
         .select_related(
             "definition",
             "organization_signatory",
         )
         .prefetch_related(
-            "batch_orders__organization",
-            "batch_orders__offering__course",
-            "batch_orders__owner",
-            "batch_orders__offering__product",
+            "batch_order__organization",
+            "batch_order__offering__course",
+            "batch_order__owner",
+            "batch_order__offering__product",
         )
     )
 
@@ -1685,7 +1685,7 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
     offering id.
     """
 
-    lookup_fields = ["batch_orders__organization__pk", "pk"]
+    lookup_fields = ["batch_order__organization__pk", "pk"]
     lookup_url_kwargs = ["organization_id", "pk"]
 
     def _lookup_by_organization_code_or_pk(self):
@@ -1696,7 +1696,7 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
         try:
             uuid.UUID(self.kwargs["organization_id"])
         except ValueError:
-            self.lookup_fields[0] = "batch_orders__organization__code__iexact"
+            self.lookup_fields[0] = "batch_order__organization__code__iexact"
 
     def initial(self, request, *args, **kwargs):
         """
@@ -1718,7 +1718,7 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
         )
 
         additional_filter = {
-            "batch_orders__organization__accesses__user__username": username,
+            "batch_order__organization__accesses__user__username": username,
         }
 
         return queryset.filter(**additional_filter)

@@ -184,7 +184,7 @@ class AgreementFilter(filters.FilterSet):
         method="filter_signature_state",
         choices=enums.CONTRACT_SIGNATURE_STATE_FILTER_CHOICES,
     )
-    organization_id = filters.UUIDFilter(field_name="batch_orders__organization__id")
+    organization_id = filters.UUIDFilter(field_name="batch_order__organization__id")
     offering_id = filters.UUIDFilter(method="filter_offering_id")
 
     class Meta:
@@ -219,9 +219,9 @@ class AgreementFilter(filters.FilterSet):
             return queryset.none()
 
         return queryset.filter(
-            batch_orders__relation__course_id=offering.course_id,
-            batch_orders__relation__product_id=offering.product_id,
-            batch_orders__organization__in=offering.organizations.only(
+            batch_order__relation__course_id=offering.course_id,
+            batch_order__relation__product_id=offering.product_id,
+            batch_order__organization__in=offering.organizations.only(
                 "pk"
             ).values_list("pk", flat=True),
         )

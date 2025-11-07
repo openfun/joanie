@@ -5779,7 +5779,11 @@
                         "description": "primary key for the record as UUID"
                     },
                     "batch_order": {
-                        "type": "string",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/BatchOrderLight"
+                            }
+                        ],
                         "readOnly": true
                     }
                 },

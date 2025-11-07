@@ -549,7 +549,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
 class AgreementBatchOrderSerializer(AbilitiesModelSerializer):
     """Small serializer for Contracts models related to Batch Orders (agreements)"""
 
-    batch_order = serializers.SerializerMethodField(read_only=True)
+    batch_order = BatchOrderLightSerializer(read_only=True)
 
     class Meta:
         model = models.Contract
@@ -559,12 +559,12 @@ class AgreementBatchOrderSerializer(AbilitiesModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_batch_order(self, instance):
-        """
-        Returns batch order's information through the related name of the contract model
-        """
-        batch_order = instance.batch_orders.first()
-        return BatchOrderLightSerializer(batch_order, context=self.context).data
+    # def get_batch_order(self, instance):
+    #     """
+    #     Returns batch order's information through the related name of the contract model
+    #     """
+    #     batch_order = instance.batch_orders.first()
+    #     return BatchOrderLightSerializer(batch_order, context=self.context).data
 
 
 class QuoteDefinitionSerializer(serializers.ModelSerializer):
