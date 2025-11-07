@@ -126,7 +126,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
             payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
         )
         batch_order.freeze_total(Decimal("100.00"))
-
+        batch_order.refresh_from_db()
         response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
