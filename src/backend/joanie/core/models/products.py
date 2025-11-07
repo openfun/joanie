@@ -2064,15 +2064,6 @@ class BatchOrder(BaseModel):
         blank=True,
         null=True,
     )
-    contract = models.ForeignKey(
-        to=Contract,
-        help_text=_("contract of type convention"),
-        verbose_name=_("contract"),
-        related_name="batch_orders",
-        blank=True,
-        null=True,
-        on_delete=models.CASCADE,
-    )
     owner = models.ForeignKey(
         to=User,
         verbose_name=_("owner"),
@@ -2277,9 +2268,13 @@ class BatchOrder(BaseModel):
         self.flow.update()  # Transition to assigned
 
         # Generate the contract
-        if self.relation.product.contract_definition_batch_order and not self.contract:
-            self.contract = Contract.objects.create(
-                definition=self.relation.product.contract_definition_batch_order
+        if (
+            self.relation.product.contract_definition_batch_order
+            and not self.has_contract
+        ):
+            Contract.objects.create(
+                definition=self.relation.product.contract_definition_batch_order,
+                batch_order=self,
             )
 
         # Generate the quote
@@ -2291,6 +2286,16 @@ class BatchOrder(BaseModel):
 
         self.flow.update()  # Transition to quoted
         self.save()
+
+    @property
+    def has_contract(self):
+        """
+        Return True if the order has a contract.
+        """
+        try:
+            return self.contract is not None  # pylint: disable=no-member
+        except Contract.DoesNotExist:
+            return False
 
     def freeze_total(self, total):
         """
@@ -2481,7 +2486,7 @@ class BatchOrder(BaseModel):
     def is_signed_by_buyer(self):
         """Return boolean value whether the batch order contract is signed by the owner"""
         return (
-            self.contract
+            self.has_contract
             and self.contract.submitted_for_signature_on is not None
             and self.contract.student_signed_on is not None
         )
