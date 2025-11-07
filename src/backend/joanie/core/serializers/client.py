@@ -1550,6 +1550,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         required=False,
         read_only=True,
     )
+    contract_id = serializers.SerializerMethodField(read_only=True)
     quote = QuoteLightSerializer(read_only=True)
     payment_method = serializers.ChoiceField(
         choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
@@ -1632,6 +1633,12 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         Return the currency used
         """
         return settings.DEFAULT_CURRENCY
+
+    def get_contract_id(self, instance):
+        """Return serialized contract id related to batch order"""
+        if contract := getattr(instance, "contract", None):
+            return str(contract.id)
+        return None
 
     def to_internal_value(self, data):
         """
