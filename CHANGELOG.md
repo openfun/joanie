@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix CSS in default and Unicamp micro-credentials after WeasyPrint update
+
 ## [3.1.2] - 2025-11-06
 
 ### Fixed
