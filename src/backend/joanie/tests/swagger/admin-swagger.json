@@ -6522,7 +6522,8 @@
                         "readOnly": true
                     },
                     "contract_submitted": {
-                        "type": "string",
+                        "type": "boolean",
+                        "description": "Return boolean value whether the batch order contract is submitted to signature",
                         "readOnly": true
                     }
                 },
@@ -6583,10 +6584,14 @@
                     },
                     "contact_name": {
                         "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
                     }
                 },
                 "required": [
                     "address",
+                    "city",
                     "company_name",
                     "contact_email",
                     "contact_name",
@@ -6626,10 +6631,15 @@
                     "contact_name": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "city": {
+                        "type": "string",
+                        "minLength": 1
                     }
                 },
                 "required": [
                     "address",
+                    "city",
                     "company_name",
                     "contact_email",
                     "contact_name",

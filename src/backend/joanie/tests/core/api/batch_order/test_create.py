@@ -31,6 +31,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
                 "address": "Street of Hogwarts",
                 "postcode": "75000",
                 "country": "FR",
+                "city": "Paris",
                 "contact_email": "jane@example.org",
                 "contact_name": "Jane Doe",
             },
