@@ -314,7 +314,7 @@ class Contract(BaseModel):
             abilities = (
                 self.order.organization.get_abilities(user=user)
                 if self.order
-                else self.batch_orders.first().organization.get_abilities(user=user)
+                else self.batch_order.organization.get_abilities(user=user)
             )
             can_sign = abilities.get("sign_contracts", False)
 
