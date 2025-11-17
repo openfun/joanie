@@ -73,6 +73,7 @@ dependencies = [
     "SQLAlchemy==2.0.40",
     "hashids==1.1.0",
     "PyMongo==3.13.0",
+    "PyMuPDF==1.26.6",
 ]
 
 [project.urls]
