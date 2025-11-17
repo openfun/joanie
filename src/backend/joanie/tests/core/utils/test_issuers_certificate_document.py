@@ -1,15 +1,97 @@
 """Test suite for utility method to generate document of Certificate/Degree in PDF bytes format."""
 
+import os
+from datetime import datetime
 from io import BytesIO
+from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.template.exceptions import TemplateDoesNotExist
 from django.test import TestCase
 
+import pymupdf
 from parler.utils.context import switch_language
 from pdfminer.high_level import extract_text as pdf_extract_text
+from PIL import Image, ImageChops, ImageStat
 
 from joanie.core import enums, factories
 from joanie.core.utils import issuers
+
+
+def call_issuers_generate_document(name: str, context: dict, path: str):
+    """
+    Call generate document from issuers but add extra step to output the file
+    for testing purposes.
+    """
+    context["creation_date"] = datetime(2025, 11, 18, 14, tzinfo=ZoneInfo("UTC"))
+    pdf_bytes = issuers.generate_document(name, context)
+    pdf_output_path = path + name + ".pdf"
+    with open(pdf_output_path, "wb") as pdf_file:
+        pdf_file.write(pdf_bytes)
+    return pdf_output_path
+
+
+def generate_certificate(template: str):
+    """
+    Create a certificate object for a given template using test factories.
+    Sets up organization, course, product, owner, and order for testing.
+    Returns the generated Certificate instance.
+    """
+    organization = factories.OrganizationFactory(
+        title="University X",
+        representative="Joanie Cunningham",
+        representative_profession="Head of the department",
+    )
+    course = factories.CourseFactory(
+        organizations=[organization],
+    )
+    certificate_definition = factories.CertificateDefinitionFactory(template=template)
+    product = factories.ProductFactory(
+        courses=[course],
+        title="Graded product",
+        certificate_definition=certificate_definition,
+        certification_level=None,
+    )
+    owner = factories.UserFactory(first_name="Joanie Cunningham")
+    order = factories.OrderFactory(product=product, owner=owner)
+    return factories.OrderCertificateFactory(
+        id="717e8e20-11d3-4a28-af65-21bbbf7f4a1d",
+        issued_on=datetime(2025, 11, 18, 14, tzinfo=ZoneInfo("UTC")),
+        order=order,
+    )
+
+
+def convert_pdf_to_png(pdf_path: str):
+    """
+    Convert the first page of a PDF file into a PNG image at 150 DPI.
+    Returns the path to the generated image.
+    """
+    generated_pdf = pymupdf.open(pdf_path)
+    generated_pdf = generated_pdf.load_page(0)
+    generated_image = generated_pdf.get_pixmap(dpi=150)
+    generated_image_path = pdf_path.replace(".pdf", ".png")
+    generated_image.save(generated_image_path)
+    return generated_image_path
+
+
+def compare_images(first_image: Image, second_image: Image, output_path: str):
+    """
+    Compare two images and save the difference image to the specified output path.
+    Returns the average RMS difference between the images.
+    """
+    diff = ImageChops.difference(first_image, second_image)
+    diff.save(output_path)
+    rms = ImageStat.Stat(diff).rms
+    tolerated_diff = sum(rms) / len(rms)
+    return tolerated_diff
+
+
+def clear_generated_files(base_path: str, certificate_name: str):
+    """
+    Remove the generated files from the output directory.
+    """
+    os.remove(base_path + certificate_name + ".png")
+    os.remove(base_path + certificate_name + "_diff.png")
 
 
 class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
@@ -366,26 +448,8 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         We should be able to generate a microcredential degree default template. The method
         `get_document_context` will prepare the data in the appropriate language.
         """
-        organization = factories.OrganizationFactory(
-            title="University X",
-            representative="Joanie Cunningham",
-            representative_profession="Head of the department",
-        )
-        course = factories.CourseFactory(organizations=[organization])
-        certificate_definition = factories.CertificateDefinitionFactory(
-            template=enums.MICROCREDENTIAL_DEGREE_DEFAULT
-        )
-
-        product = factories.ProductFactory(
-            courses=[course],
-            title="Graded product",
-            certificate_definition=certificate_definition,
-            certification_level=None,
-        )
-
-        owner = factories.UserFactory(first_name="Joanie Cunningham")
-        order = factories.OrderFactory(product=product, owner=owner)
-        certificate = factories.OrderCertificateFactory(order=order)
+        certificate = generate_certificate(enums.MICROCREDENTIAL_DEGREE_DEFAULT)
+        product = certificate.order.product
 
         document = issuers.generate_document(
             name=certificate.certificate_definition.template,
@@ -420,6 +484,98 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             )
             document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
             self.assertRegex(document_text, r"en-us")
+
+    def test_utils_issuers_verify_document_microcredential_degree_default_style(self):
+        """
+        When generating the template of the microcredential degree, the style of the document
+        should match the original once.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+
+        certificate = generate_certificate(
+            template=enums.MICROCREDENTIAL_DEGREE_DEFAULT
+        )
+
+        pdf_path = call_issuers_generate_document(
+            name=certificate.certificate_definition.template,
+            context=certificate.get_document_context(),
+            path=base_path,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + certificate.certificate_definition.template + ".pdf")
+
+        original_image = Image.open(
+            base_path + certificate.certificate_definition.template + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + certificate.certificate_definition.template + "_diff.png",
+        )
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}microcredential_degree_default.png 
+            {base_path}microcredential_degree_default_original.png 
+            rm -f {base_path}microcredential_degree_default_diff.png
+        """,
+        )
+
+        clear_generated_files(base_path, certificate.certificate_definition.template)
+
+    def test_utils_issuers_verify_document_microcredential_degree_unicamp_style(self):
+        """
+        When generating the template of the microcredential degree, the style of the document
+        should match the original once.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+
+        certificate = generate_certificate(
+            template=enums.MICROCREDENTIAL_DEGREE_UNICAMP
+        )
+
+        pdf_path = call_issuers_generate_document(
+            name=certificate.certificate_definition.template,
+            context=certificate.get_document_context(),
+            path=base_path,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + certificate.certificate_definition.template + ".pdf")
+
+        original_image = Image.open(
+            base_path + certificate.certificate_definition.template + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + certificate.certificate_definition.template + "_diff.png",
+        )
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}microcredential_degree_unicamp.png 
+            {base_path}microcredential_degree_unicamp_original.png 
+            rm -f {base_path}microcredential_degree_unicamp_diff.png
+        """,
+        )
+
+        clear_generated_files(base_path, certificate.certificate_definition.template)
 
     def test_utils_issuers_generate_document_template_does_not_exist(self):
         """If the template html and css don't exist, issuer generate document should fail"""
