@@ -1,6 +1,7 @@
 """Test suite for `generate_document` utility"""
 
 import textwrap
+from datetime import timedelta
 from io import BytesIO
 
 from django.template.exceptions import TemplateDoesNotExist
@@ -9,8 +10,15 @@ from django.test import TestCase
 import markdown
 from pdfminer.high_level import extract_text as pdf_extract_text
 
-from joanie.core.enums import CONTRACT_DEFINITION_DEFAULT, CONTRACT_DEFINITION_UNICAMP
+from joanie.core import factories
+from joanie.core.enums import (
+    BATCH_ORDER_STATE_QUOTED,
+    CONTRACT_DEFINITION_DEFAULT,
+    CONTRACT_DEFINITION_UNICAMP,
+    QUOTE_DEFAULT,
+)
 from joanie.core.utils import issuers
+from joanie.core.utils.quotes import generate_document_context
 
 
 class UtilsGenerateDocumentTestCase(TestCase):
@@ -128,3 +136,41 @@ class UtilsGenerateDocumentTestCase(TestCase):
         self.assertIn("student and the organization are tied", document_text)
         self.assertIn("are the terms and conditions of the", document_text)
         self.assertIn("[SignatureField#1]", document_text)
+
+    def test_utils_issuers_generate_document_quote_default(self):
+        """
+        The method `generate_document` should generate the quote when passing quote_default
+        because the .html template and .css stylesheet exist.
+        """
+        organization = factories.OrganizationFactory(
+            enterprise_code="SIRET_1234",
+            activity_category_code="abcd1234",
+        )
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            offering__course=factories.CourseFactory(
+                effort=timedelta(hours=11, minutes=00, seconds=00),
+            ),
+            nb_seats=2,
+            state=BATCH_ORDER_STATE_QUOTED,
+        )
+
+        document_text = pdf_extract_text(
+            BytesIO(
+                issuers.generate_document(
+                    name=QUOTE_DEFAULT,
+                    context=generate_document_context(
+                        quote_definition=batch_order.quote.definition,
+                        batch_order=batch_order,
+                    ),
+                )
+            )
+        ).replace("\n", "")
+
+        self.assertIn("Quote definition", document_text)
+        self.assertIn("abcd1234", document_text)
+        self.assertIn("SIRET_1234", document_text)
+        self.assertIn("11 hours", document_text)
+        self.assertIn("For number of seats: 2", document_text)
+        # We should not find the tag for signing that is prepared for the signature provider
+        self.assertNotIn("[SignatureField#1]", document_text)
