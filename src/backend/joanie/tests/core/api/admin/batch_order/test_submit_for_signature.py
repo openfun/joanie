@@ -78,6 +78,7 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(BaseAPITestCase):
                 if state in [
                     enums.BATCH_ORDER_STATE_DRAFT,
                     enums.BATCH_ORDER_STATE_CANCELED,
+                    enums.BATCH_ORDER_STATE_COMPLETED,
                 ]:
                     self.assertContains(
                         response,
