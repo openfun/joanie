@@ -2488,6 +2488,7 @@ class BatchOrder(BaseModel):
         if self.state in [
             enums.BATCH_ORDER_STATE_DRAFT,
             enums.BATCH_ORDER_STATE_CANCELED,
+            enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
             return False
 
