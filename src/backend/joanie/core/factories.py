@@ -1348,6 +1348,11 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             if self.uses_card_payment and self.is_ready_for_payment:
                 self.flow.process_payment()
 
+            # Simulate the organization has signed
+            self.contract.organization_signed_on = django_timezone.now()
+            self.contract.submitted_for_signature_on = None
+            self.contract.save()
+
             invoice = InvoiceFactory(
                 batch_order=self,
                 order=None,

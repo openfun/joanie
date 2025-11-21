@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -184,6 +185,7 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
                 "results": [
                     {
                         "id": str(contract.id),
+                        "organization_signed_on": None,
                         "abilities": {
                             "sign": contract.get_abilities(user)["sign"],
                         },
@@ -445,7 +447,7 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
         factories.UserOrganizationAccessFactory(user=user, organization=organization)
         # Create a batch order related to the organization
         batch_order = factories.BatchOrderFactory(
-            organization=organization, state=enums.BATCH_ORDER_STATE_SIGNING
+            organization=organization, state=enums.BATCH_ORDER_STATE_COMPLETED
         )
         contract = batch_order.contract
 
@@ -468,6 +470,9 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
                         "abilities": {
                             "sign": contract.get_abilities(user)["sign"],
                         },
+                        "organization_signed_on": format_date(
+                            contract.organization_signed_on
+                        ),
                         "batch_order": {
                             "id": str(batch_order.id),
                             "owner_name": batch_order.owner.get_full_name(),

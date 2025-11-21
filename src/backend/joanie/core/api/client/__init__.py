@@ -777,9 +777,6 @@ class BatchOrderViewSet(
         - number of seats
         Return new batch_order just created
 
-    POST /api/batch-orders/:batch_order_id/submit-for-signature/
-        Return an invitation link to pay the batch order
-
     POST /api/batch-orders/:batch_order_id/submit-for-payment/
         Returns the info to pay the batch order
     """

@@ -365,7 +365,9 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "contract": {
                     "definition_title": batch_order.contract.definition.title,
                     "id": str(batch_order.contract.id),
-                    "organization_signed_on": None,
+                    "organization_signed_on": format_date(
+                        batch_order.contract.organization_signed_on
+                    ),
                     "student_signed_on": format_date(
                         batch_order.contract.student_signed_on
                     ),
