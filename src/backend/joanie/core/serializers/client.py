@@ -556,6 +556,7 @@ class AgreementBatchOrderSerializer(AbilitiesModelSerializer):
         fields = [
             "id",
             "batch_order",
+            "organization_signed_on",
         ]
         read_only_fields = fields
 

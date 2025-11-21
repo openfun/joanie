@@ -2488,6 +2488,7 @@ class BatchOrder(BaseModel):
         if self.state in [
             enums.BATCH_ORDER_STATE_DRAFT,
             enums.BATCH_ORDER_STATE_CANCELED,
+            enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
             return False
 
@@ -2501,7 +2502,7 @@ class BatchOrder(BaseModel):
     @property
     def contract_submitted(self) -> bool:
         """Return boolean value whether the batch order contract is submitted to signature"""
-        return self.contract.submitted_for_signature_on is not None
+        return self.contract.signature_backend_reference is not None
 
     @property
     def is_signed_by_buyer(self) -> bool:
