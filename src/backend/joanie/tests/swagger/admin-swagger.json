@@ -6662,6 +6662,13 @@
                         "type": "boolean",
                         "description": "Return boolean value whether the batch order contract is submitted to signature",
                         "readOnly": true
+                    },
+                    "orders": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderLight"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6683,6 +6690,7 @@
                     "main_invoice_reference",
                     "nb_seats",
                     "offering_rules",
+                    "orders",
                     "organization",
                     "owner",
                     "payment_method",
@@ -8757,6 +8765,22 @@
                     "total_currency",
                     "updated_on",
                     "voucher"
+                ]
+            },
+            "AdminOrderLightRequest": {
+                "type": "object",
+                "description": "Read only light serializer for Order model.",
+                "properties": {
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
+                    }
+                },
+                "required": [
+                    "total"
                 ]
             },
             "AdminOrderPayment": {
