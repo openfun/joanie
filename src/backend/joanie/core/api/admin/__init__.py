@@ -783,6 +783,7 @@ class BatchOrderViewSet(
         "contract",
         "relation",
         "organization",
+        "owner",
     )
     # Map aliases to model fields for ordering
     ordering_aliases = {

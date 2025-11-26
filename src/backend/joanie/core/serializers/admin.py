@@ -1812,6 +1812,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         read_only=True,
         required=False,
     )
+    orders = AdminOrderLightSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -1852,6 +1853,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "funding_entity",
             "funding_amount",
             "contract_submitted",
+            "orders",
         ]
         read_only_fields = [
             "id",
@@ -1863,6 +1865,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "vouchers",
             "quote",
             "contract_submitted",
+            "orders",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
@@ -1895,7 +1898,10 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         for consistency with the model field.
         """
         representation = super().to_representation(instance)
-        representation["offering"] = representation.pop("relation", None)
+        representation.pop("relation")
+        representation["offering"] = AdminOfferingSerializer(
+            instance=instance.offering
+        ).data
         representation["owner"] = AdminUserSerializer(instance=instance.owner).data
         return representation
 
