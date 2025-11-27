@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from django.test import TestCase
 
-from joanie.core import factories, models
+from joanie.core import enums, factories, models
 from joanie.core.utils.quotes import generate_document_context
 
 
@@ -92,7 +92,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
 
         self.assertEqual(context, expected_context)
 
-    def test_utils_quote_generate_document(self):
+    def test_utils_quote_generate_document_context(self):
         """
         Batch order quote utils 'generate context document' method should return the quote's
         context for the document.
@@ -114,9 +114,10 @@ class UtilsQuoteGenerateContextDocument(TestCase):
             ),
             offering__product__price="151.00",
             nb_seats=2,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
         )
-        batch_order.init_flow()
-        batch_order.total = Decimal("302.00")
+
+        batch_order.freeze_total(Decimal("302.00"))
 
         expected_context = {
             "quote": {

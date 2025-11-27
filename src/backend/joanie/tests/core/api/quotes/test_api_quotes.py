@@ -1,8 +1,13 @@
 """Test suite for the Quote API client viewset"""
 
 from http import HTTPStatus
+from unittest import mock
+
+from django.conf import settings
 
 from joanie.core import enums, factories, models
+from joanie.core.serializers import fields
+from joanie.tests import format_date
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -39,7 +44,12 @@ class QuoteApiTest(BaseAPITestCase):
             response.json(),
         )
 
-    def test_api_quotes_list_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_quotes_list_authenticated(self, _mock_thumbnail):
         """Authenticated user can list quotes where he is the owner."""
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -73,17 +83,25 @@ class QuoteApiTest(BaseAPITestCase):
                             "company_name": quote.batch_order.company_name,
                             "id": str(quote.batch_order.id),
                             "organization_id": str(quote.batch_order.organization.id),
-                            "relation_id": str(quote.batch_order.relation.id),
+                            "relation": {
+                                "id": str(quote.batch_order.offering.id),
+                                "course": {
+                                    "id": str(quote.batch_order.offering.course.id),
+                                    "title": quote.batch_order.offering.course.title,
+                                    "code": quote.batch_order.offering.course.code,
+                                    "cover": "_this_field_is_mocked",
+                                },
+                                "product": {
+                                    "id": str(quote.batch_order.offering.product.id),
+                                    "title": quote.batch_order.offering.product.title,
+                                },
+                            },
                             "state": quote.batch_order.state,
                             "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
-                        },
-                        "definition": {
-                            "body": quote.definition.body,
-                            "description": quote.definition.description,
-                            "id": str(quote.definition.id),
-                            "language": quote.definition.language,
-                            "name": quote.definition.name,
-                            "title": quote.definition.title,
+                            "contract_submitted": False,
+                            "nb_seats": quote.batch_order.nb_seats,
+                            "total": float(quote.batch_order.total),
+                            "total_currency": settings.DEFAULT_CURRENCY,
                         },
                         "has_purchase_order": False,
                         "organization_signed_on": None,
@@ -132,14 +150,19 @@ class QuoteApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
-    def test_api_quotes_retrieve_authenticated(self):
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_quotes_retrieve_authenticated(self, _mock_thumbnail):
         """
         Authenticated user should be able to retrieve a quote if he is the owner
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_QUOTED,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
             owner=user,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
@@ -160,20 +183,30 @@ class QuoteApiTest(BaseAPITestCase):
                     "organization_id": str(
                         batch_order.quote.batch_order.organization.id
                     ),
-                    "relation_id": str(batch_order.quote.batch_order.relation.id),
+                    "relation": {
+                        "id": str(batch_order.offering.id),
+                        "course": {
+                            "id": str(batch_order.offering.course.id),
+                            "title": batch_order.offering.course.title,
+                            "code": batch_order.offering.course.code,
+                            "cover": "_this_field_is_mocked",
+                        },
+                        "product": {
+                            "id": str(batch_order.offering.product.id),
+                            "title": batch_order.offering.product.title,
+                        },
+                    },
                     "state": batch_order.quote.batch_order.state,
                     "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                    "contract_submitted": True,
+                    "nb_seats": batch_order.nb_seats,
+                    "total": float(batch_order.total),
+                    "total_currency": settings.DEFAULT_CURRENCY,
                 },
-                "definition": {
-                    "body": batch_order.quote.definition.body,
-                    "description": batch_order.quote.definition.description,
-                    "id": str(batch_order.quote.definition.id),
-                    "language": batch_order.quote.definition.language,
-                    "name": batch_order.quote.definition.name,
-                    "title": batch_order.quote.definition.title,
-                },
-                "has_purchase_order": False,
-                "organization_signed_on": None,
+                "has_purchase_order": True,
+                "organization_signed_on": format_date(
+                    batch_order.quote.organization_signed_on
+                ),
             },
             response.json(),
         )

@@ -387,3 +387,323 @@ class OrganizationApiContractSignatureLinkTest(BaseAPITestCase):
             response.json(),
             {"detail": "Some contracts are not available for this organization."},
         )
+
+    def test_api_organization_contracts_from_batch_order_signature_link_without_owner(
+        self,
+    ):
+        """
+        Authenticated users which is not an organization owner should not be able
+        to sign contracts in bulk.
+        """
+        organization_roles_not_owner = [
+            role[0]
+            for role in OrganizationAccess.ROLE_CHOICES
+            if role[0] != enums.OWNER
+        ]
+
+        for organization_role in organization_roles_not_owner:
+            with self.subTest(role=organization_role):
+                user = factories.UserFactory()
+                organization = factories.BatchOrderFactory(
+                    state=enums.BATCH_ORDER_STATE_TO_SIGN
+                ).organization
+                factories.UserOrganizationAccessFactory(
+                    user=user,
+                    organization=organization,
+                    role=organization_role,
+                )
+
+                token = self.generate_token_from_user(user)
+
+                response = self.client.get(
+                    f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+                    "?from_batch_order=true",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertContains(
+                    response,
+                    '{"detail":"You do not have permission to perform this action."}',
+                    status_code=HTTPStatus.FORBIDDEN,
+                )
+
+    def test_api_organization_contracts_from_batch_order_signature_link_success(self):
+        """
+        Authenticated users with the owner role should be able to sign contracts in bulk.
+        Contracts where the batch order is canceled should not be returned.
+        """
+        user = factories.UserFactory()
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
+        offering = batch_order.offering
+        organization = batch_order.organization
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.OWNER,
+        )
+
+        # Create one batch order that is canceled
+        batch_order_2 = factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+        batch_order_2.flow.cancel()
+        # Create simple orders that should not be retrieved
+        factories.OrderGeneratorFactory.create_batch(
+            3,
+            organization=organization,
+            product=offering.product,
+            course=offering.course,
+        )
+
+        token = self.generate_token_from_user(user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+            "?from_batch_order=true",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?reference=",
+            content["invitation_link"],
+        )
+        # We should not find the batch_order_2 contract since it's canceled.
+        self.assertCountEqual(
+            content["contract_ids"],
+            [str(batch_order.contract.id)],
+        )
+
+    def test_api_organization_contracts_from_batch_order_signature_link_with_offering_id(
+        self,
+    ):
+        """
+        Authenticated user with the owner role should be able to sign the contracts in
+        bulk by passing offering ids.
+        """
+        user = factories.UserFactory()
+        [organization, other_organization] = factories.OrganizationFactory.create_batch(
+            2
+        )
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.OWNER,
+        )
+        offering_1 = factories.OfferingFactory(
+            organizations=[organization, other_organization],
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+            product__price=0,
+        )
+        offering_2 = factories.OfferingFactory(
+            organizations=[organization],
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+            product__price=0,
+        )
+        batch_order_1 = factories.BatchOrderFactory(
+            offering=offering_1,
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+        factories.BatchOrderFactory(
+            offering=offering_1,
+            organization=other_organization,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+        batch_order_2 = factories.BatchOrderFactory(
+            offering=offering_2,
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+
+        token = self.generate_token_from_user(user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+            f"?from_batch_order=true&offering_ids={offering_1.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?reference=",
+            content["invitation_link"],
+        )
+        # We should only find batch_order_1.contract in the response
+        self.assertCountEqual(
+            content["contract_ids"],
+            [str(batch_order_1.contract.id)],
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+            f"?from_batch_order=true&offering_ids={offering_1.id}&offering_ids={offering_2.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?reference=",
+            content["invitation_link"],
+        )
+        # We should only find both contracts related to organization's batch orders.
+        self.assertCountEqual(
+            content["contract_ids"],
+            [str(batch_order_1.contract.id), str(batch_order_2.contract.id)],
+        )
+
+    def test_api_organization_contracts_from_batch_order_signature_link_with_contract_ids(
+        self,
+    ):
+        """
+        Authenticated user with the owner role should be able to sign the contracts in
+        bulk by passing contract ids.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.OWNER,
+        )
+        batch_order_1 = factories.BatchOrderFactory(
+            organization=organization, state=enums.BATCH_ORDER_STATE_TO_SIGN
+        )
+        batch_order_2 = factories.BatchOrderFactory(
+            organization=organization, state=enums.BATCH_ORDER_STATE_TO_SIGN
+        )
+
+        token = self.generate_token_from_user(user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+            f"?from_batch_order=true&contract_ids={batch_order_1.contract.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?reference=",
+            content["invitation_link"],
+        )
+        self.assertCountEqual(
+            content["contract_ids"],
+            [str(batch_order_1.contract.id)],
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+            f"?from_batch_order=true&contract_ids={batch_order_1.contract.id}"
+            f"&contract_ids={batch_order_2.contract.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?reference=",
+            content["invitation_link"],
+        )
+        self.assertCountEqual(
+            content["contract_ids"],
+            [str(batch_order_1.contract.id), str(batch_order_2.contract.id)],
+        )
+
+    def test_api_organization_contracts_from_batch_order_signature_link_cumulative_filters(
+        self,
+    ):
+        """
+        When filter by both a list of offering ids and a list of contract ids,
+        those filter should be combined.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user,
+            organization=organization,
+            role=enums.OWNER,
+        )
+        offering_1 = factories.OfferingFactory(
+            organizations=[organization],
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+            product__price=0,
+        )
+        offering_2 = factories.OfferingFactory(
+            organizations=[organization],
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+            product__price=0,
+        )
+        batch_order_1 = factories.BatchOrderFactory(
+            offering=offering_1,
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+        batch_order_2 = factories.BatchOrderFactory(
+            offering=offering_2,
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+
+        token = self.generate_token_from_user(user)
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+            f"?from_batch_order=true&contract_ids={batch_order_1.contract.id}"
+            f"&offering_ids={offering_1.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?reference=",
+            content["invitation_link"],
+        )
+        self.assertCountEqual(
+            content["contract_ids"],
+            [str(batch_order_1.contract.id)],
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+            f"?from_batch_order=true&contract_ids={batch_order_2.contract.id}"
+            f"&offering_ids={offering_2.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIn(
+            "https://dummysignaturebackend.fr/?reference=",
+            content["invitation_link"],
+        )
+        self.assertCountEqual(
+            content["contract_ids"],
+            [str(batch_order_2.contract.id)],
+        )
+
+        # Requesting a wrong pair of offering and contract available
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/contracts-signature-link/"
+            f"?from_batch_order=true&contract_ids={batch_order_1.contract.id}"
+            f"&offering_ids={offering_2.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {"detail": "Some contracts are not available for this organization."},
+        )

@@ -52,13 +52,18 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(batch_order.id),
                 "address": batch_order.address,
                 "city": batch_order.city,
                 "company_name": batch_order.company_name,
-                "contract_id": str(batch_order.contract.id),
+                "contract": {
+                    "definition_title": batch_order.contract.definition.title,
+                    "id": str(batch_order.contract.id),
+                    "organization_signed_on": None,
+                    "student_signed_on": None,
+                    "submitted_for_signature_on": None,
+                },
                 "country": batch_order.country.code,
                 "currency": settings.DEFAULT_CURRENCY,
                 "identification_number": batch_order.identification_number,
@@ -88,6 +93,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "address": batch_order.address,
                     "postcode": batch_order.postcode,
                     "country": batch_order.billing_address["country"],
+                    "city": batch_order.billing_address["city"],
                     "contact_email": "janedoe@example.org",
                     "contact_name": "Jane Doe",
                 },
@@ -104,7 +110,9 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "signatory_profession": None,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
+                "contract_submitted": False,
             },
+            response.json(),
         )
 
     def test_api_admin_read_detail_batch_order_with_quote(self):
@@ -119,18 +127,23 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
             payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
         )
         batch_order.freeze_total(Decimal("100.00"))
-
+        batch_order.refresh_from_db()
         response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(batch_order.id),
                 "address": batch_order.address,
                 "city": batch_order.city,
                 "company_name": batch_order.company_name,
-                "contract_id": str(batch_order.contract.id),
+                "contract": {
+                    "definition_title": batch_order.contract.definition.title,
+                    "id": str(batch_order.contract.id),
+                    "organization_signed_on": None,
+                    "student_signed_on": None,
+                    "submitted_for_signature_on": None,
+                },
                 "country": batch_order.country.code,
                 "currency": settings.DEFAULT_CURRENCY,
                 "identification_number": batch_order.identification_number,
@@ -162,6 +175,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "address": batch_order.address,
                     "postcode": batch_order.postcode,
                     "country": batch_order.billing_address["country"],
+                    "city": batch_order.billing_address["city"],
                     "contact_email": "janedoe@example.org",
                     "contact_name": "Jane Doe",
                 },
@@ -178,5 +192,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "signatory_profession": None,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
+                "contract_submitted": False,
             },
+            response.json(),
         )

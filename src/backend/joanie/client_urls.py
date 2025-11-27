@@ -104,6 +104,11 @@ organization_related_router.register(
     basename="organization_contracts",
 )
 organization_related_router.register(
+    "agreements",
+    api_client.NestedOrganizationAgreementViewSet,
+    basename="organization_agreements",
+)
+organization_related_router.register(
     "offerings",
     api_client.OfferingViewSet,
     basename="offerings_per_organization",

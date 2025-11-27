@@ -96,6 +96,14 @@ class Contract(BaseModel):
         null=True,
         blank=True,
     )
+    batch_order = models.OneToOneField(
+        "core.batchorder",
+        verbose_name=_("batch_order"),
+        on_delete=models.PROTECT,
+        editable=False,
+        null=True,
+        blank=True,
+    )
     # Set on contract generation
     definition_checksum = models.CharField(
         max_length=255, editable=False, blank=True, null=True
@@ -227,8 +235,8 @@ class Contract(BaseModel):
             course = self.order.course if self.order.course else self.order.enrollment
             owner = self.order.owner
         else:
-            course = self.batch_orders.first().relation.course
-            owner = self.batch_orders.first().owner
+            course = self.batch_order.relation.course
+            owner = self.batch_order.owner
         return f"{owner}'s contract for course {course}"
 
     def save(self, *args, **kwargs):
@@ -303,7 +311,11 @@ class Contract(BaseModel):
         can_sign = False
 
         if user.is_authenticated:
-            abilities = self.order.organization.get_abilities(user=user)
+            abilities = (
+                self.order.organization.get_abilities(user=user)
+                if self.order
+                else self.batch_order.organization.get_abilities(user=user)
+            )
             can_sign = abilities.get("sign_contracts", False)
 
         return {

@@ -407,6 +407,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "instructions",
             "certificate_definition",
             "contract_definition_order",
+            "contract_definition_batch_order",
             "quote_definition",
             "target_courses",
             "certification_level",
@@ -1325,7 +1326,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "payment_schedule",
             "credit_card",
             "has_waived_withdrawal_right",
-            "from_batch_order",
+            "batch_order",
         )
         read_only_fields = fields
 
@@ -1374,7 +1375,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "total_currency",
             "discount",
             "voucher",
-            "from_batch_order",
+            "batch_order",
         )
         read_only_fields = fields
 
@@ -1425,6 +1426,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("total_currency", _("Currency")),
             ("discount", _("Discount")),
             ("voucher", _("Voucher")),
+            ("batch_order", _("Batch order")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
@@ -1744,6 +1746,7 @@ class AdminBatchOrderBillingAddressSerializer(serializers.Serializer):
     country = serializers.CharField(required=True)
     contact_email = serializers.CharField(required=True)
     contact_name = serializers.CharField(required=True)
+    city = serializers.CharField(required=True)
 
     def create(self, validated_data):
         """Only there to avoid a NotImplementedError"""
@@ -1772,6 +1775,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         slug_field="id",
         write_only=False,
     )
+    contract = serializers.SerializerMethodField(read_only=True)
     organization = AdminOrganizationLightSerializer(read_only=True)
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
@@ -1819,7 +1823,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "relation",
             "organization",
             "main_invoice_reference",
-            "contract_id",
+            "contract",
             "company_name",
             "identification_number",
             "vat_registration",
@@ -1845,16 +1849,18 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "billing_address",
             "funding_entity",
             "funding_amount",
+            "contract_submitted",
         ]
         read_only_fields = [
             "id",
             "total",
             "currency",
             "main_invoice_reference",
-            "contract_id",
+            "contract",
             "offering_rules",
             "vouchers",
             "quote",
+            "contract_submitted",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
@@ -1866,6 +1872,12 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
     def get_vouchers(self, instance) -> list:
         """Return the voucher codes generated"""
         return instance.vouchers
+
+    def get_contract(self, instance):
+        """Return serialized information of the contract related to the batch order"""
+        if contract := getattr(instance, "contract", None):
+            return AdminContractSerializer(contract).data
+        return None
 
     def to_internal_value(self, data):
         """

@@ -82,6 +82,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                 "total": float(batch_order.total),
                 "currency": settings.DEFAULT_CURRENCY,
                 "offering": {
+                    "id": str(batch_order.offering.id),
                     "course": {
                         "id": str(batch_order.offering.course.id),
                         "title": batch_order.offering.course.title,
@@ -126,6 +127,7 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                     "address": batch_order.address,
                     "postcode": batch_order.postcode,
                     "country": batch_order.billing_address["country"],
+                    "city": batch_order.billing_address["city"],
                     "contact_email": "janedoe@example.org",
                     "contact_name": "Jane Doe",
                 },

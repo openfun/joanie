@@ -341,10 +341,23 @@ class Organization(parler_models.TranslatableModel, BaseModel):
         Return the list of references that should be signed by the organization.
         """
         filters = Q()
+        from_batch_order = kwargs.get("from_batch_order")
+
         if contract_ids := kwargs.get("contract_ids"):
             filters &= Q(id__in=contract_ids)
-        if relation_ids := kwargs.get("offering_ids"):
-            filters &= Q(order__product__offerings__id__in=relation_ids)
+
+        if offering_ids := kwargs.get("offering_ids"):
+            if from_batch_order:
+                filters &= Q(batch_order__relation__id__in=offering_ids)
+            else:
+                filters &= Q(order__product__offerings__id__in=offering_ids)
+
+        if from_batch_order:
+            filters &= Q(batch_order__organization=self)
+            exclude_filter = Q(batch_order__state=enums.BATCH_ORDER_STATE_CANCELED)
+        else:
+            filters &= Q(order__organization=self)
+            exclude_filter = Q(order__state=enums.ORDER_STATE_CANCELED)
 
         contracts_to_sign = list(
             Contract.objects.filter(
@@ -352,9 +365,8 @@ class Organization(parler_models.TranslatableModel, BaseModel):
                 signature_backend_reference__isnull=False,
                 submitted_for_signature_on__isnull=False,
                 student_signed_on__isnull=False,
-                order__organization=self,
             )
-            .exclude(order__state=enums.ORDER_STATE_CANCELED)
+            .exclude(exclude_filter)
             .values_list("id", "signature_backend_reference")
         )
 

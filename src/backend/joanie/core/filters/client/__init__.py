@@ -173,6 +173,60 @@ class ContractViewSetFilter(filters.FilterSet):
         )
 
 
+class AgreementFilter(filters.FilterSet):
+    """
+    AgreementFilter allows to filter this resource with signature state, organization id,
+    or offering id.
+    """
+
+    id = filters.AllValuesMultipleFilter()
+    signature_state = filters.ChoiceFilter(
+        method="filter_signature_state",
+        choices=enums.CONTRACT_SIGNATURE_STATE_FILTER_CHOICES,
+    )
+    organization_id = filters.UUIDFilter(field_name="batch_order__organization__id")
+    offering_id = filters.UUIDFilter(method="filter_offering_id")
+
+    class Meta:
+        model = models.Contract
+        fields: List[str] = ["id", "signature_state", "offering_id"]
+
+    def filter_signature_state(self, queryset, _name, value):
+        """
+        Filter Contracts by signature state
+        """
+        is_unsigned = value == enums.CONTRACT_SIGNATURE_STATE_UNSIGNED
+        is_half_signed = value == enums.CONTRACT_SIGNATURE_STATE_HALF_SIGNED
+
+        return queryset.filter(
+            student_signed_on__isnull=is_unsigned,
+            organization_signed_on__isnull=is_unsigned | is_half_signed,
+        )
+
+    def filter_offering_id(self, queryset, _name, value):
+        """
+        Try to retrieve an offering from the given id and filter contracts accordingly.
+        """
+        url_kwargs = self.request.parser_context.get("kwargs", {})
+        queryset_filters = {"id": value}
+
+        if organization_id := url_kwargs.get("organization_id"):
+            queryset_filters["organizations__in"] = [organization_id]
+
+        try:
+            offering = models.CourseProductRelation.objects.get(**queryset_filters)
+        except models.CourseProductRelation.DoesNotExist:
+            return queryset.none()
+
+        return queryset.filter(
+            batch_order__relation__course_id=offering.course_id,
+            batch_order__relation__product_id=offering.product_id,
+            batch_order__organization__in=offering.organizations.only("pk").values_list(
+                "pk", flat=True
+            ),
+        )
+
+
 class NestedOrderCourseViewSetFilter(filters.FilterSet):
     """
     OrderCourseFilter that allows to filter this resource with a product's 'id', an
