@@ -15,30 +15,26 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
 
     maxDiff = None
 
-    def test_api_admin_read_detail_batch_order_anonymous(self):
+    def test_api_admin_batch_order_read_anonymous(self):
         """Anonymous user should not be able to read detail of a batch order"""
         batch_order = factories.BatchOrderFactory()
 
-        response = self.client.get(
-            f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
-        )
+        response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
-    def test_api_admin_read_detail_batch_order_authenticated(self):
+    def test_api_admin_batch_order_read_authenticated(self):
         """Authenticated user should not be able to read the detail of a batch order"""
         user = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=user.username, password="password")
 
         batch_order = factories.BatchOrderFactory()
 
-        response = self.client.get(
-            f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
-        )
+        response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
-    def test_api_admin_read_detail_batch_order_admin_authenticated(self):
+    def test_api_admin_batch_order_read_admin_authenticated(self):
         """Authenticated admin user should be able to read the detail of a batch order"""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
@@ -115,7 +111,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
             response.json(),
         )
 
-    def test_api_admin_read_detail_batch_order_with_quote(self):
+    def test_api_admin_batch_order_read_with_quote(self):
         """
         Admin user should be able to get the detail of a batch order with a quote
         """
