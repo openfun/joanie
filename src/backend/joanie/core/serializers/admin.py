@@ -1844,6 +1844,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "administrative_profession",
             "administrative_email",
             "administrative_telephone",
+            "state",
             "signatory_firstname",
             "signatory_lastname",
             "signatory_profession",
@@ -1865,6 +1866,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "vouchers",
             "quote",
             "contract_submitted",
+            "state",
             "orders",
         ]
 
