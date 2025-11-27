@@ -397,7 +397,6 @@ class BatchOrdersAdminApiCreateTestCase(BaseAPITestCase):
         batch_order = models.BatchOrder.objects.get()
 
         self.assertDictEqual(
-            batch_order.billing_address,
             {
                 "company_name": batch_order.company_name,
                 "identification_number": batch_order.identification_number,
@@ -410,4 +409,5 @@ class BatchOrdersAdminApiCreateTestCase(BaseAPITestCase):
                     f"{batch_order.administrative_firstname} {batch_order.administrative_lastname}"
                 ),
             },
+            batch_order.billing_address,
         )

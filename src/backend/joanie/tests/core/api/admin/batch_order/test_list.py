@@ -1,4 +1,4 @@
-"""Test suite for the admin batch orders API read list endpoint."""
+"""Test suite for the admin batch orders API list endpoint."""
 
 from http import HTTPStatus
 
@@ -9,9 +9,9 @@ from joanie.tests.base import BaseAPITestCase
 
 
 class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
-    """Test suite for the admin batch orders API read list endpoint."""
+    """Test suite for the admin batch orders API list endpoint."""
 
-    def test_api_admin_read_list_batch_orders_anonymous(self):
+    def test_api_admin_batch_orders_list_anonymous(self):
         """Anonymous user should not be able to list the batch orders"""
         response = self.client.get(
             "/api/v1.0/admin/batch-orders/",
@@ -19,7 +19,7 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
 
-    def test_api_admin_read_list_batch_orders_authenticated_user(self):
+    def test_api_admin_batch_orders_list_authenticated_user(self):
         """Authenticated user should not be able to list batch orders"""
         user = factories.UserFactory(is_staff=False, is_superuser=False)
         self.client.login(username=user.username, password="password")
@@ -30,7 +30,7 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
-    def test_api_admin_read_list_batch_orders_list_authenticated_admin(self):
+    def test_api_admin_batch_orders_list_authenticated_admin(self):
         """Authenticated admin user should be able to list batch orders"""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
