@@ -1,4 +1,4 @@
-"""Test suite for BatchOrder read detail API"""
+"""Test suite for BatchOrder retrieve API"""
 
 from http import HTTPStatus
 from unittest import mock
