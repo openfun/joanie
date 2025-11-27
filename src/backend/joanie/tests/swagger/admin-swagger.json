@@ -6629,6 +6629,14 @@
                     "administrative_telephone": {
                         "type": "string"
                     },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/BatchOrderStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
                     "signatory_firstname": {
                         "type": "string"
                     },
@@ -6702,6 +6710,7 @@
                     "signatory_lastname",
                     "signatory_profession",
                     "signatory_telephone",
+                    "state",
                     "total",
                     "updated_on",
                     "vouchers"
@@ -6835,7 +6844,7 @@
                     "state": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/AdminBatchOrderLightStateEnum"
+                                "$ref": "#/components/schemas/BatchOrderStateEnum"
                             }
                         ],
                         "readOnly": true
@@ -6890,22 +6899,6 @@
                     "total_currency",
                     "updated_on"
                 ]
-            },
-            "AdminBatchOrderLightStateEnum": {
-                "enum": [
-                    "draft",
-                    "assigned",
-                    "quoted",
-                    "to_sign",
-                    "signing",
-                    "pending",
-                    "process_payment",
-                    "failed_payment",
-                    "canceled",
-                    "completed"
-                ],
-                "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "AdminBatchOrderRequest": {
                 "type": "object",
@@ -9948,6 +9941,22 @@
                         "description": "Voucher can be used by multiple users."
                     }
                 }
+            },
+            "BatchOrderStateEnum": {
+                "enum": [
+                    "draft",
+                    "assigned",
+                    "quoted",
+                    "to_sign",
+                    "signing",
+                    "pending",
+                    "process_payment",
+                    "failed_payment",
+                    "canceled",
+                    "completed"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "BlankEnum": {
                 "enum": [

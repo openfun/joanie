@@ -173,6 +173,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "signatory_lastname": None,
                 "signatory_telephone": None,
                 "signatory_profession": None,
+                "state": batch_order.state,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
                 "contract_submitted": False,
@@ -322,6 +323,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "signatory_lastname": None,
                 "signatory_telephone": None,
                 "signatory_profession": None,
+                "state": batch_order.state,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
                 "contract_submitted": False,
@@ -480,6 +482,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "signatory_lastname": None,
                 "signatory_telephone": None,
                 "signatory_profession": None,
+                "state": batch_order.state,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
                 "orders": [
