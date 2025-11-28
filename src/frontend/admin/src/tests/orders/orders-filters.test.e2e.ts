@@ -134,7 +134,9 @@ test.describe("Order filters", () => {
       }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: `Owner: ${store.users[0].username}` }),
+      page.getByRole("button", {
+        name: `Owner: ${store.users[0].full_name} (${store.users[0].username})`,
+      }),
     ).toBeVisible();
   });
 
