@@ -141,16 +141,30 @@ class DummySignatureBackend(BaseSignatureBackend):
             )
 
         contract = models.Contract.objects.get(signature_backend_reference=reference_id)
-        file_bytes = issuers.generate_document(
+        context_kwargs = {
+            "contract_definition": contract.definition,
+        }
+        if contract.order:
+            context_kwargs.update(
+                {
+                    "user": contract.order.owner,
+                    "order": contract.order,
+                }
+            )
+        elif contract.batch_order:
+            context_kwargs.update(
+                {
+                    "user": contract.batch_order.owner,
+                    "batch_order": contract.batch_order,
+                }
+            )
+
+        return issuers.generate_document(
             name=contract.definition.name,
             context=contract_definition_utility.generate_document_context(
-                contract_definition=contract.definition,
-                user=contract.order.owner,
-                order=contract.order,
+                **context_kwargs
             ),
         )
-
-        return file_bytes
 
     def update_signatories(self, reference_id: str, all_signatories: bool) -> str:
         """
