@@ -59,11 +59,21 @@ class Command(BaseCommand):
             help=("Accept an 'UUID' like of 36 characters long."),
         )
 
-    def handle(self, *args, **options):
+        parser.add_argument(
+            "-b",
+            "--from-batch-order",
+            action="store_true",
+            default=False,
+            help="Retrieve only contracts from batch orders.",
+        )
+
+    def handle(self, *args, **options):  # pylint: disable=too-many-locals
         """
         The command is exclusive to users who have access rights on a specific organization.
         Get all signed contracts from an existing Offering UUID OR from an
         Organization UUID and generate a ZIP archive into the file system storage.
+        When the argument passed for from batch order is set to True, it will retrieve the
+        contracts that are related to batch orders for the zip archive.
         """
         zip_uuid = None
 
@@ -99,11 +109,22 @@ class Command(BaseCommand):
             logger.error("Error: %s", error_message)
             raise CommandError(error_message)
 
+        # extra filter to check the access of a user on an organization.
+        extra_filters = {
+            (
+                "batch_order__organization__accesses__user_id"
+                if options["from_batch_order"]
+                else "order__organization__accesses__user_id"
+            ): user_id
+        }
+        from_batch_order = options["from_batch_order"]
+
         signature_references = contract_utility.get_signature_backend_references(
             offering=serializer.validated_data.get("offering"),
             organization=serializer.validated_data.get("organization"),
-            extra_filters={"order__organization__accesses__user_id": user_id},
-        )  # extra filter to check the access of a user on an organization.
+            extra_filters=extra_filters,
+            from_batch_order=from_batch_order,
+        )
 
         pdf_bytes = contract_utility.get_pdf_bytes_of_contracts(signature_references)
         if len(pdf_bytes) == 0:
