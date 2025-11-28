@@ -761,6 +761,7 @@ class OrderViewSet(
 
 
 class BatchOrderViewSet(
+    SerializerPerActionMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
@@ -773,13 +774,27 @@ class BatchOrderViewSet(
 
     authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
     permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_classes = {
+        "list": serializers.AdminBatchOrderLightSerializer,
+    }
+    default_serializer_class = serializers.AdminBatchOrderSerializer
     serializer_class = serializers.AdminBatchOrderSerializer
     queryset = models.BatchOrder.objects.all().select_related(
         "contract",
         "relation",
         "organization",
+        "owner",
     )
+    # Map aliases to model fields for ordering
+    ordering_aliases = {
+        "owner_name": "owner__first_name",
+        "product_title": "relation__product__translations__title",
+        "organization_title": "organization__translations__title",
+        "course_code": "relation__course__code",
+        "company_name": "company_name",
+    }
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+    filterset_class = filters.BatchOrderAdminFilterSet
 
     def perform_create(self, serializer):
         """Override `perform_create` to start the flow of the batch order object"""

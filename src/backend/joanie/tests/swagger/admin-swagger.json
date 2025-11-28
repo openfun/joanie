@@ -12,6 +12,53 @@
                 "description": "Admin Batch Order Viewset",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "course_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_on",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_on_date_range_after",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_on_date_range_before",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "ids",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "primary key for the record as UUID"
+                    },
+                    {
                         "name": "ordering",
                         "required": false,
                         "in": "query",
@@ -19,6 +66,34 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "organization_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "owner_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
                     },
                     {
                         "name": "page",
@@ -37,6 +112,60 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "payment_method",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "bank_transfer",
+                                "card_payment",
+                                "purchase_order"
+                            ]
+                        },
+                        "description": "* `purchase_order` - Purchase order\n* `bank_transfer` - Bank transfer\n* `card_payment` - Card payment"
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_ids",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            }
+                        },
+                        "description": "primary key for the record as UUID",
+                        "explode": true,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "state",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "assigned",
+                                "canceled",
+                                "completed",
+                                "draft",
+                                "failed_payment",
+                                "pending",
+                                "process_payment",
+                                "quoted",
+                                "signing",
+                                "to_sign"
+                            ]
+                        },
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
                     }
                 ],
                 "tags": [
@@ -52,7 +181,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaginatedAdminBatchOrderList"
+                                    "$ref": "#/components/schemas/PaginatedAdminBatchOrderLightList"
                                 }
                             }
                         },
@@ -6369,6 +6498,18 @@
                         "readOnly": true,
                         "description": "primary key for the record as UUID"
                     },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
                     "owner": {
                         "type": "string",
                         "format": "uuid",
@@ -6488,6 +6629,14 @@
                     "administrative_telephone": {
                         "type": "string"
                     },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/BatchOrderStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
                     "signatory_firstname": {
                         "type": "string"
                     },
@@ -6521,6 +6670,13 @@
                         "type": "boolean",
                         "description": "Return boolean value whether the batch order contract is submitted to signature",
                         "readOnly": true
+                    },
+                    "orders": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOrderLight"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6534,6 +6690,7 @@
                     "company_name",
                     "contract",
                     "contract_submitted",
+                    "created_on",
                     "currency",
                     "funding_amount",
                     "id",
@@ -6541,6 +6698,7 @@
                     "main_invoice_reference",
                     "nb_seats",
                     "offering_rules",
+                    "orders",
                     "organization",
                     "owner",
                     "payment_method",
@@ -6552,7 +6710,9 @@
                     "signatory_lastname",
                     "signatory_profession",
                     "signatory_telephone",
+                    "state",
                     "total",
+                    "updated_on",
                     "vouchers"
                 ]
             },
@@ -6642,6 +6802,102 @@
                     "country",
                     "identification_number",
                     "postcode"
+                ]
+            },
+            "AdminBatchOrderLight": {
+                "type": "object",
+                "description": "Admin Batch Order Serializer",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "company name"
+                    },
+                    "owner_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "organization_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "nb_seats": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "title": "Number of seats",
+                        "description": "The number of seats to reserve"
+                    },
+                    "product_title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "course_code": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "state": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/BatchOrderStateEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "created_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was created"
+                    },
+                    "updated_on": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "date and time at which a record was last updated"
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": -10000000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "readOnly": true
+                    },
+                    "total_currency": {
+                        "type": "string",
+                        "description": "Return the code of currency used by the instance",
+                        "readOnly": true
+                    },
+                    "payment_method": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentMethodEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "company_name",
+                    "course_code",
+                    "created_on",
+                    "id",
+                    "nb_seats",
+                    "organization_title",
+                    "owner_name",
+                    "payment_method",
+                    "product_title",
+                    "state",
+                    "total",
+                    "total_currency",
+                    "updated_on"
                 ]
             },
             "AdminBatchOrderRequest": {
@@ -8504,6 +8760,22 @@
                     "voucher"
                 ]
             },
+            "AdminOrderLightRequest": {
+                "type": "object",
+                "description": "Read only light serializer for Order model.",
+                "properties": {
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
+                    }
+                },
+                "required": [
+                    "total"
+                ]
+            },
             "AdminOrderPayment": {
                 "type": "object",
                 "description": "Serializer for the order payment",
@@ -9670,6 +9942,22 @@
                     }
                 }
             },
+            "BatchOrderStateEnum": {
+                "enum": [
+                    "draft",
+                    "assigned",
+                    "quoted",
+                    "to_sign",
+                    "signing",
+                    "pending",
+                    "process_payment",
+                    "failed_payment",
+                    "canceled",
+                    "completed"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
+            },
             "BlankEnum": {
                 "enum": [
                     ""
@@ -10106,7 +10394,7 @@
                 "type": "string",
                 "description": "* `owner` - owner\n* `administrator` - administrator\n* `member` - member"
             },
-            "PaginatedAdminBatchOrderList": {
+            "PaginatedAdminBatchOrderLightList": {
                 "type": "object",
                 "required": [
                     "count",
@@ -10132,7 +10420,7 @@
                     "results": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AdminBatchOrder"
+                            "$ref": "#/components/schemas/AdminBatchOrderLight"
                         }
                     }
                 }

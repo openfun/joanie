@@ -5913,7 +5913,7 @@
                     "state": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/State7d2Enum"
+                                "$ref": "#/components/schemas/BatchOrderStateEnum"
                             }
                         ],
                         "readOnly": true
@@ -6106,7 +6106,7 @@
                     "state": {
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/State7d2Enum"
+                                "$ref": "#/components/schemas/BatchOrderStateEnum"
                             }
                         ],
                         "readOnly": true
@@ -6298,6 +6298,22 @@
                     "signatory_profession",
                     "signatory_telephone"
                 ]
+            },
+            "BatchOrderStateEnum": {
+                "enum": [
+                    "draft",
+                    "assigned",
+                    "quoted",
+                    "to_sign",
+                    "signing",
+                    "pending",
+                    "process_payment",
+                    "failed_payment",
+                    "canceled",
+                    "completed"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "Certificate": {
                 "type": "object",
@@ -9233,22 +9249,6 @@
                     "id",
                     "organization_signed_on"
                 ]
-            },
-            "State7d2Enum": {
-                "enum": [
-                    "draft",
-                    "assigned",
-                    "quoted",
-                    "to_sign",
-                    "signing",
-                    "pending",
-                    "process_payment",
-                    "failed_payment",
-                    "canceled",
-                    "completed"
-                ],
-                "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `quoted` - Quoted\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `process_payment` - Process payment\n* `failed_payment` - Failed payment\n* `canceled` - Canceled\n* `completed` - Completed"
             },
             "User": {
                 "type": "object",

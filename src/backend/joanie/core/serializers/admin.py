@@ -1812,11 +1812,14 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         read_only=True,
         required=False,
     )
+    orders = AdminOrderLightSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.BatchOrder
         fields = [
             "id",
+            "created_on",
+            "updated_on",
             "owner",
             "total",
             "currency",
@@ -1841,6 +1844,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "administrative_profession",
             "administrative_email",
             "administrative_telephone",
+            "state",
             "signatory_firstname",
             "signatory_lastname",
             "signatory_profession",
@@ -1850,6 +1854,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "funding_entity",
             "funding_amount",
             "contract_submitted",
+            "orders",
         ]
         read_only_fields = [
             "id",
@@ -1861,6 +1866,8 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "vouchers",
             "quote",
             "contract_submitted",
+            "state",
+            "orders",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
@@ -1893,7 +1900,11 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         for consistency with the model field.
         """
         representation = super().to_representation(instance)
-        representation["offering"] = representation.pop("relation", None)
+        representation.pop("relation")
+        representation["offering"] = AdminOfferingSerializer(
+            instance=instance.offering
+        ).data
+        representation["owner"] = AdminUserSerializer(instance=instance.owner).data
         return representation
 
     def create(self, validated_data):
@@ -1934,6 +1945,60 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             validated_data["offering_rules"].append(offering_rule)
 
         return super().create(validated_data)
+
+
+class AdminBatchOrderLightSerializer(serializers.ModelSerializer):
+    """Admin Batch Order Serializer"""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    organization_title = serializers.CharField(
+        source="organization.title", read_only=True
+    )
+    product_title = serializers.CharField(
+        source="relation.product.title", read_only=True
+    )
+    course_code = serializers.CharField(source="relation.course.code", read_only=True)
+    total = serializers.DecimalField(
+        coerce_to_string=False, decimal_places=2, max_digits=9, read_only=True
+    )
+    total_currency = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.BatchOrder
+        fields = [
+            "id",
+            "company_name",
+            "owner_name",
+            "organization_title",
+            "nb_seats",
+            "product_title",
+            "course_code",
+            "state",
+            "created_on",
+            "updated_on",
+            "total",
+            "total_currency",
+            "payment_method",
+        ]
+        read_only_fields = [
+            "id",
+            "company_name",
+            "owner_name",
+            "organization_title",
+            "nb_seats",
+            "product_title",
+            "course_code",
+            "state",
+            "created_on",
+            "updated_on",
+            "total",
+            "total_currency",
+            "payment_method",
+        ]
+
+    def get_total_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
 
 
 class AdminEnrollmentLightSerializer(serializers.ModelSerializer):

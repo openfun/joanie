@@ -23,7 +23,11 @@ export function UserSearch(props: RHFAutocompleteSearchProps<User>) {
       items={users.items}
       loading={users.states.fetching}
       onFilter={(term) => setQuery(term)}
-      getOptionLabel={(option: Maybe<User>) => option?.username ?? ""}
+      getOptionLabel={(option: Maybe<User>) => {
+        const username = option?.username ?? "";
+        const fullName = option?.full_name ?? "";
+        return `${fullName} (${username})`;
+      }}
       isOptionEqualToValue={(option, value) =>
         option.username === value.username
       }
