@@ -43,7 +43,7 @@ describe("<UserSearch />", () => {
     const userSearch = await screen.findByRole("combobox");
     await userEvent.click(userSearch);
     await userEvent.type(userSearch, returnedUser.username);
-    screen.getByText(returnedUser.username);
+    screen.getByText(`${returnedUser.full_name} (${returnedUser.username})`);
   });
 
   it("render and search by fullname", async () => {
@@ -53,6 +53,6 @@ describe("<UserSearch />", () => {
     const userSearch = await screen.findByRole("combobox");
     await userEvent.click(userSearch);
     await userEvent.type(userSearch, returnedUser.full_name);
-    screen.getByText(returnedUser.username);
+    screen.getByText(`${returnedUser.full_name} (${returnedUser.username})`);
   });
 });
