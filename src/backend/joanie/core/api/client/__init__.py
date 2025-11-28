@@ -1882,14 +1882,25 @@ class ContractViewSet(GenericContractViewSet):
             - string of an Organization UUID alone
             - string of an CourseProductRelation UUID alone
             - string of both Organization UUID & CourseProductRelation UUID
+            - boolean value for `from_batch_order`
         """
         serializer = serializers.GenerateSignedContractsZipSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        extra_filters = {
+            (
+                "order__organization__accesses__user_id"
+                if not request.data.get("from_batch_order")
+                else "batch_order__organization__accesses__user_id"
+            ): request.user.id
+        }
+        from_batch_order = request.data.get("from_batch_order", False)
+
         if not contract_utility.get_signature_backend_references_exists(
             offering=serializer.validated_data.get("offering"),
             organization=serializer.validated_data.get("organization"),
-            extra_filters={"order__organization__accesses__user_id": request.user.id},
+            extra_filters=extra_filters,
+            from_batch_order=from_batch_order,
         ):
             raise ValidationError("No zip to generate")
 
@@ -1900,6 +1911,7 @@ class ContractViewSet(GenericContractViewSet):
             "organization_id": serializer.data.get("organization_id"),
             "offering_id": serializer.data.get("offering_id"),
             "zip": str(zip_id),
+            "from_batch_order": from_batch_order,
         }
 
         generate_zip_archive_task.delay(options)
