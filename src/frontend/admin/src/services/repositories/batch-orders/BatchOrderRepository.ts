@@ -8,6 +8,7 @@ import { BatchOrder, BatchOrderQuery } from "@/services/api/models/BatchOrder";
 export const batchOrderRoutes = {
   get: (id: string, params: string = "") => `/batch-orders/${id}/${params}`,
   getAll: (params: string = "") => `/batch-orders/${params}`,
+  delete: (id: string) => `/batch-orders/${id}/`,
 };
 
 export class BatchOrderRepository {
@@ -29,5 +30,10 @@ export class BatchOrderRepository {
       filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
+  }
+
+  static delete(id: string): Promise<void> {
+    const url = batchOrderRoutes.delete(id);
+    return fetchApi(url, { method: "DELETE" }).then(checkStatus);
   }
 }
