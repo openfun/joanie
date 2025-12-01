@@ -9,6 +9,7 @@ export const batchOrderRoutes = {
   get: (id: string, params: string = "") => `/batch-orders/${id}/${params}`,
   getAll: (params: string = "") => `/batch-orders/${params}`,
   delete: (id: string) => `/batch-orders/${id}/`,
+  confirmQuote: (id: string) => `/batch-orders/${id}/confirm-quote/`,
 };
 
 export class BatchOrderRepository {
@@ -35,5 +36,16 @@ export class BatchOrderRepository {
   static delete(id: string): Promise<void> {
     const url = batchOrderRoutes.delete(id);
     return fetchApi(url, { method: "DELETE" }).then(checkStatus);
+  }
+
+  static confirmQuote(id: string, total: string): Promise<BatchOrder> {
+    const url = batchOrderRoutes.confirmQuote(id);
+    return fetchApi(url, {
+      method: "PATCH",
+      body: JSON.stringify({ total }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(checkStatus);
   }
 }

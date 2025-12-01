@@ -200,6 +200,117 @@ test.describe("Batch Order view", () => {
       "canceled",
     );
   });
+
+  test("Confirm quote for batch order", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
+    batchOrder.total = null;
+
+    const confirmQuoteRegex = new RegExp(
+      `${url}${batchOrder.id}/confirm-quote/`,
+    );
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.unroute(confirmQuoteRegex);
+    await page.route(confirmQuoteRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "PATCH") {
+        const postData = request.postDataJSON();
+        batchOrder.total = postData.total;
+        batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_TO_SIGN;
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "quoted",
+    );
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Click confirm quote
+    await expect(
+      page.getByRole("menuitem", { name: "Confirm quote" }),
+    ).toBeVisible();
+    await page.getByRole("menuitem", { name: "Confirm quote" }).click();
+
+    // Modal should be visible
+    await expect(
+      page.getByRole("dialog").getByRole("heading", { name: "Confirm Quote" }),
+    ).toBeVisible();
+
+    // Enter total amount
+    const totalInput = page.getByTestId("confirm-quote-total-input");
+    await expect(totalInput).toBeVisible();
+    await totalInput.fill("123.45");
+
+    // Click confirm button in modal
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Confirm" })
+      .click();
+
+    // Check after operation
+    await expect(page.getByText("Batch order quote confirmed.")).toBeVisible();
+    await expect(page.getByLabel("Total", { exact: true })).toHaveValue(
+      "123.45",
+    );
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "to_sign",
+    );
+  });
+
+  test("Confirm quote button is disabled when state is not quoted", async ({
+    page,
+  }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_DRAFT;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Confirm quote should be disabled
+    const confirmQuoteMenuItem = page.getByRole("menuitem", {
+      name: "Confirm quote",
+    });
+    await expect(confirmQuoteMenuItem).toBeVisible();
+    await expect(confirmQuoteMenuItem).toHaveAttribute("aria-disabled", "true");
+  });
 });
 
 test.describe("Batch Order list", () => {
