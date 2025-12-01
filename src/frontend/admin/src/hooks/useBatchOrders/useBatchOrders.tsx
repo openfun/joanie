@@ -1,4 +1,5 @@
-import { defineMessages } from "react-intl";
+import { defineMessages, useIntl } from "react-intl";
+import { useMutation } from "@tanstack/react-query";
 import {
   QueryOptions,
   useResource,
@@ -12,6 +13,7 @@ import {
   BatchOrderQuery,
 } from "@/services/api/models/BatchOrder";
 import { BatchOrderRepository } from "@/services/repositories/batch-orders/BatchOrderRepository";
+import { HttpError } from "@/services/http/HttpError";
 
 export const useBatchOrdersMessages = defineMessages({
   errorGet: {
@@ -27,6 +29,19 @@ export const useBatchOrdersMessages = defineMessages({
       "Error message shown to the user when batch order deletion request fails.",
     defaultMessage:
       "An error occurred while deleting the batch order. Please retry later.",
+  },
+  successConfirmQuote: {
+    id: "hooks.useBatchOrders.successConfirmQuote",
+    description:
+      "Success message shown to the user when the batch order quote has been confirmed.",
+    defaultMessage: "Batch order quote confirmed.",
+  },
+  errorConfirmQuote: {
+    id: "hooks.useBatchOrders.errorConfirmQuote",
+    description:
+      "Error message shown to the user when batch order confirm quote request fails.",
+    defaultMessage:
+      "An error occurred while confirming the quote. Please retry later.",
   },
   errorNotFound: {
     id: "hooks.useBatchOrders.errorNotFound",
@@ -77,6 +92,35 @@ const resourceProps: UseResourcesProps<BatchOrder, BatchOrderQuery> = {
 export const useBatchOrders = (
   filters?: BatchOrderListQuery,
   queryOptions?: QueryOptions<BatchOrderListItem>,
-) => useResourcesCustom({ ...listProps, filters, queryOptions });
+) => {
+  const intl = useIntl();
+  const custom = useResourcesCustom({ ...listProps, filters, queryOptions });
+  const mutation = useMutation;
+  return {
+    ...custom,
+    methods: {
+      ...custom.methods,
+      confirmQuote: mutation({
+        mutationFn: async (data: { batchOrderId: string; total: string }) => {
+          return BatchOrderRepository.confirmQuote(
+            data.batchOrderId,
+            data.total,
+          );
+        },
+        onSuccess: async () => {
+          custom.methods.showSuccessMessage(
+            intl.formatMessage(useBatchOrdersMessages.successConfirmQuote),
+          );
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(useBatchOrdersMessages.errorConfirmQuote),
+          );
+        },
+      }).mutate,
+    },
+  };
+};
 // eslint-disable-next-line react-hooks/rules-of-hooks
 export const useBatchOrder = useResource(resourceProps);
