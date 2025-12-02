@@ -1713,7 +1713,159 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         return self.get_installment_value(instance, 4, "state")
 
 
-class AdminOrderListExportSerializer(serializers.ListSerializer):
+class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
+    """
+    Read only light serializer for Batch Order export.
+    """
+
+    class Meta:
+        model = models.BatchOrder
+        fields_labels = [
+            ("id", _("Batch order reference")),
+            ("owner_name", _("Owner")),
+            ("owner_email", _("Email")),
+            ("company_name", _("Company name")),
+            ("identification_number", _("Company's identification number")),
+            ("vat_registration", _("Company VAT registration")),
+            ("organization", _("Organization")),
+            ("state", _("Batch Order State")),
+            ("payment_method", _("Payment method")),
+            ("nb_seats", _("Number of seats reserved")),
+            ("created_on", _("Created on")),
+            ("updated_on", _("Updated on")),
+            ("product", _("Product")),
+            ("product_type", _("Product type")),
+            ("total", _("Total")),
+            ("quote_reference", _("Quote reference")),
+            ("quote_organization_signed", _("Organization quote signature date")),
+            ("quote_has_purchase_order", _("Quote has purchase order")),
+            ("contract", _("Contract")),
+            ("contract_submitted_for_signature_on", _("Submitted for signature")),
+            ("contract_student_signed_on", _("Buyer signature date")),
+            ("contract_organization_signed_on", _("Organization signature date")),
+            ("orders_generated", _("Orders generated")),
+        ]
+        fields = [field for field, label in fields_labels]
+        read_only_fields = fields
+
+    @property
+    def headers(self):
+        """
+        Return the headers of the CSV file.
+        """
+        return [label for field, label in self.Meta.fields_labels]
+
+    owner_name = serializers.SerializerMethodField(read_only=True)
+    owner_email = serializers.SlugRelatedField(
+        read_only=True, slug_field="email", source="owner"
+    )
+    organization = serializers.SlugRelatedField(read_only=True, slug_field="title")
+    created_on = serializers.DateTimeField(format="%d/%m/%Y %H:%M:%S")
+    updated_on = serializers.DateTimeField(format="%d/%m/%Y %H:%M:%S")
+    product = serializers.SerializerMethodField(read_only=True)
+    product_type = serializers.SerializerMethodField(read_only=True)
+    contract = serializers.SlugRelatedField(
+        read_only=True, slug_field="definition__title"
+    )
+    contract_submitted_for_signature_on = serializers.SerializerMethodField(
+        read_only=True
+    )
+    contract_student_signed_on = serializers.SerializerMethodField(read_only=True)
+    contract_organization_signed_on = serializers.SerializerMethodField(read_only=True)
+    quote_reference = serializers.SerializerMethodField(read_only=True)
+    quote_organization_signed = serializers.SerializerMethodField(read_only=True)
+    quote_has_purchase_order = serializers.SerializerMethodField(read_only=True)
+    orders_generated = serializers.SerializerMethodField(read_only=True)
+
+    def get_contract_date(self, instance, date_field: str) -> str:
+        """
+        Return the date of the specified contract field if available,
+        otherwise an empty string.
+        """
+        try:
+            return getattr(instance.contract, date_field).strftime("%d/%m/%Y %H:%M:%S")
+        except (models.Contract.DoesNotExist, AttributeError):
+            return ""
+
+    def get_quote_information(self, instance, field: str) -> str:
+        """
+        Return the field information of the quote if available, otherwise
+        an empty string.
+        """
+        try:
+            return getattr(instance.quote, field)
+        except (models.Quote.DoesNotExist, AttributeError):
+            return ""
+
+    def get_owner_name(self, instance) -> str:
+        """Returns the owner name of the batch order"""
+        return instance.owner.name
+
+    def get_product(self, instance) -> str:
+        """
+        Return the product title
+        """
+        return instance.offering.product.title
+
+    def get_product_type(self, instance) -> str:
+        """
+        Return the product's type
+        """
+        return instance.offering.product.type
+
+    def get_contract_submitted_for_signature_on(self, instance) -> str:
+        """
+        Return the date the contract was submitted for signature if available,
+        otherwise an empty string.
+        """
+        return "Yes" if instance.contract.signature_backend_reference else "No"
+
+    def get_contract_student_signed_on(self, instance) -> str:
+        """
+        Return the date the student signed the contract if available,
+        otherwise an empty string.
+        """
+        return self.get_contract_date(instance, "student_signed_on")
+
+    def get_contract_organization_signed_on(self, instance) -> str:
+        """
+        Return the date the organization signed the contract if available,
+        otherwise an empty string.
+        """
+        return self.get_contract_date(instance, "organization_signed_on")
+
+    def get_quote_reference(self, instance) -> str:
+        """
+        Returns the quote reference
+        """
+        return self.get_quote_information(instance, "reference")
+
+    def get_quote_organization_signed(self, instance) -> str:
+        """
+        Returns the date of the quote's signature from the organization
+        """
+        signature_date = self.get_quote_information(instance, "organization_signed_on")
+        return (
+            signature_date.strftime("%d/%m/%Y %H:%M:%S")
+            if signature_date
+            else signature_date
+        )
+
+    def get_quote_has_purchase_order(self, instance) -> str:
+        """
+        Returns "Yes" whether the quote has received the purchase order, otherwise "No"
+        """
+        has_purchase_order = self.get_quote_information(instance, "has_purchase_order")
+        return "Yes" if has_purchase_order else "No"
+
+    def get_orders_generated(self, instance) -> str:
+        """
+        Returns "Yes" if orders were generated, otherwise "No"
+        """
+        return "Yes" if instance.has_orders_generated else "No"
+
+
+class AdminCSVExportListSerializer(serializers.ListSerializer):
     """
     Serializer for exporting a list of orders to a CSV stream.
     """
