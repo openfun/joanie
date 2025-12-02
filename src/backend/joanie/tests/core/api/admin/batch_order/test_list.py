@@ -269,3 +269,23 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
             [r["id"] for r in content["results"]],
             [str(batch_orders[0].id), str(batch_orders[1].id)],
         )
+
+    def test_api_admin_batch_orders_list_product_type(self):
+        """
+        Admin authenticated user should be able to filter the list of batch orders
+        by product type.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_TO_SIGN)
+
+        response = self.client.get(
+            f"/api/v1.0/admin/batch-orders/?product_type={enums.PRODUCT_TYPE_CREDENTIAL}"
+        )
+
+        content = response.json()
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(content["count"], 1)
+        self.assertEqual(content["results"][0]["id"], str(batch_order.id))

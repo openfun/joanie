@@ -367,6 +367,10 @@ class BatchOrderAdminFilterSet(filters.FilterSet):
         field_name="relation__product",
         distinct=True,
     )
+    product_type = filters.MultipleChoiceFilter(
+        field_name="relation__product__type",
+        choices=enums.PRODUCT_TYPE_CHOICES,
+    )
     state = filters.ChoiceFilter(choices=enums.BATCH_ORDER_STATE_CHOICES)
     payment_method = filters.ChoiceFilter(
         choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES
