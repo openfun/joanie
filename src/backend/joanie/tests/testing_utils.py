@@ -935,6 +935,15 @@ class Demo:
             )
             batch_order.generate_orders()
 
+            for state in enums.BATCH_ORDER_STATE_CHOICES:
+                for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+                    factories.BatchOrderFactory(
+                        state=state[0],
+                        offering=credential_offering,
+                        nb_seats=2,
+                        payment_method=payment_method[0],
+                    )
+
             course_run_credential.save()
 
         if create_credential_discount:
@@ -1011,6 +1020,16 @@ class Demo:
                 nb_seats=1,
             )
             batch_order.generate_orders()
+
+            for state in enums.BATCH_ORDER_STATE_CHOICES:
+                for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+                    factories.BatchOrderFactory(
+                        state=state[0],
+                        offering=credential_discount_offering,
+                        nb_seats=2,
+                        payment_method=payment_method[0],
+                    )
+
             self.log("Successfully created offering rule")
             self.log("")
 
