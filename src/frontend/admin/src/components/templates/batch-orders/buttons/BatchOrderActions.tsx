@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DrawIcon from "@mui/icons-material/Draw";
 import {
   BatchOrder,
   BatchOrderPaymentMethodEnum,
@@ -82,6 +83,17 @@ const messages = defineMessages({
     defaultMessage:
       "Bank transfer can only be confirmed when batch order uses bank transfer payment method and is in pending, signing, or process payment state",
   },
+  submitForSignature: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.submitForSignature",
+    description: "Label for the submit for signature action",
+    defaultMessage: "Submit for signature",
+  },
+  submitForSignatureDisabled: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.submitForSignatureDisabled",
+    description: "Text when the batch order cannot be submitted for signature",
+    defaultMessage:
+      "Batch order can only be submitted for signature when in assigned, quoted, or to sign state",
+  },
 });
 
 type Props = {
@@ -150,6 +162,22 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
         ),
         onClick: async () => {
           batchOrdersQuery.methods.confirmBankTransfer(
+            { batchOrderId: batchOrder.id },
+            { onSuccess: batchOrderQuery.methods.invalidate },
+          );
+        },
+      },
+      {
+        icon: <DrawIcon />,
+        mainLabel: intl.formatMessage(messages.submitForSignature),
+        isDisable: ![
+          BatchOrderStatesEnum.BATCH_ORDER_STATE_ASSIGNED,
+          BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED,
+          BatchOrderStatesEnum.BATCH_ORDER_STATE_TO_SIGN,
+        ].includes(batchOrder.state),
+        disableMessage: intl.formatMessage(messages.submitForSignatureDisabled),
+        onClick: async () => {
+          batchOrdersQuery.methods.submitForSignature(
             { batchOrderId: batchOrder.id },
             { onSuccess: batchOrderQuery.methods.invalidate },
           );
