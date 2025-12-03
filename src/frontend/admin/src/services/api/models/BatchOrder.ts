@@ -17,6 +17,12 @@ export enum BatchOrderStatesEnum {
   BATCH_ORDER_STATE_COMPLETED = "completed",
 }
 
+export enum BatchOrderPaymentMethodEnum {
+  BATCH_ORDER_WITH_PURCHASE_ORDER = "purchase_order",
+  BATCH_ORDER_WITH_BANK_TRANSFER = "bank_transfer",
+  BATCH_ORDER_WITH_CARD_PAYMENT = "card_payment",
+}
+
 export type AbstractBatchOrder = {
   id: string;
   created_on: string;
@@ -62,6 +68,7 @@ export type BatchOrder = AbstractBatchOrder & {
 
   funding_entity: string;
   funding_amount: number;
+  payment_method: BatchOrderPaymentMethodEnum;
 };
 
 export type BatchOrderQuery = ResourcesQuery & {};
