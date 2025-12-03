@@ -10,6 +10,8 @@ export const batchOrderRoutes = {
   getAll: (params: string = "") => `/batch-orders/${params}`,
   delete: (id: string) => `/batch-orders/${id}/`,
   confirmQuote: (id: string) => `/batch-orders/${id}/confirm-quote/`,
+  confirmPurchaseOrder: (id: string) =>
+    `/batch-orders/${id}/confirm-purchase-order/`,
 };
 
 export class BatchOrderRepository {
@@ -43,6 +45,16 @@ export class BatchOrderRepository {
     return fetchApi(url, {
       method: "PATCH",
       body: JSON.stringify({ total }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(checkStatus);
+  }
+
+  static confirmPurchaseOrder(id: string): Promise<BatchOrder> {
+    const url = batchOrderRoutes.confirmPurchaseOrder(id);
+    return fetchApi(url, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
