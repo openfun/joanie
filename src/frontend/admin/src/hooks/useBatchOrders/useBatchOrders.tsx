@@ -82,6 +82,7 @@ export type BatchOrderListQuery = ResourcesQuery & {
   organizationId?: string;
   ownerId?: string;
   state?: string;
+  payment_method?: string;
 };
 
 const listProps: UseResourcesProps<BatchOrderListItem, BatchOrderListQuery> = {
