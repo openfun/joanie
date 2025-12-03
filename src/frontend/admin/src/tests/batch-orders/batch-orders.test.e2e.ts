@@ -514,6 +514,104 @@ test.describe("Batch Order view", () => {
       "true",
     );
   });
+
+  test("Submit for signature for batch order", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
+    batchOrder.total = 123.45;
+
+    const submitForSignatureRegex = new RegExp(
+      `${url}${batchOrder.id}/submit-for-signature/`,
+    );
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.unroute(submitForSignatureRegex);
+    await page.route(submitForSignatureRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "POST") {
+        batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_SIGNING;
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "quoted",
+    );
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Click submit for signature
+    await expect(
+      page.getByRole("menuitem", { name: "Submit for signature" }),
+    ).toBeVisible();
+    await page.getByRole("menuitem", { name: "Submit for signature" }).click();
+
+    // Check after operation
+    await expect(
+      page.getByText(
+        "Batch order submitted for signature. Invitation link sent.",
+      ),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "signing",
+    );
+  });
+
+  test("Submit for signature button is disabled when conditions are not met", async ({
+    page,
+  }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_DRAFT;
+    batchOrder.total = 123.45;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Submit for signature should be disabled
+    const submitForSignatureMenuItem = page.getByRole("menuitem", {
+      name: "Submit for signature",
+    });
+    await expect(submitForSignatureMenuItem).toBeVisible();
+    await expect(submitForSignatureMenuItem).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
 });
 
 test.describe("Batch Order list", () => {

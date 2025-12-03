@@ -69,6 +69,20 @@ export const useBatchOrdersMessages = defineMessages({
     defaultMessage:
       "An error occurred while confirming the bank transfer. Please retry later.",
   },
+  successSubmitForSignature: {
+    id: "hooks.useBatchOrders.successSubmitForSignature",
+    description:
+      "Success message shown to the user when the batch order has been submitted for signature.",
+    defaultMessage:
+      "Batch order submitted for signature. Invitation link sent.",
+  },
+  errorSubmitForSignature: {
+    id: "hooks.useBatchOrders.errorSubmitForSignature",
+    description:
+      "Error message shown to the user when batch order submit for signature request fails.",
+    defaultMessage:
+      "An error occurred while submitting for signature. Please retry later.",
+  },
   errorNotFound: {
     id: "hooks.useBatchOrders.errorNotFound",
     description: "Error message shown to the user when no batch order matches.",
@@ -179,6 +193,26 @@ export const useBatchOrders = (
             error.data?.details ??
               intl.formatMessage(
                 useBatchOrdersMessages.errorConfirmBankTransfer,
+              ),
+          );
+        },
+      }).mutate,
+      submitForSignature: mutation({
+        mutationFn: async (data: { batchOrderId: string }) => {
+          return BatchOrderRepository.submitForSignature(data.batchOrderId);
+        },
+        onSuccess: async () => {
+          custom.methods.showSuccessMessage(
+            intl.formatMessage(
+              useBatchOrdersMessages.successSubmitForSignature,
+            ),
+          );
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(
+                useBatchOrdersMessages.errorSubmitForSignature,
               ),
           );
         },
