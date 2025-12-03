@@ -43,6 +43,19 @@ export const useBatchOrdersMessages = defineMessages({
     defaultMessage:
       "An error occurred while confirming the quote. Please retry later.",
   },
+  successConfirmPurchaseOrder: {
+    id: "hooks.useBatchOrders.successConfirmPurchaseOrder",
+    description:
+      "Success message shown to the user when the batch order purchase order has been confirmed.",
+    defaultMessage: "Batch order purchase order confirmed.",
+  },
+  errorConfirmPurchaseOrder: {
+    id: "hooks.useBatchOrders.errorConfirmPurchaseOrder",
+    description:
+      "Error message shown to the user when batch order confirm purchase order request fails.",
+    defaultMessage:
+      "An error occurred while confirming the purchase order. Please retry later.",
+  },
   errorNotFound: {
     id: "hooks.useBatchOrders.errorNotFound",
     description: "Error message shown to the user when no batch order matches.",
@@ -81,9 +94,6 @@ const resourceProps: UseResourcesProps<BatchOrder, BatchOrderQuery> = {
     delete: async (id: string) => {
       return BatchOrderRepository.delete(id);
     },
-    confirmQuote: async (id: string, total: string) => {
-      return BatchOrderRepository.confirmQuote(id, total);
-    },
   }),
   session: true,
   messages: useBatchOrdersMessages,
@@ -116,6 +126,26 @@ export const useBatchOrders = (
           custom.methods.setError(
             error.data?.details ??
               intl.formatMessage(useBatchOrdersMessages.errorConfirmQuote),
+          );
+        },
+      }).mutate,
+      confirmPurchaseOrder: mutation({
+        mutationFn: async (data: { batchOrderId: string }) => {
+          return BatchOrderRepository.confirmPurchaseOrder(data.batchOrderId);
+        },
+        onSuccess: async () => {
+          custom.methods.showSuccessMessage(
+            intl.formatMessage(
+              useBatchOrdersMessages.successConfirmPurchaseOrder,
+            ),
+          );
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(
+                useBatchOrdersMessages.errorConfirmPurchaseOrder,
+              ),
           );
         },
       }).mutate,

@@ -7,6 +7,7 @@ import {
 } from "@/tests/useResourceHandler";
 import {
   BatchOrderListItem,
+  BatchOrderPaymentMethodEnum,
   BatchOrderStatesEnum,
   transformBatchOrdersToListItems,
 } from "@/services/api/models/BatchOrder";
@@ -310,6 +311,108 @@ test.describe("Batch Order view", () => {
     });
     await expect(confirmQuoteMenuItem).toBeVisible();
     await expect(confirmQuoteMenuItem).toHaveAttribute("aria-disabled", "true");
+  });
+
+  test("Confirm purchase order for batch order", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
+    batchOrder.payment_method =
+      BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER;
+    batchOrder.total = 123.45;
+
+    const confirmPurchaseOrderRegex = new RegExp(
+      `${url}${batchOrder.id}/confirm-purchase-order/`,
+    );
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.unroute(confirmPurchaseOrderRegex);
+    await page.route(confirmPurchaseOrderRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "PATCH") {
+        batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_TO_SIGN;
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "quoted",
+    );
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Click confirm purchase order
+    await expect(
+      page.getByRole("menuitem", { name: "Confirm purchase order" }),
+    ).toBeVisible();
+    await page
+      .getByRole("menuitem", { name: "Confirm purchase order" })
+      .click();
+
+    // Check after operation
+    await expect(
+      page.getByText("Batch order purchase order confirmed."),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "to_sign",
+    );
+  });
+
+  test("Confirm purchase order button is disabled when conditions are not met", async ({
+    page,
+  }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
+    batchOrder.payment_method =
+      BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER;
+    batchOrder.total = 123.45;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Confirm purchase order should be disabled
+    const confirmPurchaseOrderMenuItem = page.getByRole("menuitem", {
+      name: "Confirm purchase order",
+    });
+    await expect(confirmPurchaseOrderMenuItem).toBeVisible();
+    await expect(confirmPurchaseOrderMenuItem).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   });
 });
 

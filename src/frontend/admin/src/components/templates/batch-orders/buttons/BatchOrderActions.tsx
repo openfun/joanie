@@ -5,6 +5,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import {
   BatchOrder,
+  BatchOrderPaymentMethodEnum,
   BatchOrderStatesEnum,
 } from "@/services/api/models/BatchOrder";
 import ButtonMenu, {
@@ -59,6 +60,17 @@ const messages = defineMessages({
     description: "Error message when quote confirmation fails",
     defaultMessage: "Failed to confirm quote. Please try again.",
   },
+  confirmPurchaseOrder: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmPurchaseOrder",
+    description: "Label for the confirm purchase order action",
+    defaultMessage: "Confirm purchase order",
+  },
+  confirmPurchaseOrderDisabled: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmPurchaseOrderDisabled",
+    description: "Text when the batch order purchase order cannot be confirmed",
+    defaultMessage:
+      "Purchase order can only be confirmed when batch order is in quoted state with purchase order payment method, quote is signed, and total is set",
+  },
 });
 
 type Props = {
@@ -92,6 +104,24 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
           batchOrder.state !== BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED,
         disableMessage: intl.formatMessage(messages.confirmQuoteDisabled),
         onClick: confirmQuoteModal.handleOpen,
+      },
+      {
+        icon: <CheckCircleIcon />,
+        mainLabel: intl.formatMessage(messages.confirmPurchaseOrder),
+        isDisable:
+          batchOrder.state !== BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED ||
+          batchOrder.payment_method !==
+            BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER ||
+          !batchOrder.total,
+        disableMessage: intl.formatMessage(
+          messages.confirmPurchaseOrderDisabled,
+        ),
+        onClick: async () => {
+          batchOrdersQuery.methods.confirmPurchaseOrder(
+            { batchOrderId: batchOrder.id },
+            { onSuccess: batchOrderQuery.methods.invalidate },
+          );
+        },
       },
       {
         icon: <CancelIcon />,
