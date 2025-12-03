@@ -2,6 +2,7 @@ import { faker } from "@faker-js/faker";
 import {
   BatchOrder,
   BatchOrderListItem,
+  BatchOrderPaymentMethodEnum,
   BatchOrderStatesEnum,
 } from "@/services/api/models/BatchOrder";
 import { OfferingFactory } from "@/services/api/models/Offerings";
@@ -48,6 +49,9 @@ const build = (state?: BatchOrderStatesEnum): BatchOrder => {
     signatory_telephone: faker.phone.number(),
     funding_entity: faker.company.name(),
     funding_amount: faker.number.float({ min: 0, max: totalOrder }),
+    payment_method: faker.helpers.arrayElement(
+      Object.values(BatchOrderPaymentMethodEnum),
+    ),
   };
 
   return batchOrder;
