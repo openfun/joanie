@@ -173,16 +173,18 @@ export function OrderView({ order }: Props) {
                 disabled={true}
                 label={intl.formatMessage(orderViewMessages.owner)}
                 helperText={
-                  <Tooltip
-                    title={intl.formatMessage(commonTranslations.clickToCopy)}
-                    onClick={() => copyToClipboard(order.owner.email)}
-                  >
-                    <Typography sx={{ cursor: "pointer" }} variant="caption">
-                      {order.owner.email}
-                    </Typography>
-                  </Tooltip>
+                  order.owner?.email && (
+                    <Tooltip
+                      title={intl.formatMessage(commonTranslations.clickToCopy)}
+                      onClick={() => copyToClipboard(order.owner?.email)}
+                    >
+                      <Typography sx={{ cursor: "pointer" }} variant="caption">
+                        {order.owner?.email}
+                      </Typography>
+                    </Tooltip>
+                  )
                 }
-                value={order.owner.full_name ?? order.owner.username}
+                value={order.owner?.full_name ?? order.owner?.username}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
