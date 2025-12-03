@@ -64,6 +64,11 @@ const messages = defineMessages({
     defaultMessage: "Total",
     description: "Label for the total header inside the table",
   },
+  paymentMethod: {
+    id: "components.templates.batchOrders.list.paymentMethod",
+    defaultMessage: "Payment method",
+    description: "Label for the payment method header inside the table",
+  },
 });
 
 type Props = DefaultTableProps<BatchOrderListItem>;
@@ -139,6 +144,11 @@ export function BatchOrdersList(props: Props) {
       valueGetter: (value, row) => {
         return row.total ? `${row.total} ${row.total_currency}` : "-";
       },
+    },
+    {
+      field: "payment_method",
+      headerName: intl.formatMessage(messages.paymentMethod),
+      flex: 1,
     },
   ];
 
