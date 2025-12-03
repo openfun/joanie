@@ -14,6 +14,8 @@ export const batchOrderRoutes = {
     `/batch-orders/${id}/confirm-purchase-order/`,
   confirmBankTransfer: (id: string) =>
     `/batch-orders/${id}/confirm-bank-transfer/`,
+  submitForSignature: (id: string) =>
+    `/batch-orders/${id}/submit-for-signature/`,
 };
 
 export class BatchOrderRepository {
@@ -65,6 +67,16 @@ export class BatchOrderRepository {
 
   static confirmBankTransfer(id: string): Promise<BatchOrder> {
     const url = batchOrderRoutes.confirmBankTransfer(id);
+    return fetchApi(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(checkStatus);
+  }
+
+  static submitForSignature(id: string): Promise<BatchOrder> {
+    const url = batchOrderRoutes.submitForSignature(id);
     return fetchApi(url, {
       method: "POST",
       headers: {
