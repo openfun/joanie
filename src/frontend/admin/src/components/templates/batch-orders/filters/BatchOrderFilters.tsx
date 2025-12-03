@@ -17,7 +17,10 @@ import { UserSearch } from "@/components/templates/users/inputs/search/UserSearc
 import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
 import { entitiesInputLabel } from "@/translations/common/entitiesInputLabel";
 import { BatchOrderListQuery } from "@/hooks/useBatchOrders/useBatchOrders";
-import { BatchOrderStatesEnum } from "@/services/api/models/BatchOrder";
+import {
+  BatchOrderPaymentMethodEnum,
+  BatchOrderStatesEnum,
+} from "@/services/api/models/BatchOrder";
 
 const messages = defineMessages({
   searchPlaceholder: {
@@ -30,6 +33,11 @@ const messages = defineMessages({
     defaultMessage: "State",
     description: "Label for the batch order state filter",
   },
+  paymentMethodLabel: {
+    id: "components.templates.batchOrders.filters.BatchOrderFilters.paymentMethodLabel",
+    defaultMessage: "Payment method",
+    description: "Label for the batch order payment method filter",
+  },
 });
 
 // Form values for filters UI
@@ -37,6 +45,7 @@ type FormValues = {
   organizations?: Organization[];
   owners?: User[];
   state?: string;
+  payment_method?: string;
 };
 
 type Props = MandatorySearchFilterProps & {
@@ -50,11 +59,17 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
     state: Yup.string().nullable(),
     organizations: Yup.array<any, Organization>().nullable(),
     owners: Yup.array<any, User>().nullable(),
+    payment_method: Yup.string().nullable(),
   });
 
   const methods = useForm<FormValues>({
     resolver: yupResolver(RegisterSchema),
-    defaultValues: { organizations: [], owners: [], state: "" },
+    defaultValues: {
+      organizations: [],
+      owners: [],
+      state: "",
+      payment_method: "",
+    },
   });
 
   const formValuesToFilterValues = (
@@ -64,6 +79,7 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
       organization_ids: values.organizations?.map((o) => o.id),
       owner_ids: values.owners?.map((u) => u.id),
       state: values.state,
+      payment_method: values.payment_method,
     };
   };
 
@@ -75,6 +91,13 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
     label: value,
     value,
   }));
+
+  const paymentMethodOptions = Object.values(BatchOrderPaymentMethodEnum).map(
+    (value) => ({
+      label: value,
+      value,
+    }),
+  );
 
   return (
     <SearchFilters
@@ -93,7 +116,7 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
             onSubmit={onSubmit}
           >
             <Grid container mt={2} spacing={2}>
-              <Grid size={12}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFSelect
                   data-testid="select-batch-order-state-filter"
                   isFilterContext={true}
@@ -101,6 +124,16 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
                   name="state"
                   label={intl.formatMessage(messages.stateLabel)}
                   options={stateOptions}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <RHFSelect
+                  data-testid="select-batch-order-payment-method-filter"
+                  isFilterContext={true}
+                  fullWidth={true}
+                  name="payment_method"
+                  label={intl.formatMessage(messages.paymentMethodLabel)}
+                  options={paymentMethodOptions}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>

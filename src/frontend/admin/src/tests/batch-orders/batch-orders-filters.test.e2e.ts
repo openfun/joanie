@@ -4,7 +4,11 @@ import {
   getUrlCatchSearchParamsRegex,
   mockPlaywrightCrud,
 } from "@/tests/useResourceHandler";
-import { transformBatchOrdersToListItems } from "@/services/api/models/BatchOrder";
+import {
+  BatchOrderPaymentMethodEnum,
+  BatchOrderStatesEnum,
+  transformBatchOrdersToListItems,
+} from "@/services/api/models/BatchOrder";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import {
   DTOOrganization,
@@ -59,9 +63,7 @@ test.describe("Batch Order filters", () => {
     });
   });
 
-  test("Check filters button and search field are present", async ({
-    page,
-  }) => {
+  test("Check all filter fields are present", async ({ page }) => {
     await page.goto(PATH_ADMIN.batch_orders.list);
     await expect(
       page.getByRole("heading", { name: "Batch Orders" }),
@@ -71,8 +73,19 @@ test.describe("Batch Order filters", () => {
         "Search by product, company, owner or organization name",
       ),
     ).toBeVisible();
-    // Note: Currently BatchOrdersList has filters set to undefined
-    // This test validates the presence of search functionality
+    await page.getByRole("button", { name: "Filters" }).click();
+    await expect(
+      page.getByTestId("select-batch-order-state-filter").getByLabel("State"),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByTestId("select-batch-order-payment-method-filter")
+        .getByLabel("Payment method"),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("combobox", { name: "Organization" }),
+    ).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Owner" })).toBeVisible();
   });
 
   test("Check search functionality", async ({ page }) => {
@@ -89,6 +102,116 @@ test.describe("Batch Order filters", () => {
     // Test that search input is functional
     await searchInput.fill(store.list[0].company_name);
     await expect(searchInput).toHaveValue(store.list[0].company_name);
+  });
+
+  test("Check all filter chips", async ({ page }) => {
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await expect(
+      page.getByRole("heading", { name: "Batch Orders" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Filters" }).click();
+
+    // Select state filter
+    await page
+      .getByTestId("select-batch-order-state-filter")
+      .getByLabel("State")
+      .click();
+    await page
+      .getByRole("option", {
+        name: BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED,
+      })
+      .click();
+
+    // Select payment method filter
+    await page
+      .getByTestId("select-batch-order-payment-method-filter")
+      .getByLabel("Payment method")
+      .click();
+    await page
+      .getByRole("option", {
+        name: BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER,
+      })
+      .click();
+
+    // Select organization filter
+    await page.getByRole("combobox", { name: "Organization" }).click();
+    await page.getByRole("combobox", { name: "Organization" }).fill("o");
+    await page
+      .getByRole("option", { name: store.organizations[0].title })
+      .click();
+
+    // Select owner filter
+    await page.getByRole("combobox", { name: "Owner" }).click();
+    await page.getByRole("combobox", { name: "Owner" }).fill("u");
+    await page.getByRole("option", { name: store.users[0].username }).click();
+
+    await page.getByLabel("close").click();
+
+    // Verify all filter chips are visible
+    await expect(
+      page.getByRole("button", {
+        name: `State: ${BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED}`,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Payment method: ${BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER}`,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Organization: ${store.organizations[0].title}`,
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Owner: ${store.users[0].full_name} (${store.users[0].username})`,
+      }),
+    ).toBeVisible();
+  });
+
+  test("Test payment method filter functionality", async ({ page }) => {
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await expect(
+      page.getByRole("heading", { name: "Batch Orders" }),
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: "Filters" }).click();
+
+    // Select payment method filter
+    await page
+      .getByTestId("select-batch-order-payment-method-filter")
+      .getByLabel("Payment method")
+      .click();
+    await page
+      .getByRole("option", {
+        name: BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER,
+      })
+      .click();
+
+    await page.getByLabel("close").click();
+
+    // Verify chip is visible
+    await expect(
+      page.getByRole("button", {
+        name: `Payment method: ${BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER}`,
+      }),
+    ).toBeVisible();
+
+    // Clear filter
+    await page
+      .getByRole("button", {
+        name: `Payment method: ${BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER}`,
+      })
+      .getByTestId("CancelIcon")
+      .click();
+
+    // Verify chip is no longer visible
+    await expect(
+      page.getByRole("button", {
+        name: `Payment method: ${BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER}`,
+      }),
+    ).not.toBeVisible();
   });
 
   test("Test export functionality", async ({ page }) => {
