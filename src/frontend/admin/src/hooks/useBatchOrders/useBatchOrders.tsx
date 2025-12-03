@@ -56,6 +56,19 @@ export const useBatchOrdersMessages = defineMessages({
     defaultMessage:
       "An error occurred while confirming the purchase order. Please retry later.",
   },
+  successConfirmBankTransfer: {
+    id: "hooks.useBatchOrders.successConfirmBankTransfer",
+    description:
+      "Success message shown to the user when the batch order bank transfer has been confirmed.",
+    defaultMessage: "Batch order bank transfer confirmed.",
+  },
+  errorConfirmBankTransfer: {
+    id: "hooks.useBatchOrders.errorConfirmBankTransfer",
+    description:
+      "Error message shown to the user when batch order confirm bank transfer request fails.",
+    defaultMessage:
+      "An error occurred while confirming the bank transfer. Please retry later.",
+  },
   errorNotFound: {
     id: "hooks.useBatchOrders.errorNotFound",
     description: "Error message shown to the user when no batch order matches.",
@@ -145,6 +158,26 @@ export const useBatchOrders = (
             error.data?.details ??
               intl.formatMessage(
                 useBatchOrdersMessages.errorConfirmPurchaseOrder,
+              ),
+          );
+        },
+      }).mutate,
+      confirmBankTransfer: mutation({
+        mutationFn: async (data: { batchOrderId: string }) => {
+          return BatchOrderRepository.confirmBankTransfer(data.batchOrderId);
+        },
+        onSuccess: async () => {
+          custom.methods.showSuccessMessage(
+            intl.formatMessage(
+              useBatchOrdersMessages.successConfirmBankTransfer,
+            ),
+          );
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(
+                useBatchOrdersMessages.errorConfirmBankTransfer,
               ),
           );
         },
