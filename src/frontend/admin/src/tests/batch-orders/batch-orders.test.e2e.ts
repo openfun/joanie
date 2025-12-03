@@ -414,6 +414,106 @@ test.describe("Batch Order view", () => {
       "true",
     );
   });
+
+  test("Confirm bank transfer for batch order", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_PENDING;
+    batchOrder.payment_method =
+      BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER;
+    batchOrder.total = 123.45;
+
+    const confirmBankTransferRegex = new RegExp(
+      `${url}${batchOrder.id}/confirm-bank-transfer/`,
+    );
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.unroute(confirmBankTransferRegex);
+    await page.route(confirmBankTransferRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "POST") {
+        batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED;
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "pending",
+    );
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Click confirm bank transfer
+    await expect(
+      page.getByRole("menuitem", { name: "Confirm bank transfer" }),
+    ).toBeVisible();
+    await page.getByRole("menuitem", { name: "Confirm bank transfer" }).click();
+
+    // Check after operation
+    await expect(
+      page.getByText("Batch order bank transfer confirmed."),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "completed",
+    );
+  });
+
+  test("Confirm bank transfer button is disabled when conditions are not met", async ({
+    page,
+  }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
+    batchOrder.payment_method =
+      BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER;
+    batchOrder.total = 123.45;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Confirm bank transfer should be disabled
+    const confirmBankTransferMenuItem = page.getByRole("menuitem", {
+      name: "Confirm bank transfer",
+    });
+    await expect(confirmBankTransferMenuItem).toBeVisible();
+    await expect(confirmBankTransferMenuItem).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
 });
 
 test.describe("Batch Order list", () => {

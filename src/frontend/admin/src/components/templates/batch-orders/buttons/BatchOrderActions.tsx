@@ -71,6 +71,17 @@ const messages = defineMessages({
     defaultMessage:
       "Purchase order can only be confirmed when batch order is in quoted state with purchase order payment method, quote is signed, and total is set",
   },
+  confirmBankTransfer: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmBankTransfer",
+    description: "Label for the confirm bank transfer action",
+    defaultMessage: "Confirm bank transfer",
+  },
+  confirmBankTransferDisabled: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmBankTransferDisabled",
+    description: "Text when the batch order bank transfer cannot be confirmed",
+    defaultMessage:
+      "Bank transfer can only be confirmed when batch order uses bank transfer payment method and is in pending, signing, or process payment state",
+  },
 });
 
 type Props = {
@@ -118,6 +129,27 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
         ),
         onClick: async () => {
           batchOrdersQuery.methods.confirmPurchaseOrder(
+            { batchOrderId: batchOrder.id },
+            { onSuccess: batchOrderQuery.methods.invalidate },
+          );
+        },
+      },
+      {
+        icon: <CheckCircleIcon />,
+        mainLabel: intl.formatMessage(messages.confirmBankTransfer),
+        isDisable:
+          batchOrder.payment_method !==
+            BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER ||
+          ![
+            BatchOrderStatesEnum.BATCH_ORDER_STATE_SIGNING,
+            BatchOrderStatesEnum.BATCH_ORDER_STATE_PENDING,
+            BatchOrderStatesEnum.BATCH_ORDER_STATE_PROCESS_PAYMENT,
+          ].includes(batchOrder.state),
+        disableMessage: intl.formatMessage(
+          messages.confirmBankTransferDisabled,
+        ),
+        onClick: async () => {
+          batchOrdersQuery.methods.confirmBankTransfer(
             { batchOrderId: batchOrder.id },
             { onSuccess: batchOrderQuery.methods.invalidate },
           );
