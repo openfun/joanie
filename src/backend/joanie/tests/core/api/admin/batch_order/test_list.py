@@ -211,10 +211,10 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
 
         batch_order = factories.BatchOrderFactory(
             owner=factories.UserFactory(
-                username="jdoe",
-                first_name="John",
-                last_name="Doe",
-                email="jdoe@example.com",
+                username="jcung",
+                first_name="Joanie",
+                last_name="Cunningham",
+                email="joaniecunnigham@example.com",
             ),
             offering=offering,
             organization=organization,
@@ -223,10 +223,10 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
 
         queries = [
             # owner related
-            "jdoe",
-            "john",
-            "doe",
-            "jdoe@example.com",
+            "jcung",
+            "joanie",
+            "cunningham",
+            "joaniecunnigham@example.com",
             # product titles
             "Corporate Training",
             "Formation en entreprise",
