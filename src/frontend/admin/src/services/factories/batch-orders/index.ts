@@ -88,6 +88,9 @@ const buildBatchOrderListItem = (): BatchOrderListItem => {
     company_name: faker.company.name(),
     owner_name: owner.full_name ?? owner.username,
     organization_title: organization.title,
+    payment_method: faker.helpers.arrayElement(
+      Object.values(BatchOrderPaymentMethodEnum),
+    ),
   };
 };
 
