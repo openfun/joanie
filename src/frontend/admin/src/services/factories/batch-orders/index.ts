@@ -52,6 +52,7 @@ const build = (state?: BatchOrderStatesEnum): BatchOrder => {
     payment_method: faker.helpers.arrayElement(
       Object.values(BatchOrderPaymentMethodEnum),
     ),
+    orders: [],
   };
 
   return batchOrder;
