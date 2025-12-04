@@ -19,6 +19,8 @@ import {
 } from "@/services/api/models/Organization";
 import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
 import { formatShortDateTest } from "@/tests/utils";
+import { OrderListItemFactory } from "@/services/factories/orders";
+import { orderStatesMessages } from "@/components/templates/orders/view/translations";
 import { batchOrderStatesMessages } from "@/components/templates/batch-orders/view/translations";
 
 const url = "http://localhost:8071/api/v1.0/admin/batch-orders/";
@@ -706,6 +708,87 @@ test.describe("Batch Order view", () => {
       "aria-disabled",
       "true",
     );
+  });
+
+  test("Check orders table is displayed with orders", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.orders = OrderListItemFactory(batchOrder.nb_seats);
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+
+    // Check orders section title
+    await expect(
+      page.getByRole("heading", { name: "Orders", exact: true }),
+    ).toBeVisible();
+
+    // Check orders table columns
+    await expect(
+      page.getByRole("columnheader", { name: "Owner" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "State" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Created on" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Updated on" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Voucher" }),
+    ).toBeVisible();
+
+    // Check orders are displayed
+    await Promise.all(
+      batchOrder.orders.map(async (order) => {
+        const rowLocator = page.locator(`[data-id='${order.id}']`);
+        await expect(rowLocator).toBeVisible();
+        await expect(
+          rowLocator.getByRole("gridcell", {
+            name: orderStatesMessages[order.state].defaultMessage,
+          }),
+        ).toBeVisible();
+      }),
+    );
+  });
+
+  test("Check orders table is displayed when no orders", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.orders = [];
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+
+    // Check orders section title is still visible
+    await expect(
+      page.getByRole("heading", { name: "Orders", exact: true }),
+    ).toBeVisible();
+
+    // Check no rows message or empty table
+    await expect(page.getByText("No entities to display")).toBeVisible();
   });
 });
 
