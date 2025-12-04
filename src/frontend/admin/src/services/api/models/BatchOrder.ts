@@ -3,6 +3,7 @@ import { Organization } from "@/services/api/models/Organization";
 import { Nullable } from "@/types/utils";
 import { User } from "@/services/api/models/User";
 import { Offering } from "@/services/api/models/Offerings";
+import { OrderListItem } from "@/services/api/models/Order";
 
 export enum BatchOrderStatesEnum {
   BATCH_ORDER_STATE_DRAFT = "draft",
@@ -69,6 +70,7 @@ export type BatchOrder = AbstractBatchOrder & {
 
   funding_entity: string;
   funding_amount: number;
+  orders: OrderListItem[];
 };
 
 export type BatchOrderQuery = ResourcesQuery & {};
