@@ -11,11 +11,17 @@ import IconButton from "@mui/material/IconButton";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import { useRouter } from "next/router";
 import { useTheme } from "@mui/material/styles";
+import { GridColDef } from "@mui/x-data-grid";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { BatchOrder } from "@/services/api/models/BatchOrder";
+import { CustomLink } from "@/components/presentational/link/CustomLink";
+import { formatShortDate } from "@/utils/dates";
+import { TableComponent } from "@/components/presentational/table/TableComponent";
+import { batchOrderStatesMessages } from "@/components/templates/batch-orders/view/translations";
+import { orderStatesMessages } from "@/components/templates/orders/view/translations";
 
 const messages = defineMessages({
   sectionTitle: {
@@ -68,6 +74,36 @@ const messages = defineMessages({
     id: "components.templates.batchOrders.view.total",
     defaultMessage: "Total",
     description: "Label for total",
+  },
+  ordersTitle: {
+    id: "components.templates.batchOrders.view.ordersTitle",
+    defaultMessage: "Orders",
+    description: "Title for the orders section",
+  },
+  orderOwner: {
+    id: "components.templates.batchOrders.view.orderOwner",
+    defaultMessage: "Owner",
+    description: "Label for order owner column",
+  },
+  orderState: {
+    id: "components.templates.batchOrders.view.orderState",
+    defaultMessage: "State",
+    description: "Label for order state column",
+  },
+  orderCreatedOn: {
+    id: "components.templates.batchOrders.view.orderCreatedOn",
+    defaultMessage: "Created on",
+    description: "Label for order created on column",
+  },
+  orderUpdatedOn: {
+    id: "components.templates.batchOrders.view.orderUpdatedOn",
+    defaultMessage: "Updated on",
+    description: "Label for order updated on column",
+  },
+  orderVoucher: {
+    id: "components.templates.batchOrders.view.orderVoucher",
+    defaultMessage: "Voucher",
+    description: "Label for order voucher column",
   },
 });
 
@@ -205,7 +241,9 @@ export function BatchOrderView({ batchOrder }: Props) {
               fullWidth={true}
               disabled={true}
               label={intl.formatMessage(messages.state)}
-              value={batchOrder.state}
+              value={intl.formatMessage(
+                batchOrderStatesMessages[batchOrder.state],
+              )}
             />
           </Grid>
 
@@ -220,8 +258,62 @@ export function BatchOrderView({ batchOrder }: Props) {
               value={batchOrder.total}
             />
           </Grid>
+
+          <Grid size={12}>
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+              <FormattedMessage {...messages.ordersTitle} />
+            </Typography>
+            <TableComponent
+              rows={batchOrder.orders}
+              columns={getOrderColumns(intl)}
+              disableRowSelectionOnClick
+              hideFooterPagination={true}
+              enableEdit={false}
+            />
+          </Grid>
         </Grid>
       </Box>
     </SimpleCard>
   );
+}
+
+function getOrderColumns(intl: ReturnType<typeof useIntl>): GridColDef[] {
+  return [
+    {
+      field: "owner_name",
+      headerName: intl.formatMessage(messages.orderOwner),
+      flex: 1,
+      renderCell: (cell) => (
+        <CustomLink
+          href={PATH_ADMIN.orders.view(cell.row.id)}
+          title={intl.formatMessage(commonTranslations.view)}
+        >
+          {cell.row.owner_name}
+        </CustomLink>
+      ),
+    },
+    {
+      field: "state",
+      headerName: intl.formatMessage(messages.orderState),
+      flex: 1,
+      valueGetter: (value) => intl.formatMessage(orderStatesMessages[value]),
+    },
+    {
+      field: "created_on",
+      headerName: intl.formatMessage(messages.orderCreatedOn),
+      flex: 1,
+      valueGetter: (value, row) => formatShortDate(row.created_on),
+    },
+    {
+      field: "updated_on",
+      headerName: intl.formatMessage(messages.orderUpdatedOn),
+      flex: 1,
+      valueGetter: (value, row) => formatShortDate(row.updated_on),
+    },
+    {
+      field: "voucher",
+      headerName: intl.formatMessage(messages.orderVoucher),
+      flex: 1,
+    },
+  ];
 }
