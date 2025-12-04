@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from "react-intl";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DrawIcon from "@mui/icons-material/Draw";
+import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import {
   BatchOrder,
   BatchOrderPaymentMethodEnum,
@@ -94,6 +95,17 @@ const messages = defineMessages({
     defaultMessage:
       "Batch order can only be submitted for signature when in assigned, quoted, or to sign state",
   },
+  generateOrders: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.generateOrders",
+    description: "Label for the generate orders action",
+    defaultMessage: "Generate orders",
+  },
+  generateOrdersDisabled: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.generateOrdersDisabled",
+    description: "Text when the batch order orders cannot be generated",
+    defaultMessage:
+      "Orders can only be generated when batch order is in completed state",
+  },
 });
 
 type Props = {
@@ -178,6 +190,19 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
         disableMessage: intl.formatMessage(messages.submitForSignatureDisabled),
         onClick: async () => {
           batchOrdersQuery.methods.submitForSignature(
+            { batchOrderId: batchOrder.id },
+            { onSuccess: batchOrderQuery.methods.invalidate },
+          );
+        },
+      },
+      {
+        icon: <PlaylistAddCheckIcon />,
+        mainLabel: intl.formatMessage(messages.generateOrders),
+        isDisable:
+          batchOrder.state !== BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED,
+        disableMessage: intl.formatMessage(messages.generateOrdersDisabled),
+        onClick: async () => {
+          batchOrdersQuery.methods.generateOrders(
             { batchOrderId: batchOrder.id },
             { onSuccess: batchOrderQuery.methods.invalidate },
           );
