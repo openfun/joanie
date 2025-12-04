@@ -29,8 +29,9 @@ export type AbstractBatchOrder = {
   updated_on: string;
   state: BatchOrderStatesEnum;
   nb_seats: number;
-  total: number;
+  total: Nullable<number>;
   total_currency: string;
+  payment_method: BatchOrderPaymentMethodEnum;
 };
 
 export type BatchOrderListItem = AbstractBatchOrder & {
@@ -68,7 +69,6 @@ export type BatchOrder = AbstractBatchOrder & {
 
   funding_entity: string;
   funding_amount: number;
-  payment_method: BatchOrderPaymentMethodEnum;
 };
 
 export type BatchOrderQuery = ResourcesQuery & {};
@@ -84,6 +84,7 @@ export const transformBatchOrderToListItem = (
     nb_seats: batchOrder.nb_seats,
     total: batchOrder.total,
     total_currency: batchOrder.total_currency,
+    payment_method: batchOrder.payment_method,
     course_code: batchOrder.offering.course.code ?? null,
     product_title: batchOrder.offering.product.title,
     company_name: batchOrder.company_name,
