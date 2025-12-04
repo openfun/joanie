@@ -83,6 +83,20 @@ export const useBatchOrdersMessages = defineMessages({
     defaultMessage:
       "An error occurred while submitting for signature. Please retry later.",
   },
+  successGenerateOrders: {
+    id: "hooks.useBatchOrders.successGenerateOrders",
+    description:
+      "Success message shown to the user when the batch order orders have been generated.",
+    defaultMessage:
+      "Batch order orders generated. Voucher codes sent to owner.",
+  },
+  errorGenerateOrders: {
+    id: "hooks.useBatchOrders.errorGenerateOrders",
+    description:
+      "Error message shown to the user when batch order generate orders request fails.",
+    defaultMessage:
+      "An error occurred while generating orders. Please retry later.",
+  },
   errorNotFound: {
     id: "hooks.useBatchOrders.errorNotFound",
     description: "Error message shown to the user when no batch order matches.",
@@ -214,6 +228,22 @@ export const useBatchOrders = (
               intl.formatMessage(
                 useBatchOrdersMessages.errorSubmitForSignature,
               ),
+          );
+        },
+      }).mutate,
+      generateOrders: mutation({
+        mutationFn: async (data: { batchOrderId: string }) => {
+          return BatchOrderRepository.generateOrders(data.batchOrderId);
+        },
+        onSuccess: async () => {
+          custom.methods.showSuccessMessage(
+            intl.formatMessage(useBatchOrdersMessages.successGenerateOrders),
+          );
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(useBatchOrdersMessages.errorGenerateOrders),
           );
         },
       }).mutate,

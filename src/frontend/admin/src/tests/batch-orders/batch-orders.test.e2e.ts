@@ -612,6 +612,100 @@ test.describe("Batch Order view", () => {
       "true",
     );
   });
+
+  test("Generate orders for batch order", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED;
+    batchOrder.total = 123.45;
+
+    const generateOrdersRegex = new RegExp(
+      `${url}${batchOrder.id}/generate-orders/`,
+    );
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.unroute(generateOrdersRegex);
+    await page.route(generateOrdersRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "POST") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
+      "completed",
+    );
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Click generate orders
+    await expect(
+      page.getByRole("menuitem", { name: "Generate orders" }),
+    ).toBeVisible();
+    await page.getByRole("menuitem", { name: "Generate orders" }).click();
+
+    // Check after operation
+    await expect(
+      page.getByText(
+        "Batch order orders generated. Voucher codes sent to owner.",
+      ),
+    ).toBeVisible();
+  });
+
+  test("Generate orders button is disabled when conditions are not met", async ({
+    page,
+  }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
+    batchOrder.total = 123.45;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Generate orders should be disabled
+    const generateOrdersMenuItem = page.getByRole("menuitem", {
+      name: "Generate orders",
+    });
+    await expect(generateOrdersMenuItem).toBeVisible();
+    await expect(generateOrdersMenuItem).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
 });
 
 test.describe("Batch Order list", () => {
