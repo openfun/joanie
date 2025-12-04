@@ -19,6 +19,7 @@ import {
 } from "@/services/api/models/Organization";
 import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
 import { formatShortDateTest } from "@/tests/utils";
+import { batchOrderStatesMessages } from "@/components/templates/batch-orders/view/translations";
 
 const url = "http://localhost:8071/api/v1.0/admin/batch-orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -179,7 +180,7 @@ test.describe("Batch Order view", () => {
       page.getByRole("heading", { name: "Batch order informations" }),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "draft",
+      "Draft",
     );
 
     // Check and click on the action button
@@ -198,7 +199,7 @@ test.describe("Batch Order view", () => {
     // Check after operation
     await expect(page.getByText("Operation completed")).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "canceled",
+      "Canceled",
     );
   });
 
@@ -239,7 +240,7 @@ test.describe("Batch Order view", () => {
       page.getByRole("heading", { name: "Batch order informations" }),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "quoted",
+      "Quoted",
     );
 
     // Check and click on the action button
@@ -274,7 +275,7 @@ test.describe("Batch Order view", () => {
       "123.45",
     );
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "to_sign",
+      "To sign",
     );
   });
 
@@ -350,7 +351,7 @@ test.describe("Batch Order view", () => {
       page.getByRole("heading", { name: "Batch order informations" }),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "quoted",
+      "Quoted",
     );
 
     // Check and click on the action button
@@ -370,7 +371,7 @@ test.describe("Batch Order view", () => {
       page.getByText("Batch order purchase order confirmed."),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "to_sign",
+      "To sign",
     );
   });
 
@@ -452,7 +453,7 @@ test.describe("Batch Order view", () => {
       page.getByRole("heading", { name: "Batch order informations" }),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "pending",
+      "Pending",
     );
 
     // Check and click on the action button
@@ -470,7 +471,7 @@ test.describe("Batch Order view", () => {
       page.getByText("Batch order bank transfer confirmed."),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "completed",
+      "Completed",
     );
   });
 
@@ -550,7 +551,7 @@ test.describe("Batch Order view", () => {
       page.getByRole("heading", { name: "Batch order informations" }),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "quoted",
+      "Quoted",
     );
 
     // Check and click on the action button
@@ -570,7 +571,7 @@ test.describe("Batch Order view", () => {
       ),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "signing",
+      "Signing",
     );
   });
 
@@ -647,7 +648,7 @@ test.describe("Batch Order view", () => {
       page.getByRole("heading", { name: "Batch order informations" }),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
-      "completed",
+      "Completed",
     );
 
     // Check and click on the action button
@@ -786,7 +787,9 @@ test.describe("Batch Order list", () => {
           }),
         ).toBeVisible();
         await expect(
-          rowLocator.getByRole("gridcell", { name: batchOrder.state }),
+          rowLocator.getByRole("gridcell", {
+            name: batchOrderStatesMessages[batchOrder.state].defaultMessage,
+          }),
         ).toBeVisible();
         await expect(
           rowLocator.getByRole("gridcell", {

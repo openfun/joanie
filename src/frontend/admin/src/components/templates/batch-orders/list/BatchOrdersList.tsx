@@ -17,6 +17,10 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { formatShortDate } from "@/utils/dates";
 import { BatchOrderFilters } from "@/components/templates/batch-orders/filters/BatchOrderFilters";
+import {
+  batchOrderPaymentMethodsMessages,
+  batchOrderStatesMessages,
+} from "@/components/templates/batch-orders/view/translations";
 
 const messages = defineMessages({
   product: {
@@ -124,6 +128,8 @@ export function BatchOrdersList(props: Props) {
       field: "state",
       headerName: intl.formatMessage(messages.state),
       flex: 1,
+      valueGetter: (value) =>
+        intl.formatMessage(batchOrderStatesMessages[value]),
     },
     {
       field: "created_on",
@@ -149,6 +155,8 @@ export function BatchOrdersList(props: Props) {
       field: "payment_method",
       headerName: intl.formatMessage(messages.paymentMethod),
       flex: 1,
+      valueGetter: (value) =>
+        intl.formatMessage(batchOrderPaymentMethodsMessages[value]),
     },
   ];
 
