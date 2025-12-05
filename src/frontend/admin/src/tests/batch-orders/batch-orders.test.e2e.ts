@@ -21,7 +21,10 @@ import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations
 import { formatShortDateTest } from "@/tests/utils";
 import { OrderListItemFactory } from "@/services/factories/orders";
 import { orderStatesMessages } from "@/components/templates/orders/view/translations";
-import { batchOrderStatesMessages } from "@/components/templates/batch-orders/view/translations";
+import {
+  batchOrderPaymentMethodsMessages,
+  batchOrderStatesMessages,
+} from "@/components/templates/batch-orders/view/translations";
 
 const url = "http://localhost:8071/api/v1.0/admin/batch-orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -75,6 +78,8 @@ test.describe("Batch Order view", () => {
     await page
       .getByRole("heading", { name: "Batch Order informations" })
       .click();
+
+    // Basic info
     await expect(page.getByLabel("Organization", { exact: true })).toHaveValue(
       batchOrder.organization?.title ?? "",
     );
@@ -94,6 +99,64 @@ test.describe("Batch Order view", () => {
       batchOrder.nb_seats.toString(),
     );
     await expect(page.getByLabel("Total")).toHaveValue(batchOrder.total + "");
+    await expect(page.getByLabel("Payment method")).toHaveValue(
+      batchOrderPaymentMethodsMessages[batchOrder.payment_method]
+        .defaultMessage,
+    );
+
+    // Billing address
+    await expect(page.getByLabel("Identification number")).toHaveValue(
+      batchOrder.identification_number,
+    );
+    await expect(page.getByLabel("VAT registration")).toHaveValue(
+      batchOrder.vat_registration ?? "",
+    );
+    await expect(page.getByLabel("Address")).toHaveValue(batchOrder.address);
+    await expect(page.getByLabel("Postcode")).toHaveValue(batchOrder.postcode);
+    await expect(page.getByLabel("City")).toHaveValue(batchOrder.city);
+    await expect(page.getByLabel("Country")).toHaveValue(batchOrder.country);
+
+    // Administrative contact
+    await expect(page.getByLabel("Administrative first name")).toHaveValue(
+      batchOrder.administrative_firstname,
+    );
+    await expect(page.getByLabel("Administrative last name")).toHaveValue(
+      batchOrder.administrative_lastname,
+    );
+    await expect(page.getByLabel("Administrative profession")).toHaveValue(
+      batchOrder.administrative_profession,
+    );
+    await expect(page.getByLabel("Administrative email")).toHaveValue(
+      batchOrder.administrative_email,
+    );
+    await expect(page.getByLabel("Administrative telephone")).toHaveValue(
+      batchOrder.administrative_telephone,
+    );
+
+    // Signatory contact
+    await expect(page.getByLabel("Signatory first name")).toHaveValue(
+      batchOrder.signatory_firstname,
+    );
+    await expect(page.getByLabel("Signatory last name")).toHaveValue(
+      batchOrder.signatory_lastname,
+    );
+    await expect(page.getByLabel("Signatory profession")).toHaveValue(
+      batchOrder.signatory_profession,
+    );
+    await expect(page.getByLabel("Signatory email")).toHaveValue(
+      batchOrder.signatory_email,
+    );
+    await expect(page.getByLabel("Signatory telephone")).toHaveValue(
+      batchOrder.signatory_telephone,
+    );
+
+    // Funding
+    await expect(page.getByLabel("Funding entity")).toHaveValue(
+      batchOrder.funding_entity,
+    );
+    await expect(page.getByLabel("Funding amount")).toHaveValue(
+      batchOrder.funding_amount + "",
+    );
   });
 
   test("Check when organization is undefined", async ({ page }) => {
@@ -145,6 +208,8 @@ test.describe("Batch Order view", () => {
           "In this view, you can see the details of a batch order, such as the company, seats, and status.",
         ),
     ).toBeVisible();
+
+    // Basic info section
     await expect(
       page.getByLabel("Organization", { exact: true }),
     ).toBeVisible();
@@ -155,6 +220,48 @@ test.describe("Batch Order view", () => {
     await expect(page.getByLabel("Number of seats")).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toBeVisible();
     await expect(page.getByLabel("Total")).toBeVisible();
+    await expect(page.getByLabel("Payment method")).toBeVisible();
+
+    // Billing address section
+    await expect(
+      page.getByRole("heading", { name: "Billing address" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Identification number")).toBeVisible();
+    await expect(page.getByLabel("VAT registration")).toBeVisible();
+    await expect(page.getByLabel("Address")).toBeVisible();
+    await expect(page.getByLabel("Postcode")).toBeVisible();
+    await expect(page.getByLabel("City")).toBeVisible();
+    await expect(page.getByLabel("Country")).toBeVisible();
+
+    // Administrative contact section
+    await expect(
+      page.getByRole("heading", { name: "Administrative contact" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Administrative first name")).toBeVisible();
+    await expect(page.getByLabel("Administrative last name")).toBeVisible();
+    await expect(page.getByLabel("Administrative profession")).toBeVisible();
+    await expect(page.getByLabel("Administrative email")).toBeVisible();
+    await expect(page.getByLabel("Administrative telephone")).toBeVisible();
+
+    // Signatory contact section
+    await expect(
+      page.getByRole("heading", { name: "Signatory contact" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Signatory first name")).toBeVisible();
+    await expect(page.getByLabel("Signatory last name")).toBeVisible();
+    await expect(page.getByLabel("Signatory profession")).toBeVisible();
+    await expect(page.getByLabel("Signatory email")).toBeVisible();
+    await expect(page.getByLabel("Signatory telephone")).toBeVisible();
+
+    // Funding section
+    await expect(page.getByRole("heading", { name: "Funding" })).toBeVisible();
+    await expect(page.getByLabel("Funding entity")).toBeVisible();
+    await expect(page.getByLabel("Funding amount")).toBeVisible();
+
+    // Orders section
+    await expect(
+      page.getByRole("heading", { name: "Orders", exact: true }),
+    ).toBeVisible();
   });
 
   test("Cancel batch order", async ({ page }) => {
