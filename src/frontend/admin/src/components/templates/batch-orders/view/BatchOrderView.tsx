@@ -20,7 +20,10 @@ import { BatchOrder } from "@/services/api/models/BatchOrder";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { formatShortDate } from "@/utils/dates";
 import { TableComponent } from "@/components/presentational/table/TableComponent";
-import { batchOrderStatesMessages } from "@/components/templates/batch-orders/view/translations";
+import {
+  batchOrderPaymentMethodsMessages,
+  batchOrderStatesMessages,
+} from "@/components/templates/batch-orders/view/translations";
 import { orderStatesMessages } from "@/components/templates/orders/view/translations";
 
 const messages = defineMessages({
@@ -74,6 +77,121 @@ const messages = defineMessages({
     id: "components.templates.batchOrders.view.total",
     defaultMessage: "Total",
     description: "Label for total",
+  },
+  paymentMethod: {
+    id: "components.templates.batchOrders.view.paymentMethod",
+    defaultMessage: "Payment method",
+    description: "Label for payment method",
+  },
+  billingAddressTitle: {
+    id: "components.templates.batchOrders.view.billingAddressTitle",
+    defaultMessage: "Billing address",
+    description: "Title for billing address section",
+  },
+  identificationNumber: {
+    id: "components.templates.batchOrders.view.identificationNumber",
+    defaultMessage: "Identification number",
+    description: "Label for identification number",
+  },
+  vatRegistration: {
+    id: "components.templates.batchOrders.view.vatRegistration",
+    defaultMessage: "VAT registration",
+    description: "Label for VAT registration",
+  },
+  address: {
+    id: "components.templates.batchOrders.view.address",
+    defaultMessage: "Address",
+    description: "Label for address",
+  },
+  postcode: {
+    id: "components.templates.batchOrders.view.postcode",
+    defaultMessage: "Postcode",
+    description: "Label for postcode",
+  },
+  city: {
+    id: "components.templates.batchOrders.view.city",
+    defaultMessage: "City",
+    description: "Label for city",
+  },
+  country: {
+    id: "components.templates.batchOrders.view.country",
+    defaultMessage: "Country",
+    description: "Label for country",
+  },
+  administrativeContactTitle: {
+    id: "components.templates.batchOrders.view.administrativeContactTitle",
+    defaultMessage: "Administrative contact",
+    description: "Title for administrative contact section",
+  },
+  administrativeFirstname: {
+    id: "components.templates.batchOrders.view.administrativeFirstname",
+    defaultMessage: "Administrative first name",
+    description: "Label for administrative first name",
+  },
+  administrativeLastname: {
+    id: "components.templates.batchOrders.view.administrativeLastname",
+    defaultMessage: "Administrative last name",
+    description: "Label for administrative last name",
+  },
+  administrativeProfession: {
+    id: "components.templates.batchOrders.view.administrativeProfession",
+    defaultMessage: "Administrative profession",
+    description: "Label for administrative profession",
+  },
+  administrativeEmail: {
+    id: "components.templates.batchOrders.view.administrativeEmail",
+    defaultMessage: "Administrative email",
+    description: "Label for administrative email",
+  },
+  administrativeTelephone: {
+    id: "components.templates.batchOrders.view.administrativeTelephone",
+    defaultMessage: "Administrative telephone",
+    description: "Label for administrative telephone",
+  },
+  signatoryContactTitle: {
+    id: "components.templates.batchOrders.view.signatoryContactTitle",
+    defaultMessage: "Signatory contact",
+    description: "Title for signatory contact section",
+  },
+  signatoryFirstname: {
+    id: "components.templates.batchOrders.view.signatoryFirstname",
+    defaultMessage: "Signatory first name",
+    description: "Label for signatory first name",
+  },
+  signatoryLastname: {
+    id: "components.templates.batchOrders.view.signatoryLastname",
+    defaultMessage: "Signatory last name",
+    description: "Label for signatory last name",
+  },
+  signatoryProfession: {
+    id: "components.templates.batchOrders.view.signatoryProfession",
+    defaultMessage: "Signatory profession",
+    description: "Label for signatory profession",
+  },
+  signatoryEmail: {
+    id: "components.templates.batchOrders.view.signatoryEmail",
+    defaultMessage: "Signatory email",
+    description: "Label for signatory email",
+  },
+  signatoryTelephone: {
+    id: "components.templates.batchOrders.view.signatoryTelephone",
+    defaultMessage: "Signatory telephone",
+    description: "Label for signatory telephone",
+  },
+  fundingTitle: {
+    id: "components.templates.batchOrders.view.fundingTitle",
+    defaultMessage: "Funding",
+    description: "Title for funding section",
+  },
+  fundingEntity: {
+    id: "components.templates.batchOrders.view.fundingEntity",
+    defaultMessage: "Funding entity",
+    description: "Label for funding entity",
+  },
+  fundingAmount: {
+    id: "components.templates.batchOrders.view.fundingAmount",
+    defaultMessage: "Funding amount",
+    description: "Label for funding amount",
   },
   ordersTitle: {
     id: "components.templates.batchOrders.view.ordersTitle",
@@ -259,6 +377,211 @@ export function BatchOrderView({ batchOrder }: Props) {
             />
           </Grid>
 
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.paymentMethod)}
+              value={intl.formatMessage(
+                batchOrderPaymentMethodsMessages[batchOrder.payment_method],
+              )}
+            />
+          </Grid>
+
+          {/* Billing Address Section */}
+          <Grid size={12}>
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+              <FormattedMessage {...messages.billingAddressTitle} />
+            </Typography>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.identificationNumber)}
+              value={batchOrder.identification_number}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.vatRegistration)}
+              value={batchOrder.vat_registration ?? ""}
+            />
+          </Grid>
+
+          <Grid size={12}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.address)}
+              value={batchOrder.address}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.postcode)}
+              value={batchOrder.postcode}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.city)}
+              value={batchOrder.city}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.country)}
+              value={batchOrder.country}
+            />
+          </Grid>
+
+          {/* Administrative Contact Section */}
+          <Grid size={12}>
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+              <FormattedMessage {...messages.administrativeContactTitle} />
+            </Typography>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.administrativeFirstname)}
+              value={batchOrder.administrative_firstname}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.administrativeLastname)}
+              value={batchOrder.administrative_lastname}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.administrativeProfession)}
+              value={batchOrder.administrative_profession}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.administrativeEmail)}
+              value={batchOrder.administrative_email}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.administrativeTelephone)}
+              value={batchOrder.administrative_telephone}
+            />
+          </Grid>
+
+          {/* Signatory Contact Section */}
+          <Grid size={12}>
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+              <FormattedMessage {...messages.signatoryContactTitle} />
+            </Typography>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.signatoryFirstname)}
+              value={batchOrder.signatory_firstname}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.signatoryLastname)}
+              value={batchOrder.signatory_lastname}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.signatoryProfession)}
+              value={batchOrder.signatory_profession}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.signatoryEmail)}
+              value={batchOrder.signatory_email}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.signatoryTelephone)}
+              value={batchOrder.signatory_telephone}
+            />
+          </Grid>
+
+          {/* Funding Section */}
+          <Grid size={12}>
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+              <FormattedMessage {...messages.fundingTitle} />
+            </Typography>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.fundingEntity)}
+              value={batchOrder.funding_entity}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              InputProps={{
+                endAdornment: batchOrder.total_currency,
+              }}
+              label={intl.formatMessage(messages.fundingAmount)}
+              value={batchOrder.funding_amount}
+            />
+          </Grid>
+
+          {/* Orders Section */}
           <Grid size={12}>
             <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
               <FormattedMessage {...messages.ordersTitle} />
