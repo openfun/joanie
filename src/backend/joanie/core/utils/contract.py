@@ -17,7 +17,10 @@ logger = getLogger(__name__)
 
 
 def _get_base_signature_backend_references(
-    offering=None, organization=None, extra_filters=None
+    offering=None,
+    organization=None,
+    extra_filters=None,
+    from_batch_order=False,
 ):
     """
     Build the base query to get signature backend references from an Offering
@@ -27,6 +30,9 @@ def _get_base_signature_backend_references(
 
     You may use an additional parameter `extra_filters` if you need to filter out even more the
     base queryset of the Contract (check if the user has access to the organization for example).
+
+    When you set `from_batch_order` to True, it will retrieve only the contracts that are related
+    to batch orders.
     """
     if not extra_filters:
         extra_filters = {}
@@ -43,20 +49,33 @@ def _get_base_signature_backend_references(
     )
 
     if offering:
-        base_query = base_query.filter(
-            Q(order__course_id=offering.course_id)
-            | Q(order__enrollment__course_run__course_id=offering.course_id),
-            order__product_id=offering.product_id,
-        )
+        if from_batch_order:
+            base_query = base_query.filter(
+                batch_order__relation__course_id=offering.course_id,
+                batch_order__relation__product_id=offering.product_id,
+            )
+        else:
+            base_query = base_query.filter(
+                Q(order__course_id=offering.course_id)
+                | Q(order__enrollment__course_run__course_id=offering.course_id),
+                order__product_id=offering.product_id,
+            )
 
     if organization:
-        base_query = base_query.filter(order__organization_id=organization.pk)
+        organization_filter = {
+            (
+                "order__organization_id"
+                if not from_batch_order
+                else "batch_order__organization_id"
+            ): organization.pk
+        }
+        base_query = base_query.filter(**organization_filter)
 
     return base_query
 
 
 def get_signature_backend_references_exists(
-    offering=None, organization=None, extra_filters=None
+    offering=None, organization=None, extra_filters=None, from_batch_order=False
 ):
     """
     Check if signature backend references exist from either an Offering
@@ -64,18 +83,22 @@ def get_signature_backend_references_exists(
 
     You may use an additional parameter `extra_filters` if you need to filter out even more the
     base queryset of the Contract (check if the user has access to the organization for example).
+
+    When you set `from_batch_order` to True, it will fetch the signature backend references
+    of contracts related to batch orders.
     """
     base_query = _get_base_signature_backend_references(
         offering=offering,
         organization=organization,
         extra_filters=extra_filters,
+        from_batch_order=from_batch_order,
     )
 
     return base_query.distinct().exists()
 
 
 def get_signature_backend_references(
-    offering=None, organization=None, extra_filters=None
+    offering=None, organization=None, extra_filters=None, from_batch_order=False
 ):
     """
     Get a generator object with signature backend references from either an Offering
@@ -93,6 +116,7 @@ def get_signature_backend_references(
         offering=offering,
         organization=organization,
         extra_filters=extra_filters,
+        from_batch_order=from_batch_order,
     )
 
     signature_backend_references = (

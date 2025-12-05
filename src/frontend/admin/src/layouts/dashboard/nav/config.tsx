@@ -4,11 +4,13 @@ import CorporateFareRoundedIcon from "@mui/icons-material/CorporateFareRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
 import TaskRoundedIcon from "@mui/icons-material/TaskRounded";
-import ProductionQuantityLimitsRoundedIcon from "@mui/icons-material/ProductionQuantityLimitsRounded";
 import GavelIcon from "@mui/icons-material/Gavel";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import GradingIcon from "@mui/icons-material/Grading";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 import { PATH_ADMIN } from "@/utils/routes/path";
 
 const navTranslations = defineMessages({
@@ -31,6 +33,11 @@ const navTranslations = defineMessages({
     id: "layouts.dashboard.nav.config.contractDefinitionNavTitle",
     defaultMessage: "Contracts definitions",
     description: "Title for the Contract definition nav item",
+  },
+  quoteDefinitionNavTitle: {
+    id: "layouts.dashboard.nav.config.quoteDefinitionNavTitle",
+    defaultMessage: "Quote definitions",
+    description: "Title for the Quote definition nav item",
   },
   courseNavTitle: {
     id: "layouts.dashboard.nav.config.courseNavTitle",
@@ -56,6 +63,11 @@ const navTranslations = defineMessages({
     id: "layouts.dashboard.nav.config.ordersNavTitle",
     defaultMessage: "Orders",
     description: "Title for the Order nav item",
+  },
+  batchOrdersNavTitle: {
+    id: "layouts.dashboard.nav.config.batchOrdersNavTitle",
+    defaultMessage: "Batch orders",
+    description: "Title for the Batch orders nav item",
   },
   enrollmentsNavTitle: {
     id: "layouts.dashboard.nav.config.enrollmentsNavTitle",
@@ -91,6 +103,12 @@ export const navConfig: NavConfig[] = [
         icon: <GavelIcon />,
       },
       {
+        title: navTranslations.quoteDefinitionNavTitle,
+        path: PATH_ADMIN.quote_definition.list,
+        prefix: PATH_ADMIN.quote_definition.root,
+        icon: <RequestQuoteIcon />,
+      },
+      {
         title: navTranslations.courseNavTitle,
         path: PATH_ADMIN.courses.list,
         prefix: PATH_ADMIN.courses.root,
@@ -112,7 +130,7 @@ export const navConfig: NavConfig[] = [
         title: navTranslations.productNavTitle,
         path: PATH_ADMIN.products.list,
         prefix: PATH_ADMIN.products.root,
-        icon: <ProductionQuantityLimitsRoundedIcon />,
+        icon: <InventoryIcon />,
       },
       {
         title: navTranslations.voucherNavTitle,
@@ -125,6 +143,12 @@ export const navConfig: NavConfig[] = [
         path: PATH_ADMIN.orders.list,
         prefix: PATH_ADMIN.orders.root,
         icon: <ShoppingCartIcon />,
+      },
+      {
+        title: navTranslations.batchOrdersNavTitle,
+        path: PATH_ADMIN.batch_orders.list,
+        prefix: PATH_ADMIN.batch_orders.root,
+        icon: <AddShoppingCartIcon />,
       },
       {
         title: navTranslations.enrollmentsNavTitle,

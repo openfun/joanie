@@ -1,7 +1,7 @@
 import { IntlShape } from "react-intl";
-import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import InventoryIcon from "@mui/icons-material/Inventory";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
 import CorporateFareRoundedIcon from "@mui/icons-material/CorporateFareRounded";
 import TaskRoundedIcon from "@mui/icons-material/TaskRounded";
 import * as React from "react";
@@ -17,7 +17,7 @@ export const getHomeCardData = (intl: IntlShape) => [
     ),
     badgeLabel: intl.formatMessage(cardHomePagesTranslation.productBadge),
     href: PATH_ADMIN.products.create,
-    icon: <AddShoppingCartIcon />,
+    icon: <InventoryIcon />,
   },
   {
     title: intl.formatMessage(cardHomePagesTranslation.courseTitle),
@@ -33,7 +33,7 @@ export const getHomeCardData = (intl: IntlShape) => [
     ),
     badgeLabel: intl.formatMessage(cardHomePagesTranslation.courseRunBadge),
     href: PATH_ADMIN.courses_run.create,
-    icon: <CalendarMonthIcon />,
+    icon: <EventAvailableRoundedIcon />,
   },
   {
     title: intl.formatMessage(cardHomePagesTranslation.organizationTitle),

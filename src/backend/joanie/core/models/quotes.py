@@ -190,6 +190,7 @@ class Quote(BaseModel):
         """Updates the quote with the reception of the purchase order"""
         self.has_purchase_order = True
         self.save()
+        self.batch_order.flow.update()
 
     @property
     def is_signed_by_organization(self):

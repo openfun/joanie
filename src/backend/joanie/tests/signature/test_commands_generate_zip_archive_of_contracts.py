@@ -533,3 +533,71 @@ class GenerateZipArchiveOfContractsCommandTestCase(TestCase):
         )
         # Clear ZIP archive in storages
         storage.delete(zip_archive_name[0])
+
+    def test_commands_generate_zip_archive_from_batch_order(self):  # pylint: disable=too-many-locals
+        """
+        From an existing offering UUID paired with an existing User UUID who has
+        the correct access right on the organization, we should be able to fetch signed contracts
+        of batch orders to generate a ZIP archive.
+        Then, the ZIP archive is saved into the file system storage. After, we make sure the ZIP
+        archive is accessible from the file system storage with its filename. Finally, we iterate
+        over each accessible files.
+        """
+        command_output = StringIO()
+        storage = storages["contracts"]
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        product = factories.ProductFactory(
+            quote_definition=factories.QuoteDefinitionFactory(),
+            contract_definition_batch_order=factories.ContractDefinitionFactory(
+                name=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP,
+                title="Professional Training Agreement",
+                description="Professional Training Agreement description",
+                body="Article of the professional training agreement",
+            ),
+        )
+        offering = factories.OfferingFactory(
+            product=product,
+            organizations=[organization],
+        )
+        factories.BatchOrderFactory.create_batch(
+            3,
+            offering=offering,
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        zip_uuid = uuid4()
+        options = {
+            "user": user.pk,
+            "offering_id": offering.pk,
+            "zip": zip_uuid,
+            "from_batch_order": True,
+        }
+
+        call_command(
+            "generate_zip_archive_of_contracts", stdout=command_output, **options
+        )
+
+        zip_archive_name = command_output.getvalue().splitlines()
+        self.assertEqual(zip_archive_name, [f"{user.pk}_{zip_uuid}.zip"])
+
+        zip_archive = zip_archive_name[0]
+        # Retrieve the ZIP archive from storages
+        with storage.open(zip_archive) as storage_zip_archive:
+            with ZipFile(storage_zip_archive, "r") as zip_archive_elements:
+                file_names = zip_archive_elements.namelist()
+                # Check the amount of files inside the ZIP archive
+                self.assertEqual(len(file_names), 3)
+                # Check the file name of each pdf in bytes
+                for index, pdf_filename in enumerate(file_names):
+                    self.assertEqual(pdf_filename, f"contract_{index}.pdf")
+                    # Check the content of the PDF inside the ZIP archive
+                    with zip_archive_elements.open(pdf_filename) as pdf_file:
+                        document_text = pdf_extract_text(
+                            BytesIO(pdf_file.read())
+                        ).replace("\n", "")
+                        self.assertIn("Professional Training Agreement", document_text)
+
+        # Clear ZIP archive in storages
+        storage.delete(zip_archive)

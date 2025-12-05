@@ -47,10 +47,21 @@ export const PATH_ADMIN = {
     create: path("/contracts-definitions/create"),
     edit: (id: string) => path(`/contracts-definitions/${id}/edit`),
   },
+  quote_definition: {
+    root: path("/quotes-definitions"),
+    list: path("/quotes-definitions/list"),
+    create: path("/quotes-definitions/create"),
+    edit: (id: string) => path(`/quotes-definitions/${id}/edit`),
+  },
   orders: {
     root: path("/orders"),
     list: path("/orders/list"),
     view: (id: string) => path(`/orders/${id}/view`),
+  },
+  batch_orders: {
+    root: path("/batch-orders"),
+    list: path("/batch-orders/list"),
+    view: (id: string) => path(`/batch-orders/${id}/view`),
   },
   enrollments: {
     root: path("/enrollments"),

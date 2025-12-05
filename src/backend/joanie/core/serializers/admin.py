@@ -407,6 +407,7 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "instructions",
             "certificate_definition",
             "contract_definition_order",
+            "contract_definition_batch_order",
             "quote_definition",
             "target_courses",
             "certification_level",
@@ -1325,7 +1326,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "payment_schedule",
             "credit_card",
             "has_waived_withdrawal_right",
-            "from_batch_order",
+            "batch_order",
         )
         read_only_fields = fields
 
@@ -1374,7 +1375,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "total_currency",
             "discount",
             "voucher",
-            "from_batch_order",
+            "batch_order",
         )
         read_only_fields = fields
 
@@ -1425,6 +1426,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("total_currency", _("Currency")),
             ("discount", _("Discount")),
             ("voucher", _("Voucher")),
+            ("batch_order", _("Batch order")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
@@ -1711,7 +1713,159 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         return self.get_installment_value(instance, 4, "state")
 
 
-class AdminOrderListExportSerializer(serializers.ListSerializer):
+class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
+    """
+    Read only light serializer for Batch Order export.
+    """
+
+    class Meta:
+        model = models.BatchOrder
+        fields_labels = [
+            ("id", _("Batch order reference")),
+            ("owner_name", _("Owner")),
+            ("owner_email", _("Email")),
+            ("company_name", _("Company name")),
+            ("identification_number", _("Company's identification number")),
+            ("vat_registration", _("Company VAT registration")),
+            ("organization", _("Organization")),
+            ("state", _("Batch Order State")),
+            ("payment_method", _("Payment method")),
+            ("nb_seats", _("Number of seats reserved")),
+            ("created_on", _("Created on")),
+            ("updated_on", _("Updated on")),
+            ("product", _("Product")),
+            ("product_type", _("Product type")),
+            ("total", _("Total")),
+            ("quote_reference", _("Quote reference")),
+            ("quote_organization_signed", _("Organization quote signature date")),
+            ("quote_has_purchase_order", _("Quote has purchase order")),
+            ("contract", _("Contract")),
+            ("contract_submitted_for_signature_on", _("Submitted for signature")),
+            ("contract_student_signed_on", _("Buyer signature date")),
+            ("contract_organization_signed_on", _("Organization signature date")),
+            ("orders_generated", _("Orders generated")),
+        ]
+        fields = [field for field, label in fields_labels]
+        read_only_fields = fields
+
+    @property
+    def headers(self):
+        """
+        Return the headers of the CSV file.
+        """
+        return [label for field, label in self.Meta.fields_labels]
+
+    owner_name = serializers.SerializerMethodField(read_only=True)
+    owner_email = serializers.SlugRelatedField(
+        read_only=True, slug_field="email", source="owner"
+    )
+    organization = serializers.SlugRelatedField(read_only=True, slug_field="title")
+    created_on = serializers.DateTimeField(format="%d/%m/%Y %H:%M:%S")
+    updated_on = serializers.DateTimeField(format="%d/%m/%Y %H:%M:%S")
+    product = serializers.SerializerMethodField(read_only=True)
+    product_type = serializers.SerializerMethodField(read_only=True)
+    contract = serializers.SlugRelatedField(
+        read_only=True, slug_field="definition__title"
+    )
+    contract_submitted_for_signature_on = serializers.SerializerMethodField(
+        read_only=True
+    )
+    contract_student_signed_on = serializers.SerializerMethodField(read_only=True)
+    contract_organization_signed_on = serializers.SerializerMethodField(read_only=True)
+    quote_reference = serializers.SerializerMethodField(read_only=True)
+    quote_organization_signed = serializers.SerializerMethodField(read_only=True)
+    quote_has_purchase_order = serializers.SerializerMethodField(read_only=True)
+    orders_generated = serializers.SerializerMethodField(read_only=True)
+
+    def get_contract_date(self, instance, date_field: str) -> str:
+        """
+        Return the date of the specified contract field if available,
+        otherwise an empty string.
+        """
+        try:
+            return getattr(instance.contract, date_field).strftime("%d/%m/%Y %H:%M:%S")
+        except (models.Contract.DoesNotExist, AttributeError):
+            return ""
+
+    def get_quote_information(self, instance, field: str) -> str:
+        """
+        Return the field information of the quote if available, otherwise
+        an empty string.
+        """
+        try:
+            return getattr(instance.quote, field)
+        except (models.Quote.DoesNotExist, AttributeError):
+            return ""
+
+    def get_owner_name(self, instance) -> str:
+        """Returns the owner name of the batch order"""
+        return instance.owner.name
+
+    def get_product(self, instance) -> str:
+        """
+        Return the product title
+        """
+        return instance.offering.product.title
+
+    def get_product_type(self, instance) -> str:
+        """
+        Return the product's type
+        """
+        return instance.offering.product.type
+
+    def get_contract_submitted_for_signature_on(self, instance) -> str:
+        """
+        Return the date the contract was submitted for signature if available,
+        otherwise an empty string.
+        """
+        return "Yes" if instance.contract.signature_backend_reference else "No"
+
+    def get_contract_student_signed_on(self, instance) -> str:
+        """
+        Return the date the student signed the contract if available,
+        otherwise an empty string.
+        """
+        return self.get_contract_date(instance, "student_signed_on")
+
+    def get_contract_organization_signed_on(self, instance) -> str:
+        """
+        Return the date the organization signed the contract if available,
+        otherwise an empty string.
+        """
+        return self.get_contract_date(instance, "organization_signed_on")
+
+    def get_quote_reference(self, instance) -> str:
+        """
+        Returns the quote reference
+        """
+        return self.get_quote_information(instance, "reference")
+
+    def get_quote_organization_signed(self, instance) -> str:
+        """
+        Returns the date of the quote's signature from the organization
+        """
+        signature_date = self.get_quote_information(instance, "organization_signed_on")
+        return (
+            signature_date.strftime("%d/%m/%Y %H:%M:%S")
+            if signature_date
+            else signature_date
+        )
+
+    def get_quote_has_purchase_order(self, instance) -> str:
+        """
+        Returns "Yes" whether the quote has received the purchase order, otherwise "No"
+        """
+        has_purchase_order = self.get_quote_information(instance, "has_purchase_order")
+        return "Yes" if has_purchase_order else "No"
+
+    def get_orders_generated(self, instance) -> str:
+        """
+        Returns "Yes" if orders were generated, otherwise "No"
+        """
+        return "Yes" if instance.has_orders_generated else "No"
+
+
+class AdminCSVExportListSerializer(serializers.ListSerializer):
     """
     Serializer for exporting a list of orders to a CSV stream.
     """
@@ -1744,6 +1898,7 @@ class AdminBatchOrderBillingAddressSerializer(serializers.Serializer):
     country = serializers.CharField(required=True)
     contact_email = serializers.CharField(required=True)
     contact_name = serializers.CharField(required=True)
+    city = serializers.CharField(required=True)
 
     def create(self, validated_data):
         """Only there to avoid a NotImplementedError"""
@@ -1772,6 +1927,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         slug_field="id",
         write_only=False,
     )
+    contract = serializers.SerializerMethodField(read_only=True)
     organization = AdminOrganizationLightSerializer(read_only=True)
     main_invoice_reference = serializers.SlugRelatedField(
         read_only=True, slug_field="reference", source="main_invoice"
@@ -1808,18 +1964,21 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         read_only=True,
         required=False,
     )
+    orders = AdminOrderLightSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.BatchOrder
         fields = [
             "id",
+            "created_on",
+            "updated_on",
             "owner",
             "total",
             "currency",
             "relation",
             "organization",
             "main_invoice_reference",
-            "contract_id",
+            "contract",
             "company_name",
             "identification_number",
             "vat_registration",
@@ -1837,6 +1996,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "administrative_profession",
             "administrative_email",
             "administrative_telephone",
+            "state",
             "signatory_firstname",
             "signatory_lastname",
             "signatory_profession",
@@ -1845,16 +2005,21 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "billing_address",
             "funding_entity",
             "funding_amount",
+            "contract_submitted",
+            "orders",
         ]
         read_only_fields = [
             "id",
             "total",
             "currency",
             "main_invoice_reference",
-            "contract_id",
+            "contract",
             "offering_rules",
             "vouchers",
             "quote",
+            "contract_submitted",
+            "state",
+            "orders",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
@@ -1866,6 +2031,12 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
     def get_vouchers(self, instance) -> list:
         """Return the voucher codes generated"""
         return instance.vouchers
+
+    def get_contract(self, instance):
+        """Return serialized information of the contract related to the batch order"""
+        if contract := getattr(instance, "contract", None):
+            return AdminContractSerializer(contract).data
+        return None
 
     def to_internal_value(self, data):
         """
@@ -1881,7 +2052,11 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         for consistency with the model field.
         """
         representation = super().to_representation(instance)
-        representation["offering"] = representation.pop("relation", None)
+        representation.pop("relation")
+        representation["offering"] = AdminOfferingSerializer(
+            instance=instance.offering
+        ).data
+        representation["owner"] = AdminUserSerializer(instance=instance.owner).data
         return representation
 
     def create(self, validated_data):
@@ -1922,6 +2097,60 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             validated_data["offering_rules"].append(offering_rule)
 
         return super().create(validated_data)
+
+
+class AdminBatchOrderLightSerializer(serializers.ModelSerializer):
+    """Admin Batch Order Serializer"""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    organization_title = serializers.CharField(
+        source="organization.title", read_only=True
+    )
+    product_title = serializers.CharField(
+        source="relation.product.title", read_only=True
+    )
+    course_code = serializers.CharField(source="relation.course.code", read_only=True)
+    total = serializers.DecimalField(
+        coerce_to_string=False, decimal_places=2, max_digits=9, read_only=True
+    )
+    total_currency = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.BatchOrder
+        fields = [
+            "id",
+            "company_name",
+            "owner_name",
+            "organization_title",
+            "nb_seats",
+            "product_title",
+            "course_code",
+            "state",
+            "created_on",
+            "updated_on",
+            "total",
+            "total_currency",
+            "payment_method",
+        ]
+        read_only_fields = [
+            "id",
+            "company_name",
+            "owner_name",
+            "organization_title",
+            "nb_seats",
+            "product_title",
+            "course_code",
+            "state",
+            "created_on",
+            "updated_on",
+            "total",
+            "total_currency",
+            "payment_method",
+        ]
+
+    def get_total_currency(self, *args, **kwargs) -> str:
+        """Return the code of currency used by the instance"""
+        return settings.DEFAULT_CURRENCY
 
 
 class AdminEnrollmentLightSerializer(serializers.ModelSerializer):

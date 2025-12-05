@@ -1251,7 +1251,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         return offerings.first().organizations.order_by("?").first()
 
     @factory.post_generation
-    def state(self, create, extracted, **kwargs):
+    def state(self, create, extracted, **kwargs):  # pylint: disable=too-many-branches
         """
         Handle state transitions after creation and create related objects
         depending the state
@@ -1282,14 +1282,10 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             enums.BATCH_ORDER_STATE_TO_SIGN,
             enums.BATCH_ORDER_STATE_SIGNING,
             enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
-            if self.uses_purchase_order:
-                self.quote.organization_signed_on = django_timezone.now()
-                self.quote.has_purchase_order = True
-                self.quote.save()
-
             # Add course run for the courses
             if not self.offering.product.target_courses.exists():
                 CourseRunFactory(
@@ -1303,20 +1299,24 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                     course=self.offering.course,
                     is_graded=True,
                 )
+
             # Add the total to the batch order and marks the quote as signed by organization
             self.freeze_total(total=Decimal("100.00"))
+            if self.uses_purchase_order:
+                self.quote.has_purchase_order = True
+                self.quote.save()
             self.submit_for_signature(self.owner)
             self.flow.update()
 
         if extracted in [
             enums.BATCH_ORDER_STATE_SIGNING,
             enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
             self.contract.student_signed_on = django_timezone.now()
             self.contract.save()
-            self.flow.update()
 
             if self.uses_purchase_order:
                 # Transition to `completed` once contract is signed with purchase order method
@@ -1325,14 +1325,17 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
 
         if extracted in [
             enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
             enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
-            self.flow.pending()
             self.flow.update()
 
         if extracted == enums.BATCH_ORDER_STATE_FAILED_PAYMENT:
             self.flow.failed_payment()
+
+        if extracted == enums.BATCH_ORDER_STATE_PROCESS_PAYMENT:
+            self.flow.process_payment()
 
         if extracted == enums.BATCH_ORDER_STATE_COMPLETED:
             # ruff : noqa : PLC0415
@@ -1342,8 +1345,17 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 TransactionFactory,
             )
 
+            if self.uses_card_payment and self.is_ready_for_payment:
+                self.flow.process_payment()
+
+            # Simulate the organization has signed
+            self.contract.organization_signed_on = django_timezone.now()
+            self.contract.submitted_for_signature_on = None
+            self.contract.save()
+
             invoice = InvoiceFactory(
                 batch_order=self,
+                order=None,
                 parent=self.main_invoice,
                 total=0,
             )

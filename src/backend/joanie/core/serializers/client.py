@@ -476,6 +476,28 @@ class ContractSerializer(AbilitiesModelSerializer):
         read_only_fields = fields
 
 
+class OfferingBatchOrderSerializer(serializers.ModelSerializer):
+    """Convenient serializer for the offering model to use for the Batch Order"""
+
+    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
+    product = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields = [
+            "id",
+            "course",
+            "product",
+        ]
+
+    def get_product(self, instance):
+        """Return simple product representation."""
+        return {
+            "id": str(instance.product.id),
+            "title": instance.product.title,
+        }
+
+
 class BatchOrderLightSerializer(serializers.ModelSerializer):
     """Read only Batch Order light serializer"""
 
@@ -484,12 +506,17 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
         slug_field="id",
         source="organization",
     )
-    relation_id = serializers.SlugRelatedField(
-        queryset=models.CourseProductRelation.objects.all(),
-        slug_field="id",
-        source="relation",
+    relation = OfferingBatchOrderSerializer(read_only=True)
+    owner_name = serializers.SerializerMethodField(read_only=True)
+    total = serializers.DecimalField(
+        coerce_to_string=False,
+        decimal_places=2,
+        max_digits=9,
+        min_value=D(0.00),
+        read_only=True,
+        required=False,
     )
-    owner_name = serializers.SerializerMethodField()
+    total_currency = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -499,14 +526,39 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
             "organization_id",
             "state",
             "company_name",
-            "relation_id",
+            "relation",
             "payment_method",
+            "contract_submitted",
+            "nb_seats",
+            "total",
+            "total_currency",
         ]
         read_only_fields = fields
 
     def get_owner_name(self, instance) -> str:
         """Returns owner fullname of batch order"""
         return instance.owner.name
+
+    def get_total_currency(self, *args, **kwargs) -> str:
+        """
+        Return the currency used
+        """
+        return settings.DEFAULT_CURRENCY
+
+
+class AgreementBatchOrderSerializer(AbilitiesModelSerializer):
+    """Small serializer for Contracts models related to Batch Orders (agreements)"""
+
+    batch_order = BatchOrderLightSerializer(read_only=True)
+
+    class Meta:
+        model = models.Contract
+        fields = [
+            "id",
+            "batch_order",
+            "organization_signed_on",
+        ]
+        read_only_fields = fields
 
 
 class QuoteDefinitionSerializer(serializers.ModelSerializer):
@@ -521,14 +573,12 @@ class QuoteDefinitionSerializer(serializers.ModelSerializer):
 class QuoteSerializer(serializers.ModelSerializer):
     """Read only serializer for Quote model."""
 
-    definition = QuoteDefinitionSerializer()
     batch_order = BatchOrderLightSerializer(read_only=True)
 
     class Meta:
         model = models.Quote
         fields = [
             "id",
-            "definition",
             "organization_signed_on",
             "has_purchase_order",
             "batch_order",
@@ -1019,27 +1069,6 @@ class OfferingRulePropertySerializer(serializers.Serializer):
         """Only there to avoid a NotImplementedError"""
 
 
-class OfferingBatchOrderSerializer(serializers.ModelSerializer):
-    """Convenient serializer for the offering model to use for the Batch Order"""
-
-    course = CourseLightSerializer(read_only=True, exclude_abilities=True)
-    product = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = models.CourseProductRelation
-        fields = [
-            "course",
-            "product",
-        ]
-
-    def get_product(self, instance):
-        """Return simple product representation."""
-        return {
-            "id": str(instance.product.id),
-            "title": instance.product.title,
-        }
-
-
 class OfferingLightSerializer(CachedModelSerializer):
     """
     Serialize an offering in its minimal format.
@@ -1488,6 +1517,7 @@ class BatchOrderBillingAddressSerializer(serializers.Serializer):
     country = serializers.CharField(required=True)
     contact_email = serializers.CharField(required=True)
     contact_name = serializers.CharField(required=True)
+    city = serializers.CharField(required=True)
 
     def create(self, validated_data):
         """Only there to avoid a NotImplementedError"""
@@ -1536,6 +1566,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         required=False,
         read_only=True,
     )
+    contract_id = serializers.SerializerMethodField(read_only=True)
     quote = QuoteLightSerializer(read_only=True)
     payment_method = serializers.ChoiceField(
         choices=enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES,
@@ -1618,6 +1649,12 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         Return the currency used
         """
         return settings.DEFAULT_CURRENCY
+
+    def get_contract_id(self, instance):
+        """Return serialized contract id related to batch order"""
+        if contract := getattr(instance, "contract", None):
+            return str(contract.id)
+        return None
 
     def to_internal_value(self, data):
         """

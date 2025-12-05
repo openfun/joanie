@@ -259,10 +259,14 @@ class Invoice(BaseModel):
         and the related order
         """
         order_uid = self.order.id if self.order else self.batch_order.id
-        order_uid_fragment = str(order_uid).split("-", maxsplit=1)[0]
-        timestamp = int(timezone.now().timestamp() * 1_000)  # Time in milliseconds
-
-        return f"{order_uid_fragment}-{timestamp}"
+        if not self.parent:
+            order_uid_fragment = str(order_uid).split("-", maxsplit=1)[0]
+            timestamp = int(timezone.now().timestamp() * 1_000)  # Time in milliseconds
+            reference = f"{order_uid_fragment}-{timestamp}"
+        else:
+            child_number = self.parent.children.count() + 1
+            reference = f"{self.parent.reference}-{child_number}"
+        return reference
 
     def clean(self):
         """

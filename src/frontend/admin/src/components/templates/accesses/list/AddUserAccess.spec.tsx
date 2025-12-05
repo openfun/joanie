@@ -40,7 +40,9 @@ describe("<AddUserAccess />", () => {
     const userSearch = await screen.findByRole("combobox", { name: "User" });
     await userEvent.click(userSearch);
     await userEvent.type(userSearch, returnedUser.username);
-    const searchResult = screen.getByText(returnedUser.username);
+    const searchResult = screen.getByText(
+      `${returnedUser.full_name} (${returnedUser.username})`,
+    );
     await userEvent.click(searchResult);
 
     // Test default role

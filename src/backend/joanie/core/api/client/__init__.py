@@ -777,9 +777,6 @@ class BatchOrderViewSet(
         - number of seats
         Return new batch_order just created
 
-    POST /api/batch-orders/:batch_order_id/submit-for-signature/
-        Return an invitation link to pay the batch order
-
     POST /api/batch-orders/:batch_order_id/submit-for-payment/
         Returns the info to pay the batch order
     """
@@ -869,14 +866,14 @@ class BatchOrderViewSet(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
-        batch_order.flow.update()
-
         payment_backend = get_payment_backend()
         payment_infos = payment_backend.create_payment(
             order=batch_order,
             billing_address=batch_order.create_billing_address(),
             installment=None,
         )
+
+        batch_order.flow.process_payment()
 
         return Response(payment_infos, status=HTTPStatus.OK)
 
@@ -1100,6 +1097,12 @@ class OrganizationViewSet(
                 type=OpenApiTypes.UUID,
                 many=True,
             ),
+            OpenApiParameter(
+                name="from_batch_order",
+                description="Retrieve contracts links for batch orders",
+                required=False,
+                type=OpenApiTypes.BOOL,
+            ),
         ],
     )
     @action(
@@ -1115,12 +1118,14 @@ class OrganizationViewSet(
         organization = self.get_object()
         contract_ids = request.query_params.getlist("contract_ids")
         offering_ids = request.query_params.getlist("offering_ids")
+        from_batch_order = request.query_params.get("from_batch_order", False)
 
         try:
             (signature_link, ids) = organization.contracts_signature_link(
                 request.user,
                 contract_ids=contract_ids,
                 offering_ids=offering_ids,
+                from_batch_order=from_batch_order,
             )
         except NoContractToSignError as error:
             return Response({"detail": f"{error}"}, status=HTTPStatus.BAD_REQUEST)
@@ -1185,6 +1190,13 @@ class OrganizationViewSet(
                 type=OpenApiTypes.UUID,
                 many=False,
             ),
+            OpenApiParameter(
+                name="total",
+                description="Batch order total",
+                required=True,
+                type=OpenApiTypes.STR,
+                many=False,
+            ),
         ],
     )
     @action(
@@ -1205,10 +1217,11 @@ class OrganizationViewSet(
         if not total:
             raise ValidationError("Missing total value. It's required.")
 
-        quote = get_object_or_404(
+        batch_order = get_object_or_404(
             models.Quote, id=quote_id, batch_order__organization=organization
-        )
-        quote.batch_order.freeze_total(total)
+        ).batch_order
+
+        batch_order.freeze_total(total)
 
         return Response(status=HTTPStatus.OK)
 
@@ -1628,6 +1641,96 @@ class UserViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         return Response(self.serializer_class(request.user, context=context).data)
 
 
+class GenericAgreementViewSet(
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
+    """
+    Agreement ViewSet that returns information on Contracts related to Batch Orders.
+    Only authenticated users that have access to organization can get information.
+
+    GET /.*/agreements/
+    GET /.*/agreements/<uuid:contract_id>
+    """
+
+    lookup_field = "pk"
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.AgreementBatchOrderSerializer
+    filterset_class = filters.AgreementFilter
+    ordering = ["-organization_signed_on", "-created_on"]
+    queryset = (
+        models.Contract.objects.exclude(
+            batch_order__state=enums.BATCH_ORDER_STATE_CANCELED
+        )
+        .select_related(
+            "definition",
+            "organization_signatory",
+        )
+        .prefetch_related(
+            "batch_order__organization",
+            "batch_order__offering__course",
+            "batch_order__owner",
+            "batch_order__offering__product",
+        )
+    )
+
+
+class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementViewSet):
+    """
+    Nested Organization and Agreements (contracts) related to batch orders inside organization
+    route.
+
+    It allows to list & retrieve organization's agreements (contracts) if the user is
+    an administrator or an owner of the organization.
+
+    GET /api/organizations/<organization_id|organization_code>/agreements/
+        Return list of all organization's contracts
+
+    GET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/
+        Return an organization's contract if one matches the provided id
+
+    You can use query params to filter by signature state when retrieving the list, or by
+    offering id.
+    """
+
+    lookup_fields = ["batch_order__organization__pk", "pk"]
+    lookup_url_kwargs = ["organization_id", "pk"]
+
+    def _lookup_by_organization_code_or_pk(self):
+        """
+        Override `lookup_fields` to lookup by organization code or pk according to
+        the `organization_id` kwarg is a valid UUID or not.
+        """
+        try:
+            uuid.UUID(self.kwargs["organization_id"])
+        except ValueError:
+            self.lookup_fields[0] = "batch_order__organization__code__iexact"
+
+    def initial(self, request, *args, **kwargs):
+        """
+        Runs anything that needs to occur prior to calling method handler.
+        """
+        super().initial(request, *args, **kwargs)
+        self._lookup_by_organization_code_or_pk()
+
+    def get_queryset(self):
+        """
+        Customize the queryset to get only user's agreements.
+        """
+        queryset = super().get_queryset()
+
+        username = (
+            self.request.auth["username"]
+            if self.request.auth
+            else self.request.user.username
+        )
+
+        additional_filter = {
+            "batch_order__organization__accesses__user__username": username,
+        }
+
+        return queryset.filter(**additional_filter)
+
+
 class GenericContractViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
@@ -1779,14 +1882,25 @@ class ContractViewSet(GenericContractViewSet):
             - string of an Organization UUID alone
             - string of an CourseProductRelation UUID alone
             - string of both Organization UUID & CourseProductRelation UUID
+            - boolean value for `from_batch_order`
         """
         serializer = serializers.GenerateSignedContractsZipSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        extra_filters = {
+            (
+                "order__organization__accesses__user_id"
+                if not request.data.get("from_batch_order")
+                else "batch_order__organization__accesses__user_id"
+            ): request.user.id
+        }
+        from_batch_order = request.data.get("from_batch_order", False)
+
         if not contract_utility.get_signature_backend_references_exists(
             offering=serializer.validated_data.get("offering"),
             organization=serializer.validated_data.get("organization"),
-            extra_filters={"order__organization__accesses__user_id": request.user.id},
+            extra_filters=extra_filters,
+            from_batch_order=from_batch_order,
         ):
             raise ValidationError("No zip to generate")
 
@@ -1797,6 +1911,7 @@ class ContractViewSet(GenericContractViewSet):
             "organization_id": serializer.data.get("organization_id"),
             "offering_id": serializer.data.get("offering_id"),
             "zip": str(zip_id),
+            "from_batch_order": from_batch_order,
         }
 
         generate_zip_archive_task.delay(options)

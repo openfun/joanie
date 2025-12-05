@@ -51,16 +51,14 @@ class BaseSignatureBackend:
         contract.student_signed_on = django_timezone.now()
         contract.save()
 
-        if contract.batch_orders.count() == 1:
-            batch_order = contract.batch_orders.first()
+        if batch_order := contract.batch_order:
             flow = batch_order.flow
-            if batch_order.uses_purchase_order:
-                flow.update()  # Transition to `signing` state now and second call is to `completed`
+            batch_order.confirm_buyer_signature()
         else:
             flow = contract.order.flow
-        flow.update()
+            flow.update()
 
-        logger.info("Student signed the contract '%s'", contract.id)
+        logger.info("Buyer signed the contract '%s'", contract.id)
 
     def _confirm_organization_signature(self, contract):
         """

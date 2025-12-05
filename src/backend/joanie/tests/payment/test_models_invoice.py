@@ -73,10 +73,21 @@ class InvoiceModelTestCase(BaseAPITestCase):
         When an invoice object is created, its reference should be normalized.
         """
         invoice = InvoiceFactory(reference="1")
+        child_invoice = InvoiceFactory(parent=invoice, total=0)
 
         # Reference should have been normalized using current timestamp and
-        # order uid (e.g: f04bca42-1639062573511)
-        self.assertIsNotNone(re.fullmatch(r"^[0-9a-f]{8}-\d{13}$", invoice.reference))
+        # order uid or batch order uuid for parent invoice (e.g: f04bca42-1639062573511)
+        self.assertIsNotNone(
+            re.fullmatch(r"^[0-9a-f]{8}-\d{13}(-\d+)?$", invoice.reference)
+        )
+        # Reference for a child invoice should be the parent's reference
+        # followed by a dash and an incremented integer indicating its position
+        # among the parent's children (e.g.: f04bca42-1639062573511-1)
+        self.assertIn(invoice.reference, child_invoice.reference)
+        self.assertEqual(child_invoice.reference, f"{invoice.reference}-1")
+        self.assertIsNotNone(
+            re.fullmatch(r"^[0-9a-f]{8}-\d{13}(-\d+)?$", child_invoice.reference)
+        )
 
     def test_models_invoice_protected(self):
         """

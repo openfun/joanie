@@ -1305,7 +1305,6 @@ class ContractApiTest(BaseAPITestCase):
             "/api/v1.0/contracts/zip-archive/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
-
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
         self.assertEqual(
@@ -1498,7 +1497,9 @@ class ContractApiTest(BaseAPITestCase):
 
         response = self.client.post(
             "/api/v1.0/contracts/zip-archive/",
-            data={"organization_id": organization.id},
+            data={
+                "organization_id": organization.id,
+            },
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -1516,6 +1517,56 @@ class ContractApiTest(BaseAPITestCase):
         self.assertTrue(
             storage.exists(f"{requesting_user.id}_{generated_zip_uuid}.zip")
         )
+
+    @mock.patch("joanie.core.api.client.generate_zip_archive_task")
+    def test_api_contract_get_zip_archive_for_batch_orders(
+        self, mock_generate_zip_archive_task
+    ):
+        """
+        Authenticated user with organization access should be able to generate zip archive
+        of contracts (agreements) related to batch orders when passing an existing Organization
+        UUID. After the call, the task to generate zip archive should be called.
+        """
+        user = factories.UserFactory()
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(organization=organization, user=user)
+        offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+            organizations=[organization],
+        )
+        factories.BatchOrderFactory.create_batch(
+            3,
+            offering=offering,
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        expected_endpoint_polling = "/api/v1.0/contracts/zip-archive/"
+
+        token = self.get_user_token(user.username)
+
+        response = self.client.post(
+            "/api/v1.0/contracts/zip-archive/",
+            data={
+                "organization_id": organization.id,
+                "offering_id": offering.id,
+                "from_batch_order": True,
+            },
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
+
+        content = response.content.decode("utf-8")
+        content_json = json.loads(content)
+        polling_url = content_json["url"]
+        generated_zip_uuid = polling_url[-37:-1]
+
+        self.assertTrue(mock_generate_zip_archive_task.delay.called)
+        self.assertEqual(
+            content_json["url"], f"{expected_endpoint_polling}{generated_zip_uuid}/"
+        )
+        self.assertEqual(len(generated_zip_uuid), 36)
 
     def test_api_contract_get_zip_archive_anonymous(self):
         """

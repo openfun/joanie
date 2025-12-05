@@ -1,4 +1,4 @@
-"""Test suite for BatchOrder read list API"""
+"""Test suite for BatchOrder list API"""
 
 from http import HTTPStatus
 from unittest import mock
@@ -67,6 +67,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                         "total": float(bo.total),
                         "currency": settings.DEFAULT_CURRENCY,
                         "offering": {
+                            "id": str(bo.offering.id),
                             "course": {
                                 "id": str(bo.offering.course.id),
                                 "title": bo.offering.course.title,
@@ -111,6 +112,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                             "address": bo.address,
                             "postcode": bo.postcode,
                             "country": bo.billing_address["country"],
+                            "city": bo.billing_address["city"],
                             "contact_name": "Jane Doe",
                             "contact_email": "janedoe@example.org",
                         },

@@ -1,5 +1,3 @@
-// TypeScript
-
 import queryString from "query-string";
 import { AbstractRepository } from "@/services/repositories/AbstractRepository";
 import { PaginatedResponse } from "@/types/api";
