@@ -178,6 +178,24 @@ test.describe("Order view", () => {
     ).not.toBeVisible();
   });
 
+  test("Check when owner is undefined", async ({ page }) => {
+    const order = store.list[0];
+    order.owner = undefined;
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: order });
+      }
+    });
+    await page.goto(PATH_ADMIN.orders.list);
+    await page.getByRole("heading", { name: "Orders" }).click();
+    await page.getByRole("link", { name: order.product.title }).click();
+
+    await page.getByRole("heading", { name: "Order informations" }).click();
+    await expect(page.getByLabel("Owner")).toHaveValue("");
+  });
+
   test("Check all field are in this view", async ({ page }) => {
     const order = store.list[0];
     await page.goto(PATH_ADMIN.orders.list);

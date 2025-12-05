@@ -3,6 +3,7 @@ import { Organization } from "@/services/api/models/Organization";
 import { Nullable } from "@/types/utils";
 import { User } from "@/services/api/models/User";
 import { Offering } from "@/services/api/models/Offerings";
+import { OrderListItem } from "@/services/api/models/Order";
 
 export enum BatchOrderStatesEnum {
   BATCH_ORDER_STATE_DRAFT = "draft",
@@ -17,14 +18,21 @@ export enum BatchOrderStatesEnum {
   BATCH_ORDER_STATE_COMPLETED = "completed",
 }
 
+export enum BatchOrderPaymentMethodEnum {
+  BATCH_ORDER_WITH_PURCHASE_ORDER = "purchase_order",
+  BATCH_ORDER_WITH_BANK_TRANSFER = "bank_transfer",
+  BATCH_ORDER_WITH_CARD_PAYMENT = "card_payment",
+}
+
 export type AbstractBatchOrder = {
   id: string;
   created_on: string;
   updated_on: string;
   state: BatchOrderStatesEnum;
   nb_seats: number;
-  total: number;
+  total: Nullable<number>;
   total_currency: string;
+  payment_method: BatchOrderPaymentMethodEnum;
 };
 
 export type BatchOrderListItem = AbstractBatchOrder & {
@@ -62,6 +70,7 @@ export type BatchOrder = AbstractBatchOrder & {
 
   funding_entity: string;
   funding_amount: number;
+  orders: OrderListItem[];
 };
 
 export type BatchOrderQuery = ResourcesQuery & {};
@@ -77,6 +86,7 @@ export const transformBatchOrderToListItem = (
     nb_seats: batchOrder.nb_seats,
     total: batchOrder.total,
     total_currency: batchOrder.total_currency,
+    payment_method: batchOrder.payment_method,
     course_code: batchOrder.offering.course.code ?? null,
     product_title: batchOrder.offering.product.title,
     company_name: batchOrder.company_name,
