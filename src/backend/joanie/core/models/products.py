@@ -2646,6 +2646,15 @@ class BatchOrder(BaseModel):
         except ObjectDoesNotExist:
             return None
 
+    def can_confirm_quote(self) -> bool:
+        """Check if the quote can be confirmed"""
+        return (
+            not self.is_canceled
+            and self.has_quote
+            and not self.quote.is_signed_by_organization
+            and not self.total
+        )
+
 
 class Skill(parler_models.TranslatableModel, BaseModel):
     """
