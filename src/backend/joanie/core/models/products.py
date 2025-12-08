@@ -7,6 +7,7 @@ import logging
 import uuid
 from collections import defaultdict
 from datetime import timedelta
+from typing import TypedDict
 
 from django.apps import apps
 from django.conf import settings
@@ -2002,6 +2003,20 @@ class OrderTargetCourseRelation(BaseModel):
         super().save(*args, **kwargs)
 
 
+class BatchOrderAvailableActions(TypedDict):
+    """
+    Type for the available actions for a batch order.
+    """
+
+    confirm_quote: bool
+    confirm_purchase_order: bool
+    confirm_bank_transfer: bool
+    submit_for_signature: bool
+    generate_orders: bool
+    cancel: bool
+    next_action: str | None
+
+
 class BatchOrder(BaseModel):
     """
     BatchOrder allows to define a batch of orders to prepare.
@@ -2702,6 +2717,26 @@ class BatchOrder(BaseModel):
             self.state == enums.BATCH_ORDER_STATE_COMPLETED
             and not self.has_orders_generated
         )
+
+    @property
+    def available_actions(self) -> BatchOrderAvailableActions:
+        """Return the available actions for the batch order"""
+        actions = {
+            "confirm_quote": self.can_confirm_quote(),
+            "confirm_purchase_order": self.can_confirm_purchase_order(),
+            "confirm_bank_transfer": self.can_confirm_bank_transfer(),
+            "submit_for_signature": self.can_submit_for_signature(),
+            "generate_orders": self.can_generate_orders(),
+            "cancel": not self.is_canceled,
+            "next_action": None,
+        }
+
+        for key, value in actions.items():
+            if value and key not in ("cancel", "next_action"):
+                actions["next_action"] = key
+                break
+
+        return actions
 
 
 class Skill(parler_models.TranslatableModel, BaseModel):

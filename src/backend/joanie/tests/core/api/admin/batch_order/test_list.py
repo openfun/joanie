@@ -65,6 +65,15 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
                     "total": float(batch_order.total),
                     "total_currency": settings.DEFAULT_CURRENCY,
                     "payment_method": batch_order.payment_method,
+                    "available_actions": {
+                        "confirm_quote": True,
+                        "confirm_purchase_order": False,
+                        "confirm_bank_transfer": False,
+                        "submit_for_signature": False,
+                        "generate_orders": False,
+                        "cancel": True,
+                        "next_action": "confirm_quote",
+                    },
                 }
                 for batch_order in batch_orders
             ],
