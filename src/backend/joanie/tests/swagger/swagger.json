@@ -5969,6 +5969,44 @@
                         "minimum": 0.0,
                         "exclusiveMaximum": true,
                         "readOnly": true
+                    },
+                    "available_actions": {
+                        "type": "object",
+                        "description": "Return the available actions for the batch order",
+                        "properties": {
+                            "confirm_quote": {
+                                "type": "boolean"
+                            },
+                            "confirm_purchase_order": {
+                                "type": "boolean"
+                            },
+                            "confirm_bank_transfer": {
+                                "type": "boolean"
+                            },
+                            "submit_for_signature": {
+                                "type": "boolean"
+                            },
+                            "generate_orders": {
+                                "type": "boolean"
+                            },
+                            "cancel": {
+                                "type": "boolean"
+                            },
+                            "next_action": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        },
+                        "required": [
+                            "cancel",
+                            "confirm_bank_transfer",
+                            "confirm_purchase_order",
+                            "confirm_quote",
+                            "generate_orders",
+                            "next_action",
+                            "submit_for_signature"
+                        ],
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -5978,6 +6016,7 @@
                     "administrative_lastname",
                     "administrative_profession",
                     "administrative_telephone",
+                    "available_actions",
                     "city",
                     "company_name",
                     "contract_id",

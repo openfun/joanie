@@ -1630,6 +1630,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "billing_address",
             "funding_entity",
             "funding_amount",
+            "available_actions",
         ]
         read_only_fields = [
             "id",
@@ -1642,6 +1643,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "offering_rule_ids",
             "quote",
             "state",
+            "available_actions",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
