@@ -758,3 +758,45 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
                 self.assertTrue(batch_order.can_confirm_quote())
 
+    def test_models_batch_order_can_confirm_purchase_order(self):
+        """
+        When the batch order uses purchase order, quote is signed, total is set,
+        and purchase order not yet received, can_confirm_purchase_order should return True.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        batch_order.freeze_total("100.00")
+
+        self.assertTrue(batch_order.can_confirm_purchase_order())
+
+    def test_models_batch_order_can_confirm_purchase_order_not_purchase_order_method(
+        self,
+    ):
+        """
+        When the batch order does not use purchase order payment method,
+        can_confirm_purchase_order should return False.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+        )
+        batch_order.freeze_total("100.00")
+
+        self.assertFalse(batch_order.can_confirm_purchase_order())
+
+    def test_models_batch_order_can_confirm_purchase_order_already_received(self):
+        """
+        When the purchase order is already received,
+        can_confirm_purchase_order should return False.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        batch_order.freeze_total("100.00")
+        batch_order.quote.tag_has_purchase_order()
+
+        self.assertFalse(batch_order.can_confirm_purchase_order())
+

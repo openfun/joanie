@@ -2655,6 +2655,16 @@ class BatchOrder(BaseModel):
             and not self.total
         )
 
+    def can_confirm_purchase_order(self) -> bool:
+        """Check if the purchase order can be confirmed"""
+        return (
+            self.uses_purchase_order
+            and self.has_quote
+            and self.quote.is_signed_by_organization
+            and self.total
+            and not self.quote.has_received_purchase_order
+        )
+
 
 class Skill(parler_models.TranslatableModel, BaseModel):
     """
