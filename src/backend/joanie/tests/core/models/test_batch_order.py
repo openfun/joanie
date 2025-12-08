@@ -705,3 +705,56 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         }
 
         self.assertEqual(batch_order.get_equivalent_course_run_dates(), expected_result)
+
+    def test_models_batch_order_can_confirm_quote_when_canceled(self):
+        """Should return False when batch order is canceled."""
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_CANCELED
+        )
+
+        self.assertFalse(batch_order.can_confirm_quote())
+
+    def test_models_batch_order_can_confirm_quote_without_quote(self):
+        """Should return False when batch order has no quote."""
+        batch_order = factories.BatchOrderFactory()
+        # Ensure no quote exists
+        if hasattr(batch_order, "quote"):
+            batch_order.quote.delete()
+
+        self.assertFalse(batch_order.can_confirm_quote())
+
+    def test_models_batch_order_can_confirm_quote_when_already_signed(self):
+        """Should return False when quote is already signed by organization."""
+        batch_order = factories.BatchOrderFactory()
+        batch_order.init_flow()
+        batch_order.quote.organization_signed_on = django_timezone.now()
+        batch_order.quote.save()
+
+        self.assertFalse(batch_order.can_confirm_quote())
+
+    def test_models_batch_order_can_confirm_quote_when_total_set(self):
+        """Should return False when batch order total is already set."""
+        batch_order = factories.BatchOrderFactory()
+        batch_order.init_flow()
+        batch_order.total = 100
+        batch_order.save()
+
+        self.assertFalse(batch_order.can_confirm_quote())
+
+    def test_models_batch_order_can_confirm_quote_success(self):
+        """Should return True when all conditions are met."""
+        for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                batch_order = factories.BatchOrderFactory(state=state)
+                if state in (
+                    enums.BATCH_ORDER_STATE_DRAFT,
+                    enums.BATCH_ORDER_STATE_CANCELED,
+                ):
+                    continue
+
+                batch_order.quote.organization_signed_on = None
+                batch_order.total = None
+                batch_order.quote.save()
+
+                self.assertTrue(batch_order.can_confirm_quote())
+
