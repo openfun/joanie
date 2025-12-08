@@ -17,6 +17,7 @@ BatchOrdersAdminApiDetailTestCase.test_api_admin_batch_order_read_with_orders:
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_voucher" WHERE "joanie_voucher"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_discount" WHERE "joanie_discount"."id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_product" WHERE "joanie_product"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_order" WHERE ("joanie_order"."course_id" = #::uuid AND "joanie_order"."product_id" = #::uuid) LIMIT #'

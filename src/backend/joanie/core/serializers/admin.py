@@ -2007,6 +2007,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "funding_amount",
             "contract_submitted",
             "orders",
+            "available_actions",
         ]
         read_only_fields = [
             "id",
@@ -2020,6 +2021,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
             "contract_submitted",
             "state",
             "orders",
+            "available_actions",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
@@ -2131,6 +2133,7 @@ class AdminBatchOrderLightSerializer(serializers.ModelSerializer):
             "total",
             "total_currency",
             "payment_method",
+            "available_actions",
         ]
         read_only_fields = [
             "id",
@@ -2146,6 +2149,7 @@ class AdminBatchOrderLightSerializer(serializers.ModelSerializer):
             "total",
             "total_currency",
             "payment_method",
+            "available_actions",
         ]
 
     def get_total_currency(self, *args, **kwargs) -> str:

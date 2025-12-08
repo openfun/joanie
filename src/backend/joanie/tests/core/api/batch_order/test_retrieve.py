@@ -144,5 +144,14 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                 "signatory_profession": None,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": float(batch_order.funding_amount),
+                "available_actions": {
+                    "confirm_quote": True,
+                    "confirm_purchase_order": False,
+                    "confirm_bank_transfer": False,
+                    "submit_for_signature": False,
+                    "generate_orders": False,
+                    "cancel": True,
+                    "next_action": "confirm_quote",
+                },
             },
         )
