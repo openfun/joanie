@@ -2665,6 +2665,10 @@ class BatchOrder(BaseModel):
             and not self.quote.has_received_purchase_order
         )
 
+    def can_confirm_bank_transfer(self) -> bool:
+        """Check if the bank transfer can be confirmed"""
+        return self.uses_bank_transfer and self.is_eligible_to_validate_payment
+
 
 class Skill(parler_models.TranslatableModel, BaseModel):
     """
