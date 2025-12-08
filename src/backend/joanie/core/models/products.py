@@ -2696,6 +2696,13 @@ class BatchOrder(BaseModel):
 
         return True
 
+    def can_generate_orders(self) -> bool:
+        """Check if orders can be generated for this batch order"""
+        return (
+            self.state == enums.BATCH_ORDER_STATE_COMPLETED
+            and not self.has_orders_generated
+        )
+
 
 class Skill(parler_models.TranslatableModel, BaseModel):
     """
