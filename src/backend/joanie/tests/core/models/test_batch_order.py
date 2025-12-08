@@ -800,3 +800,31 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         self.assertFalse(batch_order.can_confirm_purchase_order())
 
+    def test_models_batch_order_can_confirm_bank_transfer_with_bank_transfer_method(
+        self,
+    ):
+        """
+        When the batch order uses bank transfer payment method and is eligible
+        for payment validation, can_confirm_bank_transfer should return True.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_PENDING,
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+        )
+
+        self.assertTrue(batch_order.can_confirm_bank_transfer())
+
+    def test_models_batch_order_can_confirm_bank_transfer_with_other_payment_method(
+        self,
+    ):
+        """
+        When the batch order does not use bank transfer payment method,
+        can_confirm_bank_transfer should return False.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_PENDING,
+            payment_method=enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+        )
+
+        self.assertFalse(batch_order.can_confirm_bank_transfer())
+
