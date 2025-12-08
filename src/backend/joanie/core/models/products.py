@@ -60,6 +60,7 @@ from joanie.core.utils import (
     webhooks,
 )
 from joanie.core.utils import quotes as quote_utility
+from joanie.core.utils.batch_order import get_active_offering_rule
 from joanie.core.utils.billing_address import CompanyBillingAddress
 from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
@@ -2668,6 +2669,32 @@ class BatchOrder(BaseModel):
     def can_confirm_bank_transfer(self) -> bool:
         """Check if the bank transfer can be confirmed"""
         return self.uses_bank_transfer and self.is_eligible_to_validate_payment
+
+    def can_submit_for_signature(self) -> bool:
+        """Check if the contract can be submitted for signature"""
+        if (
+            not self.is_signable
+            or self.is_signed_by_buyer
+            or self.state == enums.BATCH_ORDER_STATE_PENDING
+        ):
+            return False
+
+        if self.offering_rules.exists():
+            offering_rule = self.offering_rules.first()
+            if (
+                offering_rule.available_seats is not None
+                and offering_rule.available_seats < self.nb_seats
+            ):
+                # Check if there's an alternative active offering rule with enough seats
+                try:
+                    get_active_offering_rule(
+                        offering_id=self.offering.id,
+                        nb_seats=self.nb_seats,
+                    )
+                except ValueError:
+                    return False
+
+        return True
 
 
 class Skill(parler_models.TranslatableModel, BaseModel):
