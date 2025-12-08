@@ -4,7 +4,6 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 
-from joanie.core import models
 from joanie.core.utils.emails import send
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment.models import Invoice, Transaction
@@ -16,7 +15,12 @@ def get_active_offering_rule(offering_id, nb_seats: int):
     Otherwise, if all active offering rules don't have enough seats requested, it raises an error.
     When no offering rules is found for the offering, it returns None.
     """
-    offering_rules = models.OfferingRule.objects.find_actives(offering_id=offering_id)
+
+    # ruff : noqa : PLC0415
+    # pylint: disable=import-outside-toplevel, cyclic-import
+    from joanie.core.models import OfferingRule
+
+    offering_rules = OfferingRule.objects.find_actives(offering_id=offering_id)
     seats_limitation = None
     for offering_rule in offering_rules:
         if offering_rule.nb_seats is not None:

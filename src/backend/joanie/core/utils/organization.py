@@ -2,7 +2,7 @@
 
 from django.db.models import Count, Exists, OuterRef, Q
 
-from joanie.core import enums, models
+from joanie.core import enums
 
 
 def get_least_active_organization(product, course, enrollment=None):
@@ -10,6 +10,10 @@ def get_least_active_organization(product, course, enrollment=None):
     Return the organization with the least binding orders count
     for a given product and course.
     """
+    # ruff : noqa : PLC0415
+    # pylint: disable=import-outside-toplevel, cyclic-import
+    from joanie.core import models
+
     course_id = course.id if course else enrollment.course_run.course_id
 
     try:

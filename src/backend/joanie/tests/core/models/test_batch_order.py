@@ -828,3 +828,91 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         self.assertFalse(batch_order.can_confirm_bank_transfer())
 
+    def test_models_batch_order_can_submit_for_signature_not_signable(self):
+        """
+        When the batch order is not signable, can_submit_for_signature should return False.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_DRAFT,
+        )
+
+        self.assertFalse(batch_order.can_submit_for_signature())
+
+    def test_models_batch_order_can_submit_for_signature_signable(self):
+        """
+        When the batch order is signable and has no offering rules,
+        can_submit_for_signature should return True.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+        )
+        batch_order.freeze_total("100.00")
+
+        self.assertTrue(batch_order.can_submit_for_signature())
+
+    def test_models_batch_order_can_submit_for_signature_with_offering_rule_enough_seats(
+        self,
+    ):
+        """
+        When the batch order has an offering rule with enough available seats,
+        can_submit_for_signature should return True.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            nb_seats=5,
+        )
+        batch_order.freeze_total("100.00")
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=batch_order.offering,
+            nb_seats=10,
+        )
+        batch_order.offering_rules.add(offering_rule)
+
+        self.assertTrue(batch_order.can_submit_for_signature())
+
+    def test_models_batch_order_can_submit_for_signature_with_offering_rule_not_enough_seats(
+        self,
+    ):
+        """
+        When the batch order has an offering rule without enough available seats
+        and no alternative offering rule exists, can_submit_for_signature should return False.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            nb_seats=10,
+        )
+        batch_order.freeze_total("100.00")
+        offering_rule = factories.OfferingRuleFactory(
+            course_product_relation=batch_order.offering,
+            nb_seats=5,
+        )
+        batch_order.offering_rules.add(offering_rule)
+
+        self.assertFalse(batch_order.can_submit_for_signature())
+
+    def test_models_batch_order_can_submit_for_signature_already_signed_by_buyer(self):
+        """
+        When the batch order is already signed by the buyer,
+        can_submit_for_signature should return False.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_SIGNING,
+        )
+        # Set contract as signed by buyer
+        batch_order.contract.submitted_for_signature_on = django_timezone.now()
+        batch_order.contract.student_signed_on = django_timezone.now()
+        batch_order.contract.save()
+
+        self.assertTrue(batch_order.is_signed_by_buyer)
+        self.assertFalse(batch_order.can_submit_for_signature())
+
+    def test_models_batch_order_can_submit_for_signature_state_pending(self):
+        """
+        When the batch order is in PENDING state,
+        can_submit_for_signature should return False even if signable.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_PENDING,
+        )
+
+        self.assertFalse(batch_order.can_submit_for_signature())
