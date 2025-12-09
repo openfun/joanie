@@ -53,6 +53,15 @@ const build = (state?: BatchOrderStatesEnum): BatchOrder => {
       Object.values(BatchOrderPaymentMethodEnum),
     ),
     orders: [],
+    available_actions: {
+      confirm_quote: false,
+      confirm_purchase_order: false,
+      confirm_bank_transfer: false,
+      submit_for_signature: false,
+      generate_orders: false,
+      cancel: false,
+      next_action: null,
+    },
   };
 
   return batchOrder;
@@ -92,6 +101,15 @@ const buildBatchOrderListItem = (): BatchOrderListItem => {
     payment_method: faker.helpers.arrayElement(
       Object.values(BatchOrderPaymentMethodEnum),
     ),
+    available_actions: {
+      confirm_quote: false,
+      confirm_purchase_order: false,
+      confirm_bank_transfer: false,
+      submit_for_signature: false,
+      generate_orders: false,
+      cancel: false,
+      next_action: null,
+    },
   };
 };
 

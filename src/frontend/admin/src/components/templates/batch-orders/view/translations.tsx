@@ -71,3 +71,36 @@ export const batchOrderPaymentMethodsMessages = defineMessages({
     description: "Text for card payment payment method",
   },
 });
+
+export const batchOrderActionsMessages = defineMessages({
+  confirm_quote: {
+    id: "components.templates.batch-orders.view.batchOrderActionsMessages.confirmQuote",
+    defaultMessage: "Confirm quote",
+    description: "Label for the confirm quote action",
+  },
+  confirm_purchase_order: {
+    id: "components.templates.batch-orders.view.batchOrderActionsMessages.confirmPurchaseOrder",
+    defaultMessage: "Confirm purchase order",
+    description: "Label for the confirm purchase order action",
+  },
+  confirm_bank_transfer: {
+    id: "components.templates.batch-orders.view.batchOrderActionsMessages.confirmBankTransfer",
+    defaultMessage: "Confirm bank transfer",
+    description: "Label for the confirm bank transfer action",
+  },
+  submit_for_signature: {
+    id: "components.templates.batch-orders.view.batchOrderActionsMessages.submitForSignature",
+    defaultMessage: "Submit for signature",
+    description: "Label for the submit for signature action",
+  },
+  generate_orders: {
+    id: "components.templates.batch-orders.view.batchOrderActionsMessages.generateOrders",
+    defaultMessage: "Generate orders",
+    description: "Label for the generate orders action",
+  },
+  cancel: {
+    id: "components.templates.batch-orders.view.batchOrderActionsMessages.cancel",
+    defaultMessage: "Cancel batch order",
+    description: "Label for the cancel batch order action",
+  },
+});
