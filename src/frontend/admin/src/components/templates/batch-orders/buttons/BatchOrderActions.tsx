@@ -5,11 +5,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DrawIcon from "@mui/icons-material/Draw";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
-import {
-  BatchOrder,
-  BatchOrderPaymentMethodEnum,
-  BatchOrderStatesEnum,
-} from "@/services/api/models/BatchOrder";
+import { BatchOrder } from "@/services/api/models/BatchOrder";
 import ButtonMenu, {
   MenuOption,
 } from "@/components/presentational/button/menu/ButtonMenu";
@@ -19,6 +15,7 @@ import {
 } from "@/hooks/useBatchOrders/useBatchOrders";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { ConfirmQuoteModal } from "@/components/templates/batch-orders/modals/ConfirmQuoteModal";
+import { batchOrderActionsMessages } from "@/components/templates/batch-orders/view/translations";
 
 const messages = defineMessages({
   batchOrderActionsLabel: {
@@ -36,16 +33,6 @@ const messages = defineMessages({
     description: "Text when the batch order is not canceled",
     defaultMessage: "You must cancel the batch order before refunding it.",
   },
-  cancelBatchOrder: {
-    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.cancelBatchOrder",
-    description: "Label for the cancel batch order action",
-    defaultMessage: "Cancel this batch order",
-  },
-  confirmQuote: {
-    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmQuote",
-    description: "Label for the confirm quote action",
-    defaultMessage: "Confirm quote",
-  },
   confirmQuoteDisabled: {
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmQuoteDisabled",
     description: "Text when the batch order quote cannot be confirmed",
@@ -62,21 +49,11 @@ const messages = defineMessages({
     description: "Error message when quote confirmation fails",
     defaultMessage: "Failed to confirm quote. Please try again.",
   },
-  confirmPurchaseOrder: {
-    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmPurchaseOrder",
-    description: "Label for the confirm purchase order action",
-    defaultMessage: "Confirm purchase order",
-  },
   confirmPurchaseOrderDisabled: {
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmPurchaseOrderDisabled",
     description: "Text when the batch order purchase order cannot be confirmed",
     defaultMessage:
       "Purchase order can only be confirmed when batch order is in quoted state with purchase order payment method, quote is signed, and total is set",
-  },
-  confirmBankTransfer: {
-    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmBankTransfer",
-    description: "Label for the confirm bank transfer action",
-    defaultMessage: "Confirm bank transfer",
   },
   confirmBankTransferDisabled: {
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmBankTransferDisabled",
@@ -84,21 +61,11 @@ const messages = defineMessages({
     defaultMessage:
       "Bank transfer can only be confirmed when batch order uses bank transfer payment method and is in pending, signing, or process payment state",
   },
-  submitForSignature: {
-    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.submitForSignature",
-    description: "Label for the submit for signature action",
-    defaultMessage: "Submit for signature",
-  },
   submitForSignatureDisabled: {
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.submitForSignatureDisabled",
     description: "Text when the batch order cannot be submitted for signature",
     defaultMessage:
       "Batch order can only be submitted for signature when in assigned, quoted, or to sign state",
-  },
-  generateOrders: {
-    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.generateOrders",
-    description: "Label for the generate orders action",
-    defaultMessage: "Generate orders",
   },
   generateOrdersDisabled: {
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.generateOrdersDisabled",
@@ -134,20 +101,17 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
     const allOptions: MenuOption[] = [
       {
         icon: <CheckCircleIcon />,
-        mainLabel: intl.formatMessage(messages.confirmQuote),
-        isDisable:
-          batchOrder.state !== BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED,
+        mainLabel: intl.formatMessage(batchOrderActionsMessages.confirm_quote),
+        isDisable: !batchOrder.available_actions.confirm_quote,
         disableMessage: intl.formatMessage(messages.confirmQuoteDisabled),
         onClick: confirmQuoteModal.handleOpen,
       },
       {
         icon: <CheckCircleIcon />,
-        mainLabel: intl.formatMessage(messages.confirmPurchaseOrder),
-        isDisable:
-          batchOrder.state !== BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED ||
-          batchOrder.payment_method !==
-            BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER ||
-          !batchOrder.total,
+        mainLabel: intl.formatMessage(
+          batchOrderActionsMessages.confirm_purchase_order,
+        ),
+        isDisable: !batchOrder.available_actions.confirm_purchase_order,
         disableMessage: intl.formatMessage(
           messages.confirmPurchaseOrderDisabled,
         ),
@@ -160,15 +124,10 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
       },
       {
         icon: <CheckCircleIcon />,
-        mainLabel: intl.formatMessage(messages.confirmBankTransfer),
-        isDisable:
-          batchOrder.payment_method !==
-            BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER ||
-          ![
-            BatchOrderStatesEnum.BATCH_ORDER_STATE_SIGNING,
-            BatchOrderStatesEnum.BATCH_ORDER_STATE_PENDING,
-            BatchOrderStatesEnum.BATCH_ORDER_STATE_PROCESS_PAYMENT,
-          ].includes(batchOrder.state),
+        mainLabel: intl.formatMessage(
+          batchOrderActionsMessages.confirm_bank_transfer,
+        ),
+        isDisable: !batchOrder.available_actions.confirm_bank_transfer,
         disableMessage: intl.formatMessage(
           messages.confirmBankTransferDisabled,
         ),
@@ -181,12 +140,10 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
       },
       {
         icon: <DrawIcon />,
-        mainLabel: intl.formatMessage(messages.submitForSignature),
-        isDisable: ![
-          BatchOrderStatesEnum.BATCH_ORDER_STATE_ASSIGNED,
-          BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED,
-          BatchOrderStatesEnum.BATCH_ORDER_STATE_TO_SIGN,
-        ].includes(batchOrder.state),
+        mainLabel: intl.formatMessage(
+          batchOrderActionsMessages.submit_for_signature,
+        ),
+        isDisable: !batchOrder.available_actions.submit_for_signature,
         disableMessage: intl.formatMessage(messages.submitForSignatureDisabled),
         onClick: async () => {
           batchOrdersQuery.methods.submitForSignature(
@@ -197,9 +154,10 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
       },
       {
         icon: <PlaylistAddCheckIcon />,
-        mainLabel: intl.formatMessage(messages.generateOrders),
-        isDisable:
-          batchOrder.state !== BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED,
+        mainLabel: intl.formatMessage(
+          batchOrderActionsMessages.generate_orders,
+        ),
+        isDisable: !batchOrder.available_actions.generate_orders,
         disableMessage: intl.formatMessage(messages.generateOrdersDisabled),
         onClick: async () => {
           batchOrdersQuery.methods.generateOrders(
@@ -210,10 +168,8 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
       },
       {
         icon: <CancelIcon />,
-        mainLabel: intl.formatMessage(messages.cancelBatchOrder),
-        isDisable: [BatchOrderStatesEnum.BATCH_ORDER_STATE_CANCELED].includes(
-          batchOrder.state,
-        ),
+        mainLabel: intl.formatMessage(batchOrderActionsMessages.cancel),
+        isDisable: !batchOrder.available_actions.cancel,
         disableMessage: intl.formatMessage(messages.alreadyCancelTooltip),
         onClick: async () => {
           await batchOrderQuery.methods.delete(batchOrder.id, {
