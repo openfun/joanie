@@ -167,6 +167,9 @@ class UtilsBatchOrderTestCase(TestCase):
         batch_order = factories.BatchOrderFactory(
             owner=user,
             offering__product__title="Product 1",
+            signatory_email="signatory@example.fr",
+            signatory_firstname="Jane",
+            signatory_lastname="Doe",
         )
         batch_order.offering.product.translations.create(
             language_code="fr-fr",
@@ -182,7 +185,7 @@ class UtilsBatchOrderTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
         # check we send it to the right email
-        self.assertEqual(mail.outbox[0].to[0], batch_order.owner.email)
+        self.assertEqual(mail.outbox[0].to[0], batch_order.signatory_email)
 
         email_content = " ".join(mail.outbox[0].body.split())
 
