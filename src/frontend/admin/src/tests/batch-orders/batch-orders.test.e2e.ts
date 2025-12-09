@@ -956,6 +956,9 @@ test.describe("Batch Order list", () => {
     await expect(
       page.getByRole("columnheader", { name: "Total" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Next action" }),
+    ).toBeVisible();
   });
 
   test("Check all the batch orders are presents", async ({ page }) => {
@@ -1004,6 +1007,49 @@ test.describe("Batch Order list", () => {
         ).toBeVisible();
       }),
     );
+  });
+
+  test("Check next action column displays correct action", async ({ page }) => {
+    const nextAction: BatchOrderAction = "confirm_quote";
+    store.list[0].available_actions.next_action = nextAction;
+    store.list[1].available_actions.next_action = "submit_for_signature";
+    store.list[2].available_actions.next_action = null;
+
+    await mockPlaywrightCrud<BatchOrderListItem, any>({
+      data: store.list,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/batch-orders/",
+      page,
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await expect(
+      page.getByRole("heading", { name: "Batch Orders" }),
+    ).toBeVisible();
+
+    // Check first batch order has "Confirm quote" as next action
+    const row1 = page.locator(`[data-id='${store.list[0].id}']`);
+    await expect(row1).toBeVisible();
+    await expect(
+      row1.getByRole("gridcell", {
+        name: batchOrderActionsMessages[nextAction].defaultMessage,
+      }),
+    ).toBeVisible();
+
+    // Check second batch order has "Submit for signature" as next action
+    const row2 = page.locator(`[data-id='${store.list[1].id}']`);
+    await expect(row2).toBeVisible();
+    await expect(
+      row2.getByRole("gridcell", {
+        name: batchOrderActionsMessages.submit_for_signature.defaultMessage,
+      }),
+    ).toBeVisible();
+
+    // Check third batch order has "-" when next_action is null
+    const row3 = page.locator(`[data-id='${store.list[2].id}']`);
+    await expect(row3).toBeVisible();
+    await expect(
+      row3.getByRole("gridcell", { name: "-", exact: true }),
+    ).toBeVisible();
   });
 
   test("Check ordering", async ({ page }) => {

@@ -7,7 +7,10 @@ import {
 } from "@/components/presentational/table/TableComponent";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
 import { usePaginatedTableResource } from "@/components/presentational/table/usePaginatedTableResource";
-import { BatchOrderListItem } from "@/services/api/models/BatchOrder";
+import {
+  BatchOrderAvailableActions,
+  BatchOrderListItem,
+} from "@/services/api/models/BatchOrder";
 import {
   BatchOrderListQuery,
   useBatchOrders,
@@ -18,6 +21,7 @@ import { commonTranslations } from "@/translations/common/commonTranslations";
 import { formatShortDate } from "@/utils/dates";
 import { BatchOrderFilters } from "@/components/templates/batch-orders/filters/BatchOrderFilters";
 import {
+  batchOrderActionsMessages,
   batchOrderPaymentMethodsMessages,
   batchOrderStatesMessages,
 } from "@/components/templates/batch-orders/view/translations";
@@ -72,6 +76,11 @@ const messages = defineMessages({
     id: "components.templates.batchOrders.list.paymentMethod",
     defaultMessage: "Payment method",
     description: "Label for the payment method header inside the table",
+  },
+  nextAction: {
+    id: "components.templates.batchOrders.list.nextAction",
+    defaultMessage: "Next action",
+    description: "Label for the next action header inside the table",
   },
 });
 
@@ -157,6 +166,15 @@ export function BatchOrdersList(props: Props) {
       flex: 1,
       valueGetter: (value) =>
         intl.formatMessage(batchOrderPaymentMethodsMessages[value]),
+    },
+    {
+      field: "available_actions",
+      headerName: intl.formatMessage(messages.nextAction),
+      flex: 1,
+      valueGetter: (value: BatchOrderAvailableActions) =>
+        value?.next_action
+          ? intl.formatMessage(batchOrderActionsMessages[value.next_action])
+          : "-",
     },
   ];
 
