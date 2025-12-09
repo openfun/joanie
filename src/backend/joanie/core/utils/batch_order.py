@@ -76,8 +76,8 @@ def send_mail_invitation_link(batch_order, invitation_link: str):
                 "title": _(
                     f"{product_title} - A signature is requested for your batch order."
                 ),
-                "email": batch_order.owner.email,
-                "fullname": batch_order.owner.get_full_name(),
+                "email": batch_order.signatory_email,
+                "fullname": f"{batch_order.signatory_firstname} {batch_order.signatory_lastname}",
                 "product_title": product_title,
                 "invitation_link": invitation_link,
                 "site": {
@@ -86,7 +86,7 @@ def send_mail_invitation_link(batch_order, invitation_link: str):
                 },
             },
             template_name="invitation_to_sign_contract",
-            to_user_email=batch_order.owner.email,
+            to_user_email=batch_order.signatory_email,
         )
 
 
