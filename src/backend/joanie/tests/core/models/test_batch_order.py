@@ -6,6 +6,7 @@ from decimal import Decimal
 from unittest import mock
 
 from django.contrib.sites.models import Site
+from django.core import mail
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import override_settings
@@ -20,7 +21,7 @@ from joanie.signature.backends import get_signature_backend
 from joanie.tests.base import LoggingTestCase
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-lines
 class BatchOrderModelsTestCase(LoggingTestCase):
     """Test suite for batch order model."""
 
@@ -28,14 +29,17 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         """
         When calling init_flow method of batch order the following objects should be
         generated : the contract (agreement) without a context, the quote with its
-        context and the state should end in `quoted`
+        context and the state should end in `quoted`. Also, it should send an email
+        to the organization owner or admin if it exists that a new quote is created.
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_DRAFT,
         )
         organization = batch_order.offering.organizations.first()
         batch_order.organization = organization
-
+        access = factories.UserOrganizationAccessFactory(
+            organization=organization, role=enums.OWNER
+        )
         batch_order.init_flow()
 
         batch_order.refresh_from_db()
@@ -43,6 +47,21 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertIsNotNone(batch_order.contract)
         self.assertIsNotNone(batch_order.quote.context)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_QUOTED)
+        # Check email has been sent
+        self.assertEqual(len(mail.outbox), 1)
+
+        # Check we send it to the right email
+        self.assertEqual(mail.outbox[0].to[0], access.user.email)
+
+        email_content = " ".join(mail.outbox[0].body.split())
+
+        self.assertEqual(
+            mail.outbox[0].subject, "A new quote has arrived to your dashboard !"
+        )
+        self.assertIn("seats", email_content)
+        self.assertIn("A new quote for the company", email_content)
+        self.assertIn(batch_order.company_name, email_content)
+        self.assertIn(str(batch_order.nb_seats), email_content)
 
     def test_models_batch_order_freeze_total(self):
         """
@@ -735,6 +754,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
     def test_models_batch_order_can_confirm_quote_when_total_set(self):
         """Should return False when batch order total is already set."""
         batch_order = factories.BatchOrderFactory()
+        factories.UserOrganizationAccessFactory(
+            organization=batch_order.organization, role=enums.OWNER
+        )
         batch_order.init_flow()
         batch_order.total = 100
         batch_order.save()

@@ -23,10 +23,14 @@ class BatchOrderFullFlowAPITest(BaseAPITestCase):
         """
         Returns simple batch order sample for create payload.
         """
+
         offering = factories.OfferingFactory(
             product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
             product__contract_definition_order=factories.ContractDefinitionFactory(),
             product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+        factories.UserOrganizationAccessFactory(
+            organization=offering.organizations.first(), role=enums.OWNER
         )
 
         return {
