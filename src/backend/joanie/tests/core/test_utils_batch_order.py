@@ -44,7 +44,6 @@ class UtilsBatchOrderTestCase(TestCase):
         offering_rule = factories.OfferingRuleFactory(
             nb_seats=10, course_product_relation=offering
         )
-
         # Create an order in completed state for organization_1
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_COMPLETED,
@@ -291,7 +290,6 @@ class UtilsBatchOrderTestCase(TestCase):
             title="Produit 1",
         )
         offering.product.save()
-
         offering_rule = factories.OfferingRuleFactory(
             course_product_relation=offering, nb_seats=10
         )
@@ -301,6 +299,7 @@ class UtilsBatchOrderTestCase(TestCase):
             nb_seats=2,
             offering=offering,
         )
+        mail.outbox.clear()
         batch_order.offering_rules.add(offering_rule)
         batch_order.generate_orders()
 

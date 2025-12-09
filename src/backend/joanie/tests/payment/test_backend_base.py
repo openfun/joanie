@@ -1352,6 +1352,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             owner=owner,
             offering=offering,
         )
+        # Erase first email sent when quote is created
+        mail.outbox.clear()
 
         payment = {
             "id": "pay_0",

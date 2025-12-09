@@ -61,7 +61,10 @@ from joanie.core.utils import (
     webhooks,
 )
 from joanie.core.utils import quotes as quote_utility
-from joanie.core.utils.batch_order import get_active_offering_rule
+from joanie.core.utils.batch_order import (
+    get_active_offering_rule,
+    send_mail_quote_arrival,
+)
 from joanie.core.utils.billing_address import CompanyBillingAddress
 from joanie.core.utils.contract_definition import embed_images_in_context
 from joanie.core.utils.course_run.aggregate_course_runs_dates import (
@@ -2307,6 +2310,9 @@ class BatchOrder(BaseModel):
                 self.relation.product.quote_definition, self
             )
             self.quote.save()
+
+        # Send mail to organization
+        send_mail_quote_arrival(self)
 
         self.flow.update()  # Transition to quoted
         self.save()

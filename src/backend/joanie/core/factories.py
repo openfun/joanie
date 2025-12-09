@@ -1273,6 +1273,8 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             self.organization = None
             self.save()
             return
+        # Create an owner of organization that received the email when new quote is created
+        UserOrganizationAccessFactory(organization=self.organization, role=enums.OWNER)
 
         # Initialize flow for all non-draft states
         self.init_flow()

@@ -12,7 +12,9 @@ class CreateDevDemoTestCase(TestCase):
     """Test case for the management command 'create_demo'"""
 
     @override_settings(DEBUG=True)
-    def test_commands_create_dev_demo(self):  # pylint: disable=too-many-statements
+    def test_commands_create_dev_demo(self):
+        # pylint: disable=too-many-statements
+        # ruff : noqa : PLR0915
         """The create_dev_demo management command should create objects as expected."""
         factories.UserFactory(
             username="admin", email="admin@example.com", password="admin"
@@ -26,6 +28,7 @@ class CreateDevDemoTestCase(TestCase):
         expected_nb_users += 1  # organization_owner
         expected_nb_users += 1  # student_user
         expected_nb_users += 1  # second_user
+        expected_nb_users += 1  # organization owner
         self.assertEqual(nb_users, expected_nb_users)
         nb_product_certificate = NB_DEV_OBJECTS["product_certificate"]
         nb_product_certificate += 1  # product_certificate_enrollment
