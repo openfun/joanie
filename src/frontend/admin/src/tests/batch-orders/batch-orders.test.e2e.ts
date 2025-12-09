@@ -6,6 +6,7 @@ import {
   mockPlaywrightCrud,
 } from "@/tests/useResourceHandler";
 import {
+  BatchOrderAction,
   BatchOrderListItem,
   BatchOrderPaymentMethodEnum,
   BatchOrderStatesEnum,
@@ -22,6 +23,7 @@ import { formatShortDateTest } from "@/tests/utils";
 import { OrderListItemFactory } from "@/services/factories/orders";
 import { orderStatesMessages } from "@/components/templates/orders/view/translations";
 import {
+  batchOrderActionsMessages,
   batchOrderPaymentMethodsMessages,
   batchOrderStatesMessages,
 } from "@/components/templates/batch-orders/view/translations";
@@ -267,6 +269,7 @@ test.describe("Batch Order view", () => {
   test("Cancel batch order", async ({ page }) => {
     const batchOrder = store.list[0];
     batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_DRAFT;
+    batchOrder.available_actions.cancel = true;
 
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
@@ -299,11 +302,9 @@ test.describe("Batch Order view", () => {
     // Cancel order
 
     await expect(
-      page.getByRole("menuitem", { name: "Cancel this batch order" }),
+      page.getByRole("menuitem", { name: "Cancel batch order" }),
     ).toBeVisible();
-    await page
-      .getByRole("menuitem", { name: "Cancel this batch order" })
-      .click();
+    await page.getByRole("menuitem", { name: "Cancel batch order" }).click();
 
     // Check after operation
     await expect(page.getByText("Operation completed")).toBeVisible();
@@ -316,6 +317,7 @@ test.describe("Batch Order view", () => {
     const batchOrder = store.list[0];
     batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
     batchOrder.total = null;
+    batchOrder.available_actions.confirm_quote = true;
 
     const confirmQuoteRegex = new RegExp(
       `${url}${batchOrder.id}/confirm-quote/`,
@@ -388,11 +390,12 @@ test.describe("Batch Order view", () => {
     );
   });
 
-  test("Confirm quote button is disabled when state is not quoted", async ({
+  test("Confirm quote button is disabled when action is not available", async ({
     page,
   }) => {
     const batchOrder = store.list[0];
     batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_DRAFT;
+    batchOrder.available_actions.confirm_quote = false;
 
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
@@ -429,6 +432,7 @@ test.describe("Batch Order view", () => {
     batchOrder.payment_method =
       BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER;
     batchOrder.total = 123.45;
+    batchOrder.available_actions.confirm_purchase_order = true;
 
     const confirmPurchaseOrderRegex = new RegExp(
       `${url}${batchOrder.id}/confirm-purchase-order/`,
@@ -484,7 +488,7 @@ test.describe("Batch Order view", () => {
     );
   });
 
-  test("Confirm purchase order button is disabled when conditions are not met", async ({
+  test("Confirm purchase order button is disabled when action is not available", async ({
     page,
   }) => {
     const batchOrder = store.list[0];
@@ -492,6 +496,7 @@ test.describe("Batch Order view", () => {
     batchOrder.payment_method =
       BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER;
     batchOrder.total = 123.45;
+    batchOrder.available_actions.confirm_purchase_order = false;
 
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
@@ -531,6 +536,7 @@ test.describe("Batch Order view", () => {
     batchOrder.payment_method =
       BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER;
     batchOrder.total = 123.45;
+    batchOrder.available_actions.confirm_bank_transfer = true;
 
     const confirmBankTransferRegex = new RegExp(
       `${url}${batchOrder.id}/confirm-bank-transfer/`,
@@ -584,7 +590,7 @@ test.describe("Batch Order view", () => {
     );
   });
 
-  test("Confirm bank transfer button is disabled when conditions are not met", async ({
+  test("Confirm bank transfer button is disabled when action is not available", async ({
     page,
   }) => {
     const batchOrder = store.list[0];
@@ -592,6 +598,7 @@ test.describe("Batch Order view", () => {
     batchOrder.payment_method =
       BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER;
     batchOrder.total = 123.45;
+    batchOrder.available_actions.confirm_bank_transfer = false;
 
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
@@ -629,6 +636,7 @@ test.describe("Batch Order view", () => {
     const batchOrder = store.list[0];
     batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
     batchOrder.total = 123.45;
+    batchOrder.available_actions.submit_for_signature = true;
 
     const submitForSignatureRegex = new RegExp(
       `${url}${batchOrder.id}/submit-for-signature/`,
@@ -684,12 +692,13 @@ test.describe("Batch Order view", () => {
     );
   });
 
-  test("Submit for signature button is disabled when conditions are not met", async ({
+  test("Submit for signature button is disabled when action is not available", async ({
     page,
   }) => {
     const batchOrder = store.list[0];
     batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_DRAFT;
     batchOrder.total = 123.45;
+    batchOrder.available_actions.submit_for_signature = false;
 
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {
@@ -727,6 +736,7 @@ test.describe("Batch Order view", () => {
     const batchOrder = store.list[0];
     batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED;
     batchOrder.total = 123.45;
+    batchOrder.available_actions.generate_orders = true;
 
     const generateOrdersRegex = new RegExp(
       `${url}${batchOrder.id}/generate-orders/`,
@@ -778,12 +788,13 @@ test.describe("Batch Order view", () => {
     ).toBeVisible();
   });
 
-  test("Generate orders button is disabled when conditions are not met", async ({
+  test("Generate orders button is disabled when action is not available", async ({
     page,
   }) => {
     const batchOrder = store.list[0];
     batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
     batchOrder.total = 123.45;
+    batchOrder.available_actions.generate_orders = false;
 
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {

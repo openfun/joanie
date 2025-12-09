@@ -24,6 +24,20 @@ export enum BatchOrderPaymentMethodEnum {
   BATCH_ORDER_WITH_CARD_PAYMENT = "card_payment",
 }
 
+export type BatchOrderAction =
+  | "confirm_quote"
+  | "confirm_purchase_order"
+  | "confirm_bank_transfer"
+  | "submit_for_signature"
+  | "generate_orders"
+  | "cancel";
+
+export type BatchOrderAvailableActions = {
+  [K in BatchOrderAction]: boolean;
+} & {
+  next_action: BatchOrderAction | null;
+};
+
 export type AbstractBatchOrder = {
   id: string;
   created_on: string;
@@ -33,6 +47,7 @@ export type AbstractBatchOrder = {
   total: Nullable<number>;
   total_currency: string;
   payment_method: BatchOrderPaymentMethodEnum;
+  available_actions: BatchOrderAvailableActions;
 };
 
 export type BatchOrderListItem = AbstractBatchOrder & {
@@ -92,6 +107,7 @@ export const transformBatchOrderToListItem = (
     company_name: batchOrder.company_name,
     owner_name: batchOrder.owner.full_name ?? batchOrder.owner.username,
     organization_title: batchOrder.organization?.title ?? "",
+    available_actions: batchOrder.available_actions,
   };
 };
 
