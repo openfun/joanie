@@ -9,7 +9,7 @@ from django.test.utils import override_settings
 
 import responses
 
-from joanie.core import enums, factories
+from joanie.core import enums, factories, models
 from joanie.signature import exceptions
 from joanie.signature.backends import get_signature_backend
 
@@ -659,9 +659,7 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
         signatory_fullname = (
             f"{batch_order.signatory_firstname} {batch_order.signatory_lastname}"
         )
-        accesses = factories.UserOrganizationAccessFactory.create_batch(
-            3, organization=batch_order.organization, role="owner"
-        )
+        access = models.OrganizationAccess.objects.first()
         file_bytes = b"Some fake content"
         workflow_id = "wfl_id_fake"
         title = "Contract Definition"
@@ -773,7 +771,6 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                                         "preferred_locale": access.user.language.lower(),
                                         "consentPageId": "cop_id_fake",
                                     }
-                                    for access in reversed(accesses)
                                 ],
                                 "requiredRecipients": 1,
                                 "validityPeriod": (

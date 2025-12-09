@@ -19,6 +19,7 @@ from stockholm import Money
 
 from joanie.core import factories
 from joanie.core.enums import (
+    BATCH_ORDER_STATE_QUOTED,
     BATCH_ORDER_STATE_TO_SIGN,
     CERTIFICATE,
     CONTRACT_DEFINITION_DEFAULT,
@@ -207,6 +208,56 @@ class DebugMailSuccessPaymentViewBatchOrderHtml(TemplateView):
                 },
                 **kwargs,
             )
+
+
+class DebugMailQuoteArrivalView(TemplateView):
+    """
+    Debug view to check the layout of the quote arrival email of a batch order for an organization.
+    """
+
+    def get_context_data(self, **kwargs):
+        """
+        Generate a context for quote arrival email.
+        """
+        product = ProductFactory(
+            contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            quote_definition=factories.QuoteDefinitionFactory(),
+        )
+        product.set_current_language("en-us")
+        product.title = "Test product"
+        product.set_current_language("fr-fr")
+        product.title = "Test produit"
+        product.save()
+        batch_order = factories.BatchOrderFactory(
+            offering__product=product, state=BATCH_ORDER_STATE_QUOTED
+        )
+
+        current_language = translation.get_language()
+        with translation.override(current_language):
+            batch_order.offering.product.set_current_language(current_language)
+            return {
+                "product_title": batch_order.offering.product.title,
+                "company_name": batch_order.company_name,
+                "nb_seats": batch_order.nb_seats,
+            }
+
+
+class DebugMailQuoteArrivalViewHtml(DebugMailQuoteArrivalView):
+    """
+    Debug view to check the layout of the quote arrival of a batch order for an organization
+    in html format.
+    """
+
+    template_name = "mail/html/quote_arrival.html"
+
+
+class DebugMailQuoteArrivalViewTxt(DebugMailQuoteArrivalView):
+    """
+    Debug view to check the layout of the quote arrival of a batch order for an organization
+    in text format.
+    """
+
+    template_name = "mail/text/quote_arrival.txt"
 
 
 class DebugMailSuccessPaymentViewBatchOrderTxt(

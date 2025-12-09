@@ -19,6 +19,8 @@ from joanie.debug.views import (
     DebugMailInstallmentRefusedPaymentViewTxt,
     DebugMailInstallmentReminderPaymentViewHtml,
     DebugMailInstallmentReminderPaymentViewTxt,
+    DebugMailQuoteArrivalViewHtml,
+    DebugMailQuoteArrivalViewTxt,
     DebugMailSuccessInstallmentPaidViewHtml,
     DebugMailSuccessInstallmentPaidViewTxt,
     DebugMailSuccessPaymentViewBatchOrderHtml,
@@ -53,6 +55,16 @@ urlpatterns = [
         "__debug__/mail/invitation_to_sign_contract_txt",
         DebugInvitationSignatureLinkTxt.as_view(),
         name="debug.mail.invitation_to_sign_contract_txt",
+    ),
+    path(
+        "__debug__/mail/quote_arrival_html",
+        DebugMailQuoteArrivalViewHtml.as_view(),
+        name="debug.mail.quote_arrival_html",
+    ),
+    path(
+        "__debug__/mail/quote_arrival_txt",
+        DebugMailQuoteArrivalViewTxt.as_view(),
+        name="debug.mail.quote_arrival_txt,",
     ),
     path(
         "__debug__/pdf-templates/certificate",

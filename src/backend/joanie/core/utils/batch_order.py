@@ -4,6 +4,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 
+from joanie.core import enums
 from joanie.core.utils.emails import send
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment.models import Invoice, Transaction
@@ -88,6 +89,31 @@ def send_mail_invitation_link(batch_order, invitation_link: str):
             template_name="invitation_to_sign_contract",
             to_user_email=batch_order.signatory_email,
         )
+
+
+def send_mail_quote_arrival(batch_order):
+    """
+    Send an email to the organization to inform a new quote is
+    waiting for their action
+    """
+
+    for access in batch_order.organization.accesses.filter(
+        role__in=[enums.OWNER, enums.ADMIN]
+    ):
+        with override(access.user.language):
+            product_title = batch_order.offering.product.safe_translation_getter(
+                "title", language_code=access.user.language
+            )
+            send(
+                subject=_("A new quote has arrived to your dashboard !"),
+                template_vars={
+                    "product_title": product_title,
+                    "company_name": batch_order.company_name,
+                    "nb_seats": batch_order.nb_seats,
+                },
+                template_name="quote_arrival",
+                to_user_email=access.user.email,
+            )
 
 
 def validate_success_payment(batch_order):
