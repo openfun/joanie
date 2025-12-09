@@ -6,6 +6,7 @@ from decimal import Decimal as D
 from logging import Logger
 from unittest import mock
 
+from django.core import mail
 from django.core.cache import cache
 from django.test import override_settings
 from django.urls import reverse
@@ -29,8 +30,11 @@ from joanie.core.enums import (
 )
 from joanie.core.factories import (
     BatchOrderFactory,
+    ContractDefinitionFactory,
+    OfferingFactory,
     OrderFactory,
     OrderGeneratorFactory,
+    QuoteDefinitionFactory,
     UserFactory,
 )
 from joanie.payment.backends.base import BasePaymentBackend
@@ -865,12 +869,17 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase
         batch order should be generated.
         """
         backend = DummyPaymentBackend()
+        offering = OfferingFactory(
+            product__contract_definition_batch_order=ContractDefinitionFactory(),
+            product__quote_definition=QuoteDefinitionFactory(),
+        )
         batch_order = BatchOrderFactory(
             state=BATCH_ORDER_STATE_PENDING,
             nb_seats=2,
-            offering__product__price=100,
+            offering=offering,
             owner__language="en-us",
         )
+        mail.outbox.clear()
 
         # Create a payment
         payment_id = backend.create_payment(
