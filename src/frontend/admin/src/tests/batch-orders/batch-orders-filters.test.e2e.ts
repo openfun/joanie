@@ -214,19 +214,54 @@ test.describe("Batch Order filters", () => {
     ).not.toBeVisible();
   });
 
-  test("Test export functionality", async ({ page }) => {
+  test("Test export functionality", async ({ page, context }) => {
+    let exportRequestUrl = "";
+    await context.route(/batch-orders\/export/, (route, request) => {
+      exportRequestUrl = request.url();
+      route.fulfill({ contentType: "text/csv", body: "data" });
+    });
+
     await page.goto(PATH_ADMIN.batch_orders.list);
 
     const exportButton = page.getByRole("button", { name: "Export" });
-    if (await exportButton.isVisible()) {
-      await exportButton.click();
+    await expect(exportButton).toBeVisible();
 
-      page.on("popup", async (popup) => {
-        await popup.waitForLoadState();
-        expect(popup.url()).toContain(
-          "http://localhost:8071/api/v1.0/admin/batch-orders/export/",
-        );
-      });
-    }
+    const pagePromise = context.waitForEvent("page");
+    await exportButton.click();
+    await pagePromise;
+
+    expect(exportRequestUrl).toContain(
+      "http://localhost:8071/api/v1.0/admin/batch-orders/export/",
+    );
+  });
+
+  test("Test export with filters", async ({ page, context }) => {
+    let exportRequestUrl = "";
+    await context.route(/batch-orders\/export/, (route, request) => {
+      exportRequestUrl = request.url();
+      route.fulfill({ contentType: "text/csv", body: "data" });
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+
+    await page.getByRole("button", { name: "Filters" }).click();
+    await page
+      .getByTestId("select-batch-order-state-filter")
+      .getByLabel("State")
+      .click();
+    await page
+      .getByRole("option", {
+        name: BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED,
+      })
+      .click();
+    await page.getByLabel("close").click();
+
+    const pagePromise = context.waitForEvent("page");
+    await page.getByRole("button", { name: "Export" }).click();
+    await pagePromise;
+
+    expect(exportRequestUrl).toContain(
+      `state=${BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED}`,
+    );
   });
 });
