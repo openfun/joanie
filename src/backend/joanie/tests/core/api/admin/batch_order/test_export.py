@@ -432,6 +432,44 @@ class BatchOrderAdminApiExportTestCase(BaseAPITestCase):
                 csv_line.split(","),
             )
 
+    def test_api_admin_batch_orders_export_csv_without_contract(self):
+        """
+        Batch orders without a contract (e.g., in draft state) should be exported
+        with empty contract fields.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_DRAFT)
+
+        # Verify the batch order has no contract
+        self.assertFalse(hasattr(batch_order, "contract") and batch_order.contract)
+
+        now = timezone.now()
+        with mock.patch("django.utils.timezone.now", return_value=now):
+            response = self.client.get(
+                f"/api/v1.0/admin/batch-orders/export/?ids={batch_order.id}"
+            )
+
+        self.assert_response_export_csv(response, now)
+
+        csv_content = response.getvalue().decode().splitlines()
+        csv_header = csv_content.pop(0)
+        csv_line = csv_content[0].split(",")
+
+        # Find the index of contract-related fields
+        headers = csv_header.split(",")
+        contract_idx = headers.index("Contract")
+        submitted_idx = headers.index("Submitted for signature")
+        buyer_signed_idx = headers.index("Buyer signature date")
+        org_signed_idx = headers.index("Organization signature date")
+
+        # Verify contract-related fields are empty
+        self.assertEqual(csv_line[contract_idx], "")
+        self.assertEqual(csv_line[submitted_idx], "")
+        self.assertEqual(csv_line[buyer_signed_idx], "")
+        self.assertEqual(csv_line[org_signed_idx], "")
+
     def test_api_admin_batch_order_export_csv_filter_payment_method(self):
         """
         Payment method filter should be applied to export csv of batch orders.

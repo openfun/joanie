@@ -1818,7 +1818,10 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
         Return the date the contract was submitted for signature if available,
         otherwise an empty string.
         """
-        return "Yes" if instance.contract.signature_backend_reference else "No"
+        try:
+            return "Yes" if instance.contract.signature_backend_reference else "No"
+        except (models.Contract.DoesNotExist, AttributeError):
+            return ""
 
     def get_contract_student_signed_on(self, instance) -> str:
         """
