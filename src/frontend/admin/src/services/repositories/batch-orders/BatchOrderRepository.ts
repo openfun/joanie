@@ -1,7 +1,11 @@
 import queryString from "query-string";
 import { Maybe } from "@/types/utils";
 import { ResourcesQuery } from "@/hooks/useResources/types";
-import { checkStatus, fetchApi } from "@/services/http/HttpService";
+import {
+  buildApiUrl,
+  checkStatus,
+  fetchApi,
+} from "@/services/http/HttpService";
 import { PaginatedResponse } from "@/types/api";
 import { BatchOrder, BatchOrderQuery } from "@/services/api/models/BatchOrder";
 
@@ -17,6 +21,7 @@ export const batchOrderRoutes = {
   submitForSignature: (id: string) =>
     `/batch-orders/${id}/submit-for-signature/`,
   generateOrders: (id: string) => `/batch-orders/${id}/generate-orders/`,
+  export: (params: string = "") => `/batch-orders/export/${params}`,
 };
 
 export class BatchOrderRepository {
@@ -94,5 +99,12 @@ export class BatchOrderRepository {
         "Content-Type": "application/json",
       },
     }).then(checkStatus);
+  }
+
+  static export(filters: Maybe<ResourcesQuery>): void {
+    const url = batchOrderRoutes.export(
+      filters ? `?${queryString.stringify(filters)}` : "",
+    );
+    window.open(buildApiUrl(url));
   }
 }

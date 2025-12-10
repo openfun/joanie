@@ -102,6 +102,13 @@ export const useBatchOrdersMessages = defineMessages({
     description: "Error message shown to the user when no batch order matches.",
     defaultMessage: "Cannot find the batch order",
   },
+  errorExport: {
+    id: "hooks.useBatchOrders.errorExport",
+    description:
+      "Error message shown to the user when batch order export request fails.",
+    defaultMessage:
+      "An error occurred while exporting batch orders. Please retry later.",
+  },
 });
 
 export type BatchOrderListQuery = ResourcesQuery & {
@@ -244,6 +251,17 @@ export const useBatchOrders = (
           custom.methods.setError(
             error.data?.details ??
               intl.formatMessage(useBatchOrdersMessages.errorGenerateOrders),
+          );
+        },
+      }).mutate,
+      export: mutation({
+        mutationFn: async (data: { currentFilters: BatchOrderListQuery }) => {
+          return BatchOrderRepository.export(data.currentFilters);
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(useBatchOrdersMessages.errorExport),
           );
         },
       }).mutate,

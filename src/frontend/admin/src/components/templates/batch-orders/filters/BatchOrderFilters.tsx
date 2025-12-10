@@ -16,7 +16,10 @@ import { OrganizationSearch } from "@/components/templates/organizations/inputs/
 import { UserSearch } from "@/components/templates/users/inputs/search/UserSearch";
 import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
 import { entitiesInputLabel } from "@/translations/common/entitiesInputLabel";
-import { BatchOrderListQuery } from "@/hooks/useBatchOrders/useBatchOrders";
+import {
+  BatchOrderListQuery,
+  useBatchOrders,
+} from "@/hooks/useBatchOrders/useBatchOrders";
 import {
   BatchOrderPaymentMethodEnum,
   BatchOrderStatesEnum,
@@ -54,6 +57,7 @@ type Props = MandatorySearchFilterProps & {
 
 export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
   const intl = useIntl();
+  const batchOrdersQuery = useBatchOrders({}, { enabled: false });
 
   const RegisterSchema = Yup.object().shape({
     state: Yup.string().nullable(),
@@ -160,6 +164,11 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
           </RHFValuesChange>
         </RHFProvider>
       )}
+      export={() => {
+        batchOrdersQuery.methods.export({
+          currentFilters: formValuesToFilterValues(methods.getValues()),
+        });
+      }}
     />
   );
 }
