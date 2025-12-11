@@ -2155,19 +2155,21 @@ class BatchOrder(BaseModel):
     )
     # Signatory informations to sign contract
     signatory_firstname = models.CharField(
-        verbose_name=_("Signatory firstname"), max_length=100, blank=True, null=True
+        verbose_name=_("Signatory firstname"),
+        max_length=100,
     )
     signatory_lastname = models.CharField(
-        verbose_name=_("Signatory lastname"), max_length=100, blank=True, null=True
+        verbose_name=_("Signatory lastname"), max_length=100
     )
     signatory_email = models.CharField(
-        verbose_name=_("Signatory email"), max_length=100, blank=True, null=True
+        verbose_name=_("Signatory email"), max_length=100
     )
     signatory_telephone = models.CharField(
         verbose_name=_("Signatory telephone"), max_length=100, blank=True, null=True
     )
     signatory_profession = models.CharField(
-        verbose_name=_("Signatory profession"), max_length=100, blank=True, null=True
+        verbose_name=_("Signatory profession"),
+        max_length=100,
     )
     nb_seats = models.PositiveSmallIntegerField(
         verbose_name=_("Number of seats"),
