@@ -1659,7 +1659,10 @@ class GenericAgreementViewSet(
     ordering = ["-organization_signed_on", "-created_on"]
     queryset = (
         models.Contract.objects.exclude(
-            batch_order__state=enums.BATCH_ORDER_STATE_CANCELED
+            batch_order__state__in=[
+                enums.BATCH_ORDER_STATE_CANCELED,
+                enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+            ]
         )
         .select_related(
             "definition",
