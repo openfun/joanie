@@ -142,6 +142,35 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
             response.json(),
         )
 
+    def test_api_organizations_agreements_list_with_access_excluded_states(self):
+        """
+        Authenticated user with all access to the organization should not be able to
+        see agreements (contracts) of batch orders that are in state `failed_payment`
+        or `canceled`.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(user=user, organization=organization)
+        # Prepare batch order where their contract should not be returned
+        factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+        )
+        factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_CANCELED,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/agreements/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+
+        self.assertEqual(content["count"], 0)
+
     @mock.patch.object(
         fields.ThumbnailDetailField,
         "to_representation",
