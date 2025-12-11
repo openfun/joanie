@@ -304,6 +304,40 @@ class BatchOrdersAdminApiCreateTestCase(BaseAPITestCase):
 
         self.assertEqual(batch_order.organization, organization1)
 
+    def test_api_admin_batch_orders_create_with_funding_amount_and_entity(self):
+        """
+        Authenticated admin user should be able to create a batch order and inform that there is
+        a funding entity and amount.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        owner = factories.UserFactory()
+        offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+        factories.UserOrganizationAccessFactory(
+            organization=offering.organizations.first(), role=enums.OWNER
+        )
+
+        data = self.create_payload_batch_order(
+            owner, offering, 2, enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+        )
+        data["funding_amount"] = "100.00"
+        data["funding_entity"] = "School of glory"
+
+        response = self.client.post(
+            "/api/v1.0/admin/batch-orders/", content_type="application/json", data=data
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+
+        batch_order = models.BatchOrder.objects.get(owner=owner)
+
+        self.assertEqual(batch_order.funding_amount, Decimal("100.00"))
+        self.assertEqual(batch_order.funding_entity, "School of glory")
+
     def test_api_admin_batch_orders_create(self):
         """
         Authenticated admin user should be to create a batch order.
