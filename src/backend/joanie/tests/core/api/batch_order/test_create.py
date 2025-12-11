@@ -140,6 +140,41 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         self.assertIsNotNone(batch_order.organization)
         self.assertEqual(batch_order.total, Decimal("0.00"))
 
+    def test_api_batch_order_create_with_funding_amount_and_entity(self):
+        """
+        Authenticated user should be able to create a batch order and inform that there is
+        a funding entity and amount for the order.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+        factories.UserOrganizationAccessFactory(
+            organization=offering.organizations.first(), role=enums.OWNER
+        )
+
+        data = self.create_payload_batch_order(
+            offering, 2, enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+        )
+        data["funding_amount"] = "100.00"
+        data["funding_entity"] = "School of glory"
+
+        response = self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=data,
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+
+        batch_order = models.BatchOrder.objects.get(owner=user)
+
+        self.assertEqual(batch_order.funding_amount, Decimal("100.00"))
+        self.assertEqual(batch_order.funding_entity, "School of glory")
+
     def test_api_batch_order_create_authenticated_without_billing_address(self):
         """
         Authenticated user should be able to create a batch order. When they don't pass a
