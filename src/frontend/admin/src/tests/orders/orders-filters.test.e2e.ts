@@ -140,7 +140,12 @@ test.describe("Order filters", () => {
     ).toBeVisible();
   });
 
-  test("Test export with filters", async ({ page }) => {
+  test("Test export with filters", async ({ page, context }) => {
+    let exportRequestUrl = "";
+    await context.route(/orders\/export/, (route, request) => {
+      exportRequestUrl = request.url();
+      route.fulfill({ contentType: "text/csv", body: "data" });
+    });
     await page.goto(PATH_ADMIN.orders.list);
 
     await page.getByRole("button", { name: "Filters" }).click();
@@ -153,11 +158,11 @@ test.describe("Order filters", () => {
 
     await page.getByRole("button", { name: "Export" }).click();
 
-    page.on("popup", async (popup) => {
-      await popup.waitForLoadState();
-      expect(popup.url()).toBe(
-        "http://localhost:8071/api/v1.0/admin/orders/export/?state=completed",
-      );
-    });
+    const pagePromise = context.waitForEvent("page");
+    await page.getByRole("button", { name: "Export" }).click();
+    await pagePromise;
+    expect(exportRequestUrl).toBe(
+      "http://localhost:8071/api/v1.0/admin/orders/export/?state=completed",
+    );
   });
 });
