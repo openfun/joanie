@@ -1964,7 +1964,6 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         decimal_places=2,
         max_digits=9,
         min_value=D(0.00),
-        read_only=True,
         required=False,
     )
     orders = AdminOrderLightSerializer(many=True, read_only=True)
