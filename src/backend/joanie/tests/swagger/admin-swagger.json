@@ -6718,8 +6718,7 @@
                         "format": "double",
                         "maximum": 10000000,
                         "minimum": 0.0,
-                        "exclusiveMaximum": true,
-                        "readOnly": true
+                        "exclusiveMaximum": true
                     },
                     "contract_submitted": {
                         "type": "boolean",
@@ -6786,7 +6785,6 @@
                     "contract_submitted",
                     "created_on",
                     "currency",
-                    "funding_amount",
                     "id",
                     "identification_number",
                     "main_invoice_reference",
@@ -7142,6 +7140,13 @@
                     "funding_entity": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "funding_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
                     }
                 },
                 "required": [
@@ -11163,6 +11168,13 @@
                     "funding_entity": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "funding_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
                     }
                 }
             },
