@@ -5967,8 +5967,7 @@
                         "format": "double",
                         "maximum": 10000000,
                         "minimum": 0.0,
-                        "exclusiveMaximum": true,
-                        "readOnly": true
+                        "exclusiveMaximum": true
                     },
                     "available_actions": {
                         "type": "object",
@@ -6021,7 +6020,6 @@
                     "company_name",
                     "contract_id",
                     "currency",
-                    "funding_amount",
                     "id",
                     "identification_number",
                     "main_invoice_reference",
@@ -6323,6 +6321,13 @@
                     "funding_entity": {
                         "type": "string",
                         "minLength": 1
+                    },
+                    "funding_amount": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000000,
+                        "minimum": 0.0,
+                        "exclusiveMaximum": true
                     }
                 },
                 "required": [
