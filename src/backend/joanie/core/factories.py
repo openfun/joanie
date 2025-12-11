@@ -1242,6 +1242,11 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
     city = factory.Faker("city")
     country = factory.Faker("country_code")
     nb_seats = factory.fuzzy.FuzzyInteger(1, 20)
+    signatory_email = factory.Faker("email")
+    signatory_firstname = factory.Faker("first_name")
+    signatory_lastname = factory.Faker("last_name")
+    signatory_profession = "Signatory"
+    signatory_telephone = "0123456789"
 
     @factory.lazy_attribute
     # pylint: disable=method-hidden
