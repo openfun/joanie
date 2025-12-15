@@ -61,6 +61,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "administrative_telephone": "<ADMIN_TELEPHONE>",
                 "funding_entity": "<FUNDING_ENTITY>",
                 "funding_amount": "<FUNDING_AMOUNT>",
+                "currency": "<DEFAULT_CURRENCY>",
             },
             "organization": {
                 "address": {
@@ -90,7 +91,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
 
         context = generate_document_context()
 
-        self.assertEqual(context, expected_context)
+        self.assertEqual(expected_context, context)
 
     def test_utils_quote_generate_document_context(self):
         """
@@ -112,7 +113,9 @@ class UtilsQuoteGenerateContextDocument(TestCase):
             offering__course=factories.CourseFactory(
                 effort=timedelta(hours=10, minutes=30, seconds=12),
             ),
-            offering__product__price="151.00",
+            signatory_firstname="Jane",
+            signatory_lastname="Doe",
+            signatory_email="janedoe@example.fr",
             nb_seats=2,
             state=enums.BATCH_ORDER_STATE_QUOTED,
         )
@@ -159,6 +162,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "administrative_telephone": batch_order.administrative_telephone,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
+                "currency": "€",
             },
             "organization": {
                 "address": {
@@ -192,4 +196,4 @@ class UtilsQuoteGenerateContextDocument(TestCase):
         organization_logo = models.DocumentImage.objects.get()
         expected_context["organization"]["logo_id"] = str(organization_logo.id)
 
-        self.assertEqual(context, expected_context)
+        self.assertEqual(expected_context, context)
