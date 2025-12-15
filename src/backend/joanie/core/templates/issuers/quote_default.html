@@ -79,10 +79,10 @@ for your training, feel free to use this template as a base.
           <dd>
             <ul>
               <li>{% translate "Company representative Full name: " %}{{ customer.representative_name }}</li>
-              <li>{% translate "Representing company : " %}
+              <li>{% translate "Representing company: " %}
                 {{ customer.company_name }}
               </li>
-              <li>{% translate "SIRET number: "%}
+              <li>{% translate "SIRET number: " %}
                 {{ customer.identification_number }}
               </li>
               <li>{% translate "VAT registration number: "%}
@@ -92,7 +92,7 @@ for your training, feel free to use this template as a base.
                 {{ customer.address }}, {{ customer.postcode }}, {{ customer.city }}, {{ customer.country }}
               </li>
               <li>
-                {% translate "Administrative firstname: "%}
+                {% translate "Administrative firstname: " %}
                 {{ customer.administrative_firstname }}
               </li>
               <li>
@@ -112,22 +112,32 @@ for your training, feel free to use this template as a base.
                   {{ customer.administrative_telephone }}
               </li>
               <li>
-                {% translate "Billing address : " %}
-                  {{ customer.billing_address.contact_name }}
-                  <br>{{ customer.billing_address.contact_email }}
-                  <br>{{ customer.billing_address.company_name}}:
-                  <br>{{ customer.billing_address.address }}, {{ customer.billing_address.postcode }}, {{ customer.billing_address.city }}, {{ customer.billing_address.country }}
+                {% translate "Billing address: " %}
+                {{ customer.billing_address.company_name }}: {{ customer.billing_address.address }}, {{ customer.billing_address.postcode }}, {{ customer.billing_address.city }}, {{ customer.billing_address.country }}
+                ({{ customer.billing_address.contact_name }}, {{ customer.billing_address.contact_email }})
               </li>
             </ul>
           </dd>
           <dt>{% translate 'External funding:' %}</dt>
           <dd>
             <ul>
-              <li>{%translate "Funding entity: " %}
-                {{ customer.funding_entity }}
+              <li>{% translate "Funding entity: " %}
+                {% if customer.funding_entity %}
+                  {{ customer.funding_entity }}
+                {% else %}
+                -
+                {% endif %}
               </li>
-              <li>{%translate "Funding amount: " %}
-                {{ customer.funding_amount  }} {{customer.currency}}
+              <li>{% translate "Funding amount: " %}
+                {% if customer.funding_amount %}
+                  {% with funding_amount=customer.funding_amount|floatformat:2 currency=customer.currency %}
+                    {% if customer.funding_amount is not None and customer.funding_amount != "0.00" %}
+                    {{ funding_amount }} {{ currency }}
+                    {% else %}
+                    -
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
               </li>
             </ul>
           </dd>
