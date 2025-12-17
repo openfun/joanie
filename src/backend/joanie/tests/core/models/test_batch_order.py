@@ -978,14 +978,14 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         self.assertFalse(batch_order.can_generate_orders())
 
-    def test_models_batch_order_available_actions(self):
+    def test_models_batch_order_available_admin_actions(self):
         """
-        The available_actions method should return a dictionary with the correct
+        The available_admin_actions method should return a dictionary with the correct
         boolean values for each action based on the batch order state.
         """
         batch_order = factories.BatchOrderFactory()
 
-        actions = batch_order.available_actions
+        actions = batch_order.available_admin_actions
 
         self.assertEqual(
             [
@@ -995,6 +995,26 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                 "submit_for_signature",
                 "generate_orders",
                 "cancel",
+                "next_action",
+            ],
+            list(actions.keys()),
+        )
+
+    def test_models_batch_order_available_client_actions(self):
+        """
+        The available_client_actions method should return a dictionary with the correct
+        boolean values for each action based on the batch order state.
+        """
+        batch_order = factories.BatchOrderFactory()
+
+        actions = batch_order.available_client_actions
+
+        self.assertEqual(
+            [
+                "confirm_quote",
+                "confirm_purchase_order",
+                "confirm_bank_transfer",
+                "submit_for_signature",
                 "next_action",
             ],
             list(actions.keys()),

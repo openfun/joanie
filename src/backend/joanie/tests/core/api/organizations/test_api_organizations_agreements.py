@@ -244,6 +244,13 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
                                     "title": contract.batch_order.offering.product.title,
                                 },
                             },
+                            "available_actions": {
+                                "confirm_quote": True,
+                                "confirm_purchase_order": False,
+                                "confirm_bank_transfer": False,
+                                "submit_for_signature": False,
+                                "next_action": "confirm_quote",
+                            },
                         },
                     }
                     for contract in contracts
@@ -525,6 +532,13 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
                                     "id": str(batch_order.offering.product.id),
                                     "title": batch_order.offering.product.title,
                                 },
+                            },
+                            "available_actions": {
+                                "confirm_quote": False,
+                                "confirm_purchase_order": False,
+                                "confirm_bank_transfer": False,
+                                "submit_for_signature": False,
+                                "next_action": None,
                             },
                         },
                     },
