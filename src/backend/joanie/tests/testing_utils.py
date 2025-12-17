@@ -321,6 +321,13 @@ class Demo:
     def generate(self):  # pylint: disable=too-many-locals,too-many-statements
         """Generate fake data."""
         translation.activate("en-us")
+        admin = factories.UserFactory(
+            username="admin",
+            password="admin",
+            email="admin@example.com",
+            is_staff=True,
+            is_superuser=True,
+        )
 
         # Create an organization
         other_owners = factories.UserFactory.create_batch(
@@ -328,6 +335,7 @@ class Demo:
             first_name="Other",
             last_name="Owner",
         )
+        other_owners.append(admin)
         email = settings.DEVELOPER_EMAIL
         email_user, email_domain = email.split("@")
 
@@ -722,6 +730,13 @@ class Demo:
     ):
         """Generate simple fake data."""
         translation.activate("en-us")
+        admin = factories.UserFactory(
+            username="admin",
+            password="admin",
+            email="admin@example.com",
+            is_staff=True,
+            is_superuser=True,
+        )
 
         # Create an organization
         email = settings.DEVELOPER_EMAIL
@@ -736,7 +751,10 @@ class Demo:
         organization = factories.OrganizationFactory(
             title="The school of glory",
             # Give access to admin user
-            users=[[organization_owner, enums.OWNER]],
+            users=[
+                [organization_owner, enums.OWNER],
+                [admin, enums.OWNER],
+            ],
         )
 
         # Add one credit card to student user
