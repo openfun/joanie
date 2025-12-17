@@ -35,6 +35,12 @@ class Command(BaseCommand):
             default=False,
             help="Create a credential product with a discount.",
         )
+        parser.add_argument(
+            "--create-bunch-of-batch-orders",
+            action="store_true",
+            default=False,
+            help="Create a bunch of batch orders.",
+        )
 
     def handle(self, *args, **options):
         def log(message):
@@ -46,4 +52,5 @@ class Command(BaseCommand):
             create_certificate_discount=options.get("certificate_discount"),
             create_credential=options.get("credential"),
             create_credential_discount=options.get("credential_discount"),
+            create_bunch_of_batch_orders=options.get("create_bunch_of_batch_orders"),
         )

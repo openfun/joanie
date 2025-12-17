@@ -710,13 +710,16 @@ class Demo:
         order.owner = student_user
         order.flow.update()
 
+    # ruff: noqa: PLR0912
+    # pylint: disable=too-many-locals,too-many-statements,too-many-arguments,too-many-positional-arguments,too-many-branches
     def generate_simple(
         self,
         create_certificate=False,
         create_certificate_discount=False,
         create_credential=False,
         create_credential_discount=False,
-    ):  # pylint: disable=too-many-locals,too-many-statements
+        create_bunch_of_batch_orders=False,
+    ):
         """Generate simple fake data."""
         translation.activate("en-us")
 
@@ -768,18 +771,21 @@ class Demo:
             and not create_certificate
             and not create_certificate_discount
             and not create_credential_discount
+            and not create_bunch_of_batch_orders
         ):
             item_options = [
                 "Certificate product",
                 "Certificate product with discount",
                 "Credential product",
                 "Credential product with discount",
+                "Bunch of batch orders",
             ]
             items = select_multiple(item_options)
             create_certificate = "Certificate product" in items
             create_certificate_discount = "Certificate product with discount" in items
             create_credential = "Credential product" in items
             create_credential_discount = "Credential product with discount" in items
+            create_bunch_of_batch_orders = "Bunch of batch orders" in items
 
         if create_certificate:
             course = factories.CourseFactory(
@@ -935,14 +941,15 @@ class Demo:
             )
             batch_order.generate_orders()
 
-            for state in enums.BATCH_ORDER_STATE_CHOICES:
-                for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
-                    factories.BatchOrderFactory(
-                        state=state[0],
-                        offering=credential_offering,
-                        nb_seats=2,
-                        payment_method=payment_method[0],
-                    )
+            if create_bunch_of_batch_orders:
+                for state in enums.BATCH_ORDER_STATE_CHOICES:
+                    for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+                        factories.BatchOrderFactory(
+                            state=state[0],
+                            offering=credential_offering,
+                            nb_seats=2,
+                            payment_method=payment_method[0],
+                        )
 
             course_run_credential.save()
 
@@ -1021,14 +1028,15 @@ class Demo:
             )
             batch_order.generate_orders()
 
-            for state in enums.BATCH_ORDER_STATE_CHOICES:
-                for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
-                    factories.BatchOrderFactory(
-                        state=state[0],
-                        offering=credential_discount_offering,
-                        nb_seats=2,
-                        payment_method=payment_method[0],
-                    )
+            if create_bunch_of_batch_orders:
+                for state in enums.BATCH_ORDER_STATE_CHOICES:
+                    for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+                        factories.BatchOrderFactory(
+                            state=state[0],
+                            offering=credential_discount_offering,
+                            nb_seats=2,
+                            payment_method=payment_method[0],
+                        )
 
             self.log("Successfully created offering rule")
             self.log("")
