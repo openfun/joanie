@@ -53,7 +53,6 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
 
         self.assertDictEqual(
-            response.json(),
             {
                 "count": 1,
                 "next": None,
@@ -134,11 +133,10 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                             "confirm_purchase_order": False,
                             "confirm_bank_transfer": False,
                             "submit_for_signature": False,
-                            "generate_orders": False,
-                            "cancel": True,
                             "next_action": "confirm_quote",
                         },
                     },
                 ],
             },
+            response.json(),
         )

@@ -5970,41 +5970,12 @@
                         "exclusiveMaximum": true
                     },
                     "available_actions": {
-                        "type": "object",
-                        "description": "Return the available actions for the batch order",
-                        "properties": {
-                            "confirm_quote": {
-                                "type": "boolean"
-                            },
-                            "confirm_purchase_order": {
-                                "type": "boolean"
-                            },
-                            "confirm_bank_transfer": {
-                                "type": "boolean"
-                            },
-                            "submit_for_signature": {
-                                "type": "boolean"
-                            },
-                            "generate_orders": {
-                                "type": "boolean"
-                            },
-                            "cancel": {
-                                "type": "boolean"
-                            },
-                            "next_action": {
-                                "type": "string",
-                                "nullable": true
-                            }
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
                         },
-                        "required": [
-                            "cancel",
-                            "confirm_bank_transfer",
-                            "confirm_purchase_order",
-                            "confirm_quote",
-                            "generate_orders",
-                            "next_action",
-                            "submit_for_signature"
-                        ],
+                        "description": "Return the available actions for the batch order",
                         "readOnly": true
                     }
                 },
@@ -6200,9 +6171,19 @@
                         "type": "string",
                         "description": "Return the currency used",
                         "readOnly": true
+                    },
+                    "available_actions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "description": "Return the available actions for the batch order",
+                        "readOnly": true
                     }
                 },
                 "required": [
+                    "available_actions",
                     "company_name",
                     "contract_submitted",
                     "id",
