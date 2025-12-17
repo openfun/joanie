@@ -2727,8 +2727,8 @@ class BatchOrder(BaseModel):
         )
 
     @property
-    def available_actions(self) -> BatchOrderAvailableActions:
-        """Return the available actions for the batch order"""
+    def available_admin_actions(self) -> BatchOrderAvailableActions:
+        """Return the available admin actions for the batch order"""
         actions = {
             "confirm_quote": self.can_confirm_quote(),
             "confirm_purchase_order": self.can_confirm_purchase_order(),
@@ -2741,6 +2741,24 @@ class BatchOrder(BaseModel):
 
         for key, value in actions.items():
             if value and key not in ("cancel", "next_action"):
+                actions["next_action"] = key
+                break
+
+        return actions
+
+    @property
+    def available_client_actions(self) -> BatchOrderAvailableActions:
+        """Return the available client actions for the batch order"""
+        actions = {
+            "confirm_quote": self.can_confirm_quote(),
+            "confirm_purchase_order": self.can_confirm_purchase_order(),
+            "confirm_bank_transfer": self.can_confirm_bank_transfer(),
+            "submit_for_signature": self.can_submit_for_signature(),
+            "next_action": None,
+        }
+
+        for key, value in actions.items():
+            if value and key not in ("next_action",):
                 actions["next_action"] = key
                 break
 

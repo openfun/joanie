@@ -517,6 +517,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
         required=False,
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
+    available_actions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -532,6 +533,7 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
             "nb_seats",
             "total",
             "total_currency",
+            "available_actions",
         ]
         read_only_fields = fields
 
@@ -544,6 +546,10 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
         Return the currency used
         """
         return settings.DEFAULT_CURRENCY
+
+    def get_available_actions(self, instance) -> list[dict]:
+        """Return the available actions for the batch order"""
+        return instance.available_client_actions
 
 
 class AgreementBatchOrderSerializer(AbilitiesModelSerializer):
@@ -1591,6 +1597,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         min_value=D(0.00),
         required=False,
     )
+    available_actions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -1656,6 +1663,10 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         if contract := getattr(instance, "contract", None):
             return str(contract.id)
         return None
+
+    def get_available_actions(self, instance) -> list[dict]:
+        """Return the available actions for the batch order"""
+        return instance.available_client_actions
 
     def to_internal_value(self, data):
         """

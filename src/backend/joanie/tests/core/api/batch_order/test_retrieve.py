@@ -73,7 +73,6 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertDictEqual(
-            response.json(),
             {
                 "id": str(batch_order.id),
                 "owner": user.username,
@@ -149,9 +148,8 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                     "confirm_purchase_order": False,
                     "confirm_bank_transfer": False,
                     "submit_for_signature": False,
-                    "generate_orders": False,
-                    "cancel": True,
                     "next_action": "confirm_quote",
                 },
             },
+            response.json(),
         )

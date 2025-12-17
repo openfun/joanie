@@ -1967,6 +1967,7 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         required=False,
     )
     orders = AdminOrderLightSerializer(many=True, read_only=True)
+    available_actions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -2041,6 +2042,10 @@ class AdminBatchOrderSerializer(serializers.ModelSerializer):
         if contract := getattr(instance, "contract", None):
             return AdminContractSerializer(contract).data
         return None
+
+    def get_available_actions(self, instance) -> list[dict]:
+        """Return the available actions for the batch order"""
+        return instance.available_admin_actions
 
     def to_internal_value(self, data):
         """
@@ -2118,6 +2123,7 @@ class AdminBatchOrderLightSerializer(serializers.ModelSerializer):
         coerce_to_string=False, decimal_places=2, max_digits=9, read_only=True
     )
     total_currency = serializers.SerializerMethodField(read_only=True)
+    available_actions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.BatchOrder
@@ -2157,6 +2163,10 @@ class AdminBatchOrderLightSerializer(serializers.ModelSerializer):
     def get_total_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
+
+    def get_available_actions(self, instance) -> list[dict]:
+        """Return the available actions for the batch order"""
+        return instance.available_admin_actions
 
 
 class AdminEnrollmentLightSerializer(serializers.ModelSerializer):

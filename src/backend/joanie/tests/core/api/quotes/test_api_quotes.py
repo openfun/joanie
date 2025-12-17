@@ -102,6 +102,13 @@ class QuoteApiTest(BaseAPITestCase):
                             "nb_seats": quote.batch_order.nb_seats,
                             "total": float(quote.batch_order.total),
                             "total_currency": settings.DEFAULT_CURRENCY,
+                            "available_actions": {
+                                "confirm_quote": True,
+                                "confirm_purchase_order": False,
+                                "confirm_bank_transfer": False,
+                                "submit_for_signature": False,
+                                "next_action": "confirm_quote",
+                            },
                         },
                         "has_purchase_order": False,
                         "organization_signed_on": None,
@@ -202,6 +209,13 @@ class QuoteApiTest(BaseAPITestCase):
                     "nb_seats": batch_order.nb_seats,
                     "total": float(batch_order.total),
                     "total_currency": settings.DEFAULT_CURRENCY,
+                    "available_actions": {
+                        "confirm_quote": False,
+                        "confirm_purchase_order": False,
+                        "confirm_bank_transfer": False,
+                        "submit_for_signature": False,
+                        "next_action": None,
+                    },
                 },
                 "has_purchase_order": True,
                 "organization_signed_on": format_date(
