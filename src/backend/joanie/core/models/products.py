@@ -2477,7 +2477,9 @@ class BatchOrder(BaseModel):
     @property
     def vouchers(self):
         """Return the exhaustive list of voucher codes generated from the orders"""
-        return [order.voucher.code for order in self.orders.all()]
+        if self.state != enums.BATCH_ORDER_STATE_COMPLETED:
+            return []
+        return list(self.orders.values_list("voucher__code", flat=True))
 
     @property
     def is_assigned(self) -> bool:

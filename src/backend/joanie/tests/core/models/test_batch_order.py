@@ -550,20 +550,108 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             ),
         )
 
+    def test_models_batch_order_property_vouchers_when_state_not_completed(self):
+        """
+        The property vouchers should return an empty list if the state of the batch order
+        is not completed with payment methods `card_payment` and `bank_transfer`.
+        """
+        for payment_method in [
+            payment_method
+            for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES
+            if payment_method != enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+        ]:
+            for state in [
+                state
+                for state, _ in enums.BATCH_ORDER_STATE_CHOICES
+                if state != enums.BATCH_ORDER_STATE_COMPLETED
+            ]:
+                with self.subTest(payment_method=payment_method, state=state):
+                    if (
+                        state == enums.BATCH_ORDER_STATE_FAILED_PAYMENT
+                        and payment_method == enums.BATCH_ORDER_WITH_BANK_TRANSFER
+                    ):
+                        continue
+                    batch_order = factories.BatchOrderFactory(
+                        state=state, payment_method=payment_method
+                    )
+
+                    self.assertListEqual([], batch_order.vouchers)
+
+    def test_models_batch_order_property_vouchers_when_state_not_completed_for_purchase_order(
+        self,
+    ):
+        """
+        The property vouchers should return an empty list if the state of the batch order
+        is not completed with payment method `purchase_order`.
+        """
+        excluded_states = [
+            enums.BATCH_ORDER_STATE_SIGNING,
+            enums.BATCH_ORDER_STATE_PENDING,
+            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
+            enums.BATCH_ORDER_STATE_COMPLETED,
+        ]
+        for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
+            if state in excluded_states:
+                continue
+            with self.subTest(state=state):
+                batch_order = factories.BatchOrderFactory(
+                    state=state, payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+                )
+
+                self.assertListEqual([], batch_order.vouchers)
+
+    def test_models_batch_order_property_vouchers_when_batch_order_was_completed_to_canceled(
+        self,
+    ):
+        """
+        The property vouchers should return an empty list when we cancel a completed batch order.
+        The voucher is deleted once the batch order is canceled.
+        """
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    state=enums.BATCH_ORDER_STATE_COMPLETED,
+                    payment_method=payment_method,
+                    nb_seats=1,
+                )
+
+                if payment_method == enums.BATCH_ORDER_WITH_CARD_PAYMENT:
+                    batch_order.generate_orders()
+
+                # Store the vouchers
+                voucher_codes = batch_order.vouchers
+
+                batch_order.flow.cancel()
+                batch_order.cancel_orders()
+
+                self.assertListEqual([], batch_order.vouchers)
+                self.assertIsNone(batch_order.orders.last().voucher)
+                self.assertFalse(
+                    models.Voucher.objects.filter(code__in=voucher_codes).exists()
+                )
+
     def test_models_batch_order_property_vouchers(self):
         """
         The property vouchers should return the list of vouchers codes that are attached
         to the orders of the batch order.
         """
-        batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_COMPLETED, nb_seats=3
-        )
-        batch_order.generate_orders()
-        expected_vouchers = [order.voucher.code for order in batch_order.orders.all()]
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    payment_method=payment_method,
+                    state=enums.BATCH_ORDER_STATE_COMPLETED,
+                    nb_seats=3,
+                )
+                if payment_method == enums.BATCH_ORDER_WITH_CARD_PAYMENT:
+                    batch_order.generate_orders()
 
-        vouchers = batch_order.vouchers
+                expected_vouchers = [
+                    order.voucher.code for order in batch_order.orders.all()
+                ]
 
-        self.assertEqual(vouchers, expected_vouchers)
+                vouchers = batch_order.vouchers
+
+                self.assertEqual(vouchers, expected_vouchers)
 
     def test_models_batch_order_cancel_orders(self):
         """
