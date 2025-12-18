@@ -137,12 +137,17 @@ class BatchOrderFlow:
     def process_payment(self):
         """Mark batch order instance as "process payment" """
 
+    def _can_be_failed_payment(self):
+        """Verify if the batch order can transition to `failed_payment"""
+        return self.instance.uses_card_payment
+
     @state.transition(
         source=[
             enums.BATCH_ORDER_STATE_PENDING,
             enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
         ],
         target=enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+        conditions=[_can_be_failed_payment],
     )
     def failed_payment(self):
         """
@@ -230,6 +235,7 @@ class BatchOrderFlow:
         if (
             source == enums.BATCH_ORDER_STATE_PENDING
             and target == enums.BATCH_ORDER_STATE_FAILED_PAYMENT
+            and self.instance.uses_card_payment
         ):
             ActivityLog.create_payment_failed_activity_log(self.instance)
 
