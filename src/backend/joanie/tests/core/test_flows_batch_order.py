@@ -122,12 +122,41 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
     def test_flow_batch_order_failed_payment(self):
         """
         The batch order can be in state failed payment if the payment went wrong.
+        It can only happen when the payment method is `card_payment`.
         """
         batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_PENDING)
 
         batch_order.flow.failed_payment()
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_FAILED_PAYMENT)
+
+    def test_flow_batch_order_failed_payment_with_bank_transfer(self):
+        """
+        A batch order cannot transition to failed payment if the payment method
+        is by `bank_transfer`.
+        """
+        batch_order = factories.BatchOrderFactory(
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER
+        )
+
+        with self.assertRaises(fsm.TransitionNotAllowed) as context:
+            batch_order.flow.failed_payment()
+
+        self.assertTrue("Failed_Payment :: no transition" in str(context.exception))
+
+    def test_flow_batch_order_failed_payment_with_purchase_order(self):
+        """
+        A batch order cannot transition to failed payment if the payment method is by
+        `purchase_order`
+        """
+        batch_order = factories.BatchOrderFactory(
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+        )
+
+        with self.assertRaises(fsm.TransitionNotAllowed) as context:
+            batch_order.flow.failed_payment()
+
+        self.assertTrue("Failed_Payment :: no transition" in str(context.exception))
 
     def test_flow_batch_order_failed_payment_to_process_payment(self):
         """
