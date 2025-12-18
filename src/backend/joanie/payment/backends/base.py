@@ -116,25 +116,26 @@ class BasePaymentBackend:
             product_title = batch_order.offering.product.safe_translation_getter(
                 "title", language_code=batch_order.owner.language
             )
-            emails.send(
-                subject=_("Batch order payment validated!"),
-                template_vars={
-                    "title": _("Payment confirmed!"),
-                    "email": batch_order.owner.email,
-                    "fullname": batch_order.owner.get_full_name(),
-                    "product_title": product_title,
-                    "total": Money(batch_order.total),
-                    "number_of_seats": batch_order.nb_seats,
-                    "vouchers": vouchers,
-                    "price": amount,
-                    "site": {
-                        "name": settings.JOANIE_CATALOG_NAME,
-                        "url": settings.JOANIE_CATALOG_BASE_URL,
+            for email in [batch_order.owner.email, batch_order.administrative_email]:
+                emails.send(
+                    subject=_("Batch order payment validated!"),
+                    template_vars={
+                        "title": _("Payment confirmed!"),
+                        "email": batch_order.owner.email,
+                        "fullname": batch_order.owner.get_full_name(),
+                        "product_title": product_title,
+                        "total": Money(batch_order.total),
+                        "number_of_seats": batch_order.nb_seats,
+                        "vouchers": vouchers,
+                        "price": amount,
+                        "site": {
+                            "name": settings.JOANIE_CATALOG_NAME,
+                            "url": settings.JOANIE_CATALOG_BASE_URL,
+                        },
                     },
-                },
-                template_name="order_validated",
-                to_user_email=batch_order.owner.email,
-            )
+                    template_name="order_validated",
+                    to_user_email=email,
+                )
 
     @classmethod
     def _send_mail_subscription_success(cls, order):
