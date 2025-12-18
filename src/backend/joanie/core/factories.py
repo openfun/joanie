@@ -1326,6 +1326,8 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             self.contract.save()
 
             if self.uses_purchase_order:
+                if extracted == enums.BATCH_ORDER_STATE_FAILED_PAYMENT:
+                    return
                 # Transition to `completed` once contract is signed with purchase order method
                 self.flow.update()
                 return
@@ -1338,7 +1340,16 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         ]:
             self.flow.update()
 
-        if extracted == enums.BATCH_ORDER_STATE_FAILED_PAYMENT:
+        if (
+            self.uses_bank_transfer
+            and extracted == enums.BATCH_ORDER_STATE_FAILED_PAYMENT
+        ):
+            return
+
+        if (
+            self.uses_card_payment
+            and extracted == enums.BATCH_ORDER_STATE_FAILED_PAYMENT
+        ):
             self.flow.failed_payment()
 
         if extracted == enums.BATCH_ORDER_STATE_PROCESS_PAYMENT:
