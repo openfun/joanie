@@ -10,12 +10,34 @@ and this project adheres to
 
 ### Added
 
-- Add export csv for admin batch order viewset
+- Add essential actions to batch order detail view in admin backoffice
+- Batch order export to csv in admin API
+- Generate zip archive of agreements for an organization client API
+- Expose related orders generate by a batch order in admin backoffice
+- Add batch order detail page in admin backoffice
+- Add filter to batch order admin backoffice
+- Agreement viewset for organizations client API
+- Add filter by batch order in order admin backoffice
+- Update batch order reference in order export csv for admin API
+- Add contract definition for batch order for product configuration
+  in admin backoffice
+- Add batch order export csv for admin backoffice
 - Add quote definitions admin in the back office
 
 ### Fixed
 
+- Validate course-product relation with voucher code from
+  batch order on order creation
+- Generate quote's context at batch order creation
 - Fix CSS in default and Unicamp micro-credentials after WeasyPrint update
+
+### Changed
+
+- Send voucher codes generated from batch order to administrative email
+  and owner email
+- Signatory fields of batch order are required
+- Relation of batch order and contract in `Contract` model
+- Send batch order signature link to signatory email
 
 ## [3.1.2] - 2025-11-06
 
