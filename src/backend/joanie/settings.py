@@ -706,7 +706,7 @@ class Base(Configuration):
                 dsn=cls.SENTRY_DSN,
                 environment=cls.__name__.lower(),
                 release=get_release(),
-                integrations=[DjangoIntegration()],
+                integrations=[DjangoIntegration(middleware_spans=True)],
                 before_send=before_send,
             )
             sentry_sdk.set_tag("application", "backend")
