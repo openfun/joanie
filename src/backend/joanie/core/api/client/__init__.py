@@ -1717,7 +1717,9 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
         try:
             uuid.UUID(self.kwargs["organization_id"])
         except ValueError:
-            self.lookup_fields[0] = "batch_order__organization__code__iexact"
+            self.lookup_fields = ["batch_order__organization__code__iexact", "pk"]
+        else:
+            self.lookup_fields = ["batch_order__organization__pk", "pk"]
 
     def initial(self, request, *args, **kwargs):
         """
@@ -1959,7 +1961,9 @@ class NestedOrganizationContractViewSet(NestedGenericViewSet, GenericContractVie
         try:
             uuid.UUID(self.kwargs["organization_id"])
         except ValueError:
-            self.lookup_fields[0] = "order__organization__code__iexact"
+            self.lookup_fields = ["order__organization__code__iexact", "pk"]
+        else:
+            self.lookup_fields = ["order__organization__pk", "pk"]
 
     def initial(self, request, *args, **kwargs):
         """
@@ -2012,7 +2016,9 @@ class NestedCourseContractViewSet(NestedGenericViewSet, GenericContractViewSet):
         try:
             uuid.UUID(self.kwargs["course_id"])
         except ValueError:
-            self.lookup_fields[0] = "order__course__code__iexact"
+            self.lookup_fields = ["order__course__code__iexact", "pk"]
+        else:
+            self.lookup_fields = ["order__course__pk", "pk"]
 
     def initial(self, request, *args, **kwargs):
         """
@@ -2161,7 +2167,9 @@ class NestedOrganizationQuoteViewSet(NestedGenericViewSet, GenericQuoteViewSet):
         try:
             uuid.UUID(self.kwargs["organization_id"])
         except ValueError:
-            self.lookup_fields[0] = "batch_order__organization__code__iexact"
+            self.lookup_fields = ["batch_order__organization__code__iexact", "pk"]
+        else:
+            self.lookup_fields = ["batch_order__organization__pk", "pk"]
 
     def initial(self, request, *args, **kwargs):
         """
