@@ -1330,6 +1330,10 @@ class OrderPaymentScheduleSerializer(serializers.Serializer):
         required=False,
         help_text=_("Discounted price of the offer."),
     )
+    from_batch_order = serializers.BooleanField(
+        required=False,
+        help_text=_("If the order was created from a batch order."),
+    )
 
     def create(self, validated_data):
         """Only there to avoid a NotImplementedError"""
