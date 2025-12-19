@@ -94,29 +94,39 @@ test.describe("Batch Order view", () => {
     await expect(page.getByLabel("Owner")).toHaveValue(
       batchOrder.owner.full_name ?? batchOrder.owner.username,
     );
-    await expect(page.getByLabel("Company name")).toHaveValue(
+    await expect(page.getByLabel("Company name", { exact: true })).toHaveValue(
       batchOrder.company_name,
     );
     await expect(page.getByLabel("Number of seats")).toHaveValue(
       batchOrder.nb_seats.toString(),
     );
-    await expect(page.getByLabel("Total")).toHaveValue(batchOrder.total + "");
+    await expect(page.getByLabel("Total", { exact: true })).toHaveValue(
+      batchOrder.total + "",
+    );
     await expect(page.getByLabel("Payment method")).toHaveValue(
       batchOrderPaymentMethodsMessages[batchOrder.payment_method]
         .defaultMessage,
     );
 
     // Billing address
-    await expect(page.getByLabel("Identification number")).toHaveValue(
-      batchOrder.identification_number,
-    );
+    await expect(
+      page.getByLabel("Identification number", { exact: true }),
+    ).toHaveValue(batchOrder.identification_number);
     await expect(page.getByLabel("VAT registration")).toHaveValue(
       batchOrder.vat_registration ?? "",
     );
-    await expect(page.getByLabel("Address")).toHaveValue(batchOrder.address);
-    await expect(page.getByLabel("Postcode")).toHaveValue(batchOrder.postcode);
-    await expect(page.getByLabel("City")).toHaveValue(batchOrder.city);
-    await expect(page.getByLabel("Country")).toHaveValue(batchOrder.country);
+    await expect(page.getByLabel("Address", { exact: true })).toHaveValue(
+      batchOrder.address,
+    );
+    await expect(page.getByLabel("Postcode", { exact: true })).toHaveValue(
+      batchOrder.postcode,
+    );
+    await expect(page.getByLabel("City", { exact: true })).toHaveValue(
+      batchOrder.city,
+    );
+    await expect(page.getByLabel("Country", { exact: true })).toHaveValue(
+      batchOrder.country,
+    );
 
     // Administrative contact
     await expect(page.getByLabel("Administrative first name")).toHaveValue(
@@ -218,22 +228,36 @@ test.describe("Batch Order view", () => {
     await expect(page.getByLabel("Product")).toBeVisible();
     await expect(page.getByLabel("Course")).toBeVisible();
     await expect(page.getByLabel("Owner")).toBeVisible();
-    await expect(page.getByLabel("Company name")).toBeVisible();
+    await expect(
+      page.getByLabel("Company name", { exact: true }),
+    ).toBeVisible();
     await expect(page.getByLabel("Number of seats")).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toBeVisible();
-    await expect(page.getByLabel("Total")).toBeVisible();
+    await expect(page.getByLabel("Total", { exact: true })).toBeVisible();
     await expect(page.getByLabel("Payment method")).toBeVisible();
+    await expect(
+      page.getByLabel("Identification number", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel("VAT registration")).toBeVisible();
+    await expect(page.getByLabel("Address", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Postcode", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("City", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Country", { exact: true })).toBeVisible();
 
     // Billing address section
     await expect(
       page.getByRole("heading", { name: "Billing address" }),
     ).toBeVisible();
-    await expect(page.getByLabel("Identification number")).toBeVisible();
-    await expect(page.getByLabel("VAT registration")).toBeVisible();
-    await expect(page.getByLabel("Address")).toBeVisible();
-    await expect(page.getByLabel("Postcode")).toBeVisible();
-    await expect(page.getByLabel("City")).toBeVisible();
-    await expect(page.getByLabel("Country")).toBeVisible();
+    await expect(page.getByLabel("Billing company name")).toBeVisible();
+    await expect(page.getByLabel("Billing contact name")).toBeVisible();
+    await expect(page.getByLabel("Billing contact email")).toBeVisible();
+    await expect(
+      page.getByLabel("Billing identification number"),
+    ).toBeVisible();
+    await expect(page.getByLabel("Billing address")).toBeVisible();
+    await expect(page.getByLabel("Billing postcode")).toBeVisible();
+    await expect(page.getByLabel("Billing city")).toBeVisible();
+    await expect(page.getByLabel("Billing country")).toBeVisible();
 
     // Administrative contact section
     await expect(
