@@ -1896,6 +1896,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
+                "from_batch_order": False,
             },
             response.json(),
         )
@@ -1984,6 +1985,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
+                "from_batch_order": False,
             },
             response.json(),
         )
@@ -2050,6 +2052,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
+                "from_batch_order": False,
             },
             response.json(),
         )
@@ -2120,6 +2123,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
+                "from_batch_order": False,
             },
             response.json(),
         )
@@ -2263,6 +2267,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
+                "from_batch_order": False,
             },
             response.json(),
         )
@@ -2376,6 +2381,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
+                "from_batch_order": False,
             },
             response.json(),
         )
@@ -2475,11 +2481,104 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
+                "from_batch_order": False,
             },
             response.json(),
         )
 
         self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+        self.assertStatusCodeEqual(response_with_query_params, HTTPStatus.OK)
+        self.assertEqual(response_with_query_params.json(), response.json())
+        self.assertStatusCodeEqual(
+            response_relation_path_with_query_param,
+            HTTPStatus.OK,
+        )
+        self.assertEqual(
+            response_relation_path_with_query_param.json(), response.json()
+        )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            100: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    @patch(
+        "joanie.core.api.client.ValidateVoucherThrottle.get_rate",
+        return_value="5/minute",
+    )
+    def test_api_offering_payment_plan_voucher_code_from_batch_order(
+        self,
+        _mock_get_rate,
+    ):
+        """
+        Authenticated users should be able to retrieve a payment schedule for
+        a single offering if a product id is provided and the product is credential.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            offering__product__price=100,
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+        )
+        product = batch_order.offering.product
+        offering = batch_order.offering
+        course_run = offering.course.course_runs.first()
+        voucher_code = batch_order.vouchers[0]
+        payload = {"voucher_code": voucher_code}
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch(
+                "django.utils.timezone.now",
+                return_value=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            ),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-plan/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                data=payload,
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                data=payload,
+            )
+            response_with_query_params = self.client.get(
+                f"/api/v1.0/courses/{course_run.course.code}/"
+                f"products/{product.id}/payment-plan/?voucher_code={voucher_code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            response_relation_path_with_query_param = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/"
+                f"?voucher_code={voucher_code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(
+            {
+                "price": 100.00,
+                "discount": "-100%",
+                "discounted_price": 0.00,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 0.00,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2025-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+                "from_batch_order": True,
+            },
+            response.json(),
+        )
+
         self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
         self.assertEqual(response_relation_path.json(), response.json())
         self.assertStatusCodeEqual(response_with_query_params, HTTPStatus.OK)

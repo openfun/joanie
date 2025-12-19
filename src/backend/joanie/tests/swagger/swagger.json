@@ -8110,6 +8110,10 @@
                         "exclusiveMaximum": true,
                         "nullable": true,
                         "description": "Discounted price of the offer."
+                    },
+                    "from_batch_order": {
+                        "type": "boolean",
+                        "description": "If the order was created from a batch order."
                     }
                 },
                 "required": [
