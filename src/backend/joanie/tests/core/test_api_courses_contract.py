@@ -440,7 +440,7 @@ class CourseContractApiTest(BaseAPITestCase):
 
         with self.record_performance():
             response = self.client.get(
-                f"/api/v1.0/courses/{str(organization.id)}/contracts/{str(contract.id)}/",
+                f"/api/v1.0/courses/{str(offering.course.id)}/contracts/{str(contract.id)}/",
                 HTTP_AUTHORIZATION=f"Bearer {token}",
             )
 
