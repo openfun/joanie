@@ -88,6 +88,26 @@ const messages = defineMessages({
     defaultMessage: "Billing address",
     description: "Title for billing address section",
   },
+  billingAddressCompanyName: {
+    id: "components.templates.batchOrders.view.billingAddressCompanyName",
+    defaultMessage: "Company name",
+    description: "Label for billing address company name",
+  },
+  billingAddressIdentificationNumber: {
+    id: "components.templates.batchOrders.view.billingAddressIdentificationNumber",
+    defaultMessage: "Identification number",
+    description: "Label for billing address identification number",
+  },
+  billingAddressContactName: {
+    id: "components.templates.batchOrders.view.billingAddressContactName",
+    defaultMessage: "Contact name",
+    description: "Label for billing address contact name",
+  },
+  billingAddressContactEmail: {
+    id: "components.templates.batchOrders.view.billingAddressContactEmail",
+    defaultMessage: "Contact email",
+    description: "Label for billing address contact email",
+  },
   identificationNumber: {
     id: "components.templates.batchOrders.view.identificationNumber",
     defaultMessage: "Identification number",
@@ -388,13 +408,6 @@ export function BatchOrderView({ batchOrder }: Props) {
             />
           </Grid>
 
-          {/* Billing Address Section */}
-          <Grid size={12}>
-            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-              <FormattedMessage {...messages.billingAddressTitle} />
-            </Typography>
-          </Grid>
-
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth={true}
@@ -446,6 +459,87 @@ export function BatchOrderView({ batchOrder }: Props) {
               disabled={true}
               label={intl.formatMessage(messages.country)}
               value={batchOrder.country}
+            />
+          </Grid>
+
+          {/* Billing Address Section */}
+          <Grid size={12}>
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+              <FormattedMessage {...messages.billingAddressTitle} />
+            </Typography>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.billingAddressCompanyName)}
+              value={batchOrder.billing_address.company_name}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.billingAddressContactName)}
+              value={batchOrder.billing_address.contact_name}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.billingAddressContactEmail)}
+              value={batchOrder.billing_address.contact_email}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(
+                messages.billingAddressIdentificationNumber,
+              )}
+              value={batchOrder.billing_address.identification_number}
+            />
+          </Grid>
+
+          <Grid size={12}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.address)}
+              value={batchOrder.billing_address.address}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.postcode)}
+              value={batchOrder.billing_address.postcode}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.city)}
+              value={batchOrder.billing_address.city}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              fullWidth={true}
+              disabled={true}
+              label={intl.formatMessage(messages.country)}
+              value={batchOrder.billing_address.country}
             />
           </Grid>
 
