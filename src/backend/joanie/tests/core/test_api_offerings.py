@@ -2131,7 +2131,7 @@ class OfferingApiTest(BaseAPITestCase):
         "joanie.core.api.client.ValidateVoucherThrottle.get_rate",
         return_value="5/minute",
     )
-    def test_api_offering_voucher_payment_plan_authenticated_invalid_voucher(
+    def test_api_offering_payment_plan_voucher_authenticated_invalid_voucher(
         self, _mock_get_rate
     ):
         """
@@ -2184,7 +2184,7 @@ class OfferingApiTest(BaseAPITestCase):
         "joanie.core.api.client.ValidateVoucherThrottle.get_rate",
         return_value="5/minute",
     )
-    def test_api_offering_voucher_payment_plan_anonymous(
+    def test_api_offering_payment_plan_voucher_anonymous(
         self,
         _mock_get_rate,
     ):
@@ -2286,7 +2286,7 @@ class OfferingApiTest(BaseAPITestCase):
         "joanie.core.api.client.ValidateVoucherThrottle.get_rate",
         return_value="5/minute",
     )
-    def test_api_offering_voucher_payment_plan_with_credential_product_id_with_voucher_code(
+    def test_api_offering_payment_plan_voucher_with_credential_product_id_with_voucher_code(
         self,
         _mock_get_rate,
     ):
@@ -2401,7 +2401,7 @@ class OfferingApiTest(BaseAPITestCase):
         "joanie.core.api.client.ValidateVoucherThrottle.get_rate",
         return_value="5/minute",
     )
-    def test_api_offering_voucher_payment_plan_with_certificate_product_id_with_voucher_code(
+    def test_api_offering_payment_plan_voucher_with_certificate_product_id_with_voucher_code(
         self,
         _mock_get_rate,
     ):
@@ -2502,7 +2502,7 @@ class OfferingApiTest(BaseAPITestCase):
         "joanie.core.api.client.ValidateVoucherThrottle.get_rate",
         return_value="5/minute",
     )
-    def test_api_offering_voucher_payment_plan_throttling(
+    def test_api_offering_payment_plan_voucher_throttling(
         self,
         _mock_get_rate,
     ):
