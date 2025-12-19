@@ -24,6 +24,17 @@ export enum BatchOrderPaymentMethodEnum {
   BATCH_ORDER_WITH_CARD_PAYMENT = "card_payment",
 }
 
+export type BillingAddress = {
+  company_name: string;
+  identification_number: string;
+  address: string;
+  postcode: string;
+  city: string;
+  country: string;
+  contact_email: string;
+  contact_name: string;
+};
+
 export type BatchOrderAction =
   | "confirm_quote"
   | "confirm_purchase_order"
@@ -71,6 +82,8 @@ export type BatchOrder = AbstractBatchOrder & {
   postcode: string;
   city: string;
   country: string;
+
+  billing_address: BillingAddress;
 
   administrative_firstname: string;
   administrative_lastname: string;
