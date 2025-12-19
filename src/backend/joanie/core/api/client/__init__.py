@@ -12,7 +12,7 @@ from http import HTTPStatus
 from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.db import transaction
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import Exists, OuterRef, Prefetch, Subquery
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -260,7 +260,7 @@ class OfferingViewSet(
         voucher_code = self._get_voucher_code(request)
         price = self._get_price(offering, voucher_code)
         # Get the discount value if one is set
-        discount = self._get_discount(offering, voucher_code)
+        discount, from_batch_order = self._get_discount(offering, voucher_code)
 
         serializer = self.get_serializer(
             data={
@@ -273,6 +273,7 @@ class OfferingViewSet(
                 "price": offering.product.price,
                 "discount": discount,
                 "discounted_price": price if discount else None,
+                "from_batch_order": from_batch_order,
             }
         )
         serializer.is_valid(raise_exception=True)
@@ -299,10 +300,20 @@ class OfferingViewSet(
     def _get_discount(self, offering, voucher_code):
         """Return the amount or rate of the discount found, else it returns None."""
         if voucher_code:
-            voucher = get_object_or_404(models.Voucher, code=voucher_code)
-            return str(voucher.discount)
+            voucher = get_object_or_404(
+                models.Voucher.objects.only("discount").annotate(
+                    from_batch_order=Exists(
+                        models.Order.objects.filter(
+                            voucher=OuterRef("pk"),
+                            batch_order__isnull=False,
+                        )
+                    )
+                ),
+                code=voucher_code,
+            )
+            return str(voucher.discount), voucher.from_batch_order
 
-        return offering.rules.get("discount", None)
+        return offering.rules.get("discount", None), False
 
     @action(
         methods=["GET"],
