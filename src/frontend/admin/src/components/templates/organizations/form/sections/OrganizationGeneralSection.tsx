@@ -29,9 +29,9 @@ import { useFormSubmit } from "@/hooks/form/useFormSubmit";
 interface FormValues {
   code: string;
   title: string;
-  representative: string | undefined;
-  signature: File[] | undefined;
-  logo: File[] | undefined;
+  representative?: string;
+  signature?: File[];
+  logo?: File[];
   enterprise_code?: string; // SIRET in France
   activity_category_code?: string; // APE in France
   representative_profession?: string;
@@ -77,9 +77,9 @@ export function OrganizationGeneralSection(props: Props) {
   const RegisterSchema = Yup.object().shape({
     code: Yup.string().required(),
     title: Yup.string().required(),
-    representative: Yup.string(),
-    signature: Yup.mixed(),
-    logo: Yup.mixed(),
+    representative: Yup.string().optional(),
+    signature: Yup.array<File>().optional(),
+    logo: Yup.array<File>().optional(),
     country: Yup.string(),
     enterprise_code: Yup.string(),
     activity_category_code: Yup.string(),
