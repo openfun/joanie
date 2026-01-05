@@ -2,7 +2,7 @@ import * as React from "react";
 import { ReactNode } from "react";
 import { FormattedMessage, defineMessages, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";

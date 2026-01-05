@@ -3,7 +3,7 @@ import { useState } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import FormHelperText from "@mui/material/FormHelperText";
 import Typography from "@mui/material/Typography";
-import Grid2 from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
@@ -203,13 +203,13 @@ export function DiscountSelect(
             await handleCreateDiscount(values);
           })}
         >
-          <Grid2 container spacing={2} sx={{ mt: 1 }}>
-            <Grid2 size={12}>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={12}>
               <Typography variant="body2" color="textSecondary">
                 {intl.formatMessage(messages.discountExclusiveHelperText)}
               </Typography>
-            </Grid2>
-            <Grid2 size={12}>
+            </Grid>
+            <Grid size={12}>
               <RHFTextField
                 name="rate"
                 label={intl.formatMessage(messages.rateLabel)}
@@ -219,8 +219,8 @@ export function DiscountSelect(
                 helperText={intl.formatMessage(messages.discountRateHelperText)}
                 disabled={!!useWatch({ name: "amount", control: form.control })}
               />
-            </Grid2>
-            <Grid2 size={12}>
+            </Grid>
+            <Grid size={12}>
               <RHFTextField
                 name="amount"
                 label={intl.formatMessage(messages.amountLabel)}
@@ -232,15 +232,15 @@ export function DiscountSelect(
                 )}
                 disabled={!!useWatch({ name: "rate", control: form.control })}
               />
-            </Grid2>
+            </Grid>
             {form.formState.errors.root && (
-              <Grid2 size={12}>
+              <Grid size={12}>
                 <Typography color="error">
                   {form.formState.errors.root.message}
                 </Typography>
-              </Grid2>
+              </Grid>
             )}
-          </Grid2>
+          </Grid>
         </RHFProvider>
       </CustomModal>
     </>

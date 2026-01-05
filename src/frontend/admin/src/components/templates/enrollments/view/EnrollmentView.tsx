@@ -4,7 +4,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
 import { useRouter } from "next/router";
 import Stack from "@mui/material/Stack";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
