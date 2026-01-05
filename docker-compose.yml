@@ -136,7 +136,7 @@ services:
     working_dir: /app
 
   mail-generator:
-    image: node:20.18
+    image: node:20.19
     user: "${DOCKER_USER:-1000}"
     environment:
       HOME: /tmp
@@ -145,7 +145,7 @@ services:
     working_dir: /app/src/mail
 
   admin-dev:
-    image: node:20.18
+    image: node:20.19
     user: "${DOCKER_USER:-1000}"
     environment:
       HOME: /tmp
