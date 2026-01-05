@@ -84,7 +84,12 @@ const customJestConfig = {
       "web-namespaces|" +
       "escape-string-regexp|" +
       "markdown-table|" +
-      "rehype",
+      "rehype|",
+      "@faker-js|",
+      "react-intl|",
+      "intl-messageformat|",
+      "@formatjs|",
+      "until-async",
     ")/)",
     "^.+\\.module\\.(css|sass|scss)$",
   ],
