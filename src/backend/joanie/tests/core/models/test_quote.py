@@ -65,7 +65,7 @@ class QuoteModelsTestCase(LoggingTestCase):
         """Everytime a quote object is created, the reference should be incremented by one"""
 
         with mock.patch(
-            "django.utils.timezone.localdate",
+            "django.utils.timezone.now",
             return_value=datetime(2025, 1, 1, 0, tzinfo=ZoneInfo("UTC")),
         ):
             quote_1 = QuoteFactory()
@@ -84,7 +84,7 @@ class QuoteModelsTestCase(LoggingTestCase):
         """Everytime a quote object is created, the reference should be incremented by one"""
 
         with mock.patch(
-            "django.utils.timezone.localdate",
+            "django.utils.timezone.now",
             return_value=datetime(2025, 1, 1, 0, tzinfo=ZoneInfo("UTC")),
         ):
             quote_1 = QuoteFactory()
