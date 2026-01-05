@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useEffect } from "react";
 import * as Yup from "yup";
-import { lazy } from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Grid";
@@ -55,12 +54,8 @@ export function CourseGeneralForm({ course, ...props }: Props) {
     code: Yup.string().required(),
     title: Yup.string().required(),
     organizations: Yup.array<any, Organization>().min(1).required(),
-    cover: Yup.mixed(),
-    effort: lazy((value) => {
-      return value === ""
-        ? Yup.string().nullable().optional()
-        : Yup.number().min(0).nullable().optional();
-    }),
+    cover: Yup.array<File>().optional(),
+    effort: Yup.number().min(0).nullable().optional(),
   });
 
   const getDefaultValues = () => {
