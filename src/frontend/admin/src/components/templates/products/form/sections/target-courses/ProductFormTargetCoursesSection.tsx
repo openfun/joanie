@@ -33,7 +33,7 @@ type EditRelationState = {
 };
 
 export type ProductTargetCoursesFormValues = ToFormValues<{
-  target_courses?: ProductTargetCourseRelation[];
+  target_courses: ProductTargetCourseRelation[];
 }>;
 
 type Props = WizardStepProps & {
@@ -42,7 +42,7 @@ type Props = WizardStepProps & {
 };
 
 const Schema = Yup.object().shape({
-  target_courses: Yup.array<ProductTargetCourseRelation>().optional(),
+  target_courses: Yup.array<ProductTargetCourseRelation>().optional().defined(),
 });
 
 export function ProductFormTargetCoursesSection(props: Props) {
