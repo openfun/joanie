@@ -46,6 +46,14 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
   const intl = useIntl();
   const batchOrdersQuery = useBatchOrders({}, { enabled: false });
 
+  const getDefaultValues = () => {
+    return {
+      organizations: [],
+      owners: [],
+      state: "",
+      payment_method: "",
+    };
+  };
   const RegisterSchema = Yup.object().shape({
     state: Yup.string().nullable(),
     organizations: Yup.array<any, Organization>().nullable(),
@@ -53,14 +61,9 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
     payment_method: Yup.string().nullable(),
   });
 
-  const methods = useForm<FormValues>({
+  const methods = useForm({
     resolver: yupResolver(RegisterSchema),
-    defaultValues: {
-      organizations: [],
-      owners: [],
-      state: "",
-      payment_method: "",
-    },
+    defaultValues: getDefaultValues() as any, // To not trigger type validation for default value
   });
 
   const formValuesToFilterValues = (
