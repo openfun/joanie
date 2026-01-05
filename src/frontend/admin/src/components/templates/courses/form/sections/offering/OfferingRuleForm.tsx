@@ -4,7 +4,7 @@ import { defineMessages, useIntl } from "react-intl";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid2 from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";
 import { OfferingRule } from "@/services/api/models/OfferingRule";
 import { RHFTextField } from "@/components/presentational/hook-form/RHFTextField";
@@ -122,49 +122,49 @@ export function OfferingRuleForm({
         id="offering-rule-form"
         onSubmit={form.handleSubmit((values) => onSubmit?.(values))}
       >
-        <Grid2 container spacing={2}>
-          <Grid2 size={12}>
+        <Grid container spacing={2}>
+          <Grid size={12}>
             <RHFTextField
               type="text"
               name="description"
               label={intl.formatMessage(messages.descriptionInputLabel)}
             />
-          </Grid2>
-          <Grid2 size={12}>
+          </Grid>
+          <Grid size={12}>
             <RHFTextField
               type="number"
               name="nb_seats"
               label={intl.formatMessage(messages.numberOfSeatInputLabel)}
             />
-          </Grid2>
-          <Grid2 size={12}>
+          </Grid>
+          <Grid size={12}>
             <RHFDateTimePicker
               name="start"
               label={intl.formatMessage(messages.startLabel)}
               slotProps={{ field: { clearable: true } }}
             />
-          </Grid2>
-          <Grid2 size={12}>
+          </Grid>
+          <Grid size={12}>
             <RHFDateTimePicker
               name="end"
               label={intl.formatMessage(messages.endLabel)}
               slotProps={{ field: { clearable: true } }}
             />
-          </Grid2>
-          <Grid2 size={12}>
+          </Grid>
+          <Grid size={12}>
             <DiscountSelect
               name="discount_id"
               label={intl.formatMessage(messages.discountLabel)}
               helperText={form.formState.errors.discount_id?.message}
             />
-          </Grid2>
-          <Grid2 size={12}>
+          </Grid>
+          <Grid size={12}>
             <RHFSwitch
               name="is_active"
               label={intl.formatMessage(messages.isActiveLabel)}
             />
-          </Grid2>
-        </Grid2>
+          </Grid>
+        </Grid>
       </RHFProvider>
     </TranslatableForm>
   );

@@ -5,7 +5,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Typography from "@mui/material/Typography";
 import AccordionDetails from "@mui/material/AccordionDetails";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import { FormattedMessage, useIntl } from "react-intl";

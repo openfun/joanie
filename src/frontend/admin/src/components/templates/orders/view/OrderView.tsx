@@ -4,7 +4,7 @@ import { ReactElement, ReactNode } from "react";
 import TextField from "@mui/material/TextField";
 import { FormattedMessage, useIntl } from "react-intl";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import { useRouter } from "next/router";
 import IconButton from "@mui/material/IconButton";

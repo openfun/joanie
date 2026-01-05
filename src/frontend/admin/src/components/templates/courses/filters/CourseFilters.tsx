@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import { defineMessages, useIntl } from "react-intl";
 import { OrganizationSearch } from "../../organizations/inputs/search/OrganizationSearch";
 import { courseFormMessages } from "../form/translations";
