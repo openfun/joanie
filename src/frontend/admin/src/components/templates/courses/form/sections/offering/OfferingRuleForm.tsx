@@ -83,7 +83,10 @@ export function OfferingRuleForm({
 
   const Schema = Yup.object().shape({
     description: Yup.string().nullable().defined(),
-    nb_seats: Yup.number().min(getMinNbSeats(offeringRule)).nullable().defined(),
+    nb_seats: Yup.number()
+      .min(getMinNbSeats(offeringRule))
+      .nullable()
+      .defined(),
     start: Yup.string().nullable().defined(),
     end: Yup.string().nullable().defined(),
     is_active: Yup.boolean().required(),
