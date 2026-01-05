@@ -22,12 +22,11 @@ export const quoteDefinitionRoutes: BaseEntityRoutesPaths = {
   delete: (id: string) => `/quote-definitions/${id}/`,
 };
 
-interface Repository
-  extends AbstractRepository<
-    QuoteDefinition,
-    ResourcesQuery,
-    DTOQuoteDefinition
-  > {
+interface Repository extends AbstractRepository<
+  QuoteDefinition,
+  ResourcesQuery,
+  DTOQuoteDefinition
+> {
   getAllLanguages: () => Promise<SelectOption[]>;
   getAllTemplates: () => Promise<SelectOption[]>;
 }
