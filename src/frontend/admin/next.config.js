@@ -8,6 +8,11 @@ const nextConfig = {
     unoptimized: true,
   },
   reactStrictMode: true,
+  transpilePackages: [
+    "@mui/x-date-pickers",
+    "@mui/x-data-grid",
+    "@mui/system",
+  ],
   modularizeImports: {
     "@mui/icons-material": {
       transform: "@mui/icons-material/{{member}}", // To not import all package icons using top level import
@@ -16,6 +21,7 @@ const nextConfig = {
       transform: "@mui/material/{{member}}", // To not import all package icons using top level import
     },
   },
+  turbopack: {},
 };
 
 module.exports = removeImports(nextConfig);
