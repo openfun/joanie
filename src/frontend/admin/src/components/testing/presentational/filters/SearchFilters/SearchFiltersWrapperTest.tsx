@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import {
   SearchFilterProps,
   SearchFilters,

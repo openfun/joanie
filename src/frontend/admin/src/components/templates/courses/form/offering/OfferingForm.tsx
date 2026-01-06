@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as Yup from "yup";
 import { useFieldArray, useForm } from "react-hook-form";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";

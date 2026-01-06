@@ -1,7 +1,7 @@
 import * as React from "react";
 import { PropsWithChildren } from "react";
 import { IntlProvider } from "react-intl";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { enUS } from "date-fns/locale/en-US";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

@@ -1,7 +1,7 @@
 import * as Yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import Box from "@mui/material/Box";
 import { defineMessages, useIntl } from "react-intl";
 import { RHFProvider } from "@/components/presentational/hook-form/RHFProvider";

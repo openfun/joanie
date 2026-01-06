@@ -2,7 +2,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Grid";
+import Grid2 from "@mui/material/Grid2";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { defineMessages, useIntl } from "react-intl";
@@ -70,15 +70,15 @@ export function AddUserAccess(props: Props) {
       methods={methods}
       onSubmit={methods.handleSubmit(onSubmit)}
     >
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 5 }}>
+      <Grid2 container spacing={2}>
+        <Grid2 size={{ xs: 12, md: 5 }}>
           <UserSearch
             name="user"
             label={intl.formatMessage(messages.userLabel)}
             size="small"
           />
-        </Grid>
-        <Grid size={{ xs: 12, md: 5 }}>
+        </Grid2>
+        <Grid2 size={{ xs: 12, md: 5 }}>
           <RHFSelect
             size="small"
             options={props.allAccesses}
@@ -86,15 +86,15 @@ export function AddUserAccess(props: Props) {
             data-testid="select-role"
             label={intl.formatMessage(messages.roleLabel)}
           />
-        </Grid>
-        <Grid size={{ xs: 12, md: 2 }}>
+        </Grid2>
+        <Grid2 size={{ xs: 12, md: 2 }}>
           <Box display="flex" justifyContent="center" alignItems="center">
             <Button fullWidth type="submit" variant="contained">
               {intl.formatMessage(commonTranslations.add)}
             </Button>
           </Box>
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </RHFProvider>
   );
 }

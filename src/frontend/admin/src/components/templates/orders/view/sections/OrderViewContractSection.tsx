@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ReactElement, ReactNode } from "react";
 import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import TextField from "@mui/material/TextField";
 import { FormattedMessage, useIntl } from "react-intl";
 import { orderViewMessages } from "@/components/templates/orders/view/translations";

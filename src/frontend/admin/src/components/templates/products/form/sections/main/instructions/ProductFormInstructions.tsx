@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
 import { useFormContext } from "react-hook-form";
