@@ -2,7 +2,7 @@ import * as React from "react";
 import { PropsWithChildren, useMemo, useState } from "react";
 import { IntlProvider } from "react-intl";
 import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import type { Locale } from "date-fns";
 import { fr } from "date-fns/locale/fr";
 import { enUS } from "date-fns/locale/en-US";

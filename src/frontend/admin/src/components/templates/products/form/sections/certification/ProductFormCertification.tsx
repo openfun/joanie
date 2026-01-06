@@ -1,4 +1,4 @@
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import Alert from "@mui/material/Alert";
 import { useIntl } from "react-intl";
 import * as Yup from "yup";

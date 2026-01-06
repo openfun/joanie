@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import Stack from "@mui/material/Stack";
 import { FormattedMessage, useIntl } from "react-intl";
 import Alert from "@mui/material/Alert";

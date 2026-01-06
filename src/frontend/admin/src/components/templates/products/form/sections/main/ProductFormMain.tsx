@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect } from "react";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import Typography from "@mui/material/Typography";
 import { useIntl } from "react-intl";
 import IconButton from "@mui/material/IconButton";

@@ -61,10 +61,9 @@ export function TableComponent<T extends GridValidRowModel>({
 }: TableComponentProps<T>) {
   const intl = useIntl();
   const router = useRouter();
-  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>({
-    type: "include",
-    ids: new Set(props.defaultSelectedRows ?? []),
-  });
+  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>(
+    props.defaultSelectedRows ?? [],
+  );
   const [selectedItems, setSelectedItems] = useState<T[]>([]);
 
   const rows = props.rows ?? [];
@@ -117,7 +116,7 @@ export function TableComponent<T extends GridValidRowModel>({
   const onSelectItems = (ids: string[]) => {
     if (ids.length === 0) {
       setSelectedItems([]);
-      setSelectedRows({ type: "include", ids: new Set() });
+      setSelectedRows(ids);
       props.onSelectRows?.(ids, []);
       return;
     }
@@ -141,7 +140,7 @@ export function TableComponent<T extends GridValidRowModel>({
     );
 
     setSelectedItems(items);
-    setSelectedRows({ type: "include", ids: new Set(ids) });
+    setSelectedRows(ids);
     props.onSelectRows?.(ids, items);
   };
 
@@ -179,7 +178,7 @@ export function TableComponent<T extends GridValidRowModel>({
         )}
       </Box>
       <Box position="relative">
-        {props.multiSelectActions && selectedRows.ids.size > 0 && (
+        {props.multiSelectActions && selectedRows.length > 0 && (
           <Box
             display="flex"
             justifyContent="flex-end"
@@ -264,7 +263,7 @@ export function TableComponent<T extends GridValidRowModel>({
           pageSizeOptions={[DEFAULT_PAGE_SIZE]}
           checkboxSelection={enableSelect}
           onRowSelectionModelChange={(newRowSelectionModel) => {
-            onSelectItems([...newRowSelectionModel.ids] as string[]);
+            onSelectItems(newRowSelectionModel as string[]);
           }}
           keepNonExistentRowsSelected
           rowSelectionModel={selectedRows}
