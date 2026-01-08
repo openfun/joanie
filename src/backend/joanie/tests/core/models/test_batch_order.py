@@ -924,6 +924,26 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         self.assertTrue(batch_order.can_confirm_bank_transfer())
 
+    def test_models_batch_order_confirm_bank_transfer_state_signing_without_buyer_signature_yet(
+        self,
+    ):
+        """
+        To fix a bug on the available action to confirm the bank transfer when the buyer has not
+        yet signed the contract but it was submitted for signature at the provider.
+        The actual behavior updates the flow of the batch order to `signing` when submitting to
+        signature. Thus, it was possible to confirm the bank transfer and we must avoid it.
+        So when the batch order uses bank transfer payment method but the contract is not signed by
+        the buyer yet, `can_confirm_bank_transfer` should return False.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+        )
+        # With the factory and by submitting to signature, the state transitions to `signing`
+        self.assertTrue(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
+        self.assertIsNone(batch_order.contract.student_signed_on)
+        self.assertFalse(batch_order.can_confirm_bank_transfer())
+
     def test_models_batch_order_can_confirm_bank_transfer_with_other_payment_method(
         self,
     ):

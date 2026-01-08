@@ -2693,7 +2693,11 @@ class BatchOrder(BaseModel):
 
     def can_confirm_bank_transfer(self) -> bool:
         """Check if the bank transfer can be confirmed"""
-        return self.uses_bank_transfer and self.is_eligible_to_validate_payment
+        return (
+            self.uses_bank_transfer
+            and self.is_signed_by_buyer
+            and self.is_eligible_to_validate_payment
+        )
 
     def can_submit_for_signature(self) -> bool:
         """Check if the contract can be submitted for signature"""
