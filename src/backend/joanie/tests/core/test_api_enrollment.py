@@ -1484,6 +1484,73 @@ class EnrollmentApiTest(BaseAPITestCase):
                     },
                 )
 
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment")
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_enrollment_create_authenticated_order_from_batch_order(
+        self, _, mock_set_enrollment
+    ):
+        """
+        When a batch order agreement is signed and its orders are generated, the user that claims
+        an order should then be able to enroll to the course run.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        resource_link = (
+            "http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course"
+        )
+        # Prepare the target course run and offering for batch order
+        target_course_run = CourseRunFactory(
+            state=CourseState.ONGOING_OPEN, resource_link=resource_link, is_listed=True
+        )
+        offering = factories.OfferingFactory(
+            product=factories.ProductFactory(
+                target_courses=[target_course_run.course],
+                contract_definition_batch_order=factories.ContractDefinitionFactory(
+                    name=enums.PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT
+                ),
+                contract_definition_order=None,
+                quote_definition=factories.QuoteDefinitionFactory(),
+            ),
+        )
+
+        # Prepare the batch order
+        batch_order = factories.BatchOrderFactory(
+            offering=offering,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            nb_seats=1,
+        )
+        batch_order.generate_orders()
+        order = batch_order.orders.first()
+        # Simulate user has claimed the order with his voucher code
+        order.owner = user
+        order.state = enums.ORDER_STATE_COMPLETED
+        order.save()
+        mock_set_enrollment.return_value = True
+
+        response = self.client.post(
+            "/api/v1.0/enrollments/",
+            data={
+                "course_run_id": target_course_run.id,
+                "is_active": True,
+                "was_created_by_order": True,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+        self.assertEqual(models.Enrollment.objects.count(), 1)
+
+        enrollment = models.Enrollment.objects.get()
+
+        self.assertTrue(enrollment.is_active)
+        self.assertTrue(enrollment.was_created_by_order)
+        self.assertEqual(enrollment.state, enums.ENROLLMENT_STATE_SET)
+
     def test_api_enrollment_create_authenticated_matching_no_order(self):
         """
         It should not be allowed to create an enrollment without an order for a course
