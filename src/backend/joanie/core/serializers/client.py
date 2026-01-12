@@ -1704,7 +1704,7 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         validated_data.setdefault("offering_rules", [])
 
         try:
-            offering_rule = get_active_offering_rule(offering_id, nb_seats)
+            offering_rule = get_active_offering_rule(offering_id, int(nb_seats))
         except ValueError as exception:
             relation = models.CourseProductRelation.objects.get(id=offering_id)
             raise serializers.ValidationError(

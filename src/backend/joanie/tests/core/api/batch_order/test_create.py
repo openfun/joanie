@@ -2,6 +2,7 @@
 
 from decimal import Decimal
 from http import HTTPStatus
+from unittest import mock
 
 from joanie.core import enums, factories, models
 from joanie.tests.base import BaseAPITestCase
@@ -15,7 +16,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         Create batch order required payload data.
         """
         return {
-            "offering_id": offering.id,
+            "offering_id": str(offering.id),
             "nb_seats": nb_seats,
             "company_name": "Acme Org",
             "identification_number": "123",
@@ -24,7 +25,7 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             "postcode": "2900",
             "country": "FR",
             "payment_method": payment_method,
-            "organization_id": offering.organizations.first().id,
+            "organization_id": str(offering.organizations.first().id),
             "billing_address": {
                 "company_name": " Acme Corp",
                 "identification_number": "456",
@@ -380,3 +381,32 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+
+    @mock.patch("joanie.core.api.client.get_active_offering_rule")
+    def test_api_batch_order_create_nb_seats_is_integer(
+        self, mock_get_active_offering_rule
+    ):
+        """
+        Check when calling get_active_offering_rule that the parameters passed are
+        a string representation of offering.id and the number of seats as an integer.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        offering = factories.OfferingFactory(
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+        )
+
+        self.client.post(
+            "/api/v1.0/batch-orders/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+            data=self.create_payload_batch_order(
+                offering, 2, enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+            ),
+        )
+
+        mock_get_active_offering_rule.assert_called_with(
+            str(offering.id),  # string of the UUID
+            2,  # integer type of number of seat
+        )
