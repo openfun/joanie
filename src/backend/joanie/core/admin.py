@@ -132,7 +132,8 @@ class ContractAdmin(admin.ModelAdmin):
     """Admin class for the Contract model"""
 
     list_display = (
-        "order",
+        "order_link",
+        "batch_order_link",
         "owner",
         "organization",
         "student_signed_on",
@@ -143,6 +144,7 @@ class ContractAdmin(admin.ModelAdmin):
         "definition_checksum",
         "student_signed_on",
         "order",
+        "batch_order",
         "organization",
         "organization_signatory",
         "organization_signed_on",
@@ -150,13 +152,33 @@ class ContractAdmin(admin.ModelAdmin):
         "signature_backend_reference",
     )
 
+    @admin.display(description="Batch order", ordering="batch_order")
+    def batch_order_link(self, obj):
+        """Return a link to the related batch order admin page, if any."""
+        if obj.batch_order:
+            url = reverse("admin:core_batchorder_change", args=[obj.batch_order.id])
+            return format_html('<a href="{}">{}</a>', url, obj.batch_order)
+        return "-"
+
+    @admin.display(description="Order", ordering="order")
+    def order_link(self, obj):
+        """Return a link to the related order admin page, if any."""
+        if obj.order:
+            url = reverse("admin:core_order_change", args=[obj.order.id])
+            return format_html('<a href="{}">{}</a>', url, obj.order)
+        return "-"
+
     def owner(self, obj):  # pylint: disable=no-self-use
         """Retrieve the owner of the contract from the related order."""
-        return obj.order.owner
+        owner = obj.order.owner if obj.order else obj.batch_order.owner
+        return owner
 
     def organization(self, obj):  # pylint: disable=no-self-use
         """Retrieve the organization of the contract from the related order."""
-        return obj.order.organization
+        organization = (
+            obj.order.organization if obj.order else obj.batch_order.organization
+        )
+        return organization
 
 
 @admin.register(models.CertificateDefinition)
