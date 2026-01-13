@@ -17,7 +17,6 @@ from rest_framework.generics import get_object_or_404
 from joanie.core import enums, models
 from joanie.core.serializers.base import CachedModelSerializer
 from joanie.core.serializers.fields import ISO8601DurationField, ThumbnailDetailField
-from joanie.core.utils.batch_order import get_active_offering_rule
 from joanie.payment.models import CreditCard
 
 
@@ -1699,23 +1698,8 @@ class BatchOrderSerializer(serializers.ModelSerializer):
         )
         validated_data["organization"] = organization
 
-        offering_id = self.initial_data.get("relation_id")
-        nb_seats = self.initial_data.get("nb_seats")
         validated_data.setdefault("offering_rules", [])
-
-        try:
-            offering_rule = get_active_offering_rule(offering_id, int(nb_seats))
-        except ValueError as exception:
-            relation = models.CourseProductRelation.objects.get(id=offering_id)
-            raise serializers.ValidationError(
-                {
-                    "offering_rule": [
-                        "Maximum number of orders reached for "
-                        f"product {relation.product.title:s}"
-                    ]
-                }
-            ) from exception
-        if offering_rule:
+        if offering_rule := self.initial_data.get("offering_rules"):
             validated_data["offering_rules"].append(offering_rule)
 
         return super().create(validated_data)

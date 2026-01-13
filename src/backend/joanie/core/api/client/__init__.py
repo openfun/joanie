@@ -36,6 +36,7 @@ from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers, webhooks
 from joanie.core.utils.batch_order import (
+    get_active_offering_rule,
     send_mail_invitation_link,
     validate_success_payment,
 )
@@ -820,8 +821,6 @@ class BatchOrderViewSet(
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """Create the batch order and start the state of flows"""
-        serializer = self.get_serializer(data=request.data)
-
         offering_id = request.data.get("offering_id")
         try:
             offering = CourseProductRelation.objects.get(pk=offering_id)
@@ -830,7 +829,7 @@ class BatchOrderViewSet(
                 f"The offering does not exist: {offering_id}",
                 status=HTTPStatus.BAD_REQUEST,
             )
-
+        # Check if specific organization is passed
         organization_id = request.data.get("organization_id")
         if not organization_id:
             organization = get_least_active_organization(
@@ -838,7 +837,25 @@ class BatchOrderViewSet(
             )
         else:
             organization = get_object_or_404(models.Organization, pk=organization_id)
+
+        serializer = self.get_serializer(data=request.data)
         serializer.initial_data["organization_id"] = str(organization.id)
+
+        # Check if existing offering rule allows creation
+        try:
+            offering_rule = get_active_offering_rule(
+                offering_id, int(request.data.get("nb_seats"))
+            )
+        except ValueError:
+            return Response(
+                {
+                    "detail": _(
+                        f"Maximum number of orders reached for product {offering.product.title:s}"
+                    )
+                },
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+        serializer.initial_data["offering_rules"] = offering_rule
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
