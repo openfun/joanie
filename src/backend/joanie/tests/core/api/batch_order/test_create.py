@@ -253,14 +253,12 @@ class BatchOrderCreateAPITest(BaseAPITestCase):
             data=data,
         )
 
-        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(
             response.json(),
             {
-                "offering_rule": [
-                    "Maximum number of orders reached for "
-                    f"product {offering.product.title}"
-                ]
+                "detail": "Maximum number of orders reached for "
+                f"product {offering.product.title}"
             },
         )
 
