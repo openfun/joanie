@@ -50,7 +50,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         abilities = organization.get_abilities(AnonymousUser())
 
         self.assertEqual(
-            abilities,
             {
                 "delete": False,
                 "get": True,
@@ -63,6 +62,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "confirm_bank_transfer": False,
                 "can_submit_for_signature_batch_order": False,
             },
+            abilities,
         )
 
     def test_models_organization_get_abilities_authenticated(self):
@@ -70,7 +70,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory()
         abilities = organization.get_abilities(factories.UserFactory())
         self.assertEqual(
-            abilities,
             {
                 "delete": False,
                 "get": True,
@@ -83,6 +82,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "confirm_bank_transfer": False,
                 "can_submit_for_signature_batch_order": False,
             },
+            abilities,
         )
 
     def test_models_organization_get_abilities_owner(self):
@@ -90,7 +90,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         access = factories.UserOrganizationAccessFactory(role="owner")
         abilities = access.organization.get_abilities(access.user)
         self.assertEqual(
-            abilities,
             {
                 "delete": True,
                 "get": True,
@@ -103,6 +102,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "confirm_bank_transfer": True,
                 "can_submit_for_signature_batch_order": True,
             },
+            abilities,
         )
 
     def test_models_organization_get_abilities_administrator(self):
@@ -110,7 +110,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         access = factories.UserOrganizationAccessFactory(role="administrator")
         abilities = access.organization.get_abilities(access.user)
         self.assertEqual(
-            abilities,
             {
                 "delete": False,
                 "get": True,
@@ -118,11 +117,12 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "put": True,
                 "manage_accesses": True,
                 "sign_contracts": False,
-                "download_quote": False,
-                "confirm_quote": False,
-                "confirm_bank_transfer": False,
-                "can_submit_for_signature_batch_order": False,
+                "download_quote": True,
+                "confirm_quote": True,
+                "confirm_bank_transfer": True,
+                "can_submit_for_signature_batch_order": True,
             },
+            abilities,
         )
 
     def test_models_organization_get_abilities_member_user(self):
@@ -133,7 +133,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             abilities = access.organization.get_abilities(access.user)
 
         self.assertEqual(
-            abilities,
             {
                 "delete": False,
                 "get": True,
@@ -146,6 +145,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "confirm_bank_transfer": False,
                 "can_submit_for_signature_batch_order": False,
             },
+            abilities,
         )
 
     def test_models_organization_get_abilities_preset_role(self):
@@ -157,7 +157,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             abilities = access.organization.get_abilities(access.user)
 
         self.assertEqual(
-            abilities,
             {
                 "delete": False,
                 "get": True,
@@ -170,6 +169,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "confirm_bank_transfer": False,
                 "can_submit_for_signature_batch_order": False,
             },
+            abilities,
         )
 
     def test_models_organization_signature_backend_references_to_sign_states(self):
@@ -196,16 +196,16 @@ class OrganizationModelsTestCase(BaseAPITestCase):
 
                 if state == enums.ORDER_STATE_CANCELED:
                     self.assertEqual(
-                        organization.signature_backend_references_to_sign(),
                         ((), ()),
+                        organization.signature_backend_references_to_sign(),
                     )
                 else:
                     self.assertEqual(
-                        organization.signature_backend_references_to_sign(),
                         (
                             (contract.id,),
                             (contract.signature_backend_reference,),
                         ),
+                        organization.signature_backend_references_to_sign(),
                     )
 
     def test_models_organization_signature_backend_references_to_sign(self):
@@ -261,7 +261,6 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
 
         self.assertEqual(
-            organization.signature_backend_references_to_sign(),
             (
                 tuple(contract.id for contract in reversed(contracts_to_sign)),
                 tuple(
@@ -269,6 +268,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                     for contract in reversed(contracts_to_sign)
                 ),
             ),
+            organization.signature_backend_references_to_sign(),
         )
 
     def test_models_organization_signature_backend_references_to_sign_specified_ids(
@@ -329,15 +329,15 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         contracts_to_sign_ids = [contract.id for contract in contracts_to_sign]
 
         self.assertEqual(
-            organization.signature_backend_references_to_sign(
-                contract_ids=contracts_to_sign_ids
-            ),
             (
                 tuple(contract.id for contract in reversed(contracts_to_sign)),
                 tuple(
                     contract.signature_backend_reference
                     for contract in reversed(contracts_to_sign)
                 ),
+            ),
+            organization.signature_backend_references_to_sign(
+                contract_ids=contracts_to_sign_ids
             ),
         )
 
@@ -405,14 +405,14 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
 
         self.assertEqual(
-            str(context.exception),
             "Some contracts are not available for this organization.",
+            str(context.exception),
         )
 
     def test_models_organization_signature_backend_references_to_sign_empty(self):
         """Should return an empty list if no references to sign exists."""
         organization = factories.OrganizationFactory()
-        self.assertEqual(organization.signature_backend_references_to_sign(), ((), ()))
+        self.assertEqual(((), ()), organization.signature_backend_references_to_sign())
 
     def test_models_organization_contracts_signature_link(self):
         """Should return a signature link."""
@@ -489,8 +489,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             organization.contracts_signature_link(user=user)
 
         self.assertEqual(
-            str(context.exception),
             "No contract to sign for this organization.",
+            str(context.exception),
         )
 
     def test_models_organization_fields_contact_phone_number_only_formatted(self):
@@ -500,12 +500,12 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         )
         organization1.save()
 
-        self.assertEqual(organization1.contact_phone, "0011123456789")
+        self.assertEqual("0011123456789", organization1.contact_phone)
 
         organization2 = factories.OrganizationFactory(contact_phone="01 23 45 67 89")
         organization2.save()
 
-        self.assertEqual(organization2.contact_phone, "0123456789")
+        self.assertEqual("0123456789", organization2.contact_phone)
 
     def test_models_organization_fields_contact_phone_number_special_characters_normalized(
         self,
@@ -517,28 +517,28 @@ class OrganizationModelsTestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory(contact_phone="+1 (123) 123-4567")
         organization.save()
 
-        self.assertEqual(organization.contact_phone, "+11231234567")
+        self.assertEqual("+11231234567", organization.contact_phone)
 
         organization2 = factories.OrganizationFactory(
             contact_phone="+(33) 1 23 45 67 89"
         )
         organization2.save()
 
-        self.assertEqual(organization2.contact_phone, "+33123456789")
+        self.assertEqual("+33123456789", organization2.contact_phone)
 
     def test_models_organization_fields_contact_phone_number_empty(self):
         """The `contact_phone` field should remain empty if initially empty."""
         organization = factories.OrganizationFactory(contact_phone="")
         organization.save()
 
-        self.assertEqual(organization.contact_phone, "")
+        self.assertEqual("", organization.contact_phone)
 
     def test_models_organization_fields_contact_phone_number_no_digits(self):
         """The `contact_phone` field should be empty if no digits are provided."""
         organization = factories.OrganizationFactory(contact_phone="abc wrong number")
         organization.save()
 
-        self.assertEqual(organization.contact_phone, "")
+        self.assertEqual("", organization.contact_phone)
 
     def test_models_organization_signatory_representative_fields_must_be_set_no_profession(
         self,
@@ -555,8 +555,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
 
         self.assertEqual(
-            str(context.exception),
             "{'__all__': ['Both signatory representative fields must be set.']}",
+            str(context.exception),
         )
 
     def test_models_organization_signatory_representative_fields_must_be_set_no_representative(
@@ -574,8 +574,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             )
 
         self.assertEqual(
-            str(context.exception),
             "{'__all__': ['Both signatory representative fields must be set.']}",
+            str(context.exception),
         )
 
     def test_models_organization_signatory_representative_fields_are_both_set(self):
@@ -587,7 +587,8 @@ class OrganizationModelsTestCase(BaseAPITestCase):
             signatory_representative="John Doe",
             signatory_representative_profession="Board of Directors",
         )
-        self.assertEqual(organization.signatory_representative, "John Doe")
+        self.assertEqual("John Doe", organization.signatory_representative)
         self.assertEqual(
-            organization.signatory_representative_profession, "Board of Directors"
+            "Board of Directors",
+            organization.signatory_representative_profession,
         )

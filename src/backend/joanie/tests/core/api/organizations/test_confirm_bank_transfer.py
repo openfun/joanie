@@ -134,12 +134,12 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
-    def test_api_organization_confirm_bank_transfer_not_owner_role(
+    def test_api_organization_confirm_bank_transfer_not_owner_role_or_admin_role(
         self,
     ):
         """
-        Authenticated user with organization access that is not owner should not be able to
-        confirm a bank transfer of a batch order.
+        Authenticated user with organization access that is not owner or admin role should not
+        be able to confirm a bank transfer of a batch order.
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_SIGNING,
@@ -149,7 +149,7 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
         for role in [
             role[0]
             for role in models.OrganizationAccess.ROLE_CHOICES
-            if role[0] != enums.OWNER
+            if role[0] not in [enums.OWNER, enums.ADMIN]
         ]:
             access = factories.UserOrganizationAccessFactory(
                 organization=batch_order.organization, role=role

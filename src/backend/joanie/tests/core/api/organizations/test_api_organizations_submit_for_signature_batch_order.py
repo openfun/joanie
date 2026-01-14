@@ -129,12 +129,12 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
-    def test_api_organization_submit_for_signature_batch_order_contract_not_owner_role(
+    def test_api_organization_submit_signature_batch_order_contract_not_owner_role_or_admin_role(
         self,
     ):
         """
-        Authenticated user with organization access that is not owner role should not be able
-        to submit for signature the batch order contract
+        Authenticated user with organization access that is neither owner nor admin role should not
+        be able to submit for signature the batch order contract
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_QUOTED,
@@ -144,7 +144,7 @@ class OrganizationApisubmitForSignatureTest(BaseAPITestCase):
         for role in [
             role[0]
             for role in models.OrganizationAccess.ROLE_CHOICES
-            if role[0] != enums.OWNER
+            if role[0] not in [enums.OWNER, enums.ADMIN]
         ]:
             organization = batch_order.organization
             access = factories.UserOrganizationAccessFactory(

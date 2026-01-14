@@ -330,10 +330,10 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "delete": role == enums.OWNER,
             "manage_accesses": is_owner_or_admin,
             "sign_contracts": role == enums.OWNER,
-            "download_quote": role == enums.OWNER,
-            "confirm_quote": role == enums.OWNER,
-            "confirm_bank_transfer": role == enums.OWNER,
-            "can_submit_for_signature_batch_order": role == enums.OWNER,
+            "download_quote": is_owner_or_admin,
+            "confirm_quote": is_owner_or_admin,
+            "confirm_bank_transfer": is_owner_or_admin,
+            "can_submit_for_signature_batch_order": is_owner_or_admin,
         }
 
     def signature_backend_references_to_sign(self, **kwargs):

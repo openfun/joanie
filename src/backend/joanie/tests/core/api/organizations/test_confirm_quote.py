@@ -138,11 +138,11 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
-    def test_api_organization_confirm_quote_with_organization_access_but_not_owner_role(
+    def test_api_organization_confirm_quote_organization_access_but_not_owner_role_or_admin_role(
         self,
     ):
         """
-        Authenticated user with organization access that is not owner should not
+        Authenticated user with organization access that is neither owner nor admin role should not
         be able to confirm a quote if the total is missing.
         """
         batch_order = factories.BatchOrderFactory(
@@ -152,7 +152,7 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
         for role in [
             role[0]
             for role in models.OrganizationAccess.ROLE_CHOICES
-            if role[0] != enums.OWNER
+            if role[0] not in [enums.OWNER, enums.ADMIN]
         ]:
             access = factories.UserOrganizationAccessFactory(
                 organization=batch_order.organization, role=role
