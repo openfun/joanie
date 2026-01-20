@@ -1311,7 +1311,11 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
             self.freeze_total(total=Decimal("100.00"))
             if self.uses_purchase_order:
                 self.quote.has_purchase_order = True
+                # Add the purchase order reference if payment method uses purchase order
+                suffix_reference = str(self.id)[:3]
+                self.quote.purchase_order_reference = f"reference_{suffix_reference}"
                 self.quote.save()
+
             self.submit_for_signature(self.owner)
             self.flow.update()
 

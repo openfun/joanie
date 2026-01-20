@@ -389,7 +389,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
         batch_order.freeze_total("100.00")
-        batch_order.quote.tag_has_purchase_order()
+        batch_order.quote.tag_has_purchase_order(
+            purchase_order_reference="test_reference"
+        )
 
         batch_order.submit_for_signature(user=user)
 
@@ -499,7 +501,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
         # All the steps allowing the state of batch order to transition to `completed``
         batch_order.freeze_total("100.00")
-        batch_order.quote.tag_has_purchase_order()
+        batch_order.quote.tag_has_purchase_order(
+            purchase_order_reference="test_reference"
+        )
         batch_order.submit_for_signature(batch_order.owner)
 
         batch_order.refresh_from_db()
@@ -906,7 +910,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
         batch_order.freeze_total("100.00")
-        batch_order.quote.tag_has_purchase_order()
+        batch_order.quote.tag_has_purchase_order(
+            purchase_order_reference="test_reference"
+        )
 
         self.assertFalse(batch_order.can_confirm_purchase_order())
 

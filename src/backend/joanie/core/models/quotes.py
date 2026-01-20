@@ -111,6 +111,17 @@ class Quote(BaseModel):
         null=True,
         help_text=_("Incremental quote reference number, e.g. FUN_2025_0000001"),
     )
+    purchase_order_reference = models.CharField(
+        _("purchase_order_reference"),
+        max_length=30,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text=_(
+            "reference provided by the buyer used for commercial tracking for contract "
+            "and invoice"
+        ),
+    )
 
     class Meta:
         db_table = "joanie_quote"
@@ -136,6 +147,20 @@ class Quote(BaseModel):
                 name="The quote requires a context",
                 violation_error_message=(
                     "You must generate the quote context before signing the quote."
+                ),
+            ),
+            models.CheckConstraint(
+                check=(
+                    models.Q(has_purchase_order=False)
+                    | (
+                        models.Q(organization_signed_on__isnull=False)
+                        & models.Q(purchase_order_reference__isnull=False)
+                    )
+                ),
+                name="purchase_order_requires_signed_and_reference",
+                violation_error_message=(
+                    "If a purchase order is received, the organization must have signed "
+                    "and a purchase order reference must be set."
                 ),
             ),
         ]
@@ -186,9 +211,10 @@ class Quote(BaseModel):
         self.organization_signed_on = timezone.now()
         self.save()
 
-    def tag_has_purchase_order(self):
+    def tag_has_purchase_order(self, purchase_order_reference: str):
         """Updates the quote with the reception of the purchase order"""
         self.has_purchase_order = True
+        self.purchase_order_reference = purchase_order_reference
         self.save()
         self.batch_order.flow.update()
 
