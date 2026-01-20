@@ -75,7 +75,9 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
                 batch_order.freeze_total("100.00")
 
                 if batch_order.uses_purchase_order:
-                    batch_order.quote.tag_has_purchase_order()
+                    batch_order.quote.tag_has_purchase_order(
+                        purchase_order_reference="test_reference"
+                    )
                     self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
                 else:
                     self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
@@ -238,7 +240,9 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         # Simulate that the quote is signed by organization
         batch_order.freeze_total("100.00")
         # Simulate that we have received the purchase order
-        batch_order.quote.tag_has_purchase_order()
+        batch_order.quote.tag_has_purchase_order(
+            purchase_order_reference="test_reference"
+        )
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
 

@@ -12,7 +12,12 @@ from django.utils import timezone
 
 import pytest
 
-from joanie.core.factories import QuoteDefinitionFactory, QuoteFactory
+from joanie.core import enums
+from joanie.core.factories import (
+    BatchOrderFactory,
+    QuoteDefinitionFactory,
+    QuoteFactory,
+)
 from joanie.core.models import Quote, QuoteDefinition
 from joanie.tests.base import LoggingTestCase
 
@@ -59,6 +64,44 @@ class QuoteModelsTestCase(LoggingTestCase):
             "You must generate the quote context before signing the quote."
             in str(context.exception)
         )
+
+    def test_models_quote_purchase_order_reference_must_be_provided_once_quote_is_signed(
+        self,
+    ):
+        """
+        The organization must provide the purchase order reference once the quote is signed
+        and has purchase order is set to True, otherwise it should return a `ValidationError`.
+        """
+        with self.assertRaises(ValidationError) as context:
+            QuoteFactory(
+                has_purchase_order=True,
+                organization_signed_on=timezone.now(),
+                purchase_order_reference=None,
+            )
+
+        self.assertTrue(
+            "If a purchase order is received, the organization must have signed "
+            "and a purchase order reference must be set." in str(context.exception)
+        )
+
+    def test_models_purchase_order_reference_in_relation_with_batch_order_payment_methods(
+        self,
+    ):
+        """
+        The purchase order reference should only be set when the related batch order
+        uses `purchase_order` payment method. Otherwise, it should not be set.
+        """
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            quote = BatchOrderFactory(
+                payment_method=payment_method, state=enums.BATCH_ORDER_STATE_TO_SIGN
+            ).quote
+            if payment_method in [
+                enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+                enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+            ]:
+                self.assertIsNone(quote.purchase_order_reference)
+            else:
+                self.assertIsNotNone(quote.purchase_order_reference)
 
     @override_settings(JOANIE_PREFIX_QUOTE_REFERENCE="JOANIE")
     def test_models_quote_reference_uniqueness(self):
