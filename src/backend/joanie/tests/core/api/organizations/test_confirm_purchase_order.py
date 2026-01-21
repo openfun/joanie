@@ -196,7 +196,9 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
         batch_order.freeze_total("100.00")
-        batch_order.quote.tag_has_purchase_order()
+        batch_order.quote.tag_has_purchase_order(
+            purchase_order_reference="test_reference"
+        )
 
         access = factories.UserOrganizationAccessFactory(
             organization=batch_order.organization, role=enums.OWNER
@@ -232,7 +234,6 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
                 )
                 organization = batch_order.organization
                 batch_order.freeze_total("100.00")
-                batch_order.quote.tag_has_purchase_order()
 
                 access = factories.UserOrganizationAccessFactory(
                     organization=organization, role=enums.OWNER
@@ -269,7 +270,10 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
 
         response = self.client.patch(
             f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-purchase-order/",
-            data={"quote_id": str(batch_order.quote.id)},
+            data={
+                "quote_id": str(batch_order.quote.id),
+                "purchase_order_reference": "test_reference",
+            },
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
         )
@@ -278,4 +282,5 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(batch_order.quote.has_purchase_order, True)
+        self.assertEqual(batch_order.quote.purchase_order_reference, "test_reference")
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)

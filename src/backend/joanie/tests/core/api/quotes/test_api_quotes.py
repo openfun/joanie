@@ -111,6 +111,7 @@ class QuoteApiTest(BaseAPITestCase):
                             },
                         },
                         "has_purchase_order": False,
+                        "purchase_order_reference": None,
                         "organization_signed_on": None,
                     }
                     for quote in quotes
@@ -218,6 +219,7 @@ class QuoteApiTest(BaseAPITestCase):
                     },
                 },
                 "has_purchase_order": True,
+                "purchase_order_reference": batch_order.quote.purchase_order_reference,
                 "organization_signed_on": format_date(
                     batch_order.quote.organization_signed_on
                 ),
