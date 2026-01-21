@@ -146,7 +146,9 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(BaseAPITestCase):
         )
         batch_order.quote.context = "context"
         batch_order.freeze_total("123.45")
-        batch_order.quote.tag_has_purchase_order()
+        batch_order.quote.tag_has_purchase_order(
+            purchase_order_reference="test_reference"
+        )
 
         response = self.client.patch(
             f"/api/v1.0/admin/batch-orders/{batch_order.id}/confirm-purchase-order/",
@@ -175,12 +177,16 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(BaseAPITestCase):
                     state=enums.BATCH_ORDER_STATE_QUOTED,
                     payment_method=payment_method,
                 )
+
+                data = {}
                 if payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER:
                     batch_order.quote.context = "context"
                     batch_order.freeze_total("123.45")
+                    data = {"purchase_order_reference": "test_reference"}
 
                 response = self.client.patch(
                     f"/api/v1.0/admin/batch-orders/{batch_order.id}/confirm-purchase-order/",
+                    data=data,
                     content_type="application/json",
                 )
 
@@ -195,4 +201,5 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(BaseAPITestCase):
                     batch_order.refresh_from_db()
                     self.assertStatusCodeEqual(response, HTTPStatus.OK)
                     self.assertTrue(batch_order.quote.has_purchase_order)
+                    self.assertIsNotNone(batch_order.quote.purchase_order_reference)
                     self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)

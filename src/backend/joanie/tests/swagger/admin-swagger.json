@@ -9733,13 +9733,20 @@
                         "readOnly": true,
                         "title": "Purchase order to confirm payment",
                         "description": "Quote has purchase order to confirm payment from buyer"
+                    },
+                    "purchase_order_reference": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "reference provided by the buyer used for commercial tracking for contract and invoice"
                     }
                 },
                 "required": [
                     "definition_title",
                     "has_purchase_order",
                     "id",
-                    "organization_signed_on"
+                    "organization_signed_on",
+                    "purchase_order_reference"
                 ]
             },
             "AdminQuoteDefinition": {
