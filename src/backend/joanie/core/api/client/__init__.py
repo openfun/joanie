@@ -1262,6 +1262,13 @@ class OrganizationViewSet(
                 type=OpenApiTypes.UUID,
                 many=False,
             ),
+            OpenApiParameter(
+                name="purchase_order_reference",
+                description="reference",
+                required=True,
+                type=OpenApiTypes.STR,
+                many=False,
+            ),
         ],
     )
     @action(
@@ -1277,6 +1284,7 @@ class OrganizationViewSet(
         """
         organization = self.get_object()
         quote_id = request.data.get("quote_id")
+        purchase_order_reference = request.data.get("purchase_order_reference")
 
         quote = get_object_or_404(
             models.Quote, id=quote_id, batch_order__organization=organization
@@ -1292,7 +1300,7 @@ class OrganizationViewSet(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
-        quote.tag_has_purchase_order()
+        quote.tag_has_purchase_order(purchase_order_reference=purchase_order_reference)
         # Update the flow of batch order to sign
         quote.batch_order.flow.update()
 

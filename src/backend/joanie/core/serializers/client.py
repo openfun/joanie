@@ -587,6 +587,7 @@ class QuoteSerializer(serializers.ModelSerializer):
             "organization_signed_on",
             "has_purchase_order",
             "batch_order",
+            "purchase_order_reference",
         ]
         read_only_fields = fields
 

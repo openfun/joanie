@@ -137,6 +137,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                             },
                         },
                         "has_purchase_order": False,
+                        "purchase_order_reference": None,
                         "organization_signed_on": None,
                     }
                     for quote in expected_quotes
@@ -334,6 +335,7 @@ class OrganizationQuoteApiTest(BaseAPITestCase):
                     },
                 },
                 "has_purchase_order": False,
+                "purchase_order_reference": None,
                 "organization_signed_on": format_date(quote.organization_signed_on),
             },
             response.json(),

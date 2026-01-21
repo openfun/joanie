@@ -5076,6 +5076,15 @@
                     },
                     {
                         "in": "query",
+                        "name": "purchase_order_reference",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "reference",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
                         "name": "quote_id",
                         "schema": {
                             "type": "string",
@@ -9198,13 +9207,20 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "purchase_order_reference": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true,
+                        "description": "reference provided by the buyer used for commercial tracking for contract and invoice"
                     }
                 },
                 "required": [
                     "batch_order",
                     "has_purchase_order",
                     "id",
-                    "organization_signed_on"
+                    "organization_signed_on",
+                    "purchase_order_reference"
                 ]
             },
             "QuoteDefinition": {

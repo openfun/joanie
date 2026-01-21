@@ -274,7 +274,10 @@ class BatchOrderFullFlowAPITest(BaseAPITestCase):
         # Confirm purchase order
         response = self.client.patch(
             f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-purchase-order/",
-            data={"quote_id": str(batch_order.quote.id)},
+            data={
+                "quote_id": str(batch_order.quote.id),
+                "purchase_order_reference": "test_reference",
+            },
             HTTP_AUTHORIZATION=f"Bearer {organization_owner_token}",
             content_type="application/json",
         )
