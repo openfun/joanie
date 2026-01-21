@@ -759,6 +759,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 effort=timedelta(hours=10, minutes=30, seconds=12),
             ),
             state=enums.BATCH_ORDER_STATE_TO_SIGN,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
         course_dates = batch_order.get_equivalent_course_run_dates()
         expected_context = {
@@ -808,6 +809,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                     "contact_email": batch_order.billing_address["contact_email"],
                 },
                 "url_educational_platform": "www.example-testing.acme",
+                "purchase_order_reference": batch_order.quote.purchase_order_reference,
             },
             "organization": {
                 "address": {
