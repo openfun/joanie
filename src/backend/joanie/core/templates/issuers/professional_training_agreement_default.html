@@ -76,6 +76,9 @@ this template as a base.
           <article class="content-articles">
               <h3>{% translate "Article 1 : Training Description" %}</h3>
               <ul>
+                {% if batch_order.purchase_order_reference %}
+                  <li>{% translate "Purchase order reference: " %} {{ batch_order.purchase_order_reference }}</li>
+                {% endif %}
                 <li>{% translate "Course number: " %}{{ course.code }}</li>
                 <li>{% translate "Name of the Course: " %}{{ course.name }}</li>
                 <li>{% translate "Session start date: " %}
