@@ -83,6 +83,7 @@ class AdminQuoteSerializer(serializers.ModelSerializer):
             "definition_title",
             "organization_signed_on",
             "has_purchase_order",
+            "purchase_order_reference",
         ]
         read_only_fields = fields
 

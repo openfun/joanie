@@ -919,6 +919,7 @@ class BatchOrderViewSet(
         Once confirmed, the batch order's state transition to `to_sign`.
         """
         batch_order = self.get_object()
+        purchase_order_reference = request.data.get("purchase_order_reference")
 
         if not batch_order.uses_purchase_order:
             raise ValidationError(
@@ -938,7 +939,9 @@ class BatchOrderViewSet(
                 _("Batch order's quote purchase order already confirmed.")
             )
 
-        batch_order.quote.tag_has_purchase_order()
+        batch_order.quote.tag_has_purchase_order(
+            purchase_order_reference=purchase_order_reference
+        )
 
         return Response(status=HTTPStatus.OK)
 

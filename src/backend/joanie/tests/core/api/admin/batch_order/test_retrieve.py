@@ -43,9 +43,11 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
         self.client.login(username=admin.username, password="password")
 
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_ASSIGNED,
-            payment_method=enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+            state=enums.BATCH_ORDER_STATE_SIGNING,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            nb_seats=1,
         )
+        order = batch_order.orders.first()
 
         response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
 
@@ -62,13 +64,17 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "definition_title": batch_order.contract.definition.title,
                     "id": str(batch_order.contract.id),
                     "organization_signed_on": None,
-                    "student_signed_on": None,
-                    "submitted_for_signature_on": None,
+                    "student_signed_on": format_date(
+                        batch_order.contract.student_signed_on
+                    ),
+                    "submitted_for_signature_on": format_date(
+                        batch_order.contract.submitted_for_signature_on
+                    ),
                 },
                 "country": batch_order.country.code,
                 "currency": settings.DEFAULT_CURRENCY,
                 "identification_number": batch_order.identification_number,
-                "main_invoice_reference": None,
+                "main_invoice_reference": batch_order.main_invoice.reference,
                 "nb_seats": batch_order.nb_seats,
                 "organization": {
                     "code": batch_order.organization.code,
@@ -143,14 +149,17 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     ],
                 },
                 "total": float(batch_order.total),
-                "vouchers": [],
+                "vouchers": [order.voucher.code],
                 "offering_rules": [],
-                "payment_method": enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+                "payment_method": enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
                 "quote": {
                     "definition_title": batch_order.quote.definition.title,
-                    "has_purchase_order": False,
+                    "has_purchase_order": True,
                     "id": str(batch_order.quote.id),
-                    "organization_signed_on": None,
+                    "organization_signed_on": format_date(
+                        batch_order.quote.organization_signed_on
+                    ),
+                    "purchase_order_reference": batch_order.quote.purchase_order_reference,
                 },
                 "billing_address": {
                     "company_name": batch_order.company_name,
@@ -176,16 +185,33 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "state": batch_order.state,
                 "funding_entity": batch_order.funding_entity,
                 "funding_amount": batch_order.funding_amount,
-                "contract_submitted": False,
-                "orders": [],
+                "contract_submitted": True,
+                "orders": [
+                    {
+                        "batch_order": str(batch_order.id),
+                        "course_code": order.course.code,
+                        "created_on": format_date(order.created_on),
+                        "updated_on": format_date(order.updated_on),
+                        "enrollment_id": None,
+                        "discount": str(order.voucher.discount),
+                        "id": str(order.id),
+                        "organization_title": order.organization.title,
+                        "owner_name": None,
+                        "product_title": order.product.title,
+                        "state": order.state,
+                        "total": float(order.total),
+                        "total_currency": get_default_currency_symbol(),
+                        "voucher": order.voucher.code,
+                    }
+                ],
                 "available_actions": {
-                    "confirm_quote": True,
+                    "confirm_quote": False,
                     "confirm_purchase_order": False,
                     "confirm_bank_transfer": False,
                     "submit_for_signature": False,
                     "generate_orders": False,
                     "cancel": True,
-                    "next_action": "confirm_quote",
+                    "next_action": None,
                 },
             },
             response.json(),
@@ -310,6 +336,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "organization_signed_on": format_date(
                         batch_order.quote.organization_signed_on
                     ),
+                    "purchase_order_reference": None,
                 },
                 "billing_address": {
                     "company_name": batch_order.company_name,
@@ -480,6 +507,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                     "organization_signed_on": format_date(
                         batch_order.quote.organization_signed_on
                     ),
+                    "purchase_order_reference": None,
                 },
                 "billing_address": {
                     "company_name": batch_order.company_name,
