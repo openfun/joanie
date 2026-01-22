@@ -1740,6 +1740,7 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
             ("quote_reference", _("Quote reference")),
             ("quote_organization_signed", _("Organization quote signature date")),
             ("quote_has_purchase_order", _("Quote has purchase order")),
+            ("quote_purchase_order_reference", _("Quote purchase order reference")),
             ("contract", _("Contract")),
             ("contract_submitted_for_signature_on", _("Submitted for signature")),
             ("contract_student_signed_on", _("Buyer signature date")),
@@ -1776,6 +1777,7 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
     quote_reference = serializers.SerializerMethodField(read_only=True)
     quote_organization_signed = serializers.SerializerMethodField(read_only=True)
     quote_has_purchase_order = serializers.SerializerMethodField(read_only=True)
+    quote_purchase_order_reference = serializers.SerializerMethodField(read_only=True)
     orders_generated = serializers.SerializerMethodField(read_only=True)
 
     def get_contract_date(self, instance, date_field: str) -> str:
@@ -1861,6 +1863,15 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
         """
         has_purchase_order = self.get_quote_information(instance, "has_purchase_order")
         return "Yes" if has_purchase_order else "No"
+
+    def get_quote_purchase_order_reference(self, instance) -> str:
+        """
+        Returns purchase order reference when the batch order uses purchase order payment method
+        """
+        purchase_order_reference = self.get_quote_information(
+            instance, "purchase_order_reference"
+        )
+        return purchase_order_reference if purchase_order_reference else ""
 
     def get_orders_generated(self, instance) -> str:
         """
