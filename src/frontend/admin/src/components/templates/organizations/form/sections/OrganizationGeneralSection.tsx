@@ -77,9 +77,9 @@ export function OrganizationGeneralSection(props: Props) {
   const RegisterSchema = Yup.object().shape({
     code: Yup.string().required(),
     title: Yup.string().required(),
-    representative: Yup.string(),
-    signature: Yup.mixed(),
-    logo: Yup.mixed(),
+    representative: Yup.string().defined(),
+    signature: Yup.array<File>().defined(),
+    logo: Yup.array<File>().defined(),
     country: Yup.string(),
     enterprise_code: Yup.string(),
     activity_category_code: Yup.string(),

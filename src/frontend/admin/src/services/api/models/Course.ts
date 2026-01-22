@@ -37,8 +37,8 @@ export type CourseFormValues = Omit<
   | "is_graded"
   | "offerings"
 > & {
-  cover: File[] | undefined;
-  effort?: number;
+  cover?: File[] | undefined;
+  effort?: number | null;
 };
 
 export interface DTOCourse {
