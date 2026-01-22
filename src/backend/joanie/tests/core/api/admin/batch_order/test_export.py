@@ -43,6 +43,11 @@ def expected_csv_content(batch_order):
             batch_order.quote.organization_signed_on
         ),
         "Quote has purchase order": yes_no(batch_order.quote.has_purchase_order),
+        "Quote purchase order reference": (
+            batch_order.quote.purchase_order_reference
+            if batch_order.uses_purchase_order and batch_order.quote.has_purchase_order
+            else ""
+        ),
         "Contract": str(batch_order.contract.definition.title),
         "Submitted for signature": yes_no(
             batch_order.contract.signature_backend_reference
@@ -112,6 +117,12 @@ class BatchOrderAdminApiExportTestCase(BaseAPITestCase):
             ]:
                 continue
             factories.BatchOrderFactory(state=state)
+
+        factories.BatchOrderFactory.create_batch(
+            2,
+            state=enums.BATCH_ORDER_STATE_SIGNING,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
 
         batch_orders = BatchOrder.objects.all()
 
