@@ -300,8 +300,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v6-frontend-admin-dependencies-
+            - v7-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v7-frontend-admin-dependencies-
       - run:
           name: Setup custom environment variables
           command: echo 'export NEXT_PUBLIC_API_SOURCE="test"' >> "$BASH_ENV"
@@ -329,7 +329,7 @@ jobs:
       - save_cache:
           paths:
             - ./node_modules
-          key: v6-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
+          key: v7-frontend-admin-dependencies-{{ checksum "yarn.lock" }}
 
   lint-front-admin:
     docker:
@@ -343,8 +343,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v6-frontend-admin-dependencies-
+            - v7-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v7-frontend-admin-dependencies-
       - run:
           name: Run lint command
           command: yarn lint
@@ -366,8 +366,8 @@ jobs:
           path: ~/joanie
       - restore_cache:
           keys:
-            - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v6-frontend-admin-dependencies-
+            - v7-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v7-frontend-admin-dependencies-
       - run:
           name: Prepare test reporting
           command: |
@@ -396,8 +396,8 @@ jobs:
           at: ~/joanie
       - restore_cache:
           keys:
-            - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v6-frontend-admin-dependencies-
+            - v7-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v7-frontend-admin-dependencies-
       - run:
           name: Set up environment variables into .env
           command: echo "NEXT_PUBLIC_API_SOURCE=test" > .env
@@ -428,8 +428,8 @@ jobs:
           at: ~/joanie
       - restore_cache:
           keys:
-            - v6-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
-            - v6-frontend-admin-dependencies-
+            - v7-frontend-admin-dependencies-{{ checksum "~/joanie/src/frontend/admin/yarn.lock" }}
+            - v7-frontend-admin-dependencies-
       - run:
           name: Install Playwright dependencies (platform deps + browser)
           command: yarn playwright install --with-deps chromium
