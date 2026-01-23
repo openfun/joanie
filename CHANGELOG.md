@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add `OfferingDeepLink` model to store links of offering
+  to purchase a training from an external platform
+
 ## [3.2.2] - 2026-03-20
 
 ### Fixed
