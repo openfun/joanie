@@ -927,6 +927,72 @@ class CourseProductRelation(BaseModel):
         }
 
 
+class OfferingDeepLink(BaseModel):
+    """
+    OfferingDeepLink represents external links that allows a learner to subscribe to a course
+    from an external platform (e.g : Mon Compte Formation in France). This model gives an
+    organization the possibility to add their deep link for one specific offering.
+    """
+
+    deep_link = models.URLField(
+        _("deep_link"),
+        help_text=_(
+            "Deep link of an offering where a learner can subscribe with an external link."
+        ),
+        unique=True,
+        blank=False,
+        null=False,
+    )
+    offering = models.ForeignKey(
+        to=CourseProductRelation,
+        on_delete=models.CASCADE,
+        verbose_name=_("offering"),
+        related_name="organization_links",
+    )
+    organization = models.ForeignKey(
+        to=Organization,
+        verbose_name=_("organizations"),
+        related_name="offering_links",
+        on_delete=models.CASCADE,
+    )
+    is_active = models.BooleanField(_("is active"), default=True)
+
+    class Meta:
+        db_table = "joanie_offering_deep_link"
+        verbose_name = _("Offering Deep Link")
+        verbose_name_plural = _("Offering Deep Links")
+        ordering = ["-created_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "offering"],
+                name="unique_offering_per_organization",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.offering.course}: {self.organization} deep link"
+
+    def clean(self):
+        """
+        Ensure the organization is related to the offering before creating the object, otherwise
+        raise a validation error.
+        """
+        if not self.offering.organizations.filter(pk=self.organization.id).exists():
+            raise ValidationError(_("Organization should be related to the offering."))
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        """Delete the offering can be edited, raise a ValidationError otherwise."""
+        if not self.offering.can_edit or self.is_active:
+            raise ValidationError(_("You cannot delete this offering deep link."))
+        return super().delete(using=using, keep_parents=keep_parents)
+
+
 class CourseRun(parler_models.TranslatableModel, BaseModel):
     """
     Course run represents and records the occurrence of a course between a start
