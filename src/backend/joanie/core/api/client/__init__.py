@@ -35,6 +35,7 @@ from joanie.core.models import CourseProductRelation
 from joanie.core.tasks import generate_zip_archive_task
 from joanie.core.utils import contract as contract_utility
 from joanie.core.utils import contract_definition, issuers, webhooks
+from joanie.core.utils.api import get_authenticated_username
 from joanie.core.utils.batch_order import (
     get_active_offering_rule,
     send_mail_invitation_link,
@@ -176,11 +177,7 @@ class OfferingViewSet(
     @property
     def username(self):
         """Get the authenticated username from the request."""
-        return (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        return get_authenticated_username(self.request)
 
     def get_queryset(self):
         """
@@ -348,11 +345,7 @@ class EnrollmentViewSet(
         We retrieve product offerings related to each enrollment in the same
         query using a prefetch query.
         """
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         return (
             models.Enrollment.objects.filter(user__username=username)
@@ -409,11 +402,7 @@ class OrderViewSet(
 
     def get_queryset(self):
         """Custom queryset to limit to orders owned by the logged-in user."""
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
         return models.Order.objects.filter(owner__username=username).select_related(
             "certificate",
             "contract",
@@ -606,7 +595,7 @@ class OrderViewSet(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-        username = request.auth["username"] if request.auth else request.user.username
+        username = get_authenticated_username(request)
         try:
             invoice = Invoice.objects.get(
                 reference=reference,
@@ -800,11 +789,7 @@ class BatchOrderViewSet(
 
     def get_queryset(self):
         """Custom queryset to limit to batch orders owned by the logged-in user."""
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         return models.BatchOrder.objects.filter(
             owner__username=username
@@ -952,11 +937,7 @@ class AddressViewSet(
 
     def get_queryset(self):
         """Custom queryset to get user addresses"""
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
         return models.Address.objects.filter(owner__username=username, is_reusable=True)
 
     def perform_create(self, serializer):
@@ -1008,11 +989,7 @@ class CertificateViewSet(
 
     def get_username(self):
         """Get the authenticated username from the request."""
-        return (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        return get_authenticated_username(self.request)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -1095,11 +1072,7 @@ class OrganizationViewSet(
         """
         Custom queryset to get user organizations
         """
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
         user_role_query = models.OrganizationAccess.objects.filter(
             user__username=username, organization=OuterRef("pk")
         ).values("role")[:1]
@@ -1594,11 +1567,7 @@ class CourseViewSet(
         """
         Custom queryset to get user courses
         """
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         # Get courses for an organization to which the user has access or courses
         # to which the user has access if no organization is targeted
@@ -1759,11 +1728,7 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
         """
         queryset = super().get_queryset()
 
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         additional_filter = {
             "batch_order__organization__accesses__user__username": username,
@@ -1820,11 +1785,7 @@ class ContractViewSet(GenericContractViewSet):
         """
         queryset = super().get_queryset()
 
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         query_filters = {"order__owner__username": username}
 
@@ -2004,11 +1965,7 @@ class NestedOrganizationContractViewSet(NestedGenericViewSet, GenericContractVie
         """
         queryset = super().get_queryset()
 
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         query_filters = {
             "order__organization__accesses__user__username": username,
@@ -2060,11 +2017,7 @@ class NestedCourseContractViewSet(NestedGenericViewSet, GenericContractViewSet):
         """
         queryset = super().get_queryset()
 
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         query_filters = {
             "order__organization__accesses__user__username": username,
@@ -2159,11 +2112,7 @@ class QuoteViewSet(GenericQuoteViewSet):
         """
         queryset = super().get_queryset()
 
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         return queryset.filter(batch_order__owner__username=username)
 
@@ -2210,11 +2159,7 @@ class NestedOrganizationQuoteViewSet(NestedGenericViewSet, GenericQuoteViewSet):
         """
         queryset = super().get_queryset()
 
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         return queryset.filter(
             batch_order__organization__accesses__user__username=username
@@ -2299,11 +2244,7 @@ class ActivityLogViewSet(
         """
         Only return users if a query is provided to filter them.
         """
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         return models.ActivityLog.objects.filter(user__username=username)
 
