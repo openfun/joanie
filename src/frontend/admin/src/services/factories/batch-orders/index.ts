@@ -37,6 +37,13 @@ const build = (state?: BatchOrderStatesEnum): BatchOrder => {
     postcode: faker.location.zipCode(),
     city: faker.location.city(),
     country: faker.location.country(),
+    quote: {
+      id: faker.string.uuid(),
+      definition_title: faker.commerce.productName(),
+      organization_signed_on: faker.date.anytime().toString(),
+      has_purchase_order: faker.datatype.boolean(),
+      purchase_order_reference: faker.string.alphanumeric({ length: 28 }),
+    },
     billing_address: {
       company_name: faker.company.name(),
       identification_number: faker.string.alphanumeric({ length: 14 }),

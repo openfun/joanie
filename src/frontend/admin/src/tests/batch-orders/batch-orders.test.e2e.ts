@@ -457,6 +457,7 @@ test.describe("Batch Order view", () => {
       BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER;
     batchOrder.total = 123.45;
     batchOrder.available_actions.confirm_purchase_order = true;
+    batchOrder.quote.purchase_order_reference = null;
 
     const confirmPurchaseOrderRegex = new RegExp(
       `${url}${batchOrder.id}/confirm-purchase-order/`,
@@ -474,6 +475,9 @@ test.describe("Batch Order view", () => {
     await page.route(confirmPurchaseOrderRegex, async (route, request) => {
       const methods = request.method();
       if (methods === "PATCH") {
+        const postData = request.postDataJSON();
+        batchOrder.quote.purchase_order_reference =
+          postData.purchase_order_reference;
         batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_TO_SIGN;
         await route.fulfill({ json: batchOrder });
       }
@@ -503,12 +507,37 @@ test.describe("Batch Order view", () => {
       .getByRole("menuitem", { name: "Confirm purchase order" })
       .click();
 
+    // Modal should be visible
+    await expect(
+      page
+        .getByRole("dialog")
+        .getByRole("heading", { name: "Confirm Purchase Order" }),
+    ).toBeVisible();
+
+    // Enter purchase order reference
+    const referenceInput = page.getByTestId(
+      "confirm-purchase-order-reference-input",
+    );
+    await expect(referenceInput).toBeVisible();
+    await referenceInput.fill("PLACE-HOLDER-REF-123456");
+
+    // Confirm purchase order in modal
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Confirm" })
+      .click();
+
     // Check after operation
     await expect(
       page.getByText("Batch order purchase order confirmed."),
     ).toBeVisible();
     await expect(page.getByRole("textbox", { name: "State" })).toHaveValue(
       "To sign",
+    );
+
+    // Verify that the purchase order reference is displayed
+    await expect(page.getByLabel("Purchase order reference")).toHaveValue(
+      "PLACE-HOLDER-REF-123456",
     );
   });
 

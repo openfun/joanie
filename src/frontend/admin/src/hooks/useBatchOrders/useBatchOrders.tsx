@@ -179,8 +179,14 @@ export const useBatchOrders = (
         },
       }).mutate,
       confirmPurchaseOrder: mutation({
-        mutationFn: async (data: { batchOrderId: string }) => {
-          return BatchOrderRepository.confirmPurchaseOrder(data.batchOrderId);
+        mutationFn: async (data: {
+          batchOrderId: string;
+          purchase_order_reference: string;
+        }) => {
+          return BatchOrderRepository.confirmPurchaseOrder(
+            data.batchOrderId,
+            data.purchase_order_reference,
+          );
         },
         onSuccess: async () => {
           custom.methods.showSuccessMessage(

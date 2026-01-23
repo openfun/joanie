@@ -83,6 +83,11 @@ const messages = defineMessages({
     defaultMessage: "Payment method",
     description: "Label for payment method",
   },
+  purchaseOrderReference: {
+    id: "components.templates.batchOrders.view.purchaseOrderReference",
+    defaultMessage: "Purchase order reference",
+    description: "Label for purchase order reference",
+  },
   billingAddressTitle: {
     id: "components.templates.batchOrders.view.billingAddressTitle",
     defaultMessage: "Billing address",
@@ -454,7 +459,16 @@ export function BatchOrderView({ batchOrder }: Props) {
               value={batchOrder.address}
             />
           </Grid>
-
+          {batchOrder.quote?.purchase_order_reference && (
+            <Grid size={12}>
+              <TextField
+                fullWidth={true}
+                disabled={true}
+                label={intl.formatMessage(messages.purchaseOrderReference)}
+                value={batchOrder.quote?.purchase_order_reference}
+              />
+            </Grid>
+          )}
           <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               fullWidth={true}
