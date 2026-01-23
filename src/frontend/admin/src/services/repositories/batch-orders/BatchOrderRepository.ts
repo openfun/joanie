@@ -61,10 +61,14 @@ export class BatchOrderRepository {
     }).then(checkStatus);
   }
 
-  static confirmPurchaseOrder(id: string): Promise<BatchOrder> {
+  static confirmPurchaseOrder(
+    id: string,
+    purchase_order_reference: string,
+  ): Promise<BatchOrder> {
     const url = batchOrderRoutes.confirmPurchaseOrder(id);
     return fetchApi(url, {
       method: "PATCH",
+      body: JSON.stringify({ purchase_order_reference }),
       headers: {
         "Content-Type": "application/json",
       },

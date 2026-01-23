@@ -15,6 +15,7 @@ import {
 } from "@/hooks/useBatchOrders/useBatchOrders";
 import { useModal } from "@/components/presentational/modal/useModal";
 import { ConfirmQuoteModal } from "@/components/templates/batch-orders/modals/ConfirmQuoteModal";
+import { ConfirmPurchaseOrderModal } from "@/components/templates/batch-orders/modals/ConfirmPurchaseOrderModal";
 import { batchOrderActionsMessages } from "@/components/templates/batch-orders/view/translations";
 
 const messages = defineMessages({
@@ -43,6 +44,11 @@ const messages = defineMessages({
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmQuoteModalTitle",
     description: "Title for the confirm quote modal",
     defaultMessage: "Confirm Quote",
+  },
+  confirmPurchaseOrderModalTitle: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmPurchaseOrderModalTitle",
+    description: "Title for the confirm purchase order modal",
+    defaultMessage: "Confirm Purchase Order",
   },
   confirmQuoteError: {
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmQuoteError",
@@ -84,12 +90,27 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
   const batchOrdersQuery = useBatchOrders({}, { enabled: false });
   const batchOrderQuery = useBatchOrder(batchOrder.id);
   const confirmQuoteModal = useModal();
+  const confirmPurchaseOrderModal = useModal();
 
   const handleConfirmQuote = async (total: string) => {
     batchOrdersQuery.methods.confirmQuote(
       {
         batchOrderId: batchOrder.id,
         total,
+      },
+      {
+        onSuccess: batchOrderQuery.methods.invalidate,
+      },
+    );
+  };
+
+  const handleConfirmPurchaseOrder = async (
+    purchase_order_reference: string,
+  ) => {
+    batchOrdersQuery.methods.confirmPurchaseOrder(
+      {
+        batchOrderId: batchOrder.id,
+        purchase_order_reference,
       },
       {
         onSuccess: batchOrderQuery.methods.invalidate,
@@ -115,12 +136,7 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
         disableMessage: intl.formatMessage(
           messages.confirmPurchaseOrderDisabled,
         ),
-        onClick: async () => {
-          batchOrdersQuery.methods.confirmPurchaseOrder(
-            { batchOrderId: batchOrder.id },
-            { onSuccess: batchOrderQuery.methods.invalidate },
-          );
-        },
+        onClick: confirmPurchaseOrderModal.handleOpen,
       },
       {
         icon: <CheckCircleIcon />,
@@ -180,7 +196,14 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
     ];
 
     return allOptions;
-  }, [batchOrder, confirmQuoteModal]);
+  }, [
+    batchOrder,
+    confirmQuoteModal,
+    confirmPurchaseOrderModal,
+    intl,
+    batchOrderQuery,
+    batchOrdersQuery,
+  ]);
 
   if (options.length === 0) {
     return undefined;
@@ -200,6 +223,12 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
         open={confirmQuoteModal.open}
         handleClose={confirmQuoteModal.handleClose}
         onConfirm={handleConfirmQuote}
+      />
+      <ConfirmPurchaseOrderModal
+        title={intl.formatMessage(messages.confirmPurchaseOrderModalTitle)}
+        open={confirmPurchaseOrderModal.open}
+        handleClose={confirmPurchaseOrderModal.handleClose}
+        onConfirm={handleConfirmPurchaseOrder}
       />
     </>
   );

@@ -69,10 +69,19 @@ export type BatchOrderListItem = AbstractBatchOrder & {
   organization_title: string;
 };
 
+export type Quote = {
+  id: string;
+  definition_title: string;
+  organization_signed_on: Nullable<string>;
+  has_purchase_order: boolean;
+  purchase_order_reference: Nullable<string>;
+};
+
 export type BatchOrder = AbstractBatchOrder & {
   offering: Offering;
   organization: Nullable<Organization>;
   contract_id: Nullable<string>;
+  quote: Quote;
   owner: User;
 
   identification_number: string;
