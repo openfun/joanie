@@ -7,6 +7,7 @@ from django.db.models import Q
 from django_filters import rest_framework as filters
 
 from joanie.core import enums, models
+from joanie.core.utils.api import get_authenticated_username
 
 
 class CertificateViewSetFilter(filters.FilterSet):
@@ -45,11 +46,7 @@ class CertificateViewSetFilter(filters.FilterSet):
         """
         Filter certificates by type
         """
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
         if value == enums.CERTIFICATE_ORDER_TYPE:
             # Retrieve all certificates that belong to orders of the user
             # and also legacy degrees linked to an enrollment

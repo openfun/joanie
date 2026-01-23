@@ -15,6 +15,7 @@ from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 
 from joanie.core.models import User
+from joanie.core.utils.api import get_authenticated_username
 from joanie.payment import exceptions, get_payment_backend, models, serializers
 
 logger = logging.getLogger(__name__)
@@ -69,11 +70,7 @@ class CreditCardViewSet(
 
     def get_queryset(self):
         """Custom queryset to get user's credit cards"""
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         return (
             models.CreditCard.objects.get_cards_for_owner(username=username)
@@ -115,11 +112,7 @@ class CreditCardViewSet(
         Promote the credit card ownership of a user to main card.
         """
         credit_card = self.get_object()
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
         card_ownership = credit_card.ownerships.get(owner__username=username)
         card_ownership.is_main = True
         card_ownership.save()
@@ -134,11 +127,7 @@ class CreditCardViewSet(
         the credit card.
         """
         credit_card = self.get_object()
-        username = (
-            self.request.auth["username"]
-            if self.request.auth
-            else self.request.user.username
-        )
+        username = get_authenticated_username(self.request)
 
         # Check for pending payments on the credit card for the user
         if credit_card.orders.filter(owner__username=username).exists():
