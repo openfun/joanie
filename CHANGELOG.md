@@ -24,6 +24,7 @@ and this project adheres to
 - Add batch order export csv for admin backoffice
 - Add quote definitions admin in the back office
 - Add purchase order reference modal in batch order view
+- Add support for keycloak openid token
 
 ### Fixed
 

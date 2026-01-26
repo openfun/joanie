@@ -13,6 +13,7 @@ from django_perf_rec import TestCaseMixin as PerfRecTestCaseMixin
 from rest_framework_simplejwt.tokens import AccessToken
 
 from joanie.core import enums
+from joanie.core.authentication import KeycloakAccessToken
 from joanie.core.models import ActivityLog
 from joanie.core.utils.jwt_tokens import generate_jwt_token_from_user
 from joanie.core.utils.sentry import serialize_data
@@ -43,16 +44,46 @@ class BaseAPITestCase(PerfRecTestCaseMixin, TestCase):
             token, the jwt token generated as it should
         """
         issued_at = datetime.utcnow()
-        token = AccessToken()
-        token.payload.update(
-            {
-                "email": f"{username}@funmooc.fr",
-                "exp": expires_at or issued_at + timedelta(days=2),
-                "iat": issued_at,
-                "language": settings.LANGUAGE_CODE,
-                "username": username,
-            }
-        )
+        if issuer := settings.SIMPLE_JWT.get("ISSUER"):
+            token = KeycloakAccessToken()
+            token.payload.update(
+                {
+                    "exp": expires_at or issued_at + timedelta(days=2),
+                    "iat": issued_at,
+                    "auth_time": 1768924092,
+                    "jti": "c7ee46da-8127-51d1-35b1-3f07fa1a49a5",
+                    "iss": issuer,
+                    "aud": "keycloak-client",
+                    "sub": "095009db-b774-4e26-ab58-5e55c1474d98",
+                    "typ": "ID",
+                    "azp": "keycloak-client",
+                    "nonce": "1a21d63a-930b-457f-9445-0858645f77ba",
+                    "sid": "9f00242d-9199-80d8-178a-5f9c73968385",
+                    "at_hash": "SPRUypol4zCSgENoM3764g",
+                    "acr": "0",
+                    "s_hash": "YFa348xSzi5FBMi4x9w6jg",
+                    "email_verified": False,
+                    "name": "",
+                    "preferred_username": username,
+                    "given_name": "",
+                    "family_name": "",
+                    "email": f"{username}@funmooc.fr",
+                    "locale": settings.LANGUAGE_CODE,
+                }
+            )
+            backend = token.get_token_backend()
+            backend.algorithm = "HS256"
+        else:
+            token = AccessToken()
+            token.payload.update(
+                {
+                    "email": f"{username}@funmooc.fr",
+                    "exp": expires_at or issued_at + timedelta(days=2),
+                    "iat": issued_at,
+                    "language": settings.LANGUAGE_CODE,
+                    "username": username,
+                }
+            )
         return token
 
     @staticmethod

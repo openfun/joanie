@@ -118,7 +118,7 @@ class User(BaseModel, auth_models.AbstractUser):
 
     def update_from_token(self, token):
         """Update user from token token."""
-        values = get_user_dict(token)
+        values = get_user_dict(token, force_newsletter_subscription=False)
         for key, value in values.items():
             if value != getattr(self, key):
                 User.objects.filter(
