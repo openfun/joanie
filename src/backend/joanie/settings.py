@@ -341,8 +341,17 @@ class Base(Configuration):
         "AUTH_HEADER_TYPES": ("Bearer",),
         "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
         "USER_ID_FIELD": "username",
-        "USER_ID_CLAIM": "username",
-        "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+        "USER_ID_CLAIM": values.Value(
+            "username", environ_name="KEYCLOAK_USERNAME_CLAIM"
+        ),
+        "ISSUER": values.Value(None, environ_name="KEYCLOAK_ISSUER"),
+        "JWK_URL": values.Value(None, environ_name="KEYCLOAK_JWK_URL"),
+        # "TOKEN_TYPE_CLAIM": "typ",
+        "TOKEN_TYPE_CLAIM": values.Value("token_type", environ_name="JWT_TYPE_CLAIM"),
+        "AUTH_TOKEN_CLASSES": (
+            "rest_framework_simplejwt.tokens.AccessToken",
+            "joanie.core.authentication.KeycloakAccessToken",
+        ),
     }
     JWT_USER_FIELDS_SYNC = values.DictValue(
         {

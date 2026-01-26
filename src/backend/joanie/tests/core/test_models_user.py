@@ -1,6 +1,6 @@
 """Test suite for badge models."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
@@ -78,6 +78,24 @@ class UserModelTestCase(BaseAPITestCase):
             models.User.objects.filter(email="mail@fun-test.fr").count(), 2
         )
 
+    @override_settings(
+        SIMPLE_JWT={
+            "TOKEN_TYPE_CLAIM": "token_type",
+        },
+        JWT_USER_FIELDS_SYNC={
+            "email": "email",
+            "first_name": "full_name",
+            "language": "language",
+            "has_subscribed_to_commercial_newsletter": "has_subscribed_to_commercial_newsletter",
+        },
+    )
+    @patch(
+        "joanie.core.authentication.api_settings",
+        MagicMock(
+            USER_ID_FIELD="username",
+            USER_ID_CLAIM="username",
+        ),
+    )
     def test_models_user_create_or_update_from_request_changed(self):
         """
         Check that, using the method `update_from_token`, the user
@@ -101,6 +119,50 @@ class UserModelTestCase(BaseAPITestCase):
         # no new object has been created
         self.assertEqual(models.User.objects.count(), 1)
 
+    @override_settings(
+        SIMPLE_JWT={
+            "TOKEN_TYPE_CLAIM": "typ",
+            "ISSUER": "https://keycloak/auth/realms/joanie",
+            "JWK_URL": "https://keycloak/auth/realms/joanie/protocol/openid-connect/certs",
+        },
+        JWT_USER_FIELDS_SYNC={
+            "username": "preferred_username",
+            "first_name": "given_name",
+            "last_name": "family_name",
+            "email": "email",
+            "language": "locale",
+        },
+    )
+    @patch(
+        "joanie.core.authentication.api_settings",
+        MagicMock(
+            USER_ID_FIELD="username",
+            USER_ID_CLAIM="preferred_username",
+        ),
+    )
+    def test_models_user_create_or_update_from_request_changed_keycloak(self):
+        """
+        Check that, using the method `update_from_token`, the user
+        values are updated as expected.
+        """
+        user = factories.UserFactory()
+
+        new_user_for_data = factories.UserFactory.build()
+        token = self.generate_token_from_user(new_user_for_data)
+
+        with self.record_performance():
+            user.update_from_token(token)
+
+        user.refresh_from_db()
+        # user has been updated
+        self.assertEqual(user.username, new_user_for_data.username)
+        self.assertEqual(user.email, new_user_for_data.email)
+        self.assertEqual(user.language, new_user_for_data.language)
+        self.assertEqual(user.first_name, new_user_for_data.first_name)
+
+        # no new object has been created
+        self.assertEqual(models.User.objects.count(), 1)
+
     def test_models_user_create_or_update_from_request_unchanged(self):
         """
         Check that, using the method `update_from_token`, the user is not
@@ -112,6 +174,24 @@ class UserModelTestCase(BaseAPITestCase):
         with self.record_performance():
             user.update_from_token(token)
 
+    @override_settings(
+        SIMPLE_JWT={
+            "TOKEN_TYPE_CLAIM": "token_type",
+        },
+        JWT_USER_FIELDS_SYNC={
+            "email": "email",
+            "first_name": "full_name",
+            "language": "language",
+            "has_subscribed_to_commercial_newsletter": "has_subscribed_to_commercial_newsletter",
+        },
+    )
+    @patch(
+        "joanie.core.authentication.api_settings",
+        MagicMock(
+            USER_ID_FIELD="username",
+            USER_ID_CLAIM="username",
+        ),
+    )
     def test_models_user_create_or_update_from_request_language(self):
         """
         Check that, using the method `update_from_token`, the language
@@ -174,6 +254,94 @@ class UserModelTestCase(BaseAPITestCase):
             self.assertEqual(user.language, "it")
 
             token["language"] = "ru"
+            user.update_from_token(token)
+            user.refresh_from_db()
+            # the default language is used
+            self.assertEqual(user.language, "es-ve")
+
+    @override_settings(
+        SIMPLE_JWT={
+            "TOKEN_TYPE_CLAIM": "typ",
+            "ISSUER": "https://keycloak/auth/realms/joanie",
+            "JWK_URL": "https://keycloak/auth/realms/joanie/protocol/openid-connect/certs",
+        },
+        JWT_USER_FIELDS_SYNC={
+            "username": "preferred_username",
+            "first_name": "given_name",
+            "last_name": "family_name",
+            "email": "email",
+            "language": "locale",
+        },
+    )
+    @patch(
+        "joanie.core.authentication.api_settings",
+        MagicMock(
+            USER_ID_FIELD="username",
+            USER_ID_CLAIM="preferred_username",
+        ),
+    )
+    def test_models_user_create_or_update_from_request_language_keycloak(self):
+        """
+        Check that, using the method `update_from_token`, the language
+        is set depending on the values of the language available in the
+        settings and understood in different ways.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        token["locale"] = "fr_FR"
+        user.update_from_token(token)
+        user.refresh_from_db()
+        self.assertEqual(user.language, "fr-FR")
+
+        token["locale"] = "en"
+        user.update_from_token(token)
+        user.refresh_from_db()
+        self.assertEqual(user.language, "en-us")
+
+        token["locale"] = "en-gb"
+        user.update_from_token(token)
+        user.refresh_from_db()
+        self.assertEqual(user.language, "en-us")
+
+        token["locale"] = "fr"
+        user.update_from_token(token)
+        user.refresh_from_db()
+        self.assertEqual(user.language, "fr-fr")
+
+        # `it` is not defined in the settings
+        token["locale"] = "it"
+        user.update_from_token(token)
+        user.refresh_from_db()
+        # the default language is used
+        self.assertEqual(user.language, "en-us")
+
+        token["locale"] = "whatever"
+        user.update_from_token(token)
+        user.refresh_from_db()
+        # the default language is used
+        self.assertEqual(user.language, "en-us")
+
+        with override_settings(
+            LANGUAGES=(("fr-ca", "Canadian"), ("it", "Italian"), ("es-ve", "Spain")),
+            LANGUAGE_CODE="es-ve",
+        ):
+            token["locale"] = "fr_FR"
+            user.update_from_token(token)
+            user.refresh_from_db()
+            self.assertEqual(user.language, "fr-ca")
+
+            token["locale"] = "fr"
+            user.update_from_token(token)
+            user.refresh_from_db()
+            self.assertEqual(user.language, "fr-ca")
+
+            token["locale"] = "it"
+            user.update_from_token(token)
+            user.refresh_from_db()
+            self.assertEqual(user.language, "it")
+
+            token["locale"] = "ru"
             user.update_from_token(token)
             user.refresh_from_db()
             # the default language is used
