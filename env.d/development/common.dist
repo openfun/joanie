@@ -19,6 +19,12 @@ JOANIE_LMS_BACKENDS = '[{
 
 #JWT
 DJANGO_JWT_PRIVATE_SIGNING_KEY=ThisIsAnExampleKeyForDevPurposeOnly
+DJANGO_JWT_ALGORITHM=RS256
+DJANGO_JWT_TYPE_CLAIM=typ
+DJANGO_KEYCLOAK_USERNAME_CLAIM=preferred_username
+DJANGO_KEYCLOAK_ISSUER=http://keycloak/realms/master
+DJANGO_KEYCLOAK_JWK_URL=http://keycloak/realms/master/protocol/openid-connect/certs
+JOANIE_JWT_USER_FIELDS_SYNC={"username": "preferred_username", "first_name": "given_name", "last_name": "family_name", "email": "email", "language": "locale"}
 
 # Joanie settings
 

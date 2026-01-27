@@ -23,6 +23,7 @@ and this project adheres to
   in admin backoffice
 - Add batch order export csv for admin backoffice
 - Add quote definitions admin in the back office
+- Add support for keycloak openid token
 
 ### Fixed
 

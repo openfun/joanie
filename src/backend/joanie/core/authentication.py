@@ -11,9 +11,10 @@ from rest_framework import authentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import AccessToken
 
 
-def get_user_dict(token):
+def get_user_dict(token, force_newsletter_subscription=False):
     """Get user field values from token."""
     values = {
         field: token[token_field]
@@ -27,6 +28,12 @@ def get_user_dict(token):
         )
     except LookupError:
         values["language"] = settings.LANGUAGE_CODE
+
+    if (
+        "has_subscribed_to_commercial_newsletter" not in values
+        and force_newsletter_subscription
+    ):
+        values["has_subscribed_to_commercial_newsletter"] = True
 
     return values
 
@@ -45,10 +52,16 @@ class DelegatedJWTAuthentication(JWTAuthentication):
                 _("Token contained no recognizable user identification")
             ) from exc
 
+        # force newsletter subscription if the token is from keycloak (openid)
+        force_newsletter_subscription = isinstance(validated_token, KeycloakAccessToken)
+
         def get_or_create_and_update_user():
             user, _created = self.user_model.objects.get_or_create(
                 **{api_settings.USER_ID_FIELD: user_id},
-                defaults=get_user_dict(validated_token),
+                defaults=get_user_dict(
+                    validated_token,
+                    force_newsletter_subscription=force_newsletter_subscription,
+                ),
             )
             user.update_from_token(validated_token)
             return user
@@ -94,3 +107,10 @@ class OpenApiSessionAuthenticationExtension(SessionScheme):
     target_class = (
         "joanie.core.authentication.SessionAuthenticationWithAuthenticateHeader"
     )
+
+
+class KeycloakAccessToken(AccessToken):
+    """Custom AccessToken class with `ID` token type."""
+
+    #  ruff: noqa : S105
+    token_type = "ID"
