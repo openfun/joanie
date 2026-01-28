@@ -104,6 +104,11 @@ admin_offering_related_router.register(
     api_admin.NestedOfferingRuleViewSet,
     basename="admin_offering_rules",
 )
+admin_offering_related_router.register(
+    "offering-deeplinks",
+    api_admin.NestedOfferingDeepLinkViewSet,
+    basename="admin_offering_deeplink",
+)
 
 urlpatterns = [
     path(
