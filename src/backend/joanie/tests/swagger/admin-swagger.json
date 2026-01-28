@@ -3071,6 +3071,324 @@
                 }
             }
         },
+        "/api/v1.0/admin/offerings/{offering_id}/offering-deeplinks/": {
+            "get": {
+                "operationId": "offerings_offering_deeplinks_list",
+                "description": "Admin Offering Deep Link ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "offering_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "offerings"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAdminOfferingDeepLinkList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "offerings_offering_deeplinks_create",
+                "description": "Create a `OfferingDeepLink` using the `offering_id` from the URL.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "offering_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offerings"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOfferingDeepLinkRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOfferingDeepLinkRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOfferingDeepLink"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/offerings/{offering_id}/offering-deeplinks/{id}/": {
+            "get": {
+                "operationId": "offerings_offering_deeplinks_retrieve",
+                "description": "Admin Offering Deep Link ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "offering_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offerings"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOfferingDeepLink"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "offerings_offering_deeplinks_update",
+                "description": "Override update method to add the offering id from the url",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "offering_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offerings"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOfferingDeepLinkRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOfferingDeepLinkRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOfferingDeepLink"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "offerings_offering_deeplinks_partial_update",
+                "description": "Admin Offering Deep Link ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "offering_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offerings"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminOfferingDeepLinkRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminOfferingDeepLinkRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOfferingDeepLink"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "offerings_offering_deeplinks_destroy",
+                "description": "Admin Offering Deep Link ViewSet",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "offering_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "offerings"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/offerings/{offering_id}/offering-rules/": {
             "get": {
                 "operationId": "offerings_offering_rules_list",
@@ -8246,6 +8564,66 @@
                     "uri"
                 ]
             },
+            "AdminOfferingDeepLink": {
+                "type": "object",
+                "description": "Admin serializer for Offering Deep Link model",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "deep_link": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Deep link of an offering where a learner can subscribe with an external link.",
+                        "maxLength": 200
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "description": "Activate or deactivate deep link of an offering"
+                    }
+                },
+                "required": [
+                    "deep_link",
+                    "id"
+                ]
+            },
+            "AdminOfferingDeepLinkRequest": {
+                "type": "object",
+                "description": "Admin serializer for Offering Deep Link model",
+                "properties": {
+                    "deep_link": {
+                        "type": "string",
+                        "format": "uri",
+                        "minLength": 1,
+                        "description": "Deep link of an offering where a learner can subscribe with an external link.",
+                        "maxLength": 200
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "description": "Activate or deactivate deep link of an offering"
+                    },
+                    "organization": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "writeOnly": true
+                    },
+                    "offering": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "writeOnly": true
+                    }
+                },
+                "required": [
+                    "deep_link",
+                    "offering",
+                    "organization"
+                ]
+            },
             "AdminOfferingRule": {
                 "type": "object",
                 "description": "Admin Serializer for OfferingRule model",
@@ -10698,6 +11076,37 @@
                     }
                 }
             },
+            "PaginatedAdminOfferingDeepLinkList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AdminOfferingDeepLink"
+                        }
+                    }
+                }
+            },
             "PaginatedAdminOfferingList": {
                 "type": "object",
                 "required": [
@@ -11316,6 +11725,35 @@
                     "is_active": {
                         "type": "boolean",
                         "description": "Ticked if the user is enrolled to the course run."
+                    }
+                }
+            },
+            "PatchedAdminOfferingDeepLinkRequest": {
+                "type": "object",
+                "description": "Admin serializer for Offering Deep Link model",
+                "properties": {
+                    "deep_link": {
+                        "type": "string",
+                        "format": "uri",
+                        "minLength": 1,
+                        "description": "Deep link of an offering where a learner can subscribe with an external link.",
+                        "maxLength": 200
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "description": "Activate or deactivate deep link of an offering"
+                    },
+                    "organization": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "writeOnly": true
+                    },
+                    "offering": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "writeOnly": true
                     }
                 }
             },
