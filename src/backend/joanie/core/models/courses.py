@@ -996,6 +996,16 @@ class OfferingDeepLink(BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def delete(self, using=None, keep_parents=False):
+        """
+        A deep link can be deleted if it's not active only.
+        """
+        if self.is_active:
+            raise ValidationError(
+                _("You cannot delete this offering deep link, it's active.")
+            )
+        return super().delete(using=using, keep_parents=keep_parents)
+
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):
     """
