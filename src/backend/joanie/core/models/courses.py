@@ -986,12 +986,6 @@ class OfferingDeepLink(BaseModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    def delete(self, using=None, keep_parents=False):
-        """Delete the offering can be edited, raise a ValidationError otherwise."""
-        if not self.offering.can_edit or self.is_active:
-            raise ValidationError(_("You cannot delete this offering deep link."))
-        return super().delete(using=using, keep_parents=keep_parents)
-
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):
     """
