@@ -636,6 +636,63 @@ class NestedOfferingRuleViewSet(
         return Response(serializer.data, status=HTTPStatus.CREATED, headers=headers)
 
 
+class NestedOfferingDeepLinkViewSet(viewsets.ModelViewSet, NestedGenericViewSet):
+    """Admin Offering Deep Link ViewSet"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminOfferingDeepLinkSerializer
+    queryset = models.OfferingDeepLink.objects.all()
+    lookup_fields = ["offering", "pk"]
+    lookup_url_kwargs = ["offering_id", "pk"]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a `OfferingDeepLink` using the `offering_id` from the URL.
+        """
+        data = request.data
+        offering_id = kwargs.get("offering_id")
+        organization_id = data.get("organization_id")
+        serializer = self.get_serializer(data=data)
+
+        serializer.initial_data["offering"] = str(offering_id)
+        serializer.initial_data["organization"] = str(organization_id)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=HTTPStatus.CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        """Override update method to add the offering id from the url"""
+        instance = self.get_object()
+
+        partial = kwargs.pop('partial', False)
+        # organization_id = request.data.get("organization_id", None)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        offering_id = kwargs.pop("offering_id")
+        serializer.initial_data["offering"] = str(offering_id)
+
+#         if not organization_id:
+#             serializer.initial_data["organization"] = str(instance.organization.id)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
+
+        self.perform_update(serializer)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            breakpoint()
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+
 class OrderViewSet(
     SerializerPerActionMixin,
     mixins.DestroyModelMixin,
