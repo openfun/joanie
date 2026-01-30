@@ -7,6 +7,7 @@ import logging
 import uuid
 from collections import defaultdict
 from datetime import timedelta
+from decimal import Decimal
 from typing import TypedDict
 
 from django.apps import apps
@@ -2608,6 +2609,17 @@ class BatchOrder(BaseModel):
     def is_canceled(self) -> bool:
         """Returns boolean value whether the batch order is canceled or not."""
         return self.state == enums.BATCH_ORDER_STATE_CANCELED
+
+    @property
+    def total_per_trainee(self) -> Decimal | str:
+        """
+        Returns a decimal representation of the total per trainee for the batch order, else
+        it returns an empty string.
+        """
+        if not self.total or not self.nb_seats:
+            return ""
+
+        return round(Money(self.total / self.nb_seats).as_decimal(), 2)
 
     def cancel_orders(self):
         """

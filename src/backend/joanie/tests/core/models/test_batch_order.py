@@ -1133,3 +1133,32 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             ],
             list(actions.keys()),
         )
+
+    def test_models_batch_order_total_per_trainee_property(self):
+        """
+        It should return the total per trainee as a string. It should only return two numbers
+        after the comma. If the total is not set, it should return an empty string.
+        """
+        # The factory always sets the total to 100.00 once batch order quote is confirmed.
+        batch_order = factories.BatchOrderFactory(
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            state=enums.BATCH_ORDER_STATE_SIGNING,
+            nb_seats=2,
+        )
+        self.assertEqual(Decimal("50.00"), batch_order.total_per_trainee)
+
+        batch_order = factories.BatchOrderFactory(
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            state=enums.BATCH_ORDER_STATE_SIGNING,
+            nb_seats=13,
+        )
+
+        self.assertEqual(Decimal("7.69"), batch_order.total_per_trainee)
+
+        batch_order = factories.BatchOrderFactory(
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            state=enums.BATCH_ORDER_STATE_ASSIGNED,
+            nb_seats=2,
+        )
+
+        self.assertEqual("", batch_order.total_per_trainee)
