@@ -659,6 +659,21 @@ class OfferingFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         self.organizations.set(extracted)
 
 
+class OfferingDeepLinkFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create deep link per organization and offering"""
+
+    class Meta:
+        model = models.OfferingDeepLink
+
+    offering = factory.SubFactory(OfferingFactory)
+    deep_link = factory.Sequence(lambda n: f"http://factory-deep-link.test/{n}")
+
+    @factory.lazy_attribute
+    def organization(self):
+        """Retrieve the organization from the product/course offering."""
+        return self.offering.organizations.order_by("?").first()
+
+
 class ProductTargetCourseRelationFactory(
     DebugModelFactory, factory.django.DjangoModelFactory
 ):
