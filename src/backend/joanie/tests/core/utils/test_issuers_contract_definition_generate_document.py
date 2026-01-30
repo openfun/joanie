@@ -315,7 +315,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         batch_order = factories.BatchOrderFactory(
             organization=organization,
             offering=offering,
-            nb_seats=13,
+            nb_seats=2,
             state=enums.BATCH_ORDER_STATE_TO_SIGN,
             vat_registration="VAT_NUMBER_123",
             company_name="Acme Org",
@@ -327,11 +327,13 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             administrative_lastname="Snow",
             administrative_profession="Buyer",
             administrative_email="jonsnow@example.acme",
+            administrative_telephone="0123457890",
             signatory_firstname="Janette",
             signatory_lastname="Doe",
             signatory_email="janette@example.acme",
             signatory_telephone="0987654321",
             signatory_profession="Manager",
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
         course_dates = batch_order.get_equivalent_course_run_dates()
 
@@ -369,10 +371,10 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         # Administrative representative part
         self.assertIn("Jon Snow - Buyer", document_text)
         self.assertIn("jonsnow@example.acme", document_text)
+        self.assertIn("0123457890", document_text)
         # Signatory part
         self.assertIn("Janette Doe", document_text)
-        self.assertIn("janette@example.acme", document_text)
-        self.assertIn("0987654321", document_text)
+        self.assertIn("Manager", document_text)
 
         # - Course information should be displayed
         self.assertIn("00002", document_text)
@@ -385,6 +387,7 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         )
         self.assertIn("404 hours", document_text)
         self.assertIn("100.00 €", document_text)
+        self.assertIn("50.00 €", document_text)
 
         # - Appendices should be displayed
         self.assertIn("Appendices", document_text)

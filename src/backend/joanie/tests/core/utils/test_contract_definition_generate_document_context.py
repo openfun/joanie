@@ -760,6 +760,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
             ),
             state=enums.BATCH_ORDER_STATE_TO_SIGN,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            nb_seats=4,
         )
         course_dates = batch_order.get_equivalent_course_run_dates()
         expected_context = {
@@ -799,6 +800,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
                 "signatory_profession": batch_order.signatory_profession,
                 "number_seats": batch_order.nb_seats,
                 "total": str(batch_order.total),
+                "total_per_trainee": Decimal("25.00"),
                 "billing_address": {
                     "address": batch_order.billing_address["address"],
                     "postcode": batch_order.billing_address["postcode"],

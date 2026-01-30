@@ -33,9 +33,7 @@ this template as a base.
                   <dd>
                       <ul>
                           <li>{% translate "Name of the University: "%}{{ organization.name }}</li>
-                          {% if organization.address %}
                           <li>{% translate "Head office address: "%}{{ organization.address.address }}, {{ organization.address.postcode }} {{ organization.address.city }} ({{ organization.address.country }})</li>
-                          {% endif %}
                           <li>{% translate "SIRET number: "%}{{ organization.enterprise_code|default:"-" }}</li>
                           <li>{% translate "Activity Declaration N°: "%}{{ organization.activity_category_code|default:"-" }}</li>
                           <li>{% translate "Legal Representative: "%}{{ organization.representative }}
@@ -59,13 +57,15 @@ this template as a base.
                   <dt>{% translate 'Buying Organization (hereinafter "the Company"):' %}</dt>
                     <dd>
                        <ul>
-                          <li>{% translate "Registered company name: " %}{{ batch_order.company_name }}</li>
-                          <li>{% translate "Address: " %}{{ batch_order.company_address }}, {{ batch_order.company_postcode }} {{ batch_order.company_city }} ({{ batch_order.company_country }})</li>
-                          <li>{% translate "SIRET number: "%}{{ batch_order.company_identification_number|default:"-" }}</li>
-                          <li>{% translate "Authorized administrative signatory: "%}{{ batch_order.signatory_firstname }} {{ batch_order.signatory_lastname }} - {{ batch_order.signatory_profession }} - {{ batch_order.signatory_email }} - {{ batch_order.signatory_telephone }}</li>
-                          <li>{% translate "Legal administrative representative: "%}{{ batch_order.company_administrative_firstname  }} {{ batch_order.company_administrative_lastname  }} - {{ batch_order.company_administrative_profession }} -
+                          <li>{% translate "Registered company name : " %}{{ batch_order.company_name }}</li>
+                          <li>{% translate "Head office address : " %}{{ batch_order.company_address }}</li>
+                          <li>{% translate "Postcode - City - Country : " %}{{ batch_order.company_postcode }} - {{ batch_order.company_city }} - {{ batch_order.company_country }}</li>
+                          <li>{% translate "SIRET number : "%}{{ batch_order.company_identification_number|default:"-" }}</li>
+                          <li>{% translate "VAT registration number (if applicable) :" %}{{ batch_order.company_vat_registration }}</li>
+                          <li>{% translate "Legal representative or authorized signatory : "%}{{ batch_order.signatory_firstname }} {{ batch_order.signatory_lastname }} - {{ batch_order.signatory_profession }}</li>
+                          <li>{% translate "Administrative contact for contract follow-up : "%}{{ batch_order.company_administrative_firstname  }} {{ batch_order.company_administrative_lastname  }} - {{ batch_order.company_administrative_profession }} -
                               {{ batch_order.company_administrative_email }} - {{ batch_order.company_administrative_telephone }}</li>
-                          <li>{% translate "Billing Address: "%}
+                          <li>{% translate "Billing Address : "%}
                             {{ batch_order.billing_address.company_name }},
                             {{ batch_order.billing_address.address }}, {{ batch_order.billing_address.postcode }} {{ batch_order.billing_address.city }} ({{ batch_order.billing_address.country }})
                           </li>
@@ -80,7 +80,7 @@ this template as a base.
                   <li>{% translate "Purchase order reference: " %} {{ batch_order.purchase_order_reference }}</li>
                 {% endif %}
                 <li>{% translate "Course number: " %}{{ course.code }}</li>
-                <li>{% translate "Name of the Course: " %}{{ course.name }}</li>
+                <li>{% translate "Training title: " %}{{ course.name }}</li>
                 <li>{% translate "Session start date: " %}
                     {% with start=course.start|date:"SHORT_DATE_FORMAT" %}
                     {% if start %}
@@ -99,7 +99,7 @@ this template as a base.
                     {% endif %}
                     {% endwith %}
                 </li>
-                <li>{% translate "Total duration of the course: " %}
+                <li>{% translate "Total duration: " %}
                     {% with duration=course.effort|iso8601_to_duration:"hours" %}
                     {% if duration %}
                     {% blocktranslate with duration=duration count duration=duration trimmed%}
@@ -112,9 +112,10 @@ this template as a base.
                     {% endif %}
                     {% endwith %}
                 </li>
-                <li>{% translate "Number of participating trainees: " %}{{ batch_order.number_seats }}</li>
+                <li>{% translate 'Number of participants (hereinafter referred to as the "Trainees)": ' %}{{ batch_order.number_seats }}</li>
                 {% with currency=course.currency %}
-                  <li>{% translate "Total price for training: " %}{{ batch_order.total }} {{ currency }}</li>
+                  <li>{% translate "Total training cost: " %}{{ batch_order.total }} {{ currency }} {%translate "exclusive of VAT" %}</li>
+                  <li>{% translate "Cost per trainee: " %}{{ batch_order.total_per_trainee }} {{ currency }} {%translate "exclusive of VAT" %}</li>
                 {% endwith %}
                   <li>{% translate "Location: Training delivered exclusively online at: " %}
                     <a href="{{ batch_order.url_educational_platform }}">{{ batch_order.url_educational_platform }}</a>

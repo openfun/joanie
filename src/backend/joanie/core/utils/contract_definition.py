@@ -263,6 +263,7 @@ def prepare_batch_order_context(batch_order):
         "signatory_profession": _("<SIGNATORY_PROFESSION>"),
         "number_seats": _("<NUMBER_OF_SEATS_RESERVED>"),
         "total": _("<TOTAL>"),
+        "total_per_trainee": _("<TOTAL_PER_TRAINEE>"),
         "billing_address": {
             "address": _("<BILLING_ADDRESS>"),
             "postcode": _("<BILLING_POSTCODE>"),
@@ -297,6 +298,7 @@ def prepare_batch_order_context(batch_order):
                 "signatory_profession": batch_order.signatory_profession,
                 "number_seats": batch_order.nb_seats,
                 "total": str(batch_order.total),
+                "total_per_trainee": batch_order.total_per_trainee,
                 "billing_address": {
                     "address": batch_order.billing_address["address"],
                     "postcode": batch_order.billing_address["postcode"],
