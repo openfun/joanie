@@ -2609,6 +2609,14 @@ class BatchOrder(BaseModel):
         """Returns boolean value whether the batch order is canceled or not."""
         return self.state == enums.BATCH_ORDER_STATE_CANCELED
 
+    @property
+    def total_per_trainee(self) -> str:
+        """Returns a string representation of the total per trainee for the batch order"""
+        if not self.total:
+            return ""
+        total_per_trainee = self.total / self.nb_seats
+        return f"{total_per_trainee:.2f}"
+
     def cancel_orders(self):
         """
         Cancel all orders associated with this batch order and delete their linked vouchers.
