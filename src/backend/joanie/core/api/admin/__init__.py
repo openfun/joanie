@@ -599,6 +599,38 @@ class OfferingViewSet(viewsets.ModelViewSet):
 
         return JsonResponse(cache_data, status=HTTPStatus.CREATED)
 
+    @extend_schema(
+        request={"is_active": OpenApiTypes.BOOL},
+        responses={
+            200: OpenApiTypes.NONE,
+            400: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["PATCH"], detail=True, url_path="activate-deep-links")
+    def activate_deep_links(self, request, pk=None):  # pylint: disable=unused-argument
+        """
+        Activate or deactivate all deep links related to the offering.
+        """
+        offering = self.get_object()
+
+        if not "is_active" in request.data:
+            return Response(
+                _("is_active boolean value is required"),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        is_active = request.data.get("is_active")
+
+        if not isinstance(is_active, bool):
+            return Response(
+                _("is_active must be a boolean value."),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        offering.activate_deep_links(is_active)
+
+        return Response(status=HTTPStatus.OK)
+
 
 class NestedOfferingRuleViewSet(
     SerializerPerActionMixin,
@@ -661,9 +693,6 @@ class NestedOfferingDeepLinkViewSet(viewsets.ModelViewSet, NestedGenericViewSet)
         data["organization"] = str(organization_id)
 
         serializer = self.get_serializer(data=data)
-
-        serializer.initial_data["offering"] = str(offering_id)
-        serializer.initial_data["organization"] = str(organization_id)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
