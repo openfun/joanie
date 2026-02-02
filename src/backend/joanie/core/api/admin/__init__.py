@@ -598,6 +598,29 @@ class OfferingViewSet(viewsets.ModelViewSet):
 
         return JsonResponse(cache_data, status=HTTPStatus.CREATED)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="is_active",
+                description="Boolean value if enable or disable deeplinks",
+                required=True,
+                type=OpenApiTypes.BOOL,
+                many=False,
+            ),
+        ],
+    )
+    @action(methods=["PATCH"], detail=True, url_path="toggle-deeplinks")
+    def toggle_deeplinks(self, request, pk=None):  # pylint: disable=unused-argument
+        """
+        Activate or deactivate all deep links related to the offering.
+        """
+        offering = self.get_object()
+        is_active = request.data.get("is_active")
+
+        offering.toggle_deeplinks(is_active)
+
+        return Response(HTTPStatus.OK)
+
 
 class NestedOfferingRuleViewSet(
     SerializerPerActionMixin,
