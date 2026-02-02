@@ -926,6 +926,12 @@ class CourseProductRelation(BaseModel):
             "has_seats_left": has_seats_left or not offering_rule_is_blocking,
         }
 
+    def toggle_deeplinks(self, is_active=True):
+        """
+        Activate or deactivate the deeplinks of the offering.
+        """
+        self.organization_links.update(is_active=is_active)
+
 
 class OfferingDeepLink(BaseModel):
     """
