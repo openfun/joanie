@@ -2,6 +2,8 @@
 
 from django.db import migrations, models
 
+from joanie.core import enums
+
 
 def migrate_purchase_order_reference(apps, schema_editor):
     """
@@ -10,7 +12,10 @@ def migrate_purchase_order_reference(apps, schema_editor):
     """
     Quote = apps.get_model("core", "Quote")
     for i, quote in enumerate(Quote.objects.all()):
-        if quote.batch_order.uses_purchase_order and quote.has_purchase_order:
+        if (
+            quote.batch_order.payment_method == enums.BATCH_ORDER_WITH_PURCHASE_ORDER
+            and quote.has_purchase_order
+        ):
             quote.purchase_order_reference = f"reference_to_update_{i}"
             quote.save()
 
@@ -27,12 +32,12 @@ class Migration(migrations.Migration):
             name='purchase_order_reference',
             field=models.CharField(blank=True, help_text='reference provided by the buyer used for commercial tracking for contract and invoice', max_length=30, null=True, unique=True, verbose_name='purchase_order_reference'),
         ),
-        migrations.AddConstraint(
-            model_name='quote',
-            constraint=models.CheckConstraint(check=models.Q(('has_purchase_order', False), models.Q(('organization_signed_on__isnull', False), ('purchase_order_reference__isnull', False)), _connector='OR'), name='purchase_order_requires_signed_and_reference', violation_error_message='If a purchase order is received, the organization must have signed and a purchase order reference must be set.'),
-        ),
         migrations.RunPython(
             migrate_purchase_order_reference,
             migrations.RunPython.noop,
+        ),
+        migrations.AddConstraint(
+            model_name='quote',
+            constraint=models.CheckConstraint(check=models.Q(('has_purchase_order', False), models.Q(('organization_signed_on__isnull', False), ('purchase_order_reference__isnull', False)), _connector='OR'), name='purchase_order_requires_signed_and_reference', violation_error_message='If a purchase order is received, the organization must have signed and a purchase order reference must be set.'),
         ),
     ]
