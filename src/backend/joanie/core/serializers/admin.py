@@ -708,6 +708,45 @@ class AdminOfferingSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class AdminOfferingDeepLinkSerializer(serializers.ModelSerializer):
+    """
+    Admin serializer for Offering Deep Link model
+    """
+
+    organization = serializers.SlugRelatedField(
+        queryset=models.Organization.objects.all(),
+        slug_field="id",
+        write_only=True,
+        read_only=False,
+    )
+    offering = serializers.SlugRelatedField(
+        queryset=models.CourseProductRelation.objects.all(),
+        slug_field="id",
+        write_only=True,
+        read_only=False,
+    )
+
+    class Meta:
+        model = models.OfferingDeepLink
+        fields = [
+            "id",
+            "deep_link",
+            "is_active",
+            "organization",
+            "offering",
+        ]
+        read_only_fields = ["id"]
+
+    def to_representation(self, instance):
+        """
+        Override `to_representation` to customize the output with the organization and offering id.
+        """
+        representation = super().to_representation(instance)
+        representation["organization"] = str(instance.organization.id)
+        representation["offering"] = str(instance.offering.id)
+        return representation
+
+
 class AdminCourseAccessSerializer(serializers.ModelSerializer):
     """Serializer for CourseAccess model."""
 
