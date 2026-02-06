@@ -927,6 +927,79 @@ class CourseProductRelation(BaseModel):
         }
 
 
+class OfferingDeepLink(BaseModel):
+    """
+    OfferingDeepLink represents external links that allows a learner to subscribe to a course
+    from an external platform (e.g : Mon Compte Formation in France). This model gives an
+    organization the possibility to add their deep link for one specific offering.
+    """
+
+    deep_link = models.URLField(
+        _("deep_link"),
+        help_text=_(
+            "Deep link of an offering where a learner can subscribe with an external link."
+        ),
+        unique=True,
+        blank=False,
+        null=False,
+    )
+    offering = models.ForeignKey(
+        to=CourseProductRelation,
+        on_delete=models.CASCADE,
+        verbose_name=_("offering"),
+        related_name="organization_links",
+    )
+    organization = models.ForeignKey(
+        to=Organization,
+        verbose_name=_("organizations"),
+        related_name="offering_links",
+        on_delete=models.CASCADE,
+    )
+    is_active = models.BooleanField(
+        _("is active"),
+        default=False,
+        help_text=_("Activate or deactivate deep link of an offering"),
+    )
+
+    class Meta:
+        db_table = "joanie_offering_deep_link"
+        verbose_name = _("Offering Deep Link")
+        verbose_name_plural = _("Offering Deep Links")
+        ordering = ["-created_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "offering"],
+                name="unique_offering_per_organization",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.offering.course}: {self.organization} deep link"
+
+    def clean(self):
+        """
+        Ensure the organization is related to the offering before creating the object, otherwise
+        raise a validation error. Deep link are exclusive to product of type credentials.
+        """
+        if not self.offering.organizations.filter(pk=self.organization.id).exists():
+            raise ValidationError(_("Organization should be related to the offering."))
+
+        if self.offering.product.type in [  # pylint:disable=no-member
+            enums.PRODUCT_TYPE_CERTIFICATE,
+            enums.PRODUCT_TYPE_ENROLLMENT,
+        ]:
+            raise ValidationError(
+                _("Only product type credential are allowed to have deeplink")
+            )
+
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        """Enforce validation each time an instance is saved."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
 class CourseRun(parler_models.TranslatableModel, BaseModel):
     """
     Course run represents and records the occurrence of a course between a start
