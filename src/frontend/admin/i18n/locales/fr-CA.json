@@ -167,6 +167,406 @@
     "description": "User label for the user input",
     "message": "User"
   },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.alreadyCancelTooltip": {
+    "description": "Text when the batch order has already been canceled",
+    "message": "The batch order has already been canceled"
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.batchOrderActionsLabel": {
+    "description": "Label for the actions button",
+    "message": "Actions"
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmBankTransferDisabled": {
+    "description": "Text when the batch order bank transfer cannot be confirmed",
+    "message": "Bank transfer can only be confirmed when batch order uses bank transfer payment method and is in pending, signing, or process payment state"
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmPurchaseOrderDisabled": {
+    "description": "Text when the batch order purchase order cannot be confirmed",
+    "message": "Purchase order can only be confirmed when batch order is in quoted state with purchase order payment method, quote is signed, and total is set"
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmPurchaseOrderModalTitle": {
+    "description": "Title for the confirm purchase order modal",
+    "message": "Confirm Purchase Order"
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmQuoteDisabled": {
+    "description": "Text when the batch order quote cannot be confirmed",
+    "message": "Quote can only be confirmed when batch order is in quoted state"
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmQuoteError": {
+    "description": "Error message when quote confirmation fails",
+    "message": "Failed to confirm quote. Please try again."
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmQuoteModalTitle": {
+    "description": "Title for the confirm quote modal",
+    "message": "Confirm Quote"
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.generateOrdersDisabled": {
+    "description": "Text when the batch order orders cannot be generated",
+    "message": "Orders can only be generated when batch order is in completed state"
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.isNotCanceled": {
+    "description": "Text when the batch order is not canceled",
+    "message": "You must cancel the batch order before refunding it."
+  },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.submitForSignatureDisabled": {
+    "description": "Text when the batch order cannot be submitted for signature",
+    "message": "Batch order can only be submitted for signature when in assigned, quoted, or to sign state"
+  },
+  "components.templates.batch-orders.modals.confirmPurchaseOrderModal.cancel": {
+    "description": "Cancel button label for confirm purchase order modal",
+    "message": "Cancel"
+  },
+  "components.templates.batch-orders.modals.confirmPurchaseOrderModal.confirm": {
+    "description": "Confirm button label for confirm purchase order modal",
+    "message": "Confirm"
+  },
+  "components.templates.batch-orders.modals.confirmPurchaseOrderModal.description": {
+    "description": "Description text for confirm purchase order modal",
+    "message": "Enter the purchase order reference to confirm the purchase order for this batch order."
+  },
+  "components.templates.batch-orders.modals.confirmPurchaseOrderModal.referenceLabel": {
+    "description": "Label for purchase order reference input field",
+    "message": "Purchase order reference"
+  },
+  "components.templates.batch-orders.modals.confirmQuoteModal.cancel": {
+    "description": "Cancel button label for confirm quote modal",
+    "message": "Cancel"
+  },
+  "components.templates.batch-orders.modals.confirmQuoteModal.confirm": {
+    "description": "Confirm button label for confirm quote modal",
+    "message": "Confirm"
+  },
+  "components.templates.batch-orders.modals.confirmQuoteModal.description": {
+    "description": "Description text for confirm quote modal",
+    "message": "Enter the total amount to confirm the quote for this batch order."
+  },
+  "components.templates.batch-orders.modals.confirmQuoteModal.totalLabel": {
+    "description": "Label for total amount input field",
+    "message": "Total amount"
+  },
+  "components.templates.batch-orders.modals.confirmQuoteModal.totalPlaceholder": {
+    "description": "Placeholder for total amount input field",
+    "message": "e.g., 123.45"
+  },
+  "components.templates.batch-orders.view.batchOrderActionsMessages.cancel": {
+    "description": "Label for the cancel batch order action",
+    "message": "Cancel batch order"
+  },
+  "components.templates.batch-orders.view.batchOrderActionsMessages.confirmBankTransfer": {
+    "description": "Label for the confirm bank transfer action",
+    "message": "Confirm bank transfer"
+  },
+  "components.templates.batch-orders.view.batchOrderActionsMessages.confirmPurchaseOrder": {
+    "description": "Label for the confirm purchase order action",
+    "message": "Confirm purchase order"
+  },
+  "components.templates.batch-orders.view.batchOrderActionsMessages.confirmQuote": {
+    "description": "Label for the confirm quote action",
+    "message": "Confirm quote"
+  },
+  "components.templates.batch-orders.view.batchOrderActionsMessages.generateOrders": {
+    "description": "Label for the generate orders action",
+    "message": "Generate orders"
+  },
+  "components.templates.batch-orders.view.batchOrderActionsMessages.submitForSignature": {
+    "description": "Label for the submit for signature action",
+    "message": "Submit for signature"
+  },
+  "components.templates.batch-orders.view.batchOrderPaymentMethodsMessages.bank_transfer": {
+    "description": "Text for bank transfer payment method",
+    "message": "Bank transfer"
+  },
+  "components.templates.batch-orders.view.batchOrderPaymentMethodsMessages.card_payment": {
+    "description": "Text for card payment payment method",
+    "message": "Card payment"
+  },
+  "components.templates.batch-orders.view.batchOrderPaymentMethodsMessages.purchase_order": {
+    "description": "Text for purchase order payment method",
+    "message": "Purchase order"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.assigned": {
+    "description": "Text for assigned batch order state",
+    "message": "Assigned"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.canceled": {
+    "description": "Text for canceled batch order state",
+    "message": "Canceled"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.completed": {
+    "description": "Text for completed batch order state",
+    "message": "Completed"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.draft": {
+    "description": "Text for draft batch order state",
+    "message": "Draft"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.failed_payment": {
+    "description": "Text for failed payment batch order state",
+    "message": "Failed payment"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.pending": {
+    "description": "Text for pending batch order state",
+    "message": "Pending"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.process_payment": {
+    "description": "Text for process payment batch order state",
+    "message": "Process payment"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.quoted": {
+    "description": "Text for quoted batch order state",
+    "message": "Quoted"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.signing": {
+    "description": "Text for signing batch order state",
+    "message": "Signing"
+  },
+  "components.templates.batch-orders.view.batchOrderStatesMessages.to_sign": {
+    "description": "Text for to sign batch order state",
+    "message": "To sign"
+  },
+  "components.templates.batchOrders.filters.BatchOrderFilters.paymentMethodLabel": {
+    "description": "Label for the batch order payment method filter",
+    "message": "Payment method"
+  },
+  "components.templates.batchOrders.filters.BatchOrderFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Search by product, company, owner or organization name"
+  },
+  "components.templates.batchOrders.filters.BatchOrderFilters.stateLabel": {
+    "description": "Label for the batch order state filter",
+    "message": "State"
+  },
+  "components.templates.batchOrders.list.companyName": {
+    "description": "Label for the company header inside the table",
+    "message": "Company"
+  },
+  "components.templates.batchOrders.list.createdOn": {
+    "description": "Label for the created on header inside the table",
+    "message": "Created on"
+  },
+  "components.templates.batchOrders.list.nbSeats": {
+    "description": "Label for the number of seats header inside the table",
+    "message": "Seats"
+  },
+  "components.templates.batchOrders.list.nextAction": {
+    "description": "Label for the next action header inside the table",
+    "message": "Next action"
+  },
+  "components.templates.batchOrders.list.organizationTitle": {
+    "description": "Label for the organization header inside the table",
+    "message": "Organization"
+  },
+  "components.templates.batchOrders.list.ownerName": {
+    "description": "Label for the owner header inside the table",
+    "message": "Owner"
+  },
+  "components.templates.batchOrders.list.paymentMethod": {
+    "description": "Label for the payment method header inside the table",
+    "message": "Payment method"
+  },
+  "components.templates.batchOrders.list.state": {
+    "description": "Label for the state header inside the table",
+    "message": "State"
+  },
+  "components.templates.batchOrders.list.total": {
+    "description": "Label for the total header inside the table",
+    "message": "Total"
+  },
+  "components.templates.batchOrders.list.updatedOn": {
+    "description": "Label for the updated on header inside the table",
+    "message": "Updated on"
+  },
+  "components.templates.batchOrders.view.address": {
+    "description": "Label for address",
+    "message": "Address"
+  },
+  "components.templates.batchOrders.view.administrativeContactTitle": {
+    "description": "Title for administrative contact section",
+    "message": "Administrative contact"
+  },
+  "components.templates.batchOrders.view.administrativeEmail": {
+    "description": "Label for administrative email",
+    "message": "Administrative email"
+  },
+  "components.templates.batchOrders.view.administrativeFirstname": {
+    "description": "Label for administrative first name",
+    "message": "Administrative first name"
+  },
+  "components.templates.batchOrders.view.administrativeLastname": {
+    "description": "Label for administrative last name",
+    "message": "Administrative last name"
+  },
+  "components.templates.batchOrders.view.administrativeProfession": {
+    "description": "Label for administrative profession",
+    "message": "Administrative profession"
+  },
+  "components.templates.batchOrders.view.administrativeTelephone": {
+    "description": "Label for administrative telephone",
+    "message": "Administrative telephone"
+  },
+  "components.templates.batchOrders.view.billingAddress": {
+    "description": "Label for billing address field",
+    "message": "Billing address"
+  },
+  "components.templates.batchOrders.view.billingAddressCompanyName": {
+    "description": "Label for billing address company name",
+    "message": "Billing company name"
+  },
+  "components.templates.batchOrders.view.billingAddressContactEmail": {
+    "description": "Label for billing address contact email",
+    "message": "Billing contact email"
+  },
+  "components.templates.batchOrders.view.billingAddressContactName": {
+    "description": "Label for billing address contact name",
+    "message": "Billing contact name"
+  },
+  "components.templates.batchOrders.view.billingAddressIdentificationNumber": {
+    "description": "Label for billing address identification number",
+    "message": "Billing identification number"
+  },
+  "components.templates.batchOrders.view.billingAddressTitle": {
+    "description": "Title for billing address section",
+    "message": "Billing address"
+  },
+  "components.templates.batchOrders.view.billingCity": {
+    "description": "Label for billing city",
+    "message": "Billing city"
+  },
+  "components.templates.batchOrders.view.billingCountry": {
+    "description": "Label for billing country",
+    "message": "Billing country"
+  },
+  "components.templates.batchOrders.view.billingPostcode": {
+    "description": "Label for billing postcode",
+    "message": "Billing postcode"
+  },
+  "components.templates.batchOrders.view.city": {
+    "description": "Label for city",
+    "message": "City"
+  },
+  "components.templates.batchOrders.view.companyName": {
+    "description": "Label for company name",
+    "message": "Company name"
+  },
+  "components.templates.batchOrders.view.country": {
+    "description": "Label for country",
+    "message": "Country"
+  },
+  "components.templates.batchOrders.view.course": {
+    "description": "Label for course",
+    "message": "Course"
+  },
+  "components.templates.batchOrders.view.fundingAmount": {
+    "description": "Label for funding amount",
+    "message": "Funding amount"
+  },
+  "components.templates.batchOrders.view.fundingEntity": {
+    "description": "Label for funding entity",
+    "message": "Funding entity"
+  },
+  "components.templates.batchOrders.view.fundingTitle": {
+    "description": "Title for funding section",
+    "message": "Funding"
+  },
+  "components.templates.batchOrders.view.identificationNumber": {
+    "description": "Label for identification number",
+    "message": "Identification number"
+  },
+  "components.templates.batchOrders.view.nbSeats": {
+    "description": "Label for number of seats",
+    "message": "Number of seats"
+  },
+  "components.templates.batchOrders.view.orderCreatedOn": {
+    "description": "Label for order created on column",
+    "message": "Created on"
+  },
+  "components.templates.batchOrders.view.orderOwner": {
+    "description": "Label for order owner column",
+    "message": "Owner"
+  },
+  "components.templates.batchOrders.view.orderState": {
+    "description": "Label for order state column",
+    "message": "State"
+  },
+  "components.templates.batchOrders.view.orderUpdatedOn": {
+    "description": "Label for order updated on column",
+    "message": "Updated on"
+  },
+  "components.templates.batchOrders.view.orderVoucher": {
+    "description": "Label for order voucher column",
+    "message": "Voucher"
+  },
+  "components.templates.batchOrders.view.ordersTitle": {
+    "description": "Title for the orders section",
+    "message": "Orders"
+  },
+  "components.templates.batchOrders.view.organization": {
+    "description": "Label for organization",
+    "message": "Organization"
+  },
+  "components.templates.batchOrders.view.owner": {
+    "description": "Label for owner",
+    "message": "Owner"
+  },
+  "components.templates.batchOrders.view.paymentMethod": {
+    "description": "Label for payment method",
+    "message": "Payment method"
+  },
+  "components.templates.batchOrders.view.postcode": {
+    "description": "Label for postcode",
+    "message": "Postcode"
+  },
+  "components.templates.batchOrders.view.product": {
+    "description": "Label for product",
+    "message": "Product"
+  },
+  "components.templates.batchOrders.view.purchaseOrderReference": {
+    "description": "Label for purchase order reference",
+    "message": "Purchase order reference"
+  },
+  "components.templates.batchOrders.view.sectionAlert": {
+    "description": "Informative text for the batch order view",
+    "message": "In this view, you can see the details of a batch order, such as the company, seats, and status."
+  },
+  "components.templates.batchOrders.view.sectionTitle": {
+    "description": "Title for the batch order information section",
+    "message": "Batch Order informations"
+  },
+  "components.templates.batchOrders.view.signatoryContactTitle": {
+    "description": "Title for signatory contact section",
+    "message": "Signatory contact"
+  },
+  "components.templates.batchOrders.view.signatoryEmail": {
+    "description": "Label for signatory email",
+    "message": "Signatory email"
+  },
+  "components.templates.batchOrders.view.signatoryFirstname": {
+    "description": "Label for signatory first name",
+    "message": "Signatory first name"
+  },
+  "components.templates.batchOrders.view.signatoryLastname": {
+    "description": "Label for signatory last name",
+    "message": "Signatory last name"
+  },
+  "components.templates.batchOrders.view.signatoryProfession": {
+    "description": "Label for signatory profession",
+    "message": "Signatory profession"
+  },
+  "components.templates.batchOrders.view.signatoryTelephone": {
+    "description": "Label for signatory telephone",
+    "message": "Signatory telephone"
+  },
+  "components.templates.batchOrders.view.state": {
+    "description": "Label for state",
+    "message": "State"
+  },
+  "components.templates.batchOrders.view.total": {
+    "description": "Label for total",
+    "message": "Total"
+  },
+  "components.templates.batchOrders.view.vatRegistration": {
+    "description": "Label for VAT registration",
+    "message": "VAT registration"
+  },
   "components.templates.certificateDefinition.form.RHFCertificateDefinitionTemplates.templateLabel": {
     "description": "Label for the certificate definition template input",
     "message": "Template"
@@ -1307,17 +1707,29 @@
     "description": "Title for the course runs selection section",
     "message": "Course run selection"
   },
+  "components.templates.products.form.translations.contractDefinitionBatchOrder": {
+    "description": "Label for the contract definition batch order input",
+    "message": "Contract definition for batch orders"
+  },
+  "components.templates.products.form.translations.contractDefinitionBatchOrderHelper": {
+    "description": "Helper text for the contract definition batch order input",
+    "message": "This is a contract template that will be used when purchasing the product through a batch order"
+  },
+  "components.templates.products.form.translations.contractDefinitionBatchOrderPlaceholder": {
+    "description": "placeholder text for the contract definition batch order input",
+    "message": "Search a contract definition for batch orders"
+  },
   "components.templates.products.form.translations.contractDefinitionOrder": {
     "description": "Label for the contract definition order input",
-    "message": "Contract definition"
+    "message": "Contract definition for orders"
   },
   "components.templates.products.form.translations.contractDefinitionOrderHelper": {
     "description": "Helper text for the contract definition order input",
-    "message": "This is a contract template that will be used when purchasing the product"
+    "message": "This is a contract template that will be used when purchasing the product through an order."
   },
   "components.templates.products.form.translations.contractDefinitionOrderPlaceholder": {
     "description": "placeholder text for the contract definition order input",
-    "message": "Search a contract definition"
+    "message": "Search a contract definition for orders"
   },
   "components.templates.products.form.translations.definition": {
     "description": "Label for the definition input",
@@ -1391,6 +1803,18 @@
     "description": "Label for the product type input",
     "message": "Type"
   },
+  "components.templates.products.form.translations.quoteDefinition": {
+    "description": "Label for the quote definition input",
+    "message": "Quote definition"
+  },
+  "components.templates.products.form.translations.quoteDefinitionHelper": {
+    "description": "Helper text for the quote definition input",
+    "message": "Template used to generate quotes from batch orders for this product."
+  },
+  "components.templates.products.form.translations.quoteDefinitionPlaceholder": {
+    "description": "placeholder text for the quote definition input",
+    "message": "Search a quote definition"
+  },
   "components.templates.products.form.translations.relatedCoursesHelper": {
     "description": "Helper text for the related courses section",
     "message": "This section allows you to choose the courses to which this product will be attached. Users will therefore be able to access this product through these courses."
@@ -1462,6 +1886,58 @@
   "components.templates.products;form.sections.ProductFormTypeSection.microCredentialTitle": {
     "description": "Title for the credential product type",
     "message": "Microcredential"
+  },
+  "components.templates.quoteDefinition.filters.QuoteDefinitionFilters.searchPlaceholder": {
+    "description": "Text for the search input placeholder",
+    "message": "Search by title"
+  },
+  "components.templates.quoteDefinitions.form.RhfQuoteDefinitionLanguage.languageLabel": {
+    "description": "Label for the language input",
+    "message": "Language"
+  },
+  "components.templates.quoteDefinitions.form.bodyLabel": {
+    "description": "Label for the body input",
+    "message": "Body"
+  },
+  "components.templates.quoteDefinitions.form.descriptionLabel": {
+    "description": "Label for the name input",
+    "message": "Description"
+  },
+  "components.templates.quoteDefinitions.form.informationText": {
+    "description": "Title for the information alert",
+    "message": "This is a quote template that will be used to issue quotes."
+  },
+  "components.templates.quoteDefinitions.form.languageLabel": {
+    "description": "Label for the language input",
+    "message": "Language"
+  },
+  "components.templates.quoteDefinitions.form.mainInformationTitle": {
+    "description": "Title for the main information section",
+    "message": "Main information's"
+  },
+  "components.templates.quoteDefinitions.form.titleLabel": {
+    "description": "Label for the title input",
+    "message": "Title"
+  },
+  "components.templates.quoteDefinitions.inputs.RHFQuoteDefinitionName.inputLabel": {
+    "description": "Label for the \"name\" input",
+    "message": "Template name"
+  },
+  "components.templates.quoteDefinitions.list.languageHeader": {
+    "description": "Label for the language header inside the table  ",
+    "message": "Language"
+  },
+  "components.templates.quoteDefinitions.list.titleHeader": {
+    "description": "Label for the title header inside the table  ",
+    "message": "Title"
+  },
+  "components.templates.quoteDefinitions.modals.CreateOrEditQuoteDefinitionModal.add": {
+    "description": "Title for add definition modal",
+    "message": "Add a quote definition"
+  },
+  "components.templates.quoteDefinitions.modals.CreateOrEditQuoteDefinitionModal.edit": {
+    "description": "Title for add quote definition modal",
+    "message": "Edit the \"{name}\" quote template"
   },
   "components.templates.vouchers.filters.VoucherFilters.searchPlaceholder": {
     "description": "Text for the search input placeholder",
@@ -1550,6 +2026,62 @@
   "dashboard.nav.DashboardNavThemeMenu.system": {
     "description": "Label for system theme button",
     "message": "System"
+  },
+  "hooks.useBatchOrders.errorConfirmBankTransfer": {
+    "description": "Error message shown to the user when batch order confirm bank transfer request fails.",
+    "message": "An error occurred while confirming the bank transfer. Please retry later."
+  },
+  "hooks.useBatchOrders.errorConfirmPurchaseOrder": {
+    "description": "Error message shown to the user when batch order confirm purchase order request fails.",
+    "message": "An error occurred while confirming the purchase order. Please retry later."
+  },
+  "hooks.useBatchOrders.errorConfirmQuote": {
+    "description": "Error message shown to the user when batch order confirm quote request fails.",
+    "message": "An error occurred while confirming the quote. Please retry later."
+  },
+  "hooks.useBatchOrders.errorDelete": {
+    "description": "Error message shown to the user when batch order deletion request fails.",
+    "message": "An error occurred while deleting the batch order. Please retry later."
+  },
+  "hooks.useBatchOrders.errorExport": {
+    "description": "Error message shown to the user when batch order export request fails.",
+    "message": "An error occurred while exporting batch orders. Please retry later."
+  },
+  "hooks.useBatchOrders.errorGenerateOrders": {
+    "description": "Error message shown to the user when batch order generate orders request fails.",
+    "message": "An error occurred while generating orders. Please retry later."
+  },
+  "hooks.useBatchOrders.errorGet": {
+    "description": "Error message shown to the user when batch orders fetch request fails.",
+    "message": "An error occurred while fetching batch orders. Please retry later."
+  },
+  "hooks.useBatchOrders.errorNotFound": {
+    "description": "Error message shown to the user when no batch order matches.",
+    "message": "Cannot find the batch order"
+  },
+  "hooks.useBatchOrders.errorSubmitForSignature": {
+    "description": "Error message shown to the user when batch order submit for signature request fails.",
+    "message": "An error occurred while submitting for signature. Please retry later."
+  },
+  "hooks.useBatchOrders.successConfirmBankTransfer": {
+    "description": "Success message shown to the user when the batch order bank transfer has been confirmed.",
+    "message": "Batch order bank transfer confirmed."
+  },
+  "hooks.useBatchOrders.successConfirmPurchaseOrder": {
+    "description": "Success message shown to the user when the batch order purchase order has been confirmed.",
+    "message": "Batch order purchase order confirmed."
+  },
+  "hooks.useBatchOrders.successConfirmQuote": {
+    "description": "Success message shown to the user when the batch order quote has been confirmed.",
+    "message": "Batch order quote confirmed."
+  },
+  "hooks.useBatchOrders.successGenerateOrders": {
+    "description": "Success message shown to the user when the batch order orders have been generated.",
+    "message": "Batch order orders generated. Voucher codes sent to owner."
+  },
+  "hooks.useBatchOrders.successSubmitForSignature": {
+    "description": "Success message shown to the user when the batch order has been submitted for signature.",
+    "message": "Batch order submitted for signature. Invitation link sent."
   },
   "hooks.useCertificateDefinitions.errorCreate": {
     "description": "Error message shown to the user when certificate definition creation request fails.",
@@ -1787,6 +2319,26 @@
     "description": "Error message shown to the user when product target course relation update request fails.",
     "message": "An error occurred while updating the product target course relation. Please retry later."
   },
+  "hooks.useQuoteDefinitions.errorCreate": {
+    "description": "Error message shown to the user when quote definition creation request fails.",
+    "message": "An error occurred while creating the quote definition. Please retry later."
+  },
+  "hooks.useQuoteDefinitions.errorDelete": {
+    "description": "Error message shown to the user when quote definition deletion request fails.",
+    "message": "An error occurred while deleting the quote definition. Please retry later."
+  },
+  "hooks.useQuoteDefinitions.errorNotFound": {
+    "description": "Error message shown to the user when no quote definitions matches.",
+    "message": "Cannot find the quote definition"
+  },
+  "hooks.useQuoteDefinitions.errorSelect": {
+    "description": "Error message shown to the user when quote definitions fetch request fails.",
+    "message": "An error occurred while fetching quote definitions. Please retry later."
+  },
+  "hooks.useQuoteDefinitions.errorUpdate": {
+    "description": "Error message shown to the user when quote definition update request fails.",
+    "message": "An error occurred while updating the quote definition. Please retry later."
+  },
   "hooks.useResources.errorCreate": {
     "description": "Error message shown to the user when resource creation request fails.",
     "message": "An error occurred while creating a resource. Please retry later."
@@ -1871,6 +2423,10 @@
     "description": "Account subheader nav label",
     "message": "Account and settings"
   },
+  "layouts.dashboard.nav.config.batchOrdersNavTitle": {
+    "description": "Title for the Batch orders nav item",
+    "message": "Batch orders"
+  },
   "layouts.dashboard.nav.config.certificatesNavTitle": {
     "description": "Title for the Certificates nav item",
     "message": "Certificate definition"
@@ -1907,6 +2463,10 @@
     "description": "Title for the Product nav item",
     "message": "Products"
   },
+  "layouts.dashboard.nav.config.quoteDefinitionNavTitle": {
+    "description": "Title for the Quote definition nav item",
+    "message": "Quote definitions"
+  },
   "layouts.dashboard.nav.config.voucherNavTitle": {
     "description": "Title for the Voucher nav item",
     "message": "Vouchers"
@@ -1914,6 +2474,22 @@
   "layouts.dashboard.nav.header.DashboardNavHeader": {
     "description": "aria-label for the go back home link",
     "message": "Back to the homepage"
+  },
+  "pages.admin.batchOrders.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the batch orders list page",
+    "message": "List"
+  },
+  "pages.admin.batchOrders.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the batch orders root page",
+    "message": "Batch orders"
+  },
+  "pages.admin.batchOrders.list.pageTitle": {
+    "description": "Label for the batch orders list page title",
+    "message": "Batch orders"
+  },
+  "pages.admin.batchOrders.view.pageTitle": {
+    "description": "Label for the batch orders view page title",
+    "message": "Batch Orders"
   },
   "pages.admin.certificateDefinitions.list.pageTitle": {
     "description": "Label for the certificates definitions list page title",
@@ -2186,6 +2762,34 @@
   "pages.admin.products.list.pageTitle": {
     "description": "Label for the product list page title",
     "message": "Products"
+  },
+  "pages.admin.quoteDefinition.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the quote definitions create page",
+    "message": "Create"
+  },
+  "pages.admin.quoteDefinition.breadcrumbsTranslations.editBreadcrumb": {
+    "description": "Breadcrumb label for the quotes edit page",
+    "message": "Edit"
+  },
+  "pages.admin.quoteDefinition.breadcrumbsTranslations.listBreadcrumb": {
+    "description": "Breadcrumb label for the quotes list page",
+    "message": "List"
+  },
+  "pages.admin.quoteDefinition.breadcrumbsTranslations.rootBreadcrumb": {
+    "description": "Breadcrumb label for the quote definitions root page",
+    "message": "Quote definitions"
+  },
+  "pages.admin.quoteDefinition.create.pageTitle": {
+    "description": "Label for the create quote organization page title",
+    "message": "Add quote definition"
+  },
+  "pages.admin.quoteDefinitions.list.pageTitle": {
+    "description": "Label for the quote definitions list page title",
+    "message": "Quote definitions"
+  },
+  "pages.admin.quotes.edit.pageTitle": {
+    "description": "Label for the edit quote definition page title",
+    "message": "Edit quote definition: {name}"
   },
   "pages.admin.vouchers.breadcrumbsTranslations.createBreadcrumb": {
     "description": "Breadcrumb label for the vouchers create page",
