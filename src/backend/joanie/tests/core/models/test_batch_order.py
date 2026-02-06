@@ -38,7 +38,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         organization = batch_order.offering.organizations.first()
         batch_order.organization = organization
         access = factories.UserOrganizationAccessFactory(
-            organization=organization, role=enums.OWNER
+            organization=organization, role=enums.OWNER, user__language="en-us"
         )
         batch_order.init_flow()
 
