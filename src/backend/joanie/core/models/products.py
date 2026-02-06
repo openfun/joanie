@@ -2389,7 +2389,7 @@ class BatchOrder(BaseModel):
         )
 
     # pylint: disable=no-member
-    def submit_for_signature(self, user: User):
+    def submit_for_signature(self):
         """
         Submit the contract of type convention to signature if it has not been submitted yet.
         In the cases where it has been submitted to signature but it has not been signed yet,
@@ -2419,7 +2419,6 @@ class BatchOrder(BaseModel):
         contract_definition = self.relation.product.contract_definition_batch_order
         context = contract_definition_utility.generate_document_context(
             contract_definition=contract_definition,
-            user=user,
             batch_order=self,
         )
         context_with_images = embed_images_in_context(context)
@@ -2582,8 +2581,10 @@ class BatchOrder(BaseModel):
         """
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.
+        When the batch order uses a purchase order payment method, we verify if the purchase order
+        has been received and if the contract has been signed by the buyer.
         """
-        if self.uses_purchase_order:
+        if self.uses_purchase_order and self.is_signed_by_buyer:
             return self.quote.has_received_purchase_order
 
         child_invoice = self.invoices.filter(
