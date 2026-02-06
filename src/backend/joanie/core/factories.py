@@ -1316,7 +1316,7 @@ class BatchOrderFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 self.quote.purchase_order_reference = f"reference_{suffix_reference}"
                 self.quote.save()
 
-            self.submit_for_signature(self.owner)
+            self.submit_for_signature()
             self.flow.update()
 
         if extracted in [

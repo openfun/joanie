@@ -2389,7 +2389,7 @@ class BatchOrder(BaseModel):
         )
 
     # pylint: disable=no-member
-    def submit_for_signature(self, user: User):
+    def submit_for_signature(self):
         """
         Submit the contract of type convention to signature if it has not been submitted yet.
         In the cases where it has been submitted to signature but it has not been signed yet,
@@ -2419,7 +2419,6 @@ class BatchOrder(BaseModel):
         contract_definition = self.relation.product.contract_definition_batch_order
         context = contract_definition_utility.generate_document_context(
             contract_definition=contract_definition,
-            user=user,
             batch_order=self,
         )
         context_with_images = embed_images_in_context(context)
