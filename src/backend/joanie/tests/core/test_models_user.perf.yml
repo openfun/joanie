@@ -1,5 +1,7 @@
 UserModelTestCase.test_models_user_create_or_update_from_request_changed:
 - db: 'UPDATE "joanie_user" SET ... WHERE "joanie_user"."username" = #'
+UserModelTestCase.test_models_user_create_or_update_from_request_changed_keycloak:
+- db: 'UPDATE "joanie_user" SET ... WHERE "joanie_user"."username" = #'
 UserModelTestCase.test_models_user_create_or_update_from_request_unchanged: []
 UserModelTestCase.test_models_user_get_abilities_course_roles:
 - db: 'SELECT # AS "a" FROM "joanie_course_access" WHERE "joanie_course_access"."user_id" = #::uuid LIMIT #'
