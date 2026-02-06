@@ -2582,8 +2582,10 @@ class BatchOrder(BaseModel):
         """
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.
+        When the batch order uses a purchase order payment method, we verify if the purchase order
+        has been received and if the contract has been signed by the buyer.
         """
-        if self.uses_purchase_order:
+        if self.uses_purchase_order and self.is_signed_by_buyer:
             return self.quote.has_received_purchase_order
 
         child_invoice = self.invoices.filter(
