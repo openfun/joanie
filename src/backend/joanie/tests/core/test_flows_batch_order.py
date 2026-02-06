@@ -94,7 +94,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
                     state=enums.BATCH_ORDER_STATE_TO_SIGN, payment_method=payment_method
                 )
                 # The dummy backend signature marks the signature of the student
-                batch_order.submit_for_signature(user=batch_order.owner)
+                batch_order.submit_for_signature()
 
                 batch_order.flow.update()
 
@@ -247,7 +247,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
 
         # Submit for signature the convention, should transition `signing``
-        batch_order.submit_for_signature(batch_order.owner)
+        batch_order.submit_for_signature()
 
         batch_order.refresh_from_db()
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
@@ -280,7 +280,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         # When we submit for signature with the dummy backend signature, it triggers
         # the signature of the student and trigger the notification event.
         # The state becomes directly to `pending`.
-        batch_order.submit_for_signature(batch_order.owner)
+        batch_order.submit_for_signature()
 
         batch_order.refresh_from_db()
 
