@@ -609,17 +609,30 @@ class OfferingViewSet(viewsets.ModelViewSet):
             ),
         ],
     )
-    @action(methods=["PATCH"], detail=True, url_path="toggle-deeplinks")
-    def toggle_deeplinks(self, request, pk=None):  # pylint: disable=unused-argument
+    @action(methods=["PATCH"], detail=True, url_path="activate-deeplinks")
+    def activate_deeplinks(self, request, pk=None):  # pylint: disable=unused-argument
         """
         Activate or deactivate all deep links related to the offering.
         """
         offering = self.get_object()
+
+        if not "is_active" in request.data:
+            return Response(
+                _("is_active query parameter is required"),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
         is_active = request.data.get("is_active")
 
-        offering.toggle_deeplinks(is_active)
+        if not isinstance(is_active, bool):
+            return Response(
+                _("is_active must be a boolean value."),
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
-        return Response(HTTPStatus.OK)
+        offering.activate_deeplinks(is_active)
+
+        return Response(status=HTTPStatus.OK)
 
 
 class NestedOfferingRuleViewSet(
@@ -679,10 +692,9 @@ class NestedOfferingDeepLinkViewSet(viewsets.ModelViewSet, NestedGenericViewSet)
         data = request.data
         offering_id = kwargs.get("offering_id")
         organization_id = data.get("organization_id")
+        data["offering"] = str(offering_id)
+        data["organization"] = str(organization_id)
         serializer = self.get_serializer(data=data)
-
-        serializer.initial_data["offering"] = str(offering_id)
-        serializer.initial_data["organization"] = str(organization_id)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
