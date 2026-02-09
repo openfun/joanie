@@ -114,7 +114,6 @@ class Quote(BaseModel):
     purchase_order_reference = models.CharField(
         _("purchase_order_reference"),
         max_length=30,
-        unique=True,
         blank=True,
         null=True,
         help_text=_(

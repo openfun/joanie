@@ -122,6 +122,24 @@ class QuoteModelsTestCase(LoggingTestCase):
             "Quote with this Reference already exists." in str(context.exception)
         )
 
+    def test_models_quote_purchase_order_reference_duplicates(self):
+        """
+        It should be possible to have two purchase order reference that are the same.
+        This value is given by the buyer, it may happen that two references are the
+        same in some rare cases.
+        """
+        quote_1 = QuoteFactory(
+            purchase_order_reference="ABC_test_quote",
+        )
+        quote_2 = QuoteFactory(
+            purchase_order_reference="ABC_test_quote",
+        )
+
+        self.assertEqual(Quote.objects.count(), 2)
+        self.assertEqual(
+            quote_1.purchase_order_reference, quote_2.purchase_order_reference
+        )
+
     @override_settings(JOANIE_PREFIX_QUOTE_REFERENCE="JOANIE")
     def test_models_quote_reference_should_increment_by_1(self):
         """Everytime a quote object is created, the reference should be incremented by one"""
