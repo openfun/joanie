@@ -80,7 +80,7 @@ class BasePaymentTestCase(BaseAPITestCase):
         # catalog url is included in the email
         self.assertIn("https://richie.education", email_content)
 
-    def _check_batch_order_paid_email_sent(self, email, batch_order):
+    def _check_batch_order_paid_email_sent(self, email, batch_order, fullname):
         """Shortcut to check over batch order successful payment email"""
         # check we send it to the right email
         self.assertEqual(mail.outbox[0].to[0], email)
@@ -92,7 +92,6 @@ class BasePaymentTestCase(BaseAPITestCase):
             self.assertRegex(mail.outbox[0].subject, "Batch order payment validated!")
 
         email_content = " ".join(mail.outbox[0].body.split())
-        fullname = batch_order.owner.get_full_name()
 
         # Check body
         if "fr" in batch_order.owner.language:

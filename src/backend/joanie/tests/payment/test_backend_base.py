@@ -1352,6 +1352,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
             owner=owner,
             offering=offering,
             administrative_email="joaniecunningham@example.fr",
+            administrative_firstname="Joanie",
+            administrative_lastname="Doe",
         )
         # Erase first email sent when quote is created
         mail.outbox.clear()
@@ -1382,10 +1384,14 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
 
         # - Email has been sent
-        self._check_batch_order_paid_email_sent("johndoe@example.fr", batch_order)
+        self._check_batch_order_paid_email_sent(
+            "johndoe@example.fr", batch_order, batch_order.owner.get_full_name()
+        )
         del mail.outbox[0]  # Clear the first email sent with vouchers
         self._check_batch_order_paid_email_sent(
-            "joaniecunningham@example.fr", batch_order
+            "joaniecunningham@example.fr",
+            batch_order,
+            f"{batch_order.administrative_firstname} {batch_order.administrative_lastname}",
         )
 
         # - An event has been created

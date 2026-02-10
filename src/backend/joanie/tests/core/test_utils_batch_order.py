@@ -309,6 +309,9 @@ class UtilsBatchOrderTestCase(TestCase):
             state=enums.BATCH_ORDER_STATE_COMPLETED,
             nb_seats=2,
             offering=offering,
+            administrative_firstname="John",
+            administrative_lastname="Doe",
+            administrative_email="johndoe@example.acme",
         )
         mail.outbox.clear()
         batch_order.offering_rules.add(offering_rule)
@@ -320,15 +323,20 @@ class UtilsBatchOrderTestCase(TestCase):
         self.assertEqual(batch_order.orders.count(), 2)
         self.assertEqual(len(batch_order.vouchers), 2)
         # check email has been sent
-        self.assertEqual(len(mail.outbox), 1)
-
-        # check we send it to the right email
+        self.assertEqual(len(mail.outbox), 2)
+        # check we send it to the right emails. One for each user (owner and administrative user)
         self.assertEqual(mail.outbox[0].to[0], batch_order.owner.email)
+        self.assertEqual(mail.outbox[1].to[0], batch_order.administrative_email)
 
         email_content = " ".join(mail.outbox[0].body.split())
+        email_content_administrative_user = " ".join(mail.outbox[1].body.split())
 
         self.assertEqual(mail.outbox[0].subject, "Batch order payment validated!")
+        self.assertEqual(mail.outbox[1].subject, "Batch order payment validated!")
         self.assertIn("Hello", email_content)
+        # Check if the fullname are coherent in each email
+        self.assertIn("Jane Smith", email_content)
+        self.assertIn("John Doe", email_content_administrative_user)
         self.assertIn("Product 1", email_content)
         self.assertIn("for 2 seats", email_content)
         self.assertIn("Here are your single use vouchers", email_content)

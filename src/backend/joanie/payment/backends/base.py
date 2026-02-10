@@ -116,13 +116,20 @@ class BasePaymentBackend:
             product_title = batch_order.offering.product.safe_translation_getter(
                 "title", language_code=batch_order.owner.language
             )
-            for email in [batch_order.owner.email, batch_order.administrative_email]:
+            to_user_emails = [
+                (batch_order.owner.email, batch_order.owner.get_full_name()),
+                (
+                    batch_order.administrative_email,
+                    f"{batch_order.administrative_firstname} {batch_order.administrative_lastname}",
+                ),
+            ]
+            for email, fullname in to_user_emails:
                 emails.send(
                     subject=_("Batch order payment validated!"),
                     template_vars={
                         "title": _("Payment confirmed!"),
-                        "email": batch_order.owner.email,
-                        "fullname": batch_order.owner.get_full_name(),
+                        "email": email,
+                        "fullname": fullname,
                         "product_title": product_title,
                         "total": Money(batch_order.total),
                         "number_of_seats": batch_order.nb_seats,

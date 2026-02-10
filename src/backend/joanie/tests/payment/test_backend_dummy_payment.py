@@ -878,6 +878,9 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase
             nb_seats=2,
             offering=offering,
             owner__language="en-us",
+            administrative_firstname="Jane",
+            administrative_lastname="Doe",
+            administrative_email="janedoe@example.acme",
         )
         mail.outbox.clear()
 
@@ -912,9 +915,17 @@ class DummyPaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase
         self.assertTrue(Transaction.objects.filter(reference=payment_id).exists())
         self.assertTrue(batch_order.main_invoice.children.count(), 1)
 
-        # check email has been sent
+        # check emails were sent
         self._check_batch_order_paid_email_sent(
-            email=batch_order.owner.email, batch_order=batch_order
+            batch_order.owner.email,
+            batch_order,
+            batch_order.owner.get_full_name(),
+        )
+        del mail.outbox[0]
+        self._check_batch_order_paid_email_sent(
+            batch_order.administrative_email,
+            batch_order,
+            f"{batch_order.administrative_firstname} {batch_order.administrative_lastname}",
         )
 
         self.assertPaymentSuccessActivityLog(batch_order)
