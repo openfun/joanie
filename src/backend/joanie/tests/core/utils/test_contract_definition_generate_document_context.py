@@ -712,7 +712,7 @@ class UtilsGenerateDocumentContextTestCase(TestCase):
         self.assertNotIn("logo", context["organization"])
         self.assertIsNone(context["organization"]["logo_id"])
 
-    @override_settings(JOANIE_URL_EDUCATIONAL_PLATFORM="www.example-testing.acme")
+    @override_settings(JOANIE_CATALOG_BASE_URL="www.example-testing.acme")
     def test_utils_contract_definition_prepare_document_context_with_batch_order(self):
         """
         When we call `generate_document_context` utility method with a batch order, the
