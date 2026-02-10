@@ -206,6 +206,7 @@ class UtilsBatchOrderTestCase(TestCase):
         self.assertNotIn("trans ", email_content)
         # catalog url is included in the email
         self.assertIn("https://richie.education", email_content)
+        self.assertIn("Visualize the documents", email_content)
 
         # If user has french language, the email should be in french
         with switch_language(batch_order.offering.product, "fr-fr"):
@@ -227,6 +228,8 @@ class UtilsBatchOrderTestCase(TestCase):
                 "Produit 1 - Une signature est requise pour votre commande groupée.",
                 email_content,
             )
+            # may be uncommented once the translation is ready
+            # self.assertNotIn("Visualize the documents", email_content)
 
         # If the translation does not exist, it should use the fallback language
         with switch_language(batch_order.offering.product, "de-de"):
