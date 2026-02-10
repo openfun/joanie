@@ -18,7 +18,9 @@
             font-size="16px"
             padding="35px 15px 30px"
             border-radius="4px">
-            Visualize the documents
+            {% blocktranslate %}
+              Visualize the documents
+            {% endblocktranslate %}
           </mj-button>
         </mj-column>
       </mj-section>
