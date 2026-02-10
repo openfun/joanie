@@ -308,7 +308,7 @@ def prepare_batch_order_context(batch_order):
                     "contact_name": batch_order.billing_address["contact_name"],
                     "contact_email": batch_order.billing_address["contact_email"],
                 },
-                "url_educational_platform": settings.JOANIE_URL_EDUCATIONAL_PLATFORM,
+                "url_educational_platform": settings.JOANIE_CATALOG_BASE_URL,
                 "purchase_order_reference": (
                     batch_order.quote.purchase_order_reference
                     if batch_order.uses_purchase_order
