@@ -105,7 +105,7 @@ def send_mail_quote_arrival(batch_order):
                 "title", language_code=access.user.language
             )
             send(
-                subject=_("A new quote has arrived to your dashboard !"),
+                subject=_("A new quote request has arrived in your dashboard!"),
                 template_vars={
                     "product_title": product_title,
                     "company_name": batch_order.company_name,

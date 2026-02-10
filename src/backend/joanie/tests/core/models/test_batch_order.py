@@ -56,10 +56,10 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         email_content = " ".join(mail.outbox[0].body.split())
 
         self.assertEqual(
-            mail.outbox[0].subject, "A new quote has arrived to your dashboard !"
+            mail.outbox[0].subject, "A new quote request has arrived in your dashboard!"
         )
         self.assertIn("seats", email_content)
-        self.assertIn("A new quote for the company", email_content)
+        self.assertIn("A new quote request for the company", email_content)
         self.assertIn(batch_order.company_name, email_content)
         self.assertIn(str(batch_order.nb_seats), email_content)
 
