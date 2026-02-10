@@ -71,12 +71,12 @@ def send_mail_invitation_link(batch_order, invitation_link: str):
         )
         send(
             subject=_(
-                f"{product_title} - A signature is requested for your batch order."
-            ),
+                "{product_title} - A signature is requested for your batch order."
+            ).format(product_title=product_title),
             template_vars={
                 "title": _(
-                    f"{product_title} - A signature is requested for your batch order."
-                ),
+                    "{product_title} - A signature is requested for your batch order."
+                ).format(product_title=product_title),
                 "email": batch_order.signatory_email,
                 "fullname": f"{batch_order.signatory_firstname} {batch_order.signatory_lastname}",
                 "product_title": product_title,

@@ -215,10 +215,18 @@ class UtilsBatchOrderTestCase(TestCase):
 
             send_mail_invitation_link(batch_order, invitation_link)
 
-            email_content = " ".join(mail.outbox[0].body.split())
+            self.assertEqual(
+                mail.outbox[0].subject,
+                "Produit 1 - Une signature est requise pour votre commande groupée.",
+            )
 
+            email_content = " ".join(mail.outbox[0].body.split())
             self.assertIn("Produit 1", email_content)
             self.assertIn("Bonjour", email_content)
+            self.assertIn(
+                "Produit 1 - Une signature est requise pour votre commande groupée.",
+                email_content,
+            )
 
         # If the translation does not exist, it should use the fallback language
         with switch_language(batch_order.offering.product, "de-de"):
