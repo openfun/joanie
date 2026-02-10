@@ -7,7 +7,7 @@
         <mj-column>
           <mj-text padding="0">
             {% blocktranslate with title=product_title %}
-              A new quote for the company <strong>{{company_name}}</strong> ({{nb_seats}} seats)
+              A new quote request for the company <strong>{{company_name}}</strong> ({{nb_seats}} seats)
               has arrived for the course <strong>{{ title }}</strong>.
             {% endblocktranslate %}
           </mj-text>
