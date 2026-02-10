@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-03 09:02+0000\n"
-"PO-Revision-Date: 2026-02-06 09:05\n"
+"POT-Creation-Date: 2026-02-09 09:14+0000\n"
+"PO-Revision-Date: 2026-02-10 09:16\n"
 "Last-Translator: \n"
 "Language-Team: French, Canada\n"
 "Language: fr_CA\n"
@@ -618,7 +618,7 @@ msgstr ""
 #: joanie/core/models/accounts.py:161 joanie/core/models/certifications.py:33
 #: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:182
 #: joanie/core/models/courses.py:513 joanie/core/models/courses.py:946
-#: joanie/core/models/products.py:104 joanie/core/models/products.py:2801
+#: joanie/core/models/products.py:104 joanie/core/models/products.py:2802
 #: joanie/core/models/quotes.py:25 joanie/payment/models.py:497
 msgid "title"
 msgstr ""
@@ -639,11 +639,11 @@ msgstr ""
 msgid "country"
 msgstr ""
 
-#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2843
+#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2844
 msgid "first name"
 msgstr ""
 
-#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2844
+#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2845
 msgid "last name"
 msgstr ""
 
@@ -907,7 +907,7 @@ msgid "forever open"
 msgstr ""
 
 #: joanie/core/models/courses.py:180 joanie/core/models/courses.py:510
-#: joanie/core/models/products.py:2928
+#: joanie/core/models/products.py:2929
 msgid "code"
 msgstr ""
 
@@ -1241,7 +1241,7 @@ msgid "course product relation"
 msgstr ""
 
 #: joanie/core/models/products.py:528 joanie/core/models/products.py:774
-#: joanie/core/models/products.py:2952
+#: joanie/core/models/products.py:2953
 msgid "is active"
 msgstr ""
 
@@ -1578,79 +1578,79 @@ msgstr ""
 msgid "Contract is already signed by the buyer, cannot resubmit."
 msgstr ""
 
-#: joanie/core/models/products.py:2796
+#: joanie/core/models/products.py:2797
 msgid "Skill"
 msgstr ""
 
-#: joanie/core/models/products.py:2797
+#: joanie/core/models/products.py:2798
 msgid "Skills"
 msgstr ""
 
-#: joanie/core/models/products.py:2816
+#: joanie/core/models/products.py:2817
 msgid "A skill with this title already exists."
 msgstr ""
 
-#: joanie/core/models/products.py:2838
+#: joanie/core/models/products.py:2839
 msgid "Teacher"
 msgstr ""
 
-#: joanie/core/models/products.py:2839
+#: joanie/core/models/products.py:2840
 msgid "Teachers"
 msgstr ""
 
-#: joanie/core/models/products.py:2854 joanie/core/serializers/admin.py:1428
+#: joanie/core/models/products.py:2855 joanie/core/serializers/admin.py:1428
 msgid "Discount"
 msgstr ""
 
-#: joanie/core/models/products.py:2855
+#: joanie/core/models/products.py:2856
 msgid "Discounts"
 msgstr ""
 
-#: joanie/core/models/products.py:2871
+#: joanie/core/models/products.py:2872
 msgid "amount"
 msgstr ""
 
-#: joanie/core/models/products.py:2872
+#: joanie/core/models/products.py:2873
 msgid "Discount amount"
 msgstr ""
 
-#: joanie/core/models/products.py:2878
+#: joanie/core/models/products.py:2879
 msgid "rate"
 msgstr ""
 
-#: joanie/core/models/products.py:2879
+#: joanie/core/models/products.py:2880
 msgid "Discount rate"
 msgstr ""
 
-#: joanie/core/models/products.py:2923 joanie/core/serializers/admin.py:1429
+#: joanie/core/models/products.py:2924 joanie/core/serializers/admin.py:1429
 msgid "Voucher"
 msgstr ""
 
-#: joanie/core/models/products.py:2924
+#: joanie/core/models/products.py:2925
 msgid "Vouchers"
 msgstr ""
 
-#: joanie/core/models/products.py:2929
+#: joanie/core/models/products.py:2930
 msgid "Voucher code"
 msgstr ""
 
-#: joanie/core/models/products.py:2936
+#: joanie/core/models/products.py:2937
 msgid "discount"
 msgstr ""
 
-#: joanie/core/models/products.py:2943
+#: joanie/core/models/products.py:2944
 msgid "multiple use"
 msgstr ""
 
-#: joanie/core/models/products.py:2944
+#: joanie/core/models/products.py:2945
 msgid "Voucher can be used multiple times per user."
 msgstr ""
 
-#: joanie/core/models/products.py:2948
+#: joanie/core/models/products.py:2949
 msgid "multiple users"
 msgstr ""
 
-#: joanie/core/models/products.py:2949
+#: joanie/core/models/products.py:2950
 msgid "Voucher can be used by multiple users."
 msgstr ""
 

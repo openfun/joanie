@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-03 09:02+0000\n"
-"PO-Revision-Date: 2026-02-06 09:05\n"
+"POT-Creation-Date: 2026-02-09 09:14+0000\n"
+"PO-Revision-Date: 2026-02-10 09:16\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -618,7 +618,7 @@ msgstr "Utilisateurs"
 #: joanie/core/models/accounts.py:161 joanie/core/models/certifications.py:33
 #: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:182
 #: joanie/core/models/courses.py:513 joanie/core/models/courses.py:946
-#: joanie/core/models/products.py:104 joanie/core/models/products.py:2801
+#: joanie/core/models/products.py:104 joanie/core/models/products.py:2802
 #: joanie/core/models/quotes.py:25 joanie/payment/models.py:497
 msgid "title"
 msgstr "titre"
@@ -639,11 +639,11 @@ msgstr "ville"
 msgid "country"
 msgstr "pays"
 
-#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2843
+#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2844
 msgid "first name"
 msgstr "prénom"
 
-#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2844
+#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2845
 msgid "last name"
 msgstr "nom de famille"
 
@@ -907,7 +907,7 @@ msgid "forever open"
 msgstr "ouvert indéfiniment"
 
 #: joanie/core/models/courses.py:180 joanie/core/models/courses.py:510
-#: joanie/core/models/products.py:2928
+#: joanie/core/models/products.py:2929
 msgid "code"
 msgstr "code"
 
@@ -1241,7 +1241,7 @@ msgid "course product relation"
 msgstr "relation cours produit"
 
 #: joanie/core/models/products.py:528 joanie/core/models/products.py:774
-#: joanie/core/models/products.py:2952
+#: joanie/core/models/products.py:2953
 msgid "is active"
 msgstr "est actif"
 
@@ -1435,15 +1435,15 @@ msgstr "relation produit-cours des commandes groupées"
 
 #: joanie/core/models/products.py:2092
 msgid "eligible person to sign the convention from the company"
-msgstr "personne habilitée par l'Entreprise à signer la convention"
+msgstr "personne habilitée par l'Organisme à signer la convention"
 
 #: joanie/core/models/products.py:2097
 msgid "company identification number"
-msgstr "numéro d'identification de l'entreprise"
+msgstr "numéro d'identification de l'organisme"
 
 #: joanie/core/models/products.py:2098
 msgid "company identification number like SIRET in France"
-msgstr "numéro d'identification de l'Entreprise comme SIRET en France"
+msgstr "numéro d'identification de l'Organisme comme SIRET en France"
 
 #: joanie/core/models/products.py:2103
 msgid "Tax registration number"
@@ -1451,7 +1451,7 @@ msgstr "Numéro d’immatriculation fiscale"
 
 #: joanie/core/models/products.py:2105
 msgid "company's vat identification number like Numero de TVA intracommunautaire in France"
-msgstr "numéro de TVA de l’entreprise"
+msgstr "numéro de TVA de l’organisme"
 
 #: joanie/core/models/products.py:2112 joanie/core/models/products.py:2113
 msgid "company name"
@@ -1459,7 +1459,7 @@ msgstr "raison sociale"
 
 #: joanie/core/models/products.py:2117
 msgid "company address"
-msgstr "adresse de l'entreprise"
+msgstr "siège social de l'organisme"
 
 #: joanie/core/models/products.py:2120
 msgid "company postcode"
@@ -1467,11 +1467,11 @@ msgstr "code postal de l'entreprise"
 
 #: joanie/core/models/products.py:2123
 msgid "company city"
-msgstr "ville de l'entreprise"
+msgstr "ville de l'organisme"
 
 #: joanie/core/models/products.py:2125
 msgid "company country"
-msgstr "pays de l'entreprise"
+msgstr "pays de l'organisme"
 
 #: joanie/core/models/products.py:2128
 msgid "billing address of the company"
@@ -1578,79 +1578,79 @@ msgstr "La commande groupée n’est pas éligible à la signature"
 msgid "Contract is already signed by the buyer, cannot resubmit."
 msgstr "Le contrat est déjà signé par l'acheteur, impossible de le soumettre à nouveau."
 
-#: joanie/core/models/products.py:2796
+#: joanie/core/models/products.py:2797
 msgid "Skill"
 msgstr "Compétence"
 
-#: joanie/core/models/products.py:2797
+#: joanie/core/models/products.py:2798
 msgid "Skills"
 msgstr "Compétences"
 
-#: joanie/core/models/products.py:2816
+#: joanie/core/models/products.py:2817
 msgid "A skill with this title already exists."
 msgstr "Cette compétence existe déjà."
 
-#: joanie/core/models/products.py:2838
+#: joanie/core/models/products.py:2839
 msgid "Teacher"
 msgstr "Responsable pédagogique"
 
-#: joanie/core/models/products.py:2839
+#: joanie/core/models/products.py:2840
 msgid "Teachers"
 msgstr "Responsables pédagogiques"
 
-#: joanie/core/models/products.py:2854 joanie/core/serializers/admin.py:1428
+#: joanie/core/models/products.py:2855 joanie/core/serializers/admin.py:1428
 msgid "Discount"
 msgstr "Réduction"
 
-#: joanie/core/models/products.py:2855
+#: joanie/core/models/products.py:2856
 msgid "Discounts"
 msgstr "Réductions"
 
-#: joanie/core/models/products.py:2871
+#: joanie/core/models/products.py:2872
 msgid "amount"
 msgstr "montant"
 
-#: joanie/core/models/products.py:2872
+#: joanie/core/models/products.py:2873
 msgid "Discount amount"
 msgstr "Montant de la réduction"
 
-#: joanie/core/models/products.py:2878
+#: joanie/core/models/products.py:2879
 msgid "rate"
 msgstr "taux"
 
-#: joanie/core/models/products.py:2879
+#: joanie/core/models/products.py:2880
 msgid "Discount rate"
 msgstr "Taux de réduction"
 
-#: joanie/core/models/products.py:2923 joanie/core/serializers/admin.py:1429
+#: joanie/core/models/products.py:2924 joanie/core/serializers/admin.py:1429
 msgid "Voucher"
 msgstr "Coupon"
 
-#: joanie/core/models/products.py:2924
+#: joanie/core/models/products.py:2925
 msgid "Vouchers"
 msgstr "Coupons"
 
-#: joanie/core/models/products.py:2929
+#: joanie/core/models/products.py:2930
 msgid "Voucher code"
 msgstr "Code du coupon"
 
-#: joanie/core/models/products.py:2936
+#: joanie/core/models/products.py:2937
 msgid "discount"
 msgstr "réduction"
 
-#: joanie/core/models/products.py:2943
+#: joanie/core/models/products.py:2944
 msgid "multiple use"
 msgstr "utilisation multiple"
 
-#: joanie/core/models/products.py:2944
+#: joanie/core/models/products.py:2945
 msgid "Voucher can be used multiple times per user."
 msgstr "Le coupon peut être utilisé plusieurs fois par utilisateur."
 
-#: joanie/core/models/products.py:2948
+#: joanie/core/models/products.py:2949
 msgid "multiple users"
 msgstr "plusieurs utilisateurs"
 
-#: joanie/core/models/products.py:2949
+#: joanie/core/models/products.py:2950
 msgid "Voucher can be used by multiple users."
 msgstr "Le coupon peut être utilisé par plusieurs utilisateurs."
 
@@ -2161,7 +2161,7 @@ msgstr "Contact Délégué à la protection des données : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:59
 msgid "Learner (hereinafter \"the Learner\"):"
-msgstr "Stagiaire (ci-après \"le Stagiaire\") :"
+msgstr "Stagiaire (ci-après « le Stagiaire ») :"
 
 #: joanie/core/templates/issuers/contract_definition_default.html:62
 msgid "Full name: "
@@ -2170,7 +2170,7 @@ msgstr "Nom complet : "
 #: joanie/core/templates/issuers/contract_definition_default.html:63
 #: joanie/core/templates/issuers/quote_default.html:91
 msgid "Postal address: "
-msgstr "Adresse postale : "
+msgstr "Siège social : "
 
 #: joanie/core/templates/issuers/contract_definition_default.html:66
 msgid "Email address: "
@@ -2470,7 +2470,7 @@ msgstr "Signature électronique du représentant habilité de l’Organisme :"
 
 #: joanie/core/templates/issuers/quote_default.html:32
 msgid "The current quote is formed between the University and the Company, as identified below:"
-msgstr "Le présent devis est établi entre l’Université et l’Entreprise ci-après désignées :"
+msgstr "Le présent devis est établi entre l’Université et l’Organisme ci-après désignés :"
 
 #: joanie/core/templates/issuers/quote_default.html:37
 msgid "Quote reference:"
@@ -2478,11 +2478,11 @@ msgstr "Référence du devis :"
 
 #: joanie/core/templates/issuers/quote_default.html:78
 msgid "Company (hereinafter \"the Company\"):"
-msgstr "Organisation acheteuse (ci-après \"l'Entreprise\") :"
+msgstr "Organisation acheteuse (ci-après « l'Organisme ») :"
 
 #: joanie/core/templates/issuers/quote_default.html:81
 msgid "Company representative Full name: "
-msgstr "Nom complet du représentant légal de l'Entreprise : "
+msgstr "Nom complet du représentant légal de l'Organisme : "
 
 #: joanie/core/templates/issuers/quote_default.html:82
 msgid "Representing company: "
@@ -2530,7 +2530,7 @@ msgstr "Montant du financement : "
 
 #: joanie/core/templates/issuers/quote_default.html:144
 msgid "Course (hereinafter \"the Course\"):"
-msgstr "Formation (ci-après \"la Formation\") :"
+msgstr "Formation (ci-après « la Formation ») :"
 
 #: joanie/core/templates/issuers/quote_default.html:164
 msgid "Teaching Format: Online Only"
@@ -2760,7 +2760,7 @@ msgstr "Nous vous souhaitons beaucoup de succès dans votre formation. 🎉"
 #: joanie/core/templates/mail/html/quote_arrival.html:211
 #, python-format
 msgid " A new quote for the company <strong>%(company_name)s</strong> (%(nb_seats)s seats) has arrived for the course <strong>%(title)s</strong>. "
-msgstr " Un nouveau devis pour l’organisme <strong>%(company_name)s</strong> (%(nb_seats)s places) est disponible pour la formation <strong>%(title)s</strong>. "
+msgstr " Une nouvelle demande de devis pour l’organisme <strong>%(company_name)s</strong> (%(nb_seats)s places) est disponible pour la formation <strong>%(title)s</strong>. "
 
 #: joanie/core/templates/mail/html/quote_arrival.html:235
 #: joanie/core/templates/mail/text/quote_arrival.txt:14
@@ -2860,7 +2860,7 @@ msgstr "Vous avez acheté %(title)s pour un prix de %(price)s."
 #: joanie/core/templates/mail/text/quote_arrival.txt:12
 #, python-format
 msgid " A new quote for the company %(company_name)s (%(nb_seats)s seats) has arrived for the course %(title)s. "
-msgstr " Un nouveau devis pour l'organisme %(company_name)s (%(nb_seats)s places) est disponible pour la formation %(title)s. "
+msgstr " Une nouvelle demande de devis pour l'organisme %(company_name)s (%(nb_seats)s places) est disponible pour la formation %(title)s. "
 
 #: joanie/core/utils/batch_order.py:38
 msgid "Seat limitation has been reached."
@@ -2873,7 +2873,7 @@ msgstr "{product_title} - Une signature est requise pour votre commande groupée
 
 #: joanie/core/utils/batch_order.py:108
 msgid "A new quote has arrived to your dashboard !"
-msgstr "Un nouveau devis est arrivé sur votre tableau de bord !"
+msgstr "Une nouvelle demande de devis est arrivée sur votre tableau de bord !"
 
 #: joanie/core/utils/contract_definition.py:24 joanie/core/utils/quotes.py:66
 msgid "<ORGANIZATION_ADDRESS_STREET_NAME>"
