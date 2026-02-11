@@ -785,7 +785,6 @@ class BatchOrderViewSet(
     lookup_field = "pk"
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.BatchOrderSerializer
-    ordering = ["-created_on"]
 
     def get_queryset(self):
         """Custom queryset to limit to batch orders owned by the logged-in user."""

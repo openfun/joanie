@@ -75,7 +75,7 @@ class BatchOrdersAdminApiListTestCase(BaseAPITestCase):
                         "next_action": "confirm_quote",
                     },
                 }
-                for batch_order in batch_orders
+                for batch_order in reversed(batch_orders)
             ],
             response.json()["results"],
         )
