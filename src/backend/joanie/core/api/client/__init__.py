@@ -1226,9 +1226,6 @@ class OrganizationViewSet(
                 _("Batch order is canceled, cannot confirm quote signature.")
             )
 
-        if not batch_order.has_quote:
-            raise ValidationError(_("You must generate the quote first."))
-
         if batch_order.quote.is_signed_by_organization or batch_order.total:
             raise ValidationError(_("Quote is already signed, and total is frozen."))
 
