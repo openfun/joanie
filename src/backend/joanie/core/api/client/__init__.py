@@ -1221,6 +1221,17 @@ class OrganizationViewSet(
             models.Quote, id=quote_id, batch_order__organization=organization
         ).batch_order
 
+        if batch_order.is_canceled:
+            raise ValidationError(
+                "Batch order is canceled, cannot confirm quote signature."
+            )
+
+        if not batch_order.has_quote:
+            raise ValidationError(_("You must generate the quote first."))
+
+        if batch_order.quote.is_signed_by_organization or batch_order.total:
+            raise ValidationError(_("Quote is already signed, and total is frozen."))
+
         batch_order.freeze_total(total)
 
         return Response(status=HTTPStatus.OK)
