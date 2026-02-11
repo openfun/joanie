@@ -1215,19 +1215,30 @@ class OrganizationViewSet(
         total = request.data.get("total")
 
         if not total:
-            raise ValidationError(_("Missing total value. It's required."))
+            return Response(
+                {"detail": _("Missing total value. It's required.")},
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
         batch_order = get_object_or_404(
             models.Quote, id=quote_id, batch_order__organization=organization
         ).batch_order
 
         if batch_order.is_canceled:
-            raise ValidationError(
-                _("Batch order is canceled, cannot confirm quote signature.")
+            return Response(
+                {
+                    "detail": _(
+                        "Batch order is canceled, cannot confirm quote signature."
+                    )
+                },
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
         if batch_order.quote.is_signed_by_organization or batch_order.total:
-            raise ValidationError(_("Quote is already signed, and total is frozen."))
+            return Response(
+                {"detail": _("Quote is already signed, and total is frozen.")},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         batch_order.freeze_total(total)
 
@@ -1359,7 +1370,10 @@ class OrganizationViewSet(
         )
 
         if not batch_order.is_signable:
-            raise ValidationError(_("Batch order is not eligible to get signed."))
+            return Response(
+                {"detail": _("Batch order is not eligible to get signed.")},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         invitation_link = batch_order.submit_for_signature()
 
@@ -1816,11 +1830,19 @@ class ContractViewSet(GenericContractViewSet):
         contract = self.get_object()
 
         if contract.order.state == enums.ORDER_STATE_CANCELED:
-            raise ValidationError("Cannot get contract when an order is cancelled.")
+            return Response(
+                {"detail": _("Cannot get contract when an order is cancelled.")},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         if not contract.is_fully_signed:
-            raise ValidationError(
-                "Cannot download a contract when it is not yet fully signed."
+            return Response(
+                {
+                    "detail": _(
+                        "Cannot download a contract when it is not yet fully signed."
+                    )
+                },
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
         signed_contract_pdf_bytes = contract_utility.get_pdf_bytes_of_contracts(
@@ -1911,7 +1933,10 @@ class ContractViewSet(GenericContractViewSet):
             extra_filters=extra_filters,
             from_batch_order=from_batch_order,
         ):
-            raise ValidationError("No zip to generate")
+            return Response(
+                {"detail": _("No zip to generate.")},
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
         # Generate here the zip uuid4 to generate ZIP archive for the requesting user
         zip_id = uuid.uuid4()  # ZIP UUID to build the ZIP archive name

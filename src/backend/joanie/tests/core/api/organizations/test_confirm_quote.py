@@ -225,8 +225,11 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
-        self.assertIn("canceled", response.json()[0])
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertEqual(
+            {"detail": "Batch order is canceled, cannot confirm quote signature."},
+            response.json(),
+        )
 
     def test_api_organization_confirm_quote_no_quote(self):
         """
@@ -285,8 +288,10 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
             content_type="application/json",
         )
 
-        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
-        self.assertIn("already signed", response.json()[0])
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertEqual(
+            {"detail": "Quote is already signed, and total is frozen."}, response.json()
+        )
 
     def test_api_organization_confirm_quote_authenticated(self):
         """
