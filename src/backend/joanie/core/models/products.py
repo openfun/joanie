@@ -2968,15 +2968,14 @@ class Voucher(BaseModel):
         if self.multiple_use and self.multiple_users:
             return True
 
-        # For batch order vouchers, only unclaimed orders (TO_OWN) are
-        # considered available. A canceled order means the seat was consumed
-        # then revoked — the voucher should not become reusable.
-        if self.orders.filter(batch_order__isnull=False).exists():
-            claimable_states = (enums.ORDER_STATE_TO_OWN,)
-        else:
-            claimable_states = enums.ORDER_STATES_VOUCHER_CLAIMABLE
-
-        orders_queryset = self.orders.exclude(state__in=claimable_states)
+        # Exclude claimable orders: TO_OWN for batch orders, ORDER_STATES_VOUCHER_CLAIMABLE
+        # for regular orders. Uses conditional Q to avoid an extra query.
+        orders_queryset = self.orders.exclude(
+            models.Q(batch_order__isnull=False, state=enums.ORDER_STATE_TO_OWN)
+            | models.Q(
+                batch_order__isnull=True, state__in=enums.ORDER_STATES_VOUCHER_CLAIMABLE
+            )
+        )
 
         # Voucher can be used multiple times but only by one user
         if self.multiple_use:
