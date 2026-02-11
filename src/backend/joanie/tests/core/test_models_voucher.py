@@ -5,6 +5,7 @@ from unittest import mock
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
+from joanie.core import enums, factories
 from joanie.core.factories import VoucherFactory
 
 
@@ -65,3 +66,39 @@ class VoucherModelTestCase(TestCase):
             new_voucher = VoucherFactory()
 
         self.assertEqual(new_voucher.code, "new_code")
+
+    def test_models_voucher_is_usable_by_batch_order_canceled_order(self):
+        """
+        A voucher from a batch order should not be reusable after the
+        individual order has been canceled. The seat was consumed then
+        revoked — the voucher must not become available again.
+        """
+        user = factories.UserFactory()
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=1, state=enums.BATCH_ORDER_STATE_COMPLETED
+        )
+        batch_order.generate_orders()
+
+        order = batch_order.orders.first()
+        order.owner = user
+        order.flow.update()
+        order.save()
+
+        # Cancel the individual order
+        order.flow.cancel()
+
+        self.assertFalse(order.voucher.is_usable_by(user.id))
+
+    def test_models_voucher_is_usable_by_regular_voucher_canceled_order(self):
+        """
+        A regular (non-batch-order) voucher should become reusable after
+        the order using it has been canceled.
+        """
+        user = factories.UserFactory()
+        voucher = VoucherFactory()
+        order = factories.OrderFactory(owner=user, voucher=voucher)
+
+        # Cancel the order
+        order.flow.cancel()
+
+        self.assertTrue(voucher.is_usable_by(user.id))
