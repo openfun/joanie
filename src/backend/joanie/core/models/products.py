@@ -2030,7 +2030,7 @@ class BatchOrder(BaseModel):
         db_table = "joanie_batch_order"
         verbose_name = _("batch order")
         verbose_name_plural = _("batch orders")
-        ordering = ["created_on"]
+        ordering = ["-created_on"]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(
