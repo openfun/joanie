@@ -1215,7 +1215,7 @@ class OrganizationViewSet(
         total = request.data.get("total")
 
         if not total:
-            raise ValidationError("Missing total value. It's required.")
+            raise ValidationError(_("Missing total value. It's required."))
 
         batch_order = get_object_or_404(
             models.Quote, id=quote_id, batch_order__organization=organization
@@ -1223,7 +1223,7 @@ class OrganizationViewSet(
 
         if batch_order.is_canceled:
             raise ValidationError(
-                "Batch order is canceled, cannot confirm quote signature."
+                _("Batch order is canceled, cannot confirm quote signature.")
             )
 
         if not batch_order.has_quote:
