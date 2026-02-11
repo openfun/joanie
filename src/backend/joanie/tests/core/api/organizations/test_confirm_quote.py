@@ -197,6 +197,97 @@ class OrganizationApiConfirmQuoteTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
+    def test_api_organization_confirm_quote_canceled_batch_order(self):
+        """
+        Authenticated user with owner role should not be able to confirm a quote
+        if the batch order is canceled.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+        )
+        access = factories.UserOrganizationAccessFactory(
+            organization=batch_order.organization, role=enums.OWNER
+        )
+        token = self.generate_token_from_user(access.user)
+        quote_id = batch_order.quote.id
+
+        # Cancel the batch order after it has been quoted
+        batch_order.flow.cancel()
+        batch_order.refresh_from_db()
+
+        response = self.client.patch(
+            f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-quote/",
+            data={
+                "quote_id": str(quote_id),
+                "total": "123.45",
+            },
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertIn("canceled", response.json()[0])
+
+    def test_api_organization_confirm_quote_no_quote(self):
+        """
+        Authenticated user with owner role should not be able to confirm a quote
+        if the batch order has no quote generated yet.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+        )
+        access = factories.UserOrganizationAccessFactory(
+            organization=batch_order.organization, role=enums.OWNER
+        )
+        token = self.generate_token_from_user(access.user)
+
+        # Remove the quote to simulate no quote generated
+        quote_id = batch_order.quote.id
+        batch_order.quote.delete()
+        batch_order.refresh_from_db()
+
+        response = self.client.patch(
+            f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-quote/",
+            data={
+                "quote_id": str(quote_id),
+                "total": "123.45",
+            },
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
+
+    def test_api_organization_confirm_quote_already_signed(self):
+        """
+        Authenticated user with owner role should not be able to confirm a quote
+        if the quote is already signed by the organization and total is frozen.
+        """
+        batch_order = factories.BatchOrderFactory(
+            nb_seats=1,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+        )
+        access = factories.UserOrganizationAccessFactory(
+            organization=batch_order.organization, role=enums.OWNER
+        )
+        token = self.generate_token_from_user(access.user)
+
+        # Confirm the quote a first time
+        batch_order.freeze_total(Decimal("1234.56"))
+
+        response = self.client.patch(
+            f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-quote/",
+            data={
+                "quote_id": str(batch_order.quote.id),
+                "total": "1234.56",
+            },
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            content_type="application/json",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertIn("already signed", response.json()[0])
+
     def test_api_organization_confirm_quote_authenticated(self):
         """
         Authenticated user with owner role in his organization should be able to confirm a quote
