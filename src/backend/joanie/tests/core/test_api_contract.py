@@ -1032,7 +1032,7 @@ class ContractApiTest(BaseAPITestCase):
                     self.assertContains(
                         response,
                         "Cannot download a contract when it is not yet fully signed.",
-                        status_code=HTTPStatus.BAD_REQUEST,
+                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                     )
 
     def test_api_contract_download_authenticated_cannot_create(self):
@@ -1186,7 +1186,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Cannot download a contract when it is not yet fully signed.",
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
     def test_api_contract_generate_zip_archive_anonymous(self):
@@ -1341,7 +1341,7 @@ class ContractApiTest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
-        self.assertEqual(response.json(), ["No zip to generate"])
+        self.assertEqual(response.json(), {"detail": "No zip to generate."})
 
     # pylint: disable=too-many-locals
     def test_api_contract_generate_zip_archive_authenticated_post_passing_organization_and_cpr(
@@ -1973,7 +1973,7 @@ class ContractApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Cannot download a contract when it is not yet fully signed.",
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
     def test_api_contract_download_signed_file_authenticated_not_fully_signed_by_organization(
@@ -2011,5 +2011,5 @@ class ContractApiTest(BaseAPITestCase):
         self.assertContains(
             response,
             "Cannot download a contract when it is not yet fully signed.",
-            status_code=HTTPStatus.BAD_REQUEST,
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
         )
