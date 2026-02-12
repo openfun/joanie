@@ -313,3 +313,10 @@ class OrganizationViewSetFilter(filters.FilterSet):
     class Meta:
         model = models.Organization
         fields: List[str] = []
+
+
+class OrdersBatchOrderViewSetFilter(filters.FilterSet):
+    """
+    Filter for seats of a batch order
+    """
+    pass

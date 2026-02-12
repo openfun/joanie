@@ -551,6 +551,39 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
         return instance.available_client_actions
 
 
+class NestedBatchOrderSeatsSerializer(serializers.ModelSerializer):
+    """Light serializer for orders of batch order"""
+
+    owner_name = serializers.SerializerMethodField(read_only=True)
+    voucher = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = models.Order
+        fields = [
+            "id",
+            "owner_name",
+            "voucher",
+        ]
+
+    def get_owner_name(self, instance) -> str | None:
+        """
+        Return the name of the order's owner if available,
+        otherwise return None.
+        """
+        if instance.owner:
+            return instance.owner.name
+        return None
+
+    def get_voucher(self, instance) -> str | None:
+        """
+        Return the voucher code of the generated order if not yet consumed,
+        otherwise None
+        """
+        if instance.voucher:
+            return instance.voucher.code
+        return None
+
+
 class AgreementBatchOrderSerializer(AbilitiesModelSerializer):
     """Small serializer for Contracts models related to Batch Orders (agreements)"""
 
