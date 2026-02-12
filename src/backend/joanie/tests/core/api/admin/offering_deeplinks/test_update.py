@@ -44,7 +44,10 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_admin_api_offering_deeplink_update_with_staff_user(self):
-        """Staff user with basic permissions should be able to update deeplinks of an offering."""
+        """
+        Staff user with basic permissions should not be able to update deeplinks of an
+        offering.
+        """
         staff = factories.UserFactory(is_staff=True, is_superuser=False)
         self.client.login(username=staff.username, password="password")
         deeplink = factories.OfferingDeepLinkFactory(

@@ -717,13 +717,11 @@ class AdminOfferingDeepLinkSerializer(serializers.ModelSerializer):
         queryset=models.Organization.objects.all(),
         slug_field="id",
         write_only=True,
-        read_only=False,
     )
     offering = serializers.SlugRelatedField(
         queryset=models.CourseProductRelation.objects.all(),
         slug_field="id",
         write_only=True,
-        read_only=False,
     )
 
     class Meta:
