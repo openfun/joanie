@@ -16,7 +16,7 @@ class OfferingDeepLinkListAdminApiTestCase(BaseAPITestCase):
         offering = factories.OfferingFactory()
 
         response = self.client.get(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
@@ -28,7 +28,7 @@ class OfferingDeepLinkListAdminApiTestCase(BaseAPITestCase):
         offering = factories.OfferingFactory()
 
         response = self.client.get(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
@@ -52,7 +52,7 @@ class OfferingDeepLinkListAdminApiTestCase(BaseAPITestCase):
             deeplink_ids.append(deeplink_id)
 
         response = self.client.get(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
@@ -95,7 +95,7 @@ class OfferingDeepLinkListAdminApiTestCase(BaseAPITestCase):
         )
 
         response = self.client.get(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)

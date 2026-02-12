@@ -17,7 +17,7 @@ class OfferingDeepLinkRetrieveAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.get(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
@@ -31,7 +31,7 @@ class OfferingDeepLinkRetrieveAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.get(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
@@ -47,7 +47,7 @@ class OfferingDeepLinkRetrieveAdminApiTestCase(BaseAPITestCase):
         organization = deeplink.organization
 
         response = self.client.get(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
@@ -75,7 +75,7 @@ class OfferingDeepLinkRetrieveAdminApiTestCase(BaseAPITestCase):
         )
 
         response = self.client.get(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)

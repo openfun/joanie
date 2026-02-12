@@ -17,7 +17,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.put(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "deep_link": "https://www.deep-link-test-1.acme",
             },
@@ -34,7 +34,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.put(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "deep_link": "https://www.deep-link-test-1.acme",
             },
@@ -44,7 +44,10 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
 
     def test_admin_api_offering_deeplink_update_with_staff_user(self):
-        """Staff user with basic permissions should be able to update deeplinks of an offering."""
+        """
+        Staff user with basic permissions should not be able to update deeplinks of an
+        offering.
+        """
         staff = factories.UserFactory(is_staff=True, is_superuser=False)
         self.client.login(username=staff.username, password="password")
         deeplink = factories.OfferingDeepLinkFactory(
@@ -53,7 +56,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.put(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "deep_link": "https://www.deep-link-test-1.acme",
             },
@@ -77,7 +80,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         )
 
         response = self.client.put(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "organization": str(organization_2.id),
                 "deep_link": "https://test-deeplink-123.acme/",
@@ -103,7 +106,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.patch(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "deep_link": "https://test-deeplink-abc.acme/",
             },
@@ -120,7 +123,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.patch(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "deep_link": "https://test-deeplink-def.acme/",
             },
@@ -137,7 +140,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.patch(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "deep_link": "https://test-deeplink-ABC.acme/",
             },
@@ -160,7 +163,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.patch(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "organization": str(organization.id),
             },
@@ -178,7 +181,7 @@ class OfferingDeepLinkUpdateAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.patch(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             data={
                 "deep_link": "https://test-deeplink-456.acme/",
             },

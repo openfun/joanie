@@ -19,7 +19,7 @@ class OfferingDeepLinkDeleteAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.delete(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             content_type="application/json",
         )
 
@@ -33,7 +33,7 @@ class OfferingDeepLinkDeleteAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.delete(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             content_type="application/json",
         )
 
@@ -47,7 +47,7 @@ class OfferingDeepLinkDeleteAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.delete(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             content_type="application/json",
         )
 
@@ -64,7 +64,7 @@ class OfferingDeepLinkDeleteAdminApiTestCase(BaseAPITestCase):
         offering = deeplink.offering
 
         response = self.client.delete(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             content_type="application/json",
         )
 
@@ -77,7 +77,7 @@ class OfferingDeepLinkDeleteAdminApiTestCase(BaseAPITestCase):
         deeplink.save()
 
         response = self.client.delete(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/{deeplink.id}/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/{deeplink.id}/",
             content_type="application/json",
         )
 

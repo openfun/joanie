@@ -3071,9 +3071,9 @@
                 }
             }
         },
-        "/api/v1.0/admin/offerings/{offering_id}/offering-deeplinks/": {
+        "/api/v1.0/admin/offerings/{offering_id}/offering-deep-links/": {
             "get": {
-                "operationId": "offerings_offering_deeplinks_list",
+                "operationId": "offerings_offering_deep_links_list",
                 "description": "Admin Offering Deep Link ViewSet",
                 "parameters": [
                     {
@@ -3135,7 +3135,7 @@
                 }
             },
             "post": {
-                "operationId": "offerings_offering_deeplinks_create",
+                "operationId": "offerings_offering_deep_links_create",
                 "description": "Create a `OfferingDeepLink` using the `offering_id` from the URL.",
                 "parameters": [
                     {
@@ -3185,9 +3185,9 @@
                 }
             }
         },
-        "/api/v1.0/admin/offerings/{offering_id}/offering-deeplinks/{id}/": {
+        "/api/v1.0/admin/offerings/{offering_id}/offering-deep-links/{id}/": {
             "get": {
-                "operationId": "offerings_offering_deeplinks_retrieve",
+                "operationId": "offerings_offering_deep_links_retrieve",
                 "description": "Admin Offering Deep Link ViewSet",
                 "parameters": [
                     {
@@ -3232,7 +3232,7 @@
                 }
             },
             "put": {
-                "operationId": "offerings_offering_deeplinks_update",
+                "operationId": "offerings_offering_deep_links_update",
                 "description": "Override update method to add the offering id from the url",
                 "parameters": [
                     {
@@ -3292,7 +3292,7 @@
                 }
             },
             "patch": {
-                "operationId": "offerings_offering_deeplinks_partial_update",
+                "operationId": "offerings_offering_deep_links_partial_update",
                 "description": "Admin Offering Deep Link ViewSet",
                 "parameters": [
                     {
@@ -3351,7 +3351,7 @@
                 }
             },
             "delete": {
-                "operationId": "offerings_offering_deeplinks_destroy",
+                "operationId": "offerings_offering_deep_links_destroy",
                 "description": "Admin Offering Deep Link ViewSet",
                 "parameters": [
                     {
@@ -3891,7 +3891,7 @@
         },
         "/api/v1.0/admin/offerings/{id}/activate-deep-links/": {
             "patch": {
-                "operationId": "offerings_activate_deeplinks_partial_update",
+                "operationId": "offerings_activate_deep_links_partial_update",
                 "description": "Activate or deactivate all deep links related to the offering.",
                 "parameters": [
                     {

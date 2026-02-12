@@ -21,7 +21,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory()
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "organization_id": str(organization.id),
                 "deep_link": "https//test-deeplink-1.com/",
@@ -41,7 +41,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory()
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "organization_id": str(organization.id),
                 "deep_link": "https//test-deeplink-2.com/",
@@ -62,7 +62,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory()
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "organization_id": str(organization.id),
                 "deep_link": "https//test-deeplink-2.com/",
@@ -84,7 +84,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         factories.OfferingDeepLinkFactory(organization=organization, offering=offering)
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "organization_id": str(organization.id),
                 "deep_link": "https//test-deeplink-3.com/",
@@ -103,7 +103,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         offering = factories.OfferingFactory()
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "deep_link": "https//test-deeplink-4.com/",
             },
@@ -122,7 +122,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory()
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "organization_id": str(organization.id),
                 "deep_link": "https//test-deeplink-4.com/",
@@ -143,7 +143,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         organization = factories.OrganizationFactory()
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "organization_id": str(organization.id),
             },
@@ -165,7 +165,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         offering = factories.OfferingFactory()
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "organization_id": str(organization.id),
                 "deep_link": "https://test-deeplink-5.com/",
@@ -186,7 +186,7 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
         offering = factories.OfferingFactory(organizations=[organization])
 
         response = self.client.post(
-            f"/api/v1.0/admin/offerings/{offering.id}/offering-deeplinks/",
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
             data={
                 "organization_id": str(organization.id),
                 "deep_link": "https://test-deeplink-6.com/",
