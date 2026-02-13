@@ -5,7 +5,6 @@ import {
   mockPlaywrightCrud,
 } from "@/tests/useResourceHandler";
 import {
-  BatchOrderPaymentMethodEnum,
   BatchOrderStatesEnum,
   transformBatchOrdersToListItems,
 } from "@/services/api/models/BatchOrder";
@@ -118,7 +117,7 @@ test.describe("Batch Order filters", () => {
       .click();
     await page
       .getByRole("option", {
-        name: BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED,
+        name: "Completed",
       })
       .click();
 
@@ -129,7 +128,7 @@ test.describe("Batch Order filters", () => {
       .click();
     await page
       .getByRole("option", {
-        name: BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER,
+        name: "Bank transfer",
       })
       .click();
 
@@ -150,12 +149,12 @@ test.describe("Batch Order filters", () => {
     // Verify all filter chips are visible
     await expect(
       page.getByRole("button", {
-        name: `State: ${BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED}`,
+        name: "State: Completed",
       }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", {
-        name: `Payment method: ${BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_BANK_TRANSFER}`,
+        name: "Payment method: Bank transfer",
       }),
     ).toBeVisible();
     await expect(
@@ -185,7 +184,7 @@ test.describe("Batch Order filters", () => {
       .click();
     await page
       .getByRole("option", {
-        name: BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        name: "Purchase order",
       })
       .click();
 
@@ -194,14 +193,14 @@ test.describe("Batch Order filters", () => {
     // Verify chip is visible
     await expect(
       page.getByRole("button", {
-        name: `Payment method: ${BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER}`,
+        name: "Payment method: Purchase order",
       }),
     ).toBeVisible();
 
     // Clear filter
     await page
       .getByRole("button", {
-        name: `Payment method: ${BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER}`,
+        name: "Payment method: Purchase order",
       })
       .getByTestId("CancelIcon")
       .click();
@@ -209,7 +208,7 @@ test.describe("Batch Order filters", () => {
     // Verify chip is no longer visible
     await expect(
       page.getByRole("button", {
-        name: `Payment method: ${BatchOrderPaymentMethodEnum.BATCH_ORDER_WITH_PURCHASE_ORDER}`,
+        name: "Payment method: Purchase order",
       }),
     ).not.toBeVisible();
   });
@@ -251,7 +250,7 @@ test.describe("Batch Order filters", () => {
       .click();
     await page
       .getByRole("option", {
-        name: BatchOrderStatesEnum.BATCH_ORDER_STATE_COMPLETED,
+        name: "Completed",
       })
       .click();
     await page.getByLabel("close").click();
