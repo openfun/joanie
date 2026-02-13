@@ -14,32 +14,19 @@ import { Organization } from "@/services/api/models/Organization";
 import { User } from "@/services/api/models/User";
 import { OrganizationSearch } from "@/components/templates/organizations/inputs/search/OrganizationSearch";
 import { UserSearch } from "@/components/templates/users/inputs/search/UserSearch";
-import { RHFSelect } from "@/components/presentational/hook-form/RHFSelect";
 import { entitiesInputLabel } from "@/translations/common/entitiesInputLabel";
 import {
   BatchOrderListQuery,
   useBatchOrders,
 } from "@/hooks/useBatchOrders/useBatchOrders";
-import {
-  BatchOrderPaymentMethodEnum,
-  BatchOrderStatesEnum,
-} from "@/services/api/models/BatchOrder";
+import { RHFBatchOrderState } from "@/components/templates/batch-orders/inputs/RHFBatchOrderState";
+import { RHFBatchOrderPaymentMethod } from "@/components/templates/batch-orders/inputs/RHFBatchOrderPaymentMethod";
 
 const messages = defineMessages({
   searchPlaceholder: {
     id: "components.templates.batchOrders.filters.BatchOrderFilters.searchPlaceholder",
     description: "Text for the search input placeholder",
     defaultMessage: "Search by product, company, owner or organization name",
-  },
-  stateLabel: {
-    id: "components.templates.batchOrders.filters.BatchOrderFilters.stateLabel",
-    defaultMessage: "State",
-    description: "Label for the batch order state filter",
-  },
-  paymentMethodLabel: {
-    id: "components.templates.batchOrders.filters.BatchOrderFilters.paymentMethodLabel",
-    defaultMessage: "Payment method",
-    description: "Label for the batch order payment method filter",
   },
 });
 
@@ -91,18 +78,6 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
     onFilter(formValuesToFilterValues(values));
   };
 
-  const stateOptions = Object.values(BatchOrderStatesEnum).map((value) => ({
-    label: value,
-    value,
-  }));
-
-  const paymentMethodOptions = Object.values(BatchOrderPaymentMethodEnum).map(
-    (value) => ({
-      label: value,
-      value,
-    }),
-  );
-
   return (
     <SearchFilters
       {...searchFilterProps}
@@ -121,23 +96,19 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
           >
             <Grid container mt={2} spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <RHFSelect
+                <RHFBatchOrderState
                   data-testid="select-batch-order-state-filter"
                   isFilterContext={true}
                   fullWidth={true}
                   name="state"
-                  label={intl.formatMessage(messages.stateLabel)}
-                  options={stateOptions}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <RHFSelect
+                <RHFBatchOrderPaymentMethod
                   data-testid="select-batch-order-payment-method-filter"
                   isFilterContext={true}
                   fullWidth={true}
                   name="payment_method"
-                  label={intl.formatMessage(messages.paymentMethodLabel)}
-                  options={paymentMethodOptions}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
