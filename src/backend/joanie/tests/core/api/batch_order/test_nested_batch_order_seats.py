@@ -301,9 +301,11 @@ class NestedBatchOrderSeatsApiTestCase(BaseAPITestCase):
                         response.json(),
                     )
 
-    def test_api_nested_batch_order_seats_authenticated_owned_retrieve_single_seat(self):
+    def test_api_nested_batch_order_seats_authenticated_owned_retrieve_single_seat(
+        self,
+    ):
         """
-        Authenticated user who is the owner of the batch order should be able to 
+        Authenticated user who is the owner of the batch order should be able to
         retrieve a specific seat with the order id.
         """
         user = factories.UserFactory()
@@ -339,7 +341,7 @@ class NestedBatchOrderSeatsApiTestCase(BaseAPITestCase):
         )
 
     def test_api_nested_batch_order_seats_authenticated_with_organization_access(self):
-        """ 
+        """
         Authenticated user with the right permissions of organization access related
         to the batch order. Only users with the role `owner` or `admin` can access
         this data, otherwise the `member` role should not.

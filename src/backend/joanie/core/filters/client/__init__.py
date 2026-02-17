@@ -262,6 +262,26 @@ class NestedOrderCourseViewSetFilter(filters.FilterSet):
         )
 
 
+class NestedBatchOrderSeatsViewSetFilter(filters.FilterSet):
+    """
+    Filter for orders (seats) of a batch order
+    """
+
+    query = filters.CharFilter(method="filter_by_query")
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter resource by looking for owner username, first_name, last_name and email which
+        contains provided value in "query" query parameter.
+        """
+        return queryset.filter(
+            Q(owner__username__icontains=value)
+            | Q(owner__first_name__icontains=value)
+            | Q(owner__last_name__icontains=value)
+            | Q(owner__email__icontains=value)
+        ).distinct()
+
+
 class OfferingViewSetFilter(filters.FilterSet):
     """
     Filter offerings by product type.
