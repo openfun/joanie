@@ -6086,6 +6086,16 @@
                         },
                         "description": "Return the available actions for the batch order",
                         "readOnly": true
+                    },
+                    "seats_to_own": {
+                        "type": "integer",
+                        "description": "Return an integer about the amount of seat still available to claim on a completed\nbatch order with its generated orders",
+                        "readOnly": true
+                    },
+                    "seats_owned": {
+                        "type": "integer",
+                        "description": "Return an integer of how many seats were claimed on a completed batch order\nwith its generated orders.",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6111,6 +6121,8 @@
                     "postcode",
                     "quote",
                     "relation",
+                    "seats_owned",
+                    "seats_to_own",
                     "signatory_email",
                     "signatory_firstname",
                     "signatory_lastname",
@@ -6289,6 +6301,16 @@
                         },
                         "description": "Return the available actions for the batch order",
                         "readOnly": true
+                    },
+                    "seats_to_own": {
+                        "type": "integer",
+                        "description": "Return an integer about the amount of seat still available to claim on a completed\nbatch order with its generated orders",
+                        "readOnly": true
+                    },
+                    "seats_owned": {
+                        "type": "integer",
+                        "description": "Return an integer of how many seats were claimed on a completed batch order\nwith its generated orders.",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6301,6 +6323,8 @@
                     "owner_name",
                     "payment_method",
                     "relation",
+                    "seats_owned",
+                    "seats_to_own",
                     "state",
                     "total",
                     "total_currency"
