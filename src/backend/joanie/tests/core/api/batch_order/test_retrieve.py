@@ -150,6 +150,8 @@ class BatchOrderReadDetailAPITest(BaseAPITestCase):
                     "submit_for_signature": False,
                     "next_action": "confirm_quote",
                 },
+                "seats_to_own": batch_order.seats_to_own,
+                "seats_owned": batch_order.seats_owned,
             },
             response.json(),
         )
