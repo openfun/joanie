@@ -919,6 +919,7 @@ class NestedBatchOrderSeatsViewSet(
     """
 
     serializer_class = serializers.NestedBatchOrderSeatsSerializer
+    filterset_class = filters.NestedBatchOrderSeatsViewSetFilter
     lookup_fields = ["batch_order_id", "pk"]
     lookup_url_kwargs = ["batch_order_id", "pk"]
 
