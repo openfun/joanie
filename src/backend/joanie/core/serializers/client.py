@@ -533,6 +533,8 @@ class BatchOrderLightSerializer(serializers.ModelSerializer):
             "total",
             "total_currency",
             "available_actions",
+            "seats_to_own",
+            "seats_owned",
         ]
         read_only_fields = fields
 
@@ -1674,6 +1676,8 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "funding_entity",
             "funding_amount",
             "available_actions",
+            "seats_to_own",
+            "seats_owned",
         ]
         read_only_fields = [
             "id",
@@ -1687,6 +1691,8 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             "quote",
             "state",
             "available_actions",
+            "seats_to_own",
+            "seats_owned",
         ]
 
     def get_currency(self, *args, **kwargs) -> str:
