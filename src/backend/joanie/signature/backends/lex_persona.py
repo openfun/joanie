@@ -111,7 +111,8 @@ class LexPersonaBackend(BaseSignatureBackend):
         title: str,
         student_recipient_data: list,
         organization_recipient_data: list,
-    ):
+        order: models.Order | models.BatchOrder,
+    ):  # pylint:disable=too-many-locals
         """
         Create a workflow to initiate a signature procedure to sign a file with the signature
         provider.
@@ -130,6 +131,17 @@ class LexPersonaBackend(BaseSignatureBackend):
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
+        # When it's for a classic order, we don't need the signature provider to send
+        # the invitation link, otherwise, when it's for a batch order, we want the
+        # signer to receive an email with the invitation link.
+        student_max_invites = 0
+        student_invite_period_in_ms = None
+        if isinstance(order, models.BatchOrder):
+            student_max_invites = settings.JOANIE_SIGNATURE_MAX_INVITES
+            student_invite_period_in_ms = (
+                settings.JOANIE_SIGNATURE_INVITE_PERIOD_IN_SECONDS * 1000
+            )
+
         payload = {
             "name": title,
             "description": title,
@@ -139,8 +151,8 @@ class LexPersonaBackend(BaseSignatureBackend):
                     "recipients": student_recipient_data,
                     "requiredRecipients": 1,
                     "validityPeriod": validity_period_in_ms,
-                    "invitePeriod": None,
-                    "maxInvites": 0,
+                    "invitePeriod": student_invite_period_in_ms,
+                    "maxInvites": student_max_invites,
                     "sendDownloadLink": True,
                     "allowComments": False,
                     "hideAttachments": False,
@@ -428,7 +440,7 @@ class LexPersonaBackend(BaseSignatureBackend):
             self._prepare_recipient_data_for_organization_signer(order)
         )
         reference_id = self._create_workflow(
-            title, buyer_recipient_data, organization_recipient_data
+            title, buyer_recipient_data, organization_recipient_data, order
         )
         file_hash = self._upload_file_to_workflow(file_bytes, reference_id)
         self._start_procedure(reference_id=reference_id)

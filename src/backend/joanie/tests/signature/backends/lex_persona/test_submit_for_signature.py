@@ -25,6 +25,8 @@ from . import get_expected_workflow_payload
     JOANIE_SIGNATURE_LEXPERSONA_TOKEN="token_id_fake",
     JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS=60 * 60 * 24 * 15,
     JOANIE_SIGNATURE_TIMEOUT=3,
+    JOANIE_SIGNATURE_INVITE_PERIOD_IN_SECONDS=60 * 60 * 24,
+    JOANIE_SIGNATURE_MAX_INVITES=5,
 )
 class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
     """Lex Persona backend test for submit_for_signature."""
@@ -753,8 +755,11 @@ class LexPersonaBackendSubmitForSignatureTestCase(TestCase):
                                     settings.JOANIE_SIGNATURE_VALIDITY_PERIOD_IN_SECONDS
                                     * 1000
                                 ),
-                                "invitePeriod": None,
-                                "maxInvites": 0,
+                                "invitePeriod": (
+                                    settings.JOANIE_SIGNATURE_INVITE_PERIOD_IN_SECONDS
+                                    * 1000
+                                ),
+                                "maxInvites": settings.JOANIE_SIGNATURE_MAX_INVITES,
                                 "sendDownloadLink": True,
                                 "allowComments": False,
                                 "hideAttachments": False,
