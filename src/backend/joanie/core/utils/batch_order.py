@@ -60,10 +60,9 @@ def assign_organization(batch_order):
     batch_order.init_flow()
 
 
-def send_mail_invitation_link(batch_order, invitation_link: str):
+def send_mail_invitation_link(batch_order):
     """
-    Sends an email to the batch order owner with the link to sign the contract
-    into the owner's language.
+    Send an email to the batch order signatory member into the owner's language.
     """
     with override(batch_order.owner.language):
         product_title = batch_order.offering.product.safe_translation_getter(
@@ -80,7 +79,6 @@ def send_mail_invitation_link(batch_order, invitation_link: str):
                 "email": batch_order.signatory_email,
                 "fullname": f"{batch_order.signatory_firstname} {batch_order.signatory_lastname}",
                 "product_title": product_title,
-                "invitation_link": invitation_link,
                 "site": {
                     "name": settings.JOANIE_CATALOG_NAME,
                     "url": settings.JOANIE_CATALOG_BASE_URL,

@@ -1,7 +1,6 @@
 """Test suite utility methods for batch orders"""
 
 from decimal import Decimal as D
-from unittest import mock
 
 from django.core import mail
 from django.test import TestCase
@@ -146,13 +145,7 @@ class UtilsBatchOrderTestCase(TestCase):
         JOANIE_CATALOG_BASE_URL="https://richie.education",
         LANGUAGES=(("fr-fr", "French"), ("en-us", "English"), ("de-de", "German")),
     )
-    @mock.patch(
-        "joanie.core.models.products.BatchOrder.submit_for_signature",
-        return_value="https://dummmy.invitation_link.fr",
-    )
-    def test_utils_batch_order_send_mail_invitation_link(
-        self, mock_submit_for_signature
-    ):
+    def test_utils_batch_order_send_mail_invitation_link(self):
         """
         The method `send_mail_invitation_link` should send an email with the invitation link
         to sign the contract of the batch order to the owner.
@@ -176,9 +169,7 @@ class UtilsBatchOrderTestCase(TestCase):
         )
         batch_order.offering.product.save()
 
-        invitation_link = mock_submit_for_signature()
-
-        send_mail_invitation_link(batch_order, invitation_link)
+        send_mail_invitation_link(batch_order)
 
         # check email has been sent
         self.assertEqual(len(mail.outbox), 1)
@@ -189,10 +180,6 @@ class UtilsBatchOrderTestCase(TestCase):
         email_content = " ".join(mail.outbox[0].body.split())
 
         self.assertIn("a contract awaits your signature.", email_content)
-        self.assertIn(
-            "To sign this document, please click the button above", email_content
-        )
-        self.assertIn(invitation_link, email_content)
         self.assertIn("Product 1", email_content)
         # check it's the right object
         self.assertEqual(
@@ -206,7 +193,6 @@ class UtilsBatchOrderTestCase(TestCase):
         self.assertNotIn("trans ", email_content)
         # catalog url is included in the email
         self.assertIn("https://richie.education", email_content)
-        self.assertIn("Visualize the documents", email_content)
 
         # If user has french language, the email should be in french
         with switch_language(batch_order.offering.product, "fr-fr"):
@@ -214,7 +200,7 @@ class UtilsBatchOrderTestCase(TestCase):
             user.language = "fr-fr"
             user.save()
 
-            send_mail_invitation_link(batch_order, invitation_link)
+            send_mail_invitation_link(batch_order)
 
             self.assertEqual(
                 mail.outbox[0].subject,
@@ -237,7 +223,7 @@ class UtilsBatchOrderTestCase(TestCase):
             user.language = "de-de"
             user.save()
 
-            send_mail_invitation_link(batch_order, invitation_link)
+            send_mail_invitation_link(batch_order)
 
             email_content = " ".join(mail.outbox[0].body.split())
 
