@@ -109,7 +109,7 @@ class LexPersonaBackend(BaseSignatureBackend):
     def _create_workflow(
         self,
         title: str,
-        student_recipient_data: list,
+        buyer_recipient_data: list,
         organization_recipient_data: list,
         order: models.Order | models.BatchOrder,
     ):  # pylint:disable=too-many-locals
@@ -134,11 +134,11 @@ class LexPersonaBackend(BaseSignatureBackend):
         # When it's for a classic order, we don't need the signature provider to send
         # the invitation link, otherwise, when it's for a batch order, we want the
         # signer to receive an email with the invitation link.
-        student_max_invites = 0
-        student_invite_period_in_ms = None
+        buyer_max_invites = 0
+        buyer_invite_period_in_ms = None
         if isinstance(order, models.BatchOrder):
-            student_max_invites = settings.JOANIE_SIGNATURE_MAX_INVITES
-            student_invite_period_in_ms = (
+            buyer_max_invites = settings.JOANIE_SIGNATURE_MAX_INVITES
+            buyer_invite_period_in_ms = (
                 settings.JOANIE_SIGNATURE_INVITE_PERIOD_IN_SECONDS * 1000
             )
 
@@ -148,11 +148,11 @@ class LexPersonaBackend(BaseSignatureBackend):
             "steps": [
                 {
                     "stepType": "signature",
-                    "recipients": student_recipient_data,
+                    "recipients": buyer_recipient_data,
                     "requiredRecipients": 1,
                     "validityPeriod": validity_period_in_ms,
-                    "invitePeriod": student_invite_period_in_ms,
-                    "maxInvites": student_max_invites,
+                    "invitePeriod": buyer_invite_period_in_ms,
+                    "maxInvites": buyer_max_invites,
                     "sendDownloadLink": True,
                     "allowComments": False,
                     "hideAttachments": False,
@@ -604,12 +604,10 @@ class LexPersonaBackend(BaseSignatureBackend):
 
         return response.content
 
-    def _prepare_payload_signatories(
-        self, reference_id: str, with_payload_student: bool
-    ):
+    def _prepare_payload_signatories(self, reference_id: str, with_payload_buyer: bool):
         """
         Prepare the payload to update an ongoing signature procedure.
-        If the parameter `with_payload_student` is set to `True`, the student and organization
+        If the parameter `with_payload_buyer` is set to `True`, the buyer and organization
         signatories steps are prepared, else, only the organization's step is prepared.
         """
         try:
@@ -639,7 +637,7 @@ class LexPersonaBackend(BaseSignatureBackend):
                 },
             ]
         }
-        if not with_payload_student:
+        if not with_payload_buyer:
             return payload_organization_signatories
         return {
             "steps": [
@@ -663,7 +661,7 @@ class LexPersonaBackend(BaseSignatureBackend):
     def update_signatories(self, reference_id: str, all_signatories: bool) -> str:
         """
         Update signatories on a signature procedure.
-        When `all_signatories` is set to `True`, we prepare the payload of the student and
+        When `all_signatories` is set to `True`, we prepare the payload of the buyer and
         the organization signatories. Otherwise, when set to `False`, we prepare the payload
         for the organization signatories.
         """
@@ -674,7 +672,7 @@ class LexPersonaBackend(BaseSignatureBackend):
         headers = {"Authorization": f"Bearer {token}"}
 
         payload = self._prepare_payload_signatories(
-            reference_id=reference_id, with_payload_student=all_signatories
+            reference_id=reference_id, with_payload_buyer=all_signatories
         )
 
         response = requests.patch(url, json=payload, headers=headers, timeout=timeout)
