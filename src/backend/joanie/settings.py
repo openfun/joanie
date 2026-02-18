@@ -539,6 +539,17 @@ class Base(Configuration):
     JOANIE_SIGNATURE_TIMEOUT = values.PositiveIntegerValue(
         3, environ_name="JOANIE_SIGNATURE_TIMEOUT", environ_prefix=None
     )
+    # For signature of batch order agreements
+    JOANIE_SIGNATURE_INVITE_PERIOD_IN_SECONDS = values.PositiveIntegerValue(
+        60 * 60 * 24,  # Duration in seconds representing 1 day
+        environ_name="JOANIE_SIGNATURE_INVITE_PERIOD_IN_SECONDS",
+        environ_prefix=None,
+    )
+    JOANIE_SIGNATURE_MAX_INVITES = values.PositiveIntegerValue(
+        5,  # Number of mail sent by the signature provider to invite signer to sign
+        environ_name="JOANIE_SIGNATURE_MAX_INVITES",
+        environ_prefix=None,
+    )
 
     # Signature Backend - Lex Persona
     JOANIE_SIGNATURE_LEXPERSONA_BASE_URL = values.Value(

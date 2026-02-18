@@ -28,6 +28,8 @@ and this project adheres to
 
 ### Fixed
 
+- Invitation link to sign agreement sent by signature provider
+  to signatory recipient for batch order
 - Validate course-product relation with voucher code from
   batch order on order creation
 - Generate quote's context at batch order creation
