@@ -8,29 +8,9 @@
           <mj-text padding="0">
             {% blocktranslate with title=product_title %}
               For your batch order with the course <strong>{{ title }}</strong>, a contract
-              awaits your signature.
-            {% endblocktranslate %}
-          </mj-text>
-          <mj-button href="{{ invitation_link }}"
-            target="_blank"
-            background-color="#3d85c6"
-            color="white"
-            font-size="16px"
-            padding="35px 15px 30px"
-            border-radius="4px">
-            {% blocktranslate %}
-              Visualize the documents
-            {% endblocktranslate %}
-          </mj-button>
-        </mj-column>
-      </mj-section>
-      <mj-section mj-class="bg--blue-100" padding="0 50px 30px 50px">
-        <mj-column>
-          <mj-text padding="0">
-            {% blocktranslate %}
-              To sign this document, please click the button above or copy the following address
-              and paste it into your browser's address bar:
-              <a href="{{ invitation_link }}">{{invitation_link}}</a>
+              awaits your signature. You will receive a separate email from our electronic signature
+              provider containing a secure invitation link to review and electronically sign
+              your documents.
             {% endblocktranslate %}
           </mj-text>
         </mj-column>
