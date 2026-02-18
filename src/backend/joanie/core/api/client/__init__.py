@@ -1375,9 +1375,9 @@ class OrganizationViewSet(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
 
-        invitation_link = batch_order.submit_for_signature()
+        batch_order.submit_for_signature()
 
-        send_mail_invitation_link(batch_order, invitation_link)
+        send_mail_invitation_link(batch_order)
 
         return Response(status=HTTPStatus.ACCEPTED)
 

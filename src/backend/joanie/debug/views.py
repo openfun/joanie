@@ -137,7 +137,6 @@ class DebugInvitationSignatureLink(TemplateView):
                 f"{batch_order.signatory_firstname} {batch_order.signatory_lastname}"
             )
             context["product_title"] = product_title
-            context["invitation_link"] = "http://localhost:8071/"
             context["site"] = {
                 "name": "www.fun-mooc.fr",
                 "url": settings.JOANIE_CATALOG_BASE_URL,
