@@ -249,7 +249,7 @@ jobs:
           path: ./reports/pytest/
       - store_artifacts:
           path: ~/joanie/src/backend/joanie/tests/core/utils/__diff__
-          destination: /microcredential/__diff_output__
+          destination: /generated_documents/__diff_output__
 
   # ---- mail jobs ----
   build-mails:
