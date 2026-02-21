@@ -34,6 +34,8 @@ and this project adheres to
   batch order on order creation
 - Generate quote's context at batch order creation
 - Fix CSS in default and Unicamp micro-credentials after WeasyPrint update
+- Fix CSS and HTML structure of agreement and contract after WeasyPrint
+  update
 
 ### Changed
 

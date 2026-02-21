@@ -1,12 +1,16 @@
 """Test suite for utility method to generate document of Contract Definition in PDF bytes format"""
 
-from datetime import timedelta
+import os
+from datetime import datetime, timedelta
 from io import BytesIO
+from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.contrib.sites.models import Site
 from django.test import TestCase
 
 from pdfminer.high_level import extract_text as pdf_extract_text
+from PIL import Image
 
 from joanie.core import enums, factories
 from joanie.core.models import CourseState
@@ -14,6 +18,97 @@ from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
 from joanie.core.utils.contract_definition import format_course_date
 from joanie.payment.factories import InvoiceFactory
+from joanie.tests.compare_image_utils import (
+    call_issuers_generate_document,
+    clear_generated_files,
+    compare_images,
+    convert_pdf_to_png,
+)
+
+LOGO_FALLBACK = (
+    "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
+    "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
+)
+
+
+def generate_batch_order(template=enums.PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT):
+    """
+    Utils to generate a batch order with the same data each time it's called.
+    It returns the batch order, the course dates and the language code used.
+    """
+    organization = factories.OrganizationFactory(
+        title="University X",
+        dpo_email="dpojohnnydoes@example.fr",
+        contact_email="contact@example.fr",
+        contact_phone="0123456789",
+        enterprise_code="ENTRCODE1234",
+        activity_category_code="ACTCATCODE1234",
+        representative="John Doe",
+        representative_profession="Educational representative",
+        signatory_representative="Big boss",
+        signatory_representative_profession="Director",
+    )
+    factories.OrganizationAddressFactory(
+        organization=organization,
+        owner=None,
+        address="1 Rue de l'Université",
+        postcode="75000",
+        city="Paris",
+        country="FR",
+        is_reusable=True,
+        is_main=True,
+    )
+    run = factories.CourseRunFactory(
+        enrollment_start=datetime(2026, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+        start=datetime(2026, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+        end=datetime(2026, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+    )
+    language_code = "en-us"
+    product = factories.ProductFactory(
+        title="You know nothing Jon Snow",
+        target_courses=[run.course],
+        quote_definition=factories.QuoteDefinitionFactory(),
+        contract_definition_batch_order=factories.ContractDefinitionFactory(
+            name=template,
+            title="Professional Training Agreement",
+            description="Professional Training Agreement description",
+            body="Article of the professional training agreement",
+            appendix="Appendices",
+            language=language_code,
+        ),
+    )
+    course = factories.CourseFactory(code="00002", effort=timedelta(hours=404))
+    offering = factories.OfferingFactory(
+        product=product, course=course, organizations=[organization]
+    )
+    batch_order = factories.BatchOrderFactory(
+        organization=organization,
+        offering=offering,
+        nb_seats=2,
+        state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        vat_registration="VAT_NUMBER_123",
+        company_name="Acme Org",
+        address="Street of awesomeness",
+        postcode="00000",
+        city="Unknown City",
+        country="FR",
+        identification_number="ABC_ID_NUM_TEST",
+        administrative_firstname="Jon",
+        administrative_lastname="Snow",
+        administrative_profession="Buyer",
+        administrative_email="jonsnow@example.acme",
+        administrative_telephone="0123457890",
+        signatory_firstname="Janette",
+        signatory_lastname="Doe",
+        signatory_email="janette@example.acme",
+        signatory_telephone="0987654321",
+        signatory_profession="Manager",
+        payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+    )
+    batch_order.quote.purchase_order_reference = "ABC_test_reference"
+    course_dates = batch_order.get_equivalent_course_run_dates()
+
+    return batch_order, course_dates, language_code
 
 
 class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
@@ -271,71 +366,9 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         """
         Issuer `generate_document` should generate the contract for the batch order.
         """
-        organization = factories.OrganizationFactory(
-            title="University X",
-            dpo_email="dpojohnnydoes@example.fr",
-            contact_email="contact@example.fr",
-            contact_phone="0123456789",
-            enterprise_code="ENTRCODE1234",
-            activity_category_code="ACTCATCODE1234",
-            representative="John Doe",
-            representative_profession="Educational representative",
-            signatory_representative="Big boss",
-            signatory_representative_profession="Director",
+        batch_order, course_dates, language_code = generate_batch_order(
+            template=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP
         )
-        factories.OrganizationAddressFactory(
-            organization=organization,
-            owner=None,
-            address="1 Rue de l'Université",
-            postcode="75000",
-            city="Paris",
-            country="FR",
-            is_reusable=True,
-            is_main=True,
-        )
-        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
-        language_code = "en-us"
-        product = factories.ProductFactory(
-            title="You know nothing Jon Snow",
-            target_courses=[run.course],
-            quote_definition=factories.QuoteDefinitionFactory(),
-            contract_definition_batch_order=factories.ContractDefinitionFactory(
-                name=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP,
-                title="Professional Training Agreement",
-                description="Professional Training Agreement description",
-                body="Article of the professional training agreement",
-                appendix="Appendices",
-                language=language_code,
-            ),
-        )
-        course = factories.CourseFactory(code="00002", effort=timedelta(hours=404))
-        offering = factories.OfferingFactory(
-            product=product, course=course, organizations=[organization]
-        )
-        batch_order = factories.BatchOrderFactory(
-            organization=organization,
-            offering=offering,
-            nb_seats=2,
-            state=enums.BATCH_ORDER_STATE_TO_SIGN,
-            vat_registration="VAT_NUMBER_123",
-            company_name="Acme Org",
-            address="Street of awesomeness",
-            postcode="00000",
-            city="Unknown City",
-            country="FR",
-            administrative_firstname="Jon",
-            administrative_lastname="Snow",
-            administrative_profession="Buyer",
-            administrative_email="jonsnow@example.acme",
-            administrative_telephone="0123457890",
-            signatory_firstname="Janette",
-            signatory_lastname="Doe",
-            signatory_email="janette@example.acme",
-            signatory_telephone="0987654321",
-            signatory_profession="Manager",
-            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-        )
-        course_dates = batch_order.get_equivalent_course_run_dates()
 
         file_bytes = issuers.generate_document(
             name=batch_order.contract.definition.name,
@@ -401,3 +434,103 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         self.assertIn("[SignatureField#1]", document_text)
         self.assertIn("University representative's signature", document_text)
         self.assertIn("[SignatureField#2]", document_text)
+
+    def test_utils_issuers_verify_document_batch_order_agreement_default_style(self):
+        """
+        When generating the template of the batch order agreement default, the style of
+        the document should match the original one.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+
+        batch_order, _, _ = generate_batch_order()
+        context = contract_definition_utility.generate_document_context(
+            contract_definition=batch_order.contract.definition,
+            batch_order=batch_order,
+        )
+        context["organization"]["logo"] = LOGO_FALLBACK
+
+        pdf_path = call_issuers_generate_document(
+            name=batch_order.contract.definition.name,
+            context=context,
+            path=base_path,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + batch_order.contract.definition.name + ".pdf")
+
+        original_image = Image.open(
+            base_path + batch_order.contract.definition.name + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + batch_order.contract.definition.name + "_diff.png",
+        )
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}professional_training_agreement_default.png 
+            {base_path}professional_training_agreement_default_original.png 
+            rm -f {base_path}professional_training_agreement_default_diff.png
+        """,
+        )
+
+        clear_generated_files(base_path, batch_order.contract.definition.name)
+
+    def test_utils_issuers_verify_document_batch_order_agreement_unicamp_style(self):
+        """
+        When generating the template of the batch order agreement unicamp, the style
+        of the document should match the original one.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+
+        batch_order, _, _ = generate_batch_order(
+            template=enums.PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP
+        )
+        context = contract_definition_utility.generate_document_context(
+            contract_definition=batch_order.contract.definition,
+            batch_order=batch_order,
+        )
+        context["organization"]["logo"] = LOGO_FALLBACK
+
+        pdf_path = call_issuers_generate_document(
+            name=batch_order.contract.definition.name,
+            context=context,
+            path=base_path,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + batch_order.contract.definition.name + ".pdf")
+
+        original_image = Image.open(
+            base_path + batch_order.contract.definition.name + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + batch_order.contract.definition.name + "_diff.png",
+        )
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}microcredential_degree_unicamp.png
+            {base_path}microcredential_degree_unicamp_original.png
+            rm -f {base_path}microcredential_degree_unicamp_diff.png
+        """,
+        )
+
+        clear_generated_files(base_path, batch_order.contract.definition.name)

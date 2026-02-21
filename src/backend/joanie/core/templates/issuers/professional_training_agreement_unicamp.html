@@ -3,7 +3,9 @@
 {% load extra_tags %}
 
 {% block header %}
-    {% include 'contract_definition/fragment_logo.html' with organization=organization %}
+  {% include 'contract_definition/fragment_logo.html' with organization=organization %}
+    <div class="header-right">
     <!-- Unicamp logo here -->
-    <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
+      <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
+    </div>
 {% endblock %}
