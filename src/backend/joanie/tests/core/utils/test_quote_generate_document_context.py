@@ -1,12 +1,100 @@
 """Test suite for Quote generate document context"""
 
+import os
 from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.test import TestCase
+
+from PIL import Image
 
 from joanie.core import enums, factories, models
 from joanie.core.utils.quotes import generate_document_context
+from joanie.tests.compare_image_utils import (
+    call_issuers_generate_document,
+    clear_generated_files,
+    compare_images,
+    convert_pdf_to_png,
+)
+
+LOGO_FALLBACK = (
+    "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR"
+    "42mO8cPX6fwAIdgN9pHTGJwAAAABJRU5ErkJggg=="
+)
+
+
+def generate_batch_order():
+    """Create a batch order and related quote with consistent data"""
+    user = factories.UserFactory(
+        email="student@example.fr",
+        first_name="Rooky",
+        last_name="The Student",
+        phone_number="0612345678",
+    )
+    organization = factories.OrganizationFactory(
+        title="University X",
+        dpo_email="dpojohnnydoes@example.fr",
+        contact_email="contact@example.fr",
+        contact_phone="0123456789",
+        enterprise_code="ENTRCODE1234",
+        activity_category_code="ACTCATCODE1234",
+        representative="John Doe",
+        representative_profession="Educational representative",
+        signatory_representative="Big boss",
+        signatory_representative_profession="Director",
+    )
+    address_organization = factories.OrganizationAddressFactory(
+        organization=organization,
+        owner=None,
+        address="1 Rue de l'Université",
+        postcode="75000",
+        city="Paris",
+        country="FR",
+        is_reusable=True,
+        is_main=True,
+    )
+    language_code = "en-us"
+    batch_order = factories.BatchOrderFactory(
+        owner=user,
+        organization=organization,
+        offering__course=factories.CourseFactory(
+            effort=timedelta(hours=10, minutes=30, seconds=12),
+            code="00002",
+        ),
+        nb_seats=2,
+        offering__product__title="You know nothing Jon Snow",
+        offering__product__quote_definition=factories.QuoteDefinitionFactory(
+            name=enums.QUOTE_DEFAULT,
+            title="Quote Test",
+            description="A quote for the batch order",
+            body="Article of the quote",
+            language=language_code,
+        ),
+        state=enums.BATCH_ORDER_STATE_QUOTED,
+        vat_registration="VAT_NUMBER_123",
+        company_name="Acme Org",
+        address="Street of awesomeness",
+        postcode="00000",
+        city="Unknown City",
+        country="FR",
+        identification_number="ABC_ID_NUM_TEST",
+        administrative_firstname="Jon",
+        administrative_lastname="Snow",
+        administrative_profession="Buyer",
+        administrative_email="jonsnow@example.acme",
+        administrative_telephone="0123457890",
+        signatory_firstname="Janette",
+        signatory_lastname="Doe",
+        signatory_email="janette@example.acme",
+        signatory_telephone="0987654321",
+        signatory_profession="Manager",
+        payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+    )
+
+    batch_order.freeze_total(Decimal("302.00"))
+
+    return batch_order, organization, address_organization
 
 
 class UtilsQuoteGenerateContextDocument(TestCase):
@@ -98,29 +186,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
         Batch order quote utils 'generate context document' method should return the quote's
         context for the document.
         """
-        organization = factories.OrganizationFactory(
-            enterprise_code="1234",
-            activity_category_code="abcd1234",
-        )
-        address_organization = factories.OrganizationAddressFactory(
-            organization=organization,
-            owner=None,
-            is_main=True,
-            is_reusable=True,
-        )
-        batch_order = factories.BatchOrderFactory(
-            organization=organization,
-            offering__course=factories.CourseFactory(
-                effort=timedelta(hours=10, minutes=30, seconds=12),
-            ),
-            signatory_firstname="Jane",
-            signatory_lastname="Doe",
-            signatory_email="janedoe@example.fr",
-            nb_seats=2,
-            state=enums.BATCH_ORDER_STATE_QUOTED,
-        )
-
-        batch_order.freeze_total(Decimal("302.00"))
+        batch_order, organization, address_organization = generate_batch_order()
 
         expected_context = {
             "quote": {
@@ -197,3 +263,53 @@ class UtilsQuoteGenerateContextDocument(TestCase):
         expected_context["organization"]["logo_id"] = str(organization_logo.id)
 
         self.assertEqual(expected_context, context)
+
+    def test_utils_issuers_verify_document_quote_default_style(self):
+        """
+        When generating the template quote default, the style of the document should
+        match the original one.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+
+        batch_order, _, _ = generate_batch_order()
+
+        context = generate_document_context(
+            quote_definition=batch_order.quote.definition,
+            batch_order=batch_order,
+        )
+        context["organization"]["logo"] = LOGO_FALLBACK
+
+        pdf_path = call_issuers_generate_document(
+            name=batch_order.quote.definition.name,
+            context=context,
+            path=base_path,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + batch_order.quote.definition.name + ".pdf")
+
+        original_image = Image.open(
+            base_path + batch_order.quote.definition.name + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + batch_order.quote.definition.name + "_diff.png",
+        )
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}quote_default.png
+            {base_path}quote_defaultoriginal.png
+            rm -f {base_path}quote_default_diff.png
+            """,
+        )
+
+        clear_generated_files(base_path, batch_order.quote.definition.name)
