@@ -13,7 +13,6 @@ from pdfminer.high_level import extract_text as pdf_extract_text
 from PIL import Image
 
 from joanie.core import enums, factories
-from joanie.core.models import CourseState
 from joanie.core.utils import contract_definition as contract_definition_utility
 from joanie.core.utils import issuers
 from joanie.core.utils.contract_definition import format_course_date
@@ -111,95 +110,102 @@ def generate_batch_order(template=enums.PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT)
     return batch_order, course_dates, language_code
 
 
+def generate_order(template=enums.CONTRACT_DEFINITION_DEFAULT):
+    """Generate order and related objects that will output the same data each time called"""
+    user = factories.UserFactory(
+        email="student@example.fr",
+        first_name="Rooky",
+        last_name="The Student",
+        phone_number="0612345678",
+    )
+    user_address = factories.UserAddressFactory(
+        owner=user,
+        first_name="Rocky",
+        last_name="The Student",
+        address="1 Rue de l'Apprenant",
+        postcode="58000",
+        city="Nevers",
+        country="FR",
+        title="Office",
+        is_main=False,
+    )
+    organization = factories.OrganizationFactory(
+        title="University X",
+        activity_category_code="8542Z",
+        enterprise_code="UX-74392-899",
+        representative="John Doe",
+        representative_profession="Director",
+        signatory_representative="Jane Doe",
+        signatory_representative_profession="Administrative Manager",
+        contact_phone="+33712345678",
+        contact_email="contact@university-x.xyz",
+        dpo_email="dpo@university-x.xyz",
+    )
+    factories.OrganizationAddressFactory(
+        organization=organization,
+        owner=None,
+        address="1 Rue de l'Université",
+        postcode="87000",
+        city="Limoges",
+        country="FR",
+        is_reusable=True,
+        is_main=True,
+    )
+    # Prepare the order
+    language_code = "fr-fr"
+    definition = factories.ContractDefinitionFactory(
+        title="Contract Definition Title",
+        description="Contract Definition Description",
+        body="""
+        ## Contract Definition Body
+        Lorem ipsum sit body est
+        """,
+        appendix="""
+        ### Terms and conditions
+        Terms and Conditions Content
+        """,
+        name=template,
+        language=language_code,
+    )
+    run = factories.CourseRunFactory(
+        enrollment_start=datetime(2026, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+        start=datetime(2026, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+        end=datetime(2026, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+    )
+    product = factories.ProductFactory(
+        title="You will know that you know you don't know",
+        price="999.99",
+        contract_definition_order=definition,
+        target_courses=[run.course],
+    )
+    course = factories.CourseFactory(code="UX-00001", effort=timedelta(hours=404))
+    offering = factories.OfferingFactory(
+        product=product, course=course, organizations=[organization]
+    )
+    order = factories.OrderGeneratorFactory(
+        owner=user,
+        product=offering.product,
+        course=offering.course,
+        organization=organization,
+        state=enums.ORDER_STATE_SIGNING,
+        main_invoice=InvoiceFactory(recipient_address=user_address),
+    )
+    # Prepare start and end course dates
+    course_dates = order.get_equivalent_course_run_dates()
+    return order, course_dates, language_code
+
+
 class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
     """
     Test suite for issuer utility method to generate document of contract definition in PDF bytes
     format.
     """
 
-    # ruff : noqa : PLR0915
-    # pylint: disable=too-many-statements, too-many-locals
     def test_utils_issuers_contract_definition_generate_document(self):
         """
         Issuer 'generate document' method should generate a contract definition document.
         """
-        # Prepare User and Organization Data
-        user = factories.UserFactory(
-            email="student@example.fr",
-            first_name="Rooky",
-            last_name="The Student",
-            phone_number="0612345678",
-        )
-        user_address = factories.UserAddressFactory(
-            owner=user,
-            first_name="Rocky",
-            last_name="The Student",
-            address="1 Rue de l'Apprenant",
-            postcode="58000",
-            city="Nevers",
-            country="FR",
-            title="Office",
-            is_main=False,
-        )
-        organization = factories.OrganizationFactory(
-            title="University X",
-            activity_category_code="8542Z",
-            enterprise_code="UX-74392-899",
-            representative="John Doe",
-            representative_profession="Director",
-            signatory_representative="Jane Doe",
-            signatory_representative_profession="Administrative Manager",
-            contact_phone="+33712345678",
-            contact_email="contact@university-x.xyz",
-            dpo_email="dpo@university-x.xyz",
-        )
-        factories.OrganizationAddressFactory(
-            organization=organization,
-            owner=None,
-            address="1 Rue de l'Université",
-            postcode="87000",
-            city="Limoges",
-            country="FR",
-            is_reusable=True,
-            is_main=True,
-        )
-        # Prepare the order
-        language_code = "fr-fr"
-        definition = factories.ContractDefinitionFactory(
-            title="Contract Definition Title",
-            description="Contract Definition Description",
-            body="""
-            ## Contract Definition Body
-            Lorem ipsum sit body est
-            """,
-            appendix="""
-            ### Terms and conditions
-            Terms and Conditions Content
-            """,
-            name=enums.CONTRACT_DEFINITION_DEFAULT,
-            language=language_code,
-        )
-        run = factories.CourseRunFactory(state=CourseState.ONGOING_OPEN)
-        product = factories.ProductFactory(
-            title="You will know that you know you don't know",
-            price="999.99",
-            contract_definition_order=definition,
-            target_courses=[run.course],
-        )
-        course = factories.CourseFactory(code="UX-00001", effort=timedelta(hours=404))
-        offering = factories.OfferingFactory(
-            product=product, course=course, organizations=[organization]
-        )
-        order = factories.OrderGeneratorFactory(
-            owner=user,
-            product=offering.product,
-            course=offering.course,
-            organization=organization,
-            state=enums.ORDER_STATE_SIGNING,
-            main_invoice=InvoiceFactory(recipient_address=user_address),
-        )
-        # Prepare start and end course dates
-        course_dates = order.get_equivalent_course_run_dates()
+        order, course_dates, language_code = generate_order()
 
         file_bytes = issuers.generate_document(
             name=order.contract.definition.name,
@@ -361,6 +367,109 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
         self.assertIn("[SignatureField#1]", document_text)
         self.assertIn("University representative's signature", document_text)
         self.assertIn("[SignatureField#2]", document_text)
+
+    def test_utils_issuers_contract_definition_contract_default_style(self):
+        """
+        When generating the template of the order default contract definition, the style
+        of the document should match the original one.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+
+        order, _, _ = generate_order()
+
+        context = contract_definition_utility.generate_document_context(
+            contract_definition=order.product.contract_definition_order,
+            user=order.owner,
+            order=order,
+        )
+        context["organization"]["logo"] = LOGO_FALLBACK
+
+        pdf_path = call_issuers_generate_document(
+            name=order.product.contract_definition_order.name,
+            context=context,
+            path=base_path,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + order.product.contract_definition_order.name + ".pdf")
+
+        original_image = Image.open(
+            base_path + order.product.contract_definition_order.name + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + order.product.contract_definition_order.name + "_diff.png",
+        )
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}contract_definition_default.png 
+            {base_path}contract_definition_default_original.png 
+            rm -f {base_path}contract_definition_default_diff.png
+        """,
+        )
+
+        clear_generated_files(base_path, order.product.contract_definition_order.name)
+
+    def test_utils_issuers_contract_definition_contract_unicamp_style(self):
+        """
+        When generating the template of the order default contract definition, the style
+        of the document should match the original one.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+
+        order, _, _ = generate_order(template=enums.CONTRACT_DEFINITION_UNICAMP)
+
+        context = contract_definition_utility.generate_document_context(
+            contract_definition=order.product.contract_definition_order,
+            user=order.owner,
+            order=order,
+        )
+        context["organization"]["logo"] = LOGO_FALLBACK
+
+        pdf_path = call_issuers_generate_document(
+            name=order.product.contract_definition_order.name,
+            context=context,
+            path=base_path,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + order.product.contract_definition_order.name + ".pdf")
+
+        original_image = Image.open(
+            base_path + order.product.contract_definition_order.name + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + order.product.contract_definition_order.name + "_diff.png",
+        )
+
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}contract_definition_unicamp.png 
+            {base_path}contract_definition_unicamp_original.png 
+            rm -f {base_path}contract_definition_unicamp_diff.png
+        """,
+        )
+
+        clear_generated_files(base_path, order.product.contract_definition_order.name)
 
     def test_utils_issuers_contract_definition_generate_document_for_batch_order(self):
         """
