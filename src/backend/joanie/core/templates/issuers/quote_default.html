@@ -21,7 +21,11 @@ for your training, feel free to use this template as a base.
 
 <body class="document">
   <header class="document--header">
-    <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
+    {% include 'contract_definition/fragment_logo.html' with organization=organization %}
+      <div class="header-right">
+        <!-- Unicamp logo here -->
+        <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
+      </div>
   </header>
     <main class="document-content">
       <header class="content--header">

@@ -40,15 +40,20 @@
   align-items: center;
   box-sizing: border-box;
   display: flex;
-  height: 35mm;
+  height: 30mm;
   justify-content: space-between;
   position: fixed;
   top: -35mm;
+  padding-bottom: -10mm;
   width: 100%;
 }
 
-.document--header > img {
+.document--header > img,
+.document--header .header-left img,
+.document--header .header-right img {
   height: 20mm;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 

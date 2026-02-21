@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add organization logo into quote template for batch order
 - Add essential actions to batch order detail view in admin backoffice
 - Batch order export to csv in admin API
 - Generate zip archive of agreements for an organization client API
