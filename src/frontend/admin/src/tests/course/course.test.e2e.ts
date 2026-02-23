@@ -129,7 +129,6 @@ test.describe("Course form", async () => {
       .getByLabel("Representative", { exact: true })
       .fill("john.doe@yoppmail.com");
     await page.getByTestId("submit-button-organization-form").click();
-    await page.getByText("Operation completed successfully.").click();
     await expect(page.getByRole("button", { name: "Org title" })).toBeVisible();
     await expect(
       page.getByRole("button", { name: store.organizations[0].title }),
@@ -198,7 +197,6 @@ test.describe("Course form", async () => {
     await page
       .getByRole("textbox", { name: "Title", exact: true })
       .fill(newCourseTitle);
-    await page.getByText("Operation completed successfully.").click();
     await expect(
       page.getByRole("heading", { name: `Edit course: ${newCourseTitle}` }),
     ).toBeVisible();
