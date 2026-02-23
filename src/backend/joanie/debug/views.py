@@ -662,7 +662,6 @@ class DebugQuoteTemplateView(DebugPdfTemplateView):
             return quotes.generate_document_context()
 
         quote = Quote.objects.get(pk=pk, definition__name=self.issuer_document)
-
         return quote.context
 
 

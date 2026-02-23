@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from io import BytesIO
 
+from django.utils import timezone
+
 from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories, models
@@ -152,7 +154,8 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
     ):
         """
         Authenticated user with organization access with owner role should be able to download
-        the quote in PDF.
+        the quote in PDF. We should also find the date when the request was made to download
+        the quote.
         """
         batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_QUOTED)
         access = factories.UserOrganizationAccessFactory(
@@ -170,6 +173,7 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
             data={"quote_id": str(quote.id)},
         )
 
+        date_now = timezone.now().date().strftime("%m/%d/%Y")
         document_text = pdf_extract_text(BytesIO(b"".join(response.streaming_content)))
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
@@ -181,3 +185,5 @@ class OrganizationApiDownloadQuoteTest(BaseAPITestCase):
         self.assertIn(quote.definition.title, document_text)
         self.assertIn(quote.batch_order.owner.get_full_name(), document_text)
         self.assertIn("Company", document_text)
+        self.assertIn("Quote issued on", document_text)
+        self.assertIn(date_now, document_text)
