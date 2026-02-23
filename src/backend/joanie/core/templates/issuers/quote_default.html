@@ -22,10 +22,6 @@ for your training, feel free to use this template as a base.
 <body class="document">
   <header class="document--header">
     {% include 'contract_definition/fragment_logo.html' with organization=organization %}
-      <div class="header-right">
-        <!-- Unicamp logo here -->
-        <img src="{% base64_static "joanie/images/logo_unicamp.png" %}" />
-      </div>
   </header>
     <main class="document-content">
       <header class="content--header">
@@ -176,9 +172,12 @@ for your training, feel free to use this template as a base.
         {% if quote %}
           {{ quote.body|safe }}
         {% endif %}
-        <section class="content-signatures">
+        <section class="content-created-on">
           <div class="signature_zone">
-            <p>{% translate "University representative's signature :" %}</p>
+            <p>
+              {% translate "Quote issued on: " %}
+              {% now "SHORT_DATE_FORMAT" %}
+            </p>
           </div>
         </section>
       </article>

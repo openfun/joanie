@@ -49,8 +49,7 @@
 }
 
 .document--header > img,
-.document--header .header-left img,
-.document--header .header-right img {
+.document--header .header-left img {
   height: 20mm;
   max-width: 100%;
   object-fit: contain;
@@ -124,7 +123,7 @@
 }
 
 /* == Content - Signatures  */
-.content-signatures {
+.content-created-on {
   align-items: flex-start;
   display: flex;
   flex-direction: row;
