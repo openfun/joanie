@@ -1442,7 +1442,7 @@ class QuoteFactory(DebugModelFactory, factory.django.DjangoModelFactory):
                 "organization": quote_utils.prepare_organization_context(
                     language_code=self.definition.language,
                     organization=self.batch_order.organization,
-                    logo=organization_logo_id,
+                    logo_id=organization_logo_id,
                 ),
                 "course": quote_utils.prepare_course_context(
                     language_code=self.definition.language,
