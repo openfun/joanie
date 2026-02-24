@@ -115,13 +115,13 @@ def prepare_organization_address(organization):
     return organization_address
 
 
-def prepare_organization_context(language_code, organization, logo: str):
+def prepare_organization_context(language_code, organization, logo_id: str):
     """Prepare organization data"""
     organization_address = prepare_organization_address(organization)
 
     organization_data = {
         "address": organization_address,
-        "logo_id": logo,
+        "logo_id": logo_id,
         "name": organization.safe_translation_getter(
             "title", language_code=language_code
         ),
@@ -201,7 +201,7 @@ def generate_document_context(quote_definition=None, batch_order=None):
     }
 
     if quote_definition:
-        logo = prepare_organization_logo(
+        logo_id = prepare_organization_logo(
             definition=quote_definition, organization=batch_order.organization
         )
         document_context.update(
@@ -222,7 +222,7 @@ def generate_document_context(quote_definition=None, batch_order=None):
                 "organization": prepare_organization_context(
                     language_code=language_code,
                     organization=batch_order.organization,
-                    logo=logo,
+                    logo_id=logo_id,
                 ),
             },
         )

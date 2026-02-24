@@ -1169,8 +1169,9 @@ class OrganizationViewSet(
         except models.Quote.DoesNotExist:
             return Response("Quote does not exist.", status=HTTPStatus.NOT_FOUND)
 
+        context_with_images = contract_definition.embed_images_in_context(quote.context)
         quote_pdf_bytes = issuers.generate_document(
-            name=quote.definition.name, context=quote.context
+            name=quote.definition.name, context=context_with_images
         )
         quote_pdf_bytes_io = io.BytesIO(quote_pdf_bytes)
         quote_pdf_bytes_io.seek(0)
