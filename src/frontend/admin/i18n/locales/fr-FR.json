@@ -17,7 +17,7 @@
   },
   "components.presentational.card.CreditCard.paymentMethod": {
     "description": "Payment method label",
-    "message": "Moyen de paiement"
+    "message": "Mode de paiement"
   },
   "components.presentational.discount.DiscountSelect.addDiscountModalFormTitle": {
     "description": "Title for the add discount modal",
@@ -273,7 +273,7 @@
   },
   "components.templates.batch-orders.view.batchOrderPaymentMethodsMessages.bank_transfer": {
     "description": "Text for bank transfer payment method",
-    "message": "Virement bancaire"
+    "message": "Virement bancaire direct"
   },
   "components.templates.batch-orders.view.batchOrderPaymentMethodsMessages.card_payment": {
     "description": "Text for card payment payment method",
@@ -323,16 +323,16 @@
     "description": "Text for to sign batch order state",
     "message": "À signer"
   },
-  "components.templates.batchOrders.filters.BatchOrderFilters.paymentMethodLabel": {
-    "description": "Label for the batch order payment method filter",
-    "message": "Modalité de paiement"
-  },
   "components.templates.batchOrders.filters.BatchOrderFilters.searchPlaceholder": {
     "description": "Text for the search input placeholder",
     "message": "Recherche par produit, entreprise, propriétaire ou établissement"
   },
-  "components.templates.batchOrders.filters.BatchOrderFilters.stateLabel": {
-    "description": "Label for the batch order state filter",
+  "components.templates.batchOrders.input.RHFBatchOrderPaymentMethod.paymentMethod": {
+    "description": "Label text for the select payment method input",
+    "message": "Mode de paiement"
+  },
+  "components.templates.batchOrders.input.RHFBatchOrderState.state": {
+    "description": "Label text for the select state input",
     "message": "État"
   },
   "components.templates.batchOrders.list.companyName": {
@@ -361,7 +361,7 @@
   },
   "components.templates.batchOrders.list.paymentMethod": {
     "description": "Label for the payment method header inside the table",
-    "message": "Modalité de paiement"
+    "message": "Mode de paiement"
   },
   "components.templates.batchOrders.list.state": {
     "description": "Label for the state header inside the table",
@@ -509,7 +509,7 @@
   },
   "components.templates.batchOrders.view.paymentMethod": {
     "description": "Label for payment method",
-    "message": "Mode de commande"
+    "message": "Mode de paiement"
   },
   "components.templates.batchOrders.view.postcode": {
     "description": "Label for postcode",

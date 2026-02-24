@@ -323,16 +323,16 @@
     "description": "Text for to sign batch order state",
     "message": "To sign"
   },
-  "components.templates.batchOrders.filters.BatchOrderFilters.paymentMethodLabel": {
-    "description": "Label for the batch order payment method filter",
-    "message": "Payment method"
-  },
   "components.templates.batchOrders.filters.BatchOrderFilters.searchPlaceholder": {
     "description": "Text for the search input placeholder",
     "message": "Search by product, company, owner or organization name"
   },
-  "components.templates.batchOrders.filters.BatchOrderFilters.stateLabel": {
-    "description": "Label for the batch order state filter",
+  "components.templates.batchOrders.input.RHFBatchOrderPaymentMethod.paymentMethod": {
+    "description": "Label text for the select payment method input",
+    "message": "Payment method"
+  },
+  "components.templates.batchOrders.input.RHFBatchOrderState.state": {
+    "description": "Label text for the select state input",
     "message": "State"
   },
   "components.templates.batchOrders.list.companyName": {
