@@ -100,7 +100,7 @@ class DummySignatureBackend(BaseSignatureBackend):
         if event_type in ["signed", "finished"]:
             self.confirm_signature(reference_id)
         else:
-            logger.error("'%s' is not an event type that we handle.")
+            logger.error("'%s' is not an event type that we handle.", event_type)
             raise ValidationError(
                 f"The notification {event_type} is not supported.",
             )
