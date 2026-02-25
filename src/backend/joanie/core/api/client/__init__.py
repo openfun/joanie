@@ -757,11 +757,23 @@ class OrderViewSet(
         return Response(status=HTTPStatus.CREATED)
 
 
-class BatchOrderViewSet(
+class GenericBatchOrderViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
     viewsets.GenericViewSet,
+):
+    """
+    The Generic API viewset to list, retrieve and create batch orders.
+    """
+
+    lookup_field = "pk"
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.BatchOrderSerializer
+
+
+class BatchOrderViewSet(
+    GenericBatchOrderViewSet,
+    mixins.CreateModelMixin,
 ):
     """
     BatchOrder Viewset. Allows to create, retrieve and submit batch order for payment.
@@ -888,6 +900,64 @@ class BatchOrderViewSet(
         batch_order.flow.process_payment()
 
         return Response(payment_infos, status=HTTPStatus.OK)
+
+
+class NestedBatchOrderSeatsViewSet(
+    NestedGenericViewSet,
+    GenericBatchOrderViewSet,
+):
+    """
+    API view to list or retrieve orders from a batch order.
+    It allows the batch order's owner or an organization access with role `owner` or `admin`
+    to access the list of orders and their related voucher codes.
+
+    GET /*/batch-orders/<batch_order_id>/seats/
+        Get the list of all the seats of a batch order
+
+    GET /*/batch-orders/<batch_order_id>/seats/<pk>/
+        Retrieve a single seat of a batch order
+    """
+
+    serializer_class = serializers.NestedBatchOrderSeatsSerializer
+    filterset_class = filters.NestedBatchOrderSeatsViewSetFilter
+    lookup_fields = ["batch_order_id", "pk"]
+    lookup_url_kwargs = ["batch_order_id", "pk"]
+
+    def get_queryset(self):
+        """
+        Returns the orders of a batch order that is related to the owner or the
+        users who should have organization accesses.
+        """
+        batch_order_id = self.kwargs["batch_order_id"]
+
+        try:
+            batch_order = models.BatchOrder.objects.get(pk=batch_order_id)
+        except models.BatchOrder.DoesNotExist as error:
+            raise NotFound(
+                "The requested resource was not found on this server."
+            ) from error
+
+        username = get_authenticated_username(self.request)
+
+        if not (
+            batch_order.owner.username == username
+            or batch_order.organization.accesses.filter(
+                user__username=username,
+                role__in=[enums.OWNER, enums.ADMIN],
+            ).exists()
+        ):
+            raise NotFound("The requested resource was not found on this server.")
+
+        return models.Order.objects.filter(
+            batch_order_id=batch_order.id
+        ).select_related(
+            "batch_order",
+            "product",
+            "course",
+            "organization",
+            "owner",
+            "voucher",
+        )
 
 
 class AddressViewSet(

@@ -135,6 +135,8 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                             "submit_for_signature": False,
                             "next_action": "confirm_quote",
                         },
+                        "seats_to_own": bo.seats_to_own,
+                        "seats_owned": bo.seats_owned,
                     },
                 ],
             },

@@ -251,6 +251,8 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
                                 "submit_for_signature": False,
                                 "next_action": "confirm_quote",
                             },
+                            "seats_to_own": contract.batch_order.seats_to_own,
+                            "seats_owned": contract.batch_order.seats_owned,
                         },
                     }
                     for contract in contracts
@@ -540,6 +542,8 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
                                 "submit_for_signature": False,
                                 "next_action": None,
                             },
+                            "seats_to_own": batch_order.seats_to_own,
+                            "seats_owned": batch_order.seats_owned,
                         },
                     },
                 ],

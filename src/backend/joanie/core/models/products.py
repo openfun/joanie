@@ -2622,6 +2622,26 @@ class BatchOrder(BaseModel):
 
         return round(Money(self.total / self.nb_seats).as_decimal(), 2)
 
+    @property
+    def seats_owned(self) -> int:
+        """
+        Return an integer of how many seats were claimed on a completed batch order
+        with its generated orders.
+        """
+        if not self.has_orders_generated:
+            return 0
+        return self.orders.filter(state=enums.ORDER_STATE_COMPLETED).count()
+
+    @property
+    def seats_to_own(self) -> int:
+        """
+        Return an integer about the amount of seat still available to claim on a completed
+        batch order with its generated orders
+        """
+        if not self.has_orders_generated:
+            return self.nb_seats
+        return self.orders.filter(state=enums.ORDER_STATE_TO_OWN).count()
+
     def cancel_orders(self):
         """
         Cancel all orders associated with this batch order and delete their linked vouchers.

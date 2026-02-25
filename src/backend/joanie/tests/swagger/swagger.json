@@ -430,6 +430,106 @@
                 }
             }
         },
+        "/api/v1.0/batch-orders/{batch_order_id}/seats/": {
+            "get": {
+                "operationId": "batch_orders_seats_list",
+                "description": "API view to list or retrieve orders from a batch order.\nIt allows the batch order's owner or an organization access with role `owner` or `admin`\nto access the list of orders and their related voucher codes.\n\nGET /*/batch-orders/<batch_order_id>/seats/\n    Get the list of all the seats of a batch order\n\nGET /*/batch-orders/<batch_order_id>/seats/<pk>/\n    Retrieve a single seat of a batch order",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "batch_order_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedNestedBatchOrderSeatsList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/batch-orders/{batch_order_id}/seats/{id}/": {
+            "get": {
+                "operationId": "batch_orders_seats_retrieve",
+                "description": "API view to list or retrieve orders from a batch order.\nIt allows the batch order's owner or an organization access with role `owner` or `admin`\nto access the list of orders and their related voucher codes.\n\nGET /*/batch-orders/<batch_order_id>/seats/\n    Get the list of all the seats of a batch order\n\nGET /*/batch-orders/<batch_order_id>/seats/<pk>/\n    Retrieve a single seat of a batch order",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "batch_order_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "batch-orders"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NestedBatchOrderSeats"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/batch-orders/{id}/": {
             "get": {
                 "operationId": "batch_orders_retrieve",
@@ -5986,6 +6086,16 @@
                         },
                         "description": "Return the available actions for the batch order",
                         "readOnly": true
+                    },
+                    "seats_to_own": {
+                        "type": "integer",
+                        "description": "Return an integer about the amount of seat still available to claim on a completed\nbatch order with its generated orders",
+                        "readOnly": true
+                    },
+                    "seats_owned": {
+                        "type": "integer",
+                        "description": "Return an integer of how many seats were claimed on a completed batch order\nwith its generated orders.",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6011,6 +6121,8 @@
                     "postcode",
                     "quote",
                     "relation",
+                    "seats_owned",
+                    "seats_to_own",
                     "signatory_email",
                     "signatory_firstname",
                     "signatory_lastname",
@@ -6189,6 +6301,16 @@
                         },
                         "description": "Return the available actions for the batch order",
                         "readOnly": true
+                    },
+                    "seats_to_own": {
+                        "type": "integer",
+                        "description": "Return an integer about the amount of seat still available to claim on a completed\nbatch order with its generated orders",
+                        "readOnly": true
+                    },
+                    "seats_owned": {
+                        "type": "integer",
+                        "description": "Return an integer of how many seats were claimed on a completed batch order\nwith its generated orders.",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -6201,6 +6323,8 @@
                     "owner_name",
                     "payment_method",
                     "relation",
+                    "seats_owned",
+                    "seats_to_own",
                     "state",
                     "total",
                     "total_currency"
@@ -7502,6 +7626,35 @@
                 "type": "string",
                 "description": "* `quote_default` - Quote Default"
             },
+            "NestedBatchOrderSeats": {
+                "type": "object",
+                "description": "Light serializer for orders of batch order",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "description": "primary key for the record as UUID"
+                    },
+                    "owner_name": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Return the name of the order's owner if available,\notherwise return None.",
+                        "readOnly": true
+                    },
+                    "voucher": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Return the voucher code of the generated order if not yet consumed,\notherwise None",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "owner_name",
+                    "voucher"
+                ]
+            },
             "NestedOrder": {
                 "type": "object",
                 "description": "Order model serializer for the Certificate model",
@@ -8710,6 +8863,37 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Enrollment"
+                        }
+                    }
+                }
+            },
+            "PaginatedNestedBatchOrderSeatsList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NestedBatchOrderSeats"
                         }
                     }
                 }
