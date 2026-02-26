@@ -932,6 +932,16 @@ class CourseProductRelation(BaseModel):
         """
         self.organization_links.update(is_active=is_active)
 
+    @property
+    def has_deep_links(self) -> bool:
+        """Return boolean value whether the offering has deep links declared"""
+        return self.organization_links.exists()
+
+    @property
+    def can_access_deep_links(self) -> bool:
+        """Return boolean whether the deep links of the offering are activated"""
+        return self.organization_links.filter(is_active=True).exists()
+
 
 class OfferingDeepLink(BaseModel):
     """
