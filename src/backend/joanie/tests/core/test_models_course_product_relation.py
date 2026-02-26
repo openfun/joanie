@@ -313,3 +313,40 @@ class CourseProductRelationModelTestCase(TestCase):
                 "has_seats_left": False,
             },
         )
+
+    def test_models_offering_has_deep_links_property(self):
+        """
+        When the offering has deep links, the property `has_deep_links` should return True.
+        Otherwise, it should return False
+        """
+        organizations = factories.OrganizationFactory.create_batch(2)
+        offering_with_deep_links = factories.OfferingFactory(
+            organizations=organizations
+        )
+        for organization in organizations:
+            factories.OfferingDeepLinkFactory(
+                organization=organization, offering=offering_with_deep_links
+            )
+        offering_without_deep_links = factories.OfferingFactory()
+
+        self.assertTrue(offering_with_deep_links.has_deep_links)
+        self.assertFalse(offering_without_deep_links.has_deep_links)
+
+    def test_models_offering_can_access_deep_links_property(self):
+        """
+        When an offering has deep links and they are not activated, the property
+        `can_access_deep_links` should return False, otherwise, it should return True.
+        """
+        organizations = factories.OrganizationFactory.create_batch(3)
+        offering = factories.OfferingFactory(organizations=organizations)
+        for organization in organizations:
+            factories.OfferingDeepLinkFactory(
+                organization=organization, offering=offering, is_active=False
+            )
+
+        self.assertFalse(offering.can_access_deep_links)
+
+        # Activate all deep links of the offering
+        offering.activate_deep_links(is_active=True)
+
+        self.assertTrue(offering.can_access_deep_links)
