@@ -42,7 +42,7 @@ from joanie.core.utils.batch_order import (
     validate_success_payment,
 )
 from joanie.core.utils.discount import calculate_price
-from joanie.core.utils.offering import get_serialized_course_runs
+from joanie.core.utils.offering import get_deep_link, get_serialized_course_runs
 from joanie.core.utils.order import (
     get_prepaid_order,
     verify_voucher,
@@ -209,7 +209,7 @@ class OfferingViewSet(
         if (
             self.action == "retrieve"
             and self.kwargs.get("course_id")
-            or self.action in ["payment_schedule", "payment_plan"]
+            or self.action in ["payment_schedule", "payment_plan", "deep_link"]
         ):
             permission_classes = [drf_permissions.AllowAny]
         else:
@@ -233,6 +233,20 @@ class OfferingViewSet(
         return Response(
             data=response.data.get("payment_schedule"), status=HTTPStatus.OK
         )
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="deep-link",
+    )
+    def deep_link(self, request, *args, **kwargs):
+        """
+        Returns an active deep link of an organization for the offering when deep links
+        are active, otherwise it returns None.
+        """
+        offering = self.get_object()
+        deep_link = get_deep_link(offering)
+        return JsonResponse({"deep_link": deep_link}, status=HTTPStatus.OK)
 
     @action(
         detail=True,
