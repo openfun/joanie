@@ -926,6 +926,12 @@ class CourseProductRelation(BaseModel):
             "has_seats_left": has_seats_left or not offering_rule_is_blocking,
         }
 
+    def activate_deeplinks(self, is_active=True):
+        """
+        Activate or deactivate the deeplinks of the offering.
+        """
+        self.organization_links.update(is_active=is_active)
+
 
 class OfferingDeepLink(BaseModel):
     """
@@ -995,6 +1001,16 @@ class OfferingDeepLink(BaseModel):
         """Enforce validation each time an instance is saved."""
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        """
+        A deep link can be deleted if it's not active only.
+        """
+        if self.is_active:
+            raise ValidationError(
+                _("You cannot delete this offering deep link, it's active.")
+            )
+        return super().delete(using=using, keep_parents=keep_parents)
 
 
 class CourseRun(parler_models.TranslatableModel, BaseModel):
