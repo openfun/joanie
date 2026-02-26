@@ -659,6 +659,31 @@ class OfferingFactory(DebugModelFactory, factory.django.DjangoModelFactory):
         self.organizations.set(extracted)
 
 
+class OfferingDeepLinkFactory(DebugModelFactory, factory.django.DjangoModelFactory):
+    """A factory to create deep link per organization and offering"""
+
+    class Meta:
+        model = models.OfferingDeepLink
+
+    offering = factory.SubFactory(OfferingFactory)
+    deep_link = factory.Sequence(lambda n: f"http://factory-deep-link.test/{n}")
+    is_active = True
+
+    @factory.lazy_attribute
+    def organization(self):
+        """
+        For each organizations related to the offering, attached the organization to
+        deep link if none exists.
+        """
+        organizations = self.offering.organizations.all()
+        for organization in organizations:
+            if self.offering.organization_links.filter(
+                organization=organization
+            ).exists():
+                continue
+            return organization
+
+
 class ProductTargetCourseRelationFactory(
     DebugModelFactory, factory.django.DjangoModelFactory
 ):
