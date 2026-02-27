@@ -26,11 +26,11 @@ import { TranslatableForm } from "@/components/presentational/translatable-conte
 import { RHFCheckbox } from "@/components/presentational/hook-form/RHFCheckbox";
 import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 import { useFormSubmit } from "@/hooks/form/useFormSubmit";
+import { Organization } from "@/services/api/models/Organization";
 
-interface FormValues
-  extends ToFormValues<
-    Omit<CourseRun, "course" | "state" | "languages" | "id" | "uri">
-  > {
+interface FormValues extends ToFormValues<
+  Omit<CourseRun, "course" | "state" | "languages" | "id" | "uri">
+> {
   course: Course;
   languages: JoanieLanguage[];
 }
@@ -53,7 +53,15 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
 
   const RegisterSchema = Yup.object().shape({
     title: Yup.string().required(),
-    course: Yup.object<Course>().required(),
+    course: Yup.object()
+      .shape({
+        id: Yup.string().required(),
+        code: Yup.string().required(),
+        title: Yup.string().required(),
+        organizations: Yup.array<Organization>().required(),
+        is_graded: Yup.boolean().required(),
+      })
+      .required(),
     resource_link: Yup.string().required(),
     start: Yup.string().defined().nullable(),
     end: Yup.string().defined().nullable(),
@@ -83,7 +91,7 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
 
   const methods = useForm({
     resolver: yupResolver(RegisterSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues() as any, // To not trigger type validation for default value
   });
 
   const updateFormError = (errors: ServerSideErrorForm<FormValues>) => {

@@ -24,7 +24,7 @@ RUN mkdir /install && \
 
 
 # ---- mails ----
-FROM node:20.18-slim AS mail-builder
+FROM node:20.19-slim AS mail-builder
 
 COPY ./src/mail /mail/app
 

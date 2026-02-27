@@ -77,7 +77,7 @@ export function CertificateDefinitionForm({ definition, ...props }: Props) {
 
   const methods = useForm({
     resolver: yupResolver(RegisterSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues() as any, // To not trigger type validation for default value
   });
 
   const updateFormError = (
