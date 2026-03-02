@@ -624,7 +624,7 @@ test.describe("Product form", () => {
 
     await page.getByRole("menuitem", { name: "Copy url" }).click();
     await expect(
-      page.getByRole("alert").getByText("Link added to your clipboard"),
+      page.getByRole("alert").getByText("Copied to clipboard"),
     ).toBeVisible();
     const handle = await page.evaluateHandle(() =>
       navigator.clipboard.readText(),
