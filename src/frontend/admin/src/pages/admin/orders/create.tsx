@@ -1,23 +1,22 @@
-import Button from "@mui/material/Button";
-import { useRouter } from "next/router";
 import { defineMessages, useIntl } from "react-intl";
+import { useRouter } from "next/router";
 import { DashboardLayoutPage } from "@/layouts/dashboard/page/DashboardLayoutPage";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { ordersBreadcrumbsTranslation } from "@/translations/pages/orders/breadcrumbsTranslations";
-import { OrdersList } from "@/components/templates/orders/list/OrdersList";
-import { commonTranslations } from "@/translations/common/commonTranslations";
+import { OrderCreateForm } from "@/components/templates/orders/form/OrderCreateForm";
 
 const messages = defineMessages({
   pageTitle: {
-    id: "pages.admin.orders.list.pageTitle",
-    defaultMessage: "Orders",
-    description: "Label for the order list page title",
+    id: "pages.admin.orders.create.pageTitle",
+    defaultMessage: "Add order",
+    description: "Label for the create order page title",
   },
 });
 
-export default function OrderListPage() {
-  const { push } = useRouter();
+export default function CreateOrderPage() {
   const intl = useIntl();
+  const router = useRouter();
+
   return (
     <DashboardLayoutPage
       title={intl.formatMessage(messages.pageTitle)}
@@ -29,19 +28,17 @@ export default function OrderListPage() {
           name: intl.formatMessage(ordersBreadcrumbsTranslation.listBreadcrumb),
           href: PATH_ADMIN.orders.list,
         },
+        {
+          name: intl.formatMessage(
+            ordersBreadcrumbsTranslation.createBreadcrumb,
+          ),
+          isActive: true,
+        },
       ]}
-      stretch={false}
-      actions={
-        <Button
-          onClick={() => push(PATH_ADMIN.orders.create)}
-          size="small"
-          variant="contained"
-        >
-          {intl.formatMessage(commonTranslations.add)}
-        </Button>
-      }
     >
-      <OrdersList changeUrlOnPageChange={true} />
+      <OrderCreateForm
+        afterSubmit={(order) => router.push(PATH_ADMIN.orders.view(order.id!))}
+      />
     </DashboardLayoutPage>
   );
 }
