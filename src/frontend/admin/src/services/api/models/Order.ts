@@ -23,6 +23,7 @@ export type OrderListItem = AbstractOrder & {
   organization_title: string;
   owner_name: string;
   product_title: string;
+  voucher: Nullable<string>;
 };
 
 export enum PaymentStatesEnum {
@@ -154,6 +155,7 @@ export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
     state: order.state,
     total: order.total,
     total_currency: order.total_currency,
+    voucher: order.voucher?.code ?? null,
   };
 };
 
