@@ -168,13 +168,14 @@ class OrderFlow:
     def _can_be_state_completed(self):
         """
         An order state can be set to completed if all installments
-        are completed, or if the order is already paid through a batch order.
+        are completed, or if the order is already paid through a batch order
+        or created standalone by an admin.
         """
         if (
             self.instance.state == enums.ORDER_STATE_TO_OWN
             and self.instance.voucher.discount.rate == 1
         ):
-            return self.instance.batch_order and self.instance.owner
+            return self.instance.owner is not None
 
         fully_paid = self.instance.is_free
         if not fully_paid and self.instance.payment_schedule:
