@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 
-from joanie.core import factories
+from joanie.core import enums, factories, models
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -11,12 +11,99 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
 
     maxDiff = None
 
-    def test_api_admin_orders_create(self):
-        """Create an order should be not allowed."""
-        # Create an admin user
+    def test_api_admin_orders_create_anonymous(self):
+        """An anonymous user should not be able to create an order."""
+        offering = factories.OfferingFactory()
+        response = self.client.post(
+            "/api/v1.0/admin/orders/",
+            data={
+                "product_id": str(offering.product.id),
+                "course_code": offering.course.code,
+                "organization_id": str(offering.organizations.first().id),
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
+
+    def test_api_admin_orders_create_lambda_user(self):
+        """A non-admin user should not be able to create an order."""
+        user = factories.UserFactory(is_staff=False, is_superuser=False)
+        self.client.login(username=user.username, password="password")
+
+        offering = factories.OfferingFactory()
+        response = self.client.post(
+            "/api/v1.0/admin/orders/",
+            data={
+                "product_id": str(offering.product.id),
+                "course_code": offering.course.code,
+                "organization_id": str(offering.organizations.first().id),
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
+
+    def test_api_admin_orders_create_staff_user(self):
+        """A staff user without superuser rights should not be able to create an order."""
+        user = factories.UserFactory(is_staff=True, is_superuser=False)
+        self.client.login(username=user.username, password="password")
+
+        offering = factories.OfferingFactory()
+        response = self.client.post(
+            "/api/v1.0/admin/orders/",
+            data={
+                "product_id": str(offering.product.id),
+                "course_code": offering.course.code,
+                "organization_id": str(offering.organizations.first().id),
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
+
+    def test_api_admin_orders_create_missing_product_id(self):
+        """Creating an order without product_id should return 400."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
         self.client.login(username=admin.username, password="password")
 
-        response = self.client.post("/api/v1.0/admin/orders/")
+        offering = factories.OfferingFactory()
+        response = self.client.post(
+            "/api/v1.0/admin/orders/",
+            data={
+                "course_code": offering.course.code,
+                "organization_id": str(offering.organizations.first().id),
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertIn("product_id", response.json())
 
-        self.assertStatusCodeEqual(response, HTTPStatus.METHOD_NOT_ALLOWED)
+    def test_api_admin_orders_create(self):
+        """An admin user should be able to create a to_own order with a 100% voucher."""
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering = factories.OfferingFactory()
+        organization = offering.organizations.first()
+
+        response = self.client.post(
+            "/api/v1.0/admin/orders/",
+            data={
+                "product_id": str(offering.product.id),
+                "course_code": offering.course.code,
+                "organization_id": str(organization.id),
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.CREATED)
+        data = response.json()
+
+        # Order should exist in the database
+        order = models.Order.objects.get(id=data["id"])
+        self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
+        self.assertIsNone(order.owner)
+
+        # A 100% voucher should be attached
+        self.assertIsNotNone(order.voucher)
+        self.assertEqual(order.voucher.discount.rate, 1)
+        self.assertFalse(order.voucher.multiple_use)
+        self.assertFalse(order.voucher.multiple_users)

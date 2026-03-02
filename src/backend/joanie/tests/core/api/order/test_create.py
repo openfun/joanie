@@ -3251,3 +3251,60 @@ class OrderCreateApiTest(BaseAPITestCase):
             ],
             response.json()["target_courses"],
         )
+
+    @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
+    def test_api_order_create_with_voucher_code_from_standalone_order(
+        self, mock_enroll_user_to_course_run
+    ):
+        """
+        When a user uses a voucher code attached to a standalone to_own order
+        (created by an admin, without a batch order), they should be assigned
+        as owner and the order should transition to completed.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        offering = factories.OfferingFactory()
+        # Create the order in draft state first (no owner, no batch_order)
+        order = factories.OrderFactory(
+            product=offering.product,
+            course=offering.course,
+            organization=offering.organizations.first(),
+            owner=None,
+            credit_card=None,
+            state=enums.ORDER_STATE_DRAFT,
+        )
+        discount, _ = models.Discount.objects.get_or_create(rate=1)
+        voucher = factories.VoucherFactory(
+            discount=discount, multiple_use=False, multiple_users=False
+        )
+        # Simulate what the admin endpoint does: attach voucher and force to_own
+        models.Order.objects.filter(pk=order.pk).update(
+            state=enums.ORDER_STATE_TO_OWN,
+            voucher=voucher,
+            batch_order=None,
+        )
+        order.refresh_from_db()
+
+        data = {
+            "product_id": str(offering.product.id),
+            "course_code": offering.course.code,
+            "voucher_code": voucher.code,
+        }
+
+        response = self.client.post(
+            "/api/v1.0/orders/",
+            data=data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        mock_enroll_user_to_course_run.assert_called_once()
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+
+        order.refresh_from_db()
+        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+        self.assertEqual(order.owner, user)
+        voucher.refresh_from_db()
+        self.assertFalse(voucher.is_usable_by(user.id))
