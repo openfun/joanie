@@ -18,6 +18,7 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Chip, { ChipOwnProps } from "@mui/material/Chip";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { useTheme } from "@mui/material/styles";
 import { Order, PaymentStatesEnum } from "@/services/api/models/Order";
@@ -227,6 +228,43 @@ export function OrderView({ order }: Props) {
                 )}
               />
             </Grid>
+
+            {order.voucher && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth={true}
+                  disabled={true}
+                  label={intl.formatMessage(orderViewMessages.voucher)}
+                  value={order.voucher.code}
+                  slotProps={{
+                    htmlInput: {
+                      style: {
+                        fontFamily: "monospace",
+                        textDecoration: order.voucher.is_used
+                          ? "line-through"
+                          : "none",
+                      },
+                    },
+                    input: {
+                      endAdornment: !order.voucher.is_used ? (
+                        <Tooltip
+                          title={intl.formatMessage(
+                            commonTranslations.clickToCopy,
+                          )}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => copyToClipboard(order.voucher!.code)}
+                          >
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      ) : undefined,
+                    },
+                  }}
+                />
+              </Grid>
+            )}
           </Grid>
           <OrderViewContractSection
             order={order}

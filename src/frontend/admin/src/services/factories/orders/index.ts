@@ -80,6 +80,7 @@ const build = (state?: OrderStatesEnum): Order => {
     ],
     credit_card: CreditCardFactory(),
     has_waived_withdrawal_right: faker.datatype.boolean(),
+    voucher: null,
   };
   if (
     ![
@@ -131,6 +132,7 @@ const buildOrderListItem = (): OrderListItem => {
     state: faker.helpers.arrayElement(Object.values(OrderStatesEnum)),
     total: faker.number.float({ min: 1, max: 9999 }),
     total_currency: "EUR",
+    voucher: null,
   };
 };
 
