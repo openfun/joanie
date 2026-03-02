@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Expose voucher code and claim status in order admin API
 - Create standalone to_own orders in admin
 - Handle deep link in back office
 - Add client API endpoint to return a deep link value in `OfferingViewSet`
