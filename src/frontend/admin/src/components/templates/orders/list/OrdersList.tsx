@@ -1,6 +1,11 @@
 import * as React from "react";
 import { GridColDef } from "@mui/x-data-grid";
 import { defineMessages, useIntl } from "react-intl";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 import {
   DefaultTableProps,
   TableComponent,
@@ -15,6 +20,7 @@ import { commonTranslations } from "@/translations/common/commonTranslations";
 import { OrderFilters } from "@/components/templates/orders/filters/OrderFilters";
 import { formatShortDate } from "@/utils/dates";
 import { orderStatesMessages } from "@/components/templates/orders/view/translations";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 const messages = defineMessages({
   id: {
@@ -73,6 +79,7 @@ type Props = DefaultTableProps<OrderListItem>;
 
 export function OrdersList(props: Props) {
   const intl = useIntl();
+  const copyToClipboard = useCopyToClipboard();
 
   const paginatedResource = usePaginatedTableResource<
     OrderListItem,
@@ -143,6 +150,36 @@ export function OrdersList(props: Props) {
       field: "voucher",
       headerName: intl.formatMessage(messages.voucher),
       flex: 1,
+      renderCell: (cell) => {
+        const code: string | null = cell.row.voucher;
+        if (!code) return null;
+        return (
+          <Stack direction="row" alignItems="center" width="100%" height="100%">
+            <Typography
+              variant="body2"
+              sx={{
+                fontFamily: "monospace",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {code}
+            </Typography>
+            <Tooltip title={intl.formatMessage(commonTranslations.clickToCopy)}>
+              <IconButton
+                size="small"
+                onClick={() => copyToClipboard(code)}
+                sx={{ flexShrink: 0 }}
+              >
+                <ContentCopyIcon fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        );
+      },
     },
   ];
 
