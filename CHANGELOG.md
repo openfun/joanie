@@ -17,6 +17,7 @@ and this project adheres to
 - Handle deep link in back office
 - Create standalone to_own orders in admin
 - Expose voucher code and claim status in order admin API
+- Display voucher code in order detail view
 
 ### Fixed
 
