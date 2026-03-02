@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Display voucher code in order detail view
 - Expose voucher code and claim status in order admin API
 - Create standalone to_own orders in admin
 - Handle deep link in back office
