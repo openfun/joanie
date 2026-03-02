@@ -47,6 +47,11 @@ export type OrderCreditCard = {
   expiration_year: number;
 };
 
+export type OrderVoucher = {
+  code: string;
+  is_used: boolean;
+};
+
 export type Order = AbstractOrder & {
   owner: User;
   product: ProductSimple;
@@ -60,6 +65,7 @@ export type Order = AbstractOrder & {
   payment_schedule: Nullable<OrderPaymentSchedule[]>;
   credit_card: Nullable<OrderCreditCard>;
   has_waived_withdrawal_right: boolean;
+  voucher: Nullable<OrderVoucher>;
 };
 
 export type OrderContractDetails = {
