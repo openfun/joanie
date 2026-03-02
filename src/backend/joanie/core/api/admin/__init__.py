@@ -753,6 +753,7 @@ class OrderViewSet(
         "certificate",
         "certificate__certificate_definition",
         "credit_card",
+        "voucher",
     )
 
     # Map aliases to actual model field lookups.
