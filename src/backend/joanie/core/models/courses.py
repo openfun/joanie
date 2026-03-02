@@ -1478,6 +1478,11 @@ class Enrollment(BaseModel):
                             product__contract_definition_batch_order__isnull=False,
                             batch_order__contract__student_signed_on__isnull=False,
                         )
+                        | models.Q(
+                            product__contract_definition_order__isnull=False,
+                            voucher__discount__rate=1,
+                            batch_order__isnull=True,
+                        )
                     ),
                     state__in=enums.ORDER_STATE_ALLOW_ENROLLMENT,
                 )
