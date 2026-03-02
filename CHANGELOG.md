@@ -15,6 +15,7 @@ and this project adheres to
 - Add `OfferingDeepLink` model to store links of offering
   to purchase a training from an external platform
 - Handle deep link in back office
+- Create standalone to_own orders in admin
 
 ### Fixed
 

@@ -86,6 +86,7 @@ const listProps: UseResourcesProps<OrderListItem, OrderListQuery> = {
     get: async (filters) => {
       return OrderRepository.getAll(filters);
     },
+    create: OrderRepository.create as any,
   }),
   session: true,
   messages: useOrdersMessages,
