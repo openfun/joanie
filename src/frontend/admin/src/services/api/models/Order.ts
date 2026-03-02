@@ -101,6 +101,12 @@ export type OrderMainInvoiceChildren = {
 
 export type OrderQuery = ResourcesQuery & {};
 
+export type DTOOrderCreate = {
+  product_id: string;
+  course_code?: string | null;
+  organization_id?: string | null;
+};
+
 export enum OrderInvoiceTypesEnum {
   INVOICE = "invoice",
   CREDIT_NOTE = "credit_note",

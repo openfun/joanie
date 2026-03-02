@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Create standalone to_own orders in admin
+
 ## [3.2.0] - 2026-02-25
 
 ### Added
