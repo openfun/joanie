@@ -194,6 +194,11 @@ export const orderViewMessages = defineMessages({
     defaultMessage: "The user has not waived its withdrawal right.",
     description: "Text for the has waived withdrawal right label",
   },
+  voucher: {
+    id: "components.templates.orders.view.voucher",
+    defaultMessage: "Voucher code",
+    description: "Voucher code field",
+  },
 });
 
 export const invoiceTypesMessages = defineMessages<OrderInvoiceTypesEnum>({
