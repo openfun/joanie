@@ -194,6 +194,21 @@ export const orderViewMessages = defineMessages({
     defaultMessage: "The user has not waived its withdrawal right.",
     description: "Text for the has waived withdrawal right label",
   },
+  voucher: {
+    id: "components.templates.orders.view.voucher",
+    defaultMessage: "Voucher code",
+    description: "Voucher code field",
+  },
+  voucherAvailable: {
+    id: "components.templates.orders.view.voucherAvailable",
+    defaultMessage: "Available",
+    description: "Chip label when the voucher has not been claimed yet",
+  },
+  voucherUsed: {
+    id: "components.templates.orders.view.voucherUsed",
+    defaultMessage: "Used",
+    description: "Chip label when the voucher has already been claimed",
+  },
 });
 
 export const invoiceTypesMessages = defineMessages<OrderInvoiceTypesEnum>({
