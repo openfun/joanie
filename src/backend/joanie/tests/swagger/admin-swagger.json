@@ -8696,6 +8696,13 @@
                         "description": "primary key for the record as UUID",
                         "readOnly": true,
                         "nullable": true
+                    },
+                    "voucher": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "nullable": true,
+                        "description": "Return the voucher code and whether it has been claimed.",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -8716,7 +8723,8 @@
                     "product",
                     "state",
                     "total",
-                    "total_currency"
+                    "total_currency",
+                    "voucher"
                 ]
             },
             "AdminOrderCreate": {

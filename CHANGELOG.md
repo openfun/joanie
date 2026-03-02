@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Create standalone to_own orders in admin
+- Expose voucher code and claim status in order admin API
 
 ## [3.2.0] - 2026-02-25
 
