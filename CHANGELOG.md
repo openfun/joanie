@@ -18,6 +18,7 @@ and this project adheres to
 - Create standalone to_own orders in admin
 - Expose voucher code and claim status in order admin API
 - Display voucher code in order detail view
+- Add voucher code copy-to-clipboard in orders list
 
 ### Fixed
 
