@@ -1403,6 +1403,32 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         return None
 
 
+class AdminOrderCreateSerializer(serializers.ModelSerializer):
+    """Write serializer for creating an Order in to_own state."""
+
+    product_id = serializers.PrimaryKeyRelatedField(
+        source="product",
+        queryset=models.Product.objects.all(),
+    )
+    course_code = serializers.SlugRelatedField(
+        source="course",
+        slug_field="code",
+        queryset=models.Course.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    organization_id = serializers.PrimaryKeyRelatedField(
+        source="organization",
+        queryset=models.Organization.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = models.Order
+        fields = ("product_id", "course_code", "organization_id")
+
+
 class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods
     """
     Read only light serializer for Order export.
