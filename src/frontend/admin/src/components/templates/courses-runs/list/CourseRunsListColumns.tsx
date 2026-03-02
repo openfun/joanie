@@ -44,11 +44,6 @@ const messages = defineMessages({
     defaultMessage: "Click to copy this link",
     description: "Label for the click to copy tooltip",
   },
-  successCopy: {
-    id: "components.templates.courseRuns.list.successCopy",
-    defaultMessage: "Link added to your clipboard",
-    description: "Text for the success click to copy notification",
-  },
 });
 
 export const getCoursesRunsListColumns = (
