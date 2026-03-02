@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add voucher code copy-to-clipboard in orders list
 - Display voucher code in order detail view
 - Expose voucher code and claim status in order admin API
 - Create standalone to_own orders in admin
