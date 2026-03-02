@@ -16,4 +16,9 @@ export const ordersBreadcrumbsTranslation = defineMessages({
     defaultMessage: "View",
     description: "Breadcrumb label for the order view page",
   },
+  createBreadcrumb: {
+    id: "pages.admin.orders.breadcrumbsTranslations.createBreadcrumb",
+    defaultMessage: "Create",
+    description: "Breadcrumb label for the order create page",
+  },
 });
