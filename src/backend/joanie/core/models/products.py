@@ -2470,6 +2470,32 @@ class BatchOrder(BaseModel):
             # Transition to `signing` state now and second call is to `completed`
             self.flow.update()
 
+    def abort_signing_procedure(self):
+        """
+        When a batch order gets canceled, we should abort the signing procedure if the buyer
+        has not signed. If the contract was not yet submitted, it does not abort the procedure,
+        nor if the contract is already fully signed.
+        """
+        if not self.has_contract:
+            raise ValidationError(_("The batch order has no contract."))
+        if not self.contract.signature_backend_reference:
+            raise ValidationError(
+                _(
+                    "Cannot abort the signature procedure, the contract was not yet submitted."
+                )
+            )
+        if self.contract.is_fully_signed:
+            raise ValidationError(
+                _(
+                    "The contract is already fully signed, the procedure is already stopped."
+                )
+            )
+
+        backend_signature = get_signature_backend()
+        backend_signature.abort_signing_procedure(
+            reference_id=self.contract.signature_backend_reference
+        )
+
     def generate_orders(self):
         """Generate orders of the batch order"""
         return generate_batch_order_orders(str(self.id))
