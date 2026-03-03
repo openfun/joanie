@@ -20,9 +20,7 @@ test.describe("Course product relation", () => {
   test.beforeEach(async ({ page }) => {
     store = getCourseScenarioStore();
     const firstCourseRun = store.courseRuns[0];
-    firstCourseRun.start = new Date(
-      Date.UTC(2024, 1, 23, 7, 30),
-    ).toLocaleString("en-US");
+    firstCourseRun.start = new Date(Date.UTC(2024, 1, 23, 7, 30)).toISOString();
     store.list[0]!.courses_runs![0] = firstCourseRun;
     await mockPlaywrightCrud<User, any>({
       data: store.users,

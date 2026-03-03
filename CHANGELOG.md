@@ -15,6 +15,10 @@ and this project adheres to
 - Display voucher code in order detail view
 - Add voucher code copy-to-clipboard in orders list
 
+### Fixed
+
+- Fix timezone-dependent date formatting in e2e tests
+
 ## [3.2.0] - 2026-02-25
 
 ### Added

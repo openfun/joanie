@@ -67,10 +67,10 @@ test.describe("Batch Order view", () => {
     const batchOrder = store.list[0];
     batchOrder.created_on = new Date(
       Date.UTC(2024, 0, 23, 19, 30),
-    ).toLocaleString("en-US");
+    ).toISOString();
     batchOrder.updated_on = new Date(
       Date.UTC(2024, 0, 23, 20, 30),
-    ).toLocaleString("en-US");
+    ).toISOString();
     await page.goto(PATH_ADMIN.batch_orders.list);
     await page.getByRole("heading", { name: "Batch Orders" }).click();
     await page
