@@ -70,6 +70,22 @@ class DummySignatureBackend(BaseSignatureBackend):
             f"&eventTarget={event_target}"
         )
 
+    def abort_signing_procedure(self, reference_id: str):
+        """
+        Dummy method that confirms that the signature procedure has been stopped
+        by returning the reference id if it exists or the contract is not fully signed.
+        """
+        if not reference_id.startswith(self.prefix_workflow):
+            raise ValidationError(f"The reference {reference_id} does not exist.")
+
+        contract = models.Contract.objects.get(
+            signature_backend_reference=reference_id,
+        )
+        if contract.is_fully_signed:
+            raise ValidationError(f"The contract {contract.id} is already fully signed")
+
+        return contract.signature_backend_reference
+
     def delete_signing_procedure(self, reference_id: str):
         """
         Dummy method that deletes the signature procedure from a signature backend reference.

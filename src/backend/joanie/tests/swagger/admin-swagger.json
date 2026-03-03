@@ -286,7 +286,7 @@
             },
             "delete": {
                 "operationId": "batch_orders_destroy",
-                "description": "Cancel a batch order.",
+                "description": "Cancel a batch order and abort the signing procedure at the provider if the\nagreement was submitted for signature and the buyer has not signed it yet",
                 "parameters": [
                     {
                         "in": "path",
