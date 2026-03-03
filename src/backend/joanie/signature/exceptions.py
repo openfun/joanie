@@ -43,6 +43,20 @@ class StartSignatureProcedureFailed(APIException):
     default_code = "start_signature_procedure_failed"
 
 
+class AbortSignatureProcedureFailed(APIException):
+    """
+    Exception triggered when aborting the signature procedure failed.
+    This exception is raised when attempting to abort a workflow that does not exists, or
+    that is already finished.
+    """
+
+    status_code = HTTPStatus.BAD_REQUEST
+    default_detail = _(
+        "Cannot abort the signature procedure with the signature reference."
+    )
+    default_code = "abort_signature_procedure_failed"
+
+
 class InvitationSignatureFailed(APIException):
     """
     Exception triggered when getting the signature invitation link failed.

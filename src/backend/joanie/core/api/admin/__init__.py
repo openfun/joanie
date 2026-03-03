@@ -804,7 +804,10 @@ class BatchOrderViewSet(
         instance.init_flow()
 
     def destroy(self, request, *args, **kwargs):
-        """Cancel a batch order."""
+        """
+        Cancel a batch order and delete the signing procedure if the agreement was submitted
+        for signature and the buyer has not signed it yet.
+        """
         batch_order = self.get_object()
 
         batch_order.flow.cancel()
@@ -812,6 +815,12 @@ class BatchOrderViewSet(
         if batch_order.has_orders_generated:
             # Delete orders and linked vouchers
             batch_order.cancel_orders()
+
+        if (
+            batch_order.contract_submitted
+            and batch_order.contract.student_signed_on is None
+        ):
+            batch_order.abort_signing_procedure()
 
         return Response(status=HTTPStatus.NO_CONTENT)
 

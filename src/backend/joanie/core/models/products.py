@@ -2470,6 +2470,16 @@ class BatchOrder(BaseModel):
             # Transition to `signing` state now and second call is to `completed`
             self.flow.update()
 
+    def abort_signing_procedure(self):
+        """
+        When a batch order gets canceled, we should stop the signing procedure if the buyer
+        has not signed
+        """
+        backend_signature = get_signature_backend()
+        backend_signature.abort_signing_procedure(
+            reference_id=self.contract.signature_backend_reference
+        )
+
     def generate_orders(self):
         """Generate orders of the batch order"""
         return generate_batch_order_orders(str(self.id))

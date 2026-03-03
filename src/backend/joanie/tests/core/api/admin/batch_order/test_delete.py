@@ -42,7 +42,8 @@ class BatchOrdersAdminApiDeleteTestCase(BaseAPITestCase):
         states = [
             state
             for state, _ in enums.BATCH_ORDER_STATE_CHOICES
-            if state != enums.BATCH_ORDER_STATE_CANCELED
+            if state
+            not in [enums.BATCH_ORDER_STATE_CANCELED, enums.BATCH_ORDER_STATE_DRAFT]
         ]
         for state in states:
             with self.subTest(state=state):
@@ -113,3 +114,52 @@ class BatchOrdersAdminApiDeleteTestCase(BaseAPITestCase):
 
         # Finally, the voucher codes should be deleted
         self.assertFalse(models.Voucher.objects.filter(code__in=vouchers).exists())
+
+    @mock.patch(
+        "joanie.signature.backends.dummy.DummySignatureBackend.delete_signing_procedure"
+    )
+    def test_api_admin_batch_order_delete_authenticated_should_delete_signing_procedure(
+        self, mock_delete_signing_procedure
+    ):
+        """
+        Authenticated admin user cancels a batch order that has a contract submitted to signature,
+        it should delete the signing procedure at the provider if the contract was submitted.
+        Otherwise, it should just cancel the batch order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        states = [
+            state
+            for state, _ in enums.BATCH_ORDER_STATE_CHOICES
+            if state
+            not in [enums.BATCH_ORDER_STATE_CANCELED, enums.BATCH_ORDER_STATE_DRAFT]
+        ]
+        for state in states:
+            with self.subTest(state=state):
+                batch_order = factories.BatchOrderFactory(
+                    state=state,
+                    payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                )
+
+                response = self.client.delete(
+                    f"/api/v1.0/admin/batch-orders/{batch_order.id}/",
+                    content_type="application/json",
+                )
+
+                batch_order.refresh_from_db()
+
+                self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
+
+                if (
+                    batch_order.contract_submitted
+                    and not batch_order.is_signed_by_buyer
+                ):
+                    self.assertTrue(mock_delete_signing_procedure.called)
+                    mock_delete_signing_procedure.assert_called_with(
+                        reference_id=batch_order.contract.signature_backend_reference
+                    )
+                    mock_delete_signing_procedure.reset_mock()
+                else:
+                    self.assertFalse(mock_delete_signing_procedure.called)
+                self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)

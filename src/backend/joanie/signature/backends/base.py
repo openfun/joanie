@@ -140,6 +140,15 @@ class BaseSignatureBackend:
             " a get_signature_invitation_link() method."
         )
 
+    def abort_signing_procedure(self, reference_id: str):
+        """
+        Abort signing procedure that is registered with the contract `signature_backend_reference`
+        value at the signature procedure.
+        """
+        raise NotImplementedError(
+            "subclasses of BaseSignatureBackend must provide a abort_signing_procedure() method."
+        )
+
     def delete_signing_procedure(self, reference_id: str):
         """
         Delete a signing procedure registered with the contract `signature_backend_reference` value

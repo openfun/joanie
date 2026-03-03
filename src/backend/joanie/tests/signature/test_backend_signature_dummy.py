@@ -243,6 +243,60 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         # Check that an email has not been sent
         self._check_uncomplete_signature_no_email_sent()
 
+    def test_backend_dummy_signature_abort_signing_procedure(self):
+        """
+        Dummy backend instance aborts the signing procedure of an agreement that was submitted
+        and the buyer has not yet signed. It should only be possible if the contract was not
+        fully signed and if the reference exists. When the signature procedure is aborted has
+        succeeded, it should return the signature backend reference of the contract.
+        """
+        backend = DummySignatureBackend()
+
+        with self.assertRaises(ValidationError) as context:
+            backend.abort_signing_procedure(reference_id="fake_reference")
+
+        self.assertTrue(
+            "The reference fake_reference does not exist." in str(context.exception)
+        )
+
+        reference_id, file_hash = backend.submit_for_signature(
+            "definition_1", b"file_bytes_1", {}
+        )
+        contract = factories.ContractFactory(
+            signature_backend_reference=reference_id,
+            definition_checksum=file_hash,
+            submitted_for_signature_on=django_timezone.now(),
+            context="a small context content",
+        )
+
+        result = backend.abort_signing_procedure(
+            reference_id=contract.signature_backend_reference
+        )
+
+        self.assertEqual(result, reference_id)
+
+        reference_id, file_hash = backend.submit_for_signature(
+            "definition_2", b"file_bytes_2", {}
+        )
+        contract = factories.ContractFactory(
+            signature_backend_reference=reference_id,
+            definition_checksum=file_hash,
+            submitted_for_signature_on=None,
+            student_signed_on=django_timezone.now(),
+            organization_signed_on=django_timezone.now(),
+            context="a small context content",
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            backend.abort_signing_procedure(
+                reference_id=contract.signature_backend_reference
+            )
+
+        self.assertTrue(
+            f"The contract {contract.id} is already fully signed"
+            in str(context.exception)
+        )
+
     def test_backend_dummy_signature_delete_signature_procedure_that_does_not_exist(
         self,
     ):
