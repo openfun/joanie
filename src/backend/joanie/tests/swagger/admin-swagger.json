@@ -3878,6 +3878,45 @@
                         "description": ""
                     }
                 }
+            },
+            "post": {
+                "operationId": "orders_create",
+                "description": "Create a standalone to_own order and return the full read representation.",
+                "tags": [
+                    "orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOrderCreateRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminOrderCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminOrderCreate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
             }
         },
         "/api/v1.0/admin/orders/{id}/": {
@@ -8657,6 +8696,13 @@
                         "description": "primary key for the record as UUID",
                         "readOnly": true,
                         "nullable": true
+                    },
+                    "voucher": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "nullable": true,
+                        "description": "Return the voucher code and whether it has been claimed.",
+                        "readOnly": true
                     }
                 },
                 "required": [
@@ -8677,7 +8723,57 @@
                     "product",
                     "state",
                     "total",
-                    "total_currency"
+                    "total_currency",
+                    "voucher"
+                ]
+            },
+            "AdminOrderCreate": {
+                "type": "object",
+                "description": "Write serializer for creating an Order in to_own state.",
+                "properties": {
+                    "product_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "course_code": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "organization_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "product_id"
+                ]
+            },
+            "AdminOrderCreateRequest": {
+                "type": "object",
+                "description": "Write serializer for creating an Order in to_own state.",
+                "properties": {
+                    "product_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID"
+                    },
+                    "course_code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "nullable": true
+                    },
+                    "organization_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "primary key for the record as UUID",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "product_id"
                 ]
             },
             "AdminOrderEnrollment": {

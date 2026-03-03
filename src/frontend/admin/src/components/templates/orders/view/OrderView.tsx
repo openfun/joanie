@@ -227,6 +227,58 @@ export function OrderView({ order }: Props) {
                 )}
               />
             </Grid>
+
+            {order.voucher && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth={true}
+                  disabled={true}
+                  label={intl.formatMessage(orderViewMessages.voucher)}
+                  value={order.voucher.code}
+                  inputProps={{
+                    style: {
+                      fontFamily: "monospace",
+                      textDecoration: order.voucher.is_used
+                        ? "line-through"
+                        : "none",
+                    },
+                    endAdornment: (
+                      <Tooltip
+                        title={
+                          order.voucher.is_used
+                            ? intl.formatMessage(orderViewMessages.voucherUsed)
+                            : intl.formatMessage(commonTranslations.clickToCopy)
+                        }
+                      >
+                        <Chip
+                          size="small"
+                          label={
+                            order.voucher.is_used
+                              ? intl.formatMessage(
+                                  orderViewMessages.voucherUsed,
+                                )
+                              : intl.formatMessage(
+                                  orderViewMessages.voucherAvailable,
+                                )
+                          }
+                          color={order.voucher.is_used ? "default" : "success"}
+                          onClick={
+                            order.voucher.is_used
+                              ? undefined
+                              : () => copyToClipboard(order.voucher!.code)
+                          }
+                          sx={{
+                            cursor: order.voucher.is_used
+                              ? "default"
+                              : "pointer",
+                          }}
+                        />
+                      </Tooltip>
+                    ),
+                  }}
+                />
+              </Grid>
+            )}
           </Grid>
           <OrderViewContractSection
             order={order}

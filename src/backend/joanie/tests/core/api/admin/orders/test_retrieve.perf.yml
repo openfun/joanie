@@ -76,6 +76,7 @@ OrdersAdminApiRetrieveTestCase.test_api_admin_orders_retrieve_from_batch_order:
 - cache|get: parler.core.OrganizationTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_offeringrule" INNER JOIN "joanie_order_offering_rules" ON ("joanie_offeringrule"."id" = "joanie_order_offering_rules"."offeringrule_id") INNER JOIN "joanie_course_product_relation" ON ("joanie_offeringrule"."course_product_relation_id" = "joanie_course_product_relation"."id") WHERE "joanie_order_offering_rules"."order_id" = #::uuid ORDER BY "joanie_course_product_relation"."created_on" DESC, "joanie_offeringrule"."position" ASC'
 - db: 'SELECT ... FROM "joanie_invoice" WHERE ("joanie_invoice"."order_id" = #::uuid AND "joanie_invoice"."parent_id" IS #) LIMIT #'
+- db: 'SELECT ... FROM "joanie_voucher" WHERE "joanie_voucher"."id" = #::uuid LIMIT #'
 OrdersAdminApiRetrieveTestCase.test_api_admin_orders_retrieve_voucher:
 - db: 'SELECT ... FROM "django_session" WHERE ("django_session"."expire_date" > #::timestamptz AND "django_session"."session_key" = #) LIMIT #'
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."id" = #::uuid LIMIT #'
@@ -118,3 +119,4 @@ OrdersAdminApiRetrieveTestCase.test_api_admin_orders_retrieve_voucher:
 - db: 'SELECT SUM("joanie_transaction"."total") AS "total" FROM "joanie_transaction" WHERE ("joanie_transaction"."invoice_id" IN (SELECT U0."id" FROM "joanie_invoice" U0 WHERE U0."parent_id" = #::uuid) OR "joanie_transaction"."invoice_id" = #::uuid)'
 - db: 'SELECT ... FROM "joanie_invoice" WHERE "joanie_invoice"."parent_id" = #::uuid'
 - db: 'SELECT SUM("joanie_transaction"."total") AS "total" FROM "joanie_transaction" WHERE ("joanie_transaction"."invoice_id" IN (SELECT U0."id" FROM "joanie_invoice" U0 WHERE U0."parent_id" = #::uuid) OR "joanie_transaction"."invoice_id" = #::uuid)'
+- db: 'SELECT ... FROM "joanie_voucher" WHERE "joanie_voucher"."id" = #::uuid LIMIT #'

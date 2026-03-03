@@ -638,6 +638,7 @@ class NestedOfferingRuleViewSet(
 
 class OrderViewSet(
     SerializerPerActionMixin,
+    mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -652,6 +653,7 @@ class OrderViewSet(
     serializer_classes = {
         "list": serializers.AdminOrderLightSerializer,
         "export": serializers.AdminOrderExportSerializer,
+        "create": serializers.AdminOrderCreateSerializer,
     }
     serializer_class = serializers.AdminOrderSerializer
     default_serializer_class = serializers.AdminOrderSerializer
@@ -679,6 +681,34 @@ class OrderViewSet(
         "voucher": "voucher__code",
     }
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+
+    def perform_create(self, serializer):
+        """Create a standalone to_own order with a 100% voucher."""
+        order = serializer.save(owner=None)
+        discount, _ = models.Discount.objects.get_or_create(rate=1)
+        order.voucher = models.Voucher.objects.create(
+            discount=discount,
+            multiple_use=False,
+            multiple_users=False,
+        )
+        order.flow.assign()
+        order.freeze_target_courses()
+        order.state = enums.ORDER_STATE_TO_OWN
+        order.save()
+
+    def create(self, request, *args, **kwargs):
+        """Create a standalone to_own order and return the full read representation."""
+        write_serializer = self.get_serializer(data=request.data)
+        write_serializer.is_valid(raise_exception=True)
+        self.perform_create(write_serializer)
+        order = write_serializer.instance
+        read_serializer = serializers.AdminOrderSerializer(
+            order, context=self.get_serializer_context()
+        )
+        headers = self.get_success_headers(read_serializer.data)
+        return Response(
+            read_serializer.data, status=HTTPStatus.CREATED, headers=headers
+        )
 
     def destroy(self, request, *args, **kwargs):
         """Cancels an order."""

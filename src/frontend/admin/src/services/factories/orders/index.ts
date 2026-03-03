@@ -74,12 +74,13 @@ const build = (state?: OrderStatesEnum): Order => {
       children: [],
     },
     payment_schedule: [
-      orderPayment("6/27/2024", totalOrder / 3),
-      orderPayment("7/27/2024", totalOrder / 3),
-      orderPayment("8/27/2024", totalOrder / 3),
+      orderPayment("2024-06-27T00:00:00.000Z", totalOrder / 3),
+      orderPayment("2024-07-27T00:00:00.000Z", totalOrder / 3),
+      orderPayment("2024-08-27T00:00:00.000Z", totalOrder / 3),
     ],
     credit_card: CreditCardFactory(),
     has_waived_withdrawal_right: faker.datatype.boolean(),
+    voucher: null,
   };
   if (
     ![
@@ -131,6 +132,7 @@ const buildOrderListItem = (): OrderListItem => {
     state: faker.helpers.arrayElement(Object.values(OrderStatesEnum)),
     total: faker.number.float({ min: 1, max: 9999 }),
     total_currency: "EUR",
+    voucher: null,
   };
 };
 

@@ -60,10 +60,10 @@ test.describe("Order view", () => {
     const order = store.list[0];
     order.main_invoice.created_on = new Date(
       Date.UTC(2024, 0, 23, 19, 30),
-    ).toLocaleString("en-US");
+    ).toISOString();
     order.main_invoice.updated_on = new Date(
       Date.UTC(2024, 0, 23, 20, 30),
-    ).toLocaleString("en-US");
+    ).toISOString();
     await page.goto(PATH_ADMIN.orders.list);
     await page.getByRole("heading", { name: "Orders" }).click();
     await page.getByRole("link", { name: order.product.title }).click();
@@ -119,7 +119,6 @@ test.describe("Order view", () => {
           const paymentLocator = page.getByTestId(
             `order-view-payment-${payment.id}`,
           );
-          await page.pause();
           await expect(paymentLocator).toBeVisible();
           await expect(
             paymentLocator.getByRole("cell", {
@@ -150,10 +149,10 @@ test.describe("Order view", () => {
     const order = store.list[0];
     order.main_invoice.created_on = new Date(
       Date.UTC(2024, 0, 23, 19, 30),
-    ).toLocaleString("en-US");
+    ).toISOString();
     order.main_invoice.updated_on = new Date(
       Date.UTC(2024, 0, 23, 20, 30),
-    ).toLocaleString("en-US");
+    ).toISOString();
     order.organization = undefined;
     await page.unroute(catchIdRegex);
     await page.route(catchIdRegex, async (route, request) => {

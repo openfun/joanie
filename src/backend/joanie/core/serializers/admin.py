@@ -1306,6 +1306,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
     payment_schedule = AdminOrderPaymentSerializer(many=True, read_only=True)
     credit_card = AdminCreditCardSerializer(read_only=True)
     has_waived_withdrawal_right = serializers.BooleanField(read_only=True)
+    voucher = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = models.Order
@@ -1328,12 +1329,22 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "credit_card",
             "has_waived_withdrawal_right",
             "batch_order",
+            "voucher",
         )
         read_only_fields = fields
 
     def get_total_currency(self, *args, **kwargs) -> str:
         """Return the code of currency used by the instance"""
         return settings.DEFAULT_CURRENCY
+
+    def get_voucher(self, instance) -> dict | None:
+        """Return the voucher code and whether it has been claimed."""
+        if not instance.voucher:
+            return None
+        return {
+            "code": instance.voucher.code,
+            "is_used": instance.owner is not None,
+        }
 
 
 class AdminOrderLightSerializer(serializers.ModelSerializer):
@@ -1401,6 +1412,32 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
         if instance.voucher:
             return instance.voucher.code
         return None
+
+
+class AdminOrderCreateSerializer(serializers.ModelSerializer):
+    """Write serializer for creating an Order in to_own state."""
+
+    product_id = serializers.PrimaryKeyRelatedField(
+        source="product",
+        queryset=models.Product.objects.all(),
+    )
+    course_code = serializers.SlugRelatedField(
+        source="course",
+        slug_field="code",
+        queryset=models.Course.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    organization_id = serializers.PrimaryKeyRelatedField(
+        source="organization",
+        queryset=models.Organization.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = models.Order
+        fields = ("product_id", "course_code", "organization_id")
 
 
 class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods

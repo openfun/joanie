@@ -23,6 +23,7 @@ export type OrderListItem = AbstractOrder & {
   organization_title: string;
   owner_name: string;
   product_title: string;
+  voucher: Nullable<string>;
 };
 
 export enum PaymentStatesEnum {
@@ -47,6 +48,11 @@ export type OrderCreditCard = {
   expiration_year: number;
 };
 
+export type OrderVoucher = {
+  code: string;
+  is_used: boolean;
+};
+
 export type Order = AbstractOrder & {
   owner: User;
   product: ProductSimple;
@@ -60,6 +66,7 @@ export type Order = AbstractOrder & {
   payment_schedule: Nullable<OrderPaymentSchedule[]>;
   credit_card: Nullable<OrderCreditCard>;
   has_waived_withdrawal_right: boolean;
+  voucher: Nullable<OrderVoucher>;
 };
 
 export type OrderContractDetails = {
@@ -100,6 +107,12 @@ export type OrderMainInvoiceChildren = {
 };
 
 export type OrderQuery = ResourcesQuery & {};
+
+export type DTOOrderCreate = {
+  product_id: string;
+  course_code?: string | null;
+  organization_id?: string | null;
+};
 
 export enum OrderInvoiceTypesEnum {
   INVOICE = "invoice",
@@ -142,6 +155,7 @@ export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
     state: order.state,
     total: order.total,
     total_currency: order.total_currency,
+    voucher: order.voucher?.code ?? null,
   };
 };
 
