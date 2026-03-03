@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add admin API to manage offering deep links for organizations
 - Add `OfferingDeepLink` model to store links of offering
   to purchase a training from an external platform
 
