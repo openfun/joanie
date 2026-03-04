@@ -1,6 +1,7 @@
 """Utility methods to get all orders and/or certificates from an offering."""
 
 import logging
+import secrets
 
 from django.db.models import Q
 
@@ -49,6 +50,25 @@ def get_generated_certificates(offering):
         order__certificate__isnull=False,
         order__state=ORDER_STATE_COMPLETED,
     )
+
+
+def get_deep_link(offering) -> str | None:
+    """
+    Return a random active deep link for the given offering.
+
+    If the offering does not have deep links enabled or none were declared,
+    returns None. Otherwise, it selects and returns one of the active deep links
+    associated with the offering
+    """
+    if not offering.has_deep_links or not offering.can_access_deep_links:
+        return None
+
+    activated_deep_links = list(
+        offering.organization_links.filter(is_active=True).values_list(
+            "deep_link", flat=True
+        )
+    )
+    return secrets.choice(activated_deep_links)
 
 
 def get_serialized_course_runs(offering, visibility=None):

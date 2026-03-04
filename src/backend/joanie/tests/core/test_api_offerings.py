@@ -3030,3 +3030,83 @@ class OfferingApiTest(BaseAPITestCase):
             response_relation_path.json(),
         )
         self.assertEqual(response.json(), response_relation_path.json())
+
+    def test_api_offering_get_deeplink_no_links_declared(self):
+        """
+        When no deep link is declared on an offering, it should always return None.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization_1, organization_2 = factories.OrganizationFactory.create_batch(2)
+        offering = factories.OfferingFactory(
+            product__price=100, organizations=[organization_1, organization_2]
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{offering.course.code}/products/{offering.product.id}/deep-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIsNone(content["deep_link"])
+
+    def test_api_offering_get_deeplinks(self):
+        """
+        When deep links are declared on the offering, and they are activated, it should return
+        a random deep link that exists. Otherwise, if they are not activated, it should return
+        None.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization_1, organization_2 = factories.OrganizationFactory.create_batch(2)
+        offering = factories.OfferingFactory(
+            product__price=100, organizations=[organization_1, organization_2]
+        )
+        for organization in [organization_1, organization_2]:
+            factories.OfferingDeepLinkFactory(
+                organization=organization,
+                offering=offering,
+                is_active=True,
+            )
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{offering.course.code}"
+            f"/products/{offering.product.id}/deep-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        response_relation_path = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/deep-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
+        self.assertIn(
+            "http://factory-deep-link.test/",
+            response.json()["deep_link"],
+        )
+        self.assertIn(
+            "http://factory-deep-link.test/",
+            response_relation_path.json()["deep_link"],
+        )
+
+        # Deactivate all deep links of the offering
+        offering.activate_deep_links(is_active=False)
+        offering.refresh_from_db()
+
+        response = self.client.get(
+            f"/api/v1.0/courses/{offering.course.code}/products/{offering.product.id}/deep-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        response_relation_path = self.client.get(
+            f"/api/v1.0/offerings/{offering.id}/deep-link/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        content = response.json()
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertIsNone(content["deep_link"])
+        self.assertEqual(response.json(), response_relation_path.json())
