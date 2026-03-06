@@ -7645,7 +7645,7 @@
                     "voucher": {
                         "type": "string",
                         "nullable": true,
-                        "description": "Return the voucher code of the generated order if not yet consumed,\notherwise None",
+                        "description": "Return the voucher code of the generated order if not yet consumed (no owner yet),\notherwise None",
                         "readOnly": true
                     }
                 },

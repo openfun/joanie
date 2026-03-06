@@ -763,7 +763,7 @@ class GenericBatchOrderViewSet(
     viewsets.GenericViewSet,
 ):
     """
-    The Generic API viewset to list, retrieve and create batch orders.
+    The Generic API viewset to list, retrieve batch orders.
     """
 
     lookup_field = "pk"
@@ -929,13 +929,7 @@ class NestedBatchOrderSeatsViewSet(
         users who should have organization accesses.
         """
         batch_order_id = self.kwargs["batch_order_id"]
-
-        try:
-            batch_order = models.BatchOrder.objects.get(pk=batch_order_id)
-        except models.BatchOrder.DoesNotExist as error:
-            raise NotFound(
-                "The requested resource was not found on this server."
-            ) from error
+        batch_order = get_object_or_404(models.BatchOrder, pk=batch_order_id)
 
         username = get_authenticated_username(self.request)
 

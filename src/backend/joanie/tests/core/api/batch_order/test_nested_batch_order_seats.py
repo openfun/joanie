@@ -107,11 +107,11 @@ class NestedBatchOrderSeatsApiTestCase(BaseAPITestCase):
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
-        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
     def test_api_nested_batch_order_seats_wrong_seat_id(self):
         """
-        Authenticated user should not be able to request the list of learners
+        Authenticated user should not be able to request a seat in the list of learners
         if the seat id is incorrect, it should return a Not Found error (404).
         """
         user = factories.UserFactory()
@@ -119,7 +119,7 @@ class NestedBatchOrderSeatsApiTestCase(BaseAPITestCase):
         batch_order = factories.BatchOrderFactory(owner=user)
 
         response = self.client.get(
-            f"/api/v1.0/batch-orders/{batch_order}/seats/wrong_id/",
+            f"/api/v1.0/batch-orders/{batch_order.id}/seats/wrong_id/",
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
 
@@ -306,7 +306,8 @@ class NestedBatchOrderSeatsApiTestCase(BaseAPITestCase):
     ):
         """
         Authenticated user who is the owner of the batch order should be able to
-        retrieve a specific seat with the order id.
+        retrieve a specific seat with the order id. When the seat is not yet claimed
+        we should see the voucher code value, otherwise, it should return None.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -317,10 +318,25 @@ class NestedBatchOrderSeatsApiTestCase(BaseAPITestCase):
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
             nb_seats=1,
         )
+        order = batch_order.orders.first()
+
+        response = self.client.get(
+            f"/api/v1.0/batch-orders/{batch_order.id}/seats/{order.id}/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertDictEqual(
+            {
+                "id": str(order.id),
+                "owner_name": None,
+                "voucher": order.voucher.code,
+            },
+            response.json(),
+        )
 
         # Simulate the learner claims his order
         learner = factories.UserFactory()
-        order = batch_order.orders.first()
         order.owner = learner
         order.save()
         order.flow.update()
@@ -335,7 +351,7 @@ class NestedBatchOrderSeatsApiTestCase(BaseAPITestCase):
             {
                 "id": str(order.id),
                 "owner_name": learner.get_full_name(),
-                "voucher": order.voucher.code,
+                "voucher": None,
             },
             response.json(),
         )

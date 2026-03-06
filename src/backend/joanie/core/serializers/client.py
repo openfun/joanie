@@ -578,10 +578,10 @@ class NestedBatchOrderSeatsSerializer(serializers.ModelSerializer):
 
     def get_voucher(self, instance) -> str | None:
         """
-        Return the voucher code of the generated order if not yet consumed,
+        Return the voucher code of the generated order if not yet consumed (no owner yet),
         otherwise None
         """
-        if instance.voucher:
+        if instance.voucher and not instance.owner:
             return instance.voucher.code
         return None
 
