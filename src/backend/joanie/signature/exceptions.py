@@ -46,7 +46,7 @@ class StartSignatureProcedureFailed(APIException):
 class AbortSignatureProcedureFailed(APIException):
     """
     Exception triggered when aborting the signature procedure failed.
-    This exception is raised when attempting to abort a workflow that does not exists, or
+    This exception is raised when attempting to abort a workflow that does not exist, or
     that is already finished.
     """
 

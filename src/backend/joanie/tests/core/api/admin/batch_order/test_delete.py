@@ -116,14 +116,14 @@ class BatchOrdersAdminApiDeleteTestCase(BaseAPITestCase):
         self.assertFalse(models.Voucher.objects.filter(code__in=vouchers).exists())
 
     @mock.patch(
-        "joanie.signature.backends.dummy.DummySignatureBackend.delete_signing_procedure"
+        "joanie.signature.backends.dummy.DummySignatureBackend.abort_signing_procedure"
     )
-    def test_api_admin_batch_order_delete_authenticated_should_delete_signing_procedure(
-        self, mock_delete_signing_procedure
+    def test_api_admin_batch_order_delete_authenticated_should_abort_signing_procedure(
+        self, mock_abort_signing_procedure
     ):
         """
         Authenticated admin user cancels a batch order that has a contract submitted to signature,
-        it should delete the signing procedure at the provider if the contract was submitted.
+        it should abort the signing procedure at the provider if the contract was submitted.
         Otherwise, it should just cancel the batch order.
         """
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -155,11 +155,11 @@ class BatchOrdersAdminApiDeleteTestCase(BaseAPITestCase):
                     batch_order.contract_submitted
                     and not batch_order.is_signed_by_buyer
                 ):
-                    self.assertTrue(mock_delete_signing_procedure.called)
-                    mock_delete_signing_procedure.assert_called_with(
+                    self.assertTrue(mock_abort_signing_procedure.called)
+                    mock_abort_signing_procedure.assert_called_with(
                         reference_id=batch_order.contract.signature_backend_reference
                     )
-                    mock_delete_signing_procedure.reset_mock()
+                    mock_abort_signing_procedure.reset_mock()
                 else:
-                    self.assertFalse(mock_delete_signing_procedure.called)
+                    self.assertFalse(mock_abort_signing_procedure.called)
                 self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_CANCELED)

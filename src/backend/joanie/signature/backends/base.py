@@ -146,7 +146,7 @@ class BaseSignatureBackend:
         value at the signature procedure.
         """
         raise NotImplementedError(
-            "subclasses of BaseSignatureBackend must provide a abort_signing_procedure() method."
+            "subclasses of BaseSignatureBackend must provide an abort_signing_procedure() method."
         )
 
     def delete_signing_procedure(self, reference_id: str):

@@ -1206,3 +1206,49 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         )
 
         self.assertEqual("", batch_order.total_per_trainee)
+
+    def test_models_batch_order_abort_signing_procedure_missing_contract(self):
+        """
+        It should not be possible to call `abort_signing_procedure` when the contract is
+        missing for a batch order. It must raise a `ValidationError`.
+        """
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_DRAFT)
+
+        with self.assertRaises(ValidationError) as context:
+            batch_order.abort_signing_procedure()
+
+        self.assertTrue("The batch order has no contract." in str(context.exception))
+
+    def test_models_batch_order_abort_signing_procedure_not_submitted_to_signature_yet(
+        self,
+    ):
+        """
+        It should not be possible to call `abort_signing_procedure` when the contract is not yet
+        submitted to signature at the provider. It must raise a `ValidationError`.
+        """
+        batch_order = factories.BatchOrderFactory(state=enums.BATCH_ORDER_STATE_QUOTED)
+
+        with self.assertRaises(ValidationError) as context:
+            batch_order.abort_signing_procedure()
+
+        self.assertTrue(
+            "Cannot abort the signature procedure, the contract was not yet submitted."
+            in str(context.exception)
+        )
+
+    def test_models_batch_order_abort_signing_procedure_when_fully_signed(self):
+        """
+        It should not be possible to call `abort_signing_procedure` when the contract is
+        already fully signed. It must raise a `ValidationError`.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_COMPLETED
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            batch_order.abort_signing_procedure()
+
+        self.assertTrue(
+            "The contract is already fully signed, the procedure is already stopped"
+            in str(context.exception)
+        )

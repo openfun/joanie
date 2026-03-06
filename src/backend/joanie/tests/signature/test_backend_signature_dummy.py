@@ -247,8 +247,8 @@ class DummySignatureBackendTestCase(BaseSignatureTestCase):
         """
         Dummy backend instance aborts the signing procedure of an agreement that was submitted
         and the buyer has not yet signed. It should only be possible if the contract was not
-        fully signed and if the reference exists. When the signature procedure is aborted has
-        succeeded, it should return the signature backend reference of the contract.
+        fully signed and if the reference exists. When the signature procedure abort succeeds,
+        it should return the signature backend reference of the contract.
         """
         backend = DummySignatureBackend()
 
