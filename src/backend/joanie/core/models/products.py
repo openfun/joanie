@@ -2622,7 +2622,7 @@ class BatchOrder(BaseModel):
 
         return round(Money(self.total / self.nb_seats).as_decimal(), 2)
 
-    @property
+    @cached_property
     def seats_owned(self) -> int:
         """
         Return an integer of how many seats were claimed on a completed batch order
@@ -2632,7 +2632,7 @@ class BatchOrder(BaseModel):
             return 0
         return self.orders.filter(state=enums.ORDER_STATE_COMPLETED).count()
 
-    @property
+    @cached_property
     def seats_to_own(self) -> int:
         """
         Return an integer about the amount of seat still available to claim on a completed
