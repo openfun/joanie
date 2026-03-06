@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Count
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
@@ -803,8 +804,12 @@ class BatchOrderViewSet(
         instance = serializer.save()
         instance.init_flow()
 
+    @transaction.atomic
     def destroy(self, request, *args, **kwargs):
-        """Cancel a batch order."""
+        """
+        Cancel a batch order and abort the signing procedure at the provider if the
+        agreement was submitted for signature and the buyer has not signed it yet
+        """
         batch_order = self.get_object()
 
         batch_order.flow.cancel()
@@ -812,6 +817,13 @@ class BatchOrderViewSet(
         if batch_order.has_orders_generated:
             # Delete orders and linked vouchers
             batch_order.cancel_orders()
+
+        if (
+            batch_order.has_contract
+            and batch_order.contract_submitted
+            and batch_order.contract.student_signed_on is None
+        ):
+            batch_order.abort_signing_procedure()
 
         return Response(status=HTTPStatus.NO_CONTENT)
 

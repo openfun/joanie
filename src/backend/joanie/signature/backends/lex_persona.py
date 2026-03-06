@@ -535,6 +535,41 @@ class LexPersonaBackend(BaseSignatureBackend):
         )
         return response.json().get("consentPageUrl")
 
+    def abort_signing_procedure(self, reference_id: str):
+        """
+        Abort a signature procedure that exists by updating its status to "stopped". It should
+        return in the response the `workflowStatus` stopped value. This method is used when
+        the agreement of a batch order has been submitted and the buyer has not yet signed.
+        """
+        timeout = settings.JOANIE_SIGNATURE_TIMEOUT
+
+        base_url = self.get_setting("BASE_URL")
+        token = self.get_setting("TOKEN")
+
+        url = f"{base_url}/api/workflows/{reference_id}"
+        payload = {"workflowStatus": "stopped"}
+        headers = {"Authorization": f"Bearer {token}"}
+
+        response = requests.patch(url, json=payload, headers=headers, timeout=timeout)
+
+        if not response.ok or response.json().get("workflowStatus") != "stopped":
+            logger.error(
+                "Lex Persona: Cannot abort the signature procedure with signature reference, "
+                "reason: %s",
+                response.json(),
+                extra={
+                    "url": url,
+                    "payload": payload,
+                    "reference_id": reference_id,
+                    "response": response.json(),
+                },
+            )
+            raise exceptions.AbortSignatureProcedureFailed(
+                "Lex Persona: Cannot abort the signature procedure with signature reference"
+            )
+
+        return response.json()
+
     def delete_signing_procedure(self, reference_id: str):
         """
         Delete a signing procedure associated of a given signature backend reference.
