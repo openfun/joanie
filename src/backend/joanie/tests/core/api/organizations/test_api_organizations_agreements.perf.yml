@@ -33,6 +33,8 @@ OrganizationAgreementApiTest.test_api_organizations_agreement_list_by_signature_
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_quote" WHERE "joanie_quote"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."username" = # LIMIT #'
 - db: 'SELECT "joanie_organization_access"."role" FROM "joanie_organization_access" WHERE ("joanie_organization_access"."organization_id" = #::uuid AND "joanie_organization_access"."user_id" = #::uuid) ORDER BY "joanie_organization_access"."created_on" DESC LIMIT #'
 OrganizationAgreementApiTest.test_api_organizations_agreement_list_by_signature_state.2:
@@ -160,6 +162,8 @@ OrganizationAgreementApiTest.test_api_organizations_agreements_list_by_offering:
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_quote" WHERE "joanie_quote"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."username" = # LIMIT #'
 - db: 'SELECT "joanie_organization_access"."role" FROM "joanie_organization_access" WHERE ("joanie_organization_access"."organization_id" = #::uuid AND "joanie_organization_access"."user_id" = #::uuid) ORDER BY "joanie_organization_access"."created_on" DESC LIMIT #'
 OrganizationAgreementApiTest.test_api_organizations_agreements_list_by_offering.2:
@@ -372,17 +376,27 @@ OrganizationAgreementApiTest.test_api_organizations_agreements_list_with_accesse
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_quote" WHERE "joanie_quote"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_user" WHERE "joanie_user"."username" = # LIMIT #'
 - db: 'SELECT "joanie_organization_access"."role" FROM "joanie_organization_access" WHERE ("joanie_organization_access"."organization_id" = #::uuid AND "joanie_organization_access"."user_id" = #::uuid) ORDER BY "joanie_organization_access"."created_on" DESC LIMIT #'
 - db: 'SELECT ... FROM "joanie_quote" WHERE "joanie_quote"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
 - db: 'SELECT "joanie_organization_access"."role" FROM "joanie_organization_access" WHERE ("joanie_organization_access"."organization_id" = #::uuid AND "joanie_organization_access"."user_id" = #::uuid) ORDER BY "joanie_organization_access"."created_on" DESC LIMIT #'
 - db: 'SELECT ... FROM "joanie_quote" WHERE "joanie_quote"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
 - db: 'SELECT "joanie_organization_access"."role" FROM "joanie_organization_access" WHERE ("joanie_organization_access"."organization_id" = #::uuid AND "joanie_organization_access"."user_id" = #::uuid) ORDER BY "joanie_organization_access"."created_on" DESC LIMIT #'
 - cache|get: parler.core.CourseTranslation.#.en-us
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_quote" WHERE "joanie_quote"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
 - db: 'SELECT "joanie_organization_access"."role" FROM "joanie_organization_access" WHERE ("joanie_organization_access"."organization_id" = #::uuid AND "joanie_organization_access"."user_id" = #::uuid) ORDER BY "joanie_organization_access"."created_on" DESC LIMIT #'
 - db: 'SELECT ... FROM "joanie_quote" WHERE "joanie_quote"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
+- db: 'SELECT # AS "a" FROM "joanie_order" WHERE "joanie_order"."batch_order_id" = #::uuid LIMIT #'
 - db: 'SELECT "joanie_organization_access"."role" FROM "joanie_organization_access" WHERE ("joanie_organization_access"."organization_id" = #::uuid AND "joanie_organization_access"."user_id" = #::uuid) ORDER BY "joanie_organization_access"."created_on" DESC LIMIT #'
 OrganizationAgreementApiTest.test_api_organizations_agreements_retrieve_combine_filter_signature_state_and_contract_id:
 - db: SELECT DISTINCT "joanie_contract"."id" FROM "joanie_contract" ORDER BY "joanie_contract"."id" ASC

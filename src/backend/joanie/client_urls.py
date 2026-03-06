@@ -124,6 +124,14 @@ organization_related_router.register(
     basename="organization_quotes",
 )
 
+# Routes nested under batch order
+batch_order_related_router = DefaultRouter()
+batch_order_related_router.register(
+    "seats",
+    api_client.NestedBatchOrderSeatsViewSet,
+    basename="batch_order_seats",
+)
+
 urlpatterns = [
     path(
         f"api/{settings.API_VERSION}/",
@@ -140,6 +148,10 @@ urlpatterns = [
                 re_path(
                     r"^organizations/(?P<organization_id>[a-zA-Z0-9-_]+)/",
                     include(organization_related_router.urls),
+                ),
+                re_path(
+                    r"^batch-orders/(?P<batch_order_id>[a-zA-Z0-9-_]+)/",
+                    include(batch_order_related_router.urls),
                 ),
             ]
         ),
