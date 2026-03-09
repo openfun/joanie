@@ -11,6 +11,8 @@ and this project adheres to
 
 ### Fixed
 
+- Property `is_signed_by_buyer` returns True when buyer and
+  organization both signed agreement of batch order
 - Cancel a batch order through Joanie's backoffice aborts
   signing procedure at the signature provider
 

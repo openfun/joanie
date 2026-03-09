@@ -1070,6 +1070,35 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         batch_order.flow.update()
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
 
+    def test_models_batch_order_is_signed_by_buyer(self):
+        """
+        The property `is_signed_by_buyer` should return True when the contract has a
+        signature backend reference and a timestamp in the field `student_signed_on`.
+        We changed this property because previously we checked if both `submitted_for_signature_on`
+        and `student_signed_on` were not None, but once the organization signs as well,
+        `submitted_for_signature_on` becomes None, causing the property to return False even when
+        the student has signed. We now check if the contract has a signature backend
+        reference and a value for `student_signed_on`.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+        )
+        # Set the contract as just submitted
+        self.assertFalse(batch_order.is_signed_by_buyer)
+
+        # Set contract as signed by buyer
+        batch_order.contract.student_signed_on = django_timezone.now()
+        batch_order.contract.save()
+
+        self.assertTrue(batch_order.is_signed_by_buyer)
+
+        # Set contract as fully signed
+        batch_order.contract.submitted_for_signature_on = None
+        batch_order.contract.organization_signed_on = django_timezone.now()
+        batch_order.contract.save()
+
+        self.assertTrue(batch_order.is_signed_by_buyer)
+
     def test_models_batch_order_can_submit_for_signature_already_signed_by_buyer(self):
         """
         When the batch order is already signed by the buyer,
