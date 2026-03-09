@@ -2564,7 +2564,7 @@ class BatchOrder(BaseModel):
         """Return boolean value whether the batch order contract is signed by the owner"""
         return (
             self.has_contract
-            and self.contract.submitted_for_signature_on is not None
+            and self.contract_submitted
             and self.contract.student_signed_on is not None
         )
 
