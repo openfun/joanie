@@ -115,12 +115,13 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             {"detail": ("This batch order cannot be submitted to payment")},
         )
 
-    def test_api_batch_order_submit_for_payment_if_state_other_then_signing_or_failed_payment(
+    def test_api_batch_order_submit_for_payment_state_is_not_ready_for_payment(
         self,
     ):
         """
-        When the state of the batch order is not signing or failed payment, the authenticated
-        user should not be able to submit for payment the batch order.
+        When the state of the batch order is not signing, pending, process payment
+        or failed payment, the authenticated user should not be able to submit for payment
+        the batch order.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
@@ -130,7 +131,6 @@ class BatchOrderSubmitForPaymentAPITest(BaseAPITestCase):
             enums.BATCH_ORDER_STATE_ASSIGNED,
             enums.BATCH_ORDER_STATE_TO_SIGN,
             enums.BATCH_ORDER_STATE_QUOTED,
-            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
             enums.BATCH_ORDER_STATE_COMPLETED,
         ]:
             with self.subTest(state=state):

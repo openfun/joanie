@@ -884,8 +884,8 @@ class BatchOrderViewSet(
             billing_address=batch_order.create_billing_address(),
             installment=None,
         )
-
-        batch_order.flow.process_payment()
+        if batch_order.state != enums.BATCH_ORDER_STATE_PROCESS_PAYMENT:
+            batch_order.flow.process_payment()
 
         return Response(payment_infos, status=HTTPStatus.OK)
 

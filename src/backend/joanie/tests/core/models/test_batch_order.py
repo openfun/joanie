@@ -1281,3 +1281,25 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             "The contract is already fully signed, the procedure is already stopped"
             in str(context.exception)
         )
+
+    def test_models_batch_order_property_is_ready_for_payment(self):
+        """
+        When the batch order with `card_payment` method is in state `signing`,
+        `pending`, `process_payment` or `failed_payment`, the property `is_ready_for_payment`
+        should return True, otherwise False.
+        """
+        for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                batch_order = factories.BatchOrderFactory(
+                    state=state,
+                    payment_method=enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+                )
+                if state in [
+                    enums.BATCH_ORDER_STATE_SIGNING,
+                    enums.BATCH_ORDER_STATE_PENDING,
+                    enums.BATCH_ORDER_STATE_FAILED_PAYMENT,
+                    enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
+                ]:
+                    self.assertTrue(batch_order.is_ready_for_payment)
+                else:
+                    self.assertFalse(batch_order.is_ready_for_payment)
