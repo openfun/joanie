@@ -2580,10 +2580,7 @@ class BatchOrder(BaseModel):
         if self.state == enums.BATCH_ORDER_STATE_FAILED_PAYMENT:
             return True
 
-        return self.is_signed_by_buyer is True and self.state in [
-            enums.BATCH_ORDER_STATE_SIGNING,
-            enums.BATCH_ORDER_STATE_PENDING,
-        ]
+        return self.is_signed_by_buyer is True and self.is_eligible_to_validate_payment
 
     @property
     def can_be_submitted_to_payment(self) -> bool:
