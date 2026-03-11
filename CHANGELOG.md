@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Handle deep link in back office
 - Add client API endpoint to return a deep link value in `OfferingViewSet`
 - Add admin API to manage offering deep links for organizations
 - Add `OfferingDeepLink` model to store links of offering
