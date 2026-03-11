@@ -1281,3 +1281,53 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             "The contract is already fully signed, the procedure is already stopped"
             in str(context.exception)
         )
+
+    def test_models_batch_order_seats_to_own(self):
+        """
+        The property `seats_to_own` should return an integer about the amount of seats
+        available on a batch order that is in `completed` state.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            nb_seats=10,
+        )
+
+        # We should find that there is 10 available seats since no orders were claimed
+        self.assertEqual(batch_order.seats_to_own, batch_order.nb_seats)
+
+        order = batch_order.orders.first()
+        order.owner = factories.UserFactory()
+        order.save()
+        order.flow.update()
+
+        # Empty cache property value
+        del batch_order.seats_to_own
+
+        # There should be only 9 seats available
+        self.assertEqual(batch_order.seats_to_own, 9)
+
+    def test_models_batch_order_seats_owned(self):
+        """
+        The property `seats_owned` should return an integer about the amount of seats
+        claimed on a batch order that is in `completed` state
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            nb_seats=3,
+        )
+
+        # We should get 0 in return
+        self.assertEqual(batch_order.seats_owned, 0)
+
+        order = batch_order.orders.first()
+        order.owner = factories.UserFactory()
+        order.save()
+        order.flow.update()
+
+        # Empty cache property value
+        del batch_order.seats_owned
+
+        # There should only be 1 seat taken
+        self.assertEqual(batch_order.seats_owned, 1)
