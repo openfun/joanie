@@ -10,6 +10,10 @@ import { ResourcesQuery } from "@/hooks/useResources/types";
 import { OfferingRepository } from "@/services/repositories/offering/OfferingRepository";
 import { Offering } from "@/services/api/models/Offerings";
 import { DTOOfferingRule } from "@/services/api/models/OfferingRule";
+import {
+  DTOCreateOfferingDeepLink,
+  DTOUpdateOfferingDeepLink,
+} from "@/services/api/models/OfferingDeepLink";
 
 const messages = defineMessages({
   errorUpdate: {
@@ -60,6 +64,24 @@ const messages = defineMessages({
       "Error message shown to the user when offering rule creation request fails.",
     defaultMessage:
       "An error occurred while creating the offering rule. Please retry later.",
+  },
+  errorCreateDeepLink: {
+    id: "hooks.useCourseProductRelation.errorCreateDeepLink",
+    description:
+      "Error message shown to the user when deep link creation request fails.",
+    defaultMessage: "An error occurred while creating the deep link.",
+  },
+  errorUpdateDeepLink: {
+    id: "hooks.useCourseProductRelation.errorUpdateDeepLink",
+    description:
+      "Error message shown to the user when deep link update request fails.",
+    defaultMessage: "An error occurred while updating the deep link.",
+  },
+  errorDeleteDeepLink: {
+    id: "hooks.useCourseProductRelation.errorDeleteDeepLink",
+    description:
+      "Error message shown to the user when deep link deletion request fails.",
+    defaultMessage: "An error occurred while deleting the deep link.",
   },
   errorNotFound: {
     id: "hooks.useCourseProductRelation.errorNotFound",
@@ -164,6 +186,64 @@ export const useOfferings = (
         onError: () => {
           custom.methods.setError(
             intl.formatMessage(messages.errorDeleteOfferingRule),
+          );
+        },
+      }).mutate,
+      addDeepLink: mutation({
+        mutationFn: async (data: {
+          offeringId: string;
+          payload: DTOCreateOfferingDeepLink;
+        }) => {
+          return OfferingRepository.createDeepLink(
+            data.offeringId,
+            data.payload,
+          );
+        },
+        onError: () => {
+          custom.methods.setError(
+            intl.formatMessage(messages.errorCreateDeepLink),
+          );
+        },
+      }).mutate,
+      editDeepLink: mutation({
+        mutationFn: async (data: {
+          offeringId: string;
+          deepLinkId: string;
+          payload: DTOUpdateOfferingDeepLink;
+        }) => {
+          return OfferingRepository.updateDeepLink(
+            data.offeringId,
+            data.deepLinkId,
+            data.payload,
+          );
+        },
+        onError: () => {
+          custom.methods.setError(
+            intl.formatMessage(messages.errorUpdateDeepLink),
+          );
+        },
+      }).mutate,
+      deleteDeepLink: mutation({
+        mutationFn: async (data: {
+          offeringId: string;
+          deepLinkId: string;
+        }) => {
+          return OfferingRepository.deleteDeepLink(
+            data.offeringId,
+            data.deepLinkId,
+          );
+        },
+        onError: () => {
+          custom.methods.setError(
+            intl.formatMessage(messages.errorDeleteDeepLink),
+          );
+        },
+      }).mutate,
+      activateDeepLinks: mutation({
+        mutationFn: async (data: { offeringId: string; isActive: boolean }) => {
+          return OfferingRepository.activateDeepLinks(
+            data.offeringId,
+            data.isActive,
           );
         },
       }).mutate,
