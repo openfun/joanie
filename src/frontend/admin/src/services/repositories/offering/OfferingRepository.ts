@@ -11,6 +11,11 @@ import {
   DTOOfferingRule,
   OfferingRule,
 } from "@/services/api/models/OfferingRule";
+import {
+  DTOCreateOfferingDeepLink,
+  DTOUpdateOfferingDeepLink,
+  OfferingDeepLink,
+} from "@/services/api/models/OfferingDeepLink";
 import { exportToFormData } from "@/utils/forms";
 import { PaginatedResponse } from "@/types/api";
 
@@ -30,6 +35,16 @@ export const offeringsRoutes = {
 
   generateMultipleCertificate: (id: string) =>
     `/offerings/${id}/generate_certificates/`,
+  getDeepLinks: (offeringId: string) =>
+    `/offerings/${offeringId}/offering-deep-links/`,
+  createDeepLink: (offeringId: string) =>
+    `/offerings/${offeringId}/offering-deep-links/`,
+  getDeepLink: (offeringId: string, deepLinkId: string) =>
+    `/offerings/${offeringId}/offering-deep-links/${deepLinkId}/`,
+  updateDeepLink: (offeringId: string, deepLinkId: string) =>
+    `/offerings/${offeringId}/offering-deep-links/${deepLinkId}/`,
+  deleteDeepLink: (offeringId: string, deepLinkId: string) =>
+    `/offerings/${offeringId}/offering-deep-links/${deepLinkId}/`,
 };
 
 export const OfferingRepository = class OfferingRepository {
@@ -131,4 +146,42 @@ export const OfferingRepository = class OfferingRepository {
       },
     }).then(checkStatus);
   }
+
+  static getDeepLinks(
+    offeringId: string,
+  ): Promise<PaginatedResponse<OfferingDeepLink>> {
+    return fetchApi(offeringsRoutes.getDeepLinks(offeringId), {
+      method: "GET",
+    }).then(checkStatus);
+  }
+
+  static createDeepLink(
+    offeringId: string,
+    payload: DTOCreateOfferingDeepLink,
+  ): Promise<OfferingDeepLink> {
+    return fetchApi(offeringsRoutes.createDeepLink(offeringId), {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    }).then(checkStatus);
+  }
+
+  static updateDeepLink(
+    offeringId: string,
+    deepLinkId: string,
+    payload: DTOUpdateOfferingDeepLink,
+  ): Promise<OfferingDeepLink> {
+    return fetchApi(offeringsRoutes.updateDeepLink(offeringId, deepLinkId), {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    }).then(checkStatus);
+  }
+
+  static deleteDeepLink(offeringId: string, deepLinkId: string): Promise<void> {
+    return fetchApi(offeringsRoutes.deleteDeepLink(offeringId, deepLinkId), {
+      method: "DELETE",
+    }).then(checkStatus);
+  }
+
 };

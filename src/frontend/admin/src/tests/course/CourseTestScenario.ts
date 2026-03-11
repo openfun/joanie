@@ -17,6 +17,11 @@ import {
   DTOOfferingRule,
   OfferingRule,
 } from "@/services/api/models/OfferingRule";
+import {
+  DTOCreateOfferingDeepLink,
+  DTOUpdateOfferingDeepLink,
+  OfferingDeepLink,
+} from "@/services/api/models/OfferingDeepLink";
 import { mockCourseRunsFromCourse } from "@/tests/mocks/course-runs/course-runs-mocks";
 import { Discount, DTODiscount } from "@/services/api/models/Discount";
 import { DiscountFactory } from "@/services/factories/discounts";
@@ -30,6 +35,7 @@ export const getCourseScenarioStore = () => {
   const courseRuns: CourseRun[] = [];
   let offeringRules: OfferingRule[] = [];
   const discounts: Discount[] = DiscountFactory(3);
+  const deepLinks: OfferingDeepLink[] = [];
 
   list.forEach((course) => {
     course.organizations.forEach((organization) => {
@@ -161,14 +167,88 @@ export const getCourseScenarioStore = () => {
     courseRuns,
     offeringRules,
     discounts,
+    deepLinks,
     postUpdate,
     createOrg,
     postOffering,
     offerings,
     mockCourseRunsFromCourse,
     mockOfferingRule,
+    mockDeepLink,
     createDiscount,
   };
+};
+
+export const mockDeepLink = async (
+  page: Page,
+  deepLinkList: OfferingDeepLink[] = [],
+) => {
+  const deepLinkListRegex = catchAllIdRegex(
+    `http://localhost:8071/api/v1.0/admin/offerings/:uuid/offering-deep-links/`,
+    ":uuid",
+  );
+
+  const deepLinkItemRegex = catchAllIdRegex(
+    `http://localhost:8071/api/v1.0/admin/offerings/:uuid/offering-deep-links/:uuid/`,
+    ":uuid",
+  );
+
+  const deepLinkResource = mockResource<
+    OfferingDeepLink,
+    DTOUpdateOfferingDeepLink
+  >({
+    data: deepLinkList,
+  });
+
+  await page.unroute(deepLinkListRegex);
+  await page.route(deepLinkListRegex, async (route, request) => {
+    const method = request.method();
+    const resultMatch = request.url().match(deepLinkListRegex);
+    const offeringId = resultMatch?.[1] ?? "id";
+
+    if (method === "GET") {
+      const results = deepLinkList.filter((dl) => dl.offering === offeringId);
+      await route.fulfill({
+        json: { count: results.length, next: null, previous: null, results },
+      });
+    }
+
+    if (method === "POST") {
+      const payload: DTOCreateOfferingDeepLink = request.postDataJSON();
+      const created: OfferingDeepLink = {
+        id: faker.string.uuid(),
+        deep_link: payload.deep_link,
+        is_active: false,
+        offering: offeringId,
+        organization: payload.organization_id,
+      };
+      deepLinkList.push(created);
+      await route.fulfill({ json: created });
+    }
+  });
+
+  await page.unroute(deepLinkItemRegex);
+  await page.route(deepLinkItemRegex, async (route, request) => {
+    const method = request.method();
+    const resultMatch = request.url().match(deepLinkItemRegex);
+    const deepLinkId = resultMatch?.[2] ?? "deepLinkId";
+
+    if (method === "PATCH") {
+      const payload: DTOUpdateOfferingDeepLink = request.postDataJSON();
+      const updated = deepLinkResource.updateResource(deepLinkId, payload);
+      await route.fulfill({ json: updated });
+    }
+
+    if (method === "DELETE") {
+      const deepLink = deepLinkResource.getResource(deepLinkId);
+      if (deepLink?.is_active) {
+        await route.fulfill({ status: 400 });
+      } else {
+        deepLinkResource.deleteResource(deepLinkId);
+        await route.fulfill({ status: 204 });
+      }
+    }
+  });
 };
 
 export const mockOfferingRule = async (
