@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ReactNode, useEffect, useState } from "react";
 import Stack from "@mui/material/Stack";
+import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import PostAddIcon from "@mui/icons-material/PostAdd";
@@ -24,6 +25,16 @@ import { useOfferings } from "@/hooks/useOffering/useOffering";
 import { AlertModal } from "@/components/presentational/modal/AlertModal";
 import { useList } from "@/hooks/useList/useList";
 import { OfferingRuleRow } from "@/components/templates/courses/form/sections/offering/OfferingRuleRow";
+import {
+  DTOCreateOfferingDeepLink,
+  OfferingDeepLink,
+  OfferingDeepLinkDummy,
+} from "@/services/api/models/OfferingDeepLink";
+import { OfferingDeepLinkRow } from "@/components/templates/courses/form/sections/offering/OfferingDeepLinkRow";
+import {
+  OfferingDeepLinkForm,
+  OfferingDeepLinkFormValues,
+} from "@/components/templates/courses/form/sections/offering/OfferingDeepLinkForm";
 import { CustomLink } from "@/components/presentational/link/CustomLink";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { MenuPopover } from "@/components/presentational/menu-popover/MenuPopover";
@@ -90,10 +101,50 @@ const messages = defineMessages({
     description:
       "Text when hovering over the action to generate certificates, but a generation is already in progress",
   },
+  addDeepLinkButton: {
+    id: "components.templates.courses.form.offering.row.addDeepLinkButton",
+    description: "Add deep link button label",
+    defaultMessage: "Add deep link",
+  },
+  addDeepLinkModalFormTitle: {
+    id: "components.templates.courses.form.offering.row.addDeepLinkModalFormTitle",
+    defaultMessage: "Add a deep link",
+    description: "Title for the add deep link modal",
+  },
+  editDeepLinkModalFormTitle: {
+    id: "components.templates.courses.form.offering.row.editDeepLinkModalFormTitle",
+    defaultMessage: "Edit a deep link",
+    description: "Title for the edit deep link modal",
+  },
+  deleteDeepLinkModalTitle: {
+    id: "components.templates.courses.form.offering.row.deleteDeepLinkModalTitle",
+    description: "Title for the delete deep link modal",
+    defaultMessage: "Delete a deep link",
+  },
+  deleteDeepLinkModalContent: {
+    id: "components.templates.courses.form.offering.row.deleteDeepLinkModalContent",
+    description: "Content for the delete deep link modal",
+    defaultMessage: "Are you sure you want to delete this deep link?",
+  },
+  activateAllDeepLinks: {
+    id: "components.templates.courses.form.offering.row.activateAllDeepLinks",
+    description: "Label for the activate all deep links button",
+    defaultMessage: "Activate all deep links",
+  },
+  deactivateAllDeepLinks: {
+    id: "components.templates.courses.form.offering.row.deactivateAllDeepLinks",
+    description: "Label for the deactivate all deep links button",
+    defaultMessage: "Deactivate all deep links",
+  },
 });
 
 type EditOfferingRuleState = {
   offeringRule: OfferingRule;
+  orderIndex: number;
+};
+
+type EditDeepLinkState = {
+  deepLink: OfferingDeepLink;
   orderIndex: number;
 };
 
@@ -142,11 +193,39 @@ export function OfferingRow({
   const offeringRuleModal = useModal();
   const deleteOfferingRuleModal = useModal();
 
+  const deepLinkModal = useModal();
+  const deleteDeepLinkModal = useModal();
+
+  const [currentDeepLink, setCurrentDeepLink] =
+    useState<Maybe<EditDeepLinkState>>();
+
+  const deepLinksQuery = useQuery({
+    queryKey: ["offering-deep-links", offering.id],
+    queryFn: () => OfferingRepository.getDeepLinks(offering.id),
+  });
+
+  const { items: deepLinkDummyList, ...deepLinkDummyListMethods } =
+    useList<OfferingDeepLinkDummy>([]);
+
+  const { items: deepLinkList, ...deepLinkListMethods } =
+    useList<OfferingDeepLink>(deepLinksQuery.data?.results ?? []);
+
   const offeringQuery = useOfferings({}, { enabled: false });
 
   const sendGenerateCertificate = async () => {
     await OfferingRepository.generateMultipleCertificate(offering.id);
     await jobQuery.refetch();
+  };
+
+  const activateAllDeepLinks = (isActive: boolean) => {
+    offeringQuery.methods.activateDeepLinks(
+      { offeringId: offering.id, isActive },
+      {
+        onSuccess: () => {
+          deepLinksQuery.refetch();
+        },
+      },
+    );
   };
 
   const update = (
@@ -233,9 +312,89 @@ export function OfferingRow({
     );
   };
 
+  const createDeepLink = (values: OfferingDeepLinkFormValues) => {
+    const payload: DTOCreateOfferingDeepLink = {
+      organization_id: values.organization_id,
+      deep_link: values.deep_link,
+    };
+    const dummy: OfferingDeepLinkDummy = {
+      dummyId: deepLinkList.length + 1 + "",
+      organization: values.organization_id,
+      deep_link: values.deep_link,
+      offering: offering.id,
+      is_active: false,
+    };
+    deepLinkDummyListMethods.push(dummy);
+    offeringQuery.methods.addDeepLink(
+      { offeringId: offering.id, payload },
+      {
+        onSettled: () => {
+          deepLinkDummyListMethods.clear();
+          deepLinksQuery.refetch();
+        },
+      },
+    );
+  };
+
+  const updateDeepLink = (
+    values: OfferingDeepLinkFormValues,
+    deepLink: OfferingDeepLink,
+    index: number,
+  ) => {
+    deepLinkListMethods.updateAt(index, {
+      ...deepLink,
+      deep_link: values.deep_link,
+      is_active: values.is_active,
+      organization: values.organization_id,
+    });
+    offeringQuery.methods.editDeepLink(
+      {
+        offeringId: offering.id,
+        deepLinkId: deepLink.id,
+        payload: {
+          deep_link: values.deep_link,
+          is_active: values.is_active,
+          organization: values.organization_id,
+        },
+      },
+      {
+        onSuccess: (data) => {
+          deepLinkListMethods.updateAt(index, data);
+          setCurrentDeepLink(undefined);
+        },
+        onError: () => {
+          deepLinkListMethods.updateAt(index, deepLink);
+        },
+        onSettled: () => {
+          deepLinksQuery.refetch();
+        },
+      },
+    );
+  };
+
+  const deleteDeepLink = (deepLink: OfferingDeepLink, index: number) => {
+    deepLinkListMethods.removeAt(index);
+    offeringQuery.methods.deleteDeepLink(
+      { offeringId: offering.id, deepLinkId: deepLink.id },
+      {
+        onError: () => {
+          deepLinkListMethods.insertAt(index, deepLink);
+        },
+        onSettled: () => {
+          setCurrentDeepLink(undefined);
+          deepLinksQuery.refetch();
+        },
+      },
+    );
+  };
+
   useEffect(() => {
     offeringRuleListMethods.set(offering.offering_rules);
   }, [offering]);
+
+  useEffect(() => {
+    deepLinkListMethods.set(deepLinksQuery.data?.results ?? []);
+  }, [deepLinksQuery.data]);
 
   const getMainTitle = (): ReactNode => {
     if (source === OfferingSource.PRODUCT) {
@@ -355,6 +514,73 @@ export function OfferingRow({
           >
             <FormattedMessage {...messages.addOfferingRuleButton} />
           </Button>
+          <Divider />
+          {deepLinkList.map((deepLink, orderIndex) => (
+            <OfferingDeepLinkRow
+              key={deepLink.id}
+              deepLink={deepLink}
+              organizations={offering.organizations}
+              onDelete={() => {
+                setCurrentDeepLink({ deepLink, orderIndex });
+                deleteDeepLinkModal.handleOpen();
+              }}
+              onEdit={() => {
+                setCurrentDeepLink({ deepLink, orderIndex });
+                deepLinkModal.handleOpen();
+              }}
+              onUpdateIsActive={(isActive) => {
+                updateDeepLink(
+                  {
+                    organization_id: deepLink.organization,
+                    deep_link: deepLink.deep_link,
+                    is_active: isActive,
+                  },
+                  { ...deepLink },
+                  orderIndex,
+                );
+              }}
+            />
+          ))}
+          {deepLinkDummyList.map((deepLink) => (
+            <OfferingDeepLinkRow
+              key={deepLink.dummyId}
+              deepLink={deepLink}
+              organizations={offering.organizations}
+            />
+          ))}
+          <Stack direction="row" gap={1}>
+            <Button
+              size="small"
+              color="success"
+              sx={{ flex: 1 }}
+              disabled={
+                deepLinkList.length === 0 ||
+                deepLinkList.every((link) => link.is_active)
+              }
+              onClick={() => activateAllDeepLinks(true)}
+            >
+              <FormattedMessage {...messages.activateAllDeepLinks} />
+            </Button>
+            <Button
+              size="small"
+              color="secondary"
+              sx={{ flex: 1 }}
+              disabled={
+                deepLinkList.length === 0 ||
+                deepLinkList.every((link) => !link.is_active)
+              }
+              onClick={() => activateAllDeepLinks(false)}
+            >
+              <FormattedMessage {...messages.deactivateAllDeepLinks} />
+            </Button>
+          </Stack>
+          <Button
+            onClick={deepLinkModal.handleOpen}
+            size="small"
+            color="primary"
+          >
+            <FormattedMessage {...messages.addDeepLinkButton} />
+          </Button>
         </Stack>
       </DefaultRow>
       <CustomModal
@@ -411,6 +637,56 @@ export function OfferingRow({
             currentOfferingRule?.offeringRule,
             currentOfferingRule?.orderIndex,
           );
+        }}
+      />
+
+      <CustomModal
+        fullWidth={true}
+        maxWidth="sm"
+        title={intl.formatMessage(
+          currentDeepLink
+            ? messages.editDeepLinkModalFormTitle
+            : messages.addDeepLinkModalFormTitle,
+        )}
+        {...deepLinkModal}
+        handleClose={() => {
+          setCurrentDeepLink(undefined);
+          deepLinkModal.handleClose();
+        }}
+      >
+        <Box mt={1}>
+          <OfferingDeepLinkForm
+            deepLink={currentDeepLink?.deepLink}
+            organizations={offering.organizations}
+            onSubmit={(values) => {
+              deepLinkModal.handleClose();
+              if (currentDeepLink) {
+                updateDeepLink(
+                  values,
+                  currentDeepLink.deepLink,
+                  currentDeepLink.orderIndex,
+                );
+              } else {
+                createDeepLink(values);
+              }
+            }}
+          />
+        </Box>
+      </CustomModal>
+
+      <AlertModal
+        {...deleteDeepLinkModal}
+        onClose={() => {
+          setCurrentDeepLink(undefined);
+          deleteDeepLinkModal.handleClose();
+        }}
+        title={intl.formatMessage(messages.deleteDeepLinkModalTitle)}
+        message={intl.formatMessage(messages.deleteDeepLinkModalContent)}
+        handleAccept={() => {
+          if (!currentDeepLink) {
+            return;
+          }
+          deleteDeepLink(currentDeepLink.deepLink, currentDeepLink.orderIndex);
         }}
       />
     </>
