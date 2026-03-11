@@ -1,6 +1,10 @@
+import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 import { getCourseScenarioStore } from "@/tests/course/CourseTestScenario";
-import { mockPlaywrightCrud } from "@/tests/useResourceHandler";
+import {
+  catchAllIdRegex,
+  mockPlaywrightCrud,
+} from "@/tests/useResourceHandler";
 import { Course, DTOCourse } from "@/services/api/models/Course";
 import { COURSE_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/courses/course-mocks";
 import {
@@ -13,6 +17,7 @@ import { User } from "@/services/api/models/User";
 import { CourseRun, DTOCourseRun } from "@/services/api/models/CourseRun";
 import { PATH_ADMIN } from "@/utils/routes/path";
 import { Offering, DTOOffering } from "@/services/api/models/Offerings";
+import { OfferingDeepLink } from "@/services/api/models/OfferingDeepLink";
 import { OfferingRule } from "@/services/api/models/OfferingRule";
 import {
   expectHaveClasses,
@@ -502,5 +507,149 @@ test.describe("Offering", () => {
     await page.getByTitle("Clear").first().click();
     await page.getByRole("button", { name: "Submit" }).click();
     await expect(page.getByText("From: 1/31/23, 10:00 AM")).not.toBeVisible();
+  });
+
+  test("Create, activate and edit a deep link", async ({ page }) => {
+    const course = store.list[0];
+    const offering = course.offerings![0];
+    const organization = offering.organizations[0];
+
+    await store.mockDeepLink(page, store.deepLinks);
+    await store.mockCourseRunsFromCourse(page, []);
+    await page.goto(PATH_ADMIN.courses.list);
+    await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
+
+    // Create
+    await page.getByRole("button", { name: "Add deep link" }).first().click();
+    await expect(
+      page.getByRole("heading", { name: "Add a deep link" }),
+    ).toBeVisible();
+    await page.getByLabel("Organization").click();
+    await page.getByRole("option", { name: organization.title }).click();
+    await page.getByLabel("Deep link URL").fill("https://example.com/course");
+    await page.getByRole("button", { name: "Submit" }).click();
+
+    const createdDeepLink = store.deepLinks[0];
+    const deepLinkRow = page.getByTestId(
+      `offering-deep-link-${createdDeepLink.id}`,
+    );
+    await expect(deepLinkRow).toBeVisible();
+    await expect(deepLinkRow.getByText(organization.title)).toBeVisible();
+    await expect(
+      deepLinkRow.getByText("https://example.com/course"),
+    ).toBeVisible();
+
+    // Activate
+    const isActiveSwitch = page.getByTestId(
+      `is-active-switch-offering-deep-link-${createdDeepLink.id}`,
+    );
+    await expectHaveNotClasses(isActiveSwitch, "Mui-checked");
+    await isActiveSwitch.click();
+    await expectHaveClasses(isActiveSwitch, "Mui-checked");
+
+    // Edit
+    await deepLinkRow.hover();
+    await deepLinkRow.getByTestId("edit-row-button").click();
+    await expect(
+      page.getByRole("heading", { name: "Edit a deep link" }),
+    ).toBeVisible();
+    await page.getByLabel("Deep link URL").clear();
+    await page.getByLabel("Deep link URL").fill("https://example.com/updated");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.getByText("https://example.com/updated")).toBeVisible();
+  });
+
+  test("Show an error snackbar when deep link creation fails with 400", async ({
+    page,
+  }) => {
+    const course = store.list[0];
+    const offering = course.offerings![0];
+    const organization = offering.organizations[0];
+
+    await store.mockDeepLink(page, store.deepLinks);
+    await store.mockCourseRunsFromCourse(page, []);
+    await page.route(
+      catchAllIdRegex(
+        "http://localhost:8071/api/v1.0/admin/offerings/:uuid/offering-deep-links/",
+        ":uuid",
+      ),
+      async (route, request) => {
+        if (request.method() === "POST") {
+          await route.fulfill({ status: 400 });
+        } else {
+          await route.fallback();
+        }
+      },
+    );
+    await page.goto(PATH_ADMIN.courses.list);
+    await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
+
+    // Create  and handle HTTP 400 Error
+    await page.getByRole("button", { name: "Add deep link" }).first().click();
+    await expect(
+      page.getByRole("heading", { name: "Add a deep link" }),
+    ).toBeVisible();
+    await page.getByLabel("Organization").click();
+    await page.getByRole("option", { name: organization.title }).click();
+    await page.getByLabel("Deep link URL").fill("https://example.com/course");
+    await page.getByRole("button", { name: "Submit" }).click();
+
+    await expect(
+      page.getByText(/an error occurred while creating the deep link/i),
+    ).toBeVisible();
+  });
+
+  test("Cannot delete active deep link, deactivate then delete", async ({
+    page,
+  }) => {
+    const course = store.list[0];
+    const offering = course.offerings![0];
+    const deepLink: OfferingDeepLink = {
+      id: faker.string.uuid(),
+      deep_link: "https://example.com/active",
+      is_active: true,
+      offering: offering.id,
+      organization: offering.organizations[0].id,
+    };
+    store.deepLinks.push(deepLink);
+
+    await store.mockDeepLink(page, store.deepLinks);
+    await store.mockCourseRunsFromCourse(page, []);
+    await page.goto(PATH_ADMIN.courses.list);
+    await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
+
+    const deepLinkRow = page.getByTestId(`offering-deep-link-${deepLink.id}`);
+    await expect(deepLinkRow).toBeVisible();
+
+    // Delete button should be disabled when is_active
+    await deepLinkRow.hover();
+    const deleteButton = page.getByTestId(
+      `delete-offering-deep-link-${deepLink.id}`,
+    );
+    await expect(deleteButton).toBeDisabled();
+
+    // Deactivate
+    const isActiveSwitch = page.getByTestId(
+      `is-active-switch-offering-deep-link-${deepLink.id}`,
+    );
+    await expectHaveClasses(isActiveSwitch, "Mui-checked");
+    await isActiveSwitch.click();
+    await expectHaveNotClasses(isActiveSwitch, "Mui-checked");
+
+    // Delete should now be enabled
+    await deepLinkRow.hover();
+    await expect(deleteButton).toBeEnabled();
+    await deleteButton.click();
+    await expect(
+      page.getByRole("heading", { name: "Delete a deep link" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Are you sure you want to delete this deep link?"),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Validate" }).click();
+    await expect(deepLinkRow).not.toBeVisible();
   });
 });
