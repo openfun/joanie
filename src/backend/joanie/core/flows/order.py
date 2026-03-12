@@ -346,7 +346,8 @@ class OrderFlow:
                 return
 
     @state.on_success()
-    def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
+    # ruff: noqa: PLR0912
+    def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument, too-many-branches
         """Post transition actions"""
         self.instance.save()
         # When an order's subscription is confirmed, we send an email to the user about the
@@ -447,6 +448,19 @@ class OrderFlow:
 
         if self.instance.owner and target == enums.ORDER_STATE_CANCELED:
             self.instance.unenroll_user_from_course_runs()
+
+        # A 100% voucher was created specifically for this order and must not be
+        # reusable once the order is canceled, to prevent it from being applied
+        # as a discount on a new regular order.
+        if (
+            target == enums.ORDER_STATE_CANCELED
+            and not self.instance.from_batch_order
+            and self.instance.voucher
+            and self.instance.voucher.discount.rate == 1
+        ):
+            self.instance.voucher.delete()
+            self.instance.voucher = None
+            self.instance.save()
 
         if self.instance.credit_card and target in [
             enums.ORDER_STATE_COMPLETED,
