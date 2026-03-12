@@ -466,6 +466,30 @@ class DiscountAdminFilterSet(filters.FilterSet):
         return queryset.distinct()
 
 
+class OfferingAdminFilterSet(filters.FilterSet):
+    """
+    OfferingAdminFilterSet allows to filter by product title, course title or course code.
+    """
+
+    class Meta:
+        model = models.CourseProductRelation
+        fields: List[str] = ["query"]
+
+    query = filters.CharFilter(method="filter_by_query")
+    ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
+
+    def filter_by_query(self, queryset, _name, value):
+        """
+        Filter resource by looking for product title, course title or course code which
+        contains provided value in "query" query parameter.
+        """
+        return queryset.filter(
+            Q(product__translations__title__icontains=value)
+            | Q(course__translations__title__icontains=value)
+            | Q(course__code__icontains=value)
+        ).distinct()
+
+
 class VoucherAdminFilterSet(DiscountAdminFilterSet):
     """
     VoucherAdminFilterSet allows to filter this resource with a query for code and discount.
