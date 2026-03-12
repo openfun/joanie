@@ -487,7 +487,9 @@ class OfferingViewSet(viewsets.ModelViewSet):
     queryset = models.CourseProductRelation.objects.all().select_related(
         "course", "product"
     )
-    ordering = "created_on"
+    filterset_class = filters.OfferingAdminFilterSet
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+    ordering = ["-created_on"]
 
     @staticmethod
     def get_request_schema_parameters(create=False):
