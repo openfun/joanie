@@ -473,6 +473,7 @@ class QuoteDefinitionViewSet(viewsets.ModelViewSet):
     queryset = models.QuoteDefinition.objects.all()
     filterset_class = filters.QuoteDefinitionAdminFilterSet
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+    ordering = "created_on"
 
 
 class OfferingViewSet(viewsets.ModelViewSet):
