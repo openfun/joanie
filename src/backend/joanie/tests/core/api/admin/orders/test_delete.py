@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 
-from joanie.core import enums, factories
+from joanie.core import enums, factories, models
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -68,3 +68,35 @@ class OrdersAdminApiDeleteTestCase(BaseAPITestCase):
                 order.refresh_from_db()
                 self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
                 self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+
+    def test_api_admin_orders_cancel_deletes_full_rate_voucher(self):
+        """
+        Canceling a standalone to_own order must delete its 100% voucher
+        so it cannot be reused as a discount on a new regular order.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        order = factories.OrderFactory(
+            owner=None,
+            credit_card=None,
+            state=enums.ORDER_STATE_DRAFT,
+        )
+        discount, _ = models.Discount.objects.get_or_create(rate=1)
+        voucher = factories.VoucherFactory(
+            discount=discount, multiple_use=False, multiple_users=False
+        )
+        models.Order.objects.filter(pk=order.pk).update(
+            state=enums.ORDER_STATE_TO_OWN,
+            voucher=voucher,
+            batch_order=None,
+        )
+        order.refresh_from_db()
+        self.assertTrue(voucher.is_active)
+
+        response = self.client.delete(f"/api/v1.0/admin/orders/{order.id}/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.NO_CONTENT)
+        self.assertFalse(models.Voucher.objects.filter(pk=voucher.pk).exists())
+        order.refresh_from_db()
+        self.assertIsNone(order.voucher)
