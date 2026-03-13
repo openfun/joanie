@@ -600,6 +600,38 @@ class OfferingViewSet(viewsets.ModelViewSet):
 
         return JsonResponse(cache_data, status=HTTPStatus.CREATED)
 
+    @extend_schema(
+        request={"is_active": OpenApiTypes.BOOL},
+        responses={
+            200: OpenApiTypes.NONE,
+            400: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["PATCH"], detail=True, url_path="activate-deep-links")
+    def activate_deep_links(self, request, pk=None):  # pylint: disable=unused-argument
+        """
+        Activate or deactivate all deep links related to the offering.
+        """
+        offering = self.get_object()
+
+        if not "is_active" in request.data:
+            return Response(
+                _("is_active boolean value is required"),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        is_active = request.data.get("is_active")
+
+        if not isinstance(is_active, bool):
+            return Response(
+                _("is_active must be a boolean value."),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        offering.activate_deep_links(is_active)
+
+        return Response(status=HTTPStatus.OK)
+
 
 class NestedOfferingRuleViewSet(
     SerializerPerActionMixin,
@@ -636,6 +668,56 @@ class NestedOfferingRuleViewSet(
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=HTTPStatus.CREATED, headers=headers)
+
+
+class NestedOfferingDeepLinkViewSet(viewsets.ModelViewSet, NestedGenericViewSet):
+    """Admin Offering Deep Link ViewSet"""
+
+    authentication_classes = [SessionAuthenticationWithAuthenticateHeader]
+    permission_classes = [permissions.IsAdminUser & permissions.DjangoModelPermissions]
+    serializer_class = serializers.AdminOfferingDeepLinkSerializer
+    queryset = models.OfferingDeepLink.objects.all().select_related(
+        "offering", "organization"
+    )
+    lookup_fields = ["offering", "pk"]
+    lookup_url_kwargs = ["offering_id", "pk"]
+    filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a `OfferingDeepLink` using the `offering_id` from the URL.
+        """
+        data = request.data.copy()
+        offering_id = kwargs.get("offering_id")
+        organization_id = data.pop("organization_id", None)
+        data["offering"] = str(offering_id)
+        data["organization"] = str(organization_id)
+
+        serializer = self.get_serializer(data=data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=HTTPStatus.CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        """Override update method to add the offering id from the url"""
+        instance = self.get_object()
+
+        partial = kwargs.pop("partial", False)
+        offering_id = kwargs.pop("offering_id")
+        data = request.data.copy()
+        data["offering"] = str(offering_id)
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
+
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
 
 
 class OrderViewSet(
