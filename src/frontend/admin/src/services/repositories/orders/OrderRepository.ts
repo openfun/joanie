@@ -1,5 +1,5 @@
 import queryString from "query-string";
-import { Order, OrderQuery } from "@/services/api/models/Order";
+import { DTOOrderCreate, Order, OrderQuery } from "@/services/api/models/Order";
 import { Maybe } from "@/types/utils";
 import { ResourcesQuery } from "@/hooks/useResources/types";
 import {
@@ -12,6 +12,7 @@ import { PaginatedResponse } from "@/types/api";
 export const orderRoutes = {
   get: (id: string, params: string = "") => `/orders/${id}/${params}`,
   getAll: (params: string = "") => `/orders/${params}`,
+  create: () => `/orders/`,
   delete: (id: string) => `/orders/${id}/`,
   generateCertificate: (id: string) => `/orders/${id}/generate_certificate/`,
   refund: (id: string) => `/orders/${id}/refund/`,
@@ -34,6 +35,14 @@ export class OrderRepository {
       filters ? `?${queryString.stringify(filters)}` : "",
     );
     return fetchApi(url, { method: "GET" }).then(checkStatus);
+  }
+
+  static create(payload: DTOOrderCreate): Promise<Order> {
+    return fetchApi(orderRoutes.create(), {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    }).then(checkStatus);
   }
 
   static delete(id: string): Promise<void> {

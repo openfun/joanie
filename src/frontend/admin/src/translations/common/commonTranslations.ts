@@ -68,7 +68,7 @@ export const commonTranslations = defineMessages({
   },
   successCopy: {
     id: "translations.common.commonTranslations.successCopy",
-    defaultMessage: "Link added to your clipboard",
+    defaultMessage: "Copied to clipboard",
     description: "Text for the success click to copy notification",
   },
   none: {

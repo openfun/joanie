@@ -756,6 +756,10 @@ class Demo:
                 [admin, enums.OWNER],
             ],
         )
+        second_organization = factories.OrganizationFactory(
+            title="The second school of glory",
+            users=[[admin, enums.OWNER]],
+        )
 
         # Add one credit card to student user
         student_user = factories.UserFactory(
@@ -844,6 +848,12 @@ class Demo:
             self.log(f'Successfully created "{certificate_product.title}" product')
             self.log("")
 
+            certificate_offering = models.CourseProductRelation.objects.get(
+                course=certificate_product.courses.first(),
+                product=certificate_product,
+            )
+            certificate_offering.organizations.add(second_organization)
+
             course_run_certificate.save()
 
         if create_certificate_discount:
@@ -904,6 +914,8 @@ class Demo:
             self.log("Successfully created offering rule")
             self.log("")
 
+            certificate_discount_offering.organizations.add(second_organization)
+
             course_run_certificate_discount.save()
 
         if create_credential:
@@ -952,6 +964,7 @@ class Demo:
                 course=credential_product.courses.first(),
                 product=credential_product,
             )
+            credential_offering.organizations.add(second_organization)
             batch_order = factories.BatchOrderFactory(
                 state=enums.BATCH_ORDER_STATE_COMPLETED,
                 offering=credential_offering,
@@ -1028,6 +1041,7 @@ class Demo:
                 course=credential_product_discount.courses.first(),
                 product=credential_product_discount,
             )
+            credential_discount_offering.organizations.add(second_organization)
             self.log(
                 f'Successfully created "{credential_discount_offering}" '
                 "offering (course product relation)"

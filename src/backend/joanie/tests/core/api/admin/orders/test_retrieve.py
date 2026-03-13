@@ -225,6 +225,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 },
                 "credit_card": None,
                 "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                "voucher": None,
             },
             response.json(),
         )
@@ -370,6 +371,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                     "expiration_year": order.credit_card.expiration_year,
                 },
                 "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                "voucher": None,
             },
             response.json(),
         )
@@ -453,6 +455,10 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "main_invoice": None,
                 "credit_card": None,
                 "has_waived_withdrawal_right": False,
+                "voucher": {
+                    "code": order.voucher.code,
+                    "is_used": True,
+                },
             },
             response.json(),
         )
@@ -656,6 +662,33 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 },
                 "credit_card": None,
                 "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                "voucher": {
+                    "code": voucher.code,
+                    "is_used": True,
+                },
             },
             response.json(),
+        )
+
+    def test_api_admin_orders_retrieve_voucher_unclaimed(self):
+        """
+        An order in state to_own (no owner yet) should return the voucher with
+        is_used=False, reflecting that the voucher has not yet been claimed.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        order = factories.OrderGeneratorFactory(
+            state=enums.ORDER_STATE_TO_OWN,
+        )
+        # to_own orders have no owner yet — voucher is available
+        self.assertIsNone(order.owner)
+        self.assertIsNotNone(order.voucher)
+
+        response = self.client.get(f"/api/v1.0/admin/orders/{order.id}/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(
+            response.json()["voucher"],
+            {"code": order.voucher.code, "is_used": False},
         )

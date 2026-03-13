@@ -56,6 +56,7 @@ export const PATH_ADMIN = {
   orders: {
     root: path("/orders"),
     list: path("/orders/list"),
+    create: path("/orders/create"),
     view: (id: string) => path(`/orders/${id}/view`),
   },
   batch_orders: {
