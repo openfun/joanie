@@ -12,7 +12,7 @@ from http import HTTPStatus
 from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.db import transaction
-from django.db.models import Exists, OuterRef, Prefetch, Subquery
+from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -276,7 +276,7 @@ class OfferingViewSet(
         voucher_code = self._get_voucher_code(request)
         price = self._get_price(offering, voucher_code)
         # Get the discount value if one is set
-        discount, from_batch_order = self._get_discount(offering, voucher_code)
+        discount, skip_contract_inputs = self._get_discount(offering, voucher_code)
 
         serializer = self.get_serializer(
             data={
@@ -289,7 +289,7 @@ class OfferingViewSet(
                 "price": offering.product.price,
                 "discount": discount,
                 "discounted_price": price if discount else None,
-                "from_batch_order": from_batch_order,
+                "skip_contract_inputs": skip_contract_inputs,
             }
         )
         serializer.is_valid(raise_exception=True)
@@ -318,16 +318,15 @@ class OfferingViewSet(
         if voucher_code:
             voucher = get_object_or_404(
                 models.Voucher.objects.only("discount").annotate(
-                    from_batch_order=Exists(
-                        models.Order.objects.filter(
-                            voucher=OuterRef("pk"),
-                            batch_order__isnull=False,
+                    skip_contract_inputs=Exists(
+                        models.Order.objects.filter(voucher=OuterRef("pk")).filter(
+                            Q(batch_order__isnull=False) | Q(contract__isnull=True),
                         )
                     )
                 ),
                 code=voucher_code,
             )
-            return str(voucher.discount), voucher.from_batch_order
+            return str(voucher.discount), voucher.skip_contract_inputs
 
         return offering.rules.get("discount", None), False
 
