@@ -1276,7 +1276,12 @@ class OrganizationViewSet(
         """
         organization = self.get_object()
         quote_id = request.data.get("quote_id")
-        purchase_order_reference = request.data.get("purchase_order_reference")
+        purchase_order_reference = request.data.get(
+            "purchase_order_reference", ""
+        ).strip()
+
+        if not purchase_order_reference:
+            raise ValidationError(_("Purchase order reference is required."))
 
         quote = get_object_or_404(
             models.Quote, id=quote_id, batch_order__organization=organization
