@@ -11,6 +11,8 @@ and this project adheres to
 
 ### Fixed
 
+- Confirm purchase order requires a value for the reference
+  to validate
 - Property `is_ready_for_payment` returns True when the state
   of batch order is in `process_payment`
 - Property `is_signed_by_buyer` returns True when buyer and

@@ -109,6 +109,36 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
 
+    def test_api_admin_batch_order_confirm_purchase_order_reference_required(self):
+        """
+        Authenticated admin user should not be able to confirm a purchase order when
+        the reference is not passed.
+        """
+        user = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=user.username, password="password")
+
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        batch_order.quote.context = "context"
+        batch_order.freeze_total("123.45")
+
+        purchase_order_references = ["", " "]
+
+        for reference in purchase_order_references:
+            response = self.client.patch(
+                f"/api/v1.0/admin/batch-orders/{batch_order.id}/confirm-purchase-order/",
+                data={"purchase_order_reference": reference},
+                content_type="application/json",
+            )
+
+            self.assertContains(
+                response,
+                "Purchase order reference is required.",
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
     def test_api_admin_batch_order_confirm_purchase_order_quote_not_signed_nor_total(
         self,
     ):
@@ -126,6 +156,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(BaseAPITestCase):
 
         response = self.client.patch(
             f"/api/v1.0/admin/batch-orders/{batch_order.id}/confirm-purchase-order/",
+            data={"purchase_order_reference": "test_reference"},
             content_type="application/json",
         )
 
@@ -152,6 +183,7 @@ class BatchOrdersAdminConfirmPurchaseOrderApiTestCase(BaseAPITestCase):
 
         response = self.client.patch(
             f"/api/v1.0/admin/batch-orders/{batch_order.id}/confirm-purchase-order/",
+            data={"purchase_order_reference": "test_reference_2"},
             content_type="application/json",
         )
 

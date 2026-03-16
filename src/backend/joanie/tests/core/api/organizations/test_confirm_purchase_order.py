@@ -178,7 +178,10 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
 
         response = self.client.patch(
             f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-purchase-order/",
-            data={"quote_id": str(batch_order.quote.id)},
+            data={
+                "quote_id": str(batch_order.quote.id),
+                "purchase_order_reference": "ABC-test",
+            },
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
         )
@@ -207,12 +210,48 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
 
         response = self.client.patch(
             f"/api/v1.0/organizations/{batch_order.organization.id}/confirm-purchase-order/",
-            data={"quote_id": str(batch_order.quote.id)},
+            data={
+                "quote_id": str(batch_order.quote.id),
+                "purchase_order_reference": "ABC-test",
+            },
             HTTP_AUTHORIZATION=f"Bearer {token}",
             content_type="application/json",
         )
 
         self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
+
+    def test_api_organization_confirm_purchase_order_reference_is_required(self):
+        """
+        Authenticated user with permission cannot confirm a purchase order if the
+        reference is missing in the payload.
+        """
+        purchase_order_references = ["", " "]
+
+        for reference in purchase_order_references:
+            batch_order = factories.BatchOrderFactory(
+                nb_seats=1,
+                state=enums.BATCH_ORDER_STATE_QUOTED,
+                payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            )
+            organization = batch_order.organization
+            batch_order.freeze_total("100.00")
+
+            access = factories.UserOrganizationAccessFactory(
+                organization=organization, role=enums.OWNER
+            )
+            token = self.generate_token_from_user(access.user)
+
+            response = self.client.patch(
+                f"/api/v1.0/organizations/{organization.id}/confirm-purchase-order/",
+                data={
+                    "quote_id": str(batch_order.quote.id),
+                    "purchase_order_reference": reference,
+                },
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                content_type="application/json",
+            )
+
+            self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
     def test_api_organization_confirm_purchase_order_but_payment_method_other_than_purchase_order(
         self,
@@ -242,7 +281,10 @@ class OrganizationApiConfirmPurchaseOrderTest(BaseAPITestCase):
 
                 response = self.client.patch(
                     f"/api/v1.0/organizations/{organization.id}/confirm-purchase-order/",
-                    data={"quote_id": str(batch_order.quote.id)},
+                    data={
+                        "quote_id": str(batch_order.quote.id),
+                        "purchase_order_reference": "ABC-test",
+                    },
                     HTTP_AUTHORIZATION=f"Bearer {token}",
                     content_type="application/json",
                 )
