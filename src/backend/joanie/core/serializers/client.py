@@ -1330,9 +1330,11 @@ class OrderPaymentScheduleSerializer(serializers.Serializer):
         required=False,
         help_text=_("Discounted price of the offer."),
     )
-    from_batch_order = serializers.BooleanField(
+    skip_contract_inputs = serializers.BooleanField(
         required=False,
-        help_text=_("If the order was created from a batch order."),
+        help_text=_(
+            "Orders that do not require contract inputs either from batch order or standalone."
+        ),
     )
 
     def create(self, validated_data):

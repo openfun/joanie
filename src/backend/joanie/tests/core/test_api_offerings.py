@@ -1896,7 +1896,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
-                "from_batch_order": False,
+                "skip_contract_inputs": False,
             },
             response.json(),
         )
@@ -1985,7 +1985,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
-                "from_batch_order": False,
+                "skip_contract_inputs": False,
             },
             response.json(),
         )
@@ -2052,7 +2052,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
-                "from_batch_order": False,
+                "skip_contract_inputs": False,
             },
             response.json(),
         )
@@ -2123,7 +2123,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
-                "from_batch_order": False,
+                "skip_contract_inputs": False,
             },
             response.json(),
         )
@@ -2267,7 +2267,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
-                "from_batch_order": False,
+                "skip_contract_inputs": False,
             },
             response.json(),
         )
@@ -2381,7 +2381,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
-                "from_batch_order": False,
+                "skip_contract_inputs": False,
             },
             response.json(),
         )
@@ -2481,7 +2481,7 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
-                "from_batch_order": False,
+                "skip_contract_inputs": False,
             },
             response.json(),
         )
@@ -2574,7 +2574,127 @@ class OfferingApiTest(BaseAPITestCase):
                         "state": enums.PAYMENT_STATE_PENDING,
                     },
                 ],
-                "from_batch_order": True,
+                "skip_contract_inputs": True,
+            },
+            response.json(),
+        )
+
+        self.assertStatusCodeEqual(response_relation_path, HTTPStatus.OK)
+        self.assertEqual(response_relation_path.json(), response.json())
+        self.assertStatusCodeEqual(response_with_query_params, HTTPStatus.OK)
+        self.assertEqual(response_with_query_params.json(), response.json())
+        self.assertStatusCodeEqual(
+            response_relation_path_with_query_param,
+            HTTPStatus.OK,
+        )
+        self.assertEqual(
+            response_relation_path_with_query_param.json(), response.json()
+        )
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            100: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    @patch(
+        "joanie.core.api.client.ValidateVoucherThrottle.get_rate",
+        return_value="5/minute",
+    )
+    def test_api_offering_payment_plan_voucher_code_for_deep_link_prepaid_order(
+        self,
+        _mock_get_rate,
+    ):
+        """
+        The endpoint `payment_plan` should return True to skip contract inputs
+        when the order is in state `to_own` and is fully prepaid and is not related
+        to a batch order.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        course = factories.CourseFactory()
+        course_run = factories.CourseRunFactory(
+            enrollment_start=datetime(2025, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+            start=datetime(2025, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+            end=datetime(2025, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+            course=course,
+        )
+        product = factories.ProductFactory(
+            price=10,
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+        )
+        offering = factories.OfferingFactory(
+            course=course_run.course,
+            product=product,
+        )
+        # Create the order in draft state first (no owner, no batch_order)
+        order = factories.OrderGeneratorFactory(
+            product=offering.product,
+            course=offering.course,
+            organization=offering.organizations.first(),
+            owner=None,
+            credit_card=None,
+            state=enums.ORDER_STATE_DRAFT,
+        )
+        voucher = factories.VoucherFactory(
+            discount=factories.DiscountFactory(rate=1),
+            multiple_use=False,
+            multiple_users=False,
+        )
+        # Simulate what the admin endpoint does: attach voucher and force to_own
+        models.Order.objects.filter(pk=order.pk).update(
+            state=enums.ORDER_STATE_TO_OWN,
+            voucher=voucher,
+            batch_order=None,
+        )
+
+        mocked_now = datetime(2025, 1, 1, 0, tzinfo=ZoneInfo("UTC"))
+        payload = {"voucher_code": voucher.code}
+
+        with (
+            mock.patch("uuid.uuid4", return_value=uuid.UUID(int=1)),
+            mock.patch("django.utils.timezone.now", return_value=mocked_now),
+        ):
+            response = self.client.get(
+                f"/api/v1.0/courses/{offering.course.code}/"
+                f"products/{offering.product.id}/payment-plan/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                data=payload,
+            )
+            response_relation_path = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+                data=payload,
+            )
+            response_with_query_params = self.client.get(
+                f"/api/v1.0/courses/{offering.course.code}/"
+                f"products/{offering.product.id}/payment-plan/?voucher_code={voucher.code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+            response_relation_path_with_query_param = self.client.get(
+                f"/api/v1.0/offerings/{offering.id}/payment-plan/"
+                f"?voucher_code={voucher.code}",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(
+            {
+                "price": 10.00,
+                "discount": "-100%",
+                "discounted_price": 0.00,
+                "payment_schedule": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000001",
+                        "amount": 0.00,
+                        "currency": settings.DEFAULT_CURRENCY,
+                        "due_date": "2025-01-17",
+                        "state": enums.PAYMENT_STATE_PENDING,
+                    },
+                ],
+                "skip_contract_inputs": True,
             },
             response.json(),
         )
