@@ -8258,9 +8258,9 @@
                         "nullable": true,
                         "description": "Discounted price of the offer."
                     },
-                    "from_batch_order": {
+                    "skip_contract_inputs": {
                         "type": "boolean",
-                        "description": "If the order was created from a batch order."
+                        "description": "Orders that do not require contract inputs either from batch order or standalone."
                     }
                 },
                 "required": [
