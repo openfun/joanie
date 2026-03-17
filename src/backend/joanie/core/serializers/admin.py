@@ -1530,8 +1530,11 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     def get_owner_name(self, instance) -> str:
         """
         Return the full name of the order's owner if available,
-        otherwise fallback to the username
+        otherwise fallback to the username. Returns empty string if
+        no owner is set (e.g. batch orders with "to own" state).
         """
+        if not instance.owner:
+            return ""
         return instance.owner.name
 
     def get_enrollment_created_on(self, instance) -> str:

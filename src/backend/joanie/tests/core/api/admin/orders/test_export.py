@@ -211,3 +211,24 @@ class OrdersAdminApiExportTestCase(BaseAPITestCase):
             self.assertEqual(
                 list(expected_csv_content(order).values()), csv_line.split(",")
             )
+
+    def test_api_admin_orders_export_csv_order_without_owner(self):
+        """
+        Export should not fail when orders have no owner (e.g. batch orders
+        with "to own" state). Owner fields must be empty strings in the CSV.
+        """
+        factories.OrderFactory(owner=None, credit_card=None)
+
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        response = self.client.get("/api/v1.0/admin/orders/export/")
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        csv_content = response.getvalue().decode().splitlines()
+        csv_header = csv_content[0].split(",")
+        owner_idx = csv_header.index("Owner")
+        email_idx = csv_header.index("Email")
+        csv_data_line = csv_content[1].split(",")
+        self.assertEqual(csv_data_line[owner_idx], "")
+        self.assertEqual(csv_data_line[email_idx], "")
