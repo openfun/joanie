@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix orders CSV export crashing when order has no owner
+
 ## [3.2.1] - 2026-03-17
 
 ### Fixed
