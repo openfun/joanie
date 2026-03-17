@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-24 09:59+0000\n"
-"PO-Revision-Date: 2026-02-24 15:57\n"
+"POT-Creation-Date: 2026-03-13 16:07+0000\n"
+"PO-Revision-Date: 2026-03-17 10:02\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -255,32 +255,32 @@ msgstr "Champ de configuration"
 msgid "Config fields"
 msgstr "Champs de configuration"
 
-#: joanie/core/api/admin/__init__.py:896
+#: joanie/core/api/admin/__init__.py:909
 msgid "You must generate the quote first."
 msgstr "Vous devez d’abord générer le devis."
 
-#: joanie/core/api/admin/__init__.py:899
-#: joanie/core/api/client/__init__.py:1239
+#: joanie/core/api/admin/__init__.py:912
+#: joanie/core/api/client/__init__.py:1240
 msgid "Quote is already signed, and total is frozen."
 msgstr "Le devis est déjà signé et le montant total est figé."
 
-#: joanie/core/api/admin/__init__.py:904
+#: joanie/core/api/admin/__init__.py:917
 msgid "Missing total value. It's required to confirm quote."
 msgstr "Le montant total est manquant. Il est requis pour confirmer le devis."
 
-#: joanie/core/api/admin/__init__.py:927
+#: joanie/core/api/admin/__init__.py:940
 msgid "Cannot confirm purchase order. Batch order payment"
 msgstr "Impossible de confirmer le bon de commande. Paiement de la commande groupée"
 
-#: joanie/core/api/admin/__init__.py:934
+#: joanie/core/api/admin/__init__.py:947
 msgid "Batch order's quote is not signed, nor has a total."
 msgstr "Le devis de la commande groupée n’est pas signé et ne comporte pas de montant total."
 
-#: joanie/core/api/admin/__init__.py:939
+#: joanie/core/api/admin/__init__.py:952
 msgid "Batch order's quote purchase order already confirmed."
 msgstr "Le bon de commande du devis de la commande groupée est déjà confirmé."
 
-#: joanie/core/api/admin/__init__.py:965
+#: joanie/core/api/admin/__init__.py:978
 msgid "You are not allowed to validate the bank transfer."
 msgstr "Vous n'êtes pas autorisé à valider le virement bancaire."
 
@@ -302,27 +302,27 @@ msgstr "Opération annulée. Mode de paiement de la commande groupée : {batch_o
 msgid "This batch order cannot be submitted to payment"
 msgstr "Cette commande groupée ne peut pas être soumise au paiement"
 
-#: joanie/core/api/client/__init__.py:1219
+#: joanie/core/api/client/__init__.py:1220
 msgid "Missing total value. It's required."
 msgstr "Valeur totale manquante. Ce champ est requis."
 
-#: joanie/core/api/client/__init__.py:1231
+#: joanie/core/api/client/__init__.py:1232
 msgid "Batch order is canceled, cannot confirm quote signature."
 msgstr "La commande groupée est annulée. Impossible de confirmer la signature du devis."
 
-#: joanie/core/api/client/__init__.py:1374
+#: joanie/core/api/client/__init__.py:1375
 msgid "Batch order is not eligible to get signed."
 msgstr "Cette commande groupée n’est pas éligible à la signature."
 
-#: joanie/core/api/client/__init__.py:1834
+#: joanie/core/api/client/__init__.py:1835
 msgid "Cannot get contract when an order is cancelled."
 msgstr "Impossible de récupérer le contrat lorsque la commande est annulée."
 
-#: joanie/core/api/client/__init__.py:1842
+#: joanie/core/api/client/__init__.py:1843
 msgid "Cannot download a contract when it is not yet fully signed."
 msgstr "Impossible de télécharger le contrat tant qu’il n’est pas signé par toutes les parties."
 
-#: joanie/core/api/client/__init__.py:1937
+#: joanie/core/api/client/__init__.py:1938
 msgid "No zip to generate."
 msgstr "Aucune archive à générer."
 
@@ -639,7 +639,7 @@ msgstr "Utilisateurs"
 #: joanie/core/models/accounts.py:161 joanie/core/models/certifications.py:33
 #: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:182
 #: joanie/core/models/courses.py:513 joanie/core/models/courses.py:946
-#: joanie/core/models/products.py:104 joanie/core/models/products.py:2802
+#: joanie/core/models/products.py:104 joanie/core/models/products.py:2825
 #: joanie/core/models/quotes.py:25 joanie/payment/models.py:497
 msgid "title"
 msgstr "titre"
@@ -660,11 +660,11 @@ msgstr "ville"
 msgid "country"
 msgstr "pays"
 
-#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2844
+#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2867
 msgid "first name"
 msgstr "prénom"
 
-#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2845
+#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2868
 msgid "last name"
 msgstr "nom de famille"
 
@@ -928,7 +928,7 @@ msgid "forever open"
 msgstr "ouvert indéfiniment"
 
 #: joanie/core/models/courses.py:180 joanie/core/models/courses.py:510
-#: joanie/core/models/products.py:2929
+#: joanie/core/models/products.py:2952
 msgid "code"
 msgstr "code"
 
@@ -1262,7 +1262,7 @@ msgid "course product relation"
 msgstr "relation cours produit"
 
 #: joanie/core/models/products.py:528 joanie/core/models/products.py:774
-#: joanie/core/models/products.py:2953
+#: joanie/core/models/products.py:2976
 msgid "is active"
 msgstr "est actif"
 
@@ -1599,79 +1599,91 @@ msgstr "La commande groupée n’est pas éligible à la signature"
 msgid "Contract is already signed by the buyer, cannot resubmit."
 msgstr "Le contrat est déjà signé par l'acheteur, impossible de le soumettre à nouveau."
 
-#: joanie/core/models/products.py:2797
+#: joanie/core/models/products.py:2480
+msgid "The batch order has no contract."
+msgstr "La commande groupée n'a pas de contrat."
+
+#: joanie/core/models/products.py:2484
+msgid "Cannot abort the signature procedure, the contract was not yet submitted."
+msgstr "Impossible d'annuler la procédure de signature, le contrat n'a pas encore été soumis."
+
+#: joanie/core/models/products.py:2490
+msgid "The contract is already fully signed, the procedure is already stopped."
+msgstr "Le contrat est déjà signé, la procédure est déjà interrompue."
+
+#: joanie/core/models/products.py:2820
 msgid "Skill"
 msgstr "Compétence"
 
-#: joanie/core/models/products.py:2798
+#: joanie/core/models/products.py:2821
 msgid "Skills"
 msgstr "Compétences"
 
-#: joanie/core/models/products.py:2817
+#: joanie/core/models/products.py:2840
 msgid "A skill with this title already exists."
 msgstr "Cette compétence existe déjà."
 
-#: joanie/core/models/products.py:2839
+#: joanie/core/models/products.py:2862
 msgid "Teacher"
 msgstr "Responsable pédagogique"
 
-#: joanie/core/models/products.py:2840
+#: joanie/core/models/products.py:2863
 msgid "Teachers"
 msgstr "Responsables pédagogiques"
 
-#: joanie/core/models/products.py:2855 joanie/core/serializers/admin.py:1428
+#: joanie/core/models/products.py:2878 joanie/core/serializers/admin.py:1428
 msgid "Discount"
 msgstr "Réduction"
 
-#: joanie/core/models/products.py:2856
+#: joanie/core/models/products.py:2879
 msgid "Discounts"
 msgstr "Réductions"
 
-#: joanie/core/models/products.py:2872
+#: joanie/core/models/products.py:2895
 msgid "amount"
 msgstr "montant"
 
-#: joanie/core/models/products.py:2873
+#: joanie/core/models/products.py:2896
 msgid "Discount amount"
 msgstr "Montant de la réduction"
 
-#: joanie/core/models/products.py:2879
+#: joanie/core/models/products.py:2902
 msgid "rate"
 msgstr "taux"
 
-#: joanie/core/models/products.py:2880
+#: joanie/core/models/products.py:2903
 msgid "Discount rate"
 msgstr "Taux de réduction"
 
-#: joanie/core/models/products.py:2924 joanie/core/serializers/admin.py:1429
+#: joanie/core/models/products.py:2947 joanie/core/serializers/admin.py:1429
 msgid "Voucher"
 msgstr "Coupon"
 
-#: joanie/core/models/products.py:2925
+#: joanie/core/models/products.py:2948
 msgid "Vouchers"
 msgstr "Coupons"
 
-#: joanie/core/models/products.py:2930
+#: joanie/core/models/products.py:2953
 msgid "Voucher code"
 msgstr "Code du coupon"
 
-#: joanie/core/models/products.py:2937
+#: joanie/core/models/products.py:2960
 msgid "discount"
 msgstr "réduction"
 
-#: joanie/core/models/products.py:2944
+#: joanie/core/models/products.py:2967
 msgid "multiple use"
 msgstr "utilisation multiple"
 
-#: joanie/core/models/products.py:2945
+#: joanie/core/models/products.py:2968
 msgid "Voucher can be used multiple times per user."
 msgstr "Le coupon peut être utilisé plusieurs fois par utilisateur."
 
-#: joanie/core/models/products.py:2949
+#: joanie/core/models/products.py:2972
 msgid "multiple users"
 msgstr "plusieurs utilisateurs"
 
-#: joanie/core/models/products.py:2950
+#: joanie/core/models/products.py:2973
 msgid "Voucher can be used by multiple users."
 msgstr "Le coupon peut être utilisé par plusieurs utilisateurs."
 
@@ -3400,10 +3412,14 @@ msgid "Cannot start the signature procedure with the signature reference."
 msgstr "Impossible de démarrer la procédure de signature avec la référence de signature."
 
 #: joanie/signature/exceptions.py:55
+msgid "Cannot abort the signature procedure with the signature reference."
+msgstr "Impossible d'annuler la procédure de signature avec la référence de signature."
+
+#: joanie/signature/exceptions.py:69
 msgid "Cannot get invitation link to sign the file from the signature provider."
 msgstr "Impossible d'obtenir le lien d'invitation à signer le fichier depuis le prestataire de signature."
 
-#: joanie/signature/exceptions.py:68
+#: joanie/signature/exceptions.py:82
 msgid "Cannot delete the signature procedure."
 msgstr "Impossible de supprimer la procédure de signature."
 
