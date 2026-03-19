@@ -28,6 +28,7 @@ and this project adheres to
   organization both signed agreement of batch order
 - Cancel a batch order through Joanie's backoffice aborts
   signing procedure at the signature provider
+- Reject voucher codes from prepaid orders when used on a different offering
 
 ## [3.2.0] - 2026-02-25
 
