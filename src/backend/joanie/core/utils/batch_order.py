@@ -99,15 +99,22 @@ def send_mail_quote_arrival(batch_order):
         role__in=[enums.OWNER, enums.ADMIN]
     ):
         with override(access.user.language):
+            fullname = access.user.get_full_name()
             product_title = batch_order.offering.product.safe_translation_getter(
                 "title", language_code=access.user.language
             )
             send(
                 subject=_("A new quote request has arrived in your dashboard!"),
                 template_vars={
+                    "fullname": fullname,
+                    "email": access.user.email,
                     "product_title": product_title,
                     "company_name": batch_order.company_name,
                     "nb_seats": batch_order.nb_seats,
+                    "site": {
+                        "name": settings.JOANIE_CATALOG_NAME,
+                        "url": settings.JOANIE_CATALOG_BASE_URL,
+                    },
                 },
                 template_name="quote_arrival",
                 to_user_email=access.user.email,

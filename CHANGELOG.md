@@ -10,10 +10,8 @@ and this project adheres to
 
 ### Fixed
 
-- Fix orders CSV export crashing when order has no owner
-
-### Fixed
-
+- Added missing keys into context for quote arrival request
+  mail
 - Send only one email with voucher code when batch order
   owner email and administrative email are the same
 - Fix orders CSV export crashing when order has no owner
