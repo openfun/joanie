@@ -1397,6 +1397,52 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # - An event has been created
         self.assertPaymentSuccessActivityLog(batch_order)
 
+    def test_payment_backend_base_do_on_payment_success_for_batch_order_send_unique_address(
+        self,
+    ):
+        """
+        When the batch order email and the administrative email are the same, we should only
+        send one email with the voucher code instead of 2.
+        """
+        backend = TestBasePaymentBackend()
+        owner = UserFactory(email="johndoe@example.fr", language="fr-fr")
+        offering = OfferingFactory(
+            product=ProductFactory(
+                price=Decimal("200.00"),
+                title="Product 1",
+                contract_definition_batch_order=ContractDefinitionFactory(),
+                quote_definition=QuoteDefinitionFactory(),
+            )
+        )
+        offering.product.translations.create(language_code="fr-fr", title="Produit 1")
+        batch_order = BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_PENDING,
+            owner=owner,
+            administrative_email="johndoe@example.fr",
+            administrative_firstname="Joanie",
+            administrative_lastname="Doe",
+        )
+        # Erase first email sent when quote is created
+        mail.outbox.clear()
+
+        payment = {
+            "id": "pay_0",
+            "amount": batch_order.total,
+            "billing_address": batch_order.create_billing_address(),
+        }
+
+        backend.call_do_on_batch_order_payment_success(
+            batch_order=batch_order, payment=payment
+        )
+
+        # - Batch Order has been completed
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
+        # - Email has been sent
+        self._check_batch_order_paid_email_sent(
+            "johndoe@example.fr", batch_order, batch_order.owner.get_full_name()
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
     def test_payment_backend_base_do_on_payment_failure_for_batch_order(self):
         """
         Base backend contains a method `_do_on_payment_failure_batch_order` that handles failed

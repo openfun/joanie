@@ -12,6 +12,12 @@ and this project adheres to
 
 - Fix orders CSV export crashing when order has no owner
 
+### Fixed
+
+- Send only one email with voucher code when batch order
+  owner email and administrative email are the same
+- Fix orders CSV export crashing when order has no owner
+
 ## [3.2.1] - 2026-03-17
 
 ### Fixed

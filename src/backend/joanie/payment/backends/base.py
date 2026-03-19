@@ -109,20 +109,30 @@ class BasePaymentBackend:
     @classmethod
     def _send_mail_batch_order_payment_success(cls, batch_order, amount, vouchers):
         """
-        Send mail with the current language fo the user when the batch order
-        has been successfully fully paid
+        Send mail with the current language to the batch order owner and the administrative
+        user when the batch order has been successfully fully paid. When the administrative
+        email matches the batch order owner's email, we only send the mail once.
         """
         with override(batch_order.owner.language):
             product_title = batch_order.offering.product.safe_translation_getter(
                 "title", language_code=batch_order.owner.language
             )
+            owner_email = batch_order.owner.email
+            admin_email = batch_order.administrative_email
             to_user_emails = [
-                (batch_order.owner.email, batch_order.owner.get_full_name()),
-                (
-                    batch_order.administrative_email,
-                    f"{batch_order.administrative_firstname} {batch_order.administrative_lastname}",
-                ),
+                (owner_email, batch_order.owner.get_full_name()),
             ]
+            # Add batch order administrative email only if it's different
+            if admin_email != owner_email:
+                to_user_emails.append(
+                    (
+                        admin_email,
+                        (
+                            f"{batch_order.administrative_firstname} "
+                            f"{batch_order.administrative_lastname}"
+                        ),
+                    )
+                )
             for email, fullname in to_user_emails:
                 emails.send(
                     subject=_("Batch order payment validated!"),
