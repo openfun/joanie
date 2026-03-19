@@ -19,6 +19,7 @@ from stockholm import Money
 
 from joanie.core import factories
 from joanie.core.enums import (
+    ADMIN,
     BATCH_ORDER_STATE_QUOTED,
     BATCH_ORDER_STATE_TO_SIGN,
     CERTIFICATE,
@@ -28,6 +29,7 @@ from joanie.core.enums import (
     MICROCREDENTIAL_DEGREE_DEFAULT,
     MICROCREDENTIAL_DEGREE_UNICAMP,
     ORDER_STATE_PENDING_PAYMENT,
+    OWNER,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
@@ -230,14 +232,24 @@ class DebugMailQuoteArrivalView(TemplateView):
         batch_order = factories.BatchOrderFactory(
             offering__product=product, state=BATCH_ORDER_STATE_QUOTED
         )
-
+        access = batch_order.organization.accesses.filter(
+            role__in=[OWNER, ADMIN]
+        ).first()
+        fullname = access.user.get_full_name()
         current_language = translation.get_language()
         with translation.override(current_language):
             batch_order.offering.product.set_current_language(current_language)
+
             return {
+                "fullname": fullname,
+                "email": access.user.email,
                 "product_title": batch_order.offering.product.title,
                 "company_name": batch_order.company_name,
                 "nb_seats": batch_order.nb_seats,
+                "site": {
+                    "name": "fun-mooc-catalog-debug.acme",
+                    "url": "fun-mooc-url-debug.acme",
+                },
             }
 
 

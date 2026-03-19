@@ -25,6 +25,9 @@ from joanie.tests.base import LoggingTestCase
 class BatchOrderModelsTestCase(LoggingTestCase):
     """Test suite for batch order model."""
 
+    @override_settings(
+        JOANIE_CATALOG_NAME="Fun-Mooc-Test",
+    )
     def test_models_batch_order_init_flow(self):
         """
         When calling init_flow method of batch order the following objects should be
@@ -58,10 +61,14 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertEqual(
             mail.outbox[0].subject, "A new quote request has arrived in your dashboard!"
         )
+
         self.assertIn("seats", email_content)
         self.assertIn("A new quote request for the company", email_content)
         self.assertIn(batch_order.company_name, email_content)
         self.assertIn(str(batch_order.nb_seats), email_content)
+        self.assertIn(access.user.get_full_name(), email_content)
+        self.assertIn(access.user.email, email_content)
+        self.assertIn("Fun-Mooc-Test", email_content)
 
     def test_models_batch_order_freeze_total(self):
         """
