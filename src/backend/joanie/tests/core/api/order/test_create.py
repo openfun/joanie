@@ -3080,6 +3080,95 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertStatusCodeEqual(response_wrong_product, HTTPStatus.BAD_REQUEST)
         self.assertStatusCodeEqual(response_wrong_course_code, HTTPStatus.BAD_REQUEST)
 
+    def test_api_order_create_with_batch_order_voucher_on_different_offering(self):
+        """
+        When a user uses a voucher code from a batch order to create a regular
+        order on a different offering, it should be rejected regardless of
+        the has_waived_withdrawal_right value.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        [offering, other_offering] = factories.OfferingFactory.create_batch(
+            2,
+            product__quote_definition=factories.QuoteDefinitionFactory(),
+            product__contract_definition_batch_order=factories.ContractDefinitionFactory(),
+        )
+        batch_order = factories.BatchOrderFactory(
+            offering=offering,
+            nb_seats=1,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+        voucher_code = batch_order.vouchers[0]
+
+        for has_waived in (True, False):
+            with self.subTest(has_waived_withdrawal_right=has_waived):
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data={
+                        "product_id": other_offering.product.id,
+                        "course_code": other_offering.course.code,
+                        "voucher_code": voucher_code,
+                        "billing_address": BillingAddressDictFactory(),
+                        "has_waived_withdrawal_right": has_waived,
+                    },
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+                self.assertEqual(
+                    response.json(),
+                    "Voucher code is not valid for this product and course.",
+                )
+                self.assertFalse(models.Order.objects.filter(owner=user).exists())
+
+    def test_api_order_create_with_prepaid_voucher_on_different_product(self):
+        """
+        When an admin creates a to_own order for offering A and a user tries
+        to use the generated voucher code to subscribe to offering B, the
+        request should be rejected regardless of has_waived_withdrawal_right.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        [offering_a, offering_b] = factories.OfferingFactory.create_batch(2)
+
+        # Admin creates a to_own order for offering A
+        self.client.login(username=admin.username, password="password")
+        admin_response = self.client.post(
+            "/api/v1.0/admin/orders/",
+            data={
+                "product_id": str(offering_a.product.id),
+                "course_code": offering_a.course.code,
+                "organization_id": str(offering_a.organizations.first().id),
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCodeEqual(admin_response, HTTPStatus.CREATED)
+        voucher_code = admin_response.json()["voucher"]["code"]
+        self.client.logout()
+
+        for has_waived in (True, False):
+            with self.subTest(has_waived_withdrawal_right=has_waived):
+                response = self.client.post(
+                    "/api/v1.0/orders/",
+                    data={
+                        "product_id": str(offering_b.product.id),
+                        "course_code": offering_b.course.code,
+                        "voucher_code": voucher_code,
+                        "billing_address": BillingAddressDictFactory(),
+                        "has_waived_withdrawal_right": has_waived,
+                    },
+                    content_type="application/json",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
+
+                self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+                self.assertFalse(models.Order.objects.filter(owner=user).exists())
+
     @mock.patch("joanie.core.models.products.Order.enroll_user_to_course_run")
     def test_api_order_create_with_voucher_code_from_a_batch_order(
         self, mock_enroll_user_to_course_run

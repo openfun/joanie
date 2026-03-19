@@ -436,7 +436,7 @@ class OrderViewSet(
 
     # pylint: disable=too-many-statements, too-many-return-statements, too-many-locals
     @transaction.atomic
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):  # noqa: PLR0915
         """Try to create an order and a related payment if the payment is fee."""
         if voucher_code := request.data.get("voucher_code"):
             voucher = verify_voucher(voucher_code)
@@ -446,7 +446,7 @@ class OrderViewSet(
             if not voucher.is_usable_by(self.request.user.id):
                 return Response("Unusable voucher code", status=HTTPStatus.BAD_REQUEST)
 
-            # Check if the voucher comes from a batch order
+            # Check if the voucher comes from a prepaid order
             if order := get_prepaid_order(
                 course_code=request.data.get("course_code"),
                 product_id=request.data.get("product_id"),
@@ -463,6 +463,11 @@ class OrderViewSet(
                     )
                 return Response(
                     serializers.OrderSerializer(order).data, status=HTTPStatus.OK
+                )
+            if voucher.orders.filter(state=enums.ORDER_STATE_TO_OWN).exists():
+                return Response(
+                    "Voucher code is not valid for this product and course.",
+                    status=HTTPStatus.BAD_REQUEST,
                 )
 
         enrollment = None

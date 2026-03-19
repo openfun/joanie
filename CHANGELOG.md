@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Reject voucher codes from prepaid orders when used on a different offering
 - Add voucher code copy-to-clipboard in orders list
 - Display voucher code in order detail view
 - Expose voucher code and claim status in order admin API
