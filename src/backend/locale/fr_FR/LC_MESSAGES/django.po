@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-13 16:07+0000\n"
-"PO-Revision-Date: 2026-03-17 10:02\n"
+"POT-Creation-Date: 2026-03-20 09:57+0000\n"
+"PO-Revision-Date: 2026-03-20 10:43\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -115,19 +115,19 @@ msgid "Course"
 msgstr "Cours"
 
 #: joanie/core/admin.py:81 joanie/core/models/products.py:195
-#: joanie/core/serializers/admin.py:1415 joanie/core/serializers/admin.py:1737
+#: joanie/core/serializers/admin.py:1415 joanie/core/serializers/admin.py:1740
 #: joanie/core/templates/issuers/invoice.html:78
 msgid "Product"
 msgstr "Produit"
 
 #: joanie/core/admin.py:88 joanie/core/admin.py:95
 #: joanie/core/models/courses.py:264 joanie/core/serializers/admin.py:1418
-#: joanie/core/serializers/admin.py:1731
+#: joanie/core/serializers/admin.py:1734
 msgid "Organization"
 msgstr "Établissement"
 
 #: joanie/core/admin.py:102 joanie/core/models/course_wishes.py:18
-#: joanie/core/serializers/admin.py:1416 joanie/core/serializers/admin.py:1726
+#: joanie/core/serializers/admin.py:1416 joanie/core/serializers/admin.py:1729
 #: joanie/payment/admin.py:27 joanie/payment/admin.py:41
 #: joanie/payment/admin.py:244
 msgid "Owner"
@@ -268,19 +268,24 @@ msgstr "Le devis est déjà signé et le montant total est figé."
 msgid "Missing total value. It's required to confirm quote."
 msgstr "Le montant total est manquant. Il est requis pour confirmer le devis."
 
-#: joanie/core/api/admin/__init__.py:940
+#: joanie/core/api/admin/__init__.py:942
 msgid "Cannot confirm purchase order. Batch order payment"
 msgstr "Impossible de confirmer le bon de commande. Paiement de la commande groupée"
 
-#: joanie/core/api/admin/__init__.py:947
+#: joanie/core/api/admin/__init__.py:949
 msgid "Batch order's quote is not signed, nor has a total."
 msgstr "Le devis de la commande groupée n’est pas signé et ne comporte pas de montant total."
 
-#: joanie/core/api/admin/__init__.py:952
+#: joanie/core/api/admin/__init__.py:954
 msgid "Batch order's quote purchase order already confirmed."
 msgstr "Le bon de commande du devis de la commande groupée est déjà confirmé."
 
-#: joanie/core/api/admin/__init__.py:978
+#: joanie/core/api/admin/__init__.py:958
+#: joanie/core/api/client/__init__.py:1284
+msgid "Purchase order reference is required."
+msgstr "La référence du bon de commande est requise."
+
+#: joanie/core/api/admin/__init__.py:983
 msgid "You are not allowed to validate the bank transfer."
 msgstr "Vous n'êtes pas autorisé à valider le virement bancaire."
 
@@ -310,19 +315,19 @@ msgstr "Valeur totale manquante. Ce champ est requis."
 msgid "Batch order is canceled, cannot confirm quote signature."
 msgstr "La commande groupée est annulée. Impossible de confirmer la signature du devis."
 
-#: joanie/core/api/client/__init__.py:1375
+#: joanie/core/api/client/__init__.py:1380
 msgid "Batch order is not eligible to get signed."
 msgstr "Cette commande groupée n’est pas éligible à la signature."
 
-#: joanie/core/api/client/__init__.py:1835
+#: joanie/core/api/client/__init__.py:1840
 msgid "Cannot get contract when an order is cancelled."
 msgstr "Impossible de récupérer le contrat lorsque la commande est annulée."
 
-#: joanie/core/api/client/__init__.py:1843
+#: joanie/core/api/client/__init__.py:1848
 msgid "Cannot download a contract when it is not yet fully signed."
 msgstr "Impossible de télécharger le contrat tant qu’il n’est pas signé par toutes les parties."
 
-#: joanie/core/api/client/__init__.py:1938
+#: joanie/core/api/client/__init__.py:1943
 msgid "No zip to generate."
 msgstr "Aucune archive à générer."
 
@@ -875,7 +880,7 @@ msgid "Date and time the organization signed the contract"
 msgstr "Date et heure de signature du contrat par l'établissement"
 
 #: joanie/core/models/contracts.py:159 joanie/core/serializers/admin.py:1433
-#: joanie/core/serializers/admin.py:1744
+#: joanie/core/serializers/admin.py:1747
 msgid "Contract"
 msgstr "Contrat"
 
@@ -1767,7 +1772,7 @@ msgstr "Paramètres du site"
 msgid "Order reference"
 msgstr "Référence de commande"
 
-#: joanie/core/serializers/admin.py:1417 joanie/core/serializers/admin.py:1727
+#: joanie/core/serializers/admin.py:1417 joanie/core/serializers/admin.py:1730
 msgid "Email"
 msgstr "Courriel"
 
@@ -1783,7 +1788,7 @@ msgstr "Date de création"
 msgid "Last modification date"
 msgstr "Date de dernière modification"
 
-#: joanie/core/serializers/admin.py:1422 joanie/core/serializers/admin.py:1738
+#: joanie/core/serializers/admin.py:1422 joanie/core/serializers/admin.py:1741
 msgid "Product type"
 msgstr "Type de produit"
 
@@ -1816,7 +1821,7 @@ msgstr "Droit de rétractation renoncé"
 msgid "Certificate generated for this order"
 msgstr "Certificat généré pour cette commande"
 
-#: joanie/core/serializers/admin.py:1434 joanie/core/serializers/admin.py:1745
+#: joanie/core/serializers/admin.py:1434 joanie/core/serializers/admin.py:1748
 msgid "Submitted for signature"
 msgstr "Soumis à signature"
 
@@ -1824,7 +1829,7 @@ msgstr "Soumis à signature"
 msgid "Student signature date"
 msgstr "Date de signature de l'apprenant"
 
-#: joanie/core/serializers/admin.py:1436 joanie/core/serializers/admin.py:1747
+#: joanie/core/serializers/admin.py:1436 joanie/core/serializers/admin.py:1750
 msgid "Organization signature date"
 msgstr "Date de signature de l'établissement"
 
@@ -1871,69 +1876,69 @@ msgstr "Montant de l'échéance %d"
 msgid "Installment state %d"
 msgstr "Statut de l'échéance %d"
 
-#: joanie/core/serializers/admin.py:1725
+#: joanie/core/serializers/admin.py:1728
 msgid "Batch order reference"
 msgstr "Référence de la commande groupée"
 
-#: joanie/core/serializers/admin.py:1728
+#: joanie/core/serializers/admin.py:1731
 msgid "Company name"
 msgstr "Raison sociale"
 
-#: joanie/core/serializers/admin.py:1729
+#: joanie/core/serializers/admin.py:1732
 msgid "Company's identification number"
 msgstr "Numéro d’identification de l'organisme"
 
-#: joanie/core/serializers/admin.py:1730
+#: joanie/core/serializers/admin.py:1733
 msgid "Company VAT registration"
 msgstr "N° de TVA intracommunautaire de l'organisme"
 
-#: joanie/core/serializers/admin.py:1732
+#: joanie/core/serializers/admin.py:1735
 msgid "Batch Order State"
 msgstr "État de la commande groupée"
 
-#: joanie/core/serializers/admin.py:1733
+#: joanie/core/serializers/admin.py:1736
 msgid "Payment method"
 msgstr "Mode de commande"
 
-#: joanie/core/serializers/admin.py:1734
+#: joanie/core/serializers/admin.py:1737
 msgid "Number of seats reserved"
 msgstr "Nombre de places réservées"
 
-#: joanie/core/serializers/admin.py:1735
+#: joanie/core/serializers/admin.py:1738
 msgid "Created on"
 msgstr "Créée le"
 
-#: joanie/core/serializers/admin.py:1736
+#: joanie/core/serializers/admin.py:1739
 msgid "Updated on"
 msgstr "Mise à jour le"
 
-#: joanie/core/serializers/admin.py:1739
+#: joanie/core/serializers/admin.py:1742
 #: joanie/core/templates/issuers/invoice.html:105
 #: joanie/core/templates/issuers/invoice.html:138
 msgid "Total"
 msgstr "Total"
 
-#: joanie/core/serializers/admin.py:1740
+#: joanie/core/serializers/admin.py:1743
 msgid "Quote reference"
 msgstr "Référence du devis"
 
-#: joanie/core/serializers/admin.py:1741
+#: joanie/core/serializers/admin.py:1744
 msgid "Organization quote signature date"
 msgstr "Date de signature de l'établissement"
 
-#: joanie/core/serializers/admin.py:1742
+#: joanie/core/serializers/admin.py:1745
 msgid "Quote has purchase order"
 msgstr "Devis associé à un bon de commande"
 
-#: joanie/core/serializers/admin.py:1743
+#: joanie/core/serializers/admin.py:1746
 msgid "Quote purchase order reference"
 msgstr "Référence du bon de commande du devis"
 
-#: joanie/core/serializers/admin.py:1746
+#: joanie/core/serializers/admin.py:1749
 msgid "Buyer signature date"
 msgstr "Date de signature de l'acheteur"
 
-#: joanie/core/serializers/admin.py:1748
+#: joanie/core/serializers/admin.py:1751
 msgid "Orders generated"
 msgstr "Commandes générées"
 
@@ -2897,7 +2902,7 @@ msgstr "La limite de places a été atteinte."
 msgid "{product_title} - A signature is requested for your batch order."
 msgstr "{product_title} - Une signature est requise pour votre commande groupée."
 
-#: joanie/core/utils/batch_order.py:106
+#: joanie/core/utils/batch_order.py:107
 msgid "A new quote request has arrived in your dashboard!"
 msgstr "Une nouvelle demande de devis est disponible dans votre tableau de bord !"
 
@@ -3154,7 +3159,7 @@ msgid "<URL_EDUCATIONAL_PLATFORM>"
 msgstr "<URL_PLATEFORME_PEDAGOGIQUE>"
 
 #: joanie/core/utils/payment_schedule.py:230
-#: joanie/payment/backends/base.py:186
+#: joanie/payment/backends/base.py:196
 #, python-brace-format
 msgid "{settings.JOANIE_CATALOG_NAME} - {product_title} - "
 msgstr "{settings.JOANIE_CATALOG_NAME} - {product_title} - "
@@ -3251,34 +3256,34 @@ msgstr "Pour obtenir des résultats, choisissez un propriétaire sur la droite"
 msgid "Joanie payment application"
 msgstr "Application de paiement de Joanie"
 
-#: joanie/payment/backends/base.py:128
+#: joanie/payment/backends/base.py:138
 msgid "Batch order payment validated!"
 msgstr "Paiement de la commande groupée validé !"
 
-#: joanie/payment/backends/base.py:130
+#: joanie/payment/backends/base.py:140
 msgid "Payment confirmed!"
 msgstr "Paiement confirmé !"
 
-#: joanie/payment/backends/base.py:158 joanie/payment/backends/base.py:160
+#: joanie/payment/backends/base.py:168 joanie/payment/backends/base.py:170
 msgid "Subscription confirmed!"
 msgstr "Souscription confirmée !"
 
-#: joanie/payment/backends/base.py:191
+#: joanie/payment/backends/base.py:201
 #, python-brace-format
 msgid "An installment has been successfully paid of {installment_amount} {currency}"
 msgstr "Une échéance d'un montant de {installment_amount} {currency} a été payée avec succès"
 
-#: joanie/payment/backends/base.py:195
+#: joanie/payment/backends/base.py:205
 #, python-brace-format
 msgid "Order completed ! The last installment of {installment_amount} {currency} has been debited"
 msgstr "Commande complétée ! La dernière échéance d'un montant de {installment_amount} {currency} a été prélevée"
 
-#: joanie/payment/backends/base.py:239
+#: joanie/payment/backends/base.py:249
 #, python-brace-format
 msgid "{catalog_name} - {product_title} - An installment debit has failed {installment_amount:.2f} {currency}"
 msgstr "{catalog_name} - {product_title} - Le prélèvement d'une échéance d'un montant de {installment_amount:.2f} {currency} a échoué"
 
-#: joanie/payment/backends/base.py:307
+#: joanie/payment/backends/base.py:317
 #, python-brace-format
 msgid "{catalog_name} - {product_title} - Your order has been refunded for an amount of {installments_amount:.2f} {currency}"
 msgstr "{catalog_name} - {product_title} - Votre commande a été remboursée pour montant de {installments_amount:.2f} {currency}"
