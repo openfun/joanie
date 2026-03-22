@@ -27,6 +27,6 @@ describe("<BasicSelect />", () => {
     listbox.getByText("None");
     listbox.getByText("One");
     await userEvent.click(listbox.getByText("Two"));
-    expect(onSelect).toBeCalledWith("B");
+    expect(onSelect).toHaveBeenCalledWith("B");
   });
 });

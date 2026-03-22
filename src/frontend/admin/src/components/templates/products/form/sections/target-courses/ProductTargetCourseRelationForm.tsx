@@ -61,7 +61,7 @@ export function ProductTargetCourseRelationForm(props: Props) {
 
   const methods = useForm({
     resolver: yupResolver(Schema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues() as any, // To not trigger type validation for default value
   });
 
   const onSubmit = (values: ProductTargetCourseRelationFormValues): void => {
@@ -146,7 +146,9 @@ export function ProductTargetCourseRelationForm(props: Props) {
                 <CoursesRunsList
                   enableDelete={false}
                   defaultSelectedRows={
-                    courseRuns?.map((courseRun) => courseRun.id) ?? []
+                    courseRuns?.map(
+                      (courseRun: { id: string }) => courseRun.id,
+                    ) ?? []
                   }
                   enableSelect
                   onSelectRows={(ids, selectedCourseRuns) => {
