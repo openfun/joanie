@@ -24,6 +24,8 @@ from joanie.core.utils.batch_order import get_active_offering_rule
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
 
+PAYMENT_STATE_LABELS = dict(enums.PAYMENT_STATE_CHOICES)
+
 
 class AdminContractDefinitionSerializer(serializers.ModelSerializer):
     """Serializer for ContractDefinition model."""
@@ -1536,6 +1538,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         """
         return [label for field, label in self.Meta.fields_labels]
 
+    state = serializers.SerializerMethodField(read_only=True)
     product = serializers.SlugRelatedField(read_only=True, slug_field="title")
     owner_name = serializers.SerializerMethodField(read_only=True)
     owner_email = serializers.SlugRelatedField(
@@ -1544,9 +1547,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     organization = serializers.SlugRelatedField(read_only=True, slug_field="title")
     created_on = serializers.DateTimeField(format="%d/%m/%Y %H:%M:%S")
     updated_on = serializers.DateTimeField(format="%d/%m/%Y %H:%M:%S")
-    product_type = serializers.SlugRelatedField(
-        read_only=True, slug_field="type", source="product"
-    )
+    product_type = serializers.SerializerMethodField(read_only=True)
     enrollment_course_run_title = serializers.SlugRelatedField(
         read_only=True, slug_field="course_run__title", source="enrollment"
     )
@@ -1601,6 +1602,14 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     installment_amount_4 = serializers.SerializerMethodField(read_only=True)
     installment_state_4 = serializers.SerializerMethodField(read_only=True)
 
+    def get_state(self, instance) -> str:
+        """Return the translated state label."""
+        return instance.get_state_display()
+
+    def get_product_type(self, instance) -> str:
+        """Return the translated product type label."""
+        return instance.product.get_type_display()
+
     def get_owner_name(self, instance) -> str:
         """
         Return the full name of the order's owner if available,
@@ -1640,15 +1649,15 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
 
     def get_has_waived_withdrawal_right(self, instance) -> str:
         """
-        Return "Yes" if the order has waived the withdrawal right, otherwise "No".
+        Return translated "Yes"/"No" for whether the withdrawal right was waived.
         """
-        return "Yes" if instance.has_waived_withdrawal_right else "No"
+        return _("Yes") if instance.has_waived_withdrawal_right else _("No")
 
     def get_certificate(self, instance) -> str:
         """
-        Return "Yes" if a certificate has been generated for the order, otherwise "No".
+        Return translated "Yes"/"No" for whether a certificate was generated.
         """
-        return "Yes" if hasattr(instance, "certificate") else "No"
+        return _("Yes") if hasattr(instance, "certificate") else _("No")
 
     def get_contract_date(self, instance, date_field: str) -> str:
         """
@@ -1702,6 +1711,8 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             value = instance.payment_schedule[index][field]
             if field == "due_date":
                 return value.strftime("%d/%m/%Y %H:%M:%S")
+            if field == "state":
+                return PAYMENT_STATE_LABELS.get(value, value)
             return value
         except (IndexError, KeyError, TypeError):
             return ""
@@ -1834,6 +1845,8 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
         """
         return [label for field, label in self.Meta.fields_labels]
 
+    state = serializers.SerializerMethodField(read_only=True)
+    payment_method = serializers.SerializerMethodField(read_only=True)
     owner_name = serializers.SerializerMethodField(read_only=True)
     owner_email = serializers.SlugRelatedField(
         read_only=True, slug_field="email", source="owner"
@@ -1877,6 +1890,14 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
         except (models.Quote.DoesNotExist, AttributeError):
             return ""
 
+    def get_state(self, instance) -> str:
+        """Return the translated state label."""
+        return instance.get_state_display()
+
+    def get_payment_method(self, instance) -> str:
+        """Return the translated payment method label."""
+        return instance.get_payment_method_display()
+
     def get_owner_name(self, instance) -> str:
         """Returns the owner name of the batch order"""
         return instance.owner.name
@@ -1888,18 +1909,15 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
         return instance.offering.product.title
 
     def get_product_type(self, instance) -> str:
-        """
-        Return the product's type
-        """
-        return instance.offering.product.type
+        """Return the translated product type label."""
+        return instance.offering.product.get_type_display()
 
     def get_contract_submitted_for_signature_on(self, instance) -> str:
-        """
-        Return the date the contract was submitted for signature if available,
-        otherwise an empty string.
-        """
+        """Return translated "Yes"/"No" or empty string."""
         try:
-            return "Yes" if instance.contract.signature_backend_reference else "No"
+            return (
+                _("Yes") if instance.contract.signature_backend_reference else _("No")
+            )
         except (models.Contract.DoesNotExist, AttributeError):
             return ""
 
@@ -1936,10 +1954,10 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
 
     def get_quote_has_purchase_order(self, instance) -> str:
         """
-        Returns "Yes" whether the quote has received the purchase order, otherwise "No"
+        Returns translated "Yes"/"No" for whether the quote has a purchase order.
         """
         has_purchase_order = self.get_quote_information(instance, "has_purchase_order")
-        return "Yes" if has_purchase_order else "No"
+        return _("Yes") if has_purchase_order else _("No")
 
     def get_quote_purchase_order_reference(self, instance) -> str:
         """
@@ -1952,9 +1970,9 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
 
     def get_orders_generated(self, instance) -> str:
         """
-        Returns "Yes" if orders were generated, otherwise "No"
+        Returns translated "Yes"/"No" for whether orders were generated.
         """
-        return "Yes" if instance.has_orders_generated else "No"
+        return _("Yes") if instance.has_orders_generated else _("No")
 
 
 class AdminCSVExportListSerializer(serializers.ListSerializer):

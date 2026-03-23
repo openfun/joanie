@@ -5,6 +5,7 @@ from unittest import mock
 
 from django.conf import settings
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from joanie.core import enums, factories
 from joanie.core.models import Course, Order
@@ -14,8 +15,8 @@ from joanie.tests.testing_utils import Demo
 
 
 def yes_no(value):
-    """Return "Yes" if value is True, "No" otherwise."""
-    return "Yes" if value else "No"
+    """Return translated "Yes" if value is True, "No" otherwise."""
+    return str(_("Yes")) if value else str(_("No"))
 
 
 def expected_csv_content(order):
@@ -26,10 +27,10 @@ def expected_csv_content(order):
         "Owner": order.owner.get_full_name(),
         "Email": order.owner.email,
         "Organization": order.organization.title,
-        "Order state": order.state,
+        "Order state": order.get_state_display(),
         "Creation date": format_date_export(order.created_on),
         "Last modification date": format_date_export(order.updated_on),
-        "Product type": order.product.type,
+        "Product type": order.product.get_type_display(),
         "Enrollment session": "",
         "Session status": "",
         "Enrolled on": "",
@@ -98,7 +99,11 @@ def expected_csv_content(order):
             installment.get("due_date")
         )
         content[f"Installment amount {i}"] = str(installment.get("amount"))
-        content[f"Installment state {i}"] = installment.get("state")
+        content[f"Installment state {i}"] = str(
+            dict(enums.PAYMENT_STATE_CHOICES).get(
+                installment.get("state"), installment.get("state")
+            )
+        )
 
     return content
 
