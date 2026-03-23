@@ -60,7 +60,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "download_quote": False,
                 "confirm_quote": False,
                 "confirm_bank_transfer": False,
-                "can_submit_for_signature_batch_order": False,
+                "can_manage_batch_order_agreement": False,
             },
             abilities,
         )
@@ -80,7 +80,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "download_quote": False,
                 "confirm_quote": False,
                 "confirm_bank_transfer": False,
-                "can_submit_for_signature_batch_order": False,
+                "can_manage_batch_order_agreement": False,
             },
             abilities,
         )
@@ -100,7 +100,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "download_quote": True,
                 "confirm_quote": True,
                 "confirm_bank_transfer": True,
-                "can_submit_for_signature_batch_order": True,
+                "can_manage_batch_order_agreement": True,
             },
             abilities,
         )
@@ -120,7 +120,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "download_quote": True,
                 "confirm_quote": True,
                 "confirm_bank_transfer": True,
-                "can_submit_for_signature_batch_order": True,
+                "can_manage_batch_order_agreement": True,
             },
             abilities,
         )
@@ -143,7 +143,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "download_quote": False,
                 "confirm_quote": False,
                 "confirm_bank_transfer": False,
-                "can_submit_for_signature_batch_order": False,
+                "can_manage_batch_order_agreement": False,
             },
             abilities,
         )
@@ -167,7 +167,7 @@ class OrganizationModelsTestCase(BaseAPITestCase):
                 "download_quote": False,
                 "confirm_quote": False,
                 "confirm_bank_transfer": False,
-                "can_submit_for_signature_batch_order": False,
+                "can_manage_batch_order_agreement": False,
             },
             abilities,
         )

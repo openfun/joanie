@@ -333,7 +333,7 @@ class Organization(parler_models.TranslatableModel, BaseModel):
             "download_quote": is_owner_or_admin,
             "confirm_quote": is_owner_or_admin,
             "confirm_bank_transfer": is_owner_or_admin,
-            "can_submit_for_signature_batch_order": is_owner_or_admin,
+            "can_manage_batch_order_agreement": is_owner_or_admin,
         }
 
     def signature_backend_references_to_sign(self, **kwargs):
