@@ -1,10 +1,13 @@
 """Test suite for the Organization Agreement API"""
 
 from http import HTTPStatus
+from io import BytesIO
 from unittest import mock
 
 from django.conf import settings
 from django.utils import timezone
+
+from pdfminer.high_level import extract_text as pdf_extract_text
 
 from joanie.core import enums, factories, models
 from joanie.core.serializers import fields
@@ -545,4 +548,184 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
                 ],
             },
             response.json(),
+        )
+
+    def test_api_organizations_agreements_download_anonymous(self):
+        """
+        Anonymous user should not be able to download an agreement.
+        """
+        organization = factories.OrganizationFactory()
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/"
+            f"agreements/{batch_order.contract.id}/download/",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.UNAUTHORIZED)
+
+    def test_api_organizations_agreements_download_no_access(self):
+        """
+        Authenticated user without access to the organization cannot download an agreement.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/"
+            f"agreements/{batch_order.contract.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
+
+    def test_api_organizations_agreements_download_member_forbidden(self):
+        """
+        Organization member with basic access should not be able to download
+        an agreement.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organization, role=enums.MEMBER
+        )
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/"
+            f"agreements/{batch_order.contract.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.FORBIDDEN)
+
+    def test_api_organizations_agreements_download_not_fully_signed(self):
+        """
+        Organization administrator cannot download an agreement that is not
+        fully signed.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organization, role=enums.ADMIN
+        )
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_SIGNING,
+        )
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/"
+            f"agreements/{batch_order.contract.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertContains(
+            response,
+            "Cannot download a contract when it is not yet fully signed.",
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
+
+    def test_api_organizations_agreements_download_canceled_batch_order(self):
+        """
+        Organization administrator cannot download an agreement from a canceled
+        batch order because canceled batch orders are excluded from the queryset.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organization, role=enums.ADMIN
+        )
+        # Create a completed batch order (which has a contract), then cancel it
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        contract = batch_order.contract
+        batch_order.flow.cancel()
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/"
+            f"agreements/{contract.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.NOT_FOUND)
+
+    def test_api_organizations_agreements_download_fully_signed(self):
+        """
+        Organization administrator can download a fully signed agreement as PDF.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organization, role=enums.ADMIN
+        )
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        contract = batch_order.contract
+        expected_filename = f"{contract.definition.title}".replace(" ", "_")
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/"
+            f"agreements/{contract.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(response.headers["Content-Type"], "application/pdf")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f'attachment; filename="{expected_filename}.pdf"',
+        )
+
+        document_text = pdf_extract_text(BytesIO(b"".join(response.streaming_content)))
+        self.assertIn(contract.definition.title, document_text)
+
+    def test_api_organizations_agreements_download_with_org_code(self):
+        """
+        Organization administrator can download a fully signed agreement using
+        the organization code in the URL.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        factories.UserOrganizationAccessFactory(
+            user=user, organization=organization, role=enums.ADMIN
+        )
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        contract = batch_order.contract
+        expected_filename = f"{contract.definition.title}".replace(" ", "_")
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.code}/"
+            f"agreements/{contract.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(response.headers["Content-Type"], "application/pdf")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f'attachment; filename="{expected_filename}.pdf"',
         )

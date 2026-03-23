@@ -1745,6 +1745,9 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
     GET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/
         Return an organization's contract if one matches the provided id
 
+    GET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/download/
+        Return an organization's agreement as a signed PDF
+
     You can use query params to filter by signature state when retrieving the list, or by
     offering id.
     """
@@ -1784,6 +1787,47 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
         }
 
         return queryset.filter(**additional_filter)
+
+    @extend_schema(
+        responses={
+            (200, "application/pdf"): OpenApiTypes.BINARY,
+            404: serializers.ErrorResponseSerializer,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(
+        detail=True,
+        methods=["GET"],
+        permission_classes=[permissions.CanDownloadAgreement],
+    )
+    def download(self, request, **kwargs):
+        """
+        Return the signed agreement PDF for download.
+        """
+        contract = self.get_object()
+
+        if not contract.is_fully_signed:
+            return Response(
+                {
+                    "detail": _(
+                        "Cannot download a contract when it is not yet fully signed."
+                    )
+                },
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        signed_contract_pdf_bytes = contract_utility.get_pdf_bytes_of_contracts(
+            signature_backend_references=[contract.signature_backend_reference]
+        )
+
+        contract_pdf_bytes_io = io.BytesIO(signed_contract_pdf_bytes[0])
+        contract_pdf_bytes_io.seek(0)
+
+        return FileResponse(
+            contract_pdf_bytes_io,
+            as_attachment=True,
+            filename=f"{contract.definition.title}.pdf".replace(" ", "_"),
+        )
 
 
 class GenericContractViewSet(

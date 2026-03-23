@@ -20,6 +20,7 @@ and this project adheres to
 - Add admin API to manage offering deep links for organizations
 - Add `OfferingDeepLink` model to store links of offering
   to purchase a training from an external platform
+- Allow organization members to download signed agreements as PDF
 
 ## [3.2.2] - 2026-03-20
 

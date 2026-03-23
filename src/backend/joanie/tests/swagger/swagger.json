@@ -4084,7 +4084,7 @@
         "/api/v1.0/organizations/{organization_id}/agreements/": {
             "get": {
                 "operationId": "organizations_agreements_list",
-                "description": "Nested Organization and Agreements (contracts) related to batch orders inside organization\nroute.\n\nIt allows to list & retrieve organization's agreements (contracts) if the user is\nan administrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/agreements/\n    Return list of all organization's contracts\n\nGET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/\n    Return an organization's contract if one matches the provided id\n\nYou can use query params to filter by signature state when retrieving the list, or by\noffering id.",
+                "description": "Nested Organization and Agreements (contracts) related to batch orders inside organization\nroute.\n\nIt allows to list & retrieve organization's agreements (contracts) if the user is\nan administrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/agreements/\n    Return list of all organization's contracts\n\nGET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/\n    Return an organization's contract if one matches the provided id\n\nGET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/download/\n    Return an organization's agreement as a signed PDF\n\nYou can use query params to filter by signature state when retrieving the list, or by\noffering id.",
                 "parameters": [
                     {
                         "in": "query",
@@ -4182,7 +4182,7 @@
         "/api/v1.0/organizations/{organization_id}/agreements/{id}/": {
             "get": {
                 "operationId": "organizations_agreements_retrieve",
-                "description": "Nested Organization and Agreements (contracts) related to batch orders inside organization\nroute.\n\nIt allows to list & retrieve organization's agreements (contracts) if the user is\nan administrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/agreements/\n    Return list of all organization's contracts\n\nGET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/\n    Return an organization's contract if one matches the provided id\n\nYou can use query params to filter by signature state when retrieving the list, or by\noffering id.",
+                "description": "Nested Organization and Agreements (contracts) related to batch orders inside organization\nroute.\n\nIt allows to list & retrieve organization's agreements (contracts) if the user is\nan administrator or an owner of the organization.\n\nGET /api/organizations/<organization_id|organization_code>/agreements/\n    Return list of all organization's contracts\n\nGET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/\n    Return an organization's contract if one matches the provided id\n\nGET /api/organizations/<organization_id|organization_code>/agreements/<contract_id>/download/\n    Return an organization's agreement as a signed PDF\n\nYou can use query params to filter by signature state when retrieving the list, or by\noffering id.",
                 "parameters": [
                     {
                         "in": "path",
@@ -4218,6 +4218,74 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AgreementBatchOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/organizations/{organization_id}/agreements/{id}/download/": {
+            "get": {
+                "operationId": "organizations_agreements_download_retrieve",
+                "description": "Return the signed agreement PDF for download.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "organization_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9-_]+$"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "security": [
+                    {
+                        "DelegatedJWTAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         },

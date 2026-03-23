@@ -80,7 +80,19 @@ class CanSubmitForSignatureBatchOrder(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         """Check permission for a given object."""
         abilities = obj.get_abilities(request.user)
-        return abilities.get("can_submit_for_signature_batch_order", False)
+        return abilities.get("can_manage_batch_order_agreement", False)
+
+
+class CanDownloadAgreement(IsAuthenticated):
+    """
+    Check if the authenticated user is allowed to download a signed agreement (contract
+    related to a batch order). The permission is checked against the organization abilities.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        """Check permission for a given object."""
+        abilities = obj.batch_order.organization.get_abilities(request.user)
+        return abilities.get("can_manage_batch_order_agreement", False)
 
 
 class HasAPIKey(permissions.BasePermission):
