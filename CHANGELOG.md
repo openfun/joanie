@@ -22,6 +22,10 @@ and this project adheres to
   to purchase a training from an external platform
 - Allow organization members to download signed agreements as PDF
 
+### Fixed
+
+- Translate raw enum values in CSV exports
+
 ## [3.2.2] - 2026-03-20
 
 ### Fixed

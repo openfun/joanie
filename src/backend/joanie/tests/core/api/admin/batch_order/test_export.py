@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from joanie.core import enums, factories
 from joanie.core.models import BatchOrder
@@ -12,8 +13,8 @@ from joanie.tests.base import BaseAPITestCase
 
 
 def yes_no(value):
-    """Return "Yes" if value is True, "No" otherwise."""
-    return "Yes" if value else "No"
+    """Return translated "Yes" if value is True, "No" otherwise."""
+    return str(_("Yes")) if value else str(_("No"))
 
 
 def expected_csv_content(batch_order):
@@ -30,13 +31,13 @@ def expected_csv_content(batch_order):
         if not batch_order.vat_registration
         else batch_order.vat_registration,
         "Organization": batch_order.organization.title,
-        "Batch Order State": batch_order.state,
-        "Payment method": batch_order.payment_method,
+        "Batch Order State": batch_order.get_state_display(),
+        "Payment method": batch_order.get_payment_method_display(),
         "Number of seats reserved": str(batch_order.nb_seats),
         "Created on": format_date_export(batch_order.created_on),
         "Updated on": format_date_export(batch_order.updated_on),
         "Product": batch_order.offering.product.title,
-        "Product type": batch_order.offering.product.type,
+        "Product type": batch_order.offering.product.get_type_display(),
         "Total": str(batch_order.total),
         "Quote reference": batch_order.quote.reference,
         "Organization quote signature date": format_date_export(
