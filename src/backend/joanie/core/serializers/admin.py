@@ -2,7 +2,6 @@
 # pylint: disable=too-many-lines
 """Admin serializers for Joanie Core app."""
 
-import csv
 from decimal import Decimal as D
 
 from django.conf import settings
@@ -19,7 +18,7 @@ from joanie.core.serializers.fields import (
     ISO8601DurationField,
     ThumbnailDetailField,
 )
-from joanie.core.utils import Echo, get_default_currency_symbol
+from joanie.core.utils import get_default_currency_symbol
 from joanie.core.utils.batch_order import get_active_offering_rule
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
@@ -1973,27 +1972,6 @@ class AdminBatchOrderExportSerializer(serializers.ModelSerializer):
         Returns translated "Yes"/"No" for whether orders were generated.
         """
         return _("Yes") if instance.has_orders_generated else _("No")
-
-
-class AdminCSVExportListSerializer(serializers.ListSerializer):
-    """
-    Serializer for exporting a list of orders to a CSV stream.
-    """
-
-    def update(self, instance, validated_data):
-        """
-        Only there to avoid a NotImplementedError.
-        """
-
-    def csv_stream(self):
-        """
-        Return a CSV stream of the serialized data.
-        """
-        pseudo_buffer = Echo()
-        writer = csv.writer(pseudo_buffer)
-        yield writer.writerow(self.child.headers)
-        for row in self.data:
-            yield writer.writerow(row.values())
 
 
 class AdminBatchOrderBillingAddressSerializer(serializers.Serializer):

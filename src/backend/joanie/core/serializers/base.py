@@ -1,11 +1,14 @@
 """Base Serializer classes for the Joanie project."""
 
+import csv
 import logging
 
 from django.conf import settings
 from django.core.cache import cache
 
 from rest_framework import serializers
+
+from joanie.core.utils import Echo
 
 logger = logging.getLogger(__name__)
 
@@ -67,3 +70,26 @@ class ErrorResponseSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         """Abstract method that should be implemented."""
         raise NotImplementedError()
+
+
+class CSVExportListSerializer(serializers.ListSerializer):
+    """
+    Serializer for exporting a list of objects to a CSV stream.
+    """
+
+    def update(self, instance, validated_data):
+        """
+        Only there to avoid a NotImplementedError.
+        """
+        return instance
+
+    def csv_stream(self):
+        """
+        Return a CSV stream of the serialized data.
+        """
+        pseudo_buffer = Echo()
+        writer = csv.writer(pseudo_buffer)
+        yield writer.writerow(self.child.headers)
+        for obj in self.instance:
+            row = self.child.to_representation(obj)
+            yield writer.writerow(row.values())

@@ -867,7 +867,7 @@ class OrderViewSet(
         Export orders to a CSV file.
         """
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = serializers.AdminCSVExportListSerializer(
+        serializer = serializers.CSVExportListSerializer(
             queryset.iterator(), child=self.get_serializer()
         )
         now = timezone.now().strftime("%d-%m-%Y_%H-%M-%S")
@@ -1118,7 +1118,7 @@ class BatchOrderViewSet(
         Export batch orders to a CSV file.
         """
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = serializers.AdminCSVExportListSerializer(
+        serializer = serializers.CSVExportListSerializer(
             queryset.iterator(), child=self.get_serializer()
         )
         now = timezone.now().strftime("%d-%m-%Y_%H-%M-%S")
