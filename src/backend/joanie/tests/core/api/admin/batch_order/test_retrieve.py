@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest import mock
 
 from django.conf import settings
+from django.utils import timezone
 
 from joanie.core import enums, factories
 from joanie.core.serializers import fields
@@ -568,3 +569,107 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
             },
             response.json(),
         )
+
+    def test_api_admin_batch_order_generate_orders_purchase_order_available_actions_workflow(
+        self,
+    ):
+        """
+        It should be possible for an authenticated admin user to generate
+        orders of a batch order with purchase order payment method once
+        the reference is set on the quote. Once the orders are generated, it should transition
+        to `to_sign` state. Once the agreement is signed by the buyer, it should transition to
+        `completed`.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            nb_seats=1,
+        )
+
+        response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
+
+        self.assertFalse(batch_order.quote.has_purchase_order)
+        self.assertFalse(batch_order.has_orders_generated)
+        self.assertDictEqual(
+            {
+                "confirm_quote": True,
+                "confirm_purchase_order": False,
+                "confirm_bank_transfer": False,
+                "submit_for_signature": False,
+                "generate_orders": False,
+                "cancel": True,
+                "next_action": "confirm_quote",
+            },
+            response.json().get("available_actions"),
+        )
+
+        batch_order.freeze_total("100.00")
+        batch_order.quote.tag_organization_signed_on()
+        batch_order.quote.has_purchase_order = True
+        batch_order.quote.purchase_order_reference = "ABC-test-reference"
+        batch_order.quote.save()
+
+        response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
+
+        self.assertTrue(batch_order.quote.has_purchase_order)
+        self.assertDictEqual(
+            {
+                "confirm_quote": False,
+                "confirm_purchase_order": False,
+                "confirm_bank_transfer": False,
+                "submit_for_signature": False,
+                "generate_orders": True,
+                "cancel": True,
+                "next_action": "generate_orders",
+            },
+            response.json().get("available_actions"),
+        )
+
+        # Let's simulate that we generate the orders now, the next step
+        # should be to submit to signature the agreement
+        batch_order.flow.update()
+
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
+        self.assertTrue(batch_order.has_orders_generated)
+
+        response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
+
+        self.assertDictEqual(
+            {
+                "confirm_quote": False,
+                "confirm_purchase_order": False,
+                "confirm_bank_transfer": False,
+                "submit_for_signature": True,
+                "generate_orders": False,
+                "cancel": True,
+                "next_action": "submit_for_signature",
+            },
+            response.json().get("available_actions"),
+        )
+
+        batch_order.submit_for_signature()
+
+        response = self.client.get(f"/api/v1.0/admin/batch-orders/{batch_order.id}/")
+
+        self.assertDictEqual(
+            {
+                "confirm_quote": False,
+                "confirm_purchase_order": False,
+                "confirm_bank_transfer": False,
+                "submit_for_signature": False,
+                "generate_orders": False,
+                "cancel": True,
+                "next_action": None,
+            },
+            response.json().get("available_actions"),
+        )
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
+
+        # Simulate the student has signed
+        batch_order.contract.student_signed_on = timezone.now()
+        batch_order.flow.update()
+
+        self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
