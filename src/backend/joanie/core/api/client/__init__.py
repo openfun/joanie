@@ -13,7 +13,13 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    JsonResponse,
+    StreamingHttpResponse,
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -910,6 +916,36 @@ class BatchOrderViewSet(
             batch_order.flow.process_payment()
 
         return Response(payment_infos, status=HTTPStatus.OK)
+
+    @extend_schema(
+        request=None,
+        responses={
+            (200, "text/csv"): OpenApiTypes.OBJECT,
+            404: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(detail=True, methods=["GET"], url_path="seats-export")
+    def seats_export(self, request, pk=None):  # pylint: disable=unused-argument
+        """
+        Export the list of seats (order owners) of a batch order as CSV.
+        """
+        batch_order = self.get_object()
+        queryset = batch_order.orders.select_related("owner").order_by(
+            "owner__last_name", "owner__first_name"
+        )
+        child_serializer = serializers.BatchOrderSeatsExportSerializer()
+        serializer = serializers.CSVExportListSerializer(
+            queryset.iterator(), child=child_serializer
+        )
+        return StreamingHttpResponse(
+            serializer.csv_stream(),
+            content_type="text/csv",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="batch_order_{batch_order.id}_seats.csv"'
+                )
+            },
+        )
 
 
 class AddressViewSet(
