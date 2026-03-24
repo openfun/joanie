@@ -1215,6 +1215,20 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         self.assertFalse(batch_order.can_generate_orders())
 
+    def test_models_batch_order_can_generate_orders_when_canceled(self):
+        """
+        When the batch order is canceled, the property `can_generate_orders`
+        should return False with every payment method.
+        """
+        for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+            with self.subTest(payment_method=payment_method):
+                batch_order = factories.BatchOrderFactory(
+                    state=enums.BATCH_ORDER_STATE_QUOTED, payment_method=payment_method
+                )
+                batch_order.flow.cancel()
+
+                self.assertFalse(batch_order.can_generate_orders())
+
     def test_models_batch_order_available_admin_actions(self):
         """
         The available_admin_actions method should return a dictionary with the correct
