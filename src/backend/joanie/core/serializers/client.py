@@ -1706,3 +1706,28 @@ class BatchOrderSerializer(serializers.ModelSerializer):
             validated_data["offering_rules"].append(offering_rule)
 
         return super().create(validated_data)
+
+
+class BatchOrderSeatsExportSerializer(serializers.ModelSerializer):
+    """
+    Read only serializer for exporting batch order seats to CSV.
+    """
+
+    class Meta:
+        model = models.Order
+        fields_labels = [
+            ("owner_last_name", _("Last name")),
+            ("owner_first_name", _("First name")),
+            ("owner_email", _("Email")),
+        ]
+        fields = [field for field, label in fields_labels]
+        read_only_fields = fields
+
+    @property
+    def headers(self):
+        """Return the headers of the CSV file."""
+        return [label for field, label in self.Meta.fields_labels]
+
+    owner_last_name = serializers.CharField(source="owner.last_name")
+    owner_first_name = serializers.CharField(source="owner.first_name")
+    owner_email = serializers.EmailField(source="owner.email")
