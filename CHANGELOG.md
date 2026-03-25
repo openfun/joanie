@@ -28,6 +28,11 @@ and this project adheres to
 - Translate raw enum values in CSV exports
 - Hide deep link management from the product offering view in admin
 
+### Changed
+
+- Generate orders of batch order with purchase order payment
+  method when reference is set
+
 ## [3.2.2] - 2026-03-20
 
 ### Fixed

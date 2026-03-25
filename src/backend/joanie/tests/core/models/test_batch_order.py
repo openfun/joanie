@@ -1131,18 +1131,63 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
         self.assertFalse(batch_order.can_submit_for_signature())
 
-    def test_models_batch_order_can_generate_orders_completed_and_no_orders(self):
+    def test_models_batch_order_can_submit_for_signature_with_purchase_order_and_orders_generated(
+        self,
+    ):
         """
-        When the batch order is in COMPLETED state and has no orders generated,
-        can_generate_orders should return True.
+        When the batch order with purchase order payment method has orders generated, it
+        should be possible to submit for signature the agreement.
         """
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            nb_seats=2,
+        )
+        batch_order.quote.tag_organization_signed_on()
+        batch_order.quote.tag_has_purchase_order("ABC-reference-test")
+
+        self.assertTrue(batch_order.has_orders_generated)
+        self.assertTrue(batch_order.can_submit_for_signature())
+
+    def test_models_batch_order_can_submit_for_signature_purchase_order_and_orders_not_generated(
+        self,
+    ):
+        """
+        When the batch order with purchase order payment method does not have the orders
+        generated yet, it should not yet be possible to submit for signature the agreement.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        # Ensure orders are not generated
-        batch_order.orders.all().delete()
+        batch_order.quote.tag_organization_signed_on()
+        batch_order.quote.has_purchase_order = True
+        batch_order.quote.purchase_order_reference = "ABC-reference-test"
+        batch_order.quote.save()
 
+        self.assertFalse(batch_order.has_orders_generated)
+        self.assertFalse(batch_order.can_submit_for_signature())
+
+    def test_models_batch_order_can_generate_orders_when_no_orders_but_purchase_reference_set(
+        self,
+    ):
+        """
+        When the batch order is with purchase order payment method and the reference is set and
+        the agreement is not yet signed by the buyer,`can_generate_orders` should return True.
+        """
+        batch_order = factories.BatchOrderFactory(
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+        batch_order.quote.tag_organization_signed_on()
+
+        self.assertFalse(batch_order.can_generate_orders())
+
+        batch_order.quote.has_purchase_order = True
+        batch_order.quote.purchase_order_reference = "ABC-reference-test"
+        batch_order.quote.save()
+
+        self.assertFalse(batch_order.is_signed_by_buyer)
         self.assertTrue(batch_order.can_generate_orders())
 
     def test_models_batch_order_can_generate_orders_not_completed(self):

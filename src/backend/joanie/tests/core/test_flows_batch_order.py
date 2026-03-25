@@ -228,10 +228,10 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         self,
     ):
         """
-        When a batch order uses the payment method `purchase_order`, once the quote has received
-        the purchase order, and the buyer has signed the convention (contract), then the flow
-        updates to `completed`. During that transition from `signing` to `completed` state,
-        it generates the orders.
+        When a batch order uses the payment method `purchase_order`, once the quote has the
+        reference set, the orders are generated and the state should transition from `quoted`
+        to `to_sign`. Only after the orders are generated, we can proceed to signing the
+        agreement, and once signed by the buyer, it can transition to `completed` state.
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_QUOTED,
@@ -244,6 +244,7 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
             purchase_order_reference="test_reference"
         )
 
+        self.assertTrue(batch_order.has_orders_generated)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_TO_SIGN)
 
         # Submit for signature the convention, should transition `signing``
@@ -251,7 +252,6 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
 
         batch_order.refresh_from_db()
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
-        self.assertTrue(batch_order.orders.exists())
 
     def test_flow_batch_order_assigned_to_completed_related_with_quote_and_bank_transfer(
         self,
