@@ -1320,8 +1320,6 @@ class OrganizationViewSet(
             )
 
         quote.tag_has_purchase_order(purchase_order_reference=purchase_order_reference)
-        # Update the flow of batch order to sign
-        quote.batch_order.flow.update()
 
         return Response(status=HTTPStatus.OK)
 
