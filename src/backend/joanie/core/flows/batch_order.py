@@ -165,8 +165,16 @@ class BatchOrderFlow:
 
     def _can_be_state_completed(self):
         """
-        A batch order can be in state completed because it has been fully paid
+        A batch order can be in state completed because it has been fully paid.
+        Whent he payment method is with purchase order, we verify that the agreement
+        is signed by the buyer, the purchase reference is set and the orders are generated.
         """
+        if self.instance.uses_purchase_order:
+            return (
+                self.instance.is_paid
+                and self.instance.is_signed_by_buyer
+                and self.instance.has_orders_generated
+            )
         return self.instance.is_paid
 
     @state.transition(
@@ -208,11 +216,18 @@ class BatchOrderFlow:
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument
         """Post transition actions"""
 
-        if (
-            source in [enums.BATCH_ORDER_STATE_SIGNING, enums.BATCH_ORDER_STATE_PENDING]
-            and target == enums.BATCH_ORDER_STATE_COMPLETED
-            and (self.instance.uses_purchase_order or self.instance.uses_bank_transfer)
-        ):
+        # Generate orders for bank transfer or purchase order payment methods
+        should_generate_orders = (
+            source in [enums.BATCH_ORDER_STATE_QUOTED, enums.BATCH_ORDER_STATE_PENDING]
+            and target
+            in [enums.BATCH_ORDER_STATE_TO_SIGN, enums.BATCH_ORDER_STATE_COMPLETED]
+            and (
+                self.instance.uses_purchase_order
+                and self.instance.quote.has_received_purchase_order
+            )
+            or self.instance.uses_bank_transfer
+        )
+        if should_generate_orders:
             generate_orders_and_send_vouchers_task.delay(
                 batch_order_id=str(self.instance.id)
             )

@@ -1133,17 +1133,29 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
     def test_models_batch_order_can_generate_orders_completed_and_no_orders(self):
         """
-        When the batch order is in COMPLETED state and has no orders generated,
-        can_generate_orders should return True.
+        When the batch order is with purchase order payment method and the reference is
+        set, it should be possible to generate the orders, `can_generate_orders` should
+        return True.
         """
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_COMPLETED,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        # Ensure orders are not generated
-        batch_order.orders.all().delete()
+
+        batch_order.quote.tag_organization_signed_on()
+
+        self.assertFalse(batch_order.can_generate_orders())
+
+        batch_order.quote.has_purchase_order = True
+        batch_order.quote.save()
+
+        self.assertFalse(batch_order.can_generate_orders())
+
+        batch_order.quote.purchase_order_reference = "ABC-reference-test"
+        batch_order.quote.save()
 
         self.assertTrue(batch_order.can_generate_orders())
+        self.assertFalse(batch_order.is_signed_by_buyer)
 
     def test_models_batch_order_can_generate_orders_not_completed(self):
         """
