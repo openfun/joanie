@@ -2605,9 +2605,9 @@ class BatchOrder(BaseModel):
         Return boolean value whether the batch order is fully paid. We should find the child
         invoice, and if present, the transaction linked to it should exist.
         When the batch order uses a purchase order payment method, we verify if the purchase order
-        has been received and if the contract has been signed by the buyer.
+        reference is received.
         """
-        if self.uses_purchase_order and self.is_signed_by_buyer:
+        if self.uses_purchase_order:
             return self.quote.has_received_purchase_order
 
         child_invoice = self.invoices.filter(
@@ -2762,10 +2762,19 @@ class BatchOrder(BaseModel):
                 except ValueError:
                     return False
 
+        if (
+            self.uses_purchase_order
+            and self.quote.has_purchase_order
+            and not self.has_orders_generated
+        ):
+            return False
+
         return True
 
     def can_generate_orders(self) -> bool:
         """Check if orders can be generated for this batch order"""
+        if self.uses_purchase_order:
+            return self.quote.has_purchase_order and not self.has_orders_generated
         return (
             self.state == enums.BATCH_ORDER_STATE_COMPLETED
             and not self.has_orders_generated
