@@ -702,18 +702,20 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
     def test_models_batch_order_is_paid_quote_has_received_purchase_order(self):
         """
-        When the quote related to the batch order has received the purchase order and the contract
-        is signed by the buyer, it should return True and considered as paid.
+        When the quote related to the batch order has received the purchase order, it should
+        be considered as paid.
         """
         batch_order = factories.BatchOrderFactory(
-            state=enums.BATCH_ORDER_STATE_TO_SIGN,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
-        batch_order.quote.has_purchase_order = True
-        batch_order.contract.submitted_for_signature_on = django_timezone.now()
-        batch_order.contract.student_signed_on = django_timezone.now()
-        batch_order.save()
 
+        batch_order.freeze_total("100.00")
+        batch_order.quote.tag_organization_signed_on()
+        batch_order.quote.tag_has_purchase_order("ABC-test")
+
+        self.assertIsNotNone(batch_order.quote.purchase_order_reference)
+        self.assertTrue(batch_order.quote.has_purchase_order)
         self.assertTrue(batch_order.is_paid)
 
     def test_models_batch_order_is_paid_with_bank_transfer_not_confirmed(self):
@@ -1044,35 +1046,31 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         the contract.
         This test covers a bug where a second invitation link was requested before the
         contract was signed. Because `batch_order.flow.update()` runs after submission,
-        a missing check in is_paid allowed the order to complete without the buyer’s signature.
+        a missing check in `is_paid` allowed the order to complete without the buyer's signature.
         """
         # Simulate the first submission to signature of the contract by using `to_sign` state
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_TO_SIGN,
             payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
         )
+
         # Batch order should be in state `signing` because the invitation has been sent
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
 
         # Let's request another time the invitation link but the buyer does not sign it
         batch_order.submit_for_signature()
-        batch_order.quote.has_purchase_order = True
-        batch_order.quote.purchase_order_reference = "ABC_test_reference"
-        batch_order.quote.save()
-        batch_order.save()
 
         # The batch order should stay in state `signing` because no signature of buyer yet
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_SIGNING)
-        # The batch order should not be considered as paid because the contract is not signed
-        self.assertFalse(batch_order.is_paid)
+        # The batch order should be considered as paid because purchase reference
+        # is set, but it should not yet be in state `completed`
+        self.assertTrue(batch_order.is_paid)
 
         # Let's put the values that simulates the signature of the buyer
         batch_order.contract.submitted_for_signature_on = django_timezone.now()
         batch_order.contract.student_signed_on = django_timezone.now()
         batch_order.save()
 
-        # Since the purchase order reference is set and the buyer has signed, it should be paid
-        self.assertTrue(batch_order.is_paid)
         # Calling update should allow the batch order to bet state `completed`
         batch_order.flow.update()
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
