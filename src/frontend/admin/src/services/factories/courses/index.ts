@@ -20,6 +20,7 @@ const build = (): Course => {
     offerings: OfferingFactory(1),
     state: CourseStateFactory(),
     accesses: AccessesFactory(Object.values(CourseRoles), 3),
+    effort: faker.number.int({ min: 1, max: 100 }).toString(),
   };
 
   return {
