@@ -230,4 +230,4 @@ class OrganizationApiConfirmBankTransferTest(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
         # The orders should be generated with the voucher codes
-        self.assertTrue(batch_order.orders.exists())
+        self.assertTrue(batch_order.has_orders_generated)

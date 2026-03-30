@@ -755,13 +755,13 @@ class BatchOrderAdmin(DjangoObjectActions, admin.ModelAdmin):
 
         if (
             batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED
-            or batch_order.orders.exists()
+            or batch_order.has_orders_generated
         ):
             actions.remove(ACTION_NAME_GENERATE_ORDERS)
 
         if (
             batch_order.state != enums.BATCH_ORDER_STATE_COMPLETED
-            or not batch_order.orders.exists()
+            or not batch_order.has_orders_generated
         ):
             actions.remove(ACTION_NAME_SEND_MAIL_VOUCHERS)
 
