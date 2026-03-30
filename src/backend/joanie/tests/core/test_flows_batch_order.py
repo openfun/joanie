@@ -290,4 +290,4 @@ class BatchOrderFlowsTestCase(LoggingTestCase):
         validate_success_payment(batch_order)
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
-        self.assertTrue(batch_order.orders.exists())
+        self.assertTrue(batch_order.has_orders_generated)

@@ -167,7 +167,7 @@ class BatchOrderFullFlowAPITest(BaseAPITestCase):
 
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
         # The orders should be generated with the voucher codes
-        self.assertTrue(batch_order.orders.exists())
+        self.assertTrue(batch_order.has_orders_generated)
 
     def test_batch_order_flow_payment_method_bank_transfer(self):
         """Test the full flow of batch order with bank transfer through the API endpoints"""
@@ -231,7 +231,7 @@ class BatchOrderFullFlowAPITest(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
         # The orders should be generated with the voucher codes
-        self.assertTrue(batch_order.orders.exists())
+        self.assertTrue(batch_order.has_orders_generated)
 
     def test_batch_order_flow_payment_method_purchase_order(self):
         """Test the full flow of batch order with purchase order through the API endpoints"""
@@ -300,4 +300,4 @@ class BatchOrderFullFlowAPITest(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.ACCEPTED)
         self.assertEqual(batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED)
-        self.assertTrue(batch_order.orders.exists())
+        self.assertTrue(batch_order.has_orders_generated)

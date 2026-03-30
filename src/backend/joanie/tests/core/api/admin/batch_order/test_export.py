@@ -66,7 +66,7 @@ def expected_csv_content(batch_order):
         value = batch_order.state == enums.BATCH_ORDER_STATE_COMPLETED
         content["Submitted for signature"] = yes_no(value)
 
-    content["Orders generated"] = yes_no(batch_order.orders.exists())
+    content["Orders generated"] = yes_no(batch_order.has_orders_generated)
 
     return content
 

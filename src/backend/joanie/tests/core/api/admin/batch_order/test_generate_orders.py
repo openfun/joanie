@@ -129,7 +129,7 @@ class BatchOrdersAdminApiGenerateOrdersTestCase(LoggingTestCase, BaseAPITestCase
                 ),
             ],
         )
-        self.assertFalse(batch_order.orders.exists())
+        self.assertFalse(batch_order.has_orders_generated)
         self.assertFalse(mock_send_mail_batch_order_payment_success.called)
 
     @mock.patch(

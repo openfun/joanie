@@ -157,5 +157,5 @@ class BatchOrdersAdminConfirmBankTransferApiTestCase(BaseAPITestCase):
                     self.assertEqual(
                         batch_order.state, enums.BATCH_ORDER_STATE_COMPLETED
                     )
-                    self.assertTrue(batch_order.orders.exists())
+                    self.assertTrue(batch_order.has_orders_generated)
                     self.assertEqual(len(batch_order.vouchers), 3)
