@@ -225,6 +225,16 @@ class Quote(BaseModel):
         return self.organization_signed_on is not None
 
     @property
+    def has_total(self):
+        """
+        Returns boolean value whether the related batch order has the total set or not.
+        The total of a batch order should always be above 0 when set, because there are
+        no discount applicable. Otherwise, when the total is not set, this comparison should
+        return False.
+        """
+        return self.batch_order.total > 0
+
+    @property
     def has_received_purchase_order(self):
         """
         Returns boolean value whether the quote has been fully signed and purchase order

@@ -156,6 +156,19 @@ class QuoteModelsTestCase(LoggingTestCase):
         self.assertEqual(quote_2.reference, "JOANIE_2025_0000001")
         self.assertEqual(quote_3.reference, "JOANIE_2025_0000002")
 
+    def test_models_quote_property_has_total(self):
+        """
+        When the batch order related to the quote has no total set, the property `has_total`
+        should return False. Otherwise, when the total is set, it should return True.
+        """
+        quote = BatchOrderFactory(state=enums.BATCH_ORDER_STATE_QUOTED).quote
+
+        self.assertFalse(quote.has_total)
+
+        quote.batch_order.freeze_total("123.45")
+
+        self.assertTrue(quote.has_total)
+
 
 # pylint:disable=unused-argument
 @override_settings(JOANIE_PREFIX_QUOTE_REFERENCE="JOANIE")
