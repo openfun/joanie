@@ -674,6 +674,10 @@ class DebugQuoteTemplateView(DebugPdfTemplateView):
             return quotes.generate_document_context()
 
         quote = Quote.objects.get(pk=pk, definition__name=self.issuer_document)
+        if quote.has_total:
+            return quotes.generate_document_context(
+                quote.batch_order.relation.product.quote_definition, quote.batch_order
+            )
         return quote.context
 
 
