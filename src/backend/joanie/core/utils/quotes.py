@@ -21,6 +21,7 @@ QUOTE_FALLBACK_DATA = {
 
 BATCH_ORDER_FALLBACK_DATA = {
     "nb_seats": _("<BATCH_ORDER_NB_SEATS>"),
+    "total": _("<BATCH_ORDER_TOTAL>"),
 }
 
 COURSE_FALLBACK_DATA = {
@@ -214,6 +215,9 @@ def generate_document_context(quote_definition=None, batch_order=None):
                 },
                 "batch_order": {
                     "nb_seats": batch_order.nb_seats,
+                    "total": str(batch_order.total)
+                    if batch_order.quote.has_total
+                    else "",
                 },
                 "course": prepare_course_context(
                     language_code=language_code, batch_order=batch_order

@@ -163,7 +163,11 @@ for your training, feel free to use this template as a base.
               {% endif %}
               <li>{% translate "Teaching Format: Online Only" %}</li>
               <li>{% translate "For number of seats: " %} {{ batch_order.nb_seats }}</li>
-              <li>{% translate "Price of the course: " %}</li>
+              <li>{% translate "Price of the course: " %}
+                  {% if batch_order.total %}
+                    {{ batch_order.total }}
+                  {% endif %}
+              </li>
             </ul>
           </dd>
         </dl>
