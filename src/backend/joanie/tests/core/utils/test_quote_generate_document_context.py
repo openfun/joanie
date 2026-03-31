@@ -118,6 +118,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
             },
             "batch_order": {
                 "nb_seats": "<BATCH_ORDER_NB_SEATS>",
+                "total": "<BATCH_ORDER_TOTAL>",
             },
             "course": {
                 "name": "<COURSE_NAME>",
@@ -197,6 +198,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
             },
             "batch_order": {
                 "nb_seats": batch_order.nb_seats,
+                "total": "302.00",
             },
             "course": {
                 "name": batch_order.relation.product.title,
