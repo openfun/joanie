@@ -208,9 +208,11 @@ class Quote(BaseModel):
         super().save(*args, **kwargs)
 
     def tag_organization_signed_on(self):
-        """Updates the quote with the datetime of signature from the organization"""
+        """
+        Updates the quote with the datetime of signature from the organization.
+        Saving is left to the caller.
+        """
         self.organization_signed_on = timezone.now()
-        self.save()
 
     def tag_has_purchase_order(self, purchase_order_reference: str):
         """Updates the quote with the reception of the purchase order"""
