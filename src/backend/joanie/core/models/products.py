@@ -2346,6 +2346,7 @@ class BatchOrder(BaseModel):
         self.total = round(Money(total).as_decimal(), 2)
         self.create_main_invoice()
         self.save(update_fields=["total"])
+        self.quote.update_context()
 
         if not self.uses_purchase_order:
             self.flow.update()

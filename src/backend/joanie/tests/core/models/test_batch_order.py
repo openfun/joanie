@@ -73,7 +73,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
     def test_models_batch_order_freeze_total(self):
         """
         When calling the method `freeze_total` for a batch order, it should set the total amount,
-        mark the quote as signed, and create a main invoice.
+        mark the quote as signed, and create a main invoice. The quote's context should also
+        get updated with the new total value.
         """
         batch_order = factories.BatchOrderFactory(
             state=enums.BATCH_ORDER_STATE_ASSIGNED,
@@ -84,6 +85,9 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertEqual(batch_order.total, Decimal("1234.56"))
         self.assertIsNotNone(batch_order.quote.organization_signed_on)
         self.assertIsNotNone(batch_order.main_invoice)
+        self.assertEqual(
+            batch_order.quote.context.get("batch_order").get("total"), "1234.56"
+        )
 
     def test_models_batch_order_freeze_total_state_transition(self):
         """
