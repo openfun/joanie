@@ -5,6 +5,7 @@ Declare and configure the models for Joanie's quotes
 import textwrap
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, transaction
 from django.utils import timezone
@@ -15,6 +16,7 @@ import markdown
 
 from joanie.core import enums
 from joanie.core.models.base import BaseModel, DocumentImage
+from joanie.core.utils import quotes as quote_utility
 
 
 class QuoteDefinition(BaseModel):
@@ -241,6 +243,18 @@ class Quote(BaseModel):
         has been received
         """
         return self.is_signed_by_organization and self.has_purchase_order
+
+    def update_context(self):
+        """
+        Update the context of the quote once the total of the related batch order
+        is set. Otherwise, if the total is not yet set, it raises an error.
+        """
+        if not self.has_total:
+            raise ValidationError("Quote's context cannot be updated.")
+        self.context = quote_utility.generate_document_context(
+            self.batch_order.relation.product.quote_definition, self.batch_order
+        )
+        self.save()
 
     def get_abilities(self, user):
         """

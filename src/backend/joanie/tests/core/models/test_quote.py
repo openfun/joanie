@@ -169,6 +169,28 @@ class QuoteModelsTestCase(LoggingTestCase):
 
         self.assertTrue(quote.has_total)
 
+    def test_models_quote_update_context(self):
+        """
+        When the quote's batch order has a total, the context should be update with the total
+        value. Otherwise, when the total is not set, the actual context should be returned.
+        """
+        batch_order = BatchOrderFactory(state=enums.BATCH_ORDER_STATE_QUOTED)
+
+        with self.assertRaises(ValidationError) as context:
+            batch_order.quote.update_context()
+
+        self.assertTrue("Quote's context cannot be update" in str(context.exception))
+
+        self.assertEqual(batch_order.quote.context.get("batch_order").get("total"), "")
+
+        batch_order.freeze_total("100")
+
+        batch_order.quote.update_context()
+
+        self.assertEqual(
+            batch_order.quote.context.get("batch_order").get("total"), "100.00"
+        )
+
 
 # pylint:disable=unused-argument
 @override_settings(JOANIE_PREFIX_QUOTE_REFERENCE="JOANIE")
