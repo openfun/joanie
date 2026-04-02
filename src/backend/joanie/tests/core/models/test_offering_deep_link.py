@@ -25,7 +25,7 @@ class OfferingDeepLinkModelTestCase(TestCase):
                     )
 
                     self.assertTrue(
-                        "Only product type credential are allowed to have deeplinks"
+                        "Only product type credentials are allowed to have deep link."
                         in str(context.exception)
                     )
 
