@@ -23,6 +23,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import { useTheme } from "@mui/material/styles";
 import { Order, PaymentStatesEnum } from "@/services/api/models/Order";
 import {
+  orderNatureMessages,
   orderStatesMessages,
   orderViewMessages,
 } from "@/components/templates/orders/view/translations";
@@ -215,6 +216,14 @@ export function OrderView({ order }: Props) {
                 disabled={true}
                 label={intl.formatMessage(orderViewMessages.state)}
                 value={intl.formatMessage(orderStatesMessages[order.state])}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth={true}
+                disabled={true}
+                label={intl.formatMessage(orderViewMessages.nature)}
+                value={intl.formatMessage(orderNatureMessages[order.nature])}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>

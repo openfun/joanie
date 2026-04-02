@@ -18,6 +18,7 @@ import { User } from "@/services/api/models/User";
 import { ProductSearch } from "@/components/templates/products/inputs/search/ProductSearch";
 import { OrganizationSearch } from "@/components/templates/organizations/inputs/search/OrganizationSearch";
 import { UserSearch } from "@/components/templates/users/inputs/search/UserSearch";
+import { RHFOrderNature } from "@/components/templates/orders/inputs/RHFOrderNature";
 import { RHFOrderState } from "@/components/templates/orders/inputs/RHFOrderState";
 import { entitiesInputLabel } from "@/translations/common/entitiesInputLabel";
 import { OrderListQuery, useOrders } from "@/hooks/useOrders/useOrders";
@@ -41,6 +42,7 @@ type FormValues = {
   organizations?: Organization[];
   owners?: User[];
   state?: string;
+  nature?: string;
 };
 
 type Props = MandatorySearchFilterProps & {
@@ -62,10 +64,12 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
       organizations: [],
       owners: [],
       state: "",
+      nature: "",
     };
   };
   const RegisterSchema = Yup.object().shape({
     state: Yup.string().nullable(),
+    nature: Yup.string().nullable(),
     products: Yup.array<any, Product>().nullable(),
     courses: Yup.array<any, Course>().nullable(),
     organizations: Yup.array<any, Organization>().nullable(),
@@ -86,6 +90,7 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
       ),
       owner_ids: values.owners?.map((owner) => owner.id),
       state: values.state,
+      nature: values.nature,
     };
     return filters;
   };
@@ -111,12 +116,20 @@ export function OrderFilters({ onFilter, ...searchFilterProps }: Props) {
             onSubmit={onSubmit}
           >
             <Grid container mt={2} spacing={2}>
-              <Grid size={12}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <RHFOrderState
                   data-testid="select-order-state-filter"
                   isFilterContext={true}
                   fullWidth={true}
                   name="state"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <RHFOrderNature
+                  data-testid="select-order-nature-filter"
+                  isFilterContext={true}
+                  fullWidth={true}
+                  name="nature"
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
