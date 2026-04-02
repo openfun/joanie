@@ -44,7 +44,14 @@ type Props = {
 
 const RegisterSchema = Yup.object().shape({
   offering: Yup.mixed<Offering>().required(),
-  organization: Yup.mixed<Organization>().nullable(),
+  organization: Yup.mixed<Organization>()
+    .nullable()
+    .when("offering", {
+      is: (offering: Offering | null) =>
+        !!offering && offering.organizations.length > 1,
+      then: (schema) => schema.required(),
+      otherwise: (schema) => schema.notRequired(),
+    }),
 });
 
 export function OrderCreateForm({ afterSubmit }: Props) {
