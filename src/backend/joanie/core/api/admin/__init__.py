@@ -23,6 +23,7 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from sentry_sdk import capture_exception
 
@@ -694,6 +695,13 @@ class NestedOfferingDeepLinkViewSet(viewsets.ModelViewSet, NestedGenericViewSet)
         organization_id = data.pop("organization_id", None)
         data["offering"] = str(offering_id)
         data["organization"] = str(organization_id)
+
+        offering = get_object_or_404(models.CourseProductRelation, pk=offering_id)
+        if offering.product.type != enums.PRODUCT_TYPE_CREDENTIAL:
+            return Response(
+                _("Only product type credentials are allowed to have deep link."),
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
         serializer = self.get_serializer(data=data)
 
