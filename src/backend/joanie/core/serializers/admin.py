@@ -1367,6 +1367,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "credit_card",
             "has_waived_withdrawal_right",
             "batch_order",
+            "nature",
             "voucher",
         )
         read_only_fields = fields
@@ -1426,6 +1427,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "discount",
             "voucher",
             "batch_order",
+            "nature",
         )
         read_only_fields = fields
 
@@ -1503,6 +1505,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("discount", _("Discount")),
             ("voucher", _("Voucher")),
             ("batch_order", _("Batch order")),
+            ("nature", _("Nature")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
@@ -1559,6 +1562,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     voucher = serializers.SerializerMethodField(read_only=True)
     has_waived_withdrawal_right = serializers.SerializerMethodField(read_only=True)
     certificate = serializers.SerializerMethodField(read_only=True)
+    nature = serializers.SerializerMethodField(read_only=True)
 
     contract = serializers.SlugRelatedField(
         read_only=True, slug_field="definition__title"
@@ -1604,6 +1608,10 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     def get_state(self, instance) -> str:
         """Return the translated state label."""
         return instance.get_state_display()
+
+    def get_nature(self, instance) -> str:
+        """Return the translated nature label."""
+        return instance.get_nature_display()
 
     def get_product_type(self, instance) -> str:
         """Return the translated product type label."""

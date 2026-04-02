@@ -39,6 +39,7 @@ def expected_csv_content(order):
         "Discount": "",
         "Voucher": order.voucher.code if order.batch_order else "",
         "Batch order": "",
+        "Nature": order.get_nature_display(),
         "Waived withdrawal right": yes_no(order.has_waived_withdrawal_right),
         "Certificate generated for this order": yes_no(hasattr(order, "certificate")),
         "Contract": "",
