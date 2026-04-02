@@ -22,6 +22,7 @@ and this project adheres to
 - Add `OfferingDeepLink` model to store links of offering
   to purchase a training from an external platform
 - Allow organization members to download signed agreements as PDF
+- Allow custom discount (percentage or fixed amount) when creating admin orders
 
 ### Fixed
 

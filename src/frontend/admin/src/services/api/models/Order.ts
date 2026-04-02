@@ -112,6 +112,8 @@ export type DTOOrderCreate = {
   product_id: string;
   course_code?: string | null;
   organization_id?: string | null;
+  discount_type?: "rate" | "amount";
+  discount_value?: number;
 };
 
 export enum OrderInvoiceTypesEnum {
