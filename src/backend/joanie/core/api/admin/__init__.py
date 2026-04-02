@@ -779,7 +779,7 @@ class OrderViewSet(
 
     def perform_create(self, serializer):
         """Create a standalone to_own order with a 100% voucher."""
-        order = serializer.save(owner=None)
+        order = serializer.save(owner=None, nature=enums.ORDER_NATURE_CPF)
         discount, _ = models.Discount.objects.get_or_create(rate=1)
         order.voucher = models.Voucher.objects.create(
             discount=discount,

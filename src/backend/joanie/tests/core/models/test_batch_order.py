@@ -473,6 +473,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
                         self.assertIsNone(order.owner)
                         self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
                         self.assertEqual(order.voucher.discount.rate, 1)
+                        self.assertEqual(order.nature, enums.ORDER_NATURE_B2B)
                 else:
                     with self.assertRaises(ValidationError) as context:
                         batch_order.generate_orders()

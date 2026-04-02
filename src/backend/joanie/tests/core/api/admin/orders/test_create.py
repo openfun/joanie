@@ -102,6 +102,9 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_TO_OWN)
         self.assertIsNone(order.owner)
 
+        # Order nature should be CPF
+        self.assertEqual(order.nature, enums.ORDER_NATURE_CPF)
+
         # A 100% voucher should be attached
         self.assertIsNotNone(order.voucher)
         self.assertEqual(order.voucher.discount.rate, 1)
