@@ -2,6 +2,7 @@ import { defineMessages } from "react-intl";
 import {
   OrderInvoiceStatusEnum,
   OrderInvoiceTypesEnum,
+  OrderNatureEnum,
   OrderStatesEnum,
 } from "@/services/api/models/Order";
 
@@ -71,6 +72,11 @@ export const orderViewMessages = defineMessages({
     id: "components.templates.orders.view.state",
     defaultMessage: "State",
     description: "State field",
+  },
+  nature: {
+    id: "components.templates.orders.view.nature",
+    defaultMessage: "Nature",
+    description: "Nature field",
   },
   price: {
     id: "components.templates.orders.view.price",
@@ -229,6 +235,24 @@ export const invoiceStatusMessages = defineMessages<OrderInvoiceStatusEnum>({
     id: "components.templates.orders.view.orderStatus.refunded",
     defaultMessage: "Refunded",
     description: "Text for refunded status",
+  },
+});
+
+export const orderNatureMessages = defineMessages<OrderNatureEnum>({
+  b2c: {
+    id: "components.templates.orders.view.orderNatureMessages.b2c",
+    defaultMessage: "B2C",
+    description: "Text for B2C order nature",
+  },
+  b2b: {
+    id: "components.templates.orders.view.orderNatureMessages.b2b",
+    defaultMessage: "B2B",
+    description: "Text for B2B order nature",
+  },
+  cpf: {
+    id: "components.templates.orders.view.orderNatureMessages.cpf",
+    defaultMessage: "CPF",
+    description: "Text for CPF order nature",
   },
 });
 

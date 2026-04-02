@@ -8,11 +8,18 @@ import { Enrollment } from "@/services/api/models/Enrollment";
 import { Nullable } from "@/types/utils";
 import { GeneratedCertificate } from "@/services/api/models/GeneratedCertificate";
 
+export enum OrderNatureEnum {
+  B2C = "b2c",
+  B2B = "b2b",
+  CPF = "cpf",
+}
+
 export type AbstractOrder = {
   id: string;
   created_on: string;
   updated_on: string;
   state: OrderStatesEnum;
+  nature: OrderNatureEnum;
   total: number;
   total_currency: string;
 };
@@ -153,6 +160,7 @@ export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
     owner_name: order.owner.full_name ?? order.owner.username,
     product_title: order.product.title,
     state: order.state,
+    nature: order.nature,
     total: order.total,
     total_currency: order.total_currency,
     voucher: order.voucher?.code ?? null,
