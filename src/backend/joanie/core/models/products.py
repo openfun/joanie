@@ -2748,6 +2748,15 @@ class BatchOrder(BaseModel):
             and not self.total
         )
 
+    def can_download_quote(self) -> bool:
+        """Check if the quote can be downloaded"""
+        return (
+            not self.is_canceled
+            and self.has_quote
+            and self.quote.is_signed_by_organization
+            and self.quote.has_total
+        )
+
     def can_confirm_purchase_order(self) -> bool:
         """Check if the purchase order can be confirmed"""
         return (
@@ -2818,6 +2827,7 @@ class BatchOrder(BaseModel):
         """Return the available admin actions for the batch order"""
         actions = {
             "confirm_quote": self.can_confirm_quote(),
+            "download_quote": self.can_download_quote(),
             "confirm_purchase_order": self.can_confirm_purchase_order(),
             "confirm_bank_transfer": self.can_confirm_bank_transfer(),
             "submit_for_signature": self.can_submit_for_signature(),
@@ -2827,7 +2837,7 @@ class BatchOrder(BaseModel):
         }
 
         for key, value in actions.items():
-            if value and key not in ("cancel", "next_action"):
+            if value and key not in ("cancel", "next_action", "download_quote"):
                 actions["next_action"] = key
                 break
 

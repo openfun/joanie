@@ -208,6 +208,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 ],
                 "available_actions": {
                     "confirm_quote": False,
+                    "download_quote": True,
                     "confirm_purchase_order": False,
                     "confirm_bank_transfer": False,
                     "submit_for_signature": False,
@@ -368,6 +369,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "orders": [],
                 "available_actions": {
                     "confirm_quote": False,
+                    "download_quote": True,
                     "confirm_purchase_order": False,
                     "confirm_bank_transfer": False,
                     "submit_for_signature": True,
@@ -561,6 +563,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 ],
                 "available_actions": {
                     "confirm_quote": False,
+                    "download_quote": True,
                     "confirm_purchase_order": False,
                     "confirm_bank_transfer": False,
                     "submit_for_signature": False,
@@ -598,6 +601,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
         self.assertDictEqual(
             {
                 "confirm_quote": True,
+                "download_quote": False,
                 "confirm_purchase_order": False,
                 "confirm_bank_transfer": False,
                 "submit_for_signature": False,
@@ -619,6 +623,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
         self.assertDictEqual(
             {
                 "confirm_quote": False,
+                "download_quote": True,
                 "confirm_purchase_order": False,
                 "confirm_bank_transfer": False,
                 "submit_for_signature": False,
@@ -641,6 +646,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
         self.assertDictEqual(
             {
                 "confirm_quote": False,
+                "download_quote": True,
                 "confirm_purchase_order": False,
                 "confirm_bank_transfer": False,
                 "submit_for_signature": True,
@@ -658,6 +664,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
         self.assertDictEqual(
             {
                 "confirm_quote": False,
+                "download_quote": True,
                 "confirm_purchase_order": False,
                 "confirm_bank_transfer": False,
                 "submit_for_signature": False,
