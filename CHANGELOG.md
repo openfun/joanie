@@ -22,6 +22,8 @@ and this project adheres to
 - Add `OfferingDeepLink` model to store links of offering
   to purchase a training from an external platform
 - Allow organization members to download signed agreements as PDF
+- Add nature field (B2C, B2B, CPF) to orders with display and
+  filter in admin backoffice
 
 ### Fixed
 
