@@ -76,6 +76,7 @@ export type OrderListQuery = ResourcesQuery & {
   organizationId?: string;
   ownerId?: string;
   state?: string;
+  nature?: string;
   discount?: string;
   voucher?: string;
 };

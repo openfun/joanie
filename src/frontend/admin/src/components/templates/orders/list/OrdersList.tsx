@@ -19,7 +19,10 @@ import { PATH_ADMIN } from "@/utils/routes/path";
 import { commonTranslations } from "@/translations/common/commonTranslations";
 import { OrderFilters } from "@/components/templates/orders/filters/OrderFilters";
 import { formatShortDate } from "@/utils/dates";
-import { orderStatesMessages } from "@/components/templates/orders/view/translations";
+import {
+  orderNatureMessages,
+  orderStatesMessages,
+} from "@/components/templates/orders/view/translations";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 const messages = defineMessages({
@@ -67,6 +70,11 @@ const messages = defineMessages({
     id: "components.templates.orders.list.discount",
     defaultMessage: "Discount",
     description: "Label for the discount header inside the table",
+  },
+  nature: {
+    id: "components.templates.orders.list.nature",
+    defaultMessage: "Nature",
+    description: "Label for the nature header inside the table",
   },
   voucher: {
     id: "components.templates.orders.list.voucher",
@@ -120,6 +128,12 @@ export function OrdersList(props: Props) {
       headerName: intl.formatMessage(messages.state),
       flex: 1,
       valueGetter: (value) => intl.formatMessage(orderStatesMessages[value]),
+    },
+    {
+      field: "nature",
+      headerName: intl.formatMessage(messages.nature),
+      flex: 0.5,
+      valueGetter: (value) => intl.formatMessage(orderNatureMessages[value]),
     },
     {
       field: "created_on",

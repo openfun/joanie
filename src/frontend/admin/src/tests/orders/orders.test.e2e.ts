@@ -20,7 +20,10 @@ import {
 import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations/organization-mock";
 import { closeAllNotification, delay } from "@/components/testing/utils";
 import { formatShortDateTest } from "@/tests/utils";
-import { orderStatesMessages } from "@/components/templates/orders/view/translations";
+import {
+  orderNatureMessages,
+  orderStatesMessages,
+} from "@/components/templates/orders/view/translations";
 
 const url = "http://localhost:8071/api/v1.0/admin/orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -86,6 +89,9 @@ test.describe("Order view", () => {
     );
 
     await expect(page.getByLabel("Price")).toHaveValue(order.total + "");
+    await expect(page.getByLabel("Nature", { exact: true })).toHaveValue(
+      orderNatureMessages[order.nature].defaultMessage as string,
+    );
     await page.getByRole("button", { name: "Invoice details" }).click();
     await expect(page.getByLabel("Type")).toHaveValue(
       order.main_invoice.type === OrderInvoiceTypesEnum.INVOICE
@@ -591,6 +597,9 @@ test.describe("Order list", () => {
     await expect(
       page.getByRole("columnheader", { name: "Voucher" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Nature" }),
+    ).toBeVisible();
   });
 
   test("Check all the orders are presents", async ({ page }) => {
@@ -612,6 +621,11 @@ test.describe("Order list", () => {
         await expect(
           rowLocator.getByRole("gridcell", {
             name: orderStatesMessages[order.state].defaultMessage,
+          }),
+        ).toBeVisible();
+        await expect(
+          rowLocator.getByRole("gridcell", {
+            name: orderNatureMessages[order.nature].defaultMessage,
           }),
         ).toBeVisible();
         await expect(

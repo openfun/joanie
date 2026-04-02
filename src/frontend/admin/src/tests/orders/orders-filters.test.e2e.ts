@@ -86,6 +86,9 @@ test.describe("Order filters", () => {
     await expect(
       page.getByTestId("select-order-state-filter").getByLabel("State"),
     ).toBeVisible();
+    await expect(
+      page.getByTestId("select-order-nature-filter").getByLabel("Nature"),
+    ).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Product" })).toBeVisible();
     await expect(page.getByLabel("Course")).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Owner" })).toBeVisible();
@@ -103,6 +106,11 @@ test.describe("Order filters", () => {
       .getByLabel("State")
       .click();
     await page.getByRole("option", { name: "Completed" }).click();
+    await page
+      .getByTestId("select-order-nature-filter")
+      .getByLabel("Nature")
+      .click();
+    await page.getByRole("option", { name: "B2B" }).click();
     await page.getByTestId("custom-modal").getByLabel("Product").click();
 
     await page.getByTestId("custom-modal").getByLabel("Product").fill("p");
@@ -121,6 +129,9 @@ test.describe("Order filters", () => {
     await page.getByLabel("close").click();
     await expect(
       page.getByRole("button", { name: "State: Completed" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Nature: B2B" }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: `Product: ${store.products[0].title}` }),
@@ -154,6 +165,11 @@ test.describe("Order filters", () => {
       .getByLabel("State")
       .click();
     await page.getByRole("option", { name: "Completed" }).click();
+    await page
+      .getByTestId("select-order-nature-filter")
+      .getByLabel("Nature")
+      .click();
+    await page.getByRole("option", { name: "CPF" }).click();
     await page.getByLabel("close").click();
 
     await page.getByRole("button", { name: "Export" }).click();
@@ -162,7 +178,7 @@ test.describe("Order filters", () => {
     await page.getByRole("button", { name: "Export" }).click();
     await pagePromise;
     expect(exportRequestUrl).toBe(
-      "http://localhost:8071/api/v1.0/admin/orders/export/?state=completed",
+      "http://localhost:8071/api/v1.0/admin/orders/export/?nature=cpf&state=completed",
     );
   });
 });
