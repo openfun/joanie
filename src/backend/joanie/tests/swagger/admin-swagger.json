@@ -9285,6 +9285,14 @@
                         "format": "uuid",
                         "description": "primary key for the record as UUID",
                         "nullable": true
+                    },
+                    "discount_type": {
+                        "$ref": "#/components/schemas/DiscountTypeEnum"
+                    },
+                    "discount_value": {
+                        "type": "string",
+                        "format": "decimal",
+                        "pattern": "^-?\\d{0,8}(?:\\.\\d{0,2})?$"
                     }
                 },
                 "required": [
@@ -10934,6 +10942,14 @@
                 ],
                 "type": "string",
                 "description": "* `owner` - owner\n* `administrator` - administrator\n* `instructor` - instructor\n* `manager` - manager"
+            },
+            "DiscountTypeEnum": {
+                "enum": [
+                    "rate",
+                    "amount"
+                ],
+                "type": "string",
+                "description": "* `rate` - rate\n* `amount` - amount"
             },
             "EnrollmentStateEnum": {
                 "enum": [
