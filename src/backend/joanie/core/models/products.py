@@ -1150,6 +1150,13 @@ class Order(BaseModel):
         blank=True,
         null=True,
     )
+    nature = models.CharField(
+        max_length=3,
+        choices=enums.ORDER_NATURE_CHOICES,
+        default=enums.ORDER_NATURE_B2C,
+        verbose_name=_("nature"),
+        db_index=True,
+    )
 
     class Meta:
         db_table = "joanie_order"
