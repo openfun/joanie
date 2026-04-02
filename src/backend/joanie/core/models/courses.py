@@ -1002,7 +1002,7 @@ class OfferingDeepLink(BaseModel):
 
         if self.offering.product.type != enums.PRODUCT_TYPE_CREDENTIAL:  # pylint:disable=no-member
             raise ValidationError(
-                _("Only product type credentials are allowed to have deep link")
+                _("Only product type credentials are allowed to have deep link.")
             )
 
         return super().clean()
