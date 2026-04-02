@@ -117,4 +117,103 @@ describe("<OrderCreateForm />", () => {
     await screen.findByRole("button", { name: "Submit" });
     expect(afterSubmit).toHaveBeenCalledWith(createdOrder);
   });
+
+  it("shows the full discount checkbox checked by default and hides discount fields", async () => {
+    render(<OrderCreateForm />, { wrapper: TestingWrapper });
+    const checkbox = await screen.findByRole("checkbox", {
+      name: "Full discount (100%)",
+    });
+    expect(checkbox).toBeChecked();
+    expect(screen.queryByLabelText("Value")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Type")).not.toBeInTheDocument();
+  });
+
+  it("shows discount fields when full discount checkbox is unchecked", async () => {
+    render(<OrderCreateForm />, { wrapper: TestingWrapper });
+    const checkbox = await screen.findByRole("checkbox", {
+      name: "Full discount (100%)",
+    });
+    await userEvent.click(checkbox);
+    expect(checkbox).not.toBeChecked();
+    await screen.findByLabelText("Value");
+    await screen.findByLabelText("Type");
+  });
+
+  it("hides discount fields when full discount checkbox is re-checked", async () => {
+    render(<OrderCreateForm />, { wrapper: TestingWrapper });
+    const checkbox = await screen.findByRole("checkbox", {
+      name: "Full discount (100%)",
+    });
+    await userEvent.click(checkbox);
+    await screen.findByLabelText("Value");
+    await userEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
+    expect(screen.queryByLabelText("Value")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Type")).not.toBeInTheDocument();
+  });
+
+  it("sends discount_type and discount_value when full discount is unchecked", async () => {
+    const createdOrder = OrderFactory();
+    let capturedBody: any;
+    server.use(
+      http.post(buildApiUrl(orderRoutes.create()), async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json(createdOrder, { status: 201 });
+      }),
+    );
+
+    const afterSubmit = jest.fn();
+    render(<OrderCreateForm afterSubmit={afterSubmit} />, {
+      wrapper: TestingWrapper,
+    });
+
+    const combobox = await screen.findByRole("combobox", { name: "Offering" });
+    await userEvent.click(combobox);
+    await userEvent.click(
+      await screen.findByText("Single Org Product — Single Org Course"),
+    );
+
+    const checkbox = screen.getByRole("checkbox", {
+      name: "Full discount (100%)",
+    });
+    await userEvent.click(checkbox);
+
+    const valueInput = await screen.findByLabelText("Value");
+    await userEvent.type(valueInput, "50");
+
+    await userEvent.click(screen.getByRole("button", { name: "Submit" }));
+    await screen.findByRole("button", { name: "Submit" });
+
+    expect(afterSubmit).toHaveBeenCalled();
+    expect(capturedBody.discount_type).toBe("amount");
+    expect(capturedBody.discount_value).toBe(50);
+  });
+
+  it("does not send discount fields when full discount is checked", async () => {
+    const createdOrder = OrderFactory();
+    let capturedBody: any;
+    server.use(
+      http.post(buildApiUrl(orderRoutes.create()), async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json(createdOrder, { status: 201 });
+      }),
+    );
+
+    const afterSubmit = jest.fn();
+    render(<OrderCreateForm afterSubmit={afterSubmit} />, {
+      wrapper: TestingWrapper,
+    });
+
+    const combobox = await screen.findByRole("combobox", { name: "Offering" });
+    await userEvent.click(combobox);
+    await userEvent.click(
+      await screen.findByText("Single Org Product — Single Org Course"),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Submit" }));
+    await screen.findByRole("button", { name: "Submit" });
+
+    expect(afterSubmit).toHaveBeenCalled();
+    expect(capturedBody.discount_type).toBeUndefined();
+    expect(capturedBody.discount_value).toBeUndefined();
+  });
 });

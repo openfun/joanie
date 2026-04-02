@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Update Volta configuration with yarn fixed version
+- Allow custom discount (percentage or fixed amount) when creating admin orders
 
 ## [3.3.0] - 2026-04-09
 
