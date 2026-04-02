@@ -109,6 +109,7 @@ def generate_orders(batch_order_id: str):
             product=batch_order.relation.product,
             course=batch_order.relation.course,
             organization=batch_order.organization,
+            nature=enums.ORDER_NATURE_B2B,
         )
         if batch_order.offering_rules.exists():
             order.offering_rules.add(batch_order.offering_rules.first())
