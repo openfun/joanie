@@ -119,6 +119,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "batch_order": str(order.batch_order.id)
                     if order.batch_order
                     else None,
+                    "nature": order.nature,
                 }
                 for order in sorted(orders, key=lambda x: x.created_on, reverse=True)
             ],
@@ -184,6 +185,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "discount": "-50%",
                     "voucher": order_voucher.voucher.code,
                     "batch_order": None,
+                    "nature": enums.ORDER_NATURE_B2C,
                 },
                 {
                     "course_code": order_rule.course.code,
@@ -200,6 +202,7 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "discount": "-10% (100.00 €) Deal!",
                     "voucher": None,
                     "batch_order": None,
+                    "nature": enums.ORDER_NATURE_B2C,
                 },
             ],
         }
@@ -1187,3 +1190,33 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.OK)
         self.assertEqual(response.json()["count"], 3)
+
+    def test_api_admin_orders_filter_by_nature(self):
+        """
+        Authenticated admin user should be able to filter orders by nature.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        # B2C orders
+        factories.OrderFactory.create_batch(3)
+        # B2B orders via batch order
+        factories.BatchOrderFactory(
+            nb_seats=2,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        # CPF orders
+        factories.OrderFactory.create_batch(4, nature=enums.ORDER_NATURE_CPF)
+
+        response = self.client.get("/api/v1.0/admin/orders/?nature=b2c")
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 3)
+
+        response = self.client.get("/api/v1.0/admin/orders/?nature=b2b")
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 2)
+
+        response = self.client.get("/api/v1.0/admin/orders/?nature=cpf")
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(response.json()["count"], 4)

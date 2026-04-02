@@ -190,6 +190,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "orders": [
                     {
                         "batch_order": str(batch_order.id),
+                        "nature": order.nature,
                         "course_code": order.course.code,
                         "created_on": format_date(order.created_on),
                         "updated_on": format_date(order.updated_on),
@@ -537,6 +538,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                 "orders": [
                     {
                         "batch_order": str(batch_order.id),
+                        "nature": order.nature,
                         "course_code": order.course.code if order.course else None,
                         "created_on": format_date(order.created_on),
                         "updated_on": format_date(order.updated_on),

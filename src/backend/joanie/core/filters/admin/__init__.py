@@ -298,6 +298,7 @@ class OrderAdminFilterSet(filters.FilterSet):
         distinct=True,
     )
     state = filters.ChoiceFilter(choices=enums.ORDER_STATE_CHOICES)
+    nature = filters.ChoiceFilter(choices=enums.ORDER_NATURE_CHOICES)
     ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
     product_type = filters.MultipleChoiceFilter(
         field_name="product__type",

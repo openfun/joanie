@@ -79,6 +79,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "created_on": format_date(order.created_on),
                 "state": order.state,
                 "batch_order": None,
+                "nature": order.nature,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -270,6 +271,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "created_on": format_date(order.created_on),
                 "state": order.state,
                 "batch_order": None,
+                "nature": order.nature,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -403,6 +405,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "created_on": format_date(order.created_on),
                 "state": order.state,
                 "batch_order": str(batch_order.id),
+                "nature": order.nature,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
@@ -531,6 +534,7 @@ class OrdersAdminApiRetrieveTestCase(BaseAPITestCase):
                 "created_on": format_date(order.created_on),
                 "state": order.state,
                 "batch_order": None,
+                "nature": order.nature,
                 "owner": {
                     "id": str(order.owner.id),
                     "username": order.owner.username,
