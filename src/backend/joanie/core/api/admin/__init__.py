@@ -770,9 +770,23 @@ class OrderViewSet(
     filter_backends = [DjangoFilterBackend, AliasOrderingFilter]
 
     def perform_create(self, serializer):
-        """Create a standalone to_own order with a 100% voucher."""
+        """Create a standalone to_own order with a voucher."""
+        discount_type = serializer.validated_data.pop("discount_type", None)
+        discount_value = serializer.validated_data.pop("discount_value", None)
+
         order = serializer.save(owner=None)
-        discount, _ = models.Discount.objects.get_or_create(rate=1)
+
+        if discount_type == "rate":
+            discount, _ = models.Discount.objects.get_or_create(
+                rate=float(discount_value / 100)
+            )
+        elif discount_type == "amount":
+            discount, _ = models.Discount.objects.get_or_create(
+                amount=int(discount_value)
+            )
+        else:
+            discount, _ = models.Discount.objects.get_or_create(rate=1)
+
         order.voucher = models.Voucher.objects.create(
             discount=discount,
             multiple_use=False,
