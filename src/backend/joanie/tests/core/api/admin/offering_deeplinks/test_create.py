@@ -176,6 +176,33 @@ class OfferingDeepLinkCreateAdminApiTestCase(BaseAPITestCase):
 
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
 
+    def test_admin_api_create_deeplink_on_offering_where_product_type_certificate(self):
+        """
+        Admin authenticated user should not be able to create a deeplink on an offering
+        where the product is type certificate.
+        """
+        staff = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=staff.username, password="password")
+        organization = factories.OrganizationFactory()
+        offering = factories.OfferingFactory(
+            product__type="certificate", organizations=[organization]
+        )
+
+        response = self.client.post(
+            f"/api/v1.0/admin/offerings/{offering.id}/offering-deep-links/",
+            data={
+                "organization_id": str(organization.id),
+                "deep_link": "https//test-deeplink-3.com/",
+            },
+            content_type="application/json",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            "Only product type credentials are allowed to have deep link.",
+            response.json(),
+        )
+
     def test_admin_api_create_offering_deeplink_authenticated_superuser(self):
         """
         Authenticated admin user should be to create a deep link of an offering
