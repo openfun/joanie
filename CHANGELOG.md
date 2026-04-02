@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add download quote action when total is set for batch order admin API
 - Add list of seats of batch order in API client for buyer and organization
 - Reject voucher codes from prepaid orders when used on a different offering
 - Add voucher code copy-to-clipboard in orders list

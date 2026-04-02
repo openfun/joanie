@@ -3,13 +3,14 @@ Admin API Endpoints
 """
 
 # pylint:disable=too-many-lines
+import io
 from http import HTTPStatus
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import FileResponse, JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -36,6 +37,7 @@ from joanie.core.tasks import (
     generate_orders_and_send_vouchers_task,
     update_organization_signatories_contracts_task,
 )
+from joanie.core.utils import contract_definition, issuers
 from joanie.core.utils.batch_order import (
     get_active_offering_rule,
     send_mail_invitation_link,
@@ -1044,6 +1046,40 @@ class BatchOrderViewSet(
         batch_order.freeze_total(total)
 
         return Response(status=HTTPStatus.OK)
+
+    @extend_schema(
+        responses={
+            (200, "application/pdf"): OpenApiTypes.BINARY,
+            400: serializers.ErrorResponseSerializer,
+            404: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="download-quote",
+    )
+    def download_quote(self, request, *args, **kwargs):
+        """
+        When the batch order has a total, the related quote can be downloaded.
+        """
+        quote = self.get_object().quote
+
+        if not quote.has_total:
+            raise ValidationError("Quote does not have total, cannot download.")
+
+        context_with_images = contract_definition.embed_images_in_context(quote.context)
+        quote_pdf_bytes = issuers.generate_document(
+            name=quote.definition.name, context=context_with_images
+        )
+        quote_pdf_bytes_io = io.BytesIO(quote_pdf_bytes)
+        quote_pdf_bytes_io.seek(0)
+
+        return FileResponse(
+            quote_pdf_bytes_io,
+            as_attachment=True,
+            filename=f"{quote.definition.title}-{quote.id}.pdf".replace(" ", "_"),
+        )
 
     @action(
         methods=["PATCH"],
