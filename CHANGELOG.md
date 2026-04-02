@@ -29,6 +29,8 @@ and this project adheres to
 
 - Translate raw enum values in CSV exports
 - Hide deep link management from the product offering view in admin
+- Require organization selection in order create form when
+  multiple organizations are available
 
 ### Changed
 
