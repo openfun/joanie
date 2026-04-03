@@ -601,6 +601,54 @@ test.describe("Offering", () => {
     ).toBeVisible();
   });
 
+  test("Show backend error message when deep link creation fails with 400 and error body", async ({
+    page,
+  }) => {
+    const course = store.list[0];
+    const offering = course.offerings![0];
+    const organization = offering.organizations[0];
+
+    await store.mockDeepLink(page, store.deepLinks);
+    await store.mockCourseRunsFromCourse(page, []);
+    await page.route(
+      catchAllIdRegex(
+        "http://localhost:8071/api/v1.0/admin/offerings/:uuid/offering-deep-links/",
+        ":uuid",
+      ),
+      async (route, request) => {
+        if (request.method() === "POST") {
+          await route.fulfill({
+            status: 400,
+            contentType: "application/json",
+            body: JSON.stringify(
+              "Only product type credentials are allowed to have deep link.",
+            ),
+          });
+        } else {
+          await route.fallback();
+        }
+      },
+    );
+    await page.goto(PATH_ADMIN.courses.list);
+    await page.getByRole("link", { name: course.title }).click();
+    await page.getByRole("tab", { name: "Products" }).click();
+
+    await page.getByRole("button", { name: "Add deep link" }).first().click();
+    await expect(
+      page.getByRole("heading", { name: "Add a deep link" }),
+    ).toBeVisible();
+    await page.getByLabel("Organization").click();
+    await page.getByRole("option", { name: organization.title }).click();
+    await page.getByLabel("Deep link URL").fill("https://example.com/course");
+    await page.getByRole("button", { name: "Submit" }).click();
+
+    await expect(
+      page.getByText(
+        "Only product type credentials are allowed to have deep link.",
+      ),
+    ).toBeVisible();
+  });
+
   test("Cannot delete active deep link, deactivate then delete", async ({
     page,
   }) => {
