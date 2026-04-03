@@ -26,6 +26,7 @@ and this project adheres to
 ### Fixed
 
 - Translate raw enum values in CSV exports
+- Hide deep link management from the product offering view in admin
 
 ## [3.2.2] - 2026-03-20
 
