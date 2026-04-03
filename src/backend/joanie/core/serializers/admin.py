@@ -1455,6 +1455,8 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
 class AdminOrderCreateSerializer(serializers.ModelSerializer):
     """Write serializer for creating an Order in to_own state."""
 
+    DISCOUNT_TYPE_CHOICES = [("rate", "rate"), ("amount", "amount")]
+
     product_id = serializers.PrimaryKeyRelatedField(
         source="product",
         queryset=models.Product.objects.all(),
@@ -1472,10 +1474,44 @@ class AdminOrderCreateSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
     )
+    discount_type = serializers.ChoiceField(
+        choices=DISCOUNT_TYPE_CHOICES,
+        required=False,
+    )
+    discount_value = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+    )
 
     class Meta:
         model = models.Order
-        fields = ("product_id", "course_code", "organization_id")
+        fields = (
+            "product_id",
+            "course_code",
+            "organization_id",
+            "discount_type",
+            "discount_value",
+        )
+
+    def validate(self, attrs):
+        discount_type = attrs.get("discount_type")
+        discount_value = attrs.get("discount_value")
+        if bool(discount_type) != bool(discount_value is not None):
+            raise serializers.ValidationError(
+                _("discount_type and discount_value must be provided together.")
+            )
+        if discount_type == "rate" and discount_value is not None:
+            if discount_value <= 0 or discount_value > 100:  # noqa: PLR2004
+                raise serializers.ValidationError(
+                    {"discount_value": _("Rate must be between 1 and 100.")}
+                )
+        if discount_type == "amount" and discount_value is not None:
+            if discount_value <= 0 or discount_value != int(discount_value):
+                raise serializers.ValidationError(
+                    {"discount_value": _("Amount must be a positive whole number.")}
+                )
+        return attrs
 
 
 class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disable=too-many-public-methods

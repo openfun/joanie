@@ -6,6 +6,7 @@ import {
   mockPlaywrightCrud,
 } from "@/tests/useResourceHandler";
 import {
+  DTOOrderCreate,
   OrderInvoiceTypesEnum,
   OrderListItem,
   OrderStatesEnum,
@@ -21,6 +22,12 @@ import { ORGANIZATION_OPTIONS_REQUEST_RESULT } from "@/tests/mocks/organizations
 import { closeAllNotification, delay } from "@/components/testing/utils";
 import { formatShortDateTest } from "@/tests/utils";
 import { orderStatesMessages } from "@/components/templates/orders/view/translations";
+import {
+  OfferingFactory,
+  Offering,
+  DTOOffering,
+} from "@/services/api/models/Offerings";
+import { OrderFactory } from "@/services/factories/orders";
 
 const url = "http://localhost:8071/api/v1.0/admin/orders/";
 const catchIdRegex = getUrlCatchIdRegex(url);
@@ -649,5 +656,163 @@ test.describe("Order list", () => {
       .allInnerTexts();
     expect(titles).not.toHaveLength(0);
     expect(titles).toEqual(titles.toSorted().reverse());
+  });
+});
+
+test.describe("Order create", () => {
+  let offerings: Offering[];
+
+  test.beforeEach(async ({ page }) => {
+    offerings = [OfferingFactory()];
+    offerings[0].product.title = "Test Product";
+    offerings[0].course.title = "Test Course";
+    offerings[0].organizations = [offerings[0].organizations[0]];
+
+    await mockPlaywrightCrud<Offering, DTOOffering>({
+      data: offerings,
+      routeUrl: "http://localhost:8071/api/v1.0/admin/offerings/",
+      page,
+    });
+  });
+
+  test("Full discount checkbox is checked by default and hides discount fields", async ({
+    page,
+  }) => {
+    await page.goto(PATH_ADMIN.orders.create);
+    const checkbox = page.getByRole("checkbox", {
+      name: "Full discount (100%)",
+    });
+    await expect(checkbox).toBeChecked();
+    await expect(page.getByLabel("Value")).not.toBeVisible();
+    await expect(page.getByLabel("Type", { exact: true })).not.toBeVisible();
+  });
+
+  test("Unchecking full discount shows value and type fields", async ({
+    page,
+  }) => {
+    await page.goto(PATH_ADMIN.orders.create);
+    const checkbox = page.getByRole("checkbox", {
+      name: "Full discount (100%)",
+    });
+    await checkbox.click();
+    await expect(checkbox).not.toBeChecked();
+    await expect(page.getByLabel("Value")).toBeVisible();
+    await expect(page.getByLabel("Type", { exact: true })).toBeVisible();
+  });
+
+  test("Re-checking full discount hides discount fields", async ({ page }) => {
+    await page.goto(PATH_ADMIN.orders.create);
+    const checkbox = page.getByRole("checkbox", {
+      name: "Full discount (100%)",
+    });
+    await checkbox.click();
+    await expect(page.getByLabel("Value")).toBeVisible();
+    await checkbox.click();
+    await expect(checkbox).toBeChecked();
+    await expect(page.getByLabel("Value")).not.toBeVisible();
+  });
+
+  test("Submit with full discount does not send discount fields", async ({
+    page,
+  }) => {
+    const createdOrder = OrderFactory();
+    let capturedBody: DTOOrderCreate | undefined;
+
+    await page.route(
+      "http://localhost:8071/api/v1.0/admin/orders/",
+      async (route, request) => {
+        if (request.method() === "POST") {
+          capturedBody = request.postDataJSON();
+          await route.fulfill({ json: createdOrder, status: 201 });
+        } else {
+          await route.fallback();
+        }
+      },
+    );
+
+    await page.goto(PATH_ADMIN.orders.create);
+
+    const combobox = page.getByRole("combobox", { name: "Offering" });
+    await combobox.click();
+    await page.getByText("Test Product — Test Course").click();
+    await page.getByRole("button", { name: "Submit" }).click();
+    await page.waitForURL(/\/orders\//);
+
+    expect(capturedBody).toBeDefined();
+    expect(capturedBody!.discount_type).toBeUndefined();
+    expect(capturedBody!.discount_value).toBeUndefined();
+  });
+
+  test("Submit with fixed amount discount sends discount fields", async ({
+    page,
+  }) => {
+    const createdOrder = OrderFactory();
+    let capturedBody: DTOOrderCreate | undefined;
+
+    await page.route(
+      "http://localhost:8071/api/v1.0/admin/orders/",
+      async (route, request) => {
+        if (request.method() === "POST") {
+          capturedBody = request.postDataJSON();
+          await route.fulfill({ json: createdOrder, status: 201 });
+        } else {
+          await route.fallback();
+        }
+      },
+    );
+
+    await page.goto(PATH_ADMIN.orders.create);
+
+    const combobox = page.getByRole("combobox", { name: "Offering" });
+    await combobox.click();
+    await page.getByText("Test Product — Test Course").click();
+
+    await page.getByRole("checkbox", { name: "Full discount (100%)" }).click();
+    await page.getByLabel("Value").fill("150");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await page.waitForURL(/\/orders\//);
+
+    expect(capturedBody).toBeDefined();
+    expect(capturedBody!.discount_type).toBe("amount");
+    expect(capturedBody!.discount_value).toBe(150);
+  });
+
+  test("Submit with percentage discount sends correct discount type", async ({
+    page,
+  }) => {
+    const createdOrder = OrderFactory();
+    let capturedBody: DTOOrderCreate | undefined;
+
+    await page.route(
+      "http://localhost:8071/api/v1.0/admin/orders/",
+      async (route, request) => {
+        if (request.method() === "POST") {
+          capturedBody = request.postDataJSON();
+          await route.fulfill({ json: createdOrder, status: 201 });
+        } else {
+          await route.fallback();
+        }
+      },
+    );
+
+    await page.goto(PATH_ADMIN.orders.create);
+
+    const combobox = page.getByRole("combobox", { name: "Offering" });
+    await combobox.click();
+    await page.getByText("Test Product — Test Course").click();
+
+    await page.getByRole("checkbox", { name: "Full discount (100%)" }).click();
+
+    // Change type to percentage
+    await page.getByLabel("Type", { exact: true }).click();
+    await page.getByRole("option", { name: "Percentage" }).click();
+
+    await page.getByLabel("Value").fill("50");
+    await page.getByRole("button", { name: "Submit" }).click();
+    await page.waitForURL(/\/orders\//);
+
+    expect(capturedBody).toBeDefined();
+    expect(capturedBody!.discount_type).toBe("rate");
+    expect(capturedBody!.discount_value).toBe(50);
   });
 });
