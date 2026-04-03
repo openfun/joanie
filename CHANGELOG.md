@@ -31,6 +31,7 @@ and this project adheres to
 - Hide deep link management from the product offering view in admin
 - Require organization selection in order create form when
   multiple organizations are available
+- Display backend error message in snackbar for deep link operations
 
 ### Changed
 

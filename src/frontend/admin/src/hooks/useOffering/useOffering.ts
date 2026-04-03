@@ -14,6 +14,7 @@ import {
   DTOCreateOfferingDeepLink,
   DTOUpdateOfferingDeepLink,
 } from "@/services/api/models/OfferingDeepLink";
+import { HttpError } from "@/services/http/HttpError";
 
 const messages = defineMessages({
   errorUpdate: {
@@ -199,9 +200,11 @@ export const useOfferings = (
             data.payload,
           );
         },
-        onError: () => {
+        onError: (error: HttpError) => {
+          const detail =
+            typeof error.data === "string" ? error.data : error.data?.details;
           custom.methods.setError(
-            intl.formatMessage(messages.errorCreateDeepLink),
+            detail ?? intl.formatMessage(messages.errorCreateDeepLink),
           );
         },
       }).mutate,
@@ -217,9 +220,11 @@ export const useOfferings = (
             data.payload,
           );
         },
-        onError: () => {
+        onError: (error: HttpError) => {
+          const detail =
+            typeof error.data === "string" ? error.data : error.data?.details;
           custom.methods.setError(
-            intl.formatMessage(messages.errorUpdateDeepLink),
+            detail ?? intl.formatMessage(messages.errorUpdateDeepLink),
           );
         },
       }).mutate,
@@ -233,9 +238,11 @@ export const useOfferings = (
             data.deepLinkId,
           );
         },
-        onError: () => {
+        onError: (error: HttpError) => {
+          const detail =
+            typeof error.data === "string" ? error.data : error.data?.details;
           custom.methods.setError(
-            intl.formatMessage(messages.errorDeleteDeepLink),
+            detail ?? intl.formatMessage(messages.errorDeleteDeepLink),
           );
         },
       }).mutate,
