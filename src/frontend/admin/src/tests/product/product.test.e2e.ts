@@ -583,6 +583,17 @@ test.describe("Product form", () => {
       }),
     );
 
+    // Deep link buttons should not be rendered on the product view
+    await expect(
+      page.getByRole("button", { name: "Add deep link" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Activate all deep links" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Deactivate all deep links" }),
+    ).toHaveCount(0);
+
     // Test click on course title and open another tab
     await page.getByRole("link", { name: offerings[0].course.title }).click();
     await page.route(

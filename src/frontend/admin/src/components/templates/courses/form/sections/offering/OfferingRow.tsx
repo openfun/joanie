@@ -163,6 +163,7 @@ export function OfferingRow({
   onClickDelete,
   source,
 }: Props) {
+  const isCourse = source === OfferingSource.COURSE;
   const intl = useIntl();
 
   const jobQuery = useQuery({
@@ -202,6 +203,7 @@ export function OfferingRow({
   const deepLinksQuery = useQuery({
     queryKey: ["offering-deep-links", offering.id],
     queryFn: () => OfferingRepository.getDeepLinks(offering.id),
+    enabled: isCourse,
   });
 
   const { items: deepLinkDummyList, ...deepLinkDummyListMethods } =
@@ -514,73 +516,77 @@ export function OfferingRow({
           >
             <FormattedMessage {...messages.addOfferingRuleButton} />
           </Button>
-          <Divider />
-          {deepLinkList.map((deepLink, orderIndex) => (
-            <OfferingDeepLinkRow
-              key={deepLink.id}
-              deepLink={deepLink}
-              organizations={offering.organizations}
-              onDelete={() => {
-                setCurrentDeepLink({ deepLink, orderIndex });
-                deleteDeepLinkModal.handleOpen();
-              }}
-              onEdit={() => {
-                setCurrentDeepLink({ deepLink, orderIndex });
-                deepLinkModal.handleOpen();
-              }}
-              onUpdateIsActive={(isActive) => {
-                updateDeepLink(
-                  {
-                    organization_id: deepLink.organization,
-                    deep_link: deepLink.deep_link,
-                    is_active: isActive,
-                  },
-                  { ...deepLink },
-                  orderIndex,
-                );
-              }}
-            />
-          ))}
-          {deepLinkDummyList.map((deepLink) => (
-            <OfferingDeepLinkRow
-              key={deepLink.dummyId}
-              deepLink={deepLink}
-              organizations={offering.organizations}
-            />
-          ))}
-          <Stack direction="row" gap={1}>
-            <Button
-              size="small"
-              color="success"
-              sx={{ flex: 1 }}
-              disabled={
-                deepLinkList.length === 0 ||
-                deepLinkList.every((link) => link.is_active)
-              }
-              onClick={() => activateAllDeepLinks(true)}
-            >
-              <FormattedMessage {...messages.activateAllDeepLinks} />
-            </Button>
-            <Button
-              size="small"
-              color="secondary"
-              sx={{ flex: 1 }}
-              disabled={
-                deepLinkList.length === 0 ||
-                deepLinkList.every((link) => !link.is_active)
-              }
-              onClick={() => activateAllDeepLinks(false)}
-            >
-              <FormattedMessage {...messages.deactivateAllDeepLinks} />
-            </Button>
-          </Stack>
-          <Button
-            onClick={deepLinkModal.handleOpen}
-            size="small"
-            color="primary"
-          >
-            <FormattedMessage {...messages.addDeepLinkButton} />
-          </Button>
+          {isCourse && (
+            <>
+              <Divider />
+              {deepLinkList.map((deepLink, orderIndex) => (
+                <OfferingDeepLinkRow
+                  key={deepLink.id}
+                  deepLink={deepLink}
+                  organizations={offering.organizations}
+                  onDelete={() => {
+                    setCurrentDeepLink({ deepLink, orderIndex });
+                    deleteDeepLinkModal.handleOpen();
+                  }}
+                  onEdit={() => {
+                    setCurrentDeepLink({ deepLink, orderIndex });
+                    deepLinkModal.handleOpen();
+                  }}
+                  onUpdateIsActive={(isActive) => {
+                    updateDeepLink(
+                      {
+                        organization_id: deepLink.organization,
+                        deep_link: deepLink.deep_link,
+                        is_active: isActive,
+                      },
+                      { ...deepLink },
+                      orderIndex,
+                    );
+                  }}
+                />
+              ))}
+              {deepLinkDummyList.map((deepLink) => (
+                <OfferingDeepLinkRow
+                  key={deepLink.dummyId}
+                  deepLink={deepLink}
+                  organizations={offering.organizations}
+                />
+              ))}
+              <Stack direction="row" gap={1}>
+                <Button
+                  size="small"
+                  color="success"
+                  sx={{ flex: 1 }}
+                  disabled={
+                    deepLinkList.length === 0 ||
+                    deepLinkList.every((link) => link.is_active)
+                  }
+                  onClick={() => activateAllDeepLinks(true)}
+                >
+                  <FormattedMessage {...messages.activateAllDeepLinks} />
+                </Button>
+                <Button
+                  size="small"
+                  color="secondary"
+                  sx={{ flex: 1 }}
+                  disabled={
+                    deepLinkList.length === 0 ||
+                    deepLinkList.every((link) => !link.is_active)
+                  }
+                  onClick={() => activateAllDeepLinks(false)}
+                >
+                  <FormattedMessage {...messages.deactivateAllDeepLinks} />
+                </Button>
+              </Stack>
+              <Button
+                onClick={deepLinkModal.handleOpen}
+                size="small"
+                color="primary"
+              >
+                <FormattedMessage {...messages.addDeepLinkButton} />
+              </Button>
+            </>
+          )}
         </Stack>
       </DefaultRow>
       <CustomModal
@@ -640,55 +646,62 @@ export function OfferingRow({
         }}
       />
 
-      <CustomModal
-        fullWidth={true}
-        maxWidth="sm"
-        title={intl.formatMessage(
-          currentDeepLink
-            ? messages.editDeepLinkModalFormTitle
-            : messages.addDeepLinkModalFormTitle,
-        )}
-        {...deepLinkModal}
-        handleClose={() => {
-          setCurrentDeepLink(undefined);
-          deepLinkModal.handleClose();
-        }}
-      >
-        <Box mt={1}>
-          <OfferingDeepLinkForm
-            deepLink={currentDeepLink?.deepLink}
-            organizations={offering.organizations}
-            onSubmit={(values) => {
+      {isCourse && (
+        <>
+          <CustomModal
+            fullWidth={true}
+            maxWidth="sm"
+            title={intl.formatMessage(
+              currentDeepLink
+                ? messages.editDeepLinkModalFormTitle
+                : messages.addDeepLinkModalFormTitle,
+            )}
+            {...deepLinkModal}
+            handleClose={() => {
+              setCurrentDeepLink(undefined);
               deepLinkModal.handleClose();
-              if (currentDeepLink) {
-                updateDeepLink(
-                  values,
-                  currentDeepLink.deepLink,
-                  currentDeepLink.orderIndex,
-                );
-              } else {
-                createDeepLink(values);
+            }}
+          >
+            <Box mt={1}>
+              <OfferingDeepLinkForm
+                deepLink={currentDeepLink?.deepLink}
+                organizations={offering.organizations}
+                onSubmit={(values) => {
+                  deepLinkModal.handleClose();
+                  if (currentDeepLink) {
+                    updateDeepLink(
+                      values,
+                      currentDeepLink.deepLink,
+                      currentDeepLink.orderIndex,
+                    );
+                  } else {
+                    createDeepLink(values);
+                  }
+                }}
+              />
+            </Box>
+          </CustomModal>
+
+          <AlertModal
+            {...deleteDeepLinkModal}
+            onClose={() => {
+              setCurrentDeepLink(undefined);
+              deleteDeepLinkModal.handleClose();
+            }}
+            title={intl.formatMessage(messages.deleteDeepLinkModalTitle)}
+            message={intl.formatMessage(messages.deleteDeepLinkModalContent)}
+            handleAccept={() => {
+              if (!currentDeepLink) {
+                return;
               }
+              deleteDeepLink(
+                currentDeepLink.deepLink,
+                currentDeepLink.orderIndex,
+              );
             }}
           />
-        </Box>
-      </CustomModal>
-
-      <AlertModal
-        {...deleteDeepLinkModal}
-        onClose={() => {
-          setCurrentDeepLink(undefined);
-          deleteDeepLinkModal.handleClose();
-        }}
-        title={intl.formatMessage(messages.deleteDeepLinkModalTitle)}
-        message={intl.formatMessage(messages.deleteDeepLinkModalContent)}
-        handleAccept={() => {
-          if (!currentDeepLink) {
-            return;
-          }
-          deleteDeepLink(currentDeepLink.deepLink, currentDeepLink.orderIndex);
-        }}
-      />
+        </>
+      )}
     </>
   );
 }
