@@ -86,7 +86,7 @@ class CourseRunViewSet(
         course_id = self.kwargs.get("course_id")
 
         if self.action == "list" and not course_id:
-            raise NotFound("The requested resource was not found on this server.")
+            raise NotFound(_("The requested resource was not found on this server."))
 
         if course_id:
             queryset = queryset.filter(course=course_id)
@@ -447,10 +447,14 @@ class OrderViewSet(
         if voucher_code := request.data.get("voucher_code"):
             voucher = verify_voucher(voucher_code)
             if not voucher:
-                return Response("Invalid voucher code", status=HTTPStatus.BAD_REQUEST)
+                return Response(
+                    _("Invalid voucher code"), status=HTTPStatus.BAD_REQUEST
+                )
 
             if not voucher.is_usable_by(self.request.user.id):
-                return Response("Unusable voucher code", status=HTTPStatus.BAD_REQUEST)
+                return Response(
+                    _("Unusable voucher code"), status=HTTPStatus.BAD_REQUEST
+                )
 
             # Check if the voucher comes from a prepaid order
             if order := get_prepaid_order(
@@ -998,7 +1002,7 @@ class NestedBatchOrderSeatsViewSet(
                 role__in=[enums.OWNER, enums.ADMIN],
             ).exists()
         ):
-            raise NotFound("The requested resource was not found on this server.")
+            raise NotFound(_("The requested resource was not found on this server."))
 
         return models.Order.objects.filter(
             batch_order_id=batch_order.id
@@ -1127,10 +1131,10 @@ class CertificateViewSet(
         username = self.get_username()
 
         if certificate.order and certificate.order.owner.username != username:
-            raise Http404("No Certificate matches the given query.")
+            raise Http404(_("No Certificate matches the given query."))
 
         if certificate.enrollment and certificate.enrollment.user.username != username:
-            raise Http404("No Certificate matches the given query.")
+            raise Http404(_("No Certificate matches the given query."))
         # May raise a permission denied
         self.check_object_permissions(self.request, certificate)
 
@@ -1289,7 +1293,7 @@ class OrganizationViewSet(
                 pk=quote_id, batch_order__organization=organization
             )
         except models.Quote.DoesNotExist:
-            return Response("Quote does not exist.", status=HTTPStatus.NOT_FOUND)
+            return Response(_("Quote does not exist."), status=HTTPStatus.NOT_FOUND)
 
         context_with_images = contract_definition.embed_images_in_context(quote.context)
         quote_pdf_bytes = issuers.generate_document(
