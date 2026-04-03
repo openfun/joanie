@@ -24,8 +24,8 @@ export function RHFValuesChangeTestWrapper({
 }: Props) {
   const RegisterSchema = Yup.object().shape({
     name: Yup.string().required(),
-    select: Yup.string().nullable(),
-    enable: Yup.mixed().nullable(),
+    select: Yup.string().nullable().defined(),
+    enable: Yup.mixed().nullable().defined(),
   });
 
   const methods = useForm({
