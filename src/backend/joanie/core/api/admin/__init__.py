@@ -963,7 +963,7 @@ class BatchOrderViewSet(
         batch_order = self.get_object()
 
         if not batch_order.is_signable:
-            raise ValidationError("Batch order is not eligible to get signed.")
+            raise ValidationError(_("Batch order is not eligible to get signed."))
 
         if batch_order.offering_rules.exists():
             # Verify if the actual offering rule still accepts the number of seats requested
@@ -981,7 +981,9 @@ class BatchOrderViewSet(
                     )
                 except ValueError as exception:
                     raise ValidationError(
-                        "Cannot submit to signature, active offering rules has no seats left"
+                        _(
+                            "Cannot submit to signature, active offering rules have no seats left."
+                        )
                     ) from exception
 
                 batch_order.offering_rules.add(offering_rule)
@@ -1003,12 +1005,12 @@ class BatchOrderViewSet(
 
         if not batch_order.is_paid:
             raise ValidationError(
-                "Cannot generate orders, batch order is not in `completed` state"
+                _("Cannot generate orders, batch order is not in `completed` state")
             )
 
         if batch_order.has_orders_generated:
             raise ValidationError(
-                "Orders were already generated. Cannot generate twice."
+                _("Orders were already generated. Cannot generate twice.")
             )
 
         generate_orders_and_send_vouchers_task.delay(batch_order_id=str(batch_order.id))
@@ -1028,7 +1030,7 @@ class BatchOrderViewSet(
 
         if batch_order.is_canceled:
             raise ValidationError(
-                "Batch order is canceled, cannot confirm quote signature."
+                _("Batch order is canceled, cannot confirm quote signature.")
             )
 
         if not batch_order.has_quote:
@@ -1214,7 +1216,9 @@ class OrganizationAddressViewSet(
             models.Address.objects.get(pk=address.pk, organization_id=organization_id)
         except models.Address.DoesNotExist as error:
             raise ValidationError(
-                "The relation does not exist between the address and the organization."
+                _(
+                    "The relation does not exist between the address and the organization."
+                )
             ) from error
 
         return super().destroy(request, *args, **kwargs)

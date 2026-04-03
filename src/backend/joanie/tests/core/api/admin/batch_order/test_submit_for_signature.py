@@ -129,7 +129,7 @@ class BatchOrdersAdminApiSubmitForSignatureTestCase(BaseAPITestCase):
 
         self.assertContains(
             response,
-            "Cannot submit to signature, active offering rules has no seats left",
+            "Cannot submit to signature, active offering rules have no seats left.",
             status_code=HTTPStatus.BAD_REQUEST,
         )
 
