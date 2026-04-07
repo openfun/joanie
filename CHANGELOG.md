@@ -27,6 +27,7 @@ and this project adheres to
 - Allow organization members to download signed agreements as PDF
 - Add nature field (B2C, B2B, CPF) to orders with display and
   filter in admin backoffice
+- Add download quote button to batch order actions in admin frontend
 
 ### Fixed
 

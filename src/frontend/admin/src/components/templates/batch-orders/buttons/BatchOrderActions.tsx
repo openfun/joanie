@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DownloadIcon from "@mui/icons-material/Download";
 import DrawIcon from "@mui/icons-material/Draw";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import { BatchOrder } from "@/services/api/models/BatchOrder";
@@ -54,6 +55,12 @@ const messages = defineMessages({
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmQuoteError",
     description: "Error message when quote confirmation fails",
     defaultMessage: "Failed to confirm quote. Please try again.",
+  },
+  downloadQuoteDisabled: {
+    id: "components.templates.batch-orders.buttons.batchOrderActionsButton.downloadQuoteDisabled",
+    description: "Text when the batch order quote cannot be downloaded",
+    defaultMessage:
+      "Quote can only be downloaded when batch order has a total, is not canceled, and quote is signed by organization",
   },
   confirmPurchaseOrderDisabled: {
     id: "components.templates.batch-orders.buttons.batchOrderActionsButton.confirmPurchaseOrderDisabled",
@@ -126,6 +133,17 @@ export default function BatchOrderActionsButton({ batchOrder }: Props) {
         isDisable: !batchOrder.available_actions.confirm_quote,
         disableMessage: intl.formatMessage(messages.confirmQuoteDisabled),
         onClick: confirmQuoteModal.handleOpen,
+      },
+      {
+        icon: <DownloadIcon />,
+        mainLabel: intl.formatMessage(batchOrderActionsMessages.download_quote),
+        isDisable: !batchOrder.available_actions.download_quote,
+        disableMessage: intl.formatMessage(messages.downloadQuoteDisabled),
+        onClick: async () => {
+          batchOrdersQuery.methods.downloadQuote({
+            batchOrderId: batchOrder.id,
+          });
+        },
       },
       {
         icon: <CheckCircleIcon />,
