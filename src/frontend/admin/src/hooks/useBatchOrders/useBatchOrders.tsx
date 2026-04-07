@@ -102,6 +102,13 @@ export const useBatchOrdersMessages = defineMessages({
     description: "Error message shown to the user when no batch order matches.",
     defaultMessage: "Cannot find the batch order",
   },
+  errorDownloadQuote: {
+    id: "hooks.useBatchOrders.errorDownloadQuote",
+    description:
+      "Error message shown to the user when batch order download quote request fails.",
+    defaultMessage:
+      "An error occurred while downloading the quote. Please retry later.",
+  },
   errorExport: {
     id: "hooks.useBatchOrders.errorExport",
     description:
@@ -257,6 +264,17 @@ export const useBatchOrders = (
           custom.methods.setError(
             error.data?.details ??
               intl.formatMessage(useBatchOrdersMessages.errorGenerateOrders),
+          );
+        },
+      }).mutate,
+      downloadQuote: mutation({
+        mutationFn: async (data: { batchOrderId: string }) => {
+          return BatchOrderRepository.downloadQuote(data.batchOrderId);
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(useBatchOrdersMessages.errorDownloadQuote),
           );
         },
       }).mutate,

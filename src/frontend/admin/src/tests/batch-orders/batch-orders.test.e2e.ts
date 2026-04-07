@@ -450,6 +450,83 @@ test.describe("Batch Order view", () => {
     await expect(confirmQuoteMenuItem).toHaveAttribute("aria-disabled", "true");
   });
 
+  test("Download quote for batch order", async ({ page }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_TO_SIGN;
+    batchOrder.total = 123.45;
+    batchOrder.available_actions.download_quote = true;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Download quote should be enabled
+    const downloadQuoteMenuItem = page.getByRole("menuitem", {
+      name: "Download quote",
+    });
+    await expect(downloadQuoteMenuItem).toBeVisible();
+    await expect(downloadQuoteMenuItem).not.toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+
+  test("Download quote button is disabled when action is not available", async ({
+    page,
+  }) => {
+    const batchOrder = store.list[0];
+    batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_DRAFT;
+    batchOrder.available_actions.download_quote = false;
+
+    await page.unroute(catchIdRegex);
+    await page.route(catchIdRegex, async (route, request) => {
+      const methods = request.method();
+      if (methods === "GET") {
+        await route.fulfill({ json: batchOrder });
+      }
+    });
+
+    await page.goto(PATH_ADMIN.batch_orders.list);
+    await page.getByRole("heading", { name: "Batch Orders" }).click();
+    await page
+      .getByRole("link", { name: batchOrder.offering.product.title })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Batch order informations" }),
+    ).toBeVisible();
+
+    // Check and click on the action button
+    await expect(page.getByRole("button", { name: "Actions" })).toBeVisible();
+    await page.getByRole("button", { name: "Actions" }).click();
+
+    // Download quote should be disabled
+    const downloadQuoteMenuItem = page.getByRole("menuitem", {
+      name: "Download quote",
+    });
+    await expect(downloadQuoteMenuItem).toBeVisible();
+    await expect(downloadQuoteMenuItem).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+
   test("Confirm purchase order for batch order", async ({ page }) => {
     const batchOrder = store.list[0];
     batchOrder.state = BatchOrderStatesEnum.BATCH_ORDER_STATE_QUOTED;
