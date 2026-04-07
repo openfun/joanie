@@ -21,6 +21,7 @@ export const batchOrderRoutes = {
   submitForSignature: (id: string) =>
     `/batch-orders/${id}/submit-for-signature/`,
   generateOrders: (id: string) => `/batch-orders/${id}/generate-orders/`,
+  downloadQuote: (id: string) => `/batch-orders/${id}/download-quote/`,
   export: (params: string = "") => `/batch-orders/export/${params}`,
 };
 
@@ -103,6 +104,11 @@ export class BatchOrderRepository {
         "Content-Type": "application/json",
       },
     }).then(checkStatus);
+  }
+
+  static downloadQuote(id: string): void {
+    const url = batchOrderRoutes.downloadQuote(id);
+    window.open(buildApiUrl(url));
   }
 
   static export(filters: Maybe<ResourcesQuery>): void {
