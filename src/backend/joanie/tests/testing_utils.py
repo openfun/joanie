@@ -1000,6 +1000,11 @@ class Demo:
 
             if create_bunch_of_batch_orders:
                 for state in enums.BATCH_ORDER_STATE_CHOICES:
+                    if state[0] in (
+                        enums.BATCH_ORDER_STATE_DRAFT,
+                        enums.BATCH_ORDER_STATE_CANCELED,
+                    ):
+                        continue
                     for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
                         factories.BatchOrderFactory(
                             state=state[0],
@@ -1100,6 +1105,11 @@ class Demo:
 
             if create_bunch_of_batch_orders:
                 for state in enums.BATCH_ORDER_STATE_CHOICES:
+                    if state[0] in (
+                        enums.BATCH_ORDER_STATE_DRAFT,
+                        enums.BATCH_ORDER_STATE_CANCELED,
+                    ):
+                        continue
                     for payment_method in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
                         factories.BatchOrderFactory(
                             state=state[0],
