@@ -859,10 +859,6 @@
     "description": "Label for the State attribute header inside the table  ",
     "message": "État"
   },
-  "components.templates.courseRuns.list.successCopy": {
-    "description": "Text for the success click to copy notification",
-    "message": "Le lien a été copié dans votre presse-papier"
-  },
   "components.templates.courseRuns.list.title": {
     "description": "Label for the title attribute header inside the table  ",
     "message": "Titre"
@@ -870,6 +866,38 @@
   "components.templates.courses.filters.CourseFilters.searchPlaceholder": {
     "description": "Text for the search input placeholder",
     "message": "Rechercher par titre, code"
+  },
+  "components.templates.courses.form.offering.deepLinkForm.deepLinkLabel": {
+    "description": "The input label for the deep link URL",
+    "message": "URL du lien profond"
+  },
+  "components.templates.courses.form.offering.deepLinkForm.isActiveLabel": {
+    "description": "The input label for the activate switch",
+    "message": "Activer ce lien profond"
+  },
+  "components.templates.courses.form.offering.deepLinkForm.organizationLabel": {
+    "description": "The input label for the organization select",
+    "message": "Établissement"
+  },
+  "components.templates.courses.form.offering.deepLinkRow.deleteDisabledMessage": {
+    "description": "Message shown when delete is disabled because deep link is active",
+    "message": "Vous ne pouvez pas supprimer ce lien profond, il est actif."
+  },
+  "components.templates.courses.form.offering.deepLinkRow.isActiveSwitchAriaLabel": {
+    "description": "Aria-label for the deep link is active switch",
+    "message": "Le lien profond est activé"
+  },
+  "components.templates.courses.form.offering.row.activateAllDeepLinks": {
+    "description": "Label for the activate all deep links button",
+    "message": "Activer tous les liens profonds"
+  },
+  "components.templates.courses.form.offering.row.addDeepLinkButton": {
+    "description": "Add deep link button label",
+    "message": "Ajouter un lien profond"
+  },
+  "components.templates.courses.form.offering.row.addDeepLinkModalFormTitle": {
+    "description": "Title for the add deep link modal",
+    "message": "Ajouter un lien profond"
   },
   "components.templates.courses.form.offering.row.addOfferingRuleButton": {
     "description": "Add offering rule button label",
@@ -883,6 +911,18 @@
     "description": "Text when hovering over the action to generate certificates, but a generation is already in progress",
     "message": "Une génération de certificats est déjà en cours"
   },
+  "components.templates.courses.form.offering.row.deactivateAllDeepLinks": {
+    "description": "Label for the deactivate all deep links button",
+    "message": "Désactiver tous les liens profonds"
+  },
+  "components.templates.courses.form.offering.row.deleteDeepLinkModalContent": {
+    "description": "Content for the delete deep link modal",
+    "message": "Êtes-vous sûr de vouloir supprimer ce lien profond ?"
+  },
+  "components.templates.courses.form.offering.row.deleteDeepLinkModalTitle": {
+    "description": "Title for the delete deep link modal",
+    "message": "Supprimer un lien profond"
+  },
   "components.templates.courses.form.offering.row.deleteOfferingRuleModal": {
     "description": "Title for the delete offering rule modal",
     "message": "Supprimer une règle d'offre"
@@ -890,6 +930,10 @@
   "components.templates.courses.form.offering.row.deleteOfferingRuleModalContent": {
     "description": "Content for the delete offering rule modal",
     "message": "Êtes-vous sûr de vouloir supprimer cette règle d'offre ?"
+  },
+  "components.templates.courses.form.offering.row.editDeepLinkModalFormTitle": {
+    "description": "Title for the edit deep link modal",
+    "message": "Éditer un lien profond"
   },
   "components.templates.courses.form.offering.row.editOfferingRuleModalFormTitle": {
     "description": "Title for the edit offering rule modal",
@@ -1075,6 +1119,10 @@
     "description": "wasCreatedForOrder helper text",
     "message": "Coché si l'inscription a été initialement créée dans le cadre d'une commande."
   },
+  "components.templates.offerings.inputs.search.OfferingSearch.searchLabel": {
+    "description": "Label for the OfferingSearch component",
+    "message": "Recherchez une offre commerciale"
+  },
   "components.templates.offerings.offering.OfferingList.addOfferingButtonLabel": {
     "description": "Label for the product offering subheader form",
     "message": "Ajouter l'offre commerciale"
@@ -1171,6 +1219,22 @@
     "description": "Text for the search input placeholder",
     "message": "Rechercher par titre du produit, propriétaire (nom complet ou e-mail), établissement (code ou titre), code du cours, coupon"
   },
+  "components.templates.orders.form.generalSubtitle": {
+    "description": "Subtitle of the general section of the order create form",
+    "message": "Informations générales"
+  },
+  "components.templates.orders.form.offeringLabel": {
+    "description": "Label for the offering field in the order create form",
+    "message": "Offre commerciale"
+  },
+  "components.templates.orders.form.organizationLabel": {
+    "description": "Label for the organization field in the order create form",
+    "message": "Établissement"
+  },
+  "components.templates.orders.input.RHFOrderNature.nature": {
+    "description": "Label text for the select nature input",
+    "message": "Nature"
+  },
   "components.templates.orders.list.createdOn": {
     "description": "Label for the created on header inside the table",
     "message": "Créée le"
@@ -1182,6 +1246,10 @@
   "components.templates.orders.list.id": {
     "description": "Label for the id header inside the table",
     "message": "ID"
+  },
+  "components.templates.orders.list.nature": {
+    "description": "Label for the nature header inside the table",
+    "message": "Nature"
   },
   "components.templates.orders.list.organizationTitle": {
     "description": "Label for the organization header inside the table",
@@ -1295,6 +1363,10 @@
     "description": "Invoice updated on field",
     "message": "Mise à jour le"
   },
+  "components.templates.orders.view.nature": {
+    "description": "Nature field",
+    "message": "Nature"
+  },
   "components.templates.orders.view.noPaymentMethod": {
     "description": "Message displayed when order has no payment method",
     "message": "Aucun moyen de paiement n'a été défini."
@@ -1310,6 +1382,18 @@
   "components.templates.orders.view.orderDetailsSectionTitle": {
     "description": "Title for the order section",
     "message": "Informations sur la commande"
+  },
+  "components.templates.orders.view.orderNatureMessages.b2b": {
+    "description": "Text for B2B order nature",
+    "message": "B2B"
+  },
+  "components.templates.orders.view.orderNatureMessages.b2c": {
+    "description": "Text for B2C order nature",
+    "message": "B2C"
+  },
+  "components.templates.orders.view.orderNatureMessages.cpf": {
+    "description": "Text for CPF order nature",
+    "message": "CPF"
   },
   "components.templates.orders.view.orderStatesMessages.assigned": {
     "description": "Text for assigned order state",
@@ -1434,6 +1518,10 @@
   "components.templates.orders.view.total": {
     "description": "Total field",
     "message": "Total"
+  },
+  "components.templates.orders.view.voucher": {
+    "description": "Voucher code field",
+    "message": "Code du coupon"
   },
   "components.templates.organizations.address.form.translations.addressLabel": {
     "description": "Label for address organization address input",
@@ -2147,6 +2235,10 @@
     "description": "Error message shown to the user when course product relation creation request fails.",
     "message": "Une erreur s'est produite lors de la création de la relation cours / produit. Veuillez réessayer plus tard."
   },
+  "hooks.useCourseProductRelation.errorCreateDeepLink": {
+    "description": "Error message shown to the user when deep link creation request fails.",
+    "message": "Une erreur s'est produite lors de la création du lien profond."
+  },
   "hooks.useCourseProductRelation.errorCreateOfferingRule": {
     "description": "Error message shown to the user when offering rule creation request fails.",
     "message": "Une erreur s'est produite lors de la création de la règle d'offre. Veuillez réessayer plus tard."
@@ -2154,6 +2246,10 @@
   "hooks.useCourseProductRelation.errorDelete": {
     "description": "Error message shown to the user when course product relation deletion request fails.",
     "message": "Une erreur s'est produite lors de la suppression de la relation cours / produit. Veuillez réessayer plus tard."
+  },
+  "hooks.useCourseProductRelation.errorDeleteDeepLink": {
+    "description": "Error message shown to the user when deep link deletion request fails.",
+    "message": "Une erreur s'est produite lors de la suppression du lien profond."
   },
   "hooks.useCourseProductRelation.errorDeleteOfferingRule": {
     "description": "Error message shown to the user when offering rule deletion request fails.",
@@ -2170,6 +2266,10 @@
   "hooks.useCourseProductRelation.errorUpdate": {
     "description": "Error message shown to the user when course product relation update request fails.",
     "message": "Une erreur s'est produite lors de la mise à jour de la relation cours / produit. Veuillez réessayer plus tard."
+  },
+  "hooks.useCourseProductRelation.errorUpdateDeepLink": {
+    "description": "Error message shown to the user when deep link update request fails.",
+    "message": "Une erreur s'est produite lors de la mise à jour du lien profond."
   },
   "hooks.useCourseProductRelation.errorUpdateOfferingRule": {
     "description": "Error message shown to the user when offering rule update request fails.",
@@ -2691,6 +2791,10 @@
     "description": "Label for the root breadcrumn ",
     "message": "Page d’accueil"
   },
+  "pages.admin.orders.breadcrumbsTranslations.createBreadcrumb": {
+    "description": "Breadcrumb label for the order create page",
+    "message": "Créer"
+  },
   "pages.admin.orders.breadcrumbsTranslations.listBreadcrumb": {
     "description": "Breadcrumb label for the order list page",
     "message": "Liste"
@@ -2702,6 +2806,10 @@
   "pages.admin.orders.breadcrumbsTranslations.viewBreadcrumb": {
     "description": "Breadcrumb label for the order view page",
     "message": "Afficher"
+  },
+  "pages.admin.orders.create.pageTitle": {
+    "description": "Label for the create order page title",
+    "message": "Créer une commande"
   },
   "pages.admin.orders.list.pageTitle": {
     "description": "Label for the order list page title",
@@ -2877,7 +2985,7 @@
   },
   "translations.common.commonTranslations.successCopy": {
     "description": "Text for the success click to copy notification",
-    "message": "Le lien a été copié dans votre presse-papier"
+    "message": "Copié dans le presse-papiers"
   },
   "translations.common.commonTranslations.title": {
     "description": "Common title label",
