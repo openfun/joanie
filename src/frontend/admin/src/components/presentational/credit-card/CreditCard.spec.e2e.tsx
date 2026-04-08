@@ -5,7 +5,11 @@ import { toDigitString } from "@/utils/numbers";
 
 test.describe("<CreditCard/>", () => {
   test("should render properly", async ({ mount }) => {
-    const creditCard = CreditCardFactory({ brand: "visa" });
+    const creditCard = CreditCardFactory({
+      brand: "visa",
+      expiration_month: 12,
+      expiration_year: new Date().getFullYear() + 1,
+    });
     const component = await mount(<CreditCard {...creditCard} />);
 
     // A label should be displayed
