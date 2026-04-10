@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Update Volta configuration with yarn fixed version
+
 ## [3.3.0] - 2026-04-09
 
 ### Added
