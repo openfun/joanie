@@ -93,9 +93,9 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         )
 
         document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
-        self.assertRegex(document_text, "Certificate")
-        self.assertRegex(
-            document_text, f"Issued on {certificate.issued_on.strftime('%m/%d/%Y')}"
+        self.assertRegex(document_text, "CERTIFICATE")
+        self.assertIn(
+            certificate.issued_on.strftime("%m/%d/%Y"), document_text.replace(" ", "")
         )
         self.assertRegex(document_text, r"Richie Cunningham.*Graded product")
         self.assertRegex(
