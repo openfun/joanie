@@ -7,11 +7,13 @@ This template is used for FUN use case. It assumes that there is only one organi
 which is the course provider. So the organization is accessed with organizations.0.
 {% endcomment %}
 
+{% get_current_language as LANGUAGE_CODE %}
+
 <html>
 <head>
     <style>
         :root {
-          --document-bg: url("{% base64_static "joanie/images/degree_bg_decorator.png" %}"), url("{% base64_static "joanie/images/degree_bg_frame.png" %}");
+          --document-bg: url("{% base64_static "joanie/images/bg_degree_frame.png" %}");
         }
     </style>
     {% if debug %}
@@ -23,51 +25,50 @@ which is the course provider. So the organization is accessed with organizations
 <body>
 <div id="certificate">
     <header>
-        <div>
+        <div class="header__content">
             <h1>{% translate "Certificate" %}</h1>
             <p class="issuance-date">
-            {% blocktranslate trimmed with creation_date=creation_date|date:"SHORT_DATE_FORMAT" %}
-            Issued on {{ creation_date }}
-            {% endblocktranslate %}
+                {% blocktranslate trimmed with creation_date=creation_date|date:"SHORT_DATE_FORMAT" %}
+                Issued on {{ creation_date }}
+                {% endblocktranslate %}
             </p>
         </div>
     </header>
     <section class="student">
-        <p>
-            <strong class="student-name">{{ student.name }}</strong>
-            {% blocktranslate trimmed with student=student.name course=course.name %}
-            <br>
-            successfully completed the course
-            <br>
-            <strong class="coure-name">{{ course }}</strong>
-            {% endblocktranslate %}
-        </p>
+        <strong class="student__name">{{ student.name }}</strong>
+        <p class="student__achievement">{% translate "Successfully passed the final exam of the MOOC" %}</p>
+        <strong class="student__course">{{ course.name }}</strong>
     </section>
     <section class="signatories">
-        <div class="signatories__column">
-            <div class="signatories__column-content organization">
-                <h2 class="organization__name">{{ organizations.0.name }}</h2>
-                {% if organizations.0.logo %}
-                    <img class="organization__logo" src="{{ organizations.0.logo }}" />
-                {% endif %}
-                <img class="organization__signature" src="{{ organizations.0.signature }}" />
-                <p class="organization__signatory">
-                    <em>{{ organizations.0.representative|default:"" }}</em>
-                    <em>{{ organizations.0.representative_profession|default:"" }}</em>
-                </p>
-            </div>
+        <div class="signatories__spacer"></div>
+        <div class="signatories__organization">
+            <p class="organization__name">{{ organizations.0.name }}</p>
+            {% if organizations.0.logo %}
+                <img class="organization__logo" src="{{ organizations.0.logo }}" />
+            {% endif %}
+            <img class="organization__signature" src="{{ organizations.0.signature }}" />
+            <p class="organization__signatory">
+                <span class="organization__signatory-name">{{ organizations.0.representative|default:"" }}</span>
+                <em class="organization__signatory-role">{{ organizations.0.representative_profession|default:"" }}</em>
+            </p>
         </div>
-        <div class="signatories__column">
-            <div class="signatories__column-content platform">
-                <img src="{% base64_static "joanie/images/degree_fun_verified_badge.png" %}" />
-                <p>
-                    {% blocktranslate with link=verification_link %}
-                    To verify the authenticity of this certificate, please visit:
-                    <br/>
-                    {{link}}
-                    {% endblocktranslate %}
-                </p>
+        <div class="signatories__platform">
+            <div class="platform__logos">
+                <img class="platform__fun-logo" src="{% base64_static "joanie/images/logo_fun.png" %}" />
+                {% if LANGUAGE_CODE == "fr-fr" %}
+                <img class="platform__badge" src="{% base64_static "joanie/images/badge_verified_degree_fr.png" %}" />
+                {% else %}
+                <img class="platform__badge" src="{% base64_static "joanie/images/badge_verified_degree_en.png" %}" />
+                {% endif %}
             </div>
+            <p class="platform__verification">
+                {% blocktranslate with link=verification_link %}
+                To verify the authenticity of this certificate, please visit:
+                <br/>
+                <a href="{{ link }}">{{ link }}</a>
+                {% endblocktranslate %}
+            </p>
+            <p class="identity-verified">{% translate "The person's identity has been verified" %}</p>
         </div>
     </section>
 </div>
