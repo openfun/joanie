@@ -148,12 +148,17 @@ demo-dev: ## flush db then create a dataset for dev purpose
 	@$(MANAGE) generate_jwt_tokens
 .PHONY: demo-dev
 
+ifeq (dev-data,$(firstword $(MAKECMDGOALS)))
+  DEV_DATA_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(DEV_DATA_ARGS):;@:)
+endif
+
 dev-data: ## flush db then create a simpler dataset for dev purpose
 	@echo "$(BOLD)Flush database$(RESET)"
 	@$(MANAGE) flush --no-input
 	@${MAKE} superuser
 	@$(MANAGE) set_default_site --domain=$(LOCALTUNNEL_DOMAIN) --name=$(LOCALTUNNEL_DOMAIN)
-	@$(MANAGE) create_dev_data ${ARGS}
+	@$(MANAGE) create_dev_data $(DEV_DATA_ARGS)
 	@$(MANAGE) generate_jwt_tokens
 .PHONY: dev-data
 
