@@ -72,6 +72,7 @@ const build = (state?: BatchOrderStatesEnum): BatchOrder => {
     orders: [],
     available_actions: {
       confirm_quote: false,
+      download_quote: false,
       confirm_purchase_order: false,
       confirm_bank_transfer: false,
       submit_for_signature: false,
@@ -120,6 +121,7 @@ const buildBatchOrderListItem = (): BatchOrderListItem => {
     ),
     available_actions: {
       confirm_quote: false,
+      download_quote: false,
       confirm_purchase_order: false,
       confirm_bank_transfer: false,
       submit_for_signature: false,
