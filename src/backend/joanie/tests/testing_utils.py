@@ -727,6 +727,7 @@ class Demo:
         create_credential=False,
         create_credential_discount=False,
         create_bunch_of_batch_orders=False,
+        owned_batch_orders=False,
     ):
         """Generate simple fake data."""
         translation.activate("en-us")
@@ -778,19 +779,6 @@ class Demo:
         payment_factories.CreditCardFactory(owners=[second_student_user])
         factories.UserAddressFactory(owner=second_student_user)
 
-        # user10 is the default user used to connect on Richie
-        batch_order_owner = factories.UserFactory(
-            username="user10",
-            email="benjamin59@example.org",
-            first_name="Ronald",
-            last_name="Johnson",
-        )
-        models.OrganizationAccess.objects.create(
-            user=batch_order_owner,
-            organization=organization,
-            role=enums.OWNER,
-        )
-
         discount = factories.DiscountFactory(
             amount=10,
             rate=None,
@@ -802,12 +790,15 @@ class Demo:
             multiple_users=True,
         )
 
-        if (
-            not create_credential
-            and not create_certificate
-            and not create_certificate_discount
-            and not create_credential_discount
-            and not create_bunch_of_batch_orders
+        if not any(
+            [
+                create_credential,
+                create_certificate,
+                create_certificate_discount,
+                create_credential_discount,
+                create_bunch_of_batch_orders,
+                owned_batch_orders,
+            ]
         ):
             item_options = [
                 "Certificate product",
@@ -815,6 +806,7 @@ class Demo:
                 "Credential product",
                 "Credential product with discount",
                 "Bunch of batch orders",
+                "Owned batch orders",
             ]
             items = select_multiple(item_options)
             create_certificate = "Certificate product" in items
@@ -822,6 +814,23 @@ class Demo:
             create_credential = "Credential product" in items
             create_credential_discount = "Credential product with discount" in items
             create_bunch_of_batch_orders = "Bunch of batch orders" in items
+            owned_batch_orders = "Owned batch orders" in items
+
+        batch_order_owner = None
+        if owned_batch_orders:
+            create_credential = True
+            # user10 is the default user used to connect on Richie
+            batch_order_owner = factories.UserFactory(
+                username="user10",
+                email="benjamin59@example.org",
+                first_name="Ronald",
+                last_name="Johnson",
+            )
+            models.OrganizationAccess.objects.create(
+                user=batch_order_owner,
+                organization=organization,
+                role=enums.OWNER,
+            )
 
         if create_certificate:
             course = factories.CourseFactory(
@@ -979,24 +988,27 @@ class Demo:
                 product=credential_product,
             )
             credential_offering.organizations.add(second_organization)
-            batch_order = factories.BatchOrderFactory(
-                owner=batch_order_owner,
-                organization=organization,
-                state=enums.BATCH_ORDER_STATE_COMPLETED,
-                offering=credential_offering,
-                nb_seats=5,
-            )
+            batch_order_kwargs = {
+                "state": enums.BATCH_ORDER_STATE_COMPLETED,
+                "offering": credential_offering,
+                "nb_seats": 5,
+            }
+            if owned_batch_orders:
+                batch_order_kwargs["owner"] = batch_order_owner
+                batch_order_kwargs["organization"] = organization
+            batch_order = factories.BatchOrderFactory(**batch_order_kwargs)
             batch_order.generate_orders()
-            for order in batch_order.orders.all():
-                order.owner = factories.UserFactory()
-                order.save(update_fields=["owner"])
-                order.flow.update()
-            self.log(
-                f"Successfully created batch order {batch_order.id} "
-                f"(COMPLETED, {batch_order.nb_seats} seats, "
-                f"contract signed: {batch_order.contract.is_fully_signed})"
-            )
-            self.log("")
+            if owned_batch_orders:
+                for order in batch_order.orders.all():
+                    order.owner = factories.UserFactory()
+                    order.save(update_fields=["owner"])
+                    order.flow.update()
+                self.log(
+                    f"Successfully created batch order {batch_order.id} "
+                    f"(COMPLETED, {batch_order.nb_seats} seats, "
+                    f"contract signed: {batch_order.contract.is_fully_signed})"
+                )
+                self.log("")
 
             if create_bunch_of_batch_orders:
                 for state in enums.BATCH_ORDER_STATE_CHOICES:
@@ -1084,24 +1096,27 @@ class Demo:
                 discount=discount,
             )
 
-            batch_order = factories.BatchOrderFactory(
-                owner=batch_order_owner,
-                organization=organization,
-                state=enums.BATCH_ORDER_STATE_COMPLETED,
-                offering=credential_discount_offering,
-                nb_seats=5,
-            )
+            batch_order_kwargs = {
+                "state": enums.BATCH_ORDER_STATE_COMPLETED,
+                "offering": credential_discount_offering,
+                "nb_seats": 5,
+            }
+            if owned_batch_orders:
+                batch_order_kwargs["owner"] = batch_order_owner
+                batch_order_kwargs["organization"] = organization
+            batch_order = factories.BatchOrderFactory(**batch_order_kwargs)
             batch_order.generate_orders()
-            for order in batch_order.orders.all():
-                order.owner = factories.UserFactory()
-                order.save(update_fields=["owner"])
-                order.flow.update()
-            self.log(
-                f"Successfully created batch order {batch_order.id} "
-                f"(COMPLETED, {batch_order.nb_seats} seats, "
-                f"contract signed: {batch_order.contract.is_fully_signed})"
-            )
-            self.log("")
+            if owned_batch_orders:
+                for order in batch_order.orders.all():
+                    order.owner = factories.UserFactory()
+                    order.save(update_fields=["owner"])
+                    order.flow.update()
+                self.log(
+                    f"Successfully created batch order {batch_order.id} "
+                    f"(COMPLETED, {batch_order.nb_seats} seats, "
+                    f"contract signed: {batch_order.contract.is_fully_signed})"
+                )
+                self.log("")
 
             if create_bunch_of_batch_orders:
                 for state in enums.BATCH_ORDER_STATE_CHOICES:
