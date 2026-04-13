@@ -41,6 +41,12 @@ class Command(BaseCommand):
             default=False,
             help="Create a bunch of batch orders.",
         )
+        parser.add_argument(
+            "--owned-batch-orders",
+            action="store_true",
+            default=False,
+            help="Assign batch orders to the connected user (user10).",
+        )
 
     def handle(self, *args, **options):
         def log(message):
@@ -53,4 +59,5 @@ class Command(BaseCommand):
             create_credential=options.get("credential"),
             create_credential_discount=options.get("credential_discount"),
             create_bunch_of_batch_orders=options.get("create_bunch_of_batch_orders"),
+            owned_batch_orders=options.get("owned_batch_orders"),
         )
