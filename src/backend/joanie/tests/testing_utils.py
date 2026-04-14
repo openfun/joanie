@@ -779,6 +779,7 @@ class Demo:
         payment_factories.CreditCardFactory(owners=[second_student_user])
         factories.UserAddressFactory(owner=second_student_user)
 
+        batch_order_owner = None
         if owned_batch_orders:
             # user10 is the default user used to connect on Richie
             batch_order_owner = factories.UserFactory(
