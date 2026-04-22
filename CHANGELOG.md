@@ -12,6 +12,7 @@ and this project adheres to
 
 - Update Volta configuration with yarn fixed version
 - Update certificate degree
+- Update micro credentials to handle two issuers
 - Allow custom discount (percentage or fixed amount) when creating admin orders
 - Introduce django-waffle and expose its status through `waffle_status`
 - Add `useWaffle` hook to read feature flags in the admin frontend
