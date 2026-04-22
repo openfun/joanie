@@ -12,6 +12,7 @@ and this project adheres to
 
 - Update Volta configuration with yarn fixed version
 - Update certificate degree
+- Update micro credentials to handle two issuers
 
 ## [3.3.0] - 2026-04-09
 

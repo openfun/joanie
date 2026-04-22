@@ -555,6 +555,19 @@ class DebugMicrocredentialDegreeUnicampTemplateView(DebugCertificateTemplateView
 
     issuer_document = MICROCREDENTIAL_DEGREE_UNICAMP
 
+    def get_basic_document_context(self):
+        context = super().get_basic_document_context()
+        context["organizations"].append(
+            {
+                "logo": LOGO_FALLBACK,
+                "name": "Organization 1",
+                "representative": "Jane Smith",
+                "representative_profession": "Head of Organization 1",
+                "signature": SIGNATURE_FALLBACK,
+            }
+        )
+        return context
+
 
 class DebugMicrocredentialDegreeDefaultTemplateView(DebugCertificateTemplateView):
     """
@@ -562,6 +575,19 @@ class DebugMicrocredentialDegreeDefaultTemplateView(DebugCertificateTemplateView
     """
 
     issuer_document = MICROCREDENTIAL_DEGREE_DEFAULT
+
+    def get_basic_document_context(self):
+        context = super().get_basic_document_context()
+        context["organizations"].append(
+            {
+                "logo": LOGO_FALLBACK,
+                "name": "Organization 1",
+                "representative": "Jane Smith",
+                "representative_profession": "Head of Organization 1",
+                "signature": SIGNATURE_FALLBACK,
+            }
+        )
+        return context
 
 
 class DebugContractUnicampTemplateView(DebugPdfTemplateView):
