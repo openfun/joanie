@@ -1,16 +1,13 @@
-@import url("https://fonts.googleapis.com/css2?family=Hind:wght@300;500&family=Montserrat:wght@400;600&display=swap&family=Cinzel:wght@500");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 
 body {
-  font-family: 'Hind', Arial, sans-serif;
-  font-size: 17px;
+  font-family: "Montserrat", Arial, sans-serif;
+  font-size: 14px;
   font-weight: 300;
   color: #222;
 }
 
 @media print {
-  /* ----------------------
-   * Reset margins for media
-   * ---------------------- */
   @page {
     size: A4 landscape;
     margin: 0;
@@ -18,16 +15,13 @@ body {
   }
 
   html {
-    background-image: var(--document-bg);
-    background-size: 33mm auto, 100% 100%;
-    background-repeat: no-repeat;
-    background-position: center 2mm, center center;
-    padding: 23mm 23mm;
     height: 210mm;
     width: 297mm;
     box-sizing: border-box;
     display: block;
-    z-index: 999;
+    background-image: var(--document-bg);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
   }
 
   * {
@@ -35,119 +29,185 @@ body {
     padding: 0;
   }
 
-  /* == Certificate */
   #certificate {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 210mm;
+    width: 297mm;
+    padding: 30mm 16mm 6mm 20mm;
+    box-sizing: border-box;
   }
 
   /* == Header */
   #certificate header {
-    display: inline-block;
-    text-align: center;
-    padding-top: 10mm;
-    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6mm;
   }
 
-  #certificate header div {
-      display: inline-block;
-      margin: 0 auto;
+  .header__content {
+    flex: 1;
   }
 
   #certificate header h1 {
-    font-family: 'Cinzel', "Times New Roman", serif;
-    font-weight: 500;
-    font-size: 96px;
-    text-align: center;
-    display: inline-block;
-    line-height: 0.8;
-  }
-  #certificate header h1::first-letter {
-    font-size: 120px;
-  }
-  #certificate .issuance-date {
-    text-align: right;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-weight: 300;
+    font-size: 76pt;
     line-height: 1;
+    text-transform: uppercase;
+    color: black;
   }
 
+  .issuance-date {
+    font-size: 10pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #333;
+    margin-top: 5mm;
+    margin-left: 3mm;
+  }
 
   /* == Student */
   #certificate .student {
-    text-align: center;
-    padding: 5mm 0;
+    padding: 3mm 0 5mm 0;
     flex: 1;
-    line-height: 1.1;
   }
 
-  #certificate .student strong {
-    font-size: 2rem;
-    font-weight: inherit;
+  .student__name {
+    display: block;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 36pt;
+    font-weight: 800;
+    color: #2d69af;
+    line-height: 1.2;
+    margin-bottom: 5mm;
   }
 
-  #certificate .student strong:first-child {
-    line-height: 1.75;
+  .student__achievement {
+    font-size: 12pt;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: black;
+    margin-bottom: 8mm;
+  }
+
+  .student__course {
+    display: block;
+    font-family: "Montserrat", Arial, sans-serif;
+    font-size: 24pt;
+    font-weight: 800;
+    color: #111;
+    line-height: 1.3;
   }
 
   /* == Signatories */
   #certificate .signatories {
     display: flex;
-    margin-bottom: 24mm;
-    padding-bottom: 5mm;
+    align-items: flex-end;
+    margin-bottom: 4mm;
   }
 
-  #certificate .signatories__column {
+  .signatories__spacer {
+    width: 55mm;
+    flex-shrink: 0;
+  }
+
+  .signatories__organization {
+    margin-top: 35px;
     flex: 1;
-    margin: 0;
-    font-size: 0.7rem;
-    line-height: 1.25;
+    text-align: left;
+    height: 275px;
   }
 
-  #certificate .signatories__column-content {
-    display: flex;
-    flex-direction: column;
-    justify-items: center;
-    align-items: center;
-    align-self: center;
-    flex: 1;
-    margin: 0;
-    padding: 0;
-    text-align: center;
+  .organization__name {
+    font-size: 16pt;
+    font-weight: 600;
+    margin-bottom: 2mm;
   }
 
-  #certificate .signatories__column-content > * {
-    display: inline-block;
-    margin: 0 auto;
-  }
-
-  /* == Signatories - Organization */
-  .signatories__column-content.organization img {
+  .organization__logo {
     display: block;
-    height: 25mm;
-    padding-top: 2mm;
-    width: auto;
+    width: 25mm;
+    height: auto;
+    margin: 0 0 2mm 0;
   }
 
-  .signatories__column-content.organization > .organization__signature {
-    height: 13mm;
-  }
-
-  .signatories__column-content.organization .organization__signatory em {
+  .organization__signature {
     display: block;
+    width: 25mm;
+    height: auto;
+  }
+
+  .organization__signatory {
+    margin-top: 1mm;
+  }
+
+  .organization__signatory-name {
+    display: block;
+    font-size: 12px;
     font-style: italic;
-    margin: 0;
+    font-weight: 400;
   }
-  .signatories__column-content.organization .organization__signatory:before {
-    height: 1px;
-    background: #ccc;
-    content: '';
+
+  .organization__signatory-role {
     display: block;
-    margin: 2mm auto;
-    width: 50mm;
+    font-size: 12px;
+    font-weight: 400;
+    font-style: italic;
   }
 
   /* == Signatories - Platform */
-  .signatories__column-content.platform img {
-    padding: 2mm;
+  .signatories__platform {
+    width: 70mm;
+    flex-shrink: 0;
+  }
+
+  .platform__logos {
+    display: flex;
+    align-items: end;
+    justify-content: end;
+    gap: 2mm;
+    margin-bottom: 2mm;
+  }
+
+  .platform__fun-logo {
+    width: 35mm;
+    height: auto;
+  }
+
+  .platform__badge {
+    width: 15mm;
+    height: auto;
+    margin-left: 140px;
+  }
+
+  .platform__verification {
+    font-size: 9pt;
+    font-weight: 600;
+    font-style: italic;
+    line-height: 1.5;
+    color: #444;
+    margin-bottom: 1.5mm;
+  }
+
+  .platform__verification a {
+    color: #444;
+    font-size: 9pt;
+    font-weight: 400;
+    font-style: italic;
+    word-break: break-all;
+    text-decoration: none;
+  }
+
+  .identity-verified {
+    font-size: 8pt;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: black;
+    margin-top: 30px;
   }
 }
