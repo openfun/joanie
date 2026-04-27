@@ -677,6 +677,24 @@ test.describe("Order create", () => {
   let offerings: Offering[];
 
   test.beforeEach(async ({ page }) => {
+    await page.route(
+      "http://localhost:8071/api/v1.0/admin/waffle_status/",
+      async (route) => {
+        await route.fulfill({
+          json: {
+            flags: {},
+            switches: {
+              admin_order_custom_discount: {
+                is_active: true,
+                last_modified: "2026-04-27T12:00:00Z",
+              },
+            },
+            samples: {},
+          },
+        });
+      },
+    );
+
     offerings = [OfferingFactory()];
     offerings[0].product.title = "Test Product";
     offerings[0].course.title = "Test Course";
