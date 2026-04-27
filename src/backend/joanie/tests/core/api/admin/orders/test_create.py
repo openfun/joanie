@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 
+from waffle.testutils import override_switch
+
 from joanie.core import enums, factories, models
 from joanie.tests.base import BaseAPITestCase
 
@@ -111,6 +113,7 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertFalse(order.voucher.multiple_use)
         self.assertFalse(order.voucher.multiple_users)
 
+    @override_switch("admin_order_custom_discount", active=True)
     def test_api_admin_orders_create_with_discount_rate(self):
         """An admin should be able to create an order with a custom rate discount."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -139,6 +142,7 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertEqual(order.voucher.discount.rate, 0.5)
         self.assertIsNone(order.voucher.discount.amount)
 
+    @override_switch("admin_order_custom_discount", active=True)
     def test_api_admin_orders_create_with_discount_amount(self):
         """An admin should be able to create an order with a fixed amount discount."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -167,6 +171,7 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertIsNone(order.voucher.discount.rate)
         self.assertEqual(order.voucher.discount.amount, 150)
 
+    @override_switch("admin_order_custom_discount", active=True)
     def test_api_admin_orders_create_with_discount_rate_over_100(self):
         """A rate discount value above 100 should be rejected."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -186,6 +191,7 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertIn("discount_value", response.json())
 
+    @override_switch("admin_order_custom_discount", active=True)
     def test_api_admin_orders_create_with_discount_rate_zero(self):
         """A rate discount value of 0 should be rejected."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -205,6 +211,7 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertIn("discount_value", response.json())
 
+    @override_switch("admin_order_custom_discount", active=True)
     def test_api_admin_orders_create_with_discount_amount_decimal(self):
         """A non-integer amount discount should be rejected."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -224,6 +231,7 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertIn("discount_value", response.json())
 
+    @override_switch("admin_order_custom_discount", active=True)
     def test_api_admin_orders_create_with_discount_amount_negative(self):
         """A negative amount discount should be rejected."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -243,6 +251,7 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
         self.assertIn("discount_value", response.json())
 
+    @override_switch("admin_order_custom_discount", active=True)
     def test_api_admin_orders_create_with_discount_type_without_value(self):
         """Providing discount_type without discount_value should be rejected."""
         admin = factories.UserFactory(is_staff=True, is_superuser=True)
@@ -259,3 +268,26 @@ class OrdersAdminApiCreateTestCase(BaseAPITestCase):
             content_type="application/json",
         )
         self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+
+    def test_api_admin_orders_create_with_discount_rejected_when_switch_off(self):
+        """
+        Submitting custom discount fields while the
+        admin_order_custom_discount switch is off should be rejected.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering = factories.OfferingFactory()
+        response = self.client.post(
+            "/api/v1.0/admin/orders/",
+            data={
+                "product_id": str(offering.product.id),
+                "course_code": offering.course.code,
+                "organization_id": str(offering.organizations.first().id),
+                "discount_type": "rate",
+                "discount_value": 50,
+            },
+            content_type="application/json",
+        )
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertIn("Custom discount is not enabled.", str(response.json()))
