@@ -15,6 +15,11 @@ and this project adheres to
 - Introduce django-waffle and expose its status through `waffle_status`
 - Add `useWaffle` hook to read feature flags in the admin frontend
 
+### Changed
+
+- Gate admin order custom discount behind the `admin_order_custom_discount`
+  waffle switch (off by default)
+
 ## [3.3.0] - 2026-04-09
 
 ### Added

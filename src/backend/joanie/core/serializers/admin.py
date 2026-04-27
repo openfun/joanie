@@ -7,6 +7,7 @@ from decimal import Decimal as D
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+import waffle
 from django_countries.serializer_fields import CountryField
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
@@ -24,6 +25,8 @@ from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
 
 PAYMENT_STATE_LABELS = dict(enums.PAYMENT_STATE_CHOICES)
+
+ADMIN_ORDER_CUSTOM_DISCOUNT_SWITCH = "admin_order_custom_discount"
 
 
 class AdminContractDefinitionSerializer(serializers.ModelSerializer):
@@ -1504,6 +1507,10 @@ class AdminOrderCreateSerializer(serializers.ModelSerializer):
         """
         discount_type = attrs.get("discount_type")
         discount_value = attrs.get("discount_value")
+        if (
+            discount_type is not None or discount_value is not None
+        ) and not waffle.switch_is_active(ADMIN_ORDER_CUSTOM_DISCOUNT_SWITCH):
+            raise serializers.ValidationError(_("Custom discount is not enabled."))
         if bool(discount_type) != bool(discount_value is not None):
             raise serializers.ValidationError(
                 _("discount_type and discount_value must be provided together.")
