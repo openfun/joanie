@@ -209,6 +209,9 @@ export function OrderCreateForm({ afterSubmit }: Props) {
             <OfferingSearch
               name="offering"
               label={intl.formatMessage(messages.offeringLabel)}
+              filters={
+                customDiscountEnabled ? undefined : { has_deep_links: true }
+              }
             />
           </Grid>
 
