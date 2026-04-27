@@ -9,6 +9,7 @@ import { OrderFactory } from "@/services/factories/orders";
 import { buildApiUrl } from "@/services/http/HttpService";
 import { offeringsRoutes } from "@/services/repositories/offering/OfferingRepository";
 import { orderRoutes } from "@/services/repositories/orders/OrderRepository";
+import { waffleRoutes } from "@/services/repositories/waffle/WaffleRepository";
 import { OrderCreateForm } from "@/components/templates/orders/form/OrderCreateForm";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
 
@@ -30,6 +31,18 @@ describe("<OrderCreateForm />", () => {
 
   beforeEach(() => {
     server.use(
+      http.get(buildApiUrl(waffleRoutes.getStatus), () => {
+        return HttpResponse.json({
+          flags: {},
+          switches: {
+            admin_order_custom_discount: {
+              is_active: true,
+              last_modified: "2026-04-27T12:00:00Z",
+            },
+          },
+          samples: {},
+        });
+      }),
       http.get(buildApiUrl(offeringsRoutes.getAll()), () => {
         return HttpResponse.json({
           count: 2,

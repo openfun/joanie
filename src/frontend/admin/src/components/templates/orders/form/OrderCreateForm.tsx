@@ -16,6 +16,7 @@ import { Offering } from "@/services/api/models/Offerings";
 import { Organization } from "@/services/api/models/Organization";
 import { DTOOrderCreate, OrderListItem } from "@/services/api/models/Order";
 import { useOrders } from "@/hooks/useOrders/useOrders";
+import { useWaffleSwitch } from "@/hooks/useWaffle/useWaffle";
 
 const messages = defineMessages({
   generalSubtitle: {
@@ -95,6 +96,7 @@ type Props = {
 
 export function OrderCreateForm({ afterSubmit }: Props) {
   const intl = useIntl();
+  const customDiscountEnabled = useWaffleSwitch("admin_order_custom_discount");
 
   const RegisterSchema = Yup.object().shape({
     offering: Yup.mixed<Offering>().required(),
@@ -226,44 +228,50 @@ export function OrderCreateForm({ afterSubmit }: Props) {
             </Grid>
           )}
 
-          <Grid size={12}>
-            <Typography variant="subtitle2">
-              {intl.formatMessage(messages.discountSubtitle)}
-            </Typography>
-          </Grid>
-
-          <Grid size={12}>
-            <RHFCheckbox
-              name="fullDiscount"
-              label={intl.formatMessage(messages.fullDiscountLabel)}
-            />
-          </Grid>
-
-          {!fullDiscount && (
+          {customDiscountEnabled && (
             <>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RHFTextField
-                  name="discountValue"
-                  type="number"
-                  label={intl.formatMessage(messages.discountValueLabel)}
+              <Grid size={12}>
+                <Typography variant="subtitle2">
+                  {intl.formatMessage(messages.discountSubtitle)}
+                </Typography>
+              </Grid>
+
+              <Grid size={12}>
+                <RHFCheckbox
+                  name="fullDiscount"
+                  label={intl.formatMessage(messages.fullDiscountLabel)}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RHFSelect
-                  name="discountType"
-                  label={intl.formatMessage(messages.discountTypeLabel)}
-                  options={[
-                    {
-                      label: intl.formatMessage(messages.discountTypeRate),
-                      value: "rate",
-                    },
-                    {
-                      label: intl.formatMessage(messages.discountTypeAmount),
-                      value: "amount",
-                    },
-                  ]}
-                />
-              </Grid>
+
+              {!fullDiscount && (
+                <>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <RHFTextField
+                      name="discountValue"
+                      type="number"
+                      label={intl.formatMessage(messages.discountValueLabel)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <RHFSelect
+                      name="discountType"
+                      label={intl.formatMessage(messages.discountTypeLabel)}
+                      options={[
+                        {
+                          label: intl.formatMessage(messages.discountTypeRate),
+                          value: "rate",
+                        },
+                        {
+                          label: intl.formatMessage(
+                            messages.discountTypeAmount,
+                          ),
+                          value: "amount",
+                        },
+                      ]}
+                    />
+                  </Grid>
+                </>
+              )}
             </>
           )}
         </Grid>
