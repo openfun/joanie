@@ -23,10 +23,14 @@ const getOfferingLabel = (offering: Maybe<Offering>): string => {
   return `${offering.product.title} — ${offering.course.title}`;
 };
 
-export function OfferingSearch(props: RHFAutocompleteSearchProps<Offering>) {
+type Props = RHFAutocompleteSearchProps<Offering> & {
+  filters?: Record<string, unknown>;
+};
+
+export function OfferingSearch({ filters, ...props }: Props) {
   const intl = useIntl();
   const [query, setQuery] = useState("");
-  const offerings = useOfferings({ query });
+  const offerings = useOfferings({ query, ...filters });
 
   return (
     <RHFSearch
