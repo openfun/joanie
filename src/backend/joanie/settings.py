@@ -193,6 +193,7 @@ class Base(Configuration):
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "joanie.core.middleware.JoanieDockerflowMiddleware",
+        "waffle.middleware.WaffleMiddleware",
     ]
 
     AUTHENTICATION_BACKENDS = [
@@ -218,6 +219,7 @@ class Base(Configuration):
         "rest_framework",
         "parler",
         "easy_thumbnails",
+        "waffle",
         # Joanie
         "joanie.core",
         # contrib admin needs to be after joanie.core to override templates

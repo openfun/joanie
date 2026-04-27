@@ -18,6 +18,7 @@ from django.conf import settings
 from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
+from waffle.views import waffle_json
 
 from joanie.core.api import admin as api_admin
 
@@ -111,6 +112,11 @@ admin_offering_related_router.register(
 )
 
 urlpatterns = [
+    path(
+        f"api/{API_VERSION}/admin/waffle_status/",
+        waffle_json,
+        name="admin_waffle_status",
+    ),
     path(
         f"api/{API_VERSION}/admin/",
         include([*admin_router.urls]),

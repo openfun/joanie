@@ -12,6 +12,7 @@ and this project adheres to
 
 - Update Volta configuration with yarn fixed version
 - Allow custom discount (percentage or fixed amount) when creating admin orders
+- Introduce django-waffle and expose its status through `waffle_status`
 
 ## [3.3.0] - 2026-04-09
 
