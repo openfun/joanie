@@ -131,3 +131,45 @@ class CourseProductRelationListAdminApiTestCase(BaseAPITestCase):
             },
             response.json(),
         )
+
+    def test_admin_api_offering_list_filter_has_deep_links_true(self):
+        """
+        Filtering offerings with `?has_deep_links=true` should return only
+        offerings that have at least one OfferingDeepLink attached.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering_with = factories.OfferingFactory(product__courses=[])
+        factories.OfferingDeepLinkFactory(offering=offering_with)
+        factories.OfferingFactory(product__courses=[])
+
+        response = self.client.get(
+            "/api/v1.0/admin/offerings/?has_deep_links=true",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["id"], str(offering_with.id))
+
+    def test_admin_api_offering_list_filter_has_deep_links_false(self):
+        """
+        Filtering offerings with `?has_deep_links=false` should return only
+        offerings that do not have any OfferingDeepLink attached.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        offering_with = factories.OfferingFactory(product__courses=[])
+        factories.OfferingDeepLinkFactory(offering=offering_with)
+        offering_without = factories.OfferingFactory(product__courses=[])
+
+        response = self.client.get(
+            "/api/v1.0/admin/offerings/?has_deep_links=false",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        data = response.json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["results"][0]["id"], str(offering_without.id))

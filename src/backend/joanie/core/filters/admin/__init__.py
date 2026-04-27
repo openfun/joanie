@@ -478,6 +478,7 @@ class OfferingAdminFilterSet(filters.FilterSet):
 
     query = filters.CharFilter(method="filter_by_query")
     ids = MultipleValueFilter(field_class=fields.UUIDField, field_name="id")
+    has_deep_links = filters.BooleanFilter(method="filter_by_has_deep_links")
 
     def filter_by_query(self, queryset, _name, value):
         """
@@ -489,6 +490,15 @@ class OfferingAdminFilterSet(filters.FilterSet):
             | Q(course__translations__title__icontains=value)
             | Q(course__code__icontains=value)
         ).distinct()
+
+    def filter_by_has_deep_links(self, queryset, _name, value):
+        """
+        Filter offerings depending on whether they have at least one
+        OfferingDeepLink attached.
+        """
+        if value:
+            return queryset.filter(organization_links__isnull=False).distinct()
+        return queryset.filter(organization_links__isnull=True)
 
 
 class VoucherAdminFilterSet(DiscountAdminFilterSet):
