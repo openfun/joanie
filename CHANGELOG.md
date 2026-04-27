@@ -14,6 +14,7 @@ and this project adheres to
 - Allow custom discount (percentage or fixed amount) when creating admin orders
 - Introduce django-waffle and expose its status through `waffle_status`
 - Add `useWaffle` hook to read feature flags in the admin frontend
+- Add `has_deep_links` filter on admin offering API
 
 ### Changed
 

@@ -3036,6 +3036,13 @@
                 "parameters": [
                     {
                         "in": "query",
+                        "name": "has_deep_links",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "ids",
                         "schema": {
                             "type": "string",
