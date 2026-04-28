@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add `final_reference` field in `Invoice` model
 - Update Volta configuration with yarn fixed version
 
 ## [3.3.0] - 2026-04-09

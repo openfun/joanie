@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.dispatch import receiver
 from django.utils import timezone
@@ -49,6 +49,13 @@ class Invoice(BaseModel):
         editable=False,
         max_length=40,
         unique=True,
+    )
+    # Use final reference pdf export only
+    final_reference = models.CharField(
+        max_length=40,
+        unique=True,
+        null=True,
+        blank=True,
     )
     order = models.ForeignKey(
         to="core.Order",
@@ -267,6 +274,83 @@ class Invoice(BaseModel):
             child_number = self.parent.children.count() + 1
             reference = f"{self.parent.reference}-{child_number}"
         return reference
+
+    @property
+    def can_generate_final_reference(self):
+        """
+        Return boolean value whether we can generate an invoice once the order
+        is completed. We evaluate if the buyer has fully paid the order, the balance
+        should be at 0. Otherwise, we return False.
+        """
+        eligible_order = None
+
+        if self.order and self.order.state == enums.ORDER_STATE_COMPLETED:
+            eligible_order = self.order
+        elif (
+            self.batch_order
+            and self.batch_order.state == enums.BATCH_ORDER_STATE_COMPLETED
+            and self.batch_order.payment_method == enums.BATCH_ORDER_WITH_CARD_PAYMENT
+        ):
+            eligible_order = self.batch_order
+
+        if not eligible_order:
+            return False
+
+        return eligible_order and self.balance == 0
+
+    def normalize_final_reference(self):
+        """
+        Generate a normalized reference for the `final_reference` field.
+        Final reference can only be generated when the order or batch order is paid
+        through card payment only.
+        """
+        if not self.can_generate_final_reference:
+            raise ValidationError(
+                _("The final reference can't be generated for this order")
+            )
+
+        organization_code = (
+            self.order.organization.code
+            if self.order
+            else self.batch_order.organization.code
+        )
+
+        with transaction.atomic():
+            year = timezone.now().year
+            prefix_final_reference = f"{organization_code}_{year}_"
+            last = (
+                Invoice.objects.filter(
+                    final_reference__startswith=prefix_final_reference
+                )
+                .order_by("-final_reference")
+                .select_for_update()
+                .first()
+            )
+            next_number = 0
+            if last and last.final_reference:
+                last_number = int(last.final_reference.split("_")[-1])
+                next_number = last_number + 1
+
+            final_reference = f"{prefix_final_reference}{next_number:07d}"
+
+            while self.__class__.objects.filter(
+                final_reference=final_reference
+            ).exists():
+                # This while loop handles cases when concurrent requests are made,
+                # ensuring the reference is unique.
+                next_number += 1
+                final_reference = f"{prefix_final_reference}{next_number:07d}"
+
+            return final_reference
+
+    def add_parent_final_reference(self):
+        """
+        We should get the parent invoice of a batch order or order that uses credit card
+        payment, and update the final reference.
+        """
+        final_reference = self.normalize_final_reference()
+        self.final_reference = final_reference
+        self.save(update_fields=["final_reference"])
 
     def clean(self):
         """
