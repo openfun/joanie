@@ -78,6 +78,11 @@ export const batchOrderActionsMessages = defineMessages({
     defaultMessage: "Confirm quote",
     description: "Label for the confirm quote action",
   },
+  download_quote: {
+    id: "components.templates.batch-orders.view.batchOrderActionsMessages.downloadQuote",
+    defaultMessage: "Download quote",
+    description: "Label for the download quote action",
+  },
   confirm_purchase_order: {
     id: "components.templates.batch-orders.view.batchOrderActionsMessages.confirmPurchaseOrder",
     defaultMessage: "Confirm purchase order",
