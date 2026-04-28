@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add `final_reference` field in `Invoice` model
 - Add payment method, session code and course code to order export csv
 - Update Volta configuration with yarn fixed version
 - Update certificate degree
