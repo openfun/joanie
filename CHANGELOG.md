@@ -18,6 +18,7 @@ and this project adheres to
 
 ### Changed
 
+- Allow deeplink max length to 400 characters
 - Gate admin order custom discount behind the `admin_order_custom_discount`
   waffle switch (off by default)
 - Restrict admin order creation offering search to those with a deep link
