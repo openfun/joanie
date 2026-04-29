@@ -1,14 +1,24 @@
 """Test suite for the Invoice model."""
 
 import re
+from datetime import datetime
 from decimal import Decimal as D
+from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models import ProtectedError
 
-from joanie.core.factories import OrderFactory, ProductFactory
+from joanie.core import enums
+from joanie.core.factories import (
+    BatchOrderFactory,
+    OrderFactory,
+    OrderGeneratorFactory,
+    OrganizationFactory,
+    ProductFactory,
+)
 from joanie.payment.factories import InvoiceFactory, TransactionFactory
 from joanie.payment.models import Invoice
 from joanie.tests.base import BaseAPITestCase
@@ -284,3 +294,81 @@ class InvoiceModelTestCase(BaseAPITestCase):
         self.assertEqual(
             context["order"]["product"]["description"], "Product 1 description"
         )
+
+    def test_models_invoice_add_parent_final_reference_uniqueness(self):
+        """
+        When we create the final references for different orders that are attached to
+        the same organization, we should see the reference being incremented.
+        """
+        organization = OrganizationFactory(code="CODE_001")
+        order_1, order_2 = OrderGeneratorFactory.create_batch(
+            2, organization=organization, state=enums.ORDER_STATE_COMPLETED
+        )
+
+        self.assertIsNone(order_1.main_invoice.final_reference)
+        self.assertIsNone(order_2.main_invoice.final_reference)
+
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime(2026, 1, 1, 0, tzinfo=ZoneInfo("UTC")),
+        ):
+            order_1.main_invoice.add_parent_final_reference()
+            order_2.main_invoice.add_parent_final_reference()
+
+        self.assertEqual(
+            order_1.main_invoice.final_reference, f"{organization.code}_2026_0000000"
+        )
+        self.assertEqual(
+            order_2.main_invoice.final_reference, f"{organization.code}_2026_0000001"
+        )
+
+    def test_models_invoice_property_can_generate_final_reference_standard_order(self):
+        """
+        The property `can_generate_final_reference` should only return True
+        if the order is `completed` and is paid.
+        """
+        for state, _ in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                # States where main invoice does not exist
+                if state in [enums.ORDER_STATE_DRAFT, enums.ORDER_STATE_TO_OWN]:
+                    continue
+                if state == enums.ORDER_STATE_COMPLETED:
+                    order = OrderGeneratorFactory(state=state)
+                    self.assertTrue(order.main_invoice.can_generate_final_reference)
+                else:
+                    order = OrderGeneratorFactory(state=state)
+                    self.assertFalse(order.main_invoice.can_generate_final_reference)
+
+    def test_models_invoice_property_can_generate_final_reference_batch_order(self):
+        """
+        The property `can_generate_final_reference` should only return True
+        if the batch order is completed and uses card payment.
+        """
+        for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
+            for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+                with self.subTest(state=state, payment_method=payment_method):
+                    # States where main invoice does not exist
+                    if state in [
+                        enums.BATCH_ORDER_STATE_DRAFT,
+                        enums.BATCH_ORDER_STATE_ASSIGNED,
+                        enums.BATCH_ORDER_STATE_QUOTED,
+                        enums.BATCH_ORDER_STATE_CANCELED,
+                    ]:
+                        continue
+                    if (
+                        payment_method == enums.BATCH_ORDER_WITH_CARD_PAYMENT
+                        and state == enums.BATCH_ORDER_STATE_COMPLETED
+                    ):
+                        batch_order = BatchOrderFactory(
+                            payment_method=payment_method, state=state
+                        )
+                        self.assertTrue(
+                            batch_order.main_invoice.can_generate_final_reference
+                        )
+                    else:
+                        batch_order = BatchOrderFactory(
+                            payment_method=payment_method, state=state
+                        )
+                        self.assertFalse(
+                            batch_order.main_invoice.can_generate_final_reference
+                        )
