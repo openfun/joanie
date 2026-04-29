@@ -119,3 +119,26 @@ class OfferingDeepLinkModelTestCase(TestCase):
 
         self.assertTrue(models.OfferingDeepLink.objects.count())
         self.assertFalse(deep_link.is_active)
+
+    def test_models_offering_deeplink_create_exceed_max_length(self):
+        """
+        An offering deeplink should not exceed more than 400 characters.
+        """
+        organization = factories.OrganizationFactory()
+        offering = factories.OfferingFactory(organizations=[organization])
+
+        base_deeplink = "https://test-deeplink.com/"
+        extended_deeplink = (401 - len(base_deeplink)) * "a"
+        deeplink = f"{base_deeplink}{extended_deeplink}"
+
+        with self.assertRaises(ValidationError) as context:
+            models.OfferingDeepLink.objects.create(
+                organization=organization,
+                offering=offering,
+                deep_link=deeplink,
+            )
+
+        self.assertTrue(
+            str(context.exception),
+            "Ensure this value has at most 400 characters (it has 401).'",
+        )
