@@ -8776,7 +8776,7 @@
                         "type": "string",
                         "format": "uri",
                         "description": "Deep link of an offering where a learner can subscribe with an external link.",
-                        "maxLength": 200
+                        "maxLength": 400
                     },
                     "is_active": {
                         "type": "boolean",
@@ -8797,7 +8797,7 @@
                         "format": "uri",
                         "minLength": 1,
                         "description": "Deep link of an offering where a learner can subscribe with an external link.",
-                        "maxLength": 200
+                        "maxLength": 400
                     },
                     "is_active": {
                         "type": "boolean",
@@ -12011,7 +12011,7 @@
                         "format": "uri",
                         "minLength": 1,
                         "description": "Deep link of an offering where a learner can subscribe with an external link.",
-                        "maxLength": 200
+                        "maxLength": 400
                     },
                     "is_active": {
                         "type": "boolean",

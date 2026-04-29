@@ -952,6 +952,7 @@ class OfferingDeepLink(BaseModel):
 
     deep_link = models.URLField(
         _("deep_link"),
+        max_length=400,
         help_text=_(
             "Deep link of an offering where a learner can subscribe with an external link."
         ),
