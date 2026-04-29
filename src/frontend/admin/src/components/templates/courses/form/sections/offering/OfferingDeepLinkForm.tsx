@@ -53,7 +53,7 @@ export function OfferingDeepLinkForm({
 
   const Schema = Yup.object().shape({
     organization_id: Yup.string().required(),
-    deep_link: Yup.string().url().max(200).required(),
+    deep_link: Yup.string().url().max(400).required(),
     is_active: Yup.boolean().required(),
   });
 
