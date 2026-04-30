@@ -6,6 +6,7 @@ a validated design of documents.
 
 import os
 from datetime import datetime
+from typing import Optional
 from zoneinfo import ZoneInfo
 
 import pymupdf
@@ -15,7 +16,7 @@ from joanie.core.utils import issuers
 
 
 def call_issuers_generate_document(
-    name: str, context: dict, path: str, creation_date=False
+    name: str, context: dict, path: str, creation_date=False, file_name: Optional[str] = None
 ):
     """
     Call generate document from issuers but add extra step to output the file
@@ -25,7 +26,8 @@ def call_issuers_generate_document(
         context["creation_date"] = datetime(2025, 11, 18, 14, tzinfo=ZoneInfo("UTC"))
 
     pdf_bytes = issuers.generate_document(name, context)
-    pdf_output_path = path + name + ".pdf"
+    output_name = file_name or name
+    pdf_output_path = path + output_name + ".pdf"
     with open(pdf_output_path, "wb") as pdf_file:
         pdf_file.write(pdf_bytes)
     return pdf_output_path

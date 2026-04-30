@@ -23,20 +23,23 @@ from joanie.tests.compare_image_utils import (
 )
 
 
-def generate_certificate(template: str):
-    """
-    Create a certificate object for a given template using test factories.
-    Sets up organization, course, product, owner, and order for testing.
-    Returns the generated Certificate instance.
-    """
-    organization = factories.OrganizationFactory(
-        title="University X",
-        representative="Joanie Cunningham",
-        representative_profession="Head of the department",
-    )
-    course = factories.CourseFactory(
-        organizations=[organization],
-    )
+def generate_certificate(template: str, dual_issuers: bool = False):
+    organizations = [
+        factories.OrganizationFactory(
+            title="University X",
+            representative="Joanie Cunningham",
+            representative_profession="Head of the department",
+        )
+    ]
+    if dual_issuers:
+        organizations.append(
+            factories.OrganizationFactory(
+                title="University Y",
+                representative="Jane Doe",
+                representative_profession="Head of the department",
+            )
+        )
+    course = factories.CourseFactory(organizations=organizations)
     certificate_definition = factories.CertificateDefinitionFactory(template=template)
     product = factories.ProductFactory(
         courses=[course],
@@ -538,6 +541,204 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
         )
 
         clear_generated_files(base_path, certificate.certificate_definition.template)
+
+    def test_utils_issuers_generate_document_microcredential_degree_default_dual_issuers(
+        self,
+    ):
+        """
+        When two producer organizations are set on the course, both organization names
+        and both representatives should appear in the generated default microcredential document.
+        """
+        certificate = generate_certificate(enums.MICROCREDENTIAL_DEGREE_DEFAULT, dual_issuers=True)
+        product = certificate.order.product
+
+        document = issuers.generate_document(
+            name=certificate.certificate_definition.template,
+            context=certificate.get_document_context(),
+        )
+
+        document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+
+        self.assertRegex(
+            document_text,
+            (
+                r"Joanie Cunningham.*"
+                r"acquired the skills from the professional training.*"
+                r"Graded product"
+            ),
+        )
+        self.assertRegex(
+            document_text,
+            r"(?i)university x.*and.*university y|university y.*and.*university x",
+        )
+        self.assertRegex(document_text, r"Joanie Cunningham.*Head of the department.*University X")
+        self.assertRegex(document_text, r"Jane Doe.*Head of the department.*University Y")
+        self.assertRegex(document_text, r"en-us")
+
+        with switch_language(product, "fr-fr"):
+            document = issuers.generate_document(
+                name=certificate.certificate_definition.template,
+                context=certificate.get_document_context(),
+            )
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(document_text, r"fr-fr")
+
+        with switch_language(product, "de-de"):
+            document = issuers.generate_document(
+                name=certificate.certificate_definition.template,
+                context=certificate.get_document_context(),
+            )
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(document_text, r"en-us")
+
+    def test_utils_issuers_verify_document_microcredential_degree_default_dual_issuers_style(
+        self,
+    ):
+        """
+        When two producer organizations are set, the style of the default microcredential
+        document should match the dual-issuer reference image.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+        template_name = enums.MICROCREDENTIAL_DEGREE_DEFAULT
+        file_name = template_name + "_dual_issuers"
+
+        certificate = generate_certificate(template=template_name, dual_issuers=True)
+
+        pdf_path = call_issuers_generate_document(
+            name=certificate.certificate_definition.template,
+            context=certificate.get_document_context(),
+            path=base_path,
+            creation_date=True,
+            file_name=file_name,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + file_name + ".pdf")
+
+        original_image = Image.open(
+            base_path + file_name + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + file_name + "_diff.png",
+        )
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}{file_name}.png
+            {base_path}{file_name}_original.png
+            rm -f {base_path}{file_name}_diff.png
+        """,
+        )
+
+        clear_generated_files(base_path, file_name)
+
+    def test_utils_issuers_generate_document_microcredential_degree_unicamp_dual_issuers(
+        self,
+    ):
+        """
+        When two producer organizations are set on the course, both organization names
+        and both representatives should appear in the generated unicamp microcredential document.
+        """
+        certificate = generate_certificate(enums.MICROCREDENTIAL_DEGREE_UNICAMP, dual_issuers=True)
+        product = certificate.order.product
+
+        document = issuers.generate_document(
+            name=certificate.certificate_definition.template,
+            context=certificate.get_document_context(),
+        )
+
+        document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+
+        self.assertRegex(
+            document_text,
+            (
+                r"Joanie Cunningham.*"
+                r"acquired the skills from the professional training.*"
+                r"Graded product"
+            ),
+        )
+        self.assertRegex(
+            document_text,
+            r"(?i)university x.*and.*university y|university y.*and.*university x",
+        )
+        self.assertRegex(document_text, r"Joanie Cunningham.*Head of the department.*University X")
+        self.assertRegex(document_text, r"Jane Doe.*Head of the department.*University Y")
+        self.assertRegex(document_text, r"en-us")
+
+        with switch_language(product, "fr-fr"):
+            document = issuers.generate_document(
+                name=certificate.certificate_definition.template,
+                context=certificate.get_document_context(),
+            )
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(document_text, r"fr-fr")
+
+        with switch_language(product, "de-de"):
+            document = issuers.generate_document(
+                name=certificate.certificate_definition.template,
+                context=certificate.get_document_context(),
+            )
+            document_text = pdf_extract_text(BytesIO(document)).replace("\n", "")
+            self.assertRegex(document_text, r"en-us")
+
+    def test_utils_issuers_verify_document_microcredential_degree_unicamp_dual_issuers_style(
+        self,
+    ):
+        """
+        When two producer organizations are set, the style of the unicamp microcredential
+        document should match the dual-issuer reference image.
+        """
+        base_path = settings.BASE_DIR + "/joanie/tests/core/utils/__diff__/"
+        template_name = enums.MICROCREDENTIAL_DEGREE_UNICAMP
+        file_name = template_name + "_dual_issuers"
+
+        certificate = generate_certificate(template=template_name, dual_issuers=True)
+
+        pdf_path = call_issuers_generate_document(
+            name=certificate.certificate_definition.template,
+            context=certificate.get_document_context(),
+            path=base_path,
+            creation_date=True,
+            file_name=file_name,
+        )
+
+        generated_image_path = convert_pdf_to_png(pdf_path)
+        generated_image = Image.open(generated_image_path).convert("RGB")
+
+        os.remove(base_path + file_name + ".pdf")
+
+        original_image = Image.open(
+            base_path + file_name + "_original.png"
+        ).convert("RGB")
+
+        self.assertEqual(generated_image.size, original_image.size)
+
+        diff = compare_images(
+            generated_image,
+            original_image,
+            base_path + file_name + "_diff.png",
+        )
+        self.assertLessEqual(
+            diff,
+            1.5,
+            f"""
+            Test failed since the images are different, if you want to keep the new version use
+            mv -f {base_path}{file_name}.png
+            {base_path}{file_name}_original.png
+            rm -f {base_path}{file_name}_diff.png
+        """,
+        )
+
+        clear_generated_files(base_path, file_name)
 
     def test_utils_issuers_generate_document_template_does_not_exist(self):
         """If the template html and css don't exist, issuer generate document should fail"""
