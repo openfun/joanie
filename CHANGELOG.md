@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add payment method, session code and course code to order export csv
 - Update Volta configuration with yarn fixed version
 - Update certificate degree
 - Update micro credentials to handle two issuers
