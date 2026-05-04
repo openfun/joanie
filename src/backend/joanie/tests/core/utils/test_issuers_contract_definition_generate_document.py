@@ -168,9 +168,9 @@ def generate_order(template=enums.CONTRACT_DEFINITION_DEFAULT):
         language=language_code,
     )
     run = factories.CourseRunFactory(
-        enrollment_start=datetime(2026, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
-        start=datetime(2026, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
-        end=datetime(2026, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
+        enrollment_start=datetime(2042, 1, 1, 14, tzinfo=ZoneInfo("UTC")),
+        start=datetime(2042, 3, 1, 14, tzinfo=ZoneInfo("UTC")),
+        end=datetime(2042, 5, 1, 14, tzinfo=ZoneInfo("UTC")),
     )
     product = factories.ProductFactory(
         title="You will know that you know you don't know",
