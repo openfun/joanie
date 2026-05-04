@@ -1554,6 +1554,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("voucher", _("Voucher")),
             ("batch_order", _("Batch order")),
             ("nature", _("Nature")),
+            ("payment_method", _("Payment method")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
@@ -1611,7 +1612,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     has_waived_withdrawal_right = serializers.SerializerMethodField(read_only=True)
     certificate = serializers.SerializerMethodField(read_only=True)
     nature = serializers.SerializerMethodField(read_only=True)
-
+    payment_method = serializers.SerializerMethodField(read_only=True)
     contract = serializers.SlugRelatedField(
         read_only=True, slug_field="definition__title"
     )
@@ -1660,6 +1661,15 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     def get_nature(self, instance) -> str:
         """Return the translated nature label."""
         return instance.get_nature_display()
+
+    def get_payment_method(self, instance) -> str:
+        """Return the translated payment method label."""
+        if instance.batch_order:
+            return instance.batch_order.get_payment_method_display()
+        if instance.nature == enums.ORDER_NATURE_CPF:
+            return instance.get_nature_display()
+        # By default, standard orders are paid by card payment
+        return _("Card payment")
 
     def get_product_type(self, instance) -> str:
         """Return the translated product type label."""

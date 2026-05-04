@@ -19,6 +19,16 @@ def yes_no(value):
     return str(_("Yes")) if value else str(_("No"))
 
 
+def get_payment_method(order):
+    """Returns the payment method of the order"""
+    if order.batch_order:
+        return order.batch_order.get_payment_method_display()
+    if order.nature == enums.ORDER_NATURE_CPF:
+        return enums.ORDER_NATURE_CPF
+    # By default, standard orders are paid by card payment
+    return _("Card payment")
+
+
 def expected_csv_content(order):
     """Return the expected CSV content for an order."""
     content = {
@@ -40,6 +50,7 @@ def expected_csv_content(order):
         "Voucher": order.voucher.code if order.batch_order else "",
         "Batch order": "",
         "Nature": order.get_nature_display(),
+        "Payment method": get_payment_method(order),
         "Waived withdrawal right": yes_no(order.has_waived_withdrawal_right),
         "Certificate generated for this order": yes_no(hasattr(order, "certificate")),
         "Contract": "",
