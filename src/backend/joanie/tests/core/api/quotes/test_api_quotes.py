@@ -104,6 +104,7 @@ class QuoteApiTest(BaseAPITestCase):
                             "total_currency": settings.DEFAULT_CURRENCY,
                             "available_actions": {
                                 "confirm_quote": True,
+                                "download_quote": False,
                                 "confirm_purchase_order": False,
                                 "confirm_bank_transfer": False,
                                 "submit_for_signature": False,
@@ -214,6 +215,7 @@ class QuoteApiTest(BaseAPITestCase):
                     "total_currency": settings.DEFAULT_CURRENCY,
                     "available_actions": {
                         "confirm_quote": False,
+                        "download_quote": True,
                         "confirm_purchase_order": False,
                         "confirm_bank_transfer": False,
                         "submit_for_signature": False,

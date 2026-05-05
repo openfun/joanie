@@ -130,6 +130,7 @@ class BatchOrderReadListAPITest(BaseAPITestCase):
                         "funding_amount": float(bo.funding_amount),
                         "available_actions": {
                             "confirm_quote": True,
+                            "download_quote": False,
                             "confirm_purchase_order": False,
                             "confirm_bank_transfer": False,
                             "submit_for_signature": False,

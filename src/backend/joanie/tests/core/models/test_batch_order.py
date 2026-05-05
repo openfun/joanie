@@ -1269,6 +1269,7 @@ class BatchOrderModelsTestCase(LoggingTestCase):
         self.assertEqual(
             [
                 "confirm_quote",
+                "download_quote",
                 "confirm_purchase_order",
                 "confirm_bank_transfer",
                 "submit_for_signature",

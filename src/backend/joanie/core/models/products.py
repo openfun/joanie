@@ -2848,6 +2848,7 @@ class BatchOrder(BaseModel):
         """Return the available client actions for the batch order"""
         actions = {
             "confirm_quote": self.can_confirm_quote(),
+            "download_quote": self.can_download_quote(),
             "confirm_purchase_order": self.can_confirm_purchase_order(),
             "confirm_bank_transfer": self.can_confirm_bank_transfer(),
             "submit_for_signature": self.can_submit_for_signature(),
@@ -2855,7 +2856,7 @@ class BatchOrder(BaseModel):
         }
 
         for key, value in actions.items():
-            if value and key not in ("next_action",):
+            if value and key not in ("next_action", "download_quote"):
                 actions["next_action"] = key
                 break
 
