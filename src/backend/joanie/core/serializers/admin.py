@@ -21,6 +21,7 @@ from joanie.core.serializers.fields import (
 )
 from joanie.core.utils import get_default_currency_symbol
 from joanie.core.utils.batch_order import get_active_offering_rule
+from joanie.core.utils.order import extract_session_code_as_string
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
 
@@ -1538,6 +1539,8 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         fields_labels = [
             ("id", _("Order reference")),
             ("product", _("Product")),
+            ("course", _("Course code")),
+            ("session_code", _("Session code")),
             ("owner_name", _("Owner")),
             ("owner_email", _("Email")),
             ("organization", _("Organization")),
@@ -1591,6 +1594,8 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
 
     state = serializers.SerializerMethodField(read_only=True)
     product = serializers.SlugRelatedField(read_only=True, slug_field="title")
+    course = serializers.SlugRelatedField(read_only=True, slug_field="code")
+    session_code = serializers.SerializerMethodField(read_only=True)
     owner_name = serializers.SerializerMethodField(read_only=True)
     owner_email = serializers.SlugRelatedField(
         read_only=True, slug_field="email", source="owner"
@@ -1670,6 +1675,12 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             return instance.get_nature_display()
         # By default, standard orders are paid by card payment
         return _("Card payment")
+
+    def get_session_code(self, instance) -> str:
+        """
+        Return the session code of the course run related to the course
+        """
+        return extract_session_code_as_string(instance)
 
     def get_product_type(self, instance) -> str:
         """Return the translated product type label."""
