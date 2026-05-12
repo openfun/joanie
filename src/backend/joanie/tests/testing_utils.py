@@ -843,7 +843,7 @@ class Demo:
             self.log("")
 
             course_run_certificate = factories.CourseRunFactory(
-                title="Course run certificate",
+                title="Course run certificate - 00000",
                 resource_link=OPENEDX_COURSE_RUN_URI.format(
                     course="00000", course_run="CourseRunCertificate_run1"
                 ),
@@ -890,7 +890,7 @@ class Demo:
             self.log("")
 
             course_run_certificate_discount = factories.CourseRunFactory(
-                title="Course run certificate discount",
+                title="Course run certificate discount - 00001",
                 resource_link=OPENEDX_COURSE_RUN_URI.format(
                     course="00001", course_run="CourseRunCertificate_run1"
                 ),
@@ -951,8 +951,8 @@ class Demo:
             self.log(f'Successfully created "{course.title}" course')
             self.log("")
 
-            course_run_credential = factories.CourseRunFactory(
-                title="Course run credential",
+            course_run_first = factories.CourseRunFactory(
+                title="Course run credential - 00002",
                 resource_link=OPENEDX_COURSE_RUN_URI.format(
                     course="00002", course_run="CourseRunCredential_run1"
                 ),
@@ -961,7 +961,33 @@ class Demo:
                 state=CourseState.ONGOING_OPEN,
                 is_listed=False,
             )
-            self.log(f'Successfully created "{course_run_credential.title}" course run')
+            self.log(f'Successfully created "{course_run_first.title}" course run')
+            self.log("")
+
+            course_run_second = factories.CourseRunFactory(
+                title="Course run credential - 00002-2",
+                resource_link=OPENEDX_COURSE_RUN_URI.format(
+                    course="00002-2", course_run="CourseRunCredential_run1"
+                ),
+                course=course,
+                languages=self.get_random_languages(),
+                state=CourseState.ONGOING_OPEN,
+                is_listed=True,
+            )
+            self.log(f'Successfully created "{course_run_second.title}" course run')
+            self.log("")
+
+            course_run_selected = factories.CourseRunFactory(
+                title="Course run credential - 00002-3",
+                resource_link=OPENEDX_COURSE_RUN_URI.format(
+                    course="00002-3", course_run="CourseRunCredential_run1"
+                ),
+                course=course,
+                languages=self.get_random_languages(),
+                state=CourseState.ONGOING_OPEN,
+                is_listed=False,
+            )
+            self.log(f'Successfully created "{course_run_selected.title}" course run')
             self.log("")
 
             credential_product = factories.ProductFactory(
@@ -974,10 +1000,8 @@ class Demo:
                 quote_definition=factories.QuoteDefinitionFactory(),
                 type=enums.PRODUCT_TYPE_CREDENTIAL,
                 title="Credential Product",
-                courses=[course_run_credential.course],
-                target_courses=[
-                    course_run_credential.course,
-                ],
+                courses=[course],
+                target_courses=[course],
                 price=100,
             )
             self.log(f'Successfully created "{credential_product.title}" product')
@@ -987,7 +1011,80 @@ class Demo:
                 course=credential_product.courses.first(),
                 product=credential_product,
             )
+            # Explicitly link only the ongoing course run to the product relation
+            # This filters which course runs are available for this product
+            product_target_relation = credential_product.target_course_relations.get(
+                course=course
+            )
+
+            # Test for each session of course runs in product's target courses
+            for course_run in [
+                course_run_first,
+                course_run_second,
+            ]:
+                # For each order we create, aim to one specific course run
+                product_target_relation.course_runs.set([course_run])
+                order = factories.OrderGeneratorFactory(
+                    state=enums.ORDER_STATE_COMPLETED,
+                    course=credential_offering.course,
+                    product=credential_offering.product,
+                )
+                self.log(f"Successfully created completed order {order.id} ")
+                self.log("")
+
+            order = factories.OrderFactory(
+                state=enums.ORDER_STATE_COMPLETED,
+                course=credential_offering.course,
+                product=credential_offering.product,
+                nature=enums.ORDER_NATURE_CPF,
+                owner=factories.UserFactory(),
+            )
+            self.log(f"Successfully created CPF completed order {order.id} ")
+            self.log("")
+
+            # Apply the same for batch orders, each course run, one batch order
+            for course_run in [
+                course_run_first,
+                course_run_second,
+            ]:
+                for payment_method, _ in enums.BATCH_ORDER_PAYMENT_METHOD_CHOICES:
+                    product_target_relation.course_runs.set([course_run])
+                    batch_order = factories.BatchOrderFactory(
+                        organization=organization,
+                        state=enums.BATCH_ORDER_STATE_COMPLETED,
+                        offering=credential_offering,
+                        nb_seats=3,
+                        payment_method=payment_method,
+                    )
+                    self.log(f"Successfully created batch order {batch_order.id} ")
+                    self.log("")
+
             credential_offering.organizations.add(second_organization)
+            batch_order = factories.BatchOrderFactory(
+                organization=organization,
+                state=enums.BATCH_ORDER_STATE_COMPLETED,
+                offering=credential_offering,
+                nb_seats=5,
+            )
+            batch_order.generate_orders()
+            for order in batch_order.orders.all():
+                order.owner = factories.UserFactory()
+                order.save(update_fields=["owner"])
+                order.flow.update()
+            self.log(
+                f"Successfully created batch order {batch_order.id} "
+                f"(COMPLETED, {batch_order.nb_seats} seats, "
+                f"contract signed: {batch_order.contract.is_fully_signed})"
+            )
+            self.log("")
+
+            product_target_relation.course_runs.set([course_run_selected])
+            order = factories.OrderGeneratorFactory(
+                state=enums.ORDER_STATE_COMPLETED,
+                course=credential_offering.course,
+                product=credential_offering.product,
+            )
+
             batch_order_kwargs = {
                 "state": enums.BATCH_ORDER_STATE_COMPLETED,
                 "offering": credential_offering,
@@ -1025,7 +1122,7 @@ class Demo:
                             payment_method=payment_method[0],
                         )
 
-            course_run_credential.save()
+            course_run_selected.save()
 
         if create_credential_discount:
             course = factories.CourseFactory(
@@ -1038,7 +1135,7 @@ class Demo:
             self.log("")
 
             course_run_credential_discount = factories.CourseRunFactory(
-                title="Course run credential discount",
+                title="Course run credential discount - 00003",
                 resource_link=OPENEDX_COURSE_RUN_URI.format(
                     course="00003", course_run="CourseRunCredential_run1"
                 ),
@@ -1068,7 +1165,9 @@ class Demo:
                         organizations=[organization],
                         title="Target Course for credential product discount",
                         course_runs=factories.CourseRunFactory.create_batch(
-                            1, course__code="cred_disc"
+                            1,
+                            course__code="cred_disc",
+                            title="Target Course for credential product discount - 00003",
                         ),
                         code="00003",
                     )

@@ -89,3 +89,35 @@ def get_prepaid_order(
         )
     except models.Order.DoesNotExist:
         return None
+
+
+def extract_session_code_as_string(order: models.Order) -> str:
+    """
+    Extract the session code of the title for product type credentials
+    related to the order. When no session code is found in the title,
+    we just return the course code instead. Also, when the product is
+    type certificate, we only return the course code.
+    """
+    # Non-credential products
+    if order.product.type != enums.PRODUCT_TYPE_CREDENTIAL:
+        return (
+            order.course.code
+            if not order.enrollment
+            else order.enrollment.course_run.course.code
+        )
+    # Take the selected course run if present, if None were selected,
+    # than select the oldest course run available.
+    target_course_run = (
+        order.target_course_runs[0]
+        if order.target_course_runs.count() == 1
+        else order.target_course_runs.order_by("created_on").first()
+    )
+
+    if not target_course_run or not target_course_run.title:
+        return order.course.code
+
+    # Extract the session code from the title
+    parts = target_course_run.title.rsplit("-", 2)
+    if len(parts) == 3:  # noqa : PLR2004
+        return f"{parts[1].strip()}-{parts[2].strip()}"
+    return order.course.code

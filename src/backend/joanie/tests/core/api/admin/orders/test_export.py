@@ -9,6 +9,7 @@ from django.utils.translation import gettext as _
 
 from joanie.core import enums, factories
 from joanie.core.models import Course, Order
+from joanie.core.utils.order import extract_session_code_as_string
 from joanie.tests import format_date_export
 from joanie.tests.base import BaseAPITestCase
 from joanie.tests.testing_utils import Demo
@@ -34,6 +35,8 @@ def expected_csv_content(order):
     content = {
         "Order reference": str(order.id),
         "Product": order.product.title,
+        "Course code": order.course.code if order.course else "",
+        "Session code": extract_session_code_as_string(order),
         "Owner": order.owner.get_full_name(),
         "Email": order.owner.email,
         "Organization": order.organization.title,
@@ -81,6 +84,7 @@ def expected_csv_content(order):
         content["Enrollment session"] = order.enrollment.course_run.title
         content["Session status"] = str(order.enrollment.course_run.state)
         content["Enrolled on"] = format_date_export(order.enrollment.created_on)
+        content["Session code"] = order.enrollment.course_run.course.code
 
     if hasattr(order, "contract"):
         content["Contract"] = order.contract.definition.title
