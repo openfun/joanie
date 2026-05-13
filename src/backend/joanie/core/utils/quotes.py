@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.utils import formats, timezone
 from django.utils.duration import duration_iso_string
 from django.utils.translation import gettext as _
 
@@ -212,6 +213,9 @@ def generate_document_context(quote_definition=None, batch_order=None):
                     "description": quote_definition.description,
                     "body": quote_definition.get_body_in_html(),
                     "reference": batch_order.quote.reference,
+                    "issued_on": formats.date_format(
+                        timezone.now(), "SHORT_DATE_FORMAT"
+                    ),
                 },
                 "batch_order": {
                     "nb_seats": batch_order.nb_seats,

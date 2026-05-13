@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.test import TestCase
+from django.utils import formats
 
 from PIL import Image
 
@@ -195,6 +196,9 @@ class UtilsQuoteGenerateContextDocument(TestCase):
                 "description": batch_order.quote.definition.description,
                 "body": batch_order.quote.definition.get_body_in_html(),
                 "reference": batch_order.quote.reference,
+                "issued_on": formats.date_format(
+                    batch_order.created_on, "SHORT_DATE_FORMAT"
+                ),
             },
             "batch_order": {
                 "nb_seats": batch_order.nb_seats,
