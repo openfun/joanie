@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add issued on information in quote's context when total is set
 - Add payment method, session code and course code to order export csv
 - Update Volta configuration with yarn fixed version
 - Update certificate degree

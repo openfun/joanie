@@ -1080,10 +1080,14 @@ class BatchOrderViewSet(
         """
         When the batch order has a total, the related quote can be downloaded.
         """
-        quote = self.get_object().quote
+        batch_order = self.get_object()
+        quote = batch_order.quote
 
         if not quote.has_total:
             raise ValidationError("Quote does not have total, cannot download.")
+
+        # Load the total into the context
+        quote.context["batch_order"]["total"] = str(str(batch_order.total))
 
         context_with_images = contract_definition.embed_images_in_context(quote.context)
         quote_pdf_bytes = issuers.generate_document(

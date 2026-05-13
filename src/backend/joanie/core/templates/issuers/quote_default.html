@@ -178,10 +178,12 @@ for your training, feel free to use this template as a base.
         {% endif %}
         <section class="content-created-on">
           <div class="signature_zone">
+            {% if quote %}
             <p>
               {% translate "Quote issued on: " %}
-              {% now "SHORT_DATE_FORMAT" %}
+              {{ quote.issued_on }}
             </p>
+            {% endif %}
           </div>
         </section>
       </article>
