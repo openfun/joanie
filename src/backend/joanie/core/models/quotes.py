@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, transaction
-from django.utils import timezone
+from django.utils import formats, timezone
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -246,7 +246,7 @@ class Quote(BaseModel):
         """
         return self.is_signed_by_organization and self.has_purchase_order
 
-    def update_context(self):
+    def update_context(self, batch_order_created_on_date=False):
         """
         Update the context of the quote once the total of the related batch order
         is set. Otherwise, if the total is not yet set, it raises an error.
@@ -256,6 +256,11 @@ class Quote(BaseModel):
         self.context = quote_utility.generate_document_context(
             self.batch_order.relation.product.quote_definition, self.batch_order
         )
+        if batch_order_created_on_date:
+            self.context["quote"]["issued_on"] = formats.date_format(
+                self.batch_order.created_on, "SHORT_DATE_FORMAT"
+            )
+
         self.save()
 
     def get_abilities(self, user):
