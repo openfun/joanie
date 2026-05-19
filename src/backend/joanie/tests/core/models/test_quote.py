@@ -191,6 +191,32 @@ class QuoteModelsTestCase(LoggingTestCase):
             batch_order.quote.context.get("batch_order").get("total"), "100.00"
         )
 
+    def test_models_quote_update_context_with_batch_order_created_on_date(self):
+        """
+        When the quote already exists and has a total (e.g., in production), the key
+        `issued_on` may not be present in the context yet. To compensate, we add
+        the batch order's creation date as `issued_on` instead of using today's date
+        when generating the quote context. This ensures that older quotes reflect
+        a date closer to their actual generation, rather than the current date.
+        """
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime(2026, 1, 13, 0, tzinfo=ZoneInfo("UTC")),
+        ):
+            batch_order = BatchOrderFactory(state=enums.BATCH_ORDER_STATE_COMPLETED)
+
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime(2026, 1, 14, 0, tzinfo=ZoneInfo("UTC")),
+        ):
+            batch_order.quote.update_context(batch_order_created_on_date=True)
+
+        batch_order.refresh_from_db()
+
+        self.assertEqual(
+            batch_order.quote.context.get("quote").get("issued_on"), "01/13/2026"
+        )
+
 
 # pylint:disable=unused-argument
 @override_settings(JOANIE_PREFIX_QUOTE_REFERENCE="JOANIE")

@@ -177,14 +177,12 @@ for your training, feel free to use this template as a base.
           {{ quote.body|safe }}
         {% endif %}
         <section class="content-created-on">
-          <div class="signature_zone">
-            {% if quote %}
-            <p>
-              {% translate "Quote issued on: " %}
-              {{ quote.issued_on }}
-            </p>
-            {% endif %}
-          </div>
+          {% if quote %}
+          <p>
+            {% translate "Quote issued on: " %}
+            {{ quote.issued_on }}
+          </p>
+          {% endif %}
         </section>
       </article>
     </main>
