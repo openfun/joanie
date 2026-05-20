@@ -36,7 +36,7 @@ which is the course provider. So the organization is accessed with organizations
     </header>
     <section class="student">
         <strong class="student__name">{{ student.name }}</strong>
-        <p class="student__achievement">{% translate "Successfully passed the final exam of the MOOC" %}</p>
+        <p class="student__achievement">{% translate "Met the course requirements" %}</p>
         <strong class="student__course">{{ course.name }}</strong>
     </section>
     <section class="signatories">
@@ -54,7 +54,11 @@ which is the course provider. So the organization is accessed with organizations
         </div>
         <div class="signatories__platform">
             <div class="platform__logos">
-                <img class="platform__fun-logo" src="{% base64_static "joanie/images/logo_fun.png" %}" />
+                {% if LANGUAGE_CODE == "fr-fr" %}
+                <img class="platform__fun-logo" src="{% base64_static "joanie/images/Logo_FUN_fr_baseline.png" %}" />
+                {% else %}
+                <img class="platform__fun-logo" src="{% base64_static "joanie/images/Logo_FUN_en_baseline.png" %}" />
+                {% endif %}
                 {% if LANGUAGE_CODE == "fr-fr" %}
                 <img class="platform__badge" src="{% base64_static "joanie/images/badge_verified_degree_fr.png" %}" />
                 {% else %}
