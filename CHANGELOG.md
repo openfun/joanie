@@ -28,6 +28,14 @@ and this project adheres to
 - Restrict admin order creation offering search to those with a deep link
   when custom discount is off
 
+### Fixed
+
+- Add missing migration file for deeplink max length
+  authorized
+- Prevent seat exports of batch orders when no seats claimed
+- Normalize session code of course run in export orders csv
+- Update tray job in circle ci for ubuntu image version
+
 ## [3.3.0] - 2026-04-09
 
 ### Added
