@@ -199,6 +199,10 @@
     "description": "Title for the confirm quote modal",
     "message": "Confirmer le devis"
   },
+  "components.templates.batch-orders.buttons.batchOrderActionsButton.downloadQuoteDisabled": {
+    "description": "Text when the batch order quote cannot be downloaded",
+    "message": "Quote can only be downloaded when batch order has a total, is not canceled, and quote is signed by organization"
+  },
   "components.templates.batch-orders.buttons.batchOrderActionsButton.generateOrdersDisabled": {
     "description": "Text when the batch order orders cannot be generated",
     "message": "Les commandes ne peuvent être générées que lorsque la commande groupée est à l'état \"Complétée\""
@@ -262,6 +266,10 @@
   "components.templates.batch-orders.view.batchOrderActionsMessages.confirmQuote": {
     "description": "Label for the confirm quote action",
     "message": "Confirmer le devis"
+  },
+  "components.templates.batch-orders.view.batchOrderActionsMessages.downloadQuote": {
+    "description": "Label for the download quote action",
+    "message": "Download quote"
   },
   "components.templates.batch-orders.view.batchOrderActionsMessages.generateOrders": {
     "description": "Label for the generate orders action",
@@ -1219,6 +1227,42 @@
     "description": "Text for the search input placeholder",
     "message": "Rechercher par titre du produit, propriétaire (nom complet ou e-mail), établissement (code ou titre), code du cours, coupon"
   },
+  "components.templates.orders.form.discountAmountIntegerError": {
+    "description": "Error message when fixed amount discount is not an integer",
+    "message": "Amount must be a positive whole number"
+  },
+  "components.templates.orders.form.discountRateMaxError": {
+    "description": "Error message when percentage discount is out of range",
+    "message": "Percentage must be between 1 and 100"
+  },
+  "components.templates.orders.form.discountSubtitle": {
+    "description": "Subtitle of the discount section of the order create form",
+    "message": "Discount"
+  },
+  "components.templates.orders.form.discountTypeAmount": {
+    "description": "Option label for fixed amount discount type",
+    "message": "Fixed amount"
+  },
+  "components.templates.orders.form.discountTypeLabel": {
+    "description": "Label for the discount type field in the order create form",
+    "message": "Type"
+  },
+  "components.templates.orders.form.discountTypeRate": {
+    "description": "Option label for percentage discount type",
+    "message": "Percentage"
+  },
+  "components.templates.orders.form.discountValueLabel": {
+    "description": "Label for the discount value field in the order create form",
+    "message": "Value"
+  },
+  "components.templates.orders.form.discountValuePositiveError": {
+    "description": "Error message when discount value is not a positive number",
+    "message": "Value must be greater than 0"
+  },
+  "components.templates.orders.form.fullDiscountLabel": {
+    "description": "Label for the full discount checkbox in the order create form",
+    "message": "Full discount (100%)"
+  },
   "components.templates.orders.form.generalSubtitle": {
     "description": "Subtitle of the general section of the order create form",
     "message": "Informations générales"
@@ -2130,6 +2174,10 @@
   "hooks.useBatchOrders.errorDelete": {
     "description": "Error message shown to the user when batch order deletion request fails.",
     "message": "Une erreur s'est produite lors de la suppression de la commande groupée. Veuillez réessayer plus tard."
+  },
+  "hooks.useBatchOrders.errorDownloadQuote": {
+    "description": "Error message shown to the user when batch order download quote request fails.",
+    "message": "An error occurred while downloading the quote. Please retry later."
   },
   "hooks.useBatchOrders.errorExport": {
     "description": "Error message shown to the user when batch order export request fails.",
