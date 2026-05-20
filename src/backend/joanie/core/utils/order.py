@@ -91,7 +91,7 @@ def get_prepaid_order(
         return None
 
 
-def extract_session_code_as_string(order: models.Order) -> str:
+def get_course_run_session(order: models.Order) -> str:
     """
     Extract the session code of the title for product type credentials
     related to the order. When no session code is found in the title,
@@ -100,11 +100,8 @@ def extract_session_code_as_string(order: models.Order) -> str:
     """
     # Non-credential products
     if order.product.type != enums.PRODUCT_TYPE_CREDENTIAL:
-        return (
-            order.course.code
-            if not order.enrollment
-            else order.enrollment.course_run.course.code
-        )
+        return ""
+
     # Take the selected course run if present, if None were selected,
     # than select the oldest course run available.
     target_course_run = (
@@ -116,8 +113,17 @@ def extract_session_code_as_string(order: models.Order) -> str:
     if not target_course_run or not target_course_run.title:
         return order.course.code
 
-    # Extract the session code from the title
-    parts = target_course_run.title.rsplit("-", 2)
+    return extract_session_code(target_course_run.title)
+
+
+def extract_session_code(title: str) -> str:
+    """
+    Utility method to extract the session code at the end of the title
+    of the course run's title.
+    """
+    parts = title.rsplit("-", 2)
     if len(parts) == 3:  # noqa : PLR2004
         return f"{parts[1].strip()}-{parts[2].strip()}"
-    return order.course.code
+    if len(parts) == 2:  # noqa : PLR2004
+        return f"{parts[1].strip()}"
+    return f"{parts[0].strip()}"
