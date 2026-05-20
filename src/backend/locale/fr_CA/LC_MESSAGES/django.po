@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-03 12:00+0000\n"
-"PO-Revision-Date: 2026-04-08 16:37\n"
+"POT-Creation-Date: 2026-05-19 12:57+0000\n"
+"PO-Revision-Date: 2026-05-20 13:56\n"
 "Last-Translator: \n"
 "Language-Team: French, Canada\n"
 "Language: fr_CA\n"
@@ -115,25 +115,25 @@ msgid "Course"
 msgstr ""
 
 #: joanie/core/admin.py:81 joanie/core/models/products.py:195
-#: joanie/core/serializers/admin.py:1492 joanie/core/serializers/admin.py:1832
+#: joanie/core/serializers/admin.py:1541 joanie/core/serializers/admin.py:1901
 #: joanie/core/templates/issuers/invoice.html:78
 msgid "Product"
 msgstr ""
 
 #: joanie/core/admin.py:88 joanie/core/admin.py:95
-#: joanie/core/models/courses.py:264 joanie/core/serializers/admin.py:1495
-#: joanie/core/serializers/admin.py:1826
+#: joanie/core/models/courses.py:264 joanie/core/serializers/admin.py:1546
+#: joanie/core/serializers/admin.py:1895
 msgid "Organization"
 msgstr ""
 
 #: joanie/core/admin.py:102 joanie/core/models/course_wishes.py:18
-#: joanie/core/serializers/admin.py:1493 joanie/core/serializers/admin.py:1821
+#: joanie/core/serializers/admin.py:1544 joanie/core/serializers/admin.py:1890
 #: joanie/payment/admin.py:27 joanie/payment/admin.py:41
 #: joanie/payment/admin.py:244
 msgid "Owner"
 msgstr ""
 
-#: joanie/core/admin.py:116 joanie/core/models/courses.py:1071
+#: joanie/core/admin.py:116 joanie/core/models/courses.py:1072
 msgid "Course run"
 msgstr ""
 
@@ -263,67 +263,67 @@ msgstr ""
 msgid "is_active must be a boolean value."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:704 joanie/core/models/courses.py:1005
+#: joanie/core/api/admin/__init__.py:704 joanie/core/models/courses.py:1006
 msgid "Only product type credentials are allowed to have deep link."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:966
+#: joanie/core/api/admin/__init__.py:981
 #: joanie/core/api/client/__init__.py:1504
 msgid "Batch order is not eligible to get signed."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:985
+#: joanie/core/api/admin/__init__.py:1000
 msgid "Cannot submit to signature, active offering rules have no seats left."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1008
+#: joanie/core/api/admin/__init__.py:1023
 msgid "Cannot generate orders, batch order is not in `completed` state"
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1013
+#: joanie/core/api/admin/__init__.py:1028
 msgid "Orders were already generated. Cannot generate twice."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1033
+#: joanie/core/api/admin/__init__.py:1048
 #: joanie/core/api/client/__init__.py:1358
 msgid "Batch order is canceled, cannot confirm quote signature."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1037
+#: joanie/core/api/admin/__init__.py:1052
 msgid "You must generate the quote first."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1040
+#: joanie/core/api/admin/__init__.py:1055
 #: joanie/core/api/client/__init__.py:1366
 msgid "Quote is already signed, and total is frozen."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1045
+#: joanie/core/api/admin/__init__.py:1060
 msgid "Missing total value. It's required to confirm quote."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1104
+#: joanie/core/api/admin/__init__.py:1123
 msgid "Cannot confirm purchase order. Batch order payment"
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1111
+#: joanie/core/api/admin/__init__.py:1130
 msgid "Batch order's quote is not signed, nor has a total."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1116
+#: joanie/core/api/admin/__init__.py:1135
 msgid "Batch order's quote purchase order already confirmed."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1120
+#: joanie/core/api/admin/__init__.py:1139
 #: joanie/core/api/client/__init__.py:1410
 msgid "Purchase order reference is required."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1145
+#: joanie/core/api/admin/__init__.py:1164
 msgid "You are not allowed to validate the bank transfer."
 msgstr ""
 
-#: joanie/core/api/admin/__init__.py:1220
+#: joanie/core/api/admin/__init__.py:1239
 msgid "The relation does not exist between the address and the organization."
 msgstr ""
 
@@ -397,13 +397,13 @@ msgid "Credential"
 msgstr ""
 
 #: joanie/core/enums.py:34 joanie/core/enums.py:220
-#: joanie/core/models/courses.py:1378
+#: joanie/core/models/courses.py:1379
 msgid "Enrollment"
 msgstr ""
 
 #: joanie/core/enums.py:37 joanie/core/enums.py:209
 #: joanie/core/models/certifications.py:117
-#: joanie/core/templates/issuers/degree.html:27
+#: joanie/core/templates/issuers/degree.html:29
 msgid "Certificate"
 msgstr ""
 
@@ -609,7 +609,8 @@ msgstr ""
 msgid "Bank transfer"
 msgstr ""
 
-#: joanie/core/enums.py:308
+#: joanie/core/enums.py:308 joanie/core/serializers/admin.py:1677
+#: joanie/tests/core/api/admin/orders/test_export.py:30
 msgid "Card payment"
 msgstr ""
 
@@ -708,8 +709,8 @@ msgstr ""
 
 #: joanie/core/models/accounts.py:161 joanie/core/models/certifications.py:33
 #: joanie/core/models/contracts.py:29 joanie/core/models/courses.py:182
-#: joanie/core/models/courses.py:513 joanie/core/models/courses.py:1042
-#: joanie/core/models/products.py:104 joanie/core/models/products.py:2877
+#: joanie/core/models/courses.py:513 joanie/core/models/courses.py:1043
+#: joanie/core/models/products.py:104 joanie/core/models/products.py:2878
 #: joanie/core/models/quotes.py:27 joanie/payment/models.py:497
 msgid "title"
 msgstr ""
@@ -730,11 +731,11 @@ msgstr ""
 msgid "country"
 msgstr ""
 
-#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2919
+#: joanie/core/models/accounts.py:166 joanie/core/models/products.py:2920
 msgid "first name"
 msgstr ""
 
-#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2920
+#: joanie/core/models/accounts.py:167 joanie/core/models/products.py:2921
 msgid "last name"
 msgstr ""
 
@@ -745,7 +746,7 @@ msgid "owner"
 msgstr ""
 
 #: joanie/core/models/accounts.py:178 joanie/core/models/certifications.py:98
-#: joanie/core/models/courses.py:970 joanie/core/models/products.py:1035
+#: joanie/core/models/courses.py:971 joanie/core/models/products.py:1035
 #: joanie/core/models/products.py:2080
 msgid "organization"
 msgstr ""
@@ -778,7 +779,7 @@ msgstr ""
 msgid "Demote a main address is forbidden"
 msgstr ""
 
-#: joanie/core/models/activity_logs.py:66 joanie/core/models/courses.py:1356
+#: joanie/core/models/activity_logs.py:66 joanie/core/models/courses.py:1357
 msgid "user"
 msgstr ""
 
@@ -945,8 +946,8 @@ msgstr ""
 msgid "Date and time the organization signed the contract"
 msgstr ""
 
-#: joanie/core/models/contracts.py:159 joanie/core/serializers/admin.py:1511
-#: joanie/core/serializers/admin.py:1839
+#: joanie/core/models/contracts.py:159 joanie/core/serializers/admin.py:1563
+#: joanie/core/serializers/admin.py:1908
 msgid "Contract"
 msgstr ""
 
@@ -999,7 +1000,7 @@ msgid "forever open"
 msgstr ""
 
 #: joanie/core/models/courses.py:180 joanie/core/models/courses.py:510
-#: joanie/core/models/products.py:3004
+#: joanie/core/models/products.py:3005
 msgid "code"
 msgstr ""
 
@@ -1119,7 +1120,7 @@ msgstr ""
 msgid "Course accesses"
 msgstr ""
 
-#: joanie/core/models/courses.py:776 joanie/core/models/courses.py:1036
+#: joanie/core/models/courses.py:776 joanie/core/models/courses.py:1037
 #: joanie/core/models/products.py:432 joanie/core/models/products.py:1050
 #: joanie/core/models/products.py:1978
 msgid "course"
@@ -1146,124 +1147,124 @@ msgstr ""
 msgid "deep_link"
 msgstr ""
 
-#: joanie/core/models/courses.py:956
+#: joanie/core/models/courses.py:957
 msgid "Deep link of an offering where a learner can subscribe with an external link."
 msgstr ""
 
-#: joanie/core/models/courses.py:965
+#: joanie/core/models/courses.py:966
 msgid "offering"
 msgstr ""
 
-#: joanie/core/models/courses.py:975 joanie/core/models/products.py:528
-#: joanie/core/models/products.py:774 joanie/core/models/products.py:3028
+#: joanie/core/models/courses.py:976 joanie/core/models/products.py:528
+#: joanie/core/models/products.py:774 joanie/core/models/products.py:3029
 msgid "is active"
 msgstr ""
 
-#: joanie/core/models/courses.py:977
+#: joanie/core/models/courses.py:978
 msgid "Activate or deactivate deep link of an offering"
 msgstr ""
 
-#: joanie/core/models/courses.py:982
+#: joanie/core/models/courses.py:983
 msgid "Offering Deep Link"
 msgstr ""
 
-#: joanie/core/models/courses.py:983
+#: joanie/core/models/courses.py:984
 msgid "Offering Deep Links"
 msgstr ""
 
-#: joanie/core/models/courses.py:1001
+#: joanie/core/models/courses.py:1002
 msgid "Organization should be related to the offering."
 msgstr ""
 
-#: joanie/core/models/courses.py:1021
+#: joanie/core/models/courses.py:1022
 msgid "You cannot delete this offering deep link, it's active."
 msgstr ""
 
-#: joanie/core/models/courses.py:1040
+#: joanie/core/models/courses.py:1041
 msgid "resource link"
 msgstr ""
 
-#: joanie/core/models/courses.py:1045
+#: joanie/core/models/courses.py:1046
 msgid "course start"
 msgstr ""
 
-#: joanie/core/models/courses.py:1046
+#: joanie/core/models/courses.py:1047
 msgid "course end"
 msgstr ""
 
-#: joanie/core/models/courses.py:1048
+#: joanie/core/models/courses.py:1049
 msgid "enrollment date"
 msgstr ""
 
-#: joanie/core/models/courses.py:1049
+#: joanie/core/models/courses.py:1050
 msgid "enrollment end"
 msgstr ""
 
-#: joanie/core/models/courses.py:1057
+#: joanie/core/models/courses.py:1058
 msgid "The list of languages in which the course content is available."
 msgstr ""
 
-#: joanie/core/models/courses.py:1059
+#: joanie/core/models/courses.py:1060
 msgid "is gradable"
 msgstr ""
 
-#: joanie/core/models/courses.py:1061
+#: joanie/core/models/courses.py:1062
 msgid "is listed"
 msgstr ""
 
-#: joanie/core/models/courses.py:1064
+#: joanie/core/models/courses.py:1065
 msgid "If checked the course run will be included in the list of course runs available for enrollment on the related course page."
 msgstr ""
 
-#: joanie/core/models/courses.py:1072
+#: joanie/core/models/courses.py:1073
 msgid "Course runs"
 msgstr ""
 
-#: joanie/core/models/courses.py:1294
+#: joanie/core/models/courses.py:1295
 msgid "This course run relies on a product relation. So you cannot modify its course."
 msgstr ""
 
-#: joanie/core/models/courses.py:1350
+#: joanie/core/models/courses.py:1351
 msgid "course run"
 msgstr ""
 
-#: joanie/core/models/courses.py:1361
+#: joanie/core/models/courses.py:1362
 msgid "Ticked if the user is enrolled to the course run."
 msgstr ""
 
-#: joanie/core/models/courses.py:1365
+#: joanie/core/models/courses.py:1366
 msgid "state"
 msgstr ""
 
-#: joanie/core/models/courses.py:1369
+#: joanie/core/models/courses.py:1370
 msgid "Ticked if the enrollment has been initially created in the scope of an order."
 msgstr ""
 
-#: joanie/core/models/courses.py:1371
+#: joanie/core/models/courses.py:1372
 msgid "was created by order"
 msgstr ""
 
-#: joanie/core/models/courses.py:1379
+#: joanie/core/models/courses.py:1380
 msgid "Enrollments"
 msgstr ""
 
-#: joanie/core/models/courses.py:1387
+#: joanie/core/models/courses.py:1388
 msgid "active"
 msgstr ""
 
-#: joanie/core/models/courses.py:1387
+#: joanie/core/models/courses.py:1388
 msgid "inactive"
 msgstr ""
 
-#: joanie/core/models/courses.py:1457
+#: joanie/core/models/courses.py:1458
 msgid "You cannot enroll to a non-listed course run out of the scope of an order."
 msgstr ""
 
-#: joanie/core/models/courses.py:1491
+#: joanie/core/models/courses.py:1492
 msgid "Course run \"{self.course_run.id!s}\" requires a valid order to enroll."
 msgstr ""
 
-#: joanie/core/models/courses.py:1496
+#: joanie/core/models/courses.py:1497
 msgid "You are not allowed to enroll to a course run not listed."
 msgstr ""
 
@@ -1718,79 +1719,79 @@ msgstr ""
 msgid "The contract is already fully signed, the procedure is already stopped."
 msgstr ""
 
-#: joanie/core/models/products.py:2872
+#: joanie/core/models/products.py:2873
 msgid "Skill"
 msgstr ""
 
-#: joanie/core/models/products.py:2873
+#: joanie/core/models/products.py:2874
 msgid "Skills"
 msgstr ""
 
-#: joanie/core/models/products.py:2892
+#: joanie/core/models/products.py:2893
 msgid "A skill with this title already exists."
 msgstr ""
 
-#: joanie/core/models/products.py:2914
+#: joanie/core/models/products.py:2915
 msgid "Teacher"
 msgstr ""
 
-#: joanie/core/models/products.py:2915
+#: joanie/core/models/products.py:2916
 msgid "Teachers"
 msgstr ""
 
-#: joanie/core/models/products.py:2930 joanie/core/serializers/admin.py:1505
+#: joanie/core/models/products.py:2931 joanie/core/serializers/admin.py:1556
 msgid "Discount"
 msgstr ""
 
-#: joanie/core/models/products.py:2931
+#: joanie/core/models/products.py:2932
 msgid "Discounts"
 msgstr ""
 
-#: joanie/core/models/products.py:2947
+#: joanie/core/models/products.py:2948
 msgid "amount"
 msgstr ""
 
-#: joanie/core/models/products.py:2948
+#: joanie/core/models/products.py:2949
 msgid "Discount amount"
 msgstr ""
 
-#: joanie/core/models/products.py:2954
+#: joanie/core/models/products.py:2955
 msgid "rate"
 msgstr ""
 
-#: joanie/core/models/products.py:2955
+#: joanie/core/models/products.py:2956
 msgid "Discount rate"
 msgstr ""
 
-#: joanie/core/models/products.py:2999 joanie/core/serializers/admin.py:1506
+#: joanie/core/models/products.py:3000 joanie/core/serializers/admin.py:1557
 msgid "Voucher"
 msgstr ""
 
-#: joanie/core/models/products.py:3000
+#: joanie/core/models/products.py:3001
 msgid "Vouchers"
 msgstr ""
 
-#: joanie/core/models/products.py:3005
+#: joanie/core/models/products.py:3006
 msgid "Voucher code"
 msgstr ""
 
-#: joanie/core/models/products.py:3012
+#: joanie/core/models/products.py:3013
 msgid "discount"
 msgstr ""
 
-#: joanie/core/models/products.py:3019
+#: joanie/core/models/products.py:3020
 msgid "multiple use"
 msgstr ""
 
-#: joanie/core/models/products.py:3020
+#: joanie/core/models/products.py:3021
 msgid "Voucher can be used multiple times per user."
 msgstr ""
 
-#: joanie/core/models/products.py:3024
+#: joanie/core/models/products.py:3025
 msgid "multiple users"
 msgstr ""
 
-#: joanie/core/models/products.py:3025
+#: joanie/core/models/products.py:3026
 msgid "Voucher can be used by multiple users."
 msgstr ""
 
@@ -1806,7 +1807,7 @@ msgstr ""
 msgid "Quote definitions"
 msgstr ""
 
-#: joanie/core/models/quotes.py:77 joanie/core/serializers/admin.py:1507
+#: joanie/core/models/quotes.py:77 joanie/core/serializers/admin.py:1558
 msgid "Batch order"
 msgstr ""
 
@@ -1870,198 +1871,222 @@ msgstr ""
 msgid "Site configs"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1491
+#: joanie/core/serializers/admin.py:1514
+msgid "Custom discount is not enabled."
+msgstr ""
+
+#: joanie/core/serializers/admin.py:1517
+msgid "discount_type and discount_value must be provided together."
+msgstr ""
+
+#: joanie/core/serializers/admin.py:1522
+msgid "Rate must be between 1 and 100."
+msgstr ""
+
+#: joanie/core/serializers/admin.py:1527
+msgid "Amount must be a positive whole number."
+msgstr ""
+
+#: joanie/core/serializers/admin.py:1540
 msgid "Order reference"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1494 joanie/core/serializers/admin.py:1822
+#: joanie/core/serializers/admin.py:1542
+msgid "Course code"
+msgstr ""
+
+#: joanie/core/serializers/admin.py:1543
+msgid "Session code"
+msgstr ""
+
+#: joanie/core/serializers/admin.py:1545 joanie/core/serializers/admin.py:1891
 #: joanie/core/serializers/client.py:1760
 msgid "Email"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1496
+#: joanie/core/serializers/admin.py:1547
 msgid "Order state"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1497
+#: joanie/core/serializers/admin.py:1548
 msgid "Creation date"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1498
+#: joanie/core/serializers/admin.py:1549
 msgid "Last modification date"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1499 joanie/core/serializers/admin.py:1833
+#: joanie/core/serializers/admin.py:1550 joanie/core/serializers/admin.py:1902
 msgid "Product type"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1500
+#: joanie/core/serializers/admin.py:1551
 msgid "Enrollment session"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1501
+#: joanie/core/serializers/admin.py:1552
 msgid "Session status"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1502
+#: joanie/core/serializers/admin.py:1553
 msgid "Enrolled on"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1503
+#: joanie/core/serializers/admin.py:1554
 #: joanie/core/templates/issuers/invoice.html:87
 msgid "Price"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1504
+#: joanie/core/serializers/admin.py:1555
 msgid "Currency"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1508
+#: joanie/core/serializers/admin.py:1559
 msgid "Nature"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1509
+#: joanie/core/serializers/admin.py:1560 joanie/core/serializers/admin.py:1897
+msgid "Payment method"
+msgstr ""
+
+#: joanie/core/serializers/admin.py:1561
 msgid "Waived withdrawal right"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1510
+#: joanie/core/serializers/admin.py:1562
 msgid "Certificate generated for this order"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1512 joanie/core/serializers/admin.py:1840
+#: joanie/core/serializers/admin.py:1564 joanie/core/serializers/admin.py:1909
 msgid "Submitted for signature"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1513
+#: joanie/core/serializers/admin.py:1565
 msgid "Student signature date"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1514 joanie/core/serializers/admin.py:1842
+#: joanie/core/serializers/admin.py:1566 joanie/core/serializers/admin.py:1911
 msgid "Organization signature date"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1515
+#: joanie/core/serializers/admin.py:1567
 msgid "Type"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1516
+#: joanie/core/serializers/admin.py:1568
 msgid "Total (on invoice)"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1517
+#: joanie/core/serializers/admin.py:1569
 msgid "Balance (on invoice)"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1518
+#: joanie/core/serializers/admin.py:1570
 msgid "Billing state"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1519
+#: joanie/core/serializers/admin.py:1571
 msgid "Card type"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1520
+#: joanie/core/serializers/admin.py:1572
 msgid "Last card digits"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1521
+#: joanie/core/serializers/admin.py:1573
 msgid "Card expiration date"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1525
+#: joanie/core/serializers/admin.py:1577
 #, python-format
 msgid "Installment date %d"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1528
+#: joanie/core/serializers/admin.py:1580
 #, python-format
 msgid "Installment amount %d"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1531
+#: joanie/core/serializers/admin.py:1583
 #, python-format
 msgid "Installment state %d"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1661 joanie/core/serializers/admin.py:1667
-#: joanie/core/serializers/admin.py:1926 joanie/core/serializers/admin.py:1967
-#: joanie/core/serializers/admin.py:1982
+#: joanie/core/serializers/admin.py:1730 joanie/core/serializers/admin.py:1736
+#: joanie/core/serializers/admin.py:1995 joanie/core/serializers/admin.py:2036
+#: joanie/core/serializers/admin.py:2051
 #: joanie/tests/core/api/admin/batch_order/test_export.py:17
-#: joanie/tests/core/api/admin/orders/test_export.py:19
+#: joanie/tests/core/api/admin/orders/test_export.py:20
 msgid "Yes"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1661 joanie/core/serializers/admin.py:1667
-#: joanie/core/serializers/admin.py:1926 joanie/core/serializers/admin.py:1967
-#: joanie/core/serializers/admin.py:1982
+#: joanie/core/serializers/admin.py:1730 joanie/core/serializers/admin.py:1736
+#: joanie/core/serializers/admin.py:1995 joanie/core/serializers/admin.py:2036
+#: joanie/core/serializers/admin.py:2051
 #: joanie/tests/core/api/admin/batch_order/test_export.py:17
-#: joanie/tests/core/api/admin/orders/test_export.py:19
+#: joanie/tests/core/api/admin/orders/test_export.py:20
 msgid "No"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1820
+#: joanie/core/serializers/admin.py:1889
 msgid "Batch order reference"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1823
+#: joanie/core/serializers/admin.py:1892
 msgid "Company name"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1824
+#: joanie/core/serializers/admin.py:1893
 msgid "Company's identification number"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1825
+#: joanie/core/serializers/admin.py:1894
 msgid "Company VAT registration"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1827
+#: joanie/core/serializers/admin.py:1896
 msgid "Batch Order State"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1828
-msgid "Payment method"
-msgstr ""
-
-#: joanie/core/serializers/admin.py:1829
+#: joanie/core/serializers/admin.py:1898
 msgid "Number of seats reserved"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1830
+#: joanie/core/serializers/admin.py:1899
 msgid "Created on"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1831
+#: joanie/core/serializers/admin.py:1900
 msgid "Updated on"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1834
+#: joanie/core/serializers/admin.py:1903
 #: joanie/core/templates/issuers/invoice.html:105
 #: joanie/core/templates/issuers/invoice.html:138
 msgid "Total"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1835
+#: joanie/core/serializers/admin.py:1904
 msgid "Quote reference"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1836
+#: joanie/core/serializers/admin.py:1905
 msgid "Organization quote signature date"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1837
+#: joanie/core/serializers/admin.py:1906
 msgid "Quote has purchase order"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1838
+#: joanie/core/serializers/admin.py:1907
 msgid "Quote purchase order reference"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1841
+#: joanie/core/serializers/admin.py:1910
 msgid "Buyer signature date"
 msgstr ""
 
-#: joanie/core/serializers/admin.py:1843
+#: joanie/core/serializers/admin.py:1912
 msgid "Orders generated"
 msgstr ""
 
@@ -2425,23 +2450,26 @@ msgstr ""
 msgid "Catalog syllabus"
 msgstr ""
 
-#: joanie/core/templates/issuers/degree.html:29
+#: joanie/core/templates/issuers/degree.html:31
 #, python-format
 msgid "Issued on %(creation_date)s"
 msgstr ""
 
-#: joanie/core/templates/issuers/degree.html:38
-#, python-format
-msgid "<br> successfully completed the course <br> <strong class=\"coure-name\">%(course)s</strong>"
+#: joanie/core/templates/issuers/degree.html:39
+msgid "Successfully passed the final exam of the MOOC"
 msgstr ""
 
-#: joanie/core/templates/issuers/degree.html:64
+#: joanie/core/templates/issuers/degree.html:65
 #, python-format
 msgid "\n"
-"                    To verify the authenticity of this certificate, please visit:\n"
-"                    <br/>\n"
-"                    %(link)s\n"
-"                    "
+"                To verify the authenticity of this certificate, please visit:\n"
+"                <br/>\n"
+"                <a href=\"%(link)s\">%(link)s</a>\n"
+"                "
+msgstr ""
+
+#: joanie/core/templates/issuers/degree.html:71
+msgid "The person's identity has been verified"
 msgstr ""
 
 #: joanie/core/templates/issuers/invoice.html:21 joanie/payment/admin.py:20
@@ -2501,29 +2529,34 @@ msgstr ""
 msgid "Micro-credential"
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:33
+#: joanie/core/templates/issuers/microcredential_degree_default.html:43
 #, python-format
 msgid "<span class=\"student-name\">%(student)s</span><br/> acquired the skills from the professional training:<br/> <span class=\"course-name\">%(course)s</span>"
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:40
+#: joanie/core/templates/issuers/microcredential_degree_default.html:50
 #, python-format
 msgid "Issued on %(creation_date)s in France."
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:53
+#: joanie/core/templates/issuers/microcredential_degree_default.html:58
+msgid "and"
+msgstr ""
+
+#: joanie/core/templates/issuers/microcredential_degree_default.html:69
 msgid "Educational coordinator "
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:61
+#: joanie/core/templates/issuers/microcredential_degree_default.html:77
+#: joanie/core/templates/issuers/microcredential_degree_default.html:99
 msgid "Issued by"
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:77
+#: joanie/core/templates/issuers/microcredential_degree_default.html:115
 msgid "Certification level"
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:85
+#: joanie/core/templates/issuers/microcredential_degree_default.html:123
 #, python-format
 msgid "\n"
 "                            This micro-certification is issued in compliance with the common framework for micro-certifications:\n"
@@ -2531,18 +2564,18 @@ msgid "\n"
 "                            "
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:98
+#: joanie/core/templates/issuers/microcredential_degree_default.html:136
 msgid "This training<br/>is hosted by FUN"
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:109
+#: joanie/core/templates/issuers/microcredential_degree_default.html:147
 #, python-format
 msgid "\n"
 "                    To verify the authenticity<br />of this certificate, visit <br /><a href=\"%(link)s\">%(link)s</a>\n"
 "                    "
 msgstr ""
 
-#: joanie/core/templates/issuers/microcredential_degree_default.html:121
+#: joanie/core/templates/issuers/microcredential_degree_default.html:159
 msgid "<strong>Assessed skills</strong> of the professional training:"
 msgstr ""
 
@@ -3026,31 +3059,31 @@ msgstr ""
 msgid "A new quote request has arrived in your dashboard!"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:24 joanie/core/utils/quotes.py:67
+#: joanie/core/utils/contract_definition.py:24 joanie/core/utils/quotes.py:68
 msgid "<ORGANIZATION_ADDRESS_STREET_NAME>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:25 joanie/core/utils/quotes.py:68
+#: joanie/core/utils/contract_definition.py:25 joanie/core/utils/quotes.py:69
 msgid "<ORGANIZATION_ADDRESS_CITY>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:26 joanie/core/utils/quotes.py:69
+#: joanie/core/utils/contract_definition.py:26 joanie/core/utils/quotes.py:70
 msgid "<ORGANIZATION_ADDRESS_COUNTRY>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:27 joanie/core/utils/quotes.py:70
+#: joanie/core/utils/contract_definition.py:27 joanie/core/utils/quotes.py:71
 msgid "<ORGANIZATION_LAST_NAME>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:28 joanie/core/utils/quotes.py:71
+#: joanie/core/utils/contract_definition.py:28 joanie/core/utils/quotes.py:72
 msgid "<ORGANIZATION_FIRST_NAME>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:29 joanie/core/utils/quotes.py:72
+#: joanie/core/utils/contract_definition.py:29 joanie/core/utils/quotes.py:73
 msgid "<ORGANIZATION_ADDRESS_POSTCODE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:30 joanie/core/utils/quotes.py:73
+#: joanie/core/utils/contract_definition.py:30 joanie/core/utils/quotes.py:74
 msgid "<ORGANIZATION_ADDRESS_TITLE>"
 msgstr ""
 
@@ -3082,11 +3115,11 @@ msgstr ""
 msgid "<STUDENT_ADDRESS_TITLE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:82 joanie/core/utils/quotes.py:76
+#: joanie/core/utils/contract_definition.py:82 joanie/core/utils/quotes.py:77
 msgid "<ORGANIZATION_NAME>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:83 joanie/core/utils/quotes.py:79
+#: joanie/core/utils/contract_definition.py:83 joanie/core/utils/quotes.py:80
 msgid "<REPRESENTATIVE>"
 msgstr ""
 
@@ -3102,19 +3135,19 @@ msgstr ""
 msgid "<ACTIVITY_CATEGORY_CODE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:87 joanie/core/utils/quotes.py:80
+#: joanie/core/utils/contract_definition.py:87 joanie/core/utils/quotes.py:81
 msgid "<SIGNATORY_REPRESENTATIVE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:89 joanie/core/utils/quotes.py:81
+#: joanie/core/utils/contract_definition.py:89 joanie/core/utils/quotes.py:82
 msgid "<SIGNATURE_REPRESENTATIVE_PROFESSION>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:91 joanie/core/utils/quotes.py:82
+#: joanie/core/utils/contract_definition.py:91 joanie/core/utils/quotes.py:83
 msgid "<CONTACT_PHONE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:92 joanie/core/utils/quotes.py:83
+#: joanie/core/utils/contract_definition.py:92 joanie/core/utils/quotes.py:84
 msgid "<CONTACT_EMAIL>"
 msgstr ""
 
@@ -3122,15 +3155,15 @@ msgstr ""
 msgid "<DPO_EMAIL_ADDRESS>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:141 joanie/core/utils/quotes.py:28
+#: joanie/core/utils/contract_definition.py:141 joanie/core/utils/quotes.py:29
 msgid "<COURSE_NAME>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:142 joanie/core/utils/quotes.py:29
+#: joanie/core/utils/contract_definition.py:142 joanie/core/utils/quotes.py:30
 msgid "<COURSE_CODE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:145 joanie/core/utils/quotes.py:30
+#: joanie/core/utils/contract_definition.py:145 joanie/core/utils/quotes.py:31
 msgid "<COURSE_EFFORT>"
 msgstr ""
 
@@ -3194,23 +3227,23 @@ msgstr ""
 msgid "<VAT_REGISTRATION>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:254 joanie/core/utils/quotes.py:51
+#: joanie/core/utils/contract_definition.py:254 joanie/core/utils/quotes.py:52
 msgid "<ADMIN_FIRSTNAME>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:255 joanie/core/utils/quotes.py:52
+#: joanie/core/utils/contract_definition.py:255 joanie/core/utils/quotes.py:53
 msgid "<ADMIN_LASTNAME>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:256 joanie/core/utils/quotes.py:53
+#: joanie/core/utils/contract_definition.py:256 joanie/core/utils/quotes.py:54
 msgid "<ADMIN_PROFESSION>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:257 joanie/core/utils/quotes.py:55
+#: joanie/core/utils/contract_definition.py:257 joanie/core/utils/quotes.py:56
 msgid "<ADMIN_TELEPHONE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:258 joanie/core/utils/quotes.py:54
+#: joanie/core/utils/contract_definition.py:258 joanie/core/utils/quotes.py:55
 msgid "<ADMIN_EMAIL>"
 msgstr ""
 
@@ -3246,23 +3279,23 @@ msgstr ""
 msgid "<TOTAL_PER_TRAINEE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:268 joanie/core/utils/quotes.py:43
+#: joanie/core/utils/contract_definition.py:268 joanie/core/utils/quotes.py:44
 msgid "<BILLING_ADDRESS>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:269 joanie/core/utils/quotes.py:44
+#: joanie/core/utils/contract_definition.py:269 joanie/core/utils/quotes.py:45
 msgid "<BILLING_POSTCODE>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:270 joanie/core/utils/quotes.py:45
+#: joanie/core/utils/contract_definition.py:270 joanie/core/utils/quotes.py:46
 msgid "<BILLING_CITY>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:271 joanie/core/utils/quotes.py:46
+#: joanie/core/utils/contract_definition.py:271 joanie/core/utils/quotes.py:47
 msgid "<BILLING_COUNTRY>"
 msgstr ""
 
-#: joanie/core/utils/contract_definition.py:272 joanie/core/utils/quotes.py:47
+#: joanie/core/utils/contract_definition.py:272 joanie/core/utils/quotes.py:48
 msgid "<BILLING_COMPANY_NAME>"
 msgstr ""
 
@@ -3284,87 +3317,87 @@ msgstr ""
 msgid "{settings.JOANIE_CATALOG_NAME} - {product_title} - "
 msgstr ""
 
-#: joanie/core/utils/quotes.py:16
+#: joanie/core/utils/quotes.py:17
 msgid "<QUOTE_TITLE>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:17
+#: joanie/core/utils/quotes.py:18
 msgid "<QUOTE_DESCRIPTION>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:18
+#: joanie/core/utils/quotes.py:19
 msgid "&lt;QUOTE_BODY&gt;"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:19
+#: joanie/core/utils/quotes.py:20
 msgid "<REFERENCE>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:23
+#: joanie/core/utils/quotes.py:24
 msgid "<BATCH_ORDER_NB_SEATS>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:24
+#: joanie/core/utils/quotes.py:25
 msgid "<BATCH_ORDER_TOTAL>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:34
+#: joanie/core/utils/quotes.py:35
 msgid "<CUSTOMER_REPRESENTATIVE_NAME>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:35
+#: joanie/core/utils/quotes.py:36
 msgid "<CUSTOMER_IDENTIFICATION_NUMBER>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:36
+#: joanie/core/utils/quotes.py:37
 msgid "<CUSTOMER_VAT_REGISTRATION>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:37
+#: joanie/core/utils/quotes.py:38
 msgid "<CUSTOMER_COMPANY_NAME>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:38
+#: joanie/core/utils/quotes.py:39
 msgid "<CUSTOMER_ADDRESS>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:39
+#: joanie/core/utils/quotes.py:40
 msgid "<CUSTOMER_POSTCODE>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:40
+#: joanie/core/utils/quotes.py:41
 msgid "<CUSTOMER_COUNTRY>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:41
+#: joanie/core/utils/quotes.py:42
 msgid "<CUSTOMER_CITY>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:48
+#: joanie/core/utils/quotes.py:49
 msgid "<BILLING_CONTACT_NAME>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:49
+#: joanie/core/utils/quotes.py:50
 msgid "<BILLING_CONTACT_EMAIL>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:56
+#: joanie/core/utils/quotes.py:57
 msgid "<FUNDING_ENTITY>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:57
+#: joanie/core/utils/quotes.py:58
 msgid "<FUNDING_AMOUNT>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:58
+#: joanie/core/utils/quotes.py:59
 msgid "<DEFAULT_CURRENCY>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:77
+#: joanie/core/utils/quotes.py:78
 msgid "<ORGANIZATION_ENTERPRISE_CODE>"
 msgstr ""
 
-#: joanie/core/utils/quotes.py:78
+#: joanie/core/utils/quotes.py:79
 msgid "<ORGANIZATION_ACTIVITY_CODE>"
 msgstr ""
 
