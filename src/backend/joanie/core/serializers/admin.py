@@ -21,7 +21,7 @@ from joanie.core.serializers.fields import (
 )
 from joanie.core.utils import get_default_currency_symbol
 from joanie.core.utils.batch_order import get_active_offering_rule
-from joanie.core.utils.order import extract_session_code_as_string
+from joanie.core.utils.order import get_course_run_session
 from joanie.core.utils.organization import get_least_active_organization
 from joanie.payment import models as payment_models
 
@@ -1680,7 +1680,7 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
         """
         Return the session code of the course run related to the course
         """
-        return extract_session_code_as_string(instance)
+        return get_course_run_session(instance)
 
     def get_product_type(self, instance) -> str:
         """Return the translated product type label."""

@@ -7,10 +7,13 @@ from django.conf import settings
 from django.test import TestCase
 
 from joanie.core import enums, factories, models
+from joanie.core.models import CourseState
 from joanie.core.utils.order import (
     delete_stuck_certificate_order,
     delete_stuck_orders,
     delete_stuck_signing_order,
+    extract_session_code,
+    get_course_run_session,
     get_prepaid_order,
     verify_voucher,
 )
@@ -206,3 +209,92 @@ class UtilsOrderTestCase(TestCase):
                 offering_1.course.code, offering_1.product.id, order.voucher.code
             )
         )
+
+    def test_utils_order_get_course_run_session(self):
+        """
+        The utility method `get_course_run_session` should return the session code
+        within the course run's title for credential products. Otherwise, when the product
+        is certificate, it should always return the `course.code` value.
+        """
+        course = factories.CourseFactory(
+            code="00002",
+            title="Course for credential",
+        )
+        course_run_selected = factories.CourseRunFactory(
+            title="Course run credential - 00002-1",
+            course=course,
+            state=CourseState.ONGOING_OPEN,
+            is_listed=False,
+        )
+
+        # prepare credential product and order
+        credential_product = factories.ProductFactory(
+            contract_definition_order=factories.ContractDefinitionFactory(
+                name=enums.CONTRACT_DEFINITION_UNICAMP
+            ),
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            title="Credential Product",
+            courses=[course],
+            target_courses=[course_run_selected.course],
+            price=100,
+        )
+        order_credential = factories.OrderGeneratorFactory(
+            product=credential_product,
+            course=course,
+            state=enums.ORDER_STATE_COMPLETED,
+        )
+
+        course_run_session = get_course_run_session(order_credential)
+
+        self.assertEqual(course_run_session, "00002-1")
+
+        # prepare certificate product and order
+        certificate_product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            title="Certificate Product with discount",
+            courses=[course],
+            target_courses=[],
+            certificate_definition=factories.CertificateDefinitionFactory(),
+            price=100,
+        )
+        order_certificate = factories.OrderFactory(
+            product=certificate_product,
+            course=None,
+            enrollment=factories.EnrollmentFactory(),
+        )
+
+        course_run_session = get_course_run_session(order_certificate)
+
+        self.assertEqual(course_run_session, "")
+
+    def test_utils_order_extract_session_code(self):
+        """
+        The utility method `extract_session_code` should aways extract the last section
+        of the session code for pro
+        """
+        course_run_titles = [
+            "Course run title - 0001",
+            "Course run title - 0001-1",
+            "Course run title - 0001-2",
+            "Course run title - session 1",
+            "Course run title-session 2",
+            "Course run title-0003-1",
+            "Course run title-0003- 2",
+            "Course run title-0003 -3",
+        ]
+        expected_output = [
+            "0001",
+            "0001-1",
+            "0001-2",
+            "session 1",
+            "session 2",
+            "0003-1",
+            "0003-2",
+            "0003-3",
+        ]
+
+        results = []
+        for course_run_title in course_run_titles:
+            results.append(extract_session_code(course_run_title))
+
+        self.assertEqual(results, expected_output)
