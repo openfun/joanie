@@ -72,6 +72,27 @@ class BatchOrderSeatsExportAPITest(BaseAPITestCase):
             "Last name,First name,Email",
         )
 
+    def test_api_batch_order_seats_export_with_orders_but_not_owned_yet(self):
+        """
+        When a batch roder has generated orders, but no seats are owned yet,
+        it should return an UNPROCESSABLE ENTITY (422) status code error response.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        batch_order = factories.BatchOrderFactory(
+            owner=user,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        batch_order.generate_orders()
+
+        response = self.client.get(
+            f"/api/v1.0/batch-orders/{batch_order.id}/seats-export/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertFalse(batch_order.seats_owned)
+        self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
+
     def test_api_batch_order_seats_export_with_orders(self):
         """
         When a batch order has generated orders, the CSV should list
