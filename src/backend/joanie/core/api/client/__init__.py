@@ -946,6 +946,13 @@ class BatchOrderViewSet(
         Export the list of seats (order owners) of a batch order as CSV.
         """
         batch_order = self.get_object()
+
+        if not batch_order.seats_owned and batch_order.has_orders_generated:
+            return Response(
+                {"detail": _("Batch order has no seats owned, cannot export seats.")},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
         queryset = batch_order.orders.select_related("owner").order_by(
             "owner__last_name", "owner__first_name"
         )
