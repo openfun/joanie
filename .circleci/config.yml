@@ -491,7 +491,7 @@ jobs:
   # ---- Tray jobs (k8s) ----
   tray:
     machine:
-      image: default
+      image: ubuntu-2204:2025.09.1
       # Prevent cache-related issues
       docker_layer_caching: false
     working_directory: ~/joanie
