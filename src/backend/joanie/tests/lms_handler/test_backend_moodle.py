@@ -1650,6 +1650,130 @@ class MoodleLMSBackendTestCase(TestCase):
             ],
         )
 
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+                "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+                "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+                "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+                "STUDENT_ROLE_ID": 5,
+            }
+        ]
+    )
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_enroll_with_student_role_id(self):
+        """
+        When STUDENT_ROLE_ID is set in config, set_enrollment should not call the
+        local_wsgetroles_get_roles plugin function.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(username="student")
+        enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
+        backend = LMSHandler.select_lms(course_run.resource_link)
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=200,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("enrol_manual_enrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=200,
+        )
+
+        result = backend.set_enrollment(enrollment)
+
+        self.assertTrue(result)
+
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
+                "API_TOKEN": "a_secure_api_token",
+                "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+                "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+                "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+                "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+                "STUDENT_ROLE_ID": 5,
+            }
+        ]
+    )
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_set_enrollment_unenroll_with_student_role_id(self):
+        """
+        When STUDENT_ROLE_ID is set in config, set_enrollment should not call the
+        local_wsgetroles_get_roles plugin function.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(username="student")
+        enrollment = models.Enrollment(
+            course_run=course_run, user=user, is_active=False
+        )
+        backend = LMSHandler.select_lms(course_run.resource_link)
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=200,
+            json=MOODLE_RESPONSE_USERS,
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("enrol_manual_unenrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=200,
+        )
+
+        result = backend.set_enrollment(enrollment)
+
+        self.assertTrue(result)
+
     @responses.activate(assert_all_requests_are_fired=True)
     def test_backend_moodle_get_grades_moodle_error(self):
         """

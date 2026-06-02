@@ -95,6 +95,8 @@ class MoodleLMSBackend(BaseLMSBackend):
 
     def student_role_id(self):
         """Retrieve student role id."""
+        if student_role_id := self.configuration.get("STUDENT_ROLE_ID"):
+            return student_role_id
         roles = self.get_roles()
         for role in roles:
             if role.get("shortname") == "student":

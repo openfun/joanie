@@ -91,6 +91,10 @@ we need to set up a Moodle webservice, and a Moodle webservice client.
 
 11. Add local_wsgetroles_get_roles to Joanie webservice functions
 
+> **Note:** Steps 10–11 can be skipped if you configure `STUDENT_ROLE_ID` directly in Joanie
+> (see below). This is the recommended approach for Moodle instances where installing the plugin
+> is not possible.
+
 ## Setup Moodle settings in Joanie
 
 ### Declare a Moodle backend in JOANIE_LMS_BACKENDS environment variable
@@ -100,6 +104,9 @@ we need to set up a Moodle webservice, and a Moodle webservice client.
 - BASE_URL: the URL of the Moodle webservice (e.g. `"http://moodle.test/webservice/rest/server.php"`)
 - SELECTOR_REGEX: a regex to match the Moodle backend (e.g. `r"^.*/course/view.php\?id=.*$"`)
 - COURSE_REGEX: a regex to match the Moodle course id (e.g. `r"^.*/course/view.php\?id=(.*)$"`)
+- STUDENT_ROLE_ID *(optional)*: the numeric ID of the "student" role in Moodle. When set, Joanie
+  skips the call to the `local_wsgetroles` plugin. In a default Moodle installation the student
+  role ID is `5` — verify it under `Site administration > Users > Permissions > Define roles`.
 
 ```shell
 JOANIE_LMS_BACKENDS = '[
@@ -109,7 +116,8 @@ JOANIE_LMS_BACKENDS = '[
        "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
        "BASE_URL": "http://moodle.test/webservice/rest/server.php",
        "SELECTOR_REGEX": "^.*/course/view.php\\?id=.*$",
-       "COURSE_REGEX": "^.*/courses/(?P<course_id>.*)/course/?$"
+       "COURSE_REGEX": "^.*/courses/(?P<course_id>.*)/course/?$",
+       "STUDENT_ROLE_ID": 5
     }
 ]'
 ```
