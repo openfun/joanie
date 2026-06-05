@@ -556,6 +556,88 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
             response.json(),
         )
 
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
+    def test_api_organizations_agreements_retrieve_with_batch_order_owner(self, _):
+        """
+        Authenticated batch order owner can retrieve his contract.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+        # Create a batch order related to the organization
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            owner=user,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+        contract = batch_order.contract
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.code}/agreements/"
+            f"?contract_id={contract.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertDictEqual(
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": str(contract.id),
+                        "abilities": {
+                            "sign": contract.get_abilities(user)["sign"],
+                        },
+                        "organization_signed_on": format_date(
+                            contract.organization_signed_on
+                        ),
+                        "batch_order": {
+                            "id": str(batch_order.id),
+                            "owner_name": batch_order.owner.get_full_name(),
+                            "contract_submitted": batch_order.contract_submitted,
+                            "nb_seats": batch_order.nb_seats,
+                            "organization_id": str(batch_order.organization.id),
+                            "state": batch_order.state,
+                            "company_name": batch_order.company_name,
+                            "payment_method": batch_order.payment_method,
+                            "total": float(batch_order.total),
+                            "total_currency": settings.DEFAULT_CURRENCY,
+                            "relation": {
+                                "id": str(batch_order.offering.id),
+                                "course": {
+                                    "id": str(batch_order.offering.course.id),
+                                    "title": batch_order.offering.course.title,
+                                    "code": batch_order.offering.course.code,
+                                    "cover": "_this_field_is_mocked",
+                                },
+                                "product": {
+                                    "id": str(batch_order.offering.product.id),
+                                    "title": batch_order.offering.product.title,
+                                },
+                            },
+                            "available_actions": {
+                                "confirm_quote": False,
+                                "download_quote": True,
+                                "confirm_purchase_order": False,
+                                "confirm_bank_transfer": False,
+                                "submit_for_signature": False,
+                                "next_action": None,
+                            },
+                            "seats_to_own": batch_order.seats_to_own,
+                            "seats_owned": batch_order.seats_owned,
+                        },
+                    },
+                ],
+            },
+            response.json(),
+        )
+
     def test_api_organizations_agreements_download_anonymous(self):
         """
         Anonymous user should not be able to download an agreement.
@@ -686,6 +768,40 @@ class OrganizationAgreementApiTest(BaseAPITestCase):
             organization=organization,
             state=enums.BATCH_ORDER_STATE_COMPLETED,
         )
+        contract = batch_order.contract
+        expected_filename = f"{contract.definition.title}".replace(" ", "_")
+
+        response = self.client.get(
+            f"/api/v1.0/organizations/{organization.id}/"
+            f"agreements/{contract.id}/download/",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertEqual(response.headers["Content-Type"], "application/pdf")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            f'attachment; filename="{expected_filename}.pdf"',
+        )
+
+        document_text = pdf_extract_text(BytesIO(b"".join(response.streaming_content)))
+        self.assertIn(contract.definition.title, document_text)
+
+    def test_api_organization_agreements_download_fully_signed_batch_order_owner(self):
+        """
+        We also want batch order owners to be able to download the agreement once
+        it is fully signed.
+        """
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+        organization = factories.OrganizationFactory()
+
+        batch_order = factories.BatchOrderFactory(
+            organization=organization,
+            owner=user,
+            state=enums.BATCH_ORDER_STATE_COMPLETED,
+        )
+
         contract = batch_order.contract
         expected_filename = f"{contract.definition.title}".replace(" ", "_")
 
