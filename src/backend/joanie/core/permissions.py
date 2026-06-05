@@ -90,7 +90,12 @@ class CanDownloadAgreement(IsAuthenticated):
     """
 
     def has_object_permission(self, request, view, obj):
-        """Check permission for a given object."""
+        """
+        Check permission for a given object. The only other person we can
+        authorize is the owner of the batch order object.
+        """
+        if getattr(obj.batch_order, "owner_id", None) == request.user.id:
+            return True
         abilities = obj.batch_order.organization.get_abilities(request.user)
         return abilities.get("can_manage_batch_order_agreement", False)
 

@@ -1837,7 +1837,7 @@ class GenericAgreementViewSet(
             "batch_order__owner",
             "batch_order__offering__product",
         )
-    )
+    ).distinct()
 
 
 class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementViewSet):
@@ -1846,7 +1846,8 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
     route.
 
     It allows to list & retrieve organization's agreements (contracts) if the user is
-    an administrator or an owner of the organization.
+    an administrator or an owner of the organization. It also allows the owner of the batch
+    order to retrieve the agreement.
 
     GET /api/organizations/<organization_id|organization_code>/agreements/
         Return list of all organization's contracts
@@ -1885,17 +1886,19 @@ class NestedOrganizationAgreementViewSet(NestedGenericViewSet, GenericAgreementV
 
     def get_queryset(self):
         """
-        Customize the queryset to get only user's agreements.
+        Customize the queryset to get only user's agreements. The user can whether be
+        the owner of the batch order or someone who has organization access.
         """
         queryset = super().get_queryset()
 
         username = get_authenticated_username(self.request)
 
-        additional_filter = {
-            "batch_order__organization__accesses__user__username": username,
-        }
+        query_organization_access = Q(
+            batch_order__organization__accesses__user__username=username,
+        )
+        query_owner = Q(batch_order__owner__username=username)
 
-        return queryset.filter(**additional_filter)
+        return queryset.filter(query_organization_access | query_owner)
 
     @extend_schema(
         responses={
