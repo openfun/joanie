@@ -1477,7 +1477,15 @@ class Enrollment(BaseModel):
                         )
                         | models.Q(
                             product__contract_definition_batch_order__isnull=False,
+                            batch_order__payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+                        )
+                        | models.Q(
+                            product__contract_definition_batch_order__isnull=False,
                             batch_order__contract__student_signed_on__isnull=False,
+                            batch_order__payment_method__in=[
+                                enums.BATCH_ORDER_WITH_CARD_PAYMENT,
+                                enums.BATCH_ORDER_WITH_BANK_TRANSFER,
+                            ],
                         )
                         | models.Q(
                             product__contract_definition_order__isnull=False,

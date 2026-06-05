@@ -2599,6 +2599,79 @@ class EnrollmentApiTest(BaseAPITestCase):
         "to_representation",
         return_value="_this_field_is_mocked",
     )
+    def test_api_enrollment_update_was_created_by_order_batch_order_with_purchase_order(
+        self, _, __
+    ):
+        """
+        We have identified a bug in batch orders with purchase order payment method  where
+        we could not enroll the student because there was missing check in the clean method of the
+        Enrollment model. When the API endpoint is called to update the enrollment, we would
+        get an error in return because the contract related to the batch order was not signed.
+        With the fix, the student can enroll immediately before signing the contract.
+        """
+        student = factories.UserFactory()
+        owner = factories.UserFactory()
+        student_token = self.generate_token_from_user(student)
+
+        target_course = factories.CourseFactory()
+        course_run = self.create_opened_course_run(
+            course=target_course,
+            resource_link="http://openedx.test/courses/course-v1:edx+000001+Demo_Course/course",
+            is_listed=True,
+        )
+        batch_order_with_purchase_order = factories.BatchOrderFactory(
+            offering__product__target_courses=[target_course],
+            owner=owner,
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            nb_seats=3,
+        )
+        # Update the related quote's informations to be considered as paid
+        batch_order_with_purchase_order.quote.context = "context"
+        batch_order_with_purchase_order.freeze_total("123.45")
+        batch_order_with_purchase_order.quote.tag_has_purchase_order(
+            purchase_order_reference="test_reference"
+        )
+
+        self.assertTrue(batch_order_with_purchase_order.is_paid)
+        self.assertTrue(batch_order_with_purchase_order.has_orders_generated)
+        self.assertEqual(
+            batch_order_with_purchase_order.state, enums.BATCH_ORDER_STATE_TO_SIGN
+        )
+
+        # Let's assign the order
+        order = batch_order_with_purchase_order.orders.first()
+        order.owner = student
+        order.flow.update()
+        # Prepare the enrollment
+        enrollment = factories.EnrollmentFactory(
+            course_run=course_run,
+            user=student,
+            is_active=True,
+            was_created_by_order=True,
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/enrollments/{enrollment.id}/",
+            data={
+                "course_run_id": str(course_run.id),
+                "is_active": True,
+                "was_created_by_order": True,
+            },
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {student_token}",
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.OK)
+        self.assertTrue(response.json().get("is_active"))
+        self.assertFalse(batch_order_with_purchase_order.is_signed_by_buyer)
+
+    @mock.patch.object(OpenEdXLMSBackend, "set_enrollment", return_value="enrolled")
+    @mock.patch.object(
+        fields.ThumbnailDetailField,
+        "to_representation",
+        return_value="_this_field_is_mocked",
+    )
     def test_api_enrollment_filter_by_query_course_title(self, _, __):
         """
         Authenticated users retrieving the list of enrollments should be able to filter

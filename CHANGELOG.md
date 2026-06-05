@@ -30,6 +30,8 @@ and this project adheres to
 
 ### Fixed
 
+- Allow student to enroll to course from a batch order with purchase order
+  payment method and the contract is not signed yet
 - Add missing migration file for deeplink max length
   authorized
 - Prevent seat exports of batch orders when no seats claimed
