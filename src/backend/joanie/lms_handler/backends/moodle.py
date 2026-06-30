@@ -21,10 +21,6 @@ from .base import BaseLMSBackend
 logger = logging.getLogger(__name__)
 
 
-class MoodleStudentRoleException(Exception):
-    """Raised when the student role is not found in Moodle."""
-
-
 class MoodleUserException(Exception):
     """Raised when a user is not found in Moodle."""
 
@@ -42,6 +38,7 @@ class MoodleLMSBackend(BaseLMSBackend):
         self.base_url = self.configuration["BASE_URL"]
         self.token = self.configuration["API_TOKEN"]
         self.moodle = Moodle(self.base_url, self.token)
+        self.role_id = settings.JOANIE_LMS_MOODLE_STUDENT_ROLE_ID
 
     def build_url(self, function):
         """Build a Moodle API url."""
@@ -85,22 +82,6 @@ class MoodleLMSBackend(BaseLMSBackend):
             logger.error("Moodle error while retrieving enrollments: %s", e)
             return None
 
-    def get_roles(self):
-        """Retrieve roles."""
-        try:
-            return self.moodle("local_wsgetroles_get_roles")
-        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
-            logger.error(e)
-            return []
-
-    def student_role_id(self):
-        """Retrieve student role id."""
-        roles = self.get_roles()
-        for role in roles:
-            if role.get("shortname") == "student":
-                return role.get("id")
-        raise MoodleStudentRoleException("Student role not found in Moodle")
-
     # pylint: disable=invalid-name
     def get_user_id(self, username):
         """Retrieve user id."""
@@ -138,12 +119,6 @@ class MoodleLMSBackend(BaseLMSBackend):
     # pylint: disable=too-many-branches
     def set_enrollment(self, enrollment):
         """Activate/deactivate an enrollment."""
-        try:
-            role_id = self.student_role_id()
-        except MoodleStudentRoleException as e:
-            logger.error("Moodle error while retrieving student role: %s", e)
-            raise EnrollmentError() from e
-
         user_id = None
         try:
             user_id = self.get_user_id(enrollment.user.username)
@@ -162,7 +137,7 @@ class MoodleLMSBackend(BaseLMSBackend):
         moodle_enrollment = {
             "courseid": course_id,
             "userid": user_id,
-            "roleid": role_id,
+            "roleid": self.role_id,
         }
         try:
             if enrollment.is_active:
@@ -175,7 +150,7 @@ class MoodleLMSBackend(BaseLMSBackend):
                 "enrolling" if enrollment.is_active else "unenrolling",
                 enrollment.user.username,
                 user_id,
-                role_id,
+                self.role_id,
                 course_id,
                 e,
                 e.exception if hasattr(e, "exception") else "",

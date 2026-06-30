@@ -16,6 +16,7 @@ JOANIE_LMS_BACKENDS = '[{
     "COURSE_REGEX": "^.*/courses/(?P<course_id>.*)/course/?$",
     "COURSE_RUN_SYNC_NO_UPDATE_FIELDS": ["languages"]
 }]'
+JOANIE_LMS_MOODLE_STUDENT_ROLE_ID="IntegerRoleIdStudent"
 
 #JWT
 DJANGO_JWT_PRIVATE_SIGNING_KEY=ThisIsAnExampleKeyForDevPurposeOnly

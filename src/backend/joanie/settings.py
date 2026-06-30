@@ -238,6 +238,11 @@ class Base(Configuration):
     MOODLE_AUTH_METHOD = values.Value(
         "oauth2", environ_name="MOODLE_AUTH_METHOD", environ_prefix=None
     )
+    # Override this variable depending on the student role id of your moodle instance
+    # if you use moodle as one of your LMS backends
+    JOANIE_LMS_MOODLE_STUDENT_ROLE_ID = values.Value(
+        "", environ_name="JOANIE_LMS_MOODLE_STUDENT_ROLE_ID", environ_prefix=None
+    )
     JOANIE_BADGE_PROVIDERS = {
         "obf": {
             "client_id": values.Value(
@@ -831,6 +836,8 @@ class Test(Base):
             "COURSE_REGEX": r"^(?P<course_id>.*)$",
         }
     ]
+    # This environment variable is only used for moodle student role id
+    JOANIE_LMS_MOODLE_STUDENT_ROLE_ID = "5"
 
     COURSE_WEB_HOOKS = []
 
