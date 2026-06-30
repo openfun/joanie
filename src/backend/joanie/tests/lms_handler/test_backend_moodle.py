@@ -1,6 +1,5 @@
 """Test suite for the Moodle LMS Backend."""
 
-import random
 from http import HTTPStatus
 from logging import ERROR, INFO
 
@@ -627,13 +626,6 @@ class MoodleLMSBackendTestCase(TestCase):
 
         responses.add(
             responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
-        )
-
-        responses.add(
-            responses.POST,
             self.backend.build_url("enrol_manual_enrol_users"),
             match=[
                 responses.matchers.urlencoded_params_matcher(
@@ -686,13 +678,6 @@ class MoodleLMSBackendTestCase(TestCase):
 
         responses.add(
             responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
-        )
-
-        responses.add(
-            responses.POST,
             self.backend.build_url("enrol_manual_unenrol_users"),
             match=[
                 responses.matchers.urlencoded_params_matcher(
@@ -724,13 +709,6 @@ class MoodleLMSBackendTestCase(TestCase):
         )
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=False
-        )
-
-        responses.add(
-            responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
         )
 
         responses.add(
@@ -817,13 +795,6 @@ class MoodleLMSBackendTestCase(TestCase):
 
         responses.add(
             responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
-        )
-
-        responses.add(
-            responses.POST,
             self.backend.build_url("enrol_manual_enrol_users"),
             match=[
                 responses.matchers.urlencoded_params_matcher(
@@ -855,13 +826,6 @@ class MoodleLMSBackendTestCase(TestCase):
         )
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=False
-        )
-
-        responses.add(
-            responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
         )
 
         responses.add(
@@ -898,97 +862,6 @@ class MoodleLMSBackendTestCase(TestCase):
         )
 
     @responses.activate(assert_all_requests_are_fired=True)
-    def test_backend_moodle_set_enrollment_student_role_error(self):
-        """
-        When enrolling, if getting roles fails, it should raise an EnrollmentError.
-        """
-        course_run = factories.CourseRunMoodleFactory(
-            is_listed=True,
-            state=models.CourseState.ONGOING_OPEN,
-        )
-        user = factories.UserFactory(
-            username="student",
-        )
-        is_active = random.choice([True, False])
-        enrollment = models.Enrollment(
-            course_run=course_run, user=user, is_active=is_active
-        )
-
-        responses.add(
-            responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
-
-        with (
-            self.assertLogs(
-                "joanie.lms_handler.backends.moodle", level=ERROR
-            ) as error_logs,
-            self.assertRaises(EnrollmentError),
-        ):
-            self.backend.set_enrollment(enrollment)
-
-        self.assertEqual(
-            error_logs.output,
-            [
-                "ERROR:joanie.lms_handler.backends.moodle:Empty response from server!",
-                "ERROR:joanie.lms_handler.backends.moodle:"
-                "Moodle error while retrieving student role: "
-                "Student role not found in Moodle",
-            ],
-        )
-
-    @responses.activate(assert_all_requests_are_fired=True)
-    def test_backend_moodle_set_enrollment_student_role_not_found(self):
-        """
-        When enrolling, if student role is not found, it should raise an EnrollmentError.
-        """
-        course_run = factories.CourseRunMoodleFactory(
-            is_listed=True,
-            state=models.CourseState.ONGOING_OPEN,
-        )
-        user = factories.UserFactory(
-            username="student",
-        )
-        is_active = random.choice([True, False])
-        enrollment = models.Enrollment(
-            course_run=course_run, user=user, is_active=is_active
-        )
-
-        responses.add(
-            responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=[
-                {
-                    "id": 1,
-                    "name": "",
-                    "shortname": "manager",
-                    "description": "",
-                    "sortorder": 1,
-                    "archetype": "manager",
-                },
-            ],
-        )
-
-        with (
-            self.assertLogs(
-                "joanie.lms_handler.backends.moodle", level=ERROR
-            ) as error_logs,
-            self.assertRaises(EnrollmentError),
-        ):
-            self.backend.set_enrollment(enrollment)
-
-        self.assertEqual(
-            error_logs.output,
-            [
-                "ERROR:joanie.lms_handler.backends.moodle:"
-                "Moodle error while retrieving student role: "
-                "Student role not found in Moodle"
-            ],
-        )
-
-    @responses.activate(assert_all_requests_are_fired=True)
     def test_backend_moodle_set_enrollment_enroll_fail(self):
         """
         When enrolling, if Moodle returns an error, it should raise an EnrollmentError.
@@ -1016,13 +889,6 @@ class MoodleLMSBackendTestCase(TestCase):
             ],
             status=HTTPStatus.OK,
             json=MOODLE_RESPONSE_USERS,
-        )
-
-        responses.add(
-            responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
         )
 
         responses.add(
@@ -1093,13 +959,6 @@ class MoodleLMSBackendTestCase(TestCase):
 
         responses.add(
             responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
-        )
-
-        responses.add(
-            responses.POST,
             self.backend.build_url("enrol_manual_unenrol_users"),
             match=[
                 responses.matchers.urlencoded_params_matcher(
@@ -1164,13 +1023,6 @@ class MoodleLMSBackendTestCase(TestCase):
 
         responses.add(
             responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
-        )
-
-        responses.add(
-            responses.POST,
             self.backend.build_url("enrol_manual_enrol_users"),
             body=RequestException(),
         )
@@ -1227,13 +1079,6 @@ class MoodleLMSBackendTestCase(TestCase):
 
         responses.add(
             responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
-        )
-
-        responses.add(
-            responses.POST,
             self.backend.build_url("enrol_manual_unenrol_users"),
             body=RequestException(),
         )
@@ -1284,13 +1129,6 @@ class MoodleLMSBackendTestCase(TestCase):
             ],
             status=HTTPStatus.OK,
             json=MOODLE_RESPONSE_USERS,
-        )
-
-        responses.add(
-            responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
         )
 
         responses.add(
@@ -1352,13 +1190,6 @@ class MoodleLMSBackendTestCase(TestCase):
             ],
             status=HTTPStatus.OK,
             json=MOODLE_RESPONSE_USERS,
-        )
-
-        responses.add(
-            responses.POST,
-            self.backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=MOODLE_RESPONSE_ROLES,
         )
 
         responses.add(

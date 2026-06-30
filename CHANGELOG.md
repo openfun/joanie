@@ -22,6 +22,7 @@ and this project adheres to
 
 ### Changed
 
+- Allow configure role id student for Moodle as environment variable
 - Allow deeplink max length to 400 characters
 - Gate admin order custom discount behind the `admin_order_custom_discount`
   waffle switch (off by default)

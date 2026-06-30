@@ -611,22 +611,6 @@ class OrderFlowsTestCase(LoggingTestCase):
 
         responses.add(
             responses.POST,
-            backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=[
-                {
-                    "id": 5,
-                    "name": "",
-                    "shortname": "student",
-                    "description": "",
-                    "sortorder": 5,
-                    "archetype": "student",
-                },
-            ],
-        )
-
-        responses.add(
-            responses.POST,
             backend.build_url("enrol_manual_enrol_users"),
             match=[
                 responses.matchers.urlencoded_params_matcher(
@@ -650,7 +634,7 @@ class OrderFlowsTestCase(LoggingTestCase):
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
-        self.assertEqual(len(responses.calls), 3)
+        self.assertEqual(len(responses.calls), 2)
 
     @responses.activate
     @override_settings(
@@ -681,22 +665,6 @@ class OrderFlowsTestCase(LoggingTestCase):
         )
         product = factories.ProductFactory(target_courses=[course], price="0.00")
         backend = LMSHandler.select_lms(resource_link)
-
-        responses.add(
-            responses.POST,
-            backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=[
-                {
-                    "id": 5,
-                    "name": "",
-                    "shortname": "student",
-                    "description": "",
-                    "sortorder": 5,
-                    "archetype": "student",
-                },
-            ],
-        )
 
         responses.add(
             responses.POST,
@@ -740,7 +708,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
-        self.assertEqual(len(responses.calls), 3)
+        self.assertEqual(len(responses.calls), 2)
 
     def test_flows_order_cancel_success(self):
         """Test that the cancel transition is successful from any state"""
