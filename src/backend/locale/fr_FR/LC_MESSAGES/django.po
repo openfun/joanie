@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-19 12:57+0000\n"
-"PO-Revision-Date: 2026-05-20 14:10\n"
+"POT-Creation-Date: 2026-06-08 13:50+0000\n"
+"PO-Revision-Date: 2026-07-09 09:25\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -268,7 +268,7 @@ msgid "Only product type credentials are allowed to have deep link."
 msgstr "Seuls les produits de type diplôme (credential) sont autorisés à avoir un lien profond."
 
 #: joanie/core/api/admin/__init__.py:981
-#: joanie/core/api/client/__init__.py:1504
+#: joanie/core/api/client/__init__.py:1511
 msgid "Batch order is not eligible to get signed."
 msgstr "Cette commande groupée n’est pas éligible à la signature."
 
@@ -285,7 +285,7 @@ msgid "Orders were already generated. Cannot generate twice."
 msgstr "Les commandes ont déjà été générées. Impossible de générer deux fois."
 
 #: joanie/core/api/admin/__init__.py:1048
-#: joanie/core/api/client/__init__.py:1358
+#: joanie/core/api/client/__init__.py:1365
 msgid "Batch order is canceled, cannot confirm quote signature."
 msgstr "La commande groupée est annulée. Impossible de confirmer la signature du devis."
 
@@ -294,7 +294,7 @@ msgid "You must generate the quote first."
 msgstr "Vous devez d’abord générer le devis."
 
 #: joanie/core/api/admin/__init__.py:1055
-#: joanie/core/api/client/__init__.py:1366
+#: joanie/core/api/client/__init__.py:1373
 msgid "Quote is already signed, and total is frozen."
 msgstr "Le devis est déjà signé et le montant total est figé."
 
@@ -315,7 +315,7 @@ msgid "Batch order's quote purchase order already confirmed."
 msgstr "Le bon de commande du devis de la commande groupée est déjà confirmé."
 
 #: joanie/core/api/admin/__init__.py:1139
-#: joanie/core/api/client/__init__.py:1410
+#: joanie/core/api/client/__init__.py:1417
 msgid "Purchase order reference is required."
 msgstr "La référence du bon de commande est requise."
 
@@ -328,7 +328,7 @@ msgid "The relation does not exist between the address and the organization."
 msgstr "La relation n'existe pas entre l'adresse et l'organisation."
 
 #: joanie/core/api/client/__init__.py:89
-#: joanie/core/api/client/__init__.py:1005
+#: joanie/core/api/client/__init__.py:1012
 msgid "The requested resource was not found on this server."
 msgstr "La ressource demandée n'a pas été trouvée sur ce serveur."
 
@@ -358,29 +358,33 @@ msgstr "Opération annulée. Mode de paiement de la commande groupée : {batch_o
 msgid "This batch order cannot be submitted to payment"
 msgstr "Cette commande groupée ne peut pas être soumise au paiement"
 
-#: joanie/core/api/client/__init__.py:1134
-#: joanie/core/api/client/__init__.py:1137
+#: joanie/core/api/client/__init__.py:952
+msgid "Batch order has no seats owned, cannot export seats."
+msgstr "La commande groupée n'a pas de place attribuée, impossible d’exporter la liste."
+
+#: joanie/core/api/client/__init__.py:1141
+#: joanie/core/api/client/__init__.py:1144
 msgid "No Certificate matches the given query."
 msgstr "Aucun certificat ne correspond à la requête donnée."
 
-#: joanie/core/api/client/__init__.py:1296
+#: joanie/core/api/client/__init__.py:1303
 msgid "Quote does not exist."
 msgstr "Le devis n'existe pas."
 
-#: joanie/core/api/client/__init__.py:1346
+#: joanie/core/api/client/__init__.py:1353
 msgid "Missing total value. It's required."
 msgstr "Valeur totale manquante. Ce champ est requis."
 
-#: joanie/core/api/client/__init__.py:1915
-#: joanie/core/api/client/__init__.py:2016
+#: joanie/core/api/client/__init__.py:1925
+#: joanie/core/api/client/__init__.py:2026
 msgid "Cannot download a contract when it is not yet fully signed."
 msgstr "Impossible de télécharger le contrat tant qu’il n’est pas signé par toutes les parties."
 
-#: joanie/core/api/client/__init__.py:2008
+#: joanie/core/api/client/__init__.py:2018
 msgid "Cannot get contract when an order is cancelled."
 msgstr "Impossible de récupérer le contrat lorsque la commande est annulée."
 
-#: joanie/core/api/client/__init__.py:2111
+#: joanie/core/api/client/__init__.py:2121
 msgid "No zip to generate."
 msgstr "Aucune archive à générer."
 
@@ -936,7 +940,7 @@ msgstr "Date et heure d'envoi du contrat sur la plateforme de signature"
 
 #: joanie/core/models/contracts.py:137
 msgid "Date and time of issuance"
-msgstr "Date et heure de signature du contrat par l'établissement"
+msgstr "Date et heure d’émission du contrat"
 
 #: joanie/core/models/contracts.py:143
 msgid "organization signatory"
@@ -1260,11 +1264,11 @@ msgstr "inactive"
 msgid "You cannot enroll to a non-listed course run out of the scope of an order."
 msgstr "Vous ne pouvez pas vous inscrire à un cours non listé en dehors d'une commande."
 
-#: joanie/core/models/courses.py:1492
+#: joanie/core/models/courses.py:1500
 msgid "Course run \"{self.course_run.id!s}\" requires a valid order to enroll."
 msgstr "La session de cours \"{self.course_run.resource_link:s}\" nécessite une commande valide pour s'inscrire."
 
-#: joanie/core/models/courses.py:1497
+#: joanie/core/models/courses.py:1505
 msgid "You are not allowed to enroll to a course run not listed."
 msgstr "Vous n'êtes pas autorisé à vous inscrire à une session de cours non répertoriée."
 
@@ -1877,15 +1881,15 @@ msgstr ""
 
 #: joanie/core/serializers/admin.py:1517
 msgid "discount_type and discount_value must be provided together."
-msgstr ""
+msgstr "le type de réduction et sa valeur doivent être renseignés ensemble."
 
 #: joanie/core/serializers/admin.py:1522
 msgid "Rate must be between 1 and 100."
-msgstr ""
+msgstr "Le taux doit être compris entre 1 et 100."
 
 #: joanie/core/serializers/admin.py:1527
 msgid "Amount must be a positive whole number."
-msgstr ""
+msgstr "Le montant doit être un entier positif."
 
 #: joanie/core/serializers/admin.py:1540
 msgid "Order reference"
@@ -1893,11 +1897,11 @@ msgstr "Référence de commande"
 
 #: joanie/core/serializers/admin.py:1542
 msgid "Course code"
-msgstr ""
+msgstr "Code de cours"
 
 #: joanie/core/serializers/admin.py:1543
 msgid "Session code"
-msgstr ""
+msgstr "Code de session"
 
 #: joanie/core/serializers/admin.py:1545 joanie/core/serializers/admin.py:1891
 #: joanie/core/serializers/client.py:1760
@@ -2453,24 +2457,28 @@ msgstr "Syllabus de la formation"
 #: joanie/core/templates/issuers/degree.html:31
 #, python-format
 msgid "Issued on %(creation_date)s"
-msgstr "Délivrée le %(creation_date)s"
+msgstr "Délivré le %(creation_date)s"
 
 #: joanie/core/templates/issuers/degree.html:39
-msgid "Successfully passed the final exam of the MOOC"
-msgstr ""
+msgid "Met the course requirements"
+msgstr "A satisfait aux exigences de la formation"
 
-#: joanie/core/templates/issuers/degree.html:65
+#: joanie/core/templates/issuers/degree.html:69
 #, python-format
 msgid "\n"
 "                To verify the authenticity of this certificate, please visit:\n"
 "                <br/>\n"
 "                <a href=\"%(link)s\">%(link)s</a>\n"
 "                "
-msgstr ""
+msgstr "\n"
+"                Vérifier la validité de ce certificat et les informations associées :\n"
+"                <br/>\n"
+"                <a href=\"%(link)s\">%(link)s</a>\n"
+"                "
 
-#: joanie/core/templates/issuers/degree.html:71
+#: joanie/core/templates/issuers/degree.html:75
 msgid "The person's identity has been verified"
-msgstr ""
+msgstr "L'identité de la personne a été vérifiée"
 
 #: joanie/core/templates/issuers/invoice.html:21 joanie/payment/admin.py:20
 #: joanie/payment/enums.py:13
@@ -2541,7 +2549,7 @@ msgstr "Délivrée le %(creation_date)s en France."
 
 #: joanie/core/templates/issuers/microcredential_degree_default.html:58
 msgid "and"
-msgstr ""
+msgstr "et"
 
 #: joanie/core/templates/issuers/microcredential_degree_default.html:69
 msgid "Educational coordinator "
