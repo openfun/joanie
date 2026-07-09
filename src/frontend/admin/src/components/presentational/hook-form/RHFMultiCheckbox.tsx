@@ -9,8 +9,10 @@ import FormLabel from "@mui/material/FormLabel";
 import { Controller, useFormContext } from "react-hook-form";
 import classNames from "classnames";
 
-interface RHFMultiCheckboxProps
-  extends Omit<FormControlLabelProps, "control" | "label"> {
+interface RHFMultiCheckboxProps extends Omit<
+  FormControlLabelProps,
+  "control" | "label"
+> {
   name: string;
   row?: boolean;
   options: { label: string; value: any }[];
