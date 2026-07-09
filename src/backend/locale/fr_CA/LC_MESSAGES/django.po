@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-19 12:57+0000\n"
-"PO-Revision-Date: 2026-05-20 13:56\n"
+"POT-Creation-Date: 2026-06-08 13:50+0000\n"
+"PO-Revision-Date: 2026-07-09 08:57\n"
 "Last-Translator: \n"
 "Language-Team: French, Canada\n"
 "Language: fr_CA\n"
@@ -268,7 +268,7 @@ msgid "Only product type credentials are allowed to have deep link."
 msgstr ""
 
 #: joanie/core/api/admin/__init__.py:981
-#: joanie/core/api/client/__init__.py:1504
+#: joanie/core/api/client/__init__.py:1511
 msgid "Batch order is not eligible to get signed."
 msgstr ""
 
@@ -285,7 +285,7 @@ msgid "Orders were already generated. Cannot generate twice."
 msgstr ""
 
 #: joanie/core/api/admin/__init__.py:1048
-#: joanie/core/api/client/__init__.py:1358
+#: joanie/core/api/client/__init__.py:1365
 msgid "Batch order is canceled, cannot confirm quote signature."
 msgstr ""
 
@@ -294,7 +294,7 @@ msgid "You must generate the quote first."
 msgstr ""
 
 #: joanie/core/api/admin/__init__.py:1055
-#: joanie/core/api/client/__init__.py:1366
+#: joanie/core/api/client/__init__.py:1373
 msgid "Quote is already signed, and total is frozen."
 msgstr ""
 
@@ -315,7 +315,7 @@ msgid "Batch order's quote purchase order already confirmed."
 msgstr ""
 
 #: joanie/core/api/admin/__init__.py:1139
-#: joanie/core/api/client/__init__.py:1410
+#: joanie/core/api/client/__init__.py:1417
 msgid "Purchase order reference is required."
 msgstr ""
 
@@ -328,7 +328,7 @@ msgid "The relation does not exist between the address and the organization."
 msgstr ""
 
 #: joanie/core/api/client/__init__.py:89
-#: joanie/core/api/client/__init__.py:1005
+#: joanie/core/api/client/__init__.py:1012
 msgid "The requested resource was not found on this server."
 msgstr ""
 
@@ -358,29 +358,33 @@ msgstr ""
 msgid "This batch order cannot be submitted to payment"
 msgstr ""
 
-#: joanie/core/api/client/__init__.py:1134
-#: joanie/core/api/client/__init__.py:1137
+#: joanie/core/api/client/__init__.py:952
+msgid "Batch order has no seats owned, cannot export seats."
+msgstr ""
+
+#: joanie/core/api/client/__init__.py:1141
+#: joanie/core/api/client/__init__.py:1144
 msgid "No Certificate matches the given query."
 msgstr ""
 
-#: joanie/core/api/client/__init__.py:1296
+#: joanie/core/api/client/__init__.py:1303
 msgid "Quote does not exist."
 msgstr ""
 
-#: joanie/core/api/client/__init__.py:1346
+#: joanie/core/api/client/__init__.py:1353
 msgid "Missing total value. It's required."
 msgstr ""
 
-#: joanie/core/api/client/__init__.py:1915
-#: joanie/core/api/client/__init__.py:2016
+#: joanie/core/api/client/__init__.py:1925
+#: joanie/core/api/client/__init__.py:2026
 msgid "Cannot download a contract when it is not yet fully signed."
 msgstr ""
 
-#: joanie/core/api/client/__init__.py:2008
+#: joanie/core/api/client/__init__.py:2018
 msgid "Cannot get contract when an order is cancelled."
 msgstr ""
 
-#: joanie/core/api/client/__init__.py:2111
+#: joanie/core/api/client/__init__.py:2121
 msgid "No zip to generate."
 msgstr ""
 
@@ -1260,11 +1264,11 @@ msgstr ""
 msgid "You cannot enroll to a non-listed course run out of the scope of an order."
 msgstr ""
 
-#: joanie/core/models/courses.py:1492
+#: joanie/core/models/courses.py:1500
 msgid "Course run \"{self.course_run.id!s}\" requires a valid order to enroll."
 msgstr ""
 
-#: joanie/core/models/courses.py:1497
+#: joanie/core/models/courses.py:1505
 msgid "You are not allowed to enroll to a course run not listed."
 msgstr ""
 
@@ -2456,10 +2460,10 @@ msgid "Issued on %(creation_date)s"
 msgstr ""
 
 #: joanie/core/templates/issuers/degree.html:39
-msgid "Successfully passed the final exam of the MOOC"
+msgid "Met the course requirements"
 msgstr ""
 
-#: joanie/core/templates/issuers/degree.html:65
+#: joanie/core/templates/issuers/degree.html:69
 #, python-format
 msgid "\n"
 "                To verify the authenticity of this certificate, please visit:\n"
@@ -2468,7 +2472,7 @@ msgid "\n"
 "                "
 msgstr ""
 
-#: joanie/core/templates/issuers/degree.html:71
+#: joanie/core/templates/issuers/degree.html:75
 msgid "The person's identity has been verified"
 msgstr ""
 
