@@ -46,6 +46,66 @@ class LMSHandlerTestCase(TestCase):
     @override_settings(
         JOANIE_LMS_BACKENDS=[
             {
+                "API_TOKEN": "token_1",
+                "BASE_URL": "https://openedx.apps.test.acme",
+                "BACKEND": "joanie.lms_handler.backends.openedx.OpenEdXLMSBackend",
+                "COURSE_REGEX": "^.*/courses/(?P<course_id>.*)/info/?$",
+                "SELECTOR_REGEX": "^.*/courses/(?P<course_id>.*)/info/?$",
+                "COURSE_RUN_SYNC_NO_UPDATE_FIELDS": ["languages"],
+            },
+            {
+                "API_TOKEN": "token_2",
+                "BASE_URL": "https://moodle.1-fun.apps.test.acme/webservice/rest/server.php",
+                "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+                "COURSE_REGEX": "^.*/course/view.php\\?id=.*$",
+                "SELECTOR_REGEX": "^.*/course/view.php\\?id=.*$",
+            },
+            {
+                "API_TOKEN": "token_3",
+                "BASE_URL": "https://moodle.2.test.acme/webservice/rest/server.php",
+                "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+                "COURSE_REGEX": "^.*/course/view.php\\?id=.*$",
+                "SELECTOR_REGEX": "^.*/course/view.php\\?id=.*$",
+            },
+        ]
+    )
+    def test_lms_handler_select_lms_with_shared_selector_regex(self):
+        """
+        When there are lms backends that share the same selector regex, the lms handler
+        should compare with the base_url to find the appropriate class to instantiate.
+        """
+        backend = LMSHandler.select_lms(
+            "https://openedx.apps.test.acme/courses/course-v1:some+course+id/info"
+        )
+        self.assertIsInstance(backend, OpenEdXLMSBackend)
+        self.assertEqual(
+            backend.configuration["BASE_URL"], "https://openedx.apps.test.acme"
+        )
+
+        backend = LMSHandler.select_lms(
+            "https://moodle.1-fun.apps.test.acme/course/view.php?id=472"
+        )
+        self.assertIsInstance(backend, MoodleLMSBackend)
+        self.assertEqual(
+            backend.configuration["BASE_URL"],
+            "https://moodle.1-fun.apps.test.acme/webservice/rest/server.php",
+        )
+
+        backend = LMSHandler.select_lms(
+            "https://moodle.2.test.acme/course/view.php?id=4"
+        )
+        self.assertIsInstance(backend, MoodleLMSBackend)
+        self.assertEqual(
+            backend.configuration["BASE_URL"],
+            "https://moodle.2.test.acme/webservice/rest/server.php",
+        )
+
+        backend = LMSHandler.select_lms("http://unknown-lms.test/courses/42")
+        self.assertIsNone(backend)
+
+    @override_settings(
+        JOANIE_LMS_BACKENDS=[
+            {
                 "BACKEND": "joanie.lms_handler.backends.base.BaseLMSBackend",
                 "BASE_URL": "http://lms-1.test",
                 "SELECTOR_REGEX": r"^disabled$",
