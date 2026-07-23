@@ -31,6 +31,8 @@ and this project adheres to
 
 ### Fixed
 
+- LMS Handler finds appropriate configuration when many lms share same regex
+  selector
 - Allow student to enroll to course from a batch order with purchase order
   payment method and the contract is not signed yet
 - Add missing migration file for deeplink max length
