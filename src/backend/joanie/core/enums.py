@@ -68,6 +68,7 @@ ORDER_STATE_TO_SAVE_PAYMENT_METHOD = (
 ORDER_STATE_TO_SIGN = "to_sign"  # order needs a contract signature
 ORDER_STATE_SIGNING = "signing"  # order is being signed
 ORDER_STATE_PENDING = "pending"  # payment has failed but can be retried
+ORDER_STATE_PENDING_WITHDRAW = "pending_withdraw"  # order is in pending to be withdrawn
 ORDER_STATE_CANCELED = "canceled"  # has been canceled
 ORDER_STATE_PENDING_PAYMENT = "pending_payment"  # payment is pending
 ORDER_STATE_FAILED_PAYMENT = "failed_payment"  # last payment has failed
@@ -84,6 +85,10 @@ ORDER_STATE_CHOICES = (
     (ORDER_STATE_SIGNING, _("Signing")),
     (ORDER_STATE_PENDING, _("Pending")),
     (ORDER_STATE_CANCELED, pgettext_lazy("As in: the order is canceled.", "Canceled")),
+    (
+        ORDER_STATE_PENDING_WITHDRAW,
+        pgettext_lazy("As in: the order is in pending to be withdrawn", "To withdraw"),
+    ),
     (
         ORDER_STATE_PENDING_PAYMENT,
         pgettext_lazy("As in: the order payment is pending.", "Pending payment"),
