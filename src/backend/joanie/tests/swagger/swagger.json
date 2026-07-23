@@ -3422,6 +3422,7 @@
                                     "no_payment",
                                     "pending",
                                     "pending_payment",
+                                    "pending_withdraw",
                                     "refunded",
                                     "refunding",
                                     "signing",
@@ -3431,7 +3432,7 @@
                                 ]
                             }
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_withdraw` - To withdraw\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
                         "explode": true,
                         "style": "form"
                     },
@@ -3451,6 +3452,7 @@
                                     "no_payment",
                                     "pending",
                                     "pending_payment",
+                                    "pending_withdraw",
                                     "refunded",
                                     "refunding",
                                     "signing",
@@ -3460,7 +3462,7 @@
                                 ]
                             }
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_withdraw` - To withdraw\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
                         "explode": true,
                         "style": "form"
                     }
@@ -8587,6 +8589,7 @@
                     "signing",
                     "pending",
                     "canceled",
+                    "pending_withdraw",
                     "pending_payment",
                     "failed_payment",
                     "no_payment",
@@ -8596,7 +8599,7 @@
                     "to_own"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_withdraw` - To withdraw\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own"
             },
             "OrderTargetCourseRelation": {
                 "type": "object",

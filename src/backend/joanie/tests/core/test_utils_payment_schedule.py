@@ -62,7 +62,7 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
         course_start_date = date(2024, 3, 1)
 
         self.assertEqual(
-            payment_schedule._withdrawal_limit_date(
+            payment_schedule.withdrawal_limit_date(
                 signed_contract_date, course_start_date
             ),
             date(2024, 1, 17),
@@ -76,7 +76,7 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
         course_start_date = date(2024, 3, 1)
 
         self.assertEqual(
-            payment_schedule._withdrawal_limit_date(
+            payment_schedule.withdrawal_limit_date(
                 signed_contract_date, course_start_date
             ),
             date(2024, 2, 19),
@@ -90,7 +90,7 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
         course_start_date = date(2024, 3, 1)
 
         self.assertEqual(
-            payment_schedule._withdrawal_limit_date(
+            payment_schedule.withdrawal_limit_date(
                 signed_contract_date, course_start_date
             ),
             date(2024, 1, 2),
@@ -105,7 +105,7 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
         course_start_date = date(2024, 1, 10)
 
         self.assertEqual(
-            payment_schedule._withdrawal_limit_date(
+            payment_schedule.withdrawal_limit_date(
                 signed_contract_date, course_start_date
             ),
             date(2024, 1, 1),
@@ -124,7 +124,7 @@ class PaymentScheduleUtilsTestCase(LoggingTestCase):
         course_start_date = date(2023, 11, 21)
 
         self.assertEqual(
-            payment_schedule._withdrawal_limit_date(
+            payment_schedule.withdrawal_limit_date(
                 signed_contract_date, course_start_date
             ),
             date(2023, 12, 14),

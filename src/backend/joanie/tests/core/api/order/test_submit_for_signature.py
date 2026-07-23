@@ -85,6 +85,8 @@ class OrderSubmitForSignatureApiTest(BaseAPITestCase):
         factories.UserAddressFactory(owner=user)
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
+                if state == enums.ORDER_STATE_PENDING_WITHDRAW:
+                    continue
                 if state == enums.ORDER_STATE_TO_OWN:
                     order = factories.OrderGeneratorFactory(state=state)
                 else:

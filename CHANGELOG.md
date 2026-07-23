@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add withdrawal action for orders in client and admin API
+
 ## [3.5.0] - 2026-08-13
 
 ### Added
