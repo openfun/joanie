@@ -7,7 +7,9 @@ import json
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest import mock
+from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
@@ -699,6 +701,8 @@ class OrderModelsTestCase(LoggingTestCase):
         factories.UserAddressFactory(owner=user)
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
+                if state == enums.ORDER_STATE_PENDING_WITHDRAW:
+                    continue
                 if state == enums.ORDER_STATE_TO_OWN:
                     order = factories.OrderGeneratorFactory(state=state)
                 else:
@@ -1500,3 +1504,278 @@ class OrderModelsTestCase(LoggingTestCase):
         )
 
         self.assertTrue(order.has_full_discount)
+
+    def test_models_order_eligible_to_withdraw_has_waived_withdrawal_right_credential_product(
+        self,
+    ):
+        """
+        When the order of product type credential  has waived his withdrawal right,
+        the property `eligible_to_withdraw` should return False.
+        """
+        order = factories.OrderGeneratorFactory(
+            has_waived_withdrawal_right=True,
+            product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+
+        self.assertFalse(order.eligible_to_withdraw)
+
+    def test_models_order_eligible_to_withdraw_has_waived_withdrawal_right_certificate_product(
+        self,
+    ):
+        """
+        When the order has waived his withdrawal right on a product of type certificate,
+        the property `eligible_to_withdraw` should return True when the withdrawal period
+        has not been reached yet.
+        """
+        mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
+
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            enrollment = factories.EnrollmentFactory()
+            product = factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                contract_definition_order=None,
+                certificate_definition=factories.CertificateDefinitionFactory(),
+                courses=[enrollment.course_run.course],
+                price=10.00,
+            )
+            order = factories.OrderGeneratorFactory(
+                product=product,
+                enrollment=enrollment,
+                course=None,
+                state=enums.ORDER_STATE_COMPLETED,
+                has_waived_withdrawal_right=True,
+            )
+
+        for day in range(0, settings.JOANIE_WITHDRAWAL_PERIOD_DAYS):
+            with self.subTest(day=day):
+                withdrawal_date_before_limit = mocked_now + timedelta(days=day)
+                with mock.patch(
+                    "django.utils.timezone.now",
+                    return_value=withdrawal_date_before_limit,
+                ):
+                    self.assertTrue(order.eligible_to_withdraw)
+
+    def test_models_order_eligible_to_withdraw_product_certificate_passed_withdrawal_date(
+        self,
+    ):
+        """
+        When the order of product type certificate wants to withdraw, but the date is passed
+        the withdrawal period limit, the property `eligible_to_withdraw` should return False.
+        """
+        mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
+
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            enrollment = factories.EnrollmentFactory()
+            product = factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                contract_definition_order=None,
+                certificate_definition=factories.CertificateDefinitionFactory(),
+                courses=[enrollment.course_run.course],
+                price=10.00,
+            )
+            order = factories.OrderGeneratorFactory(
+                product=product,
+                enrollment=enrollment,
+                course=None,
+                state=enums.ORDER_STATE_COMPLETED,
+                has_waived_withdrawal_right=False,
+            )
+
+        withdrawal_date_passed_limit = mocked_now + timedelta(
+            days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS + 1
+        )
+
+        with mock.patch(
+            "django.utils.timezone.now", return_value=withdrawal_date_passed_limit
+        ):
+            self.assertFalse(order.eligible_to_withdraw)
+
+    def test_models_order_eligible_to_withdraw_product_certificate_with_generated_certificate(
+        self,
+    ):
+        """
+        When the order of product type certificate wants to withdraw, the property
+        `eligible_to_withdraw` should return False if the certificate has been issued.
+        """
+        enrollment = factories.EnrollmentFactory()
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+            contract_definition_order=None,
+            certificate_definition=factories.CertificateDefinitionFactory(),
+            courses=[enrollment.course_run.course],
+            price=10.00,
+        )
+        order = factories.OrderGeneratorFactory(
+            product=product,
+            enrollment=enrollment,
+            course=None,
+            state=enums.ORDER_STATE_COMPLETED,
+            has_waived_withdrawal_right=False,
+        )
+        factories.OrderCertificateFactory(order=order)
+
+        self.assertFalse(order.eligible_to_withdraw)
+
+    def test_models_order_eligible_to_withdraw_product_credential_has_waived_withdrawal_right(
+        self,
+    ):
+        """
+        When the order of product type credential has waived the withdrawal right, the
+        property `eligible_to_withdraw` should return False.
+        """
+        order = factories.OrderGeneratorFactory(
+            has_waived_withdrawal_right=True,
+            product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+            state=enums.ORDER_STATE_PENDING,
+        )
+
+        self.assertFalse(order.eligible_to_withdraw)
+
+    def test_models_order_eligible_to_withdraw_product_credential_state_not_allowed_to_withdraw(
+        self,
+    ):
+        """
+        When the order of product type credential has not waived the withdrawal right, the
+        property `eligible_to_withdraw` should return False when the state of the order
+        is not in the allowed state to withdraw.
+        """
+        for _, state in enums.ORDER_STATE_CHOICES:
+            with self.subTest(state=state):
+                if state not in [
+                    enums.ORDER_STATE_SIGNING,
+                    enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+                    enums.ORDER_STATE_PENDING,
+                ]:
+                    continue
+                order = factories.OrderGeneratorFactory(state=state)
+
+                self.assertFalse(order.eligible_to_withdraw)
+
+    def test_models_order_eligible_to_withdraw_product_credential(
+        self,
+    ):
+        """
+        When the order of product type credential has not waived the withdrawal right, the
+        property `eligible_to_withdraw` should return True only if date is between the buyer's
+        signature of the contract up to 16 days from this date.
+        """
+        mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
+        for day in range(15, 20):
+            with self.subTest(day=day):
+                course_run = factories.CourseRunFactory(
+                    enrollment_start=mocked_now,
+                    start=mocked_now + timedelta(days=20),
+                    end=mocked_now + timedelta(days=40),
+                    course=factories.CourseFactory(),
+                )
+                offering = factories.OfferingFactory(
+                    course=course_run.course,
+                    product=factories.ProductFactory(
+                        price=10,
+                        type=enums.PRODUCT_TYPE_CREDENTIAL,
+                        target_courses=[course_run.course],
+                        contract_definition_order=factories.ContractDefinitionFactory(),
+                    ),
+                    organizations=[factories.OrganizationFactory()],
+                )
+                order = factories.OrderGeneratorFactory(
+                    product=offering.product,
+                    state=enums.ORDER_STATE_SIGNING,
+                    has_waived_withdrawal_right=False,
+                )
+                order.submit_for_signature(user=order.owner)
+                order.contract.student_signed_on = mocked_now
+                order.contract.save()
+                order.flow.update()
+
+                withdrawal_date_request = mocked_now + timedelta(days=day)
+                with mock.patch(
+                    "django.utils.timezone.now", return_value=withdrawal_date_request
+                ):
+                    if day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS:
+                        self.assertTrue(order.eligible_to_withdraw)
+                    else:
+                        self.assertFalse(order.eligible_to_withdraw)
+
+    def test_models_order_withdrawal_limit_product_type_certificate(self):
+        """
+        The method `withdrawal_date_limit` should return the withdrawal date limit
+        for an order with product type certificate.
+        """
+        mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            enrollment = factories.EnrollmentFactory()
+            product = factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CERTIFICATE,
+                contract_definition_order=None,
+                certificate_definition=factories.CertificateDefinitionFactory(),
+                courses=[enrollment.course_run.course],
+                price=10.00,
+            )
+            for value in [True, False]:
+                with self.subTest(value=value):
+                    order = factories.OrderGeneratorFactory(
+                        product=product,
+                        enrollment=enrollment,
+                        course=None,
+                        state=enums.ORDER_STATE_COMPLETED,
+                        has_waived_withdrawal_right=value,
+                    )
+
+                    withdrawal_date_limit = mocked_now + timedelta(
+                        days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
+                    )
+
+                    self.assertEqual(
+                        order.withdrawal_date_limit(), withdrawal_date_limit
+                    )
+
+                    order.flow.cancel()
+
+    def test_models_order_withdrawal_limit_product_type_credential(self):
+        """
+        The method `withdrawal_limit_date` should return the withdrawal date limit
+        for an order of product type credential when the owner has not waived the
+        withdrawal right, otherwise it should return None.
+        """
+        mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            course_run = factories.CourseRunFactory(
+                enrollment_start=mocked_now,
+                start=mocked_now + timedelta(days=20),
+                end=mocked_now + timedelta(days=40),
+                course=factories.CourseFactory(),
+            )
+            offering = factories.OfferingFactory(
+                course=course_run.course,
+                product=factories.ProductFactory(
+                    price=10,
+                    type=enums.PRODUCT_TYPE_CREDENTIAL,
+                    target_courses=[course_run.course],
+                    contract_definition_order=factories.ContractDefinitionFactory(),
+                ),
+                organizations=[factories.OrganizationFactory()],
+            )
+            for value in [True, False]:
+                with self.subTest(value=value):
+                    order = factories.OrderGeneratorFactory(
+                        product=offering.product,
+                        state=enums.ORDER_STATE_SIGNING,
+                        has_waived_withdrawal_right=value,
+                    )
+
+                    withdrawal_date_limit = mocked_now + timedelta(
+                        days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
+                    )
+                    if value:
+                        order.submit_for_signature(user=order.owner)
+                        order.contract.student_signed_on = mocked_now
+                        order.flow.update()
+                        order.save()
+                        self.assertEqual(
+                            order.withdrawal_date_limit(), withdrawal_date_limit
+                        )
+                    else:
+                        self.assertIsNone(order.withdrawal_date_limit())
+
+                    order.flow.cancel()

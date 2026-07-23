@@ -1782,6 +1782,7 @@ class OrderFlowsTestCase(LoggingTestCase):
                 enums.ORDER_STATE_REFUNDING,
                 enums.ORDER_STATE_REFUNDED,
                 enums.ORDER_STATE_CANCELED,
+                enums.ORDER_STATE_PENDING_WITHDRAW,
             )
         )
         for state, _ in order_state_choices:
@@ -1801,7 +1802,8 @@ class OrderFlowsTestCase(LoggingTestCase):
         order_state_choices = tuple(
             choice
             for choice in enums.ORDER_STATE_CHOICES
-            if choice[0] not in (enums.ORDER_STATE_REFUNDING,)
+            if choice[0]
+            not in (enums.ORDER_STATE_REFUNDING, enums.ORDER_STATE_PENDING_WITHDRAW)
         )
         for state, _ in order_state_choices:
             with self.subTest(state=state):

@@ -609,6 +609,43 @@ class OrdersAdminApiTestCase(BaseAPITestCase):
             },
         )
 
+    def test_api_admin_enrollments_update_missing_course_run_id_should_fail(self):
+        """
+        Admin user should not be able to update an enrollment if the course run id is missing.
+        """
+        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        self.client.login(username=admin.username, password="password")
+
+        user = factories.UserFactory()
+        enrollment = factories.EnrollmentFactory(
+            user=user, is_active=True, was_created_by_order=False
+        )
+
+        response = self.client.put(
+            f"/api/v1.0/admin/enrollments/{enrollment.id}/",
+            content_type="application/json",
+            data={
+                "id": enrollment.id,
+                # "certificate": uuid.uuid4(),
+                "user": user.id,
+                "is_active": True,
+                "was_created_by_order": False,
+                "state": "set",
+                "created_on": format_date(timezone.now()),
+                "updated_on": format_date(timezone.now()),
+            },
+        )
+
+        self.assertStatusCodeEqual(response, HTTPStatus.BAD_REQUEST)
+        self.assertDictEqual(
+            response.json(),
+            {
+                "__all__": [
+                    "You must provide a course_run_id to create/update an enrollment."
+                ]
+            },
+        )
+
     def test_api_admin_enrollments_update_missing_user_id_should_fail(self):
         """
         Admin user should not be able to update an enrollment if the user id is missing.

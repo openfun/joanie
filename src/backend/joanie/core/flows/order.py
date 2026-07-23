@@ -156,6 +156,28 @@ class OrderFlow:
         Transition order to pending state.
         """
 
+    def _can_be_state_pending_withdraw(self):
+        """
+        An order can be state `pending_withdraw` when the withdrawal period is eligible
+        and a value is set for `cancel_requested_at` field.
+        """
+        return self.instance.eligible_to_withdraw
+
+    @state.transition(
+        source=[
+            enums.ORDER_STATE_SIGNING,
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_COMPLETED,
+        ],
+        target=enums.ORDER_STATE_PENDING_WITHDRAW,
+        conditions=[_can_be_state_pending_withdraw],
+    )
+    def pending_withdraw(self):
+        """
+        Transition order to pending withdraw
+        """
+
     @state.transition(
         source=fsm.State.ANY,
         target=enums.ORDER_STATE_CANCELED,
@@ -333,7 +355,6 @@ class OrderFlow:
             self.no_payment,
             self.failed_payment,
             self.refunded,
-            self.to_own,
         ]:
             with suppress(fsm.TransitionNotAllowed):
                 logger.debug(
@@ -472,6 +493,20 @@ class OrderFlow:
             self.instance.save()
             if not credit_card.orders.exists():
                 credit_card.delete()
+
+        # The order withdrawn request per type of product
+        # if (
+        #     source == enums.ORDER_STATE_PENDING_WITHDRAW
+        #     and target == enums.ORDER_STATE_CANCELED
+        # ):
+        # if self.instance.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+        # send mail confirmation about cancellation to order owner and organization administrator
+        # print("Hello, credential product to be canceled due to withdrawal")
+        # else:
+        # send mail confirm request accounted about withdrawal and organization administrator
+        # print(
+        #     "Hello, certificate product request taken in account to be withdrawn"
+        # )
 
         # Reset offering cache if its representation is impacted by changes
         # on related orders
