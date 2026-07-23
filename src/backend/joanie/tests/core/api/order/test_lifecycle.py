@@ -48,6 +48,7 @@ class OrderLifecycle(BaseAPITestCase):
         )
 
         order = models.Order.objects.get(id=response.json().get("id"))
+
         self.assertEqual(order.state, enums.ORDER_STATE_TO_SIGN)
 
         self.client.post(

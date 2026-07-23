@@ -1144,30 +1144,31 @@ class OrderModelsTestCase(LoggingTestCase, ActivityLogMixingTestCase):
 
     def test_models_order_schedule_withdraw(self):
         """Check that the order can be withdrawn"""
-        order = factories.OrderFactory(
-            payment_schedule=[
-                {
-                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
-                    "amount": "200.00",
-                    "due_date": "2024-01-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-                {
-                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
-                    "amount": "300.00",
-                    "due_date": "2024-02-17",
-                    "state": PAYMENT_STATE_PENDING,
-                },
-            ]
-        )
-        order.refresh_from_db()
-
         mocked_now = datetime(2024, 1, 12, 8, 8, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            order = factories.OrderGeneratorFactory(
+                payment_schedule=[
+                    {
+                        "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                        "amount": "200.00",
+                        "due_date": "2024-01-17",
+                        "state": PAYMENT_STATE_PENDING,
+                    },
+                    {
+                        "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                        "amount": "300.00",
+                        "due_date": "2024-02-17",
+                        "state": PAYMENT_STATE_PENDING,
+                    },
+                ],
+                state=ORDER_STATE_PENDING,
+            )
+            order.refresh_from_db()
+
             order.withdraw()
 
-        order.refresh_from_db()
-        self.assertEqual(order.state, "canceled")
+            order.refresh_from_db()
+            self.assertEqual(order.state, "canceled")
 
     def test_models_order_schedule_withdraw_no_schedule(self):
         """If no payment schedule is found, withdraw should raise an error"""

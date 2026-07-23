@@ -6,6 +6,8 @@ from logging import getLogger
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
+from django.utils.translation import override
 
 from stockholm import Money
 
@@ -99,3 +101,66 @@ def send(subject, template_vars, template_name, to_user_email):
     except smtplib.SMTPException as exception:
         # no exception raised as user can't sometimes change his mail,
         logger.error("%s purchase order mail %s not send", to_user_email, exception)
+
+
+def _prepare_withdrawal_context(order, title):
+    """Prepare the common context variables for withdrawal-related emails."""
+    product_title = order.product.safe_translation_getter(
+        "title", language_code=order.owner.language
+    )
+    return {
+        "title": title,
+        "email": order.owner.email,
+        "fullname": order.owner.name,
+        "product_title": product_title,
+        "dashboard_order_link": (
+            settings.JOANIE_DASHBOARD_ORDER_LINK.replace(":orderId", str(order.id))
+        ),
+        "site": {
+            "name": settings.JOANIE_CATALOG_NAME,
+            "url": settings.JOANIE_CATALOG_BASE_URL,
+        },
+    }
+
+
+def _send_withdrawal_email(order, title, template_name):
+    """Send a withdrawal-related mail to the order owner."""
+    send(
+        subject=title,
+        template_vars=_prepare_withdrawal_context(order, title),
+        template_name=template_name,
+        to_user_email=order.owner.email,
+    )
+
+
+def send_withdrawal_request(order):
+    """
+    Send a mail to the order owner confirming that their withdrawal request has been
+    received and is pending manual review.
+    """
+    with override(order.owner.language):
+        _send_withdrawal_email(
+            order, _("Withdrawal request received"), "withdrawal_request"
+        )
+
+
+def send_withdrawal_confirmation(order):
+    """
+    Send a mail to the order owner confirming that their withdrawal has been
+    confirmed and their order cancelled.
+    """
+    with override(order.owner.language):
+        _send_withdrawal_email(
+            order, _("Withdrawal confirmed"), "withdrawal_confirmation"
+        )
+
+
+def send_withdrawal_rejection(order):
+    """
+    Send a mail to the order owner informing them that their withdrawal request
+    has been rejected and their order resumes its normal course.
+    """
+    with override(order.owner.language):
+        _send_withdrawal_email(
+            order, _("Withdrawal request rejected"), "withdrawal_rejection"
+        )

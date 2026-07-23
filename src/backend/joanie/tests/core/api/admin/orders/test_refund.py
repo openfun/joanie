@@ -122,6 +122,7 @@ class OrdersAdminApiRefundTestCase(BaseAPITestCase):
                 enums.ORDER_STATE_CANCELED,
                 enums.ORDER_STATE_REFUNDING,
                 enums.ORDER_STATE_REFUNDED,
+                enums.ORDER_STATE_PENDING_WITHDRAW,
             ]
         )
         admin = factories.UserFactory(is_staff=True, is_superuser=True)

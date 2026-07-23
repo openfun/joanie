@@ -11,6 +11,11 @@ from sentry_sdk import capture_exception
 from viewflow import fsm
 
 from joanie.core import enums
+from joanie.core.utils.emails import (
+    send_withdrawal_confirmation,
+    send_withdrawal_rejection,
+    send_withdrawal_request,
+)
 from joanie.core.utils.payment_schedule import (
     has_installment_paid,
     has_installments_to_debit,
@@ -154,6 +159,39 @@ class OrderFlow:
     def pending(self):
         """
         Transition order to pending state.
+        """
+
+    def _can_be_state_pending_withdraw(self):
+        """
+        An order can be state `pending_withdraw` only for certificate products for which
+        the owner has waived their withdrawal right — in that case, the withdrawal
+        request cannot be auto-approved and must go through manual review, since the
+        actual criteria (whether the exam was accessed) cannot be checked automatically.
+        """
+        return (
+            self.instance.eligible_to_withdraw
+            and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+            and self.instance.has_waived_withdrawal_right
+        )
+
+    @state.transition(
+        source=enums.ORDER_STATE_COMPLETED,
+        target=enums.ORDER_STATE_PENDING_WITHDRAW,
+        conditions=[_can_be_state_pending_withdraw],
+    )
+    def pending_withdraw(self):
+        """
+        Transition order to pending withdraw
+        """
+
+    @state.transition(
+        source=enums.ORDER_STATE_PENDING_WITHDRAW,
+        target=enums.ORDER_STATE_COMPLETED,
+    )
+    def reject_withdraw(self):
+        """
+        Transition order back to completed when a withdrawal request is rejected
+        by an administrator.
         """
 
     @state.transition(
@@ -333,7 +371,6 @@ class OrderFlow:
             self.no_payment,
             self.failed_payment,
             self.refunded,
-            self.to_own,
         ]:
             with suppress(fsm.TransitionNotAllowed):
                 logger.debug(
@@ -472,6 +509,29 @@ class OrderFlow:
             self.instance.save()
             if not credit_card.orders.exists():
                 credit_card.delete()
+
+        # Handle withdrawal for order with product type certificate, mail request
+        if (
+            source == enums.ORDER_STATE_COMPLETED
+            and target == enums.ORDER_STATE_PENDING_WITHDRAW
+            and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+        ):
+            send_withdrawal_request(self.instance)
+
+        # Confirm withdrawal (credential or certificate products)
+        if (
+            source == enums.ORDER_STATE_PENDING_WITHDRAW
+            and target == enums.ORDER_STATE_CANCELED
+        ):
+            send_withdrawal_confirmation(self.instance)
+
+        # The order withdrawal request has been rejected, the order resumes its normal course
+        # It happens for certificate products only
+        if (
+            source == enums.ORDER_STATE_PENDING_WITHDRAW
+            and target == enums.ORDER_STATE_COMPLETED
+        ):
+            send_withdrawal_rejection(self.instance)
 
         # Reset offering cache if its representation is impacted by changes
         # on related orders
