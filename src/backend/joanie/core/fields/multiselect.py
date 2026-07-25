@@ -86,7 +86,7 @@ class MultiSelectField(models.CharField):
 
     def deconstruct(self):
         """Return enough information to recreate the field as a 4-tuple."""
-        name, path, args, kwargs = super().deconstruct()
+        name, path, args, kwargs = super().deconstruct()  # pylint: disable=no-member
         kwargs["max_choices"] = self.max_choices
         return name, path, args, kwargs
 
@@ -100,7 +100,7 @@ class MultiSelectField(models.CharField):
                     id="fields.E1001",
                 )
             ]
-        return super()._check_choices()
+        return super()._check_choices()  # pylint: disable=no-member
 
     def _check_max_choices_attribute(self):
         """Check that max_choices is well configured."""
@@ -140,7 +140,7 @@ class MultiSelectField(models.CharField):
 
     def check(self, **kwargs):
         """Add checks on max_choices to the field's checks."""
-        res = [*super().check(**kwargs), *self._check_max_choices_attribute()]
+        res = [*super().check(**kwargs), *self._check_max_choices_attribute()]  # pylint: disable=no-member
         return res
 
     @staticmethod
@@ -184,7 +184,7 @@ class MultiSelectField(models.CharField):
         value = self.value_from_object(obj)
         return self.get_prep_value(value)
 
-    def validate(self, value, model_instance):
+    def validate(self, value, _model_instance):
         """
         Validate each value in values and raise a ValidationError if something is wrong.
         """
@@ -244,7 +244,7 @@ class MultiSelectField(models.CharField):
 
         We choose to display a sentence of the form: "French, English and German".
         """
-        super().contribute_to_class(cls, name, private_only=private_only)
+        super().contribute_to_class(cls, name, private_only=private_only)  # pylint: disable=no-member
         if self.choices:
             choicedict = dict(self.choices)
 
