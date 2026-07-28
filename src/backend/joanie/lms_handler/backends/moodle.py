@@ -109,6 +109,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             "lastname": user.last_name or ".",
             "email": user.email,
             "auth": settings.MOODLE_AUTH_METHOD,
+            "idnumber": user.username,
         }
         try:
             return self.moodle("core_user_create_users", users=[user_data])[0]
