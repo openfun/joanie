@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add Trivy CVE scan job in CI (report only, non-blocking)
 - Add `idnumber` in create user for Moodle LMS
 - Add issued on information in quote's context when total is set
 - Add payment method, session code and course code to order export csv

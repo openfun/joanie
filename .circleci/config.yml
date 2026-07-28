@@ -123,6 +123,37 @@ jobs:
           name: Check built image availability
           command: docker images "joanie-admin:${CIRCLE_SHA1}*"
 
+  # Scan front & back dependencies, and the base OS environment, for known
+  # CVEs (report only, never fails)
+  scan-cve:
+    docker:
+      - image: cimg/base:current
+    working_directory: ~/joanie
+    steps:
+      - checkout:
+          path: ~/joanie
+      - setup_remote_docker:
+          version: default
+      - run:
+          name: Build production image
+          command: docker build -t joanie:${CIRCLE_SHA1} --target production .
+      - run:
+          name: Install trivy
+          command: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+      - run:
+          name: Scan runtime environment (OS packages) for known CVEs
+          command: |
+            mkdir -p reports/trivy
+            trivy image --vuln-type os --exit-code 0 --format template --template "@.circleci/templates/trivy-cve-report.tpl" -o reports/trivy/env-report.html joanie:${CIRCLE_SHA1}
+      - run:
+          name: Scan back-end application dependencies for known CVEs
+          command: trivy image --vuln-type library --exit-code 0 --format template --template "@.circleci/templates/trivy-cve-report.tpl" -o reports/trivy/back-report.html joanie:${CIRCLE_SHA1}
+      - run:
+          name: Scan front-end application dependencies for known CVEs
+          command: trivy fs --vuln-type library --exit-code 0 --format template --template "@.circleci/templates/trivy-cve-report.tpl" -o reports/trivy/front-report.html src/frontend/admin
+      - store_artifacts:
+          path: reports/trivy
+
   # ---- Backend jobs ----
   # Build backend development environment
   build-back:
@@ -820,6 +851,14 @@ workflows:
               only: /.*/
 
       - build-docker-admin:
+          filters:
+            tags:
+              only: /.*/
+
+      # Security jobs
+      #
+      # Scan front & back dependencies for known CVEs (report only)
+      - scan-cve:
           filters:
             tags:
               only: /.*/
