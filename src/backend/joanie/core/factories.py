@@ -935,7 +935,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         if extracted:
             return extracted
 
-        if self.state in [
+        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL and self.state in [
             enums.ORDER_STATE_TO_SIGN,
             enums.ORDER_STATE_SIGNING,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
@@ -1053,7 +1053,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         It updates the payment schedule states accordingly.
         """
         target_state = self.state
-        if self.state not in [
+        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL and self.state not in [
             enums.ORDER_STATE_DRAFT,
             enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_TO_OWN,
