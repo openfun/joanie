@@ -1956,6 +1956,13 @@ class Order(BaseModel):
             self.flow.pending_withdraw()
             self.save()
 
+    def confirm_withdrawal(self):
+        """Adds the timestamps of the confirmation of the withdrawal"""
+        # Protect here the method for only certificate products that are not free
+        # Add test for admin api new endpoint + this method in test_models_orders_*
+        self.withdrawn_confirmation_at = timezone.now()
+        self.save()
+
     @property
     def has_consent_to_terms(self):
         """Redefine `has_consent_to_terms` property to raise an exception if used"""
