@@ -494,19 +494,35 @@ class OrderFlow:
             if not credit_card.orders.exists():
                 credit_card.delete()
 
+
+        # Create the condition for when product certificate get to pending_withdraw
+        # that triggers the email
+
+        if (
+            source == enums.ORDER_STATE_COMPLETED
+            and target == enums.ORDER_STATE_PENDING_WITHDRAW
+            and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+        ):
+            pass
+            # send mail request
+            # You should create here a method that is responsible to send mails
+            # in joanie.core.utils.emails
+
         # The order withdrawn request per type of product
-        # if (
-        #     source == enums.ORDER_STATE_PENDING_WITHDRAW
-        #     and target == enums.ORDER_STATE_CANCELED
-        # ):
-        # if self.instance.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
-        # send mail confirmation about cancellation to order owner and organization administrator
-        # print("Hello, credential product to be canceled due to withdrawal")
-        # else:
-        # send mail confirm request accounted about withdrawal and organization administrator
-        # print(
-        #     "Hello, certificate product request taken in account to be withdrawn"
-        # )
+        if (
+            source == enums.ORDER_STATE_PENDING_WITHDRAW
+            and target == enums.ORDER_STATE_CANCELED
+        ):
+            if self.instance.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+                pass
+            # send mail confirmation about cancellation to order owner and organization administrator
+            # print("Hello, credential product to be canceled due to withdrawal")
+            if self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+                pass
+            # send mail confirm request accounted about withdrawal and organization administrator
+                # print(
+                #     "Hello, certificate product request taken in account to be withdrawn"
+                # )
 
         # Reset offering cache if its representation is impacted by changes
         # on related orders
