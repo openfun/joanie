@@ -116,6 +116,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "target_enrollments": [],
                         "total": float(product.price),
                         "total_currency": settings.DEFAULT_CURRENCY,
+                        "eligible_to_withdraw": False,
+                        "withdrawal_date_limit": None,
                     }
                 ],
             },
@@ -157,6 +159,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": False,
+                        "withdrawal_date_limit": None,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -340,6 +344,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": order.eligible_to_withdraw,
+                        "withdrawal_date_limit": order.withdrawal_date_limit,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -471,6 +477,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": order.eligible_to_withdraw,
+                        "withdrawal_date_limit": order.withdrawal_date_limit,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -636,6 +644,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": order.eligible_to_withdraw,
+                        "withdrawal_date_limit": order.withdrawal_date_limit,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -746,6 +756,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": order.eligible_to_withdraw,
+                        "withdrawal_date_limit": order.withdrawal_date_limit,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -877,6 +889,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": order.eligible_to_withdraw,
+                        "withdrawal_date_limit": order.withdrawal_date_limit,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -1092,6 +1106,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": order.eligible_to_withdraw,
+                        "withdrawal_date_limit": order.withdrawal_date_limit,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -1180,6 +1196,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": order.main_invoice.reference,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": order.eligible_to_withdraw,
+                        "withdrawal_date_limit": order.withdrawal_date_limit,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,
@@ -1272,6 +1290,8 @@ class OrderListApiTest(BaseAPITestCase):
                         "main_invoice_reference": None,
                         "offering_rule_ids": [],
                         "has_waived_withdrawal_right": order.has_waived_withdrawal_right,
+                        "eligible_to_withdraw": order.eligible_to_withdraw,
+                        "withdrawal_date_limit": order.withdrawal_date_limit,
                         "organization": {
                             "id": str(order.organization.id),
                             "code": order.organization.code,

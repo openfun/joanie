@@ -1726,9 +1726,7 @@ class OrderModelsTestCase(LoggingTestCase):
                         days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
                     )
 
-                    self.assertEqual(
-                        order.withdrawal_date_limit(), withdrawal_date_limit
-                    )
+                    self.assertEqual(order.withdrawal_date_limit, withdrawal_date_limit)
 
                     order.flow.cancel()
 
@@ -1773,9 +1771,9 @@ class OrderModelsTestCase(LoggingTestCase):
                         order.flow.update()
                         order.save()
                         self.assertEqual(
-                            order.withdrawal_date_limit(), withdrawal_date_limit
+                            order.withdrawal_date_limit, withdrawal_date_limit
                         )
                     else:
-                        self.assertIsNone(order.withdrawal_date_limit())
+                        self.assertIsNone(order.withdrawal_date_limit)
 
                     order.flow.cancel()
