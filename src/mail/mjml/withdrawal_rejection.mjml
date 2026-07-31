@@ -1,0 +1,20 @@
+<mjml>
+  <mj-include path="./partial/header.mjml" />
+  <mj-body mj-class="bg--blue-100">
+    <mj-wrapper css-class="wrapper" padding="20px 40px 40px 40px">
+      <mj-include path="./partial/welcome.mjml" />
+      <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% blocktranslate with title=product_title %}
+            After review, the withdrawal request for <strong>{{ title }}</strong> has been rejected.
+            <br />
+            The order remains active and resumes its normal course.
+            {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+    <mj-include path="./partial/footer.mjml" />
+  </mj-body>
+</mjml>
