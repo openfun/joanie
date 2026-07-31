@@ -1932,12 +1932,29 @@ class Order(BaseModel):
             raise ValidationError("No payment schedule found for this order")
 
         # check if current date is greater than the first installment due date
-        if timezone.now().date() >= self.payment_schedule[0]["due_date"]:
+        if (
+            self.product.type == enums.PRODUCT_TYPE_CREDENTIAL
+            and timezone.now().date() >= self.payment_schedule[0]["due_date"]
+        ):
             raise ValidationError(
                 "Cannot withdraw order after the first installment due date"
             )
 
-        self.flow.cancel()
+        if not self.eligible_to_withdraw:
+            raise ValidationError(
+                "Cannot withdraw order because the date has been reached"
+            )
+
+        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+            self.withdrawn_requested_at = timezone.now()
+            self.withdrawn_confirmation_at = timezone.now()
+            self.flow.cancel()
+            self.save()
+
+        elif self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            self.withdrawn_requested_at = timezone.now()
+            self.flow.pending_withdraw()
+            self.save()
 
     @property
     def has_consent_to_terms(self):
