@@ -33,6 +33,12 @@ from joanie.debug.views import (
     DebugProfessionalTrainingAgreementDefaultTemplateView,
     DebugProfessionalTrainingAgreementUnicampTemplateView,
     DebugQuoteTemplateView,
+    DebugWithdrawalConfirmationViewHtml,
+    DebugWithdrawalConfirmationViewTxt,
+    DebugWithdrawalRejectionViewHtml,
+    DebugWithdrawalRejectionViewTxt,
+    DebugWithdrawalRequestViewHtml,
+    DebugWithdrawalRequestViewTxt,
 )
 
 urlpatterns = [
@@ -170,5 +176,35 @@ urlpatterns = [
         "__debug__/mail/batch-order-payment-success-txt",
         DebugMailSuccessPaymentViewBatchOrderTxt.as_view(),
         name="debug.mail.batch_order_payment_success_txt",
+    ),
+    path(
+        "__debug__/mail/withdrawal-request-html",
+        DebugWithdrawalRequestViewHtml.as_view(),
+        name="debug.mail.withdrawal_request_html",
+    ),
+    path(
+        "__debug__/mail/withdrawal-request-txt",
+        DebugWithdrawalRequestViewTxt.as_view(),
+        name="debug.mail.withdrawal_request_txt",
+    ),
+    path(
+        "__debug__/mail/withdrawal-confirmation-html",
+        DebugWithdrawalConfirmationViewHtml.as_view(),
+        name="debug.mail.withdrawal_confirmation_html",
+    ),
+    path(
+        "__debug__/mail/withdrawal-confirmation-txt",
+        DebugWithdrawalConfirmationViewTxt.as_view(),
+        name="debug.mail.withdrawal_confirmation_txt",
+    ),
+    path(
+        "__debug__/mail/withdrawal-rejection-html",
+        DebugWithdrawalRejectionViewHtml.as_view(),
+        name="debug.mail.withdrawal_rejection_html",
+    ),
+    path(
+        "__debug__/mail/withdrawal-rejection-txt",
+        DebugWithdrawalRejectionViewTxt.as_view(),
+        name="debug.mail.withdrawal_rejection_txt",
     ),
 ]
