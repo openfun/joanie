@@ -103,6 +103,26 @@ class DebugMailSuccessPaymentViewTxt(DebugMailSuccessPayment):
     template_name = "mail/text/order_validated.txt"
 
 
+class DebugWithdrawal(TemplateView):
+    pass
+
+
+class DebugWithdrawalRequest(DebugWithdrawal):
+    # Remember this mail should be sent to :
+        # Student
+        # Fun admin
+        # organization administrator role
+    pass
+
+
+class DebugWithdrawalConfirmation(DebugWithdrawal):
+    # Remember this mail should be sent to :
+        # Student
+        # Fun admin
+        # organization administrator role
+    pass
+
+
 class DebugInvitationSignatureLink(TemplateView):
     """
     Debug View to check the layout of the invitation signature link email when it's triggered

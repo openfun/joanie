@@ -3422,6 +3422,7 @@
                                     "no_payment",
                                     "pending",
                                     "pending_payment",
+                                    "pending_withdraw",
                                     "refunded",
                                     "refunding",
                                     "signing",
@@ -3431,7 +3432,7 @@
                                 ]
                             }
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_withdraw` - To withdraw\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
                         "explode": true,
                         "style": "form"
                     },
@@ -3451,6 +3452,7 @@
                                     "no_payment",
                                     "pending",
                                     "pending_payment",
+                                    "pending_withdraw",
                                     "refunded",
                                     "refunding",
                                     "signing",
@@ -3460,7 +3462,7 @@
                                 ]
                             }
                         },
-                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
+                        "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_withdraw` - To withdraw\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own",
                         "explode": true,
                         "style": "form"
                     }
@@ -3846,10 +3848,13 @@
                     }
                 ],
                 "responses": {
-                    "204": {
+                    "200": {
                         "content": {
                             "application/json": {
-                                "schema": null
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
                             }
                         },
                         "description": ""
@@ -8403,6 +8408,15 @@
                     "has_waived_withdrawal_right": {
                         "type": "boolean"
                     },
+                    "eligible_to_withdraw": {
+                        "type": "boolean",
+                        "description": "Returns whether the order is eligible to be withdrawn.\n\nFor certificate products: the order must be in a completed state (meaning\nthe owner has paid to take the certificate exam) and no certificate must\nhave been issued yet, otherwise this returns False. Waiving the withdrawal\nright does not apply here — eligibility is always determined by checking\nwhether we're still within the withdrawal period.\n\nFor credential products: if the owner has waived their withdrawal right,\nthis returns False. Otherwise, eligibility depends on whether we're still\nwithin the withdrawal period, calculated from the contract's signature date",
+                        "readOnly": true
+                    },
+                    "withdrawal_date_limit": {
+                        "type": "string",
+                        "readOnly": true
+                    },
                     "from_batch_order": {
                         "type": "boolean",
                         "description": "Returns boolean value whether the order is from a batch order",
@@ -8414,6 +8428,7 @@
                     "contract",
                     "course",
                     "created_on",
+                    "eligible_to_withdraw",
                     "enrollment",
                     "from_batch_order",
                     "has_waived_withdrawal_right",
@@ -8428,7 +8443,8 @@
                     "target_courses",
                     "target_enrollments",
                     "total",
-                    "total_currency"
+                    "total_currency",
+                    "withdrawal_date_limit"
                 ]
             },
             "OrderPayment": {
@@ -8587,6 +8603,7 @@
                     "signing",
                     "pending",
                     "canceled",
+                    "pending_withdraw",
                     "pending_payment",
                     "failed_payment",
                     "no_payment",
@@ -8596,7 +8613,7 @@
                     "to_own"
                 ],
                 "type": "string",
-                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own"
+                "description": "* `draft` - Draft\n* `assigned` - Assigned\n* `to_save_payment_method` - To save payment method\n* `to_sign` - To sign\n* `signing` - Signing\n* `pending` - Pending\n* `canceled` - Canceled\n* `pending_withdraw` - To withdraw\n* `pending_payment` - Pending payment\n* `failed_payment` - Failed payment\n* `no_payment` - No payment\n* `completed` - Completed\n* `refunding` - Refunding\n* `refunded` - Refunded\n* `to_own` - To own"
             },
             "OrderTargetCourseRelation": {
                 "type": "object",

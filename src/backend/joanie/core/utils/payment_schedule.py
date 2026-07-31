@@ -36,7 +36,7 @@ def _get_installments_percentages(total):
     return percentages
 
 
-def _withdrawal_limit_date(signed_contract_date, course_start_date):
+def withdrawal_limit_date(signed_contract_date, course_start_date):
     """
     Return the withdrawal limit date for the order.
 
@@ -72,6 +72,24 @@ def _withdrawal_limit_date(signed_contract_date, course_start_date):
     return (
         withdrawal_date if withdrawal_date < course_start_date else signed_contract_date
     )
+
+
+def withdrawal_limit_date_after_purchase(purchase_date):
+    """
+    Return the withdrawal limite date for the order where the product is type certificate.
+    The withdrawal date should be 16 days after the purchase date to pass the certification.
+    """
+    calendar = get_country_calendar()
+    withdrawal_date = purchase_date + timedelta(
+        days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
+    )
+
+    if not calendar.is_working_day(withdrawal_date):
+        withdrawal_date = calendar.add_working_days(
+            withdrawal_date, 1, keep_datetime=True
+        )
+
+    return withdrawal_date
 
 
 def _calculate_due_dates(
@@ -130,7 +148,7 @@ def generate(total, beginning_contract_date, course_start_date, course_end_date)
     """
     Generate payment schedule for the order.
     """
-    withdrawal_date = _withdrawal_limit_date(
+    withdrawal_date = withdrawal_limit_date(
         beginning_contract_date.date(), course_start_date.date()
     )
     percentages = _get_installments_percentages(total)
@@ -152,7 +170,7 @@ def has_withdrawal_period(signed_contract_date, course_start_date):
     the end of the withdrawal period).
     """
 
-    limit_date = _withdrawal_limit_date(signed_contract_date, course_start_date)
+    limit_date = withdrawal_limit_date(signed_contract_date, course_start_date)
     return limit_date != signed_contract_date
 
 

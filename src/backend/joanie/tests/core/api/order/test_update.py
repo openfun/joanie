@@ -75,6 +75,8 @@ class OrderUpdateApiTest(BaseAPITestCase):
                 "total_currency",
                 "payment_schedule",
                 "has_waived_withdrawal_right",
+                "eligible_to_withdraw",
+                "withdrawal_date_limit",
                 "from_batch_order",
             ],
         )
@@ -147,11 +149,13 @@ class OrderUpdateApiTest(BaseAPITestCase):
         they own, no matter the state.
         """
         owner = factories.UserFactory()
-        *target_courses, _other_course = factories.CourseFactory.create_batch(3)
-        product = factories.ProductFactory(target_courses=target_courses)
+        # *target_courses, _other_course = factories.CourseFactory.create_batch(3)
+        # product = factories.ProductFactory(target_courses=target_courses)
 
         for state, _ in enums.ORDER_STATE_CHOICES:
             with self.subTest(state=state):
+                *target_courses, _other_course = factories.CourseFactory.create_batch(3)
+                product = factories.ProductFactory(target_courses=target_courses)
                 order = factories.OrderFactory(
                     owner=owner, product=product, state=state
                 )

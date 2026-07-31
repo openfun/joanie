@@ -192,6 +192,8 @@ class OrderCreateApiTest(BaseAPITestCase):
                     for offering_rule in order.offering_rules.all()
                 ],
                 "has_waived_withdrawal_right": True,
+                "eligible_to_withdraw": order.eligible_to_withdraw,
+                "withdrawal_date_limit": order.withdrawal_date_limit,
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -332,6 +334,8 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "created_on": order.created_on.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "credit_card_id": None,
                 "has_waived_withdrawal_right": True,
+                "eligible_to_withdraw": order.eligible_to_withdraw,
+                "withdrawal_date_limit": order.withdrawal_date_limit,
                 "enrollment": {
                     "course_run": {
                         "course": {
@@ -992,6 +996,8 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "main_invoice_reference": None,
                 "offering_rule_ids": [],
                 "has_waived_withdrawal_right": True,
+                "eligible_to_withdraw": order.eligible_to_withdraw,
+                "withdrawal_date_limit": order.withdrawal_date_limit,
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -1324,6 +1330,8 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "main_invoice_reference": order.main_invoice.reference,
                 "offering_rule_ids": [],
                 "has_waived_withdrawal_right": True,
+                "eligible_to_withdraw": order.eligible_to_withdraw,
+                "withdrawal_date_limit": order.withdrawal_date_limit,
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -1529,6 +1537,8 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "main_invoice_reference": order.main_invoice.reference,
                 "offering_rule_ids": [],
                 "has_waived_withdrawal_right": True,
+                "eligible_to_withdraw": order.eligible_to_withdraw,
+                "withdrawal_date_limit": order.withdrawal_date_limit,
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,
@@ -2560,6 +2570,8 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "main_invoice_reference": order.main_invoice.reference,
                 "offering_rule_ids": [],
                 "has_waived_withdrawal_right": True,
+                "eligible_to_withdraw": order.eligible_to_withdraw,
+                "withdrawal_date_limit": order.withdrawal_date_limit,
                 "organization": {
                     "id": str(order.organization.id),
                     "code": order.organization.code,

@@ -73,6 +73,10 @@ from joanie.core.utils.course_run.aggregate_course_runs_dates import (
 )
 from joanie.core.utils.discount import calculate_price
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
+from joanie.core.utils.payment_schedule import (
+    withdrawal_limit_date,
+    withdrawal_limit_date_after_purchase,
+)
 from joanie.signature.backends import get_signature_backend
 
 logger = logging.getLogger(__name__)
@@ -1111,6 +1115,18 @@ class Order(BaseModel):
         default=False,
         help_text=_("User has waived their withdrawal right."),
     )
+    withdrawn_requested_at = models.DateTimeField(
+        _("Date and time buyer requested to withdraw the order"),
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    withdrawn_confirmation_at = models.DateTimeField(
+        _("Date and time order is withdrawn"),
+        null=True,
+        blank=True,
+        editable=False,
+    )
     state = models.CharField(
         default=enums.ORDER_STATE_DRAFT,
         choices=enums.ORDER_STATE_CHOICES,
@@ -1841,6 +1857,73 @@ class Order(BaseModel):
             None,
         )
 
+    def _withdrawal_limit(self):
+        """
+        Returns the withdrawal limit date for a credential order with a signed
+        contract, or None if not applicable (wrong product type, no contract,
+        or contract not yet signed).
+        """
+        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+            if not self.has_contract or self.has_unsigned_contract:
+                return None
+            return withdrawal_limit_date(
+                signed_contract_date=self.contract.student_signed_on,  # pylint:disable=no-member
+                course_start_date=self.get_equivalent_course_run_dates(
+                    ignore_archived=True
+                )["start"],
+            )
+
+        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE and not self.is_free:
+            if self.state != enums.ORDER_STATE_COMPLETED:
+                return None
+            last_transaction = self.invoices.get(  # pylint:disable=no-member
+                parent__isnull=False
+            ).transactions.last()
+            return withdrawal_limit_date_after_purchase(
+                purchase_date=last_transaction.created_on
+            )
+
+        return None
+
+    @property
+    def eligible_to_withdraw(self) -> bool:
+        """
+        Returns whether the order is eligible to be withdrawn.
+
+        For certificate products: the order must be in a completed state (meaning
+        the owner has paid to take the certificate exam) and no certificate must
+        have been issued yet, otherwise this returns False. Waiving the withdrawal
+        right does not apply here — eligibility is always determined by checking
+        whether we're still within the withdrawal period.
+
+        For credential products: if the owner has waived their withdrawal right,
+        this returns False. Otherwise, eligibility depends on whether we're still
+        within the withdrawal period, calculated from the contract's signature date
+        """
+        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            if (
+                self.state != enums.ORDER_STATE_COMPLETED
+                or Certificate.objects.filter(order=self).exists()
+            ):
+                return False
+        elif self.has_waived_withdrawal_right or self.state not in [
+            enums.ORDER_STATE_SIGNING,
+            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            enums.ORDER_STATE_PENDING,
+        ]:
+            return False
+
+        withdrawal_limit = self._withdrawal_limit()
+        return withdrawal_limit is not None and withdrawal_limit >= timezone.now()
+
+    @property
+    def withdrawal_date_limit(self):
+        """
+        Returns the the withdrawal limit date when the order is eligible to be withdrawn.
+        Otherwise, this returns None.
+        """
+        return self._withdrawal_limit()
+
     def withdraw(self):
         """
         Withdraw the order.
@@ -1849,12 +1932,36 @@ class Order(BaseModel):
             raise ValidationError("No payment schedule found for this order")
 
         # check if current date is greater than the first installment due date
-        if timezone.now().date() >= self.payment_schedule[0]["due_date"]:
+        if (
+            self.product.type == enums.PRODUCT_TYPE_CREDENTIAL
+            and timezone.now().date() >= self.payment_schedule[0]["due_date"]
+        ):
             raise ValidationError(
                 "Cannot withdraw order after the first installment due date"
             )
 
-        self.flow.cancel()
+        if not self.eligible_to_withdraw:
+            raise ValidationError(
+                "Cannot withdraw order because the date has been reached"
+            )
+
+        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+            self.withdrawn_requested_at = timezone.now()
+            self.withdrawn_confirmation_at = timezone.now()
+            self.flow.cancel()
+            self.save()
+
+        elif self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            self.withdrawn_requested_at = timezone.now()
+            self.flow.pending_withdraw()
+            self.save()
+
+    def confirm_withdrawal(self):
+        """Adds the timestamps of the confirmation of the withdrawal"""
+        # Protect here the method for only certificate products that are not free
+        # Add test for admin api new endpoint + this method in test_models_orders_*
+        self.withdrawn_confirmation_at = timezone.now()
+        self.save()
 
     @property
     def has_consent_to_terms(self):

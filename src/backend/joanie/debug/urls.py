@@ -33,6 +33,7 @@ from joanie.debug.views import (
     DebugProfessionalTrainingAgreementDefaultTemplateView,
     DebugProfessionalTrainingAgreementUnicampTemplateView,
     DebugQuoteTemplateView,
+    # import here the new DebugClassView
 )
 
 urlpatterns = [
@@ -171,4 +172,5 @@ urlpatterns = [
         DebugMailSuccessPaymentViewBatchOrderTxt.as_view(),
         name="debug.mail.batch_order_payment_success_txt",
     ),
+    # Create their url paths
 ]

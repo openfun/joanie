@@ -1461,6 +1461,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_currency",
             "payment_schedule",
             "has_waived_withdrawal_right",
+            "eligible_to_withdraw",
+            "withdrawal_date_limit",
             "voucher_code",
             "from_batch_order",
         ]
