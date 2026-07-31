@@ -824,6 +824,11 @@ class EnrollmentApiTest(BaseAPITestCase):
                     ]
                     if order.payment_schedule
                     else None,
+                    "has_waived_withdrawal_right": False,
+                    "eligible_to_withdraw": False,
+                    "withdrawal_date_limit": None,
+                    "withdrawn_requested_at": None,
+                    "withdrawn_confirmation_at": None,
                 }
             ],
             content["orders"],
