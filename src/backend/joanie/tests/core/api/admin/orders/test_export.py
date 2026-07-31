@@ -55,6 +55,8 @@ def expected_csv_content(order):
         "Nature": order.get_nature_display(),
         "Payment method": get_payment_method(order),
         "Waived withdrawal right": yes_no(order.has_waived_withdrawal_right),
+        "Withdrawal confirmation at": "",
+        "Withdrawal request at": "",
         "Certificate generated for this order": yes_no(hasattr(order, "certificate")),
         "Contract": "",
         "Submitted for signature": "",

@@ -1562,6 +1562,8 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
             ("nature", _("Nature")),
             ("payment_method", _("Payment method")),
             ("has_waived_withdrawal_right", _("Waived withdrawal right")),
+            ("withdrawn_confirmation_at", _("Withdrawal confirmation at")),
+            ("withdrawn_requested_at", _("Withdrawal request at")),
             ("certificate", _("Certificate generated for this order")),
             ("contract", _("Contract")),
             ("contract_submitted_for_signature_on", _("Submitted for signature")),
@@ -1618,6 +1620,8 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     discount = serializers.SerializerMethodField(read_only=True)
     voucher = serializers.SerializerMethodField(read_only=True)
     has_waived_withdrawal_right = serializers.SerializerMethodField(read_only=True)
+    withdrawn_confirmation_at = serializers.SerializerMethodField(read_only=True)
+    withdrawn_requested_at = serializers.SerializerMethodField(read_only=True)
     certificate = serializers.SerializerMethodField(read_only=True)
     nature = serializers.SerializerMethodField(read_only=True)
     payment_method = serializers.SerializerMethodField(read_only=True)
@@ -1661,6 +1665,24 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     installment_due_date_4 = serializers.SerializerMethodField(read_only=True)
     installment_amount_4 = serializers.SerializerMethodField(read_only=True)
     installment_state_4 = serializers.SerializerMethodField(read_only=True)
+
+    def get_withdrawn_confirmation_at(self, instance) -> str:
+        """
+        Return the formatted date and time the withdrawal was confirmed,
+        otherwise an empty string.
+        """
+        if not instance.withdrawn_confirmation_at:
+            return ""
+        return instance.withdrawn_confirmation_at.strftime("%d/%m/%Y %H:%M:%S")
+
+    def get_withdrawn_requested_at(self, instance) -> str:
+        """
+        Return the formatted date and time the withdrawal was requested,
+        otherwise an empty string.
+        """
+        if not instance.withdrawn_requested_at:
+            return ""
+        return instance.withdrawn_requested_at.strftime("%d/%m/%Y %H:%M:%S")
 
     def get_state(self, instance) -> str:
         """Return the translated state label."""
