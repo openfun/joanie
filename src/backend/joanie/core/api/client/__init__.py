@@ -670,7 +670,7 @@ class OrderViewSet(
     @extend_schema(
         request=None,
         responses={
-            204: OpenApiTypes.NONE,
+            (200, "application/json"): OpenApiTypes.OBJECT,
             422: serializers.ErrorResponseSerializer,
         },
     )
@@ -686,7 +686,9 @@ class OrderViewSet(
                 {"detail": f"{error}"}, status=HTTPStatus.UNPROCESSABLE_ENTITY
             )
 
-        return Response(status=HTTPStatus.NO_CONTENT)
+        response = self.get_serializer(order)
+
+        return Response(response.data, status=HTTPStatus.OK)
 
     @extend_schema(
         request=None,

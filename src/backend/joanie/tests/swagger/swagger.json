@@ -3848,10 +3848,13 @@
                     }
                 ],
                 "responses": {
-                    "204": {
+                    "200": {
                         "content": {
                             "application/json": {
-                                "schema": null
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
                             }
                         },
                         "description": ""
@@ -8405,6 +8408,29 @@
                     "has_waived_withdrawal_right": {
                         "type": "boolean"
                     },
+                    "eligible_to_withdraw": {
+                        "type": "boolean",
+                        "description": "Returns whether the order is eligible to be withdrawn.\n\nFor certificate products: the order must be in a completed state (meaning\nthe owner has paid to take the certificate exam) and no certificate must\nhave been issued yet, otherwise this returns False. Waiving the withdrawal\nright does not apply here — eligibility is always determined by checking\nwhether we're still within the withdrawal period.\n\nFor credential products: if the owner has waived their withdrawal right,\nthis returns False. Otherwise, eligibility depends on whether we're still\nwithin the withdrawal period, calculated from the contract's signature date",
+                        "readOnly": true
+                    },
+                    "withdrawal_date_limit": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "withdrawn_requested_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time buyer requested to withdraw the order"
+                    },
+                    "withdrawn_confirmation_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time order is withdrawn"
+                    },
                     "from_batch_order": {
                         "type": "boolean",
                         "description": "Returns boolean value whether the order is from a batch order",
@@ -8416,6 +8442,7 @@
                     "contract",
                     "course",
                     "created_on",
+                    "eligible_to_withdraw",
                     "enrollment",
                     "from_batch_order",
                     "has_waived_withdrawal_right",
@@ -8430,7 +8457,10 @@
                     "target_courses",
                     "target_enrollments",
                     "total",
-                    "total_currency"
+                    "total_currency",
+                    "withdrawal_date_limit",
+                    "withdrawn_confirmation_at",
+                    "withdrawn_requested_at"
                 ]
             },
             "OrderPayment": {
