@@ -1463,6 +1463,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "has_waived_withdrawal_right",
             "eligible_to_withdraw",
             "withdrawal_date_limit",
+            "withdrawn_requested_at",
+            "withdrawn_confirmation_at",
             "voucher_code",
             "from_batch_order",
         ]

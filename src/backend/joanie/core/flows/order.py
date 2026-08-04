@@ -11,6 +11,7 @@ from sentry_sdk import capture_exception
 from viewflow import fsm
 
 from joanie.core import enums
+from joanie.core.utils import emails
 from joanie.core.utils.payment_schedule import (
     has_installment_paid,
     has_installments_to_debit,
@@ -494,35 +495,17 @@ class OrderFlow:
             if not credit_card.orders.exists():
                 credit_card.delete()
 
+        # An order entering pending_withdraw means the owner just requested
+        # a withdrawal that must be confirmed by an admin.
+        if target == enums.ORDER_STATE_PENDING_WITHDRAW:
+            emails.send_withdrawal_request(self.instance)
 
-        # Create the condition for when product certificate get to pending_withdraw
-        # that triggers the email
-
-        if (
-            source == enums.ORDER_STATE_COMPLETED
-            and target == enums.ORDER_STATE_PENDING_WITHDRAW
-            and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
-        ):
-            pass
-            # send mail request
-            # You should create here a method that is responsible to send mails
-            # in joanie.core.utils.emails
-
-        # The order withdrawn request per type of product
+        # The withdrawal has been confirmed by an admin and the order is now canceled.
         if (
             source == enums.ORDER_STATE_PENDING_WITHDRAW
             and target == enums.ORDER_STATE_CANCELED
         ):
-            if self.instance.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
-                pass
-            # send mail confirmation about cancellation to order owner and organization administrator
-            # print("Hello, credential product to be canceled due to withdrawal")
-            if self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
-                pass
-            # send mail confirm request accounted about withdrawal and organization administrator
-                # print(
-                #     "Hello, certificate product request taken in account to be withdrawn"
-                # )
+            emails.send_withdrawal_confirmation(self.instance)
 
         # Reset offering cache if its representation is impacted by changes
         # on related orders

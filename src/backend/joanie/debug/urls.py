@@ -33,7 +33,10 @@ from joanie.debug.views import (
     DebugProfessionalTrainingAgreementDefaultTemplateView,
     DebugProfessionalTrainingAgreementUnicampTemplateView,
     DebugQuoteTemplateView,
-    # import here the new DebugClassView
+    DebugWithdrawalConfirmationViewHtml,
+    DebugWithdrawalConfirmationViewTxt,
+    DebugWithdrawalRequestViewHtml,
+    DebugWithdrawalRequestViewTxt,
 )
 
 urlpatterns = [
@@ -172,5 +175,24 @@ urlpatterns = [
         DebugMailSuccessPaymentViewBatchOrderTxt.as_view(),
         name="debug.mail.batch_order_payment_success_txt",
     ),
-    # Create their url paths
+    path(
+        "__debug__/mail/withdrawal-request-html",
+        DebugWithdrawalRequestViewHtml.as_view(),
+        name="debug.mail.withdrawal_request_html",
+    ),
+    path(
+        "__debug__/mail/withdrawal-request-txt",
+        DebugWithdrawalRequestViewTxt.as_view(),
+        name="debug.mail.withdrawal_request_txt",
+    ),
+    path(
+        "__debug__/mail/withdrawal-confirmation-html",
+        DebugWithdrawalConfirmationViewHtml.as_view(),
+        name="debug.mail.withdrawal_confirmation_html",
+    ),
+    path(
+        "__debug__/mail/withdrawal-confirmation-txt",
+        DebugWithdrawalConfirmationViewTxt.as_view(),
+        name="debug.mail.withdrawal_confirmation_txt",
+    ),
 ]

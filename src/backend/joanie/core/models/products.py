@@ -1945,23 +1945,28 @@ class Order(BaseModel):
                 "Cannot withdraw order because the date has been reached"
             )
 
-        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
-            self.withdrawn_requested_at = timezone.now()
-            self.withdrawn_confirmation_at = timezone.now()
-            self.flow.cancel()
-            self.save()
-
-        elif self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
-            self.withdrawn_requested_at = timezone.now()
-            self.flow.pending_withdraw()
-            self.save()
+        self.withdrawn_requested_at = timezone.now()
+        self.flow.pending_withdraw()
+        self.save()
 
     def confirm_withdrawal(self):
-        """Adds the timestamps of the confirmation of the withdrawal"""
-        # Protect here the method for only certificate products that are not free
-        # Add test for admin api new endpoint + this method in test_models_orders_*
+        """
+        Confirm the withdrawal of an order that is pending withdrawal,
+        timestamp the confirmation and cancel the order accordingly.
+        """
+        if self.is_free:
+            raise ValidationError(
+                "Only non-free orders can be withdrawn through this method."
+            )
+
+        if self.state != enums.ORDER_STATE_PENDING_WITHDRAW:
+            raise ValidationError(
+                "Cannot confirm withdrawal for an order that is not pending withdrawal."
+            )
+
         self.withdrawn_confirmation_at = timezone.now()
         self.save()
+        self.flow.cancel()
 
     @property
     def has_consent_to_terms(self):

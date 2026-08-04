@@ -6,6 +6,8 @@ from logging import getLogger
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import override
 
 from stockholm import Money
 
@@ -99,3 +101,46 @@ def send(subject, template_vars, template_name, to_user_email):
     except smtplib.SMTPException as exception:
         # no exception raised as user can't sometimes change his mail,
         logger.error("%s purchase order mail %s not send", to_user_email, exception)
+
+
+def _withdrawal_context_data(order):
+    """Prepare the context variables shared by withdrawal emails."""
+    product_title = order.product.safe_translation_getter(
+        "title", language_code=order.owner.language
+    )
+    return {
+        "email": order.owner.email,
+        "fullname": order.owner.name,
+        "product_title": product_title,
+        "dashboard_order_link": (
+            settings.JOANIE_DASHBOARD_ORDER_LINK.replace(":orderId", str(order.id))
+        ),
+        "site": {
+            "name": settings.JOANIE_CATALOG_NAME,
+            "url": settings.JOANIE_CATALOG_BASE_URL,
+        },
+    }
+
+
+def send_withdrawal_request(order):
+    """Notify the order owner that their withdrawal request has been received."""
+    with override(order.owner.language):
+        subject = _("Your withdrawal request has been received")
+        send(
+            subject=subject,
+            template_vars={"title": subject, **_withdrawal_context_data(order)},
+            template_name="withdrawal_request",
+            to_user_email=order.owner.email,
+        )
+
+
+def send_withdrawal_confirmation(order):
+    """Notify the order owner that their withdrawal has been confirmed."""
+    with override(order.owner.language):
+        subject = _("Your withdrawal has been confirmed")
+        send(
+            subject=subject,
+            template_vars={"title": subject, **_withdrawal_context_data(order)},
+            template_name="withdrawal_confirmation",
+            to_user_email=order.owner.email,
+        )

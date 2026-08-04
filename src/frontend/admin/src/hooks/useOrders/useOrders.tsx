@@ -31,6 +31,12 @@ export const useOrdersMessages = defineMessages({
       "Success message shown to the user when the order is being refunded.",
     defaultMessage: "Refunding order.",
   },
+  successConfirmWithdrawal: {
+    id: "hooks.useOrders.successConfirmWithdrawal",
+    description:
+      "Success message shown to the user when the order withdrawal is confirmed.",
+    defaultMessage: "Withdrawal confirmed.",
+  },
   errorGet: {
     id: "hooks.useOrders.errorGet",
     description:
@@ -152,6 +158,23 @@ export const useOrders = (
           custom.methods.invalidate();
           custom.methods.showSuccessMessage(
             intl.formatMessage(useOrdersMessages.successRefund),
+          );
+        },
+        onError: (error: HttpError) => {
+          custom.methods.setError(
+            error.data?.details ??
+              intl.formatMessage(useOrdersMessages.errorUpdate),
+          );
+        },
+      }).mutate,
+      confirmWithdrawal: mutation({
+        mutationFn: async (data: { orderId: string }) => {
+          return OrderRepository.confirmWithdrawal(data.orderId);
+        },
+        onSuccess: () => {
+          custom.methods.invalidate();
+          custom.methods.showSuccessMessage(
+            intl.formatMessage(useOrdersMessages.successConfirmWithdrawal),
           );
         },
         onError: (error: HttpError) => {

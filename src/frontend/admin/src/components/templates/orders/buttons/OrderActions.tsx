@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from "react-intl";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ArticleIcon from "@mui/icons-material/Article";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import { Order, OrderStatesEnum } from "@/services/api/models/Order";
 import ButtonMenu, {
   MenuOption,
@@ -60,6 +61,16 @@ const messages = defineMessages({
     id: "components.templates.orders.buttons.orderActionsButton.generateCertificate",
     description: "Label for the generate certificate order action",
     defaultMessage: "Generate certificate",
+  },
+  confirmWithdrawal: {
+    id: "components.templates.orders.buttons.orderActionsButton.confirmWithdrawal",
+    description: "Label for the confirm withdrawal order action",
+    defaultMessage: "Confirm withdrawal",
+  },
+  notPendingWithdrawTooltip: {
+    id: "components.templates.orders.buttons.orderActionsButton.notPendingWithdrawTooltip",
+    description: "Text when the order is not pending withdrawal",
+    defaultMessage: "The order is not pending withdrawal",
   },
 });
 
@@ -132,6 +143,20 @@ export default function OrderActionsButton({ order }: Props) {
         disableMessage: generateCertificateDisableMessage(),
         onClick: async () => {
           ordersQuery.methods.generateCertificate(
+            { orderId: order.id },
+            {
+              onSuccess: orderQuery.methods.invalidate,
+            },
+          );
+        },
+      },
+      {
+        icon: <AssignmentTurnedInIcon />,
+        mainLabel: intl.formatMessage(messages.confirmWithdrawal),
+        isDisable: order.state !== OrderStatesEnum.ORDER_STATE_PENDING_WITHDRAW,
+        disableMessage: intl.formatMessage(messages.notPendingWithdrawTooltip),
+        onClick: async () => {
+          ordersQuery.methods.confirmWithdrawal(
             { orderId: order.id },
             {
               onSuccess: orderQuery.methods.invalidate,

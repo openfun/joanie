@@ -905,7 +905,7 @@ class OrderViewSet(
     @extend_schema(
         request=None,
         responses={
-            (200, "application/json"): serializers.AdminCertificateSerializer,
+            200: OpenApiTypes.NONE,
             422: serializers.ErrorResponseSerializer,
         },
     )
@@ -913,20 +913,17 @@ class OrderViewSet(
     def confirm_withdrawal(self, request, pk=None):  # pylint:disable=unused-argument
         """
         Confirm withdrawal an order if the state is in `pending_withdraw` exclusively and
-        the product is type certificate.
+        the order is not free.
         """
         order = self.get_object()
 
-        if order.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+        try:
+            order.confirm_withdrawal()
+        except ValidationError as error:
             return Response(
-                {"detail": "Only certificate products can be withdrawn"},
-                status=HTTPStatus.UNPROCESSABLE_ENTITY
+                {"detail": str(error)},
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
             )
-
-        if order.state != enums.ORDER_STATE_PENDING_WITHDRAW:
-            return Response(status=HTTPStatus.UNPROCESSABLE_ENTITY)
-
-        order.confirm_withdrawal()
 
         return Response(status=HTTPStatus.OK)
 
