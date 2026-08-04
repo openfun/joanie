@@ -28,19 +28,23 @@ from joanie.core.enums import (
     DEGREE,
     MICROCREDENTIAL_DEGREE_DEFAULT,
     MICROCREDENTIAL_DEGREE_UNICAMP,
+    ORDER_STATE_COMPLETED,
     ORDER_STATE_PENDING_PAYMENT,
     OWNER,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
+    PRODUCT_TYPE_CERTIFICATE,
     PROFESSIONAL_TRAINING_AGREEMENT_DEFAULT,
     PROFESSIONAL_TRAINING_AGREEMENT_UNICAMP,
     QUOTE_DEFAULT,
 )
 from joanie.core.factories import (
+    CertificateDefinitionFactory,
     ContractDefinitionFactory,
     ContractFactory,
     CourseRunFactory,
+    EnrollmentFactory,
     OrderFactory,
     OrderGeneratorFactory,
     ProductFactory,
@@ -104,23 +108,91 @@ class DebugMailSuccessPaymentViewTxt(DebugMailSuccessPayment):
 
 
 class DebugWithdrawal(TemplateView):
-    pass
+    """Debug View to check the layout of withdrawal-related emails"""
+
+    def get_context_data(self, **kwargs):
+        """Generates sample datas to have a valid debug email"""
+        enrollment = EnrollmentFactory()
+        product = ProductFactory(
+            type=PRODUCT_TYPE_CERTIFICATE,
+            contract_definition_order=None,
+            certificate_definition=CertificateDefinitionFactory(),
+            courses=[enrollment.course_run.course],
+            price=10.00,
+        )
+        order = OrderGeneratorFactory(
+            owner=enrollment.user,
+            product=product,
+            enrollment=enrollment,
+            course=None,
+            state=ORDER_STATE_COMPLETED,
+            credit_card=None,
+        )
+        current_language = translation.get_language()
+        with translation.override(current_language):
+            product.set_current_language(current_language)
+            context = super().get_context_data(**kwargs)
+            context["title"] = "👨‍💻Development email preview"
+            context["email"] = order.owner.email
+            context["fullname"] = order.owner.name
+            context["product_title"] = product.title
+            context["dashboard_order_link"] = (
+                settings.JOANIE_DASHBOARD_ORDER_LINK.replace(":orderId", str(order.id))
+            )
+            context["site"] = {
+                "name": settings.JOANIE_CATALOG_NAME,
+                "url": settings.JOANIE_CATALOG_BASE_URL,
+            }
+
+            return context
 
 
 class DebugWithdrawalRequest(DebugWithdrawal):
-    # Remember this mail should be sent to :
-        # Student
-        # Fun admin
-        # organization administrator role
     pass
 
 
 class DebugWithdrawalConfirmation(DebugWithdrawal):
-    # Remember this mail should be sent to :
-        # Student
-        # Fun admin
-        # organization administrator role
     pass
+
+
+class DebugWithdrawalRejection(DebugWithdrawal):
+    pass
+
+
+class DebugWithdrawalRequestViewHtml(DebugWithdrawalRequest):
+    """Debug View to check the layout of the withdrawal request email in html format."""
+
+    template_name = "mail/html/withdrawal_request.html"
+
+
+class DebugWithdrawalRequestViewTxt(DebugWithdrawalRequest):
+    """Debug View to check the layout of the withdrawal request email in text format."""
+
+    template_name = "mail/text/withdrawal_request.txt"
+
+
+class DebugWithdrawalConfirmationViewHtml(DebugWithdrawalConfirmation):
+    """Debug View to check the layout of the withdrawal confirmation email in html format."""
+
+    template_name = "mail/html/withdrawal_confirmation.html"
+
+
+class DebugWithdrawalConfirmationViewTxt(DebugWithdrawalConfirmation):
+    """Debug View to check the layout of the withdrawal confirmation email in text format."""
+
+    template_name = "mail/text/withdrawal_confirmation.txt"
+
+
+class DebugWithdrawalRejectionViewHtml(DebugWithdrawalRejection):
+    """Debug View to check the layout of the withdrawal rejection email in html format."""
+
+    template_name = "mail/html/withdrawal_rejection.html"
+
+
+class DebugWithdrawalRejectionViewTxt(DebugWithdrawalRejection):
+    """Debug View to check the layout of the withdrawal rejection email in text format."""
+
+    template_name = "mail/text/withdrawal_rejection.txt"
 
 
 class DebugInvitationSignatureLink(TemplateView):

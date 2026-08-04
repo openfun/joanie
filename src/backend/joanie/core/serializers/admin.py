@@ -1370,6 +1370,8 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "payment_schedule",
             "credit_card",
             "has_waived_withdrawal_right",
+            "withdrawn_requested_at",
+            "withdrawn_confirmation_at",
             "batch_order",
             "nature",
             "voucher",
@@ -1432,6 +1434,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "voucher",
             "batch_order",
             "nature",
+            "withdrawn_confirmation_at",
         )
         read_only_fields = fields
 
@@ -1664,12 +1667,22 @@ class AdminOrderExportSerializer(serializers.ModelSerializer):  # pylint: disabl
     installment_state_4 = serializers.SerializerMethodField(read_only=True)
 
     def get_withdrawn_confirmation_at(self, instance) -> str:
-        # WIP
-        pass
+        """
+        Return the formatted date and time the withdrawal was confirmed,
+        otherwise an empty string.
+        """
+        if not instance.withdrawn_confirmation_at:
+            return ""
+        return instance.withdrawn_confirmation_at.strftime("%d/%m/%Y %H:%M:%S")
 
     def get_withdrawn_requested_at(self, instance) -> str:
-        # WIP
-        pass
+        """
+        Return the formatted date and time the withdrawal was requested,
+        otherwise an empty string.
+        """
+        if not instance.withdrawn_requested_at:
+            return ""
+        return instance.withdrawn_requested_at.strftime("%d/%m/%Y %H:%M:%S")
 
     def get_state(self, instance) -> str:
         """Return the translated state label."""

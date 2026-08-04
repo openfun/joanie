@@ -16,6 +16,8 @@ export const orderRoutes = {
   delete: (id: string) => `/orders/${id}/`,
   generateCertificate: (id: string) => `/orders/${id}/generate_certificate/`,
   refund: (id: string) => `/orders/${id}/refund/`,
+  confirmWithdrawal: (id: string) => `/orders/${id}/confirm_withdrawal/`,
+  rejectWithdrawal: (id: string) => `/orders/${id}/reject_withdrawal/`,
   export: (params: string = "") => `/orders/export/${params}`,
 };
 
@@ -57,6 +59,16 @@ export class OrderRepository {
 
   static refund(id: string): Promise<void> {
     const url = orderRoutes.refund(id);
+    return fetchApi(url, { method: "POST" }).then(checkStatus);
+  }
+
+  static confirmWithdrawal(id: string): Promise<void> {
+    const url = orderRoutes.confirmWithdrawal(id);
+    return fetchApi(url, { method: "POST" }).then(checkStatus);
+  }
+
+  static rejectWithdrawal(id: string): Promise<void> {
+    const url = orderRoutes.rejectWithdrawal(id);
     return fetchApi(url, { method: "POST" }).then(checkStatus);
   }
 

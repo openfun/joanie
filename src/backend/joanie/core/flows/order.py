@@ -11,6 +11,11 @@ from sentry_sdk import capture_exception
 from viewflow import fsm
 
 from joanie.core import enums
+from joanie.core.utils.emails import (
+    send_withdrawal_confirmation,
+    send_withdrawal_rejection,
+    send_withdrawal_request,
+)
 from joanie.core.utils.payment_schedule import (
     has_installment_paid,
     has_installments_to_debit,
@@ -158,24 +163,35 @@ class OrderFlow:
 
     def _can_be_state_pending_withdraw(self):
         """
-        An order can be state `pending_withdraw` when the withdrawal period is eligible
-        and a value is set for `cancel_requested_at` field.
+        An order can be state `pending_withdraw` only for certificate products for which
+        the owner has waived their withdrawal right — in that case, the withdrawal
+        request cannot be auto-approved and must go through manual review, since the
+        actual criteria (whether the exam was accessed) cannot be checked automatically.
         """
-        return self.instance.eligible_to_withdraw
+        return (
+            self.instance.eligible_to_withdraw
+            and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+            and self.instance.has_waived_withdrawal_right
+        )
 
     @state.transition(
-        source=[
-            enums.ORDER_STATE_SIGNING,
-            enums.ORDER_STATE_PENDING,
-            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
-            enums.ORDER_STATE_COMPLETED,
-        ],
+        source=enums.ORDER_STATE_COMPLETED,
         target=enums.ORDER_STATE_PENDING_WITHDRAW,
         conditions=[_can_be_state_pending_withdraw],
     )
     def pending_withdraw(self):
         """
         Transition order to pending withdraw
+        """
+
+    @state.transition(
+        source=enums.ORDER_STATE_PENDING_WITHDRAW,
+        target=enums.ORDER_STATE_COMPLETED,
+    )
+    def reject_withdraw(self):
+        """
+        Transition order back to completed when a withdrawal request is rejected
+        by an administrator.
         """
 
     @state.transition(
@@ -497,32 +513,29 @@ class OrderFlow:
 
         # Create the condition for when product certificate get to pending_withdraw
         # that triggers the email
-
         if (
             source == enums.ORDER_STATE_COMPLETED
             and target == enums.ORDER_STATE_PENDING_WITHDRAW
-            and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE
         ):
-            pass
             # send mail request
-            # You should create here a method that is responsible to send mails
-            # in joanie.core.utils.emails
+            send_withdrawal_request(self.instance)
 
         # The order withdrawn request per type of product
         if (
             source == enums.ORDER_STATE_PENDING_WITHDRAW
             and target == enums.ORDER_STATE_CANCELED
         ):
-            if self.instance.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
-                pass
-            # send mail confirmation about cancellation to order owner and organization administrator
-            # print("Hello, credential product to be canceled due to withdrawal")
             if self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
-                pass
-            # send mail confirm request accounted about withdrawal and organization administrator
-                # print(
-                #     "Hello, certificate product request taken in account to be withdrawn"
-                # )
+                # send mail confirm request accounted about withdrawal and organization administrator
+                send_withdrawal_confirmation(self.instance)
+
+        # The order withdrawal request has been rejected, the order resumes its normal course
+        if (
+            source == enums.ORDER_STATE_PENDING_WITHDRAW
+            and target == enums.ORDER_STATE_COMPLETED
+        ):
+            send_withdrawal_rejection(self.instance)
 
         # Reset offering cache if its representation is impacted by changes
         # on related orders

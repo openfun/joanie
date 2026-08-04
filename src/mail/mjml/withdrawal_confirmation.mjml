@@ -6,24 +6,14 @@
       <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
         <mj-column>
           <mj-text padding="0">
-            {% blocktranslate %}
-                Add your text here (top of email)
+            {% blocktranslate with title=product_title %}
+            Your withdrawal request for <strong>{{ title }}</strong> has been confirmed.
             <br />
+            Your order has been cancelled accordingly.
             {% endblocktranslate %}
           </mj-text>
         </mj-column>
       </mj-section>
-      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
-        <mj-column>
-          <mj-text padding="0">
-            {% blocktranslate %}
-            Add body of email here
-            {% endblocktranslate %}
-            {% endwith %}
-          </mj-text>
-        </mj-column>
-      </mj-section>
-      <mj-include path="./partial/installment_table.mjml" />
       <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
         <mj-column>
           <mj-text padding="0">

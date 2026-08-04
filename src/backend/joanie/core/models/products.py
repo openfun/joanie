@@ -72,6 +72,7 @@ from joanie.core.utils.course_run.aggregate_course_runs_dates import (
     aggregate_course_runs_dates,
 )
 from joanie.core.utils.discount import calculate_price
+from joanie.core.utils.emails import send_withdrawal_confirmation
 from joanie.core.utils.payment_schedule import generate as generate_payment_schedule
 from joanie.core.utils.payment_schedule import (
     withdrawal_limit_date,
@@ -1945,22 +1946,37 @@ class Order(BaseModel):
                 "Cannot withdraw order because the date has been reached"
             )
 
-        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
-            self.withdrawn_requested_at = timezone.now()
+        self.withdrawn_requested_at = timezone.now()
+
+        if (
+            self.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+            and self.has_waived_withdrawal_right
+        ):
+            # The exam access cannot be checked automatically, so the request goes
+            # through manual review on the back-office side.
+            self.flow.pending_withdraw()
+            self.save()
+        else:
+            # Credential, or certificate not subject to the waiver: the withdrawal
+            # right is validated automatically.
             self.withdrawn_confirmation_at = timezone.now()
             self.flow.cancel()
             self.save()
-
-        elif self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
-            self.withdrawn_requested_at = timezone.now()
-            self.flow.pending_withdraw()
-            self.save()
+            send_withdrawal_confirmation(self)
 
     def confirm_withdrawal(self):
-        """Adds the timestamps of the confirmation of the withdrawal"""
-        # Protect here the method for only certificate products that are not free
-        # Add test for admin api new endpoint + this method in test_models_orders_*
+        """
+        Confirm a pending withdrawal request: cancel the order accordingly.
+        """
         self.withdrawn_confirmation_at = timezone.now()
+        self.flow.cancel()
+        self.save()
+
+    def reject_withdrawal(self):
+        """
+        Reject a pending withdrawal request: the order resumes its normal course.
+        """
+        self.flow.reject_withdraw()
         self.save()
 
     @property
