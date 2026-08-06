@@ -56,11 +56,12 @@ def send_mail_vouchers(batch_order_id: str):
 
     BatchOrder = apps.get_model("core", "BatchOrder")  # pylint: disable=invalid-name
     batch_order = BatchOrder.objects.get(pk=batch_order_id)
+    voucher_codes = list(batch_order.orders.values_list("voucher__code", flat=True))
 
     payment_backend = get_payment_backend()
     # pylint:disable=protected-access
     payment_backend._send_mail_batch_order_payment_success(  # noqa: SLF001
-        batch_order, batch_order.total, batch_order.vouchers
+        batch_order, batch_order.total, voucher_codes
     )
 
 
