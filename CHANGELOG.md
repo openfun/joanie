@@ -41,6 +41,7 @@ and this project adheres to
 - Prevent seat exports of batch orders when no seats claimed
 - Normalize session code of course run in export orders csv
 - Update tray job in circle ci for ubuntu image version
+- Display voucher list in mail for purchase order batch order
 
 ## [3.3.0] - 2026-04-09
 

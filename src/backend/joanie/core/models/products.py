@@ -2510,8 +2510,11 @@ class BatchOrder(BaseModel):
 
     @property
     def vouchers(self):
-        """Return the exhaustive list of voucher codes generated from the orders"""
-        if self.state != enums.BATCH_ORDER_STATE_COMPLETED:
+        """
+        Return the exhaustive list of voucher codes generated from the orders.
+        When the batch order is cancelled, it returns an empty list.
+        """
+        if not self.has_orders_generated or self.is_canceled:
             return []
         return list(self.orders.values_list("voucher__code", flat=True))
 
