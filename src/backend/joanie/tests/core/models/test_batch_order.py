@@ -593,27 +593,20 @@ class BatchOrderModelsTestCase(LoggingTestCase):
 
                     self.assertListEqual([], batch_order.vouchers)
 
-    def test_models_batch_order_property_vouchers_when_state_not_completed_for_purchase_order(
+    def test_models_batch_order_property_vouchers_with_purchase_order_payment_method(
         self,
     ):
         """
-        The property vouchers should return an empty list if the state of the batch order
-        is not completed with payment method `purchase_order`.
+        The property `vouchers` should return an empty list when the orders are not generated,
+        or if the batch order is cancelled when it uses purchase order payment method.
         """
-        excluded_states = [
-            enums.BATCH_ORDER_STATE_SIGNING,
-            enums.BATCH_ORDER_STATE_PENDING,
-            enums.BATCH_ORDER_STATE_PROCESS_PAYMENT,
-            enums.BATCH_ORDER_STATE_COMPLETED,
-        ]
         for state, _ in enums.BATCH_ORDER_STATE_CHOICES:
-            if state in excluded_states:
-                continue
             with self.subTest(state=state):
                 batch_order = factories.BatchOrderFactory(
                     state=state, payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER
                 )
-
+                if batch_order.has_orders_generated:
+                    continue
                 self.assertListEqual([], batch_order.vouchers)
 
     def test_models_batch_order_property_vouchers_when_batch_order_was_completed_to_canceled(
@@ -690,6 +683,8 @@ class BatchOrderModelsTestCase(LoggingTestCase):
             batch_order.orders.exclude(state=enums.ORDER_STATE_CANCELED).exists()
         )
         self.assertFalse(models.Voucher.objects.filter(code__in=voucher_codes).exists())
+        # Calling the property vouchers now should return an empty list
+        self.assertEqual(batch_order.vouchers, [])
 
     def test_models_batch_order_is_paid_quote_has_not_received_purchase_order(self):
         """
