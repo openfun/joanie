@@ -20,8 +20,8 @@ import { commonTranslations } from "@/translations/common/commonTranslations";
 import { OrderFilters } from "@/components/templates/orders/filters/OrderFilters";
 import { formatShortDate } from "@/utils/dates";
 import {
+  getOrderStateMessage,
   orderNatureMessages,
-  orderStatesMessages,
 } from "@/components/templates/orders/view/translations";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
@@ -127,7 +127,8 @@ export function OrdersList(props: Props) {
       field: "state",
       headerName: intl.formatMessage(messages.state),
       flex: 1,
-      valueGetter: (value) => intl.formatMessage(orderStatesMessages[value]),
+      valueGetter: (_value, row) =>
+        intl.formatMessage(getOrderStateMessage(row)),
     },
     {
       field: "nature",

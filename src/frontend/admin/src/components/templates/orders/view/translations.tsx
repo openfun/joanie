@@ -1,10 +1,11 @@
-import { defineMessages } from "react-intl";
+import { defineMessage, defineMessages } from "react-intl";
 import {
   OrderInvoiceStatusEnum,
   OrderInvoiceTypesEnum,
   OrderNatureEnum,
   OrderStatesEnum,
 } from "@/services/api/models/Order";
+import { Nullable } from "@/types/utils";
 
 export const orderViewMessages = defineMessages({
   contract: {
@@ -200,6 +201,16 @@ export const orderViewMessages = defineMessages({
     defaultMessage: "The user has not waived its withdrawal right.",
     description: "Text for the has waived withdrawal right label",
   },
+  withdrawnRequestedAt: {
+    id: "components.templates.orders.view.withdrawnRequestedAt",
+    defaultMessage: "Withdrawal requested on",
+    description: "Label for the withdrawal request date field",
+  },
+  withdrawnConfirmationAt: {
+    id: "components.templates.orders.view.withdrawnConfirmationAt",
+    defaultMessage: "Withdrawal confirmed on",
+    description: "Label for the withdrawal confirmation date field",
+  },
   voucher: {
     id: "components.templates.orders.view.voucher",
     defaultMessage: "Voucher code",
@@ -287,6 +298,11 @@ export const orderStatesMessages = defineMessages<OrderStatesEnum>({
     defaultMessage: "Pending",
     description: "Text for pending order state",
   },
+  pending_withdraw: {
+    id: "components.templates.orders.view.orderStatesMessages.pending_withdraw",
+    defaultMessage: "Withdrawal to review",
+    description: "Text for pending withdraw order state",
+  },
   canceled: {
     id: "components.templates.orders.view.orderStatesMessages.canceled",
     defaultMessage: "Canceled",
@@ -328,3 +344,29 @@ export const orderStatesMessages = defineMessages<OrderStatesEnum>({
     description: "Text for refunded order state",
   },
 });
+
+export const orderStateWithdrawnMessage = defineMessage({
+  id: "components.templates.orders.view.orderStatesMessages.withdrawn",
+  defaultMessage: "Withdrawn",
+  description:
+    "Text for a canceled order state that was actually canceled by the owner exercising their withdrawal right",
+});
+
+/**
+ * A withdrawn order shares the same `canceled` state as any other cancellation, the only
+ * distinguishing signal being `withdrawn_confirmation_at`. Use this instead of
+ * `orderStatesMessages[order.state]` directly wherever the order state is displayed, so
+ * withdrawn orders read as "Withdrawn" rather than a plain, ambiguous "Canceled".
+ */
+export const getOrderStateMessage = (order: {
+  state: OrderStatesEnum;
+  withdrawn_confirmation_at?: Nullable<string>;
+}) => {
+  if (
+    order.state === OrderStatesEnum.ORDER_STATE_CANCELED &&
+    order.withdrawn_confirmation_at
+  ) {
+    return orderStateWithdrawnMessage;
+  }
+  return orderStatesMessages[order.state];
+};

@@ -31,6 +31,7 @@ export type OrderListItem = AbstractOrder & {
   owner_name: string;
   product_title: string;
   voucher: Nullable<string>;
+  withdrawn_confirmation_at: Nullable<string>;
 };
 
 export enum PaymentStatesEnum {
@@ -73,6 +74,8 @@ export type Order = AbstractOrder & {
   payment_schedule: Nullable<OrderPaymentSchedule[]>;
   credit_card: Nullable<OrderCreditCard>;
   has_waived_withdrawal_right: boolean;
+  withdrawn_requested_at: Nullable<string>;
+  withdrawn_confirmation_at: Nullable<string>;
   voucher: Nullable<OrderVoucher>;
 };
 
@@ -141,6 +144,7 @@ export enum OrderStatesEnum {
   ORDER_STATE_TO_SIGN = "to_sign", // order needs a contract signature
   ORDER_STATE_SIGNING = "signing", // order is pending for contract signature validation
   ORDER_STATE_PENDING = "pending", // payment has failed but can be retried
+  ORDER_STATE_PENDING_WITHDRAW = "pending_withdraw", // withdrawal request awaiting manual review
   ORDER_STATE_CANCELED = "canceled", // has been canceled
   ORDER_STATE_PENDING_PAYMENT = "pending_payment", // payment is pending
   ORDER_STATE_TO_OWN = "to_own", // order is paid but is awaiting owner to claim it
@@ -166,6 +170,7 @@ export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
     total: order.total,
     total_currency: order.total_currency,
     voucher: order.voucher?.code ?? null,
+    withdrawn_confirmation_at: order.withdrawn_confirmation_at,
   };
 };
 
