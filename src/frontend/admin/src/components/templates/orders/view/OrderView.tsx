@@ -23,8 +23,8 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import { useTheme } from "@mui/material/styles";
 import { Order, PaymentStatesEnum } from "@/services/api/models/Order";
 import {
+  getOrderStateMessage,
   orderNatureMessages,
-  orderStatesMessages,
   orderViewMessages,
 } from "@/components/templates/orders/view/translations";
 import { SimpleCard } from "@/components/presentational/card/SimpleCard";
@@ -215,7 +215,7 @@ export function OrderView({ order }: Props) {
                 fullWidth={true}
                 disabled={true}
                 label={intl.formatMessage(orderViewMessages.state)}
-                value={intl.formatMessage(orderStatesMessages[order.state])}
+                value={intl.formatMessage(getOrderStateMessage(order))}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -237,6 +237,31 @@ export function OrderView({ order }: Props) {
                 )}
               />
             </Grid>
+
+            {order.withdrawn_requested_at && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth={true}
+                  disabled={true}
+                  label={intl.formatMessage(
+                    orderViewMessages.withdrawnRequestedAt,
+                  )}
+                  value={formatShortDate(order.withdrawn_requested_at)}
+                />
+              </Grid>
+            )}
+            {order.withdrawn_confirmation_at && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth={true}
+                  disabled={true}
+                  label={intl.formatMessage(
+                    orderViewMessages.withdrawnConfirmationAt,
+                  )}
+                  value={formatShortDate(order.withdrawn_confirmation_at)}
+                />
+              </Grid>
+            )}
 
             {order.voucher && (
               <Grid size={{ xs: 12, sm: 6 }}>

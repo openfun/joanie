@@ -31,6 +31,7 @@ export type OrderListItem = AbstractOrder & {
   owner_name: string;
   product_title: string;
   voucher: Nullable<string>;
+  withdrawn_confirmation_at: Nullable<string>;
 };
 
 export enum PaymentStatesEnum {
@@ -73,6 +74,8 @@ export type Order = AbstractOrder & {
   payment_schedule: Nullable<OrderPaymentSchedule[]>;
   credit_card: Nullable<OrderCreditCard>;
   has_waived_withdrawal_right: boolean;
+  withdrawn_requested_at: Nullable<string>;
+  withdrawn_confirmation_at: Nullable<string>;
   voucher: Nullable<OrderVoucher>;
 };
 
@@ -167,6 +170,7 @@ export const transformOrderToOrderListItem = (order: Order): OrderListItem => {
     total: order.total,
     total_currency: order.total_currency,
     voucher: order.voucher?.code ?? null,
+    withdrawn_confirmation_at: order.withdrawn_confirmation_at,
   };
 };
 
