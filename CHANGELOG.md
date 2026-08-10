@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Add withdraw state in order list view of backoffice
+- Add confirm and reject withdrawal backoffice
 - Add withdrawal action for orders in client and admin API
 
 ### Fixed

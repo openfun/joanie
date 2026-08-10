@@ -4,6 +4,8 @@ import { defineMessages, useIntl } from "react-intl";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ArticleIcon from "@mui/icons-material/Article";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import { Order, OrderStatesEnum } from "@/services/api/models/Order";
 import ButtonMenu, {
   MenuOption,
@@ -60,6 +62,22 @@ const messages = defineMessages({
     id: "components.templates.orders.buttons.orderActionsButton.generateCertificate",
     description: "Label for the generate certificate order action",
     defaultMessage: "Generate certificate",
+  },
+  notPendingWithdrawalTooltip: {
+    id: "components.templates.orders.buttons.orderActionsButton.notPendingWithdrawalTooltip",
+    description:
+      "Text when the order has no withdrawal request awaiting review",
+    defaultMessage: "This order has no withdrawal request awaiting review",
+  },
+  confirmWithdrawal: {
+    id: "components.templates.orders.buttons.orderActionsButton.confirmWithdrawal",
+    description: "Label for the confirm withdrawal order action",
+    defaultMessage: "Confirm withdrawal",
+  },
+  rejectWithdrawal: {
+    id: "components.templates.orders.buttons.orderActionsButton.rejectWithdrawal",
+    description: "Label for the reject withdrawal order action",
+    defaultMessage: "Reject withdrawal",
   },
 });
 
@@ -132,6 +150,38 @@ export default function OrderActionsButton({ order }: Props) {
         disableMessage: generateCertificateDisableMessage(),
         onClick: async () => {
           ordersQuery.methods.generateCertificate(
+            { orderId: order.id },
+            {
+              onSuccess: orderQuery.methods.invalidate,
+            },
+          );
+        },
+      },
+      {
+        icon: <CheckCircleIcon />,
+        mainLabel: intl.formatMessage(messages.confirmWithdrawal),
+        isDisable: order.state !== OrderStatesEnum.ORDER_STATE_PENDING_WITHDRAW,
+        disableMessage: intl.formatMessage(
+          messages.notPendingWithdrawalTooltip,
+        ),
+        onClick: async () => {
+          ordersQuery.methods.confirmWithdrawal(
+            { orderId: order.id },
+            {
+              onSuccess: orderQuery.methods.invalidate,
+            },
+          );
+        },
+      },
+      {
+        icon: <DoNotDisturbIcon />,
+        mainLabel: intl.formatMessage(messages.rejectWithdrawal),
+        isDisable: order.state !== OrderStatesEnum.ORDER_STATE_PENDING_WITHDRAW,
+        disableMessage: intl.formatMessage(
+          messages.notPendingWithdrawalTooltip,
+        ),
+        onClick: async () => {
+          ordersQuery.methods.rejectWithdrawal(
             { orderId: order.id },
             {
               onSuccess: orderQuery.methods.invalidate,
