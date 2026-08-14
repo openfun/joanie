@@ -399,6 +399,10 @@ class Base(Configuration):
     EMAIL_USE_TLS = values.BooleanValue(False)
     EMAIL_FROM = values.Value("from@fun-mooc.fr")
 
+    # Support email configuration
+    JOANIE_EMAIL_SUPPORT_CERTIFICATE = values.Value("certificate@support.acme")
+    JOANIE_EMAIL_SUPPORT_CREDENTIAL = values.Value("credential@support.acme")
+
     # Django Money
     DEFAULT_CURRENCY = "EUR"
     CURRENCIES = (DEFAULT_CURRENCY,)
@@ -838,6 +842,9 @@ class Test(Base):
     ]
     # This environment variable is only used for moodle student role id
     JOANIE_LMS_MOODLE_STUDENT_ROLE_ID = "5"
+
+    JOANIE_EMAIL_SUPPORT_CERTIFICATE = values.Value("certificate@fun.org")
+    JOANIE_EMAIL_SUPPORT_CREDENTIAL = values.Value("credential@fun.org")
 
     COURSE_WEB_HOOKS = []
 
