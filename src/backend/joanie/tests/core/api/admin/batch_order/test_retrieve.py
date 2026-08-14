@@ -204,6 +204,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                         "total": float(order.total),
                         "total_currency": get_default_currency_symbol(),
                         "voucher": order.voucher.code,
+                        "withdrawn_confirmation_at": None,
                     }
                 ],
                 "available_actions": {
@@ -558,6 +559,7 @@ class BatchOrdersAdminApiDetailTestCase(BaseAPITestCase):
                         if order.voucher
                         else None,
                         "voucher": order.voucher.code if order.voucher else None,
+                        "withdrawn_confirmation_at": None,
                     }
                     for order in batch_order.orders.all()
                 ],
