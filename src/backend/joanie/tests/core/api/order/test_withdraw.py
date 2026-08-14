@@ -217,6 +217,34 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                     withdrawal_date_request,
                                 )
                                 self.assertIsNone(order.withdrawn_confirmation_at)
+                                # Check email confirming cancelled order
+                                self.assertEqual(
+                                    "Withdrawal request received",
+                                    mail.outbox[0].subject,
+                                )
+                                self.assertEqual(
+                                    mail.outbox[0].to[0], order.owner.email
+                                )
+                                email_content = " ".join(mail.outbox[0].body.split())
+                                self.assertIn(
+                                    "We have received a withdrawal request",
+                                    email_content,
+                                )
+
+                                self.assertEqual(
+                                    "Withdrawal request received",
+                                    mail.outbox[1].subject,
+                                )
+                                self.assertEqual(
+                                    mail.outbox[1].to[0],
+                                    settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
+                                )
+                                email_content = " ".join(mail.outbox[1].body.split())
+                                self.assertIn(
+                                    "We have received a withdrawal request",
+                                    email_content,
+                                )
+                                mail.outbox.clear()
                             elif (
                                 day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
                                 and not value
@@ -233,6 +261,32 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                     order.withdrawn_confirmation_at,
                                     withdrawal_date_request,
                                 )
+                                # Check email confirming cancelled order
+                                self.assertEqual(
+                                    "Withdrawal confirmed", mail.outbox[0].subject
+                                )
+                                self.assertEqual(
+                                    mail.outbox[0].to[0], order.owner.email
+                                )
+                                email_content = " ".join(mail.outbox[0].body.split())
+                                self.assertIn(
+                                    "The order has been cancelled accordingly",
+                                    email_content,
+                                )
+
+                                self.assertEqual(
+                                    "Withdrawal confirmed", mail.outbox[1].subject
+                                )
+                                self.assertEqual(
+                                    mail.outbox[1].to[0],
+                                    settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
+                                )
+                                email_content = " ".join(mail.outbox[1].body.split())
+                                self.assertIn(
+                                    "The order has been cancelled accordingly",
+                                    email_content,
+                                )
+                                mail.outbox.clear()
                             else:
                                 self.assertStatusCodeEqual(
                                     response, HTTPStatus.UNPROCESSABLE_ENTITY
