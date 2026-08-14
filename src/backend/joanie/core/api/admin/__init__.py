@@ -902,6 +902,72 @@ class OrderViewSet(
             headers={"Content-Disposition": f'attachment; filename="orders_{now}.csv"'},
         )
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: OpenApiTypes.NONE,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["POST"], detail=True, url_path="confirm-withdrawal")
+    def confirm_withdrawal(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Confirm withdrawal an order if the state is in `pending_withdraw` exclusively and
+        the product is type certificate.
+        """
+        order = self.get_object()
+
+        if (
+            order.product.type == enums.PRODUCT_TYPE_CREDENTIAL
+            or order.state != enums.ORDER_STATE_PENDING_WITHDRAW
+        ):
+            return Response(
+                {
+                    "detail": _(
+                        "Only orders with certificate products can be withdrawn "
+                        "or in pending withdraw state"
+                    )
+                },
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        order.confirm_withdrawal()
+
+        return Response(status=HTTPStatus.OK)
+
+    @extend_schema(
+        request=None,
+        responses={
+            200: OpenApiTypes.NONE,
+            422: serializers.ErrorResponseSerializer,
+        },
+    )
+    @action(methods=["POST"], detail=True, url_path="reject-withdrawal")
+    def reject_withdrawal(self, request, pk=None):  # pylint:disable=unused-argument
+        """
+        Reject withdrawal an order if the state is in `pending_withdraw` exclusively and
+        the product is type certificate.
+        """
+        order = self.get_object()
+
+        if (
+            not order.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+            or order.state != enums.ORDER_STATE_PENDING_WITHDRAW
+        ):
+            return Response(
+                {
+                    "detail": _(
+                        "Only orders with certificate products can be withdrawn "
+                        "or in pending withdraw state"
+                    )
+                },
+                status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
+
+        order.reject_withdrawal()
+
+        return Response(status=HTTPStatus.OK)
+
 
 class BatchOrderViewSet(
     SerializerPerActionMixin,

@@ -4464,6 +4464,52 @@
                 }
             }
         },
+        "/api/v1.0/admin/orders/{id}/confirm-withdrawal/": {
+            "post": {
+                "operationId": "orders_confirm_withdrawal_create",
+                "description": "Confirm withdrawal an order if the state is in `pending_withdraw` exclusively and\nthe product is type certificate.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": null
+                            }
+                        },
+                        "description": ""
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1.0/admin/orders/{id}/generate_certificate/": {
             "post": {
                 "operationId": "orders_generate_certificate_create",
@@ -4577,6 +4623,52 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AdminOrder"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1.0/admin/orders/{id}/reject-withdrawal/": {
+            "post": {
+                "operationId": "orders_reject_withdrawal_create",
+                "description": "Reject withdrawal an order if the state is in `pending_withdraw` exclusively and\nthe product is type certificate.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "primary key for the record as UUID"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": null
+                            }
+                        },
+                        "description": ""
+                    },
+                    "422": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         },
@@ -9228,6 +9320,20 @@
                         "type": "boolean",
                         "readOnly": true
                     },
+                    "withdrawn_requested_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time buyer requested to withdraw the order"
+                    },
+                    "withdrawn_confirmation_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time order is withdrawn"
+                    },
                     "batch_order": {
                         "type": "string",
                         "format": "uuid",
@@ -9271,7 +9377,9 @@
                     "state",
                     "total",
                     "total_currency",
-                    "voucher"
+                    "voucher",
+                    "withdrawn_confirmation_at",
+                    "withdrawn_requested_at"
                 ]
             },
             "AdminOrderCreateRequest": {
@@ -9456,6 +9564,13 @@
                             }
                         ],
                         "readOnly": true
+                    },
+                    "withdrawn_confirmation_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true,
+                        "title": "Date and time order is withdrawn"
                     }
                 },
                 "required": [
@@ -9473,7 +9588,8 @@
                     "total",
                     "total_currency",
                     "updated_on",
-                    "voucher"
+                    "voucher",
+                    "withdrawn_confirmation_at"
                 ]
             },
             "AdminOrderLightRequest": {

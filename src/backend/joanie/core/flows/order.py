@@ -519,9 +519,25 @@ class OrderFlow:
             send_withdrawal_request(self.instance)
 
         # Confirm withdrawal (credential or certificate products)
+        # pylint: disable=too-many-boolean-expressions
         if (
-            source == enums.ORDER_STATE_PENDING_WITHDRAW
-            and target == enums.ORDER_STATE_CANCELED
+            (
+                source == enums.ORDER_STATE_PENDING_WITHDRAW
+                and target == enums.ORDER_STATE_CANCELED
+            )
+            or (
+                target == enums.ORDER_STATE_CANCELED
+                and self.instance.product.type == enums.PRODUCT_TYPE_CREDENTIAL
+                and self.instance.withdrawn_requested_at
+                and self.instance.withdrawn_confirmation_at
+            )
+            or (
+                source == enums.ORDER_STATE_COMPLETED
+                and target == enums.ORDER_STATE_CANCELED
+                and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+                and self.instance.withdrawn_requested_at
+                and self.instance.withdrawn_confirmation_at
+            )
         ):
             send_withdrawal_confirmation(self.instance)
 

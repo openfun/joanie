@@ -120,6 +120,9 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     if order.batch_order
                     else None,
                     "nature": order.nature,
+                    "withdrawn_confirmation_at": format_date(
+                        order.withdrawn_confirmation_at
+                    ),
                 }
                 for order in sorted(orders, key=lambda x: x.created_on, reverse=True)
             ],
@@ -186,6 +189,9 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "voucher": order_voucher.voucher.code,
                     "batch_order": None,
                     "nature": enums.ORDER_NATURE_B2C,
+                    "withdrawn_confirmation_at": format_date(
+                        order_voucher.withdrawn_confirmation_at
+                    ),
                 },
                 {
                     "course_code": order_rule.course.code,
@@ -203,6 +209,9 @@ class OrdersAdminApiListTestCase(BaseAPITestCase):
                     "voucher": None,
                     "batch_order": None,
                     "nature": enums.ORDER_NATURE_B2C,
+                    "withdrawn_confirmation_at": format_date(
+                        order_rule.withdrawn_confirmation_at
+                    ),
                 },
             ],
         }
