@@ -4,6 +4,7 @@ Test suite for order flows.
 
 # pylint: disable=too-many-lines,too-many-public-methods
 import json
+import uuid
 from datetime import date
 from http import HTTPStatus
 from unittest import mock
@@ -11,6 +12,7 @@ from unittest import mock
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
+from django.utils import timezone
 
 import responses
 from stockholm import Money
@@ -1862,3 +1864,44 @@ class OrderFlowsTestCase(LoggingTestCase):
         order.flow.refunded()
 
         self.assertEqual(order.state, enums.ORDER_STATE_REFUNDED)
+
+    @override_settings(JOANIE_EMAIL_SUPPORT_CERTIFICATE="johndoe@support.acme")
+    def test_flows_order_transition_completed_to_canceled_on_withdrawal(self):
+        """
+        Test when the order has product certificate with state `completed` transitions to
+        canceled should send mail to 3 recipients (organization administrator, support, and
+        buyer).
+        """
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], type="certificate")
+        enrollment = factories.EnrollmentFactory(
+            course_run__course=course,
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+            is_active=True,
+        )
+        access = factories.UserOrganizationAccessFactory(role=enums.ADMIN)
+        order = factories.OrderFactory(
+            product=product,
+            organization=access.organization,
+            enrollment=enrollment,
+            course=None,
+            state=enums.ORDER_STATE_COMPLETED,
+            has_waived_withdrawal_right=False,
+            payment_schedule=[
+                {
+                    "id": uuid.uuid4(),
+                    "due_date": "2026-08-25",
+                    "state": enums.PAYMENT_STATE_PAID,
+                    "amount": "10.00",
+                },
+            ],
+        )
+        order.withdrawn_requested_at = timezone.now()
+        order.withdrawn_confirmation_at = timezone.now()
+        order.flow.cancel()
+
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(mail.outbox[0].to[0], order.owner.email)
+        self.assertEqual(mail.outbox[1].to[0], "johndoe@support.acme")
+        self.assertEqual(mail.outbox[2].to[0], access.user.email)

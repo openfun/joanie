@@ -1370,6 +1370,8 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "payment_schedule",
             "credit_card",
             "has_waived_withdrawal_right",
+            "withdrawn_requested_at",
+            "withdrawn_confirmation_at",
             "batch_order",
             "nature",
             "voucher",
@@ -1432,6 +1434,7 @@ class AdminOrderLightSerializer(serializers.ModelSerializer):
             "voucher",
             "batch_order",
             "nature",
+            "withdrawn_confirmation_at",
         )
         read_only_fields = fields
 

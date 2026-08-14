@@ -1945,16 +1945,35 @@ class Order(BaseModel):
                 "Cannot withdraw order because the date has been reached"
             )
 
-        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
-            self.withdrawn_requested_at = timezone.now()
-            self.withdrawn_confirmation_at = timezone.now()
-            self.flow.cancel()
-            self.save()
+        self.withdrawn_requested_at = timezone.now()
 
-        elif self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
-            self.withdrawn_requested_at = timezone.now()
+        if (
+            self.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+            and self.has_waived_withdrawal_right
+        ):
+            # The exam access cannot be checked automatically, so the request goes
+            # through manual review on the back-office side.
             self.flow.pending_withdraw()
             self.save()
+        else:
+            # Credential, or certificate not subject to the waiver: the withdrawal
+            # right is validated automatically.
+            self.confirm_withdrawal()
+
+    def confirm_withdrawal(self):
+        """
+        Confirm a pending withdrawal request: cancel the order accordingly.
+        """
+        self.withdrawn_confirmation_at = timezone.now()
+        self.flow.cancel()
+        self.save()
+
+    def reject_withdrawal(self):
+        """
+        Reject a pending withdrawal request: the order resumes its normal course.
+        """
+        self.flow.reject_withdraw()
+        self.save()
 
     @property
     def has_consent_to_terms(self):
