@@ -12,9 +12,12 @@ from django.utils.translation import override
 from stockholm import Money
 
 from joanie.core.enums import (
+    ADMIN,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
+    PRODUCT_TYPE_CERTIFICATE,
+    PRODUCT_TYPE_CREDENTIAL,
 )
 
 logger = getLogger(__name__)
@@ -123,14 +126,40 @@ def _prepare_withdrawal_context(order, title):
     }
 
 
+def _prepare_withdrawal_recipients(order):
+    """
+    The withdrawal email should be sent to 3 recipients.
+    Those recipients are : the buyer, the organization administrators, and the generic
+    staff member mail.
+    """
+    recipients = [order.owner.email]
+
+    support_email = None
+    if order.product.type == PRODUCT_TYPE_CERTIFICATE:
+        support_email = settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE
+    elif order.product.type == PRODUCT_TYPE_CREDENTIAL:
+        support_email = settings.JOANIE_EMAIL_SUPPORT_CREDENTIAL
+    if support_email:
+        recipients.append(support_email)
+
+    organization_emails = order.organization.accesses.filter(role=ADMIN).values_list(
+        "user__email", flat=True
+    )
+    recipients.extend(list(organization_emails))
+
+    return recipients
+
+
 def _send_withdrawal_email(order, title, template_name):
     """Send a withdrawal-related mail to the order owner."""
-    send(
-        subject=title,
-        template_vars=_prepare_withdrawal_context(order, title),
-        template_name=template_name,
-        to_user_email=order.owner.email,
-    )
+    email_recipients = _prepare_withdrawal_recipients(order)
+    for to_user_email in email_recipients:
+        send(
+            subject=title,
+            template_vars=_prepare_withdrawal_context(order, title),
+            template_name=template_name,
+            to_user_email=to_user_email,
+        )
 
 
 def send_withdrawal_request(order):
