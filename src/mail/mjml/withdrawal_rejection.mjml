@@ -6,11 +6,26 @@
       <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
         <mj-column>
           <mj-text padding="0">
-            {% blocktranslate with title=product_title %}
-            After review, the withdrawal request for <strong>{{ title }}</strong> has been rejected.
-            <br />
-            The order remains active and resumes its normal course.
+            {% blocktranslate with title=product_title withdrawal_requested_at=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
+              After review by our support team, the withdrawal request on {{ withdrawal_requested_at }} for <strong>{{ title }}</strong> has been <strong>rejected</strong>.
+              The order '{{ order_id }}' remains active and resumes its normal course.
             {% endblocktranslate %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+          {% if is_support_email %}
+            {% blocktranslate %}
+              Please find the order in the <a href="{{ backoffice_dashboard_order_link }}">backoffice</a>
+            {% endblocktranslate %}
+          {% elif not is_organization_admin and not is_support_email %}
+            {% blocktranslate %}
+              You may check your order on your <a href="{{ dashboard_order_link }}">dashboard</a>.
+              If you have any questions, please feel free to reach our support team.
+            {% endblocktranslate %}
+          {% endif %}
           </mj-text>
         </mj-column>
       </mj-section>

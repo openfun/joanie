@@ -6,11 +6,46 @@
       <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
         <mj-column>
           <mj-text padding="0">
+          {% if is_support_email %}
             {% blocktranslate with title=product_title %}
-            We have received a withdrawal request for <strong>{{ title }}</strong>.
-            <br />
-            Our team will review the request and receive a confirmation email once it has been processed.
+              A withdrawal request is made for the <strong>{{ title }}</strong>.
+              The order '{{ order_id }}' for {{ buyer_fullname }} needs your review to validate
+              the withdrawal.
             {% endblocktranslate %}
+          {% elif is_organization_admin %}
+            {% blocktranslate with title=product_title %}
+              A withdrawal request has been made on an order on the course <strong>{{ title }}</strong>.
+              The order for {{ buyer_fullname }} will go under investigation by the support team to see if it is eligible
+              to be withdrawn.
+            {% endblocktranslate %}
+          {% elif not is_support_email or not is_organization_admin %}
+            {% with withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
+            {% blocktranslate with title=product_title %}
+              We have received a withdrawal request for <strong>{{ title }}</strong> for your order '{{ order_id }}'.
+              </br>
+              We registered your withdrawal request on <strong>{{ withdrawal_request_date }}</strong>, and it is now being processed.
+            {% endblocktranslate %}
+            {% endwith %}
+          {% endif %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+          {% if is_support_email %}
+            {% blocktranslate %}
+              Please find the order in the <a href="{{ backoffice_dashboard_order_link }}">backoffice</a>
+            {% endblocktranslate %}
+          {% elif is_organization_admin %}
+            {% blocktranslate %}
+              A confirmation or rejection email will soon follow up about the state of this order.
+            {% endblocktranslate %}
+          {% else %}
+            {% blocktranslate %}
+              Our team will review your request.
+            {% endblocktranslate %}
+          {% endif %}
           </mj-text>
         </mj-column>
       </mj-section>
