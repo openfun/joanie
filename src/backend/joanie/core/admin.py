@@ -592,6 +592,8 @@ class OrderAdmin(DjangoObjectActions, admin.ModelAdmin):
         "invoice",
         "certificate",
         "batch_order_link",
+        "withdrawn_requested_at",
+        "withdrawn_confirmation_at",
     )
     search_fields = ["course__translations__title", "organization__translations__title"]
 
