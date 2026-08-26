@@ -1,4 +1,4 @@
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, too-many-lines
 """All debug views of the `debug`app."""
 
 import base64
@@ -110,6 +110,23 @@ class DebugMailSuccessPaymentViewTxt(DebugMailSuccessPayment):
 class DebugWithdrawal(TemplateView):
     """Debug View to check the layout of withdrawal-related emails"""
 
+    def update_context(self, context):
+        """
+        Retrieve the query parameter passed in the url to see different views of the email
+        depending on the recipient role.
+        """
+        is_support_email = self.request.GET.get("is_support_email")
+        is_organization_admin = self.request.GET.get("is_organization_admin")
+        context["is_support_email"] = bool(is_support_email)
+        context["is_organization_admin"] = bool(is_organization_admin)
+        # Override fullname because the receiver is not the buyer
+        if is_support_email:
+            context["fullname"] = "Support"
+        if is_organization_admin:
+            context["fullname"] = "Organization Admin"
+
+        return context
+
     def get_context_data(self, **kwargs):
         """Generates sample datas to have a valid debug email"""
         enrollment = EnrollmentFactory()
@@ -140,18 +157,25 @@ class DebugWithdrawal(TemplateView):
             )
             context = super().get_context_data(**kwargs)
             context["title"] = "👨‍💻Development email preview"
+            context["withdrawal_requested_at"] = timezone.now()
+            context["course_code"] = "0001"  # Use None to see difference in template
             context["email"] = order.owner.email
             context["fullname"] = order.owner.name
+            context["buyer_fullname"] = order.owner.name
             context["product_title"] = product_title
+            context["order_id"] = str(order.id)
             context["dashboard_order_link"] = (
                 settings.JOANIE_DASHBOARD_ORDER_LINK.replace(":orderId", str(order.id))
+            )
+            context["backoffice_dashboard_order_link"] = (
+                settings.JOANIE_BACKOFFICE_ORDER_LINK.replace("orderId", str(order.id))
             )
             context["site"] = {
                 "name": settings.JOANIE_CATALOG_NAME,
                 "url": settings.JOANIE_CATALOG_BASE_URL,
             }
 
-            return context
+            return self.update_context(context)
 
 
 class DebugWithdrawalRequestViewHtml(DebugWithdrawal):

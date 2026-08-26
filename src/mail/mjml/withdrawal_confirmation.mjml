@@ -6,11 +6,47 @@
       <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
         <mj-column>
           <mj-text padding="0">
-            {% blocktranslate with title=product_title %}
-            The withdrawal request for <strong>{{ title }}</strong> has been confirmed.
+          {% if not is_organization_admin or is_support_email  %}
+          {% blocktranslate with title=product_title withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
+            The withdrawal request on the {{ withdrawal_request_date }} for <strong>{{ title }}</strong> has been confirmed.
             <br />
-            The order has been cancelled accordingly.
+          {% endblocktranslate %}
+          {% elif is_organization_admin or is_support_email %}
+            {% blocktranslate with title=product_title %}
+              The order '{{ order_id }}' on course <strong>{{ title }}</strong> for <strong>{{ buyer_fullname }}</strong> has been
+              cancelled accordingly.
             {% endblocktranslate %}
+          {% endif %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+            {% if not course_code and not is_support_email and not is_organization_admin %}
+              {% blocktranslate %}
+                Your order '{{ order_id }}' has been cancelled accordingly.
+              {% endblocktranslate %}
+            {% elif course_code and not is_support_email and not is_organization_admin %}
+              {% blocktranslate %}
+                The order '{{ order_id }}' for course code {{ course_code }} has been cancelled accordingly.
+              {% endblocktranslate %}
+            {% endif %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+          {% if is_support_email %}
+            {% blocktranslate %}
+              Please find the order in the <a href="{{ backoffice_dashboard_order_link }}">backoffice</a>
+            {% endblocktranslate %}
+          {% elif not is_organization_admin and not is_support_email %}
+            {% blocktranslate %}
+              You may check your order on your <a href="{{ dashboard_order_link }}">dashboard</a>
+            {% endblocktranslate %}
+          {% endif %}
           </mj-text>
         </mj-column>
       </mj-section>
