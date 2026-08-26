@@ -227,7 +227,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 email_content = " ".join(mail.outbox[0].body.split())
                                 self.assertIn(
-                                    "We have received a withdrawal request",
+                                    "will review your request",
                                     email_content,
                                 )
 
@@ -241,7 +241,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 email_content = " ".join(mail.outbox[1].body.split())
                                 self.assertIn(
-                                    "We have received a withdrawal request",
+                                    "needs your review to validate",
                                     email_content,
                                 )
                                 mail.outbox.clear()
@@ -270,7 +270,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 email_content = " ".join(mail.outbox[0].body.split())
                                 self.assertIn(
-                                    "The order has been cancelled accordingly",
+                                    "has been cancelled accordingly",
                                     email_content,
                                 )
 
@@ -283,7 +283,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 email_content = " ".join(mail.outbox[1].body.split())
                                 self.assertIn(
-                                    "The order has been cancelled accordingly",
+                                    "has been confirmed",
                                     email_content,
                                 )
                                 mail.outbox.clear()
@@ -368,7 +368,6 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                             )
 
                             order.refresh_from_db()
-                            # breakpoint()
                             if (
                                 day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
                                 and not value
