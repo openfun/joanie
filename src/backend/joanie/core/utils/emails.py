@@ -106,33 +106,46 @@ def send(subject, template_vars, template_name, to_user_email):
         logger.error("%s purchase order mail %s not send", to_user_email, exception)
 
 
-def _prepare_withdrawal_context(order, title):
+def _prepare_withdrawal_context(
+    order,
+    is_support_email=False,
+    is_organization_admin=False,
+):
     """Prepare the common context variables for withdrawal-related emails."""
     product_title = order.product.safe_translation_getter(
         "title", language_code=order.owner.language
     )
     return {
-        "title": title,
         "email": order.owner.email,
-        "fullname": order.owner.name,
+        "buyer_fullname": order.owner.name,
         "product_title": product_title,
+        "order_id": str(order.id),
+        "course_code": (
+            order.course.code if order.product.type == PRODUCT_TYPE_CREDENTIAL else None
+        ),
+        "withdrawal_requested_at": order.withdrawn_requested_at,
         "dashboard_order_link": (
             settings.JOANIE_DASHBOARD_ORDER_LINK.replace(":orderId", str(order.id))
+        ),
+        "backoffice_dashboard_order_link": (
+            settings.JOANIE_BACKOFFICE_ORDER_LINK.replace(":orderId", str(order.id))
         ),
         "site": {
             "name": settings.JOANIE_CATALOG_NAME,
             "url": settings.JOANIE_CATALOG_BASE_URL,
         },
+        "is_support_email": is_support_email,
+        "is_organization_admin": is_organization_admin,
     }
 
 
 def _prepare_withdrawal_recipients(order):
     """
-    The withdrawal email should be sent to 3 recipients.
+    The withdrawal email should be sent to 3 recipients at least.
     Those recipients are : the buyer, the organization administrators, and the generic
     staff member mail.
     """
-    recipients = [order.owner.email]
+    recipients = {order.owner.name: order.owner.email}
 
     support_email = None
     if order.product.type == PRODUCT_TYPE_CERTIFICATE:
@@ -140,25 +153,38 @@ def _prepare_withdrawal_recipients(order):
     elif order.product.type == PRODUCT_TYPE_CREDENTIAL:
         support_email = settings.JOANIE_EMAIL_SUPPORT_CREDENTIAL
     if support_email:
-        recipients.append(support_email)
+        recipients["Support"] = support_email
 
     organization_emails = order.organization.accesses.filter(role=ADMIN).values_list(
-        "user__email", flat=True
+        "user__first_name", "user__email"
     )
-    recipients.extend(list(organization_emails))
+
+    recipients.update(dict(organization_emails))
 
     return recipients
 
 
-def _send_withdrawal_email(order, title, template_name):
-    """Send a withdrawal-related mail to the order owner."""
+def _send_withdrawal_email(order, subject, template_name):
+    """
+    Send a withdrawal-related mail to the order owner.
+    The first recipient is the buyer, the second is the support, and finally the
+    organization administrators.
+    """
     email_recipients = _prepare_withdrawal_recipients(order)
-    for to_user_email in email_recipients:
+    for index, recipient in enumerate(email_recipients.items()):
+        is_support_email = index == 1
+        is_organization_admin = index >= 2  # noqa : PLR2004
+        context = _prepare_withdrawal_context(
+            order,
+            is_support_email=is_support_email,
+            is_organization_admin=is_organization_admin,
+        )
+        context["fullname"] = recipient[0]
         send(
-            subject=title,
-            template_vars=_prepare_withdrawal_context(order, title),
+            subject=subject,
+            template_vars=context,
             template_name=template_name,
-            to_user_email=to_user_email,
+            to_user_email=recipient[1],
         )
 
 

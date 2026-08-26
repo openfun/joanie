@@ -473,6 +473,13 @@ class Base(Configuration):
         environ_name="JOANIE_INSTALLMENT_REMINDER_DAYS_BEFORE",
         environ_prefix=None,
     )
+    # Email for withdrawal
+    # Add here the backoffice order detail view link
+    JOANIE_BACKOFFICE_ORDER_LINK = values.Value(
+        None,
+        environ_name="JOANIE_BACKOFFICE_ORDER_LINK",
+        environ_prefix=None,
+    )
     # Link to the microcertification terms of service which is used
     # at a first place in the Unicamp certificate template
     JOANIE_DEGREE_MICROCERTIFICATION_TERMS_URL = values.Value(
@@ -867,6 +874,7 @@ class Test(Base):
     JOANIE_DASHBOARD_ORDER_LINK = (
         "http://localhost:8070/dashboard/courses/orders/:orderId/"
     )
+    JOANIE_BACKOFFICE_ORDER_LINK = "http://localhost:8072/admin/orders/:orderId/view"
 
     JOANIE_DEGREE_MICROCERTIFICATION_TERMS_URL = "https://example.com/terms"
 
