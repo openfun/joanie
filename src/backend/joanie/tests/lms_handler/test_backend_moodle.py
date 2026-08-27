@@ -371,6 +371,7 @@ class MoodleLMSBackendTestCase(TestCase):
                         "users[0][email]": user.email,
                         "users[0][auth]": "moodle_auth_method",
                         "users[0][idnumber]": user.username,
+                        "users[0][alternatename]": user.username,
                     }
                 )
             ],
@@ -403,6 +404,7 @@ class MoodleLMSBackendTestCase(TestCase):
                         "users[0][email]": user.email,
                         "users[0][auth]": "moodle_auth_method",
                         "users[0][idnumber]": "johndoe",
+                        "users[0][alternatename]": "johndoe",
                     }
                 )
             ],
@@ -436,6 +438,7 @@ class MoodleLMSBackendTestCase(TestCase):
                         "users[0][email]": user.email,
                         "users[0][auth]": "moodle_auth_method",
                         "users[0][idnumber]": user.username,
+                        "users[0][alternatename]": user.username,
                     }
                 )
             ],
@@ -724,6 +727,7 @@ class MoodleLMSBackendTestCase(TestCase):
                         "users[0][email]": user.email,
                         "users[0][auth]": "oauth2",
                         "users[0][idnumber]": user.username,
+                        "users[0][alternatename]": user.username,
                     }
                 )
             ],
