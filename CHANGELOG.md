@@ -12,6 +12,10 @@ and this project adheres to
 
 - Add withdrawal action for orders in client and admin API
 
+### Fixed
+
+- Withdrawal date limit for credential product orders
+
 ## [3.5.0] - 2026-08-13
 
 ### Added

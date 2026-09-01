@@ -1863,27 +1863,35 @@ class Order(BaseModel):
         contract, or None if not applicable (wrong product type, no contract,
         or contract not yet signed).
         """
-        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
-            if not self.has_contract or self.has_unsigned_contract:
-                return None
-            return withdrawal_limit_date(
+        should_have_withdrawal_date = (
+            self.product.type == enums.PRODUCT_TYPE_CREDENTIAL
+            and self.has_contract
+            and not self.has_unsigned_contract
+        ) or (
+            self.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+            and not self.is_free
+            and self.state == enums.ORDER_STATE_COMPLETED
+        )
+
+        if not should_have_withdrawal_date:
+            return None
+
+        return (
+            withdrawal_limit_date(
                 signed_contract_date=self.contract.student_signed_on,  # pylint:disable=no-member
                 course_start_date=self.get_equivalent_course_run_dates(
                     ignore_archived=True
                 )["start"],
             )
-
-        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE and not self.is_free:
-            if self.state != enums.ORDER_STATE_COMPLETED:
-                return None
-            last_transaction = self.invoices.get(  # pylint:disable=no-member
-                parent__isnull=False
-            ).transactions.last()
-            return withdrawal_limit_date_after_purchase(
-                purchase_date=last_transaction.created_on
+            if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL
+            else withdrawal_limit_date_after_purchase(
+                purchase_date=self.invoices.get(  # pylint:disable=no-member
+                    parent__isnull=False
+                )
+                .transactions.last()
+                .created_on
             )
-
-        return None
+        )
 
     @property
     def eligible_to_withdraw(self) -> bool:
@@ -1919,10 +1927,10 @@ class Order(BaseModel):
     @property
     def withdrawal_date_limit(self):
         """
-        Returns the the withdrawal limit date when the order is eligible to be withdrawn.
+        Returns the withdrawal limit date when the order is eligible to be withdrawn.
         Otherwise, this returns None.
         """
-        return self._withdrawal_limit()
+        return self._withdrawal_limit() if self.eligible_to_withdraw else None
 
     def withdraw(self):
         """

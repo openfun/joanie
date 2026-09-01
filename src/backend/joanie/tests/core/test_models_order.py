@@ -1730,6 +1730,7 @@ class OrderModelsTestCase(LoggingTestCase):
 
                     order.flow.cancel()
 
+    @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=14)
     def test_models_order_withdrawal_limit_product_type_credential(self):
         """
         The method `withdrawal_limit_date` should return the withdrawal date limit
@@ -1766,14 +1767,13 @@ class OrderModelsTestCase(LoggingTestCase):
                         days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
                     )
                     if value:
-                        order.submit_for_signature(user=order.owner)
+                        self.assertIsNone(order.withdrawal_date_limit)
+                    else:
+                        # Sign for the student
                         order.contract.student_signed_on = mocked_now
-                        order.flow.update()
-                        order.save()
+                        order.contract.save()
                         self.assertEqual(
                             order.withdrawal_date_limit, withdrawal_date_limit
                         )
-                    else:
-                        self.assertIsNone(order.withdrawal_date_limit)
 
                     order.flow.cancel()
