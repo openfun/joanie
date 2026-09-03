@@ -1863,34 +1863,31 @@ class Order(BaseModel):
         contract, or None if not applicable (wrong product type, no contract,
         or contract not yet signed).
         """
-        should_have_withdrawal_date = (
-            self.product.type == enums.PRODUCT_TYPE_CREDENTIAL
-            and self.has_contract
-            and not self.has_unsigned_contract
-        ) or (
-            self.product.type == enums.PRODUCT_TYPE_CERTIFICATE
-            and not self.is_free
-            and self.state == enums.ORDER_STATE_COMPLETED
-        )
+        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+            if not self.has_contract:
+                return None
 
-        if not should_have_withdrawal_date:
-            return None
+            course_start_date = self.get_equivalent_course_run_dates(
+                ignore_archived=True
+            )["start"]
+            # Ignore if all target course runs are archived and not in ending in future
+            if not course_start_date:
+                return None
 
-        return (
-            withdrawal_limit_date(
+            return withdrawal_limit_date(
                 signed_contract_date=self.contract.student_signed_on,  # pylint:disable=no-member
-                course_start_date=self.get_equivalent_course_run_dates(
-                    ignore_archived=True
-                )["start"],
+                course_start_date=course_start_date,
             )
-            if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL
-            else withdrawal_limit_date_after_purchase(
-                purchase_date=self.invoices.get(  # pylint:disable=no-member
-                    parent__isnull=False
-                )
-                .transactions.last()
-                .created_on
-            )
+
+        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            if self.is_free or self.state != enums.ORDER_STATE_COMPLETED:
+                return None
+
+        last_transaction = self.invoices.get(  # pylint:disable=no-member
+            parent__isnull=False
+        ).transactions.last()
+        return withdrawal_limit_date_after_purchase(
+            purchase_date=last_transaction.created_on
         )
 
     @property
