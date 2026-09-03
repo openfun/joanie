@@ -21,6 +21,7 @@ from joanie.core.enums import PAYMENT_STATE_PENDING
 from joanie.core.factories import CourseRunFactory
 from joanie.core.models import Contract, CourseState, Order
 from joanie.core.utils import contract_definition
+from joanie.core.utils.course_run import aggregate_course_runs_dates
 from joanie.payment.factories import (
     BillingAddressDictFactory,
     CreditCardFactory,
@@ -1777,3 +1778,99 @@ class OrderModelsTestCase(LoggingTestCase):
                         )
 
                     order.flow.cancel()
+
+    @override_settings(
+        JOANIE_PAYMENT_SCHEDULE_LIMITS={
+            10: (100,),
+        },
+        DEFAULT_CURRENCY="EUR",
+    )
+    def test_models_order_withdrawal_limit_date_product_credential_course_run_archived(
+        self,
+    ):
+        """
+        This occurs in preproduction where course runs were deleted after creating orders.
+        To avoid this problem, here's a representation of the identified bug. The order was
+        created and the method `aggregate_course_runs_dates` should return None to each keys.
+        When an credential product order has archived course run because the end
+        (ignore_archived=True) is in the past, the method `_withdrawal_limit` should return None,
+        because there's nothing to compute.
+        """
+        course_run = factories.CourseRunFactory(
+            enrollment_start=django_timezone.now() - timedelta(days=60),
+            enrollment_end=django_timezone.now() - timedelta(days=41),
+            start=django_timezone.now() - timedelta(days=40),
+            end=django_timezone.now() - timedelta(days=1),
+            course=factories.CourseFactory(),
+        )
+        course = course_run.course
+        organization = factories.OrganizationFactory()
+        offering = factories.OfferingFactory(
+            course=course,
+            product=factories.ProductFactory(
+                price=10,
+                type=enums.PRODUCT_TYPE_CREDENTIAL,
+                target_courses=[course],
+                contract_definition_order=factories.ContractDefinitionFactory(),
+            ),
+            organizations=[organization],
+        )
+        # Simulate that `aggregate_course_runs_dates` return None to each keys
+        dates = aggregate_course_runs_dates(course.course_runs, ignore_archived=True)
+        # This would be the result when the end is not greater than today's date
+        self.assertEqual(
+            dates,
+            {
+                "start": None,
+                "end": None,
+                "enrollment_start": None,
+                "enrollment_end": None,
+            },
+        )
+
+        order = factories.OrderFactory(
+            course=offering.course,
+            product=offering.product,
+            organization=organization,
+            payment_schedule=[
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "100.00",
+                    "due_date": "2026-07-08",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+        order.init_flow(billing_address=BillingAddressDictFactory())
+        order.contract.student_signed_on = django_timezone.now()
+
+        self.assertIsNone(order._withdrawal_limit())  # pylint:disable=protected-access
+
+    def test_models_order_withdrawal_limit_date_product_credential_course_run_ongoing(
+        self,
+    ):
+        """
+        When the course run's end date is greater than todays, it should return
+        a date limit. It means that the course run is ongoing, so the method `_withdrawal_limit`
+        should return the limit date.
+        """
+        course_run_ongoing_open = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN,
+        )
+        course = factories.CourseFactory(course_runs=[course_run_ongoing_open])
+        product = factories.ProductFactory(
+            target_courses=[course],
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+        )
+        offering = factories.OfferingFactory(
+            product=product, course=course_run_ongoing_open.course
+        )
+
+        order = factories.OrderGeneratorFactory(
+            product=offering.product,
+            state=enums.ORDER_STATE_SIGNING,
+        )
+        order.contract.student_signed_on = django_timezone.now()
+        order.contract.save()
+
+        self.assertIsNotNone(order._withdrawal_limit())  # pylint:disable=protected-access
