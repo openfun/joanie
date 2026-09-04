@@ -287,6 +287,11 @@ export const orderStatesMessages = defineMessages<OrderStatesEnum>({
     defaultMessage: "Pending",
     description: "Text for pending order state",
   },
+  pending_withdraw: {
+    id: "components.templates.orders.view.orderStatesMessages.pending_withdraw",
+    defaultMessage: "To withdraw",
+    description: "Text for pending withdraw order state",
+  },
   canceled: {
     id: "components.templates.orders.view.orderStatesMessages.canceled",
     defaultMessage: "Canceled",
