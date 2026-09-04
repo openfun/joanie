@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import * as React from "react";
 import { OrderView } from "@/components/templates/orders/view/OrderView";
 import { OrderFactory } from "@/services/factories/orders";
+import { OrderStatesEnum } from "@/services/api/models/Order";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
 
 jest.mock("@/hooks/useCopyToClipboard", () => ({
@@ -42,5 +43,16 @@ describe("<OrderView /> voucher section", () => {
     expect(
       screen.queryByRole("button", { name: "Click to copy" }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("<OrderView /> state field", () => {
+  it("renders the pending_withdraw state without crashing", () => {
+    const order = OrderFactory();
+    order.state = OrderStatesEnum.ORDER_STATE_PENDING_WITHDRAW;
+
+    render(<OrderView order={order} />, { wrapper: TestingWrapper });
+
+    expect(screen.getByDisplayValue("To withdraw")).toBeInTheDocument();
   });
 });

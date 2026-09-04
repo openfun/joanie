@@ -141,6 +141,7 @@ export enum OrderStatesEnum {
   ORDER_STATE_TO_SIGN = "to_sign", // order needs a contract signature
   ORDER_STATE_SIGNING = "signing", // order is pending for contract signature validation
   ORDER_STATE_PENDING = "pending", // payment has failed but can be retried
+  ORDER_STATE_PENDING_WITHDRAW = "pending_withdraw", // order is pending to be withdrawn
   ORDER_STATE_CANCELED = "canceled", // has been canceled
   ORDER_STATE_PENDING_PAYMENT = "pending_payment", // payment is pending
   ORDER_STATE_TO_OWN = "to_own", // order is paid but is awaiting owner to claim it
