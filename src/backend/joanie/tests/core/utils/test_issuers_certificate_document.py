@@ -487,8 +487,8 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             1.5,
             f"""
             Test failed since the images are different, if you want to keep the new version use
-            mv -f {base_path}microcredential_degree_default.png 
-            {base_path}microcredential_degree_default_original.png 
+            mv -f {base_path}microcredential_degree_default.png
+            {base_path}microcredential_degree_default_original.png
             rm -f {base_path}microcredential_degree_default_diff.png
         """,
         )
@@ -534,8 +534,8 @@ class UtilsIssuersCertificateGenerateDocumentTestCase(TestCase):
             1.5,
             f"""
             Test failed since the images are different, if you want to keep the new version use
-            mv -f {base_path}microcredential_degree_unicamp.png 
-            {base_path}microcredential_degree_unicamp_original.png 
+            mv -f {base_path}microcredential_degree_unicamp.png
+            {base_path}microcredential_degree_unicamp_original.png
             rm -f {base_path}microcredential_degree_unicamp_diff.png
         """,
         )

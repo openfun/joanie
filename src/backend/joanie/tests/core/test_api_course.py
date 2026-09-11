@@ -124,7 +124,7 @@ class CourseApiTest(BaseAPITestCase):
                 ],
             },
         )
-        mock_abilities.called_once_with(user)
+        mock_abilities.assert_called_once_with(user)
 
     def test_api_course_list_filter_has_listed_course_runs(self):
         """
