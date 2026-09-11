@@ -18,6 +18,10 @@ and this project adheres to
 
 - Withdrawal date limit for credential product orders
 
+### Changed
+
+- Upgrade Joanie to use python 3.13
+
 ## [3.5.0] - 2026-08-13
 
 ### Added

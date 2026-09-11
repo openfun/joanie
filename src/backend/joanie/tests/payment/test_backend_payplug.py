@@ -482,7 +482,7 @@ class PayplugBackendTestCase(BasePaymentTestCase):
 
         self.assertEqual(str(context.exception), "Cannot parse notification.")
 
-        mock_treat.called_once_with(request.body)
+        mock_treat.assert_called_once_with(request.body)
 
     @mock.patch.object(payplug.notifications, "treat")
     def test_payment_backend_payplug_handle_notification_payment_unknown_order(
