@@ -1,7 +1,7 @@
 # Joanie, power up Richie catalog
 
 # ---- base image to inherit from ----
-FROM python:3.10-slim-bullseye AS base
+FROM python:3.12-slim-bookworm AS base
 
 # Upgrade pip to its latest release to speed up dependencies installation
 RUN python -m pip install --upgrade pip

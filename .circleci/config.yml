@@ -22,7 +22,7 @@ jobs:
   # Check that the git history is clean and complies with our expectations
   lint-git:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
     working_directory: ~/joanie
     steps:
       - checkout:
@@ -127,7 +127,7 @@ jobs:
   # Build backend development environment
   build-back:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
     working_directory: ~/joanie
     steps:
       - checkout:
@@ -146,7 +146,7 @@ jobs:
 
   lint-back:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
         environment:
           PYTHONPATH: /home/circleci/joanie/src/backend:/home/circleci/joanie/src/backend/joanie
     working_directory: ~/joanie/src/backend
@@ -181,7 +181,7 @@ jobs:
 
   test-back:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
         environment:
           DJANGO_SETTINGS_MODULE: joanie.settings
           DJANGO_SECRET_KEY: ThisIsAnExampleKeyForTestPurposeOnly
@@ -442,7 +442,7 @@ jobs:
   # ---- Internationalization jobs ----
   build-back-i18n:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
@@ -609,7 +609,7 @@ jobs:
   # ---- Packaging jobs ----
   package-back:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.12
     working_directory: ~/joanie/src/backend
     steps:
       - checkout:
