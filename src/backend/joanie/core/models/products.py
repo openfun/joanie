@@ -1919,7 +1919,16 @@ class Order(BaseModel):
             return False
 
         withdrawal_limit = self._withdrawal_limit()
-        return withdrawal_limit is not None and withdrawal_limit >= timezone.now()
+
+        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+            return withdrawal_limit is not None and withdrawal_limit >= timezone.now()
+
+        window = self.contract.student_signed_on + timedelta(
+            days=settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
+        )
+        return withdrawal_limit is not None and (
+            self.contract.student_signed_on <= timezone.now() <= window
+        )
 
     @property
     def withdrawal_date_limit(self):
