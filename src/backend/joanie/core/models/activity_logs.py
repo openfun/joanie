@@ -6,7 +6,6 @@ import logging
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 from joanie.core import enums
@@ -80,7 +79,7 @@ class ActivityLog(BaseModel):
     type = models.CharField(
         _("type"),
         max_length=20,
-        choices=lazy(lambda: enums.ACTIVITY_LOG_TYPE_CHOICES, tuple)(),
+        choices=enums.ACTIVITY_LOG_TYPE_CHOICES,
         default=enums.ACTIVITY_LOG_TYPE_NOTIFICATION,
     )
 

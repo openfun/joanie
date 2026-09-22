@@ -246,7 +246,7 @@ class MultiSelectField(models.CharField):
         """
         super().contribute_to_class(cls, name, private_only=private_only)  # pylint: disable=no-member
         if self.choices:
-            choicedict = dict(self.choices)
+            choicedict = dict(self.flatchoices)
 
             def func(self, *_args):
                 """

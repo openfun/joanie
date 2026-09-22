@@ -34,7 +34,7 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_delete_authenticated:
 - cache|delete: OfferingLightSerializer-#-#.#-fr-fr
 - cache|delete: OfferingSerializer-#-#.#-fr-fr
 - cache|delete: ProductRelationSerializer-#-#.#-fr-fr
-- db: 'SELECT "joanie_offeringrule_translation"."language_code" FROM "joanie_offeringrule_translation" WHERE "joanie_offeringrule_translation"."master_id" = #::uuid ORDER BY "joanie_offeringrule_translation"."language_code" ASC'
+- db: 'SELECT "joanie_offeringrule_translation"."language_code" AS "language_code" FROM "joanie_offeringrule_translation" WHERE "joanie_offeringrule_translation"."master_id" = #::uuid ORDER BY # ASC'
 - cache|delete_many: []
 - db: DELETE FROM "joanie_offeringrule_translation" WHERE "joanie_offeringrule_translation"."master_id" IN (#::uuid)
 - db: DELETE FROM "joanie_order_offering_rules" WHERE "joanie_order_offering_rules"."offeringrule_id" IN (#::uuid)
@@ -55,7 +55,7 @@ OfferingRuleAdminApiTest.test_admin_api_offering_rule_delete_cannot_edit:
 - cache|delete: OfferingLightSerializer-#-#.#-fr-fr
 - cache|delete: OfferingSerializer-#-#.#-fr-fr
 - cache|delete: ProductRelationSerializer-#-#.#-fr-fr
-- db: 'SELECT "joanie_offeringrule_translation"."language_code" FROM "joanie_offeringrule_translation" WHERE "joanie_offeringrule_translation"."master_id" = #::uuid ORDER BY "joanie_offeringrule_translation"."language_code" ASC'
+- db: 'SELECT "joanie_offeringrule_translation"."language_code" AS "language_code" FROM "joanie_offeringrule_translation" WHERE "joanie_offeringrule_translation"."master_id" = #::uuid ORDER BY # ASC'
 - cache|delete_many: []
 - db: DELETE FROM "joanie_offeringrule_translation" WHERE "joanie_offeringrule_translation"."master_id" IN (#::uuid)
 - db: DELETE FROM "joanie_order_offering_rules" WHERE "joanie_order_offering_rules"."offeringrule_id" IN (#::uuid)

@@ -9,13 +9,13 @@ from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, transaction
 from django.utils import formats, timezone
-from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 import markdown
 
 from joanie.core import enums
 from joanie.core.models.base import BaseModel, DocumentImage
+from joanie.core.utils import get_language_choices
 from joanie.core.utils import quotes as quote_utility
 
 
@@ -29,7 +29,7 @@ class QuoteDefinition(BaseModel):
     body = models.TextField(_("body"), blank=True)
     language = models.CharField(
         max_length=10,
-        choices=lazy(lambda: settings.LANGUAGES, tuple)(),
+        choices=get_language_choices,
         verbose_name=_("language"),
         help_text=_("Language of the quote definition"),
     )

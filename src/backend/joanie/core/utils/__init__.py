@@ -17,6 +17,11 @@ from configurations.values import ValidationMixin
 from PIL import ImageFile as PillowImageFile
 
 
+def get_language_choices():
+    """Return the languages available in settings (resolved at access time)."""
+    return settings.LANGUAGES
+
+
 def remove_extra_whitespaces(text):
     """
     Remove extra whitespaces from a string.

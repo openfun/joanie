@@ -17,7 +17,6 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.functional import lazy
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
@@ -1054,7 +1053,7 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         # Language choices are made lazy so that we can override them in our tests.
         # When set directly, they are evaluated too early and can't be changed with the
         # "override_settings" utility.
-        choices=lazy(lambda: enums.ALL_LANGUAGES, tuple)(),
+        choices=enums.ALL_LANGUAGES,
         help_text=_("The list of languages in which the course content is available."),
     )
     is_gradable = models.BooleanField(_("is gradable"), default=False)
@@ -1204,18 +1203,18 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
 
     # pylint: disable=invalid-name
     def get_equivalent_serialized_course_runs_for_related_products(
-        self, visibility=None
+        self, course_run_id=None, visibility=None
     ):
         """
         Returns the equivalent serialized course runs for the products related to the
         current course run.
         """
+        course_run_id = course_run_id or self.pk
         products = self.course.products.model.objects.filter(
             models.Q(target_course_relations__course_runs__isnull=True)
-            | models.Q(target_course_relations__course_runs=self),
+            | models.Q(target_course_relations__course_runs=course_run_id),
             target_course_relations__course=self.course,
         )
-
         return self.course.products.model.get_equivalent_serialized_course_runs_for_products(
             products, visibility=visibility
         )
@@ -1313,13 +1312,16 @@ class CourseRun(parler_models.TranslatableModel, BaseModel):
         the developer to handle these cases correctly.
         """
         # Course run will be deleted, we synchronize it setting its visibility to hidden
+        course_run_id = self.pk
         serialized_course_runs = [self.get_serialized(visibility=enums.HIDDEN)]
 
         super().delete(using=using)
 
         # Now synchronize the related products by recomputing the equivalent serialized course run
         serialized_course_runs.extend(
-            self.get_equivalent_serialized_course_runs_for_related_products()
+            self.get_equivalent_serialized_course_runs_for_related_products(
+                course_run_id=course_run_id,
+            )
         )
         logger.debug("[SYNC] %s", serialized_course_runs)
         webhooks.synchronize_course_runs(serialized_course_runs)

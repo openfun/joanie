@@ -202,7 +202,7 @@ class ProductAdminTestCase(BaseAPITestCase):
 
         section_title = sortable_section.cssselect("h2")[0]
         self.assertEqual(
-            section_title.text_content(),
+            section_title.text_content().strip(),
             "Target courses relations to products with a position",
         )
 

@@ -1,5 +1,5 @@
 CreateCertificatesTestCase.test_commands_generate_certificates_can_be_restricted_to_product:
-- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
+- db: 'DECLARE "_django_curs_#" NO SCROLL CURSOR FOR SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
 - db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_order_target_course_relation" ON ("joanie_course"."id" = "joanie_order_target_course_relation"."course_id") WHERE ("joanie_order_target_course_relation"."order_id" = #::uuid AND "joanie_order_target_course_relation"."is_graded") ORDER BY "joanie_order_target_course_relation"."position" ASC'
@@ -14,7 +14,9 @@ CreateCertificatesTestCase.test_commands_generate_certificates_can_be_restricted
 - db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: SAVEPOINT `#`
 - db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- db: RELEASE SAVEPOINT `#`
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
@@ -28,7 +30,7 @@ CreateCertificatesTestCase.test_commands_generate_certificates_can_be_restricted
 - db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
 - db: INSERT INTO "joanie_certificate" (...) VALUES (...)
 CreateCertificatesTestCase.test_commands_generate_certificates_can_be_restricted_to_product.2:
-- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
+- db: 'DECLARE "_django_curs_#" NO SCROLL CURSOR FOR SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
 - db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_order_target_course_relation" ON ("joanie_course"."id" = "joanie_order_target_course_relation"."course_id") WHERE ("joanie_order_target_course_relation"."order_id" = #::uuid AND "joanie_order_target_course_relation"."is_graded") ORDER BY "joanie_order_target_course_relation"."position" ASC'
@@ -43,7 +45,9 @@ CreateCertificatesTestCase.test_commands_generate_certificates_can_be_restricted
 - db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: SAVEPOINT `#`
 - db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- db: RELEASE SAVEPOINT `#`
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
@@ -57,7 +61,7 @@ CreateCertificatesTestCase.test_commands_generate_certificates_can_be_restricted
 - db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
 - db: INSERT INTO "joanie_certificate" (...) VALUES (...)
 CreateCertificatesTestCase.test_commands_generate_certificates_optimizes_db_queries:
-- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
+- db: 'DECLARE "_django_curs_#" NO SCROLL CURSOR FOR SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
 - db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_order_target_course_relation" ON ("joanie_course"."id" = "joanie_order_target_course_relation"."course_id") WHERE ("joanie_order_target_course_relation"."order_id" = #::uuid AND "joanie_order_target_course_relation"."is_graded") ORDER BY "joanie_order_target_course_relation"."position" ASC'
@@ -76,7 +80,9 @@ CreateCertificatesTestCase.test_commands_generate_certificates_optimizes_db_quer
 - db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: SAVEPOINT `#`
 - db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- db: RELEASE SAVEPOINT `#`
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
@@ -90,7 +96,7 @@ CreateCertificatesTestCase.test_commands_generate_certificates_optimizes_db_quer
 - db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'
 - db: INSERT INTO "joanie_certificate" (...) VALUES (...)
 CreateCertificatesTestCase.test_commands_generate_certificates_optimizes_db_queries.2:
-- db: 'SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
+- db: 'DECLARE "_django_curs_#" NO SCROLL CURSOR FOR SELECT ... FROM "joanie_order" INNER JOIN "joanie_product" ON ("joanie_order"."product_id" = "joanie_product"."id") LEFT OUTER JOIN "joanie_certificate" ON ("joanie_order"."id" = "joanie_certificate"."order_id") WHERE ("joanie_order"."product_id" IN (#::uuid) AND "joanie_certificate"."id" IS # AND "joanie_product"."type" IN (...) AND "joanie_order"."state" = #) ORDER BY "joanie_order"."created_on" DESC'
 - db: 'SELECT ... FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_certificate_definition" WHERE "joanie_certificate_definition"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_course" INNER JOIN "joanie_order_target_course_relation" ON ("joanie_course"."id" = "joanie_order_target_course_relation"."course_id") WHERE ("joanie_order_target_course_relation"."order_id" = #::uuid AND "joanie_order_target_course_relation"."is_graded") ORDER BY "joanie_order_target_course_relation"."position" ASC'
@@ -109,7 +115,9 @@ CreateCertificatesTestCase.test_commands_generate_certificates_optimizes_db_quer
 - db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: SAVEPOINT `#`
 - db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- db: RELEASE SAVEPOINT `#`
 - cache|get: parler.core.ProductTranslation.#.en-us
 - db: 'SELECT ... FROM "joanie_course" WHERE "joanie_course"."id" = #::uuid LIMIT #'
 - db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
