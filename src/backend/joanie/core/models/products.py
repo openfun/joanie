@@ -1919,6 +1919,7 @@ class Order(BaseModel):
             return False
 
         withdrawal_limit = self._withdrawal_limit()
+
         return withdrawal_limit is not None and withdrawal_limit >= timezone.now()
 
     @property
