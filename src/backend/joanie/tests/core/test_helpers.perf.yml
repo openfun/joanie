@@ -12,7 +12,9 @@ HelpersTestCase.test_helpers_get_or_generate_certificate:
 - db: 'SELECT # AS "a" FROM "joanie_organization" WHERE "joanie_organization"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."id" = #::uuid LIMIT #'
 - db: 'SELECT # AS "a" FROM "joanie_certificate" WHERE "joanie_certificate"."order_id" = #::uuid LIMIT #'
+- db: SAVEPOINT `#`
 - db: 'SELECT # AS "_check" WHERE COALESCE(...)'
+- db: RELEASE SAVEPOINT `#`
 - db: 'SELECT ... FROM "joanie_organization" INNER JOIN "joanie_course_organizations" ON ("joanie_organization"."id" = "joanie_course_organizations"."organization_id") WHERE "joanie_course_organizations"."course_id" = #::uuid ORDER BY "joanie_organization"."created_on" DESC'
 - db: 'SELECT ... FROM "joanie_skill" INNER JOIN "joanie_product_skills" ON ("joanie_skill"."id" = "joanie_product_skills"."skill_id") WHERE "joanie_product_skills"."product_id" = #::uuid ORDER BY "joanie_skill"."created_on" ASC'
 - db: 'SELECT ... FROM "joanie_teacher" INNER JOIN "joanie_product_teachers" ON ("joanie_teacher"."id" = "joanie_product_teachers"."teacher_id") WHERE "joanie_product_teachers"."product_id" = #::uuid ORDER BY "joanie_teacher"."last_name" ASC, "joanie_teacher"."first_name" ASC'

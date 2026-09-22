@@ -1,9 +1,7 @@
 """Tests for the Order read detail API."""
 
-from datetime import datetime
 from http import HTTPStatus
 from unittest import mock
-from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.cache import cache
@@ -56,12 +54,6 @@ class OrderReadApiTest(BaseAPITestCase):
         order = factories.OrderFactory(
             product=product,
             owner=owner,
-            contract=factories.ContractFactory(
-                submitted_for_signature_on=datetime(
-                    2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")
-                ),
-                student_signed_on=datetime(2023, 9, 20, 8, 0, tzinfo=ZoneInfo("UTC")),
-            ),
             state=enums.ORDER_STATE_COMPLETED,
         )
         # Generate payment schedule

@@ -237,7 +237,7 @@ class OfferingRuleModelTestCase(TestCase):
 
         assignable_offering_rules = OfferingRule.objects.find_actives(offering.id)
 
-        self.assertQuerysetEqual(assignable_offering_rules, [])
+        self.assertQuerySetEqual(assignable_offering_rules, [])
 
     def test_model_offering_rule_find_actives(self):
         """
@@ -250,7 +250,7 @@ class OfferingRuleModelTestCase(TestCase):
 
         assignable_offering_rules = OfferingRule.objects.find_actives(offering.id)
 
-        self.assertQuerysetEqual(assignable_offering_rules, [offering_rule])
+        self.assertQuerySetEqual(assignable_offering_rules, [offering_rule])
 
     def test_model_offering_rule_find_actives_position(self):
         """
@@ -267,7 +267,7 @@ class OfferingRuleModelTestCase(TestCase):
 
         assignable_offering_rules = OfferingRule.objects.find_actives(offering.id)
 
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             assignable_offering_rules, [offering_rule_1, offering_rule_2]
         )
 
@@ -278,7 +278,7 @@ class OfferingRuleModelTestCase(TestCase):
 
         assignable_offering_rules = OfferingRule.objects.find_actives(offering.id)
 
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             assignable_offering_rules, [offering_rule_2, offering_rule_1]
         )
 
@@ -299,7 +299,7 @@ class OfferingRuleModelTestCase(TestCase):
 
         assignable_offering_rules = OfferingRule.objects.find_actives(offering.id)
 
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             assignable_offering_rules,
             [
                 offering_rule_1,
