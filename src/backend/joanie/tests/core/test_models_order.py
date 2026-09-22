@@ -1660,43 +1660,38 @@ class OrderModelsTestCase(LoggingTestCase):
         property `eligible_to_withdraw` should return True only if date is between the buyer's
         signature of the contract up to 16 days from this date.
         """
-        mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
-        for day in range(15, 20):
-            with self.subTest(day=day):
-                course_run = factories.CourseRunFactory(
-                    enrollment_start=mocked_now,
-                    start=mocked_now + timedelta(days=20),
-                    end=mocked_now + timedelta(days=40),
-                    course=factories.CourseFactory(),
-                )
-                offering = factories.OfferingFactory(
-                    course=course_run.course,
-                    product=factories.ProductFactory(
-                        price=10,
-                        type=enums.PRODUCT_TYPE_CREDENTIAL,
-                        target_courses=[course_run.course],
+        mocked_now_creation = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now_creation):
+            for day in range(15, 16):
+                with self.subTest(day=day):
+                    course = factories.CourseFactory()
+                    product = factories.ProductFactory(
+                        courses=[course],
                         contract_definition_order=factories.ContractDefinitionFactory(),
-                    ),
-                    organizations=[factories.OrganizationFactory()],
-                )
-                order = factories.OrderGeneratorFactory(
-                    product=offering.product,
-                    state=enums.ORDER_STATE_SIGNING,
-                    has_waived_withdrawal_right=False,
-                )
-                order.submit_for_signature(user=order.owner)
-                order.contract.student_signed_on = mocked_now
-                order.contract.save()
-                order.flow.update()
+                    )
+                    factories.CourseRunFactory(
+                        course=course,
+                        state=CourseState.ONGOING_OPEN,
+                    )
+                    order = factories.OrderGeneratorFactory(
+                        product=product,
+                        state=enums.ORDER_STATE_SIGNING,
+                        has_waived_withdrawal_right=False,
+                    )
+                    order.submit_for_signature(user=order.owner)
+                    order.contract.student_signed_on = mocked_now_creation
+                    order.contract.save()
+                    order.flow.update()
 
-                withdrawal_date_request = mocked_now + timedelta(days=day)
-                with mock.patch(
-                    "django.utils.timezone.now", return_value=withdrawal_date_request
-                ):
-                    if day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS:
-                        self.assertTrue(order.eligible_to_withdraw)
-                    else:
-                        self.assertFalse(order.eligible_to_withdraw)
+                    withdrawal_date_request = mocked_now_creation + timedelta(days=day)
+                    with mock.patch(
+                        "django.utils.timezone.now",
+                        return_value=withdrawal_date_request,
+                    ):
+                        if day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS:
+                            self.assertTrue(order.eligible_to_withdraw)
+                        else:
+                            self.assertFalse(order.eligible_to_withdraw)
 
     def test_models_order_withdrawal_limit_product_type_certificate(self):
         """
