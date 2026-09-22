@@ -8,8 +8,10 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core import mail
+from django.test import override_settings
 
 from joanie.core import enums, factories
+from joanie.core.models import CourseState
 from joanie.tests.base import BaseAPITestCase
 
 
@@ -300,6 +302,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                             # Cancel the order to continue each cases
                             order.flow.cancel()
 
+    @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=14)
     def test_api_order_withdraw_authenticated_product_credential(self):
         """
         Authenticated user should be able to withdraw an order with product credential when
@@ -311,53 +314,36 @@ class OrderWithdrawApiTest(BaseAPITestCase):
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
-        for day in range(15, 20):
-            with self.subTest(day=day):
-                course_run = factories.CourseRunFactory(
-                    enrollment_start=mocked_now,
-                    start=mocked_now + timedelta(days=20),
-                    end=mocked_now + timedelta(days=40),
-                    course=factories.CourseFactory(),
-                )
-                offering = factories.OfferingFactory(
-                    course=course_run.course,
-                    product=factories.ProductFactory(
-                        price=10,
-                        type=enums.PRODUCT_TYPE_CREDENTIAL,
-                        target_courses=[course_run.course],
-                        contract_definition_order=factories.ContractDefinitionFactory(),
-                    ),
-                    organizations=[factories.OrganizationFactory()],
-                )
+        mocked_now_creation = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now_creation):
+            for day in range(15, 20):
                 for value in [True, False]:
-                    with self.subTest(value=value, day=day):
+                    with self.subTest(has_waived_withdrawal_right=value, day=day):
+                        course = factories.CourseFactory()
+                        product = factories.ProductFactory(
+                            courses=[course],
+                            contract_definition_order=factories.ContractDefinitionFactory(),
+                        )
+                        factories.CourseRunFactory(
+                            course=course,
+                            state=CourseState.ONGOING_OPEN,
+                        )
                         order = factories.OrderGeneratorFactory(
                             owner=user,
-                            product=offering.product,
+                            product=product,
                             state=enums.ORDER_STATE_SIGNING,
                             has_waived_withdrawal_right=value,
-                            payment_schedule=[
-                                {
-                                    "id": uuid.uuid4(),
-                                    "amount": "3.00",
-                                    "due_date": "2026-08-15",
-                                    "state": enums.PAYMENT_STATE_PENDING,
-                                },
-                                {
-                                    "id": uuid.uuid4(),
-                                    "amount": "7.00",
-                                    "due_date": "2026-09-15",
-                                    "state": enums.PAYMENT_STATE_PENDING,
-                                },
-                            ],
                         )
                         order.submit_for_signature(user=order.owner)
-                        order.contract.student_signed_on = mocked_now
+                        order.contract.student_signed_on = (
+                            mocked_now_creation + timedelta(days=1)
+                        )
                         order.contract.save()
                         order.flow.update()
 
-                        withdrawal_date_request = mocked_now + timedelta(days=day)
+                        withdrawal_date_request = mocked_now_creation + timedelta(
+                            days=day
+                        )
                         with mock.patch(
                             "django.utils.timezone.now",
                             return_value=withdrawal_date_request,
@@ -368,6 +354,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                             )
 
                             order.refresh_from_db()
+
                             if (
                                 day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
                                 and not value

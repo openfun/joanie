@@ -1974,7 +1974,7 @@ class SignalsTestCase(TestCase):
         self.assertEqual(
             synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
         )
-        mock_clear_cache.not_called()
+        mock_clear_cache.assert_not_called()
 
     def test_signals_on_change_course_run_restrict_product_relation_clear(
         self, mock_sync, mock_clear_cache

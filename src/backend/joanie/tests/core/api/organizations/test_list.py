@@ -130,7 +130,7 @@ class OrganizationApiListTest(BaseAPITestCase):
                 ],
             },
         )
-        mock_abilities.called_once_with(user)
+        mock_abilities.assert_called_once_with(user)
 
     def test_api_organization_list_filtered_by_offering_id(self):
         """

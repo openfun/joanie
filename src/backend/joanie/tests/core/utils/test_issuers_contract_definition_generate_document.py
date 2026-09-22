@@ -411,8 +411,8 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             1.5,
             f"""
             Test failed since the images are different, if you want to keep the new version use
-            mv -f {base_path}contract_definition_default.png 
-            {base_path}contract_definition_default_original.png 
+            mv -f {base_path}contract_definition_default.png
+            {base_path}contract_definition_default_original.png
             rm -f {base_path}contract_definition_default_diff.png
         """,
         )
@@ -463,8 +463,8 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             1.5,
             f"""
             Test failed since the images are different, if you want to keep the new version use
-            mv -f {base_path}contract_definition_unicamp.png 
-            {base_path}contract_definition_unicamp_original.png 
+            mv -f {base_path}contract_definition_unicamp.png
+            {base_path}contract_definition_unicamp_original.png
             rm -f {base_path}contract_definition_unicamp_diff.png
         """,
         )
@@ -585,8 +585,8 @@ class UtilsIssuersContractDefinitionGenerateDocument(TestCase):
             1.5,
             f"""
             Test failed since the images are different, if you want to keep the new version use
-            mv -f {base_path}professional_training_agreement_default.png 
-            {base_path}professional_training_agreement_default_original.png 
+            mv -f {base_path}professional_training_agreement_default.png
+            {base_path}professional_training_agreement_default_original.png
             rm -f {base_path}professional_training_agreement_default_diff.png
         """,
         )

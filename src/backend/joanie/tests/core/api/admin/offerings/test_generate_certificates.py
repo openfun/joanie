@@ -676,7 +676,9 @@ class AdminOfferingApiTestCase(BaseAPITestCase):
         for order in orders:
             self.assertTrue(Certificate.objects.filter(order=order).exists())
 
-    @mock.patch("joanie.core.api.admin.generate_certificates_task")
+    @mock.patch(
+        "joanie.core.api.admin.generate_certificates_task",
+    )
     @mock.patch(
         "joanie.lms_handler.backends.dummy.DummyLMSBackend.get_grades",
         return_value={"passed": True},
@@ -708,13 +710,16 @@ class AdminOfferingApiTestCase(BaseAPITestCase):
         order_ids = []
         for enrollment in enrollments[:3]:
             order_ids.append(
-                factories.OrderFactory(
-                    product=offering.product,
-                    enrollment=enrollment,
-                    course=None,
-                    state=enums.ORDER_STATE_COMPLETED,
-                ).id
+                str(
+                    factories.OrderFactory(
+                        product=offering.product,
+                        enrollment=enrollment,
+                        course=None,
+                        state=enums.ORDER_STATE_COMPLETED,
+                    ).id
+                )
             )
+        order_list_ids = list(reversed(order_ids))
         # Create 4 orders where the certificate has been generated
         for enrollment in enrollments[3:]:
             factories.OrderCertificateFactory(
@@ -740,10 +745,10 @@ class AdminOfferingApiTestCase(BaseAPITestCase):
                 "count_exist_before_generation": 4,
             },
         )
-        self.assertTrue(mock_generate_certificates_task.delay.called)
-        self.assertTrue(
-            mock_generate_certificates_task.delay.called_with(
-                order_ids=order_ids,
+        # Should return None if it works, otherwise raises an error
+        self.assertIsNone(
+            mock_generate_certificates_task.delay.assert_called_once_with(
+                order_ids=order_list_ids,
                 cache_key=f"celery_certificate_generation_{offering.id}",
             )
         )
