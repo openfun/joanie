@@ -17,6 +17,7 @@ and this project adheres to
 ### Fixed
 
 - Withdrawal date limit for credential product orders
+- Credit card expiration date display in order detail backoffice
 
 ### Changed
 
