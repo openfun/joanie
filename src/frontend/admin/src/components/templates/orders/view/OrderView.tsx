@@ -317,7 +317,7 @@ export function OrderView({ order }: Props) {
               </Typography>
               <Box my={2}>
                 {order.credit_card ? (
-                  <CreditCard {...order.credit_card} expiration_month={5} />
+                  <CreditCard {...order.credit_card} />
                 ) : (
                   <Alert severity="warning">
                     <FormattedMessage {...orderViewMessages.noPaymentMethod} />

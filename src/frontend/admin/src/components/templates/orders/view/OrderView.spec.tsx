@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import * as React from "react";
 import { OrderView } from "@/components/templates/orders/view/OrderView";
 import { OrderFactory } from "@/services/factories/orders";
+import { CreditCardFactory } from "@/services/factories/credit-cards";
 import { OrderStatesEnum } from "@/services/api/models/Order";
 import { TestingWrapper } from "@/components/testing/TestingWrapper";
 
@@ -43,6 +44,24 @@ describe("<OrderView /> voucher section", () => {
     expect(
       screen.queryByRole("button", { name: "Click to copy" }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("<OrderView /> credit card", () => {
+  it("renders the credit card expiration date of the order", () => {
+    const order = OrderFactory();
+    const expirationYear = new Date().getFullYear() + 1;
+    order.credit_card = CreditCardFactory({
+      expiration_month: 3,
+      expiration_year: expirationYear,
+    });
+
+    render(<OrderView order={order} />, { wrapper: TestingWrapper });
+
+    expect(
+      screen.getByTestId(`credit-card-${order.credit_card.id}`),
+    ).toBeInTheDocument();
+    expect(screen.getByText(`03 / ${expirationYear}`)).toBeInTheDocument();
   });
 });
 
