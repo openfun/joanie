@@ -8,7 +8,6 @@ import django.contrib.auth.models as auth_models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 from django_countries.fields import CountryField
@@ -16,7 +15,7 @@ from rest_framework_simplejwt.settings import api_settings
 
 from joanie.core.authentication import get_user_dict
 from joanie.core.models.base import BaseModel
-from joanie.core.utils import normalize_phone_number
+from joanie.core.utils import get_language_choices, normalize_phone_number
 from joanie.core.utils.newsletter.subscription import (
     set_commercial_newsletter_subscription,
 )
@@ -30,7 +29,7 @@ class User(BaseModel, auth_models.AbstractUser):
     language = models.CharField(
         default=settings.LANGUAGE_CODE,
         max_length=10,
-        choices=lazy(lambda: settings.LANGUAGES, tuple)(),
+        choices=get_language_choices,
         verbose_name=_("language"),
         help_text=_("Language of the user"),
     )

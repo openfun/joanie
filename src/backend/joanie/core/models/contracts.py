@@ -10,13 +10,13 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
-from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 
 import markdown
 
 from joanie.core import enums
 from joanie.core.models.base import BaseModel, DocumentImage
+from joanie.core.utils import get_language_choices
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class ContractDefinition(BaseModel):
     appendix = models.TextField(_("appendix"), blank=True)
     language = models.CharField(
         max_length=10,
-        choices=lazy(lambda: settings.LANGUAGES, tuple)(),
+        choices=get_language_choices,
         verbose_name=_("language"),
         help_text=_("Language of the contract definition"),
     )

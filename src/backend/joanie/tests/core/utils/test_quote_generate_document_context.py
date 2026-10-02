@@ -1,8 +1,10 @@
 """Test suite for Quote generate document context"""
 
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
+from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.test import TestCase
@@ -56,44 +58,47 @@ def generate_batch_order():
         is_main=True,
     )
     language_code = "en-us"
-    batch_order = factories.BatchOrderFactory(
-        owner=user,
-        organization=organization,
-        offering__course=factories.CourseFactory(
-            effort=timedelta(hours=10, minutes=30, seconds=12),
-            code="00002",
-        ),
-        nb_seats=2,
-        offering__product__title="You know nothing Jon Snow",
-        offering__product__quote_definition=factories.QuoteDefinitionFactory(
-            name=enums.QUOTE_DEFAULT,
-            title="Quote Test",
-            description="A quote for the batch order",
-            body="Article of the quote",
-            language=language_code,
-        ),
-        state=enums.BATCH_ORDER_STATE_QUOTED,
-        vat_registration="VAT_NUMBER_123",
-        company_name="Acme Org",
-        address="Street of awesomeness",
-        postcode="00000",
-        city="Unknown City",
-        country="FR",
-        identification_number="ABC_ID_NUM_TEST",
-        administrative_firstname="Jon",
-        administrative_lastname="Snow",
-        administrative_profession="Buyer",
-        administrative_email="jonsnow@example.acme",
-        administrative_telephone="0123457890",
-        signatory_firstname="Janette",
-        signatory_lastname="Doe",
-        signatory_email="janette@example.acme",
-        signatory_telephone="0987654321",
-        signatory_profession="Manager",
-        payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
-    )
 
-    batch_order.freeze_total(Decimal("302.00"))
+    mocked_now = datetime(2026, 10, 2, 0, tzinfo=ZoneInfo("UTC"))
+    with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+        batch_order = factories.BatchOrderFactory(
+            owner=user,
+            organization=organization,
+            offering__course=factories.CourseFactory(
+                effort=timedelta(hours=10, minutes=30, seconds=12),
+                code="00002",
+            ),
+            nb_seats=2,
+            offering__product__title="You know nothing Jon Snow",
+            offering__product__quote_definition=factories.QuoteDefinitionFactory(
+                name=enums.QUOTE_DEFAULT,
+                title="Quote Test",
+                description="A quote for the batch order",
+                body="Article of the quote",
+                language=language_code,
+            ),
+            state=enums.BATCH_ORDER_STATE_QUOTED,
+            vat_registration="VAT_NUMBER_123",
+            company_name="Acme Org",
+            address="Street of awesomeness",
+            postcode="00000",
+            city="Unknown City",
+            country="FR",
+            identification_number="ABC_ID_NUM_TEST",
+            administrative_firstname="Jon",
+            administrative_lastname="Snow",
+            administrative_profession="Buyer",
+            administrative_email="jonsnow@example.acme",
+            administrative_telephone="0123457890",
+            signatory_firstname="Janette",
+            signatory_lastname="Doe",
+            signatory_email="janette@example.acme",
+            signatory_telephone="0987654321",
+            signatory_profession="Manager",
+            payment_method=enums.BATCH_ORDER_WITH_PURCHASE_ORDER,
+        )
+
+        batch_order.freeze_total(Decimal("302.00"))
 
     return batch_order, organization, address_organization
 
