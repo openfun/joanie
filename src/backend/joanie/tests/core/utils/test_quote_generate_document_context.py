@@ -1,8 +1,10 @@
 """Test suite for Quote generate document context"""
 
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
+from unittest import mock
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.test import TestCase
@@ -56,6 +58,7 @@ def generate_batch_order():
         is_main=True,
     )
     language_code = "en-us"
+
     batch_order = factories.BatchOrderFactory(
         owner=user,
         organization=organization,
@@ -279,10 +282,12 @@ class UtilsQuoteGenerateContextDocument(TestCase):
 
         batch_order, _, _ = generate_batch_order()
 
-        context = generate_document_context(
-            quote_definition=batch_order.quote.definition,
-            batch_order=batch_order,
-        )
+        mocked_now = datetime(2026, 10, 5, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            context = generate_document_context(
+                quote_definition=batch_order.quote.definition,
+                batch_order=batch_order,
+            )
         context["organization"]["logo"] = LOGO_FALLBACK
 
         pdf_path = call_issuers_generate_document(
