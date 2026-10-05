@@ -114,7 +114,7 @@
     "workerDirectory": "public"
   },
   "volta": {
-    "node": "20.18.2",
+    "node": "24.21.0",
     "yarn": "1.22.22"
   }
 }
