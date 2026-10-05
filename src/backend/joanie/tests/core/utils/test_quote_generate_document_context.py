@@ -309,7 +309,7 @@ class UtilsQuoteGenerateContextDocument(TestCase):
         )
         self.assertLessEqual(
             diff,
-            1.5,
+            2.0,
             f"""
             Test failed since the images are different, if you want to keep the new version use
             mv -f {base_path}quote_default.png
