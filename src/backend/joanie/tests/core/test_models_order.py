@@ -19,7 +19,7 @@ from django.utils import timezone as django_timezone
 from joanie.core import enums, factories
 from joanie.core.enums import PAYMENT_STATE_PENDING
 from joanie.core.factories import CourseRunFactory
-from joanie.core.models import Contract, CourseState, Order
+from joanie.core.models import Contract, CourseState, Order, OrderTargetCourseRelation
 from joanie.core.utils import contract_definition
 from joanie.core.utils.course_run import aggregate_course_runs_dates
 from joanie.payment.factories import (
@@ -1652,47 +1652,59 @@ class OrderModelsTestCase(LoggingTestCase):
 
                 self.assertFalse(order.eligible_to_withdraw)
 
-    @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=14)
-    def test_models_order_eligible_to_withdraw_product_credential(
-        self,
-    ):
+    @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=16)
+    def test_models_order_eligible_to_withdraw_product_credential(self):
         """
         When the order of product type credential has not waived the withdrawal right, the
         property `eligible_to_withdraw` should return True only if date is between the buyer's
         signature of the contract up to 16 days from this date.
         """
+        # Wednesday: signature + 16 days is Friday 14 Aug, a working day,
+        # so no weekend/holiday extension applies.
         mocked_now_creation = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
-        with mock.patch("django.utils.timezone.now", return_value=mocked_now_creation):
-            for day in range(15, 16):
-                with self.subTest(day=day):
-                    course = factories.CourseFactory()
-                    product = factories.ProductFactory(
-                        courses=[course],
-                        contract_definition_order=factories.ContractDefinitionFactory(),
-                    )
-                    factories.CourseRunFactory(
-                        course=course,
-                        state=CourseState.ONGOING_OPEN,
-                    )
-                    order = factories.OrderGeneratorFactory(
-                        product=product,
-                        state=enums.ORDER_STATE_SIGNING,
-                        has_waived_withdrawal_right=False,
-                    )
-                    order.submit_for_signature(user=order.owner)
-                    order.contract.student_signed_on = mocked_now_creation
-                    order.contract.save()
-                    order.flow.update()
 
-                    withdrawal_date_request = mocked_now_creation + timedelta(days=day)
-                    with mock.patch(
-                        "django.utils.timezone.now",
-                        return_value=withdrawal_date_request,
-                    ):
-                        if day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS:
-                            self.assertTrue(order.eligible_to_withdraw)
-                        else:
-                            self.assertFalse(order.eligible_to_withdraw)
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now_creation):
+            course = factories.CourseFactory()
+            factories.CourseRunFactory(
+                course=course,
+                enrollment_start=mocked_now_creation,
+                # Starts well after the withdrawal limit, otherwise the limit
+                # falls back to the signature date.
+                start=mocked_now_creation + timedelta(days=60),
+                end=mocked_now_creation + timedelta(days=120),
+            )
+            product = factories.ProductFactory(
+                target_courses=[course],
+                contract_definition_order=factories.ContractDefinitionFactory(),
+            )
+            order = factories.OrderGeneratorFactory(
+                product=product,
+                state=enums.ORDER_STATE_SIGNING,
+                has_waived_withdrawal_right=False,
+            )
+            if not OrderTargetCourseRelation.objects.filter(
+                course=course, order=order
+            ).exists():
+                factories.OrderTargetCourseRelationFactory(
+                    course=course, order=order, position=1
+                )
+            order.submit_for_signature(user=order.owner)
+            order.contract.student_signed_on = mocked_now_creation
+            order.contract.save()
+            order.flow.update()
+
+        for day in range(1, settings.JOANIE_WITHDRAWAL_PERIOD_DAYS + 5):
+            with self.subTest(day=day):
+                withdrawal_date_request = mocked_now_creation + timedelta(days=day)
+                with mock.patch(
+                    "django.utils.timezone.now",
+                    return_value=withdrawal_date_request,
+                ):
+                    # `limit >= now` is still eligible, so day 16 is the last valid one
+                    if day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS:
+                        self.assertTrue(order.eligible_to_withdraw)
+                    else:
+                        self.assertFalse(order.eligible_to_withdraw)
 
     @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=14)
     def test_models_order_withdrawal_limit_product_type_certificate(self):
@@ -1871,3 +1883,69 @@ class OrderModelsTestCase(LoggingTestCase):
         order.contract.save()
 
         self.assertIsNotNone(order._withdrawal_limit())  # pylint:disable=protected-access
+
+    @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=16)
+    def test_models_order_withdrawal_without_payment_schedule_certificate_product(self):
+        """
+        An order with a certificate product and no payment schedule should not
+        be able to withdraw, it should raise an error.
+        """
+        enrollment = factories.EnrollmentFactory()
+        order = factories.OrderFactory(
+            state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+            product__type=enums.PRODUCT_TYPE_CERTIFICATE,
+            course=None,
+            enrollment=enrollment,
+            payment_schedule=[],
+        )
+        with self.assertRaises(ValidationError) as context:
+            order.withdraw()
+
+        self.assertTrue(
+            "No payment schedule found for this order" in str(context.exception)
+        )
+
+    @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=16)
+    def test_models_order_withdrawal_without_payment_schedule_credential_product(self):
+        """
+        An order with a credential product and no payment schedule and the state
+        `to_save_payment_schedule` should be able to withdraw.
+        """
+        mocked_now_creation = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
+
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now_creation):
+            course = factories.CourseFactory()
+            factories.CourseRunFactory(
+                course=course,
+                enrollment_start=mocked_now_creation,
+                # Starts well after the withdrawal limit, otherwise the limit
+                # falls back to the signature date.
+                start=mocked_now_creation + timedelta(days=60),
+                end=mocked_now_creation + timedelta(days=120),
+            )
+            product = factories.ProductFactory(
+                target_courses=[course],
+                contract_definition_order=factories.ContractDefinitionFactory(),
+            )
+            order = factories.OrderGeneratorFactory(
+                product=product,
+                state=enums.ORDER_STATE_SIGNING,
+                has_waived_withdrawal_right=False,
+            )
+            if not OrderTargetCourseRelation.objects.filter(
+                course=course, order=order
+            ).exists():
+                factories.OrderTargetCourseRelationFactory(
+                    course=course, order=order, position=1
+                )
+
+            order = factories.OrderGeneratorFactory(
+                product__type=enums.PRODUCT_TYPE_CREDENTIAL,
+                state=enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+                has_waived_withdrawal_right=False,
+            )
+            order.withdraw()
+
+            order.refresh_from_db()
+
+            self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)

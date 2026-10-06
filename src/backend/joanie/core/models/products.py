@@ -1321,6 +1321,16 @@ class Order(BaseModel):
         """Returns boolean value whether the order is from a batch order"""
         return self.batch_order is not None
 
+    @property
+    def is_certificate_product(self) -> bool:
+        """Returns boolean value whether the order is for certificate product"""
+        return self.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+
+    @property
+    def is_credential_product(self) -> bool:
+        """Returns boolean value whether the order is for credential product"""
+        return self.product.type == enums.PRODUCT_TYPE_CREDENTIAL
+
     # pylint: disable=too-many-branches
     def clean(self):
         """Clean instance fields and raise a ValidationError in case of issue."""
@@ -1576,7 +1586,7 @@ class Order(BaseModel):
                 ),
             )
 
-        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+        if self.is_certificate_product:
             graded_courses = [self.enrollment.course_run.course_id]
         else:
             graded_courses = (
@@ -1760,7 +1770,7 @@ class Order(BaseModel):
         installment. Whereas, when the order's product type is 'certificate', there should always
         be 1 installment only.
         """
-        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+        if self.is_credential_product:
             beginning_contract_date, course_start_date, course_end_date = (
                 self.get_schedule_dates()
             )
@@ -1863,7 +1873,7 @@ class Order(BaseModel):
         contract, or None if not applicable (wrong product type, no contract,
         or contract not yet signed).
         """
-        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL:
+        if self.is_credential_product:
             if not self.has_contract:
                 return None
 
@@ -1871,7 +1881,8 @@ class Order(BaseModel):
                 ignore_archived=True
             )["start"]
             # Ignore if all target course runs are archived and not in ending in future
-            if not course_start_date:
+            # or ignore when contract is yet signed by buyer
+            if not course_start_date or not self.contract.student_signed_on:
                 return None
 
             return withdrawal_limit_date(
@@ -1879,7 +1890,7 @@ class Order(BaseModel):
                 course_start_date=course_start_date,
             )
 
-        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
+        if self.is_certificate_product:
             if self.is_free or self.state != enums.ORDER_STATE_COMPLETED:
                 return None
 
@@ -1889,6 +1900,55 @@ class Order(BaseModel):
         return withdrawal_limit_date_after_purchase(
             purchase_date=last_transaction.created_on
         )
+
+    def _certificate_allows_withdrawal(self) -> bool:
+        """The order's state is `completed` (paid by buyer) and no certificate issued yet."""
+        return (
+            self.state == enums.ORDER_STATE_COMPLETED
+            and not Certificate.objects.filter(order=self).exists()
+        )
+
+    def _credential_allows_withdrawal(self) -> bool:
+        """Withdrawal rights not waived and order still in a pre-payment state."""
+        return (
+            not self.has_waived_withdrawal_right
+            and self.state in enums.ORDER_WITHDRAWABLE_CREDENTIAL_STATES
+        )
+
+    def _is_within_withdrawal_period(self) -> bool:
+        """
+        This method ensures that today's date is still within the withdrawal period
+        according to the limit date found.
+        """
+        limit = self._withdrawal_limit()
+        return limit is not None and limit >= timezone.now()
+
+    def _first_installment_due_date_reached(self) -> bool:
+        """
+        Returns boolean value where the first installment's date has been reached
+        in comparison to today's date for credential orders.
+        """
+        return bool(
+            self.payment_schedule
+            and self.is_credential_product
+            and self.state != enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+            and timezone.now().date() >= self.payment_schedule[0]["due_date"]
+        )
+
+    def _has_no_payment_method_registered(self) -> bool:
+        """
+        For certificate orders where the user never registered a card, the
+        user is still enrolled for free, so withdrawing changes nothing.
+        """
+        return (
+            self.state == enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+            and not self.payment_schedule
+            and not self.has_contract
+        )
+
+    def _requires_manual_withdrawal_review(self) -> bool:
+        """Exam access can't be checked automatically, so back-office reviews it."""
+        return self.is_certificate_product and self.has_waived_withdrawal_right
 
     @property
     def eligible_to_withdraw(self) -> bool:
@@ -1905,22 +1965,21 @@ class Order(BaseModel):
         this returns False. Otherwise, eligibility depends on whether we're still
         within the withdrawal period, calculated from the contract's signature date
         """
-        if self.product.type == enums.PRODUCT_TYPE_CERTIFICATE:
-            if (
-                self.state != enums.ORDER_STATE_COMPLETED
-                or Certificate.objects.filter(order=self).exists()
-            ):
-                return False
-        elif self.has_waived_withdrawal_right or self.state not in [
-            enums.ORDER_STATE_SIGNING,
-            enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
-            enums.ORDER_STATE_PENDING,
-        ]:
+        rule_ok = (
+            self._certificate_allows_withdrawal()
+            if self.is_certificate_product
+            else self._credential_allows_withdrawal()
+        )
+        if (
+            self.is_credential_product
+            and self.state == enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD
+            and not self.has_waived_withdrawal_right
+        ):
+            if self._is_within_withdrawal_period():
+                return True
             return False
 
-        withdrawal_limit = self._withdrawal_limit()
-
-        return withdrawal_limit is not None and withdrawal_limit >= timezone.now()
+        return rule_ok and self._is_within_withdrawal_period()
 
     @property
     def withdrawal_date_limit(self):
@@ -1931,17 +1990,14 @@ class Order(BaseModel):
         return self._withdrawal_limit() if self.eligible_to_withdraw else None
 
     def withdraw(self):
-        """
-        Withdraw the order.
-        """
-        if not self.payment_schedule:
+        """Withdraw the order."""
+        if self.state in enums.ORDER_NON_WITHDRAWABLE_STATES:
+            raise ValidationError("The order's state does not allow withdrawal")
+
+        if self._has_no_payment_method_registered():
             raise ValidationError("No payment schedule found for this order")
 
-        # check if current date is greater than the first installment due date
-        if (
-            self.product.type == enums.PRODUCT_TYPE_CREDENTIAL
-            and timezone.now().date() >= self.payment_schedule[0]["due_date"]
-        ):
+        if self._first_installment_due_date_reached():
             raise ValidationError(
                 "Cannot withdraw order after the first installment due date"
             )
@@ -1953,17 +2009,11 @@ class Order(BaseModel):
 
         self.withdrawn_requested_at = timezone.now()
 
-        if (
-            self.product.type == enums.PRODUCT_TYPE_CERTIFICATE
-            and self.has_waived_withdrawal_right
-        ):
-            # The exam access cannot be checked automatically, so the request goes
-            # through manual review on the back-office side.
+        if self._requires_manual_withdrawal_review():
             self.flow.pending_withdraw()
             self.save()
         else:
-            # Credential, or certificate not subject to the waiver: the withdrawal
-            # right is validated automatically.
+            # Withdrawal right validated automatically; the order moves to `canceled`.
             self.confirm_withdrawal()
 
     def confirm_withdrawal(self):
