@@ -1175,13 +1175,14 @@ class OrderModelsTestCase(LoggingTestCase, ActivityLogMixingTestCase):
         order = factories.OrderFactory()
 
         with self.assertRaisesMessage(
-            ValidationError, "No payment schedule found for this order"
+            ValidationError, "The order's state does not allow withdrawal"
         ):
             order.withdraw()
 
     def test_models_order_schedule_withdraw_passed_due_date(self):
         """If the due date has passed, withdraw should raise an error"""
         order = factories.OrderFactory(
+            state=ORDER_STATE_PENDING,
             payment_schedule=[
                 {
                     "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
@@ -1195,7 +1196,7 @@ class OrderModelsTestCase(LoggingTestCase, ActivityLogMixingTestCase):
                     "due_date": "2024-02-17",
                     "state": PAYMENT_STATE_PENDING,
                 },
-            ]
+            ],
         )
         order.refresh_from_db()
 

@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Allow credential orders to withdraw in save payment method state
 - Add withdraw state in order list view of backoffice
 - Add confirm and reject withdrawal backoffice
 - Add withdrawal action for orders in client and admin API

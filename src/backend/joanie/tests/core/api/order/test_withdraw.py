@@ -11,14 +11,74 @@ from django.core import mail
 from django.test import override_settings
 
 from joanie.core import enums, factories
-from joanie.core.models import CourseState
+from joanie.core.models import OrderTargetCourseRelation
 from joanie.tests.base import BaseAPITestCase
 
 
+@override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=16)
 class OrderWithdrawApiTest(BaseAPITestCase):
     """Test the API of the Order withdraw endpoint."""
 
     maxDiff = None
+
+    def setUp(self):
+        super().setUp()
+        self.creation_date = datetime(2026, 6, 25, 14, tzinfo=ZoneInfo("UTC"))
+
+    def _create_order_credential(self, user, has_waived_withdrawal_right):
+        """Create an order signed by the student, created at `creation_date`."""
+        with mock.patch("django.utils.timezone.now", return_value=self.creation_date):
+            course = factories.CourseFactory()
+            factories.CourseRunFactory(
+                course=course,
+                enrollment_start=self.creation_date,
+                start=datetime(2026, 8, 27, 14, tzinfo=ZoneInfo("UTC")),
+                end=datetime(2026, 10, 1, 14, tzinfo=ZoneInfo("UTC")),
+            )
+            product = factories.ProductFactory(
+                target_courses=[course],
+                contract_definition_order=factories.ContractDefinitionFactory(),
+            )
+            order = factories.OrderGeneratorFactory(
+                owner=user,
+                product=product,
+                state=enums.ORDER_STATE_SIGNING,
+                has_waived_withdrawal_right=has_waived_withdrawal_right,
+            )
+            if not OrderTargetCourseRelation.objects.filter(
+                course=course, order=order
+            ).exists():
+                factories.OrderTargetCourseRelationFactory(
+                    course=course, order=order, position=1
+                )
+            order.submit_for_signature(user=user)
+            order.contract.student_signed_on = self.creation_date + timedelta(days=1)
+            order.contract.save()
+            order.flow.update()
+        return order
+
+    def _limit_for(self, order):
+        """Withdrawal limit computed with the same clock as the fixture."""
+        with mock.patch("django.utils.timezone.now", return_value=self.creation_date):
+            return order._withdrawal_limit()  # pylint:disable=protected-access
+
+    def _first_refused_day(self, order):
+        """First day offset (from creation_date) at which withdrawal is refused."""
+        limit = self._limit_for(order)
+        self.assertIsNotNone(limit)
+        # `limit >= now` is still eligible, so the first refused day is one past it
+        return (limit - self.creation_date).days + 1
+
+    def _withdraw(self, order, token, day):
+        """Call the withdraw endpoint `day` days after the order creation."""
+        request_date = self.creation_date + timedelta(days=day)
+        with mock.patch("django.utils.timezone.now", return_value=request_date):
+            response = self.client.post(
+                f"/api/v1.0/orders/{order.id}/withdraw/",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            )
+        order.refresh_from_db()
+        return response, request_date
 
     def test_api_order_withdraw_anonymous(self):
         """
@@ -146,24 +206,91 @@ class OrderWithdrawApiTest(BaseAPITestCase):
 
     def test_api_order_withdraw_authenticated_no_payment_schedule(self):
         """
-        User should not be able to withdraw owned orders if there is no payment schedule
+        User should not be able to withdraw owned orders unless the contract is signed,
+        the payment schedule is not generated and the state is in `to_save_payment_method`.
         """
         user = factories.UserFactory()
         token = self.generate_token_from_user(user)
-        order = factories.OrderGeneratorFactory(owner=user, payment_schedule=[])
+        for state in [
+            enums.ORDER_STATE_DRAFT,
+            enums.ORDER_STATE_ASSIGNED,
+            enums.ORDER_STATE_TO_OWN,
+        ]:
+            with self.subTest(state=state):
+                order = factories.OrderGeneratorFactory(
+                    owner=user,
+                    payment_schedule=[],
+                    state=state,
+                )
 
-        response = self.client.post(
-            f"/api/v1.0/orders/{order.id}/withdraw/",
-            HTTP_AUTHORIZATION=f"Bearer {token}",
-        )
+                response = self.client.post(
+                    f"/api/v1.0/orders/{order.id}/withdraw/",
+                    HTTP_AUTHORIZATION=f"Bearer {token}",
+                )
 
-        self.assertContains(
-            response,
-            "No payment schedule found for this order",
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-        )
-        order.refresh_from_db()
-        self.assertEqual(order.state, enums.ORDER_STATE_DRAFT)
+                self.assertContains(
+                    response,
+                    "The order's state does not allow withdrawal",
+                    status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                )
+
+    def test_api_order_withdraw_within_period(self):
+        """Right not waived + inside the period: the order is cancelled."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        for day in range(1, settings.JOANIE_WITHDRAWAL_PERIOD_DAYS + 1):
+            with self.subTest(day=day):
+                order = self._create_order_credential(
+                    user, has_waived_withdrawal_right=False
+                )
+
+                response, request_date = self._withdraw(order, token, day)
+
+                self.assertStatusCodeEqual(response, HTTPStatus.OK)
+                self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
+                self.assertEqual(order.withdrawn_requested_at, request_date)
+                self.assertEqual(order.withdrawn_confirmation_at, request_date)
+
+    def test_api_order_withdraw_after_period(self):
+        """Right not waived + outside the period: withdrawal is refused."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        probe = self._create_order_credential(user, has_waived_withdrawal_right=False)
+        first_refused_day = self._first_refused_day(probe)
+
+        for day in range(first_refused_day, first_refused_day + 5):
+            with self.subTest(day=day):
+                order = self._create_order_credential(
+                    user, has_waived_withdrawal_right=False
+                )
+
+                response, _ = self._withdraw(order, token, day)
+                order.refresh_from_db()
+
+                self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
+                self.assertNotEqual(order.state, enums.ORDER_STATE_CANCELED)
+                self.assertIsNone(order.withdrawn_requested_at)
+                self.assertIsNone(order.withdrawn_confirmation_at)
+
+    def test_api_order_withdraw_right_waived(self):
+        """Right waived: withdrawal is refused whatever the day."""
+        user = factories.UserFactory()
+        token = self.generate_token_from_user(user)
+
+        for day in (1, 15, 16, 17, 18):
+            with self.subTest(day=day):
+                order = self._create_order_credential(
+                    user, has_waived_withdrawal_right=True
+                )
+
+                response, _ = self._withdraw(order, token, day)
+
+                self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
+                self.assertEqual(order.state, enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD)
+                self.assertIsNone(order.withdrawn_requested_at)
+                self.assertIsNone(order.withdrawn_confirmation_at)
 
     def test_api_order_withdraw_authenticated_product_certificate(self):
         """
@@ -300,86 +427,4 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 self.assertIsNone(order.withdrawn_confirmation_at)
 
                             # Cancel the order to continue each cases
-                            order.flow.cancel()
-
-    @override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=14)
-    def test_api_order_withdraw_authenticated_product_credential(self):
-        """
-        Authenticated user should be able to withdraw an order with product credential when
-        they have not waived their withdrawal right and the request is made within the date limit.
-        If so, the order gets cancelled. Otherwise, if the withdrawal right was taken, it's not
-        possible to withdraw the order. When the request is valid, we should find values into
-        those fields `withdrawn_requested_at`, `withdrawn_confirmation_at` and the order should
-        be cancelled.
-        """
-        user = factories.UserFactory()
-        token = self.generate_token_from_user(user)
-        mocked_now_creation = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
-        with mock.patch("django.utils.timezone.now", return_value=mocked_now_creation):
-            for day in range(15, 20):
-                for value in [True, False]:
-                    with self.subTest(has_waived_withdrawal_right=value, day=day):
-                        course = factories.CourseFactory()
-                        product = factories.ProductFactory(
-                            courses=[course],
-                            contract_definition_order=factories.ContractDefinitionFactory(),
-                        )
-                        factories.CourseRunFactory(
-                            course=course,
-                            state=CourseState.ONGOING_OPEN,
-                        )
-                        order = factories.OrderGeneratorFactory(
-                            owner=user,
-                            product=product,
-                            state=enums.ORDER_STATE_SIGNING,
-                            has_waived_withdrawal_right=value,
-                        )
-                        order.submit_for_signature(user=order.owner)
-                        order.contract.student_signed_on = (
-                            mocked_now_creation + timedelta(days=1)
-                        )
-                        order.contract.save()
-                        order.flow.update()
-
-                        withdrawal_date_request = mocked_now_creation + timedelta(
-                            days=day
-                        )
-                        with mock.patch(
-                            "django.utils.timezone.now",
-                            return_value=withdrawal_date_request,
-                        ):
-                            response = self.client.post(
-                                f"/api/v1.0/orders/{order.id}/withdraw/",
-                                HTTP_AUTHORIZATION=f"Bearer {token}",
-                            )
-
-                            order.refresh_from_db()
-
-                            if (
-                                day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
-                                and not value
-                            ):
-                                self.assertStatusCodeEqual(response, HTTPStatus.OK)
-                                self.assertEqual(
-                                    order.state, enums.ORDER_STATE_CANCELED
-                                )
-                                self.assertEqual(
-                                    order.withdrawn_requested_at,
-                                    withdrawal_date_request,
-                                )
-                                self.assertEqual(
-                                    order.withdrawn_confirmation_at,
-                                    withdrawal_date_request,
-                                )
-                            else:
-                                self.assertStatusCodeEqual(
-                                    response, HTTPStatus.UNPROCESSABLE_ENTITY
-                                )
-                                self.assertEqual(
-                                    order.state,
-                                    enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
-                                )
-                                self.assertIsNone(order.withdrawn_requested_at)
-                                self.assertIsNone(order.withdrawn_confirmation_at)
-
                             order.flow.cancel()

@@ -935,7 +935,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         if extracted:
             return extracted
 
-        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL and self.state in [
+        if self.is_credential_product and self.state in [
             enums.ORDER_STATE_TO_SIGN,
             enums.ORDER_STATE_SIGNING,
             enums.ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
@@ -1053,7 +1053,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         It updates the payment schedule states accordingly.
         """
         target_state = self.state
-        if self.product.type == enums.PRODUCT_TYPE_CREDENTIAL and self.state not in [
+        if self.is_credential_product and self.state not in [
             enums.ORDER_STATE_DRAFT,
             enums.ORDER_STATE_ASSIGNED,
             enums.ORDER_STATE_TO_OWN,
@@ -1205,10 +1205,7 @@ class OrderGeneratorFactory(DebugModelFactory, factory.django.DjangoModelFactory
         if self.state == enums.ORDER_STATE_PENDING_WITHDRAW:
             self.flow.update()
 
-        if (
-            self.product.type == enums.PRODUCT_TYPE_CERTIFICATE
-            and target_state == enums.ORDER_STATE_COMPLETED
-        ):
+        if self.is_certificate_product and target_state == enums.ORDER_STATE_COMPLETED:
             self.generate_schedule()
             self.payment_schedule[0]["state"] = enums.PAYMENT_STATE_PAID
             # Create related transactions when an installment is paid
