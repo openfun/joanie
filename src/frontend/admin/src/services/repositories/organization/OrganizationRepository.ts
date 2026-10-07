@@ -40,8 +40,11 @@ export const organizationRoute: OrganizationRoutes = {
     `/organizations/${id}/addresses/${addressId}/`,
 };
 
-interface Repository
-  extends AbstractRepository<Organization, ResourcesQuery, DTOOrganization> {
+interface Repository extends AbstractRepository<
+  Organization,
+  ResourcesQuery,
+  DTOOrganization
+> {
   addUserAccess: (
     organizationId: string,
     userId: string,

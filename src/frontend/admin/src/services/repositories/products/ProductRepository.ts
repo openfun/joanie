@@ -33,8 +33,11 @@ export const productRoute: ProductRoutes = {
     `/products/${productId}/target-courses/reorder/`,
 };
 
-interface Repository
-  extends AbstractRepository<Product, ResourcesQuery, DTOProduct> {
+interface Repository extends AbstractRepository<
+  Product,
+  ResourcesQuery,
+  DTOProduct
+> {
   addTargetCourse: (
     productId: string,
     payload: DTOProductTargetCourseRelation,

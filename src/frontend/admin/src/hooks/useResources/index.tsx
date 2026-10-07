@@ -15,8 +15,8 @@ export type { Resource, ResourcesQuery, QueryOptions } from "./types";
 export interface UseResourcesProps<
   TData extends Resource,
   TResourceQuery extends ResourcesQuery = ResourcesQuery,
-  TApiResource extends
-    ApiResourceInterface<TData> = ApiResourceInterface<TData>,
+  TApiResource extends ApiResourceInterface<TData> =
+    ApiResourceInterface<TData>,
 > {
   queryKey: QueryKey;
   filters?: TResourceQuery;
@@ -34,8 +34,8 @@ export interface UseResourcesProps<
 export const useResourcesCustom = <
   TData extends Resource,
   TResourceQuery extends ResourcesQuery = ResourcesQuery,
-  TApiResource extends
-    ApiResourceInterface<TData> = ApiResourceInterface<TData>,
+  TApiResource extends ApiResourceInterface<TData> =
+    ApiResourceInterface<TData>,
 >(
   props: UseResourcesProps<TData, TResourceQuery, TApiResource>,
 ) => {
@@ -51,8 +51,8 @@ export const useResources =
   <
     TData extends Resource,
     TResourceQuery extends ResourcesQuery = ResourcesQuery,
-    TApiResource extends
-      ApiResourceInterface<TData> = ApiResourceInterface<TData>,
+    TApiResource extends ApiResourceInterface<TData> =
+      ApiResourceInterface<TData>,
   >(
     props: UseResourcesProps<TData, TResourceQuery, TApiResource>,
   ) =>
