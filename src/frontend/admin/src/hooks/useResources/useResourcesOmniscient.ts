@@ -19,8 +19,8 @@ import {
 export const useResourcesOmniscient = <
   TData extends Resource,
   TResourceQuery extends ResourcesQuery = ResourcesQuery,
-  TApiResource extends
-    ApiResourceInterface<TData> = ApiResourceInterface<TData>,
+  TApiResource extends ApiResourceInterface<TData> =
+    ApiResourceInterface<TData>,
 >({
   filters,
   ...props

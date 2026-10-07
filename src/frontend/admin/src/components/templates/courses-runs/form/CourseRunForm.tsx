@@ -27,10 +27,9 @@ import { RHFCheckbox } from "@/components/presentational/hook-form/RHFCheckbox";
 import { RHFValuesChange } from "@/components/presentational/hook-form/RFHValuesChange";
 import { useFormSubmit } from "@/hooks/form/useFormSubmit";
 
-interface FormValues
-  extends ToFormValues<
-    Omit<CourseRun, "course" | "state" | "languages" | "id" | "uri">
-  > {
+interface FormValues extends ToFormValues<
+  Omit<CourseRun, "course" | "state" | "languages" | "id" | "uri">
+> {
   course: Course;
   languages: JoanieLanguage[];
 }

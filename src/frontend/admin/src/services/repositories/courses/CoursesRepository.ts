@@ -38,8 +38,11 @@ export const coursesRoute: CourseRoutes = {
   allRoles: "/courses/",
 };
 
-interface Repository
-  extends AbstractRepository<Course, CourseResourceQuery, DTOCourse> {
+interface Repository extends AbstractRepository<
+  Course,
+  CourseResourceQuery,
+  DTOCourse
+> {
   getCourseRuns: (
     courseId: string,
     filters?: Maybe<CourseRunResourcesQuery>,
