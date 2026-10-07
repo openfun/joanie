@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect } from "react";
 import * as Yup from "yup";
 import { lazy } from "yup";
-import { useForm } from "react-hook-form";
+import { Resolver, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Grid2";
 import Box from "@mui/material/Box";
@@ -75,8 +75,8 @@ export function CourseGeneralForm({ course, ...props }: Props) {
     };
   };
 
-  const methods = useForm({
-    resolver: yupResolver(RegisterSchema),
+  const methods = useForm<CourseFormValues>({
+    resolver: yupResolver(RegisterSchema) as Resolver<CourseFormValues>,
     defaultValues: getDefaultValues() as any,
   });
 
@@ -105,14 +105,14 @@ export function CourseGeneralForm({ course, ...props }: Props) {
   };
 
   useEffect(() => {
-    methods.reset(getDefaultValues());
+    methods.reset(getDefaultValues() as any);
   }, [course]);
 
   return (
     <SimpleCard>
       <TranslatableForm
         entitiesDeps={[course]}
-        resetForm={() => methods.reset(getDefaultValues())}
+        resetForm={() => methods.reset(getDefaultValues() as any)}
         onSelectLang={() => {
           if (course) coursesQuery.methods.invalidate();
         }}

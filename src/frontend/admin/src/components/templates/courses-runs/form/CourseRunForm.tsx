@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as Yup from "yup";
-import { useForm } from "react-hook-form";
+import { Resolver, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Grid2";
 import Box from "@mui/material/Box";
@@ -81,8 +81,8 @@ export function CourseRunForm({ courseRun, addToCourse, ...props }: Props) {
     };
   };
 
-  const methods = useForm({
-    resolver: yupResolver(RegisterSchema),
+  const methods = useForm<FormValues>({
+    resolver: yupResolver(RegisterSchema) as unknown as Resolver<FormValues>,
     defaultValues: getDefaultValues(),
   });
 
