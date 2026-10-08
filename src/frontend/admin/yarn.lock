@@ -114,7 +114,7 @@
     json5 "^2.2.3"
     semver "^6.3.1"
 
-"@babel/core@^7.27.4":
+"@babel/core@^7.24.4", "@babel/core@^7.27.4":
   version "7.29.7"
   resolved "https://registry.yarnpkg.com/@babel/core/-/core-7.29.7.tgz#80c10b17248082968b57a857b91640971f2070f7"
   integrity sha512-RgHBCvtjbOK2gXSNBNIkNoEc9qoVEtau3hj8gEqKQuL3HZAibKarWFEI3Lfm6EYKkLalOh8eSrj9b+ch9H/VBA==
@@ -5141,10 +5141,16 @@ eslint-plugin-prettier@5.5.6:
     prettier-linter-helpers "^1.0.1"
     synckit "^0.11.13"
 
-eslint-plugin-react-hooks@5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-5.2.0.tgz#1be0080901e6ac31ce7971beed3d3ec0a423d9e3"
-  integrity sha512-+f15FfK64YQwZdJNELETdn5ibXEUQmW1DZL6KXhNnc2heoy/sg9VJJeT7n8TlMWouzWqSWavFkIhHyIbIAEapg==
+eslint-plugin-react-hooks@7.1.1:
+  version "7.1.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-7.1.1.tgz#e6742cad75d970c0a3f30d7d3fa80a4784f55927"
+  integrity sha512-f2I7Gw6JbvCexzIInuSbZpfdQ44D7iqdWX01FKLvrPgqxoE7oMj8clOfto8U6vYiz4yd5oKu39rRSVOe1zRu0g==
+  dependencies:
+    "@babel/core" "^7.24.4"
+    "@babel/parser" "^7.24.4"
+    hermes-parser "^0.25.1"
+    zod "^3.25.0 || ^4.0.0"
+    zod-validation-error "^3.5.0 || ^4.0.0"
 
 eslint-plugin-react-hooks@^5.0.0:
   version "5.0.0"
@@ -6128,6 +6134,18 @@ headers-polyfill@^4.0.2:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/headers-polyfill/-/headers-polyfill-4.0.3.tgz#922a0155de30ecc1f785bcf04be77844ca95ad07"
   integrity sha512-IScLbePpkvO846sIwOtOTDjutRMWdXdJmXdMvk6gCBHxFO8d+QKOQedyZSxFTTFYRSmlgSTDtXqqq4pcenBXLQ==
+
+hermes-estree@0.25.1:
+  version "0.25.1"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.25.1.tgz#6aeec17d1983b4eabf69721f3aa3eb705b17f480"
+  integrity sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw==
+
+hermes-parser@^0.25.1:
+  version "0.25.1"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.25.1.tgz#5be0e487b2090886c62bd8a11724cd766d5f54d1"
+  integrity sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==
+  dependencies:
+    hermes-estree "0.25.1"
 
 hoist-non-react-statics@^3.3.0, hoist-non-react-statics@^3.3.1, hoist-non-react-statics@^3.3.2:
   version "3.3.2"
@@ -10896,12 +10914,17 @@ zod-to-json-schema@^3.25.1:
   resolved "https://registry.yarnpkg.com/zod-to-json-schema/-/zod-to-json-schema-3.25.2.tgz#3fa799a7badd554541472fb65843fdc460b2e5aa"
   integrity sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==
 
+"zod-validation-error@^3.5.0 || ^4.0.0":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/zod-validation-error/-/zod-validation-error-4.0.2.tgz#bc605eba49ce0fcd598c127fee1c236be3f22918"
+  integrity sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==
+
 zod@^3.24.2:
   version "3.25.76"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.76.tgz#26841c3f6fd22a6a2760e7ccb719179768471e34"
   integrity sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==
 
-"zod@^3.25 || ^4.0":
+"zod@^3.25 || ^4.0", "zod@^3.25.0 || ^4.0.0":
   version "4.6.5"
   resolved "https://registry.yarnpkg.com/zod/-/zod-4.6.5.tgz#e3af3edbdc260239c52f73caad05dbbffe6e82cd"
   integrity sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==
