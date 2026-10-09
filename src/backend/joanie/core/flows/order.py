@@ -279,7 +279,10 @@ class OrderFlow:
         ]
 
     @state.transition(
-        source=enums.ORDER_STATE_PENDING,
+        source=[
+            enums.ORDER_STATE_PENDING,
+            enums.ORDER_STATE_PENDING_PAYMENT,
+        ],
         target=enums.ORDER_STATE_NO_PAYMENT,
         conditions=[_can_be_state_no_payment],
     )
