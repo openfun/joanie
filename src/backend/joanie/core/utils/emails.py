@@ -108,6 +108,7 @@ def send(subject, template_vars, template_name, to_user_email):
 
 def _prepare_withdrawal_context(
     order,
+    to_email=None,
     is_support_email=False,
     is_organization_admin=False,
 ):
@@ -116,7 +117,7 @@ def _prepare_withdrawal_context(
         "title", language_code=order.owner.language
     )
     return {
-        "email": order.owner.email,
+        "email": to_email,
         "buyer_fullname": order.owner.name,
         "product_title": product_title,
         "order_id": str(order.id),
@@ -176,6 +177,7 @@ def _send_withdrawal_email(order, subject, template_name):
         is_organization_admin = index >= 2  # noqa : PLR2004
         context = _prepare_withdrawal_context(
             order,
+            to_email=recipient[1],
             is_support_email=is_support_email,
             is_organization_admin=is_organization_admin,
         )
