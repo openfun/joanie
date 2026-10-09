@@ -491,11 +491,11 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
         # - Email has been sent
         self._check_installment_paid_email_sent("sam@fun-test.fr", order)
 
-    def test_payment_backend_base_do_on_payment_failure(self):
+    def test_payment_backend_base_do_on_payment_failure_pending_state(self):
         """
         Base backend contains a method _do_on_payment_failure which aims to be
-        call by subclasses when a payment failed. It should cancel the related
-        order.
+        call by subclasses when a payment failed. It should mark the state as `no_payment`
+        on the related order.
         """
         backend = TestBasePaymentBackend()
         order = OrderFactory(
@@ -516,7 +516,84 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
 
         # - Payment has failed gracefully and changed order state to no payment
         self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
+        self.assertEqual(
+            order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUSED
+        )
+        # - An email should be sent mentioning the payment failure
+        self._check_installment_refused_email_sent(order.owner.email, order)
+        # - An event has been created
+        self.assertPaymentFailedActivityLog(order)
 
+    def test_payment_backend_base_do_on_payment_failure_pending_payment_state(self):
+        """
+        Base backend contains a method _do_on_payment_failure which aims to be
+        call by subclasses when a payment failed. When it's the first installment
+        that gets refused, it should mark the order as `no_payment` state.
+        """
+        backend = TestBasePaymentBackend()
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        backend.call_do_on_payment_failure(
+            order, installment_id="d9356dd7-19a6-4695-b18e-ad93af41424a"
+        )
+
+        # - Payment has failed gracefully and changed order state to no payment
+        self.assertEqual(order.state, enums.ORDER_STATE_NO_PAYMENT)
+        self.assertEqual(
+            order.payment_schedule[0]["state"], enums.PAYMENT_STATE_REFUSED
+        )
+        # - An email should be sent mentioning the payment failure
+        self._check_installment_refused_email_sent(order.owner.email, order)
+
+        # - An event has been created
+        self.assertPaymentFailedActivityLog(order)
+
+    def test_payment_backend_base_do_on_payment_failure_pending_payment_state_second_installment(
+        self,
+    ):
+        """
+        Base backend contains a method _do_on_payment_failure which aims to be
+        call by subclasses when a payment failed. When it's the second installment
+        that gets refused, it should mark the order as `failed_payment` state.
+        """
+        backend = TestBasePaymentBackend()
+        order = OrderFactory(
+            state=enums.ORDER_STATE_PENDING_PAYMENT,
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": enums.PAYMENT_STATE_PAID,
+                },
+                {
+                    "id": "c9356dd7-19a6-4695-b18e-ad93af41431a",
+                    "amount": "200.00",
+                    "due_date": "2024-02-17",
+                    "state": enums.PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        backend.call_do_on_payment_failure(
+            order, installment_id="c9356dd7-19a6-4695-b18e-ad93af41431a"
+        )
+
+        # - Payment has failed gracefully and changed order state to no payment
+        self.assertEqual(order.state, enums.ORDER_STATE_FAILED_PAYMENT)
+        self.assertEqual(
+            order.payment_schedule[1]["state"], enums.PAYMENT_STATE_REFUSED
+        )
         # - An email should be sent mentioning the payment failure
         self._check_installment_refused_email_sent(order.owner.email, order)
 
@@ -526,8 +603,8 @@ class BasePaymentBackendTestCase(BasePaymentTestCase, ActivityLogMixingTestCase)
     def test_payment_backend_base_do_on_payment_failure_with_installment(self):
         """
         Base backend contains a method _do_on_payment_failure which aims to be
-        call by subclasses when a payment failed. It should cancel the related
-        order.
+        call by subclasses when a payment failed. It should mark the state `no_payment`
+        for the related order.
         """
         backend = TestBasePaymentBackend()
         order = OrderFactory(

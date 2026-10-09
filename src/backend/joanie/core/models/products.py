@@ -1801,7 +1801,7 @@ class Order(BaseModel):
         for installment in self.payment_schedule:
             if installment["id"] == installment_id:
                 installment["state"] = state
-                self.save(update_fields=["payment_schedule"])
+                self.save(update_fields=["state", "payment_schedule"])
                 self.flow.update()
                 return
         raise ValueError(f"Installment with id {installment_id} not found")

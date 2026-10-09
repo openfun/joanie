@@ -17,6 +17,8 @@ and this project adheres to
 
 ### Fixed
 
+- Order in `pending_payment` state can transition to `no_payment`
+  to be authorized to do manual payment through API client
 - Withdrawal date limit for credential product orders
 - Credit card expiration date display in order detail backoffice
 
