@@ -292,6 +292,8 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                 self.assertIsNone(order.withdrawn_requested_at)
                 self.assertIsNone(order.withdrawn_confirmation_at)
 
+    # pylint: disable=too-many-statements
+    # ruff: noqa: PLR0915
     def test_api_order_withdraw_authenticated_product_certificate(self):
         """
         Authenticated user should be able to withdraw an order with product type certificate
@@ -359,7 +361,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                     "will review your request",
                                     email_content,
                                 )
-
+                                self.assertIn(order.owner.email, email_content)
                                 self.assertEqual(
                                     "Withdrawal request received",
                                     mail.outbox[1].subject,
@@ -371,6 +373,10 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 email_content = " ".join(mail.outbox[1].body.split())
                                 self.assertIn(
                                     "needs your review to validate",
+                                    email_content,
+                                )
+                                self.assertIn(
+                                    settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
                                     email_content,
                                 )
                                 mail.outbox.clear()
@@ -402,7 +408,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                     "has been cancelled accordingly",
                                     email_content,
                                 )
-
+                                self.assertIn(order.owner.email, email_content)
                                 self.assertEqual(
                                     "Withdrawal confirmed", mail.outbox[1].subject
                                 )
@@ -413,6 +419,10 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 email_content = " ".join(mail.outbox[1].body.split())
                                 self.assertIn(
                                     "has been confirmed",
+                                    email_content,
+                                )
+                                self.assertIn(
+                                    settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
                                     email_content,
                                 )
                                 mail.outbox.clear()
