@@ -68,7 +68,7 @@ describe("<Wizard />", () => {
     screen.getByRole("button", { name: "Reset" });
 
     await userEvent.click(nextButton);
-    expect(before).toBeCalledWith(0);
+    expect(before).toHaveBeenCalledWith(0);
     await screen.findByText("Step two");
     expect(stepTwo).toHaveClass("Mui-active");
     expect(stepOne).not.toHaveClass("Mui-active");
@@ -85,7 +85,7 @@ describe("<Wizard />", () => {
     await screen.findByText("Step two");
 
     await userEvent.click(nextButton);
-    expect(before).toBeCalledWith(1);
+    expect(before).toHaveBeenCalledWith(1);
     await screen.findByText("Step three");
     expect(stepThree).toHaveClass("Mui-active");
     expect(stepTwo).not.toHaveClass("Mui-active");
@@ -95,15 +95,15 @@ describe("<Wizard />", () => {
     screen.getByRole("button", { name: "Submit" });
 
     await userEvent.click(screen.getByRole("button", { name: "One" }));
-    expect(before).toBeCalledWith(2);
+    expect(before).toHaveBeenCalledWith(2);
     screen.getByText("Step one");
 
     await userEvent.click(screen.getByRole("button", { name: "Three" }));
-    expect(before).toBeCalledWith(0);
+    expect(before).toHaveBeenCalledWith(0);
     screen.getByText("Step three");
 
     await userEvent.click(screen.getByRole("button", { name: "Two" }));
-    expect(before).toBeCalledWith(2);
+    expect(before).toHaveBeenCalledWith(2);
     screen.getByText("Step two");
   });
 
