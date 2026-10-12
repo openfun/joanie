@@ -637,10 +637,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@boiseitguru/cookie-cutter@0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@boiseitguru/cookie-cutter/-/cookie-cutter-0.2.3.tgz#34c64e5e2d78f820b03f29e9f3703fac85725fcd"
-  integrity sha512-5Qc77XxPKZ3nQi+UZux31YdPZjNirrYYDTUUhmmHvvE8LqTgmwtXOdrOFCNhp4u+2O6uKFHg1s/B/AqiBQCDTA==
+"@boiseitguru/cookie-cutter@0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@boiseitguru/cookie-cutter/-/cookie-cutter-0.3.1.tgz#ea60ec974c872593ef2ca1707636d26c17b7af45"
+  integrity sha512-+kC0aflk5cXxIAlRiTLjXpZqpEAnTiPLaNNXt8O0BpBHQwp8xdM++gXT9kvjclrJgyWc9hKnLWVwbdTv9IWKGg==
 
 "@bundled-es-modules/cookie@^2.0.1":
   version "2.0.1"
