@@ -215,19 +215,28 @@ class OrdersAdminApiConfirmWithdrawalTestCase(BaseAPITestCase):
         self.assertEqual(order.state, enums.ORDER_STATE_CANCELED)
 
         # Check email confirming cancelled order
-        self.assertEqual("Withdrawal confirmed", mail.outbox[0].subject)
+        self.assertEqual(
+            "Confirmation of withdrawal - Acknowledgement of receipt",
+            mail.outbox[0].subject
+        )
         self.assertEqual(mail.outbox[0].to[0], order.owner.email)
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertIn("has been cancelled accordingly", email_content)
 
-        self.assertEqual("Withdrawal confirmed", mail.outbox[1].subject)
+        self.assertEqual(
+            "Confirmation of withdrawal - Acknowledgement of receipt",
+            mail.outbox[1].subject
+        )
         self.assertEqual(
             mail.outbox[1].to[0], settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE
         )
         email_content = " ".join(mail.outbox[1].body.split())
-        self.assertIn("has been confirmed", email_content)
+        self.assertIn("A withdrawal request has been confirmed", email_content)
 
-        self.assertEqual("Withdrawal confirmed", mail.outbox[2].subject)
+        self.assertEqual(
+            "Confirmation of withdrawal - Acknowledgement of receipt",
+            mail.outbox[2].subject
+        )
         self.assertEqual(mail.outbox[2].to[0], access.user.email)
         email_content = " ".join(mail.outbox[2].body.split())
-        self.assertIn("has been cancelled accordingly", email_content)
+        self.assertIn("We inform you that the order", email_content)

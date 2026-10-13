@@ -402,6 +402,7 @@ class Base(Configuration):
     # Support email configuration
     JOANIE_EMAIL_SUPPORT_CERTIFICATE = values.Value("certificate@support.acme")
     JOANIE_EMAIL_SUPPORT_CREDENTIAL = values.Value("credential@support.acme")
+    JOANIE_EMAIL_WITHDRAWAL_SIGNATURE = values.Value("France Université Numérique")
 
     # Django Money
     DEFAULT_CURRENCY = "EUR"
@@ -852,6 +853,7 @@ class Test(Base):
 
     JOANIE_EMAIL_SUPPORT_CERTIFICATE = values.Value("certificate@fun.org")
     JOANIE_EMAIL_SUPPORT_CREDENTIAL = values.Value("credential@fun.org")
+    JOANIE_EMAIL_WITHDRAWAL_SIGNATURE = values.Value("School of Glory")
 
     COURSE_WEB_HOOKS = []
 
