@@ -17,8 +17,11 @@ export const voucherRoutes: VoucherRoutes = {
   delete: (id: string) => `/vouchers/${id}/`,
 };
 
-interface Repository
-  extends AbstractRepository<Voucher, ResourcesQuery, DTOVoucher> {}
+interface Repository extends AbstractRepository<
+  Voucher,
+  ResourcesQuery,
+  DTOVoucher
+> {}
 
 export const VoucherRepository: Repository = class VoucherRepository {
   static get(id: string, filters?: Maybe<ResourcesQuery>): Promise<Voucher> {

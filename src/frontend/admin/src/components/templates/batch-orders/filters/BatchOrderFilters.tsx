@@ -32,10 +32,10 @@ const messages = defineMessages({
 
 // Form values for filters UI
 type FormValues = {
-  organizations?: Organization[];
-  owners?: User[];
-  state?: string;
-  payment_method?: string;
+  organizations?: Organization[] | null;
+  owners?: User[] | null;
+  state?: string | null;
+  payment_method?: string | null;
 };
 
 type Props = MandatorySearchFilterProps & {
@@ -69,8 +69,8 @@ export function BatchOrderFilters({ onFilter, ...searchFilterProps }: Props) {
     return {
       organization_ids: values.organizations?.map((o) => o.id),
       owner_ids: values.owners?.map((u) => u.id),
-      state: values.state,
-      payment_method: values.payment_method,
+      state: values.state ?? undefined,
+      payment_method: values.payment_method ?? undefined,
     };
   };
 

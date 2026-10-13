@@ -310,7 +310,7 @@ test.describe("Organization List", () => {
       data: store.list,
       routeUrl: "http://localhost:8071/api/v1.0/admin/organizations/",
       page,
-      searchTimeout: 200,
+      searchTimeout: 800,
       searchResult: store.list[0],
     });
     await page.goto(PATH_ADMIN.organizations.list);
