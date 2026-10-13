@@ -293,7 +293,6 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                 self.assertIsNone(order.withdrawn_confirmation_at)
 
     # pylint: disable=too-many-statements
-    # ruff: noqa: PLR0915
     def test_api_order_withdraw_authenticated_product_certificate(self):
         """
         Authenticated user should be able to withdraw an order with product type certificate
@@ -350,7 +349,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 self.assertIsNone(order.withdrawn_confirmation_at)
                                 # Check email confirming cancelled order
                                 self.assertEqual(
-                                    "Withdrawal request received",
+                                    "Withdrawal request – Acknowledgement of receipt",
                                     mail.outbox[0].subject,
                                 )
                                 self.assertEqual(
@@ -363,7 +362,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 self.assertIn(order.owner.email, email_content)
                                 self.assertEqual(
-                                    "Withdrawal request received",
+                                    "Withdrawal - Validation request",
                                     mail.outbox[1].subject,
                                 )
                                 self.assertEqual(
@@ -398,7 +397,8 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 # Check email confirming cancelled order
                                 self.assertEqual(
-                                    "Withdrawal confirmed", mail.outbox[0].subject
+                                    "Confirmation of withdrawal - Acknowledgement of receipt",
+                                     mail.outbox[0].subject
                                 )
                                 self.assertEqual(
                                     mail.outbox[0].to[0], order.owner.email
@@ -410,7 +410,8 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 self.assertIn(order.owner.email, email_content)
                                 self.assertEqual(
-                                    "Withdrawal confirmed", mail.outbox[1].subject
+                                    "Confirmation of withdrawal - Acknowledgement of receipt",
+                                    mail.outbox[1].subject
                                 )
                                 self.assertEqual(
                                     mail.outbox[1].to[0],
@@ -418,7 +419,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 email_content = " ".join(mail.outbox[1].body.split())
                                 self.assertIn(
-                                    "has been confirmed",
+                                    "request has been confirmed for the following order",
                                     email_content,
                                 )
                                 self.assertIn(

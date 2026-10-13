@@ -137,7 +137,9 @@ def _prepare_withdrawal_context(
         },
         "is_support_email": is_support_email,
         "is_organization_admin": is_organization_admin,
+        "signature_by": settings.JOANIE_EMAIL_WITHDRAWAL_SIGNATURE,
     }
+
 
 
 def _prepare_withdrawal_recipients(order):
@@ -208,7 +210,9 @@ def send_withdrawal_confirmation(order):
     """
     with override(order.owner.language):
         _send_withdrawal_email(
-            order, _("Withdrawal confirmed"), "withdrawal_confirmation"
+            order,
+            _("Confirmation of withdrawal - Acknowledgement of receipt"),
+            "withdrawal_confirmation"
         )
 
 
