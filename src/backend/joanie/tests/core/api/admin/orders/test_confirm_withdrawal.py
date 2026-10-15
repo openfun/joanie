@@ -217,15 +217,15 @@ class OrdersAdminApiConfirmWithdrawalTestCase(BaseAPITestCase):
         # Check email confirming cancelled order
         self.assertEqual(
             "Confirmation of withdrawal - Acknowledgement of receipt",
-            mail.outbox[0].subject
+            mail.outbox[0].subject,
         )
         self.assertEqual(mail.outbox[0].to[0], order.owner.email)
         email_content = " ".join(mail.outbox[0].body.split())
         self.assertIn("has been cancelled accordingly", email_content)
 
         self.assertEqual(
-            "Confirmation of withdrawal - Acknowledgement of receipt",
-            mail.outbox[1].subject
+            "Student withdrawal - Notification of order cancellation",
+            mail.outbox[1].subject,
         )
         self.assertEqual(
             mail.outbox[1].to[0], settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE
@@ -234,8 +234,8 @@ class OrdersAdminApiConfirmWithdrawalTestCase(BaseAPITestCase):
         self.assertIn("A withdrawal request has been confirmed", email_content)
 
         self.assertEqual(
-            "Confirmation of withdrawal - Acknowledgement of receipt",
-            mail.outbox[2].subject
+            "Student withdrawal - Notification of order cancellation",
+            mail.outbox[2].subject,
         )
         self.assertEqual(mail.outbox[2].to[0], access.user.email)
         email_content = " ".join(mail.outbox[2].body.split())
