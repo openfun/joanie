@@ -398,7 +398,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 # Check email confirming cancelled order
                                 self.assertEqual(
                                     "Confirmation of withdrawal - Acknowledgement of receipt",
-                                     mail.outbox[0].subject
+                                    mail.outbox[0].subject,
                                 )
                                 self.assertEqual(
                                     mail.outbox[0].to[0], order.owner.email
@@ -410,8 +410,8 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 self.assertIn(order.owner.email, email_content)
                                 self.assertEqual(
-                                    "Confirmation of withdrawal - Acknowledgement of receipt",
-                                    mail.outbox[1].subject
+                                    "Learner withdrawal - Notification of order cancellation",
+                                    mail.outbox[1].subject,
                                 )
                                 self.assertEqual(
                                     mail.outbox[1].to[0],

@@ -141,7 +141,6 @@ def _prepare_withdrawal_context(
     }
 
 
-
 def _prepare_withdrawal_recipients(order):
     """
     The withdrawal email should be sent to 3 recipients at least.
@@ -167,7 +166,36 @@ def _prepare_withdrawal_recipients(order):
     return recipients
 
 
-def _send_withdrawal_email(order, subject, template_name):
+def _prepare_subject_withdrawal_email(template_name, index):
+    """
+    Return the mail subject according to the template name and
+    the receiver's index while preparing the context.
+    """
+    subjects = {
+        "withdrawal_request": [
+            _("Withdrawal request – Acknowledgement of receipt"),
+            _("Withdrawal - Validation request"),
+        ],
+        "withdrawal_confirmation": [
+            _("Confirmation of withdrawal - Acknowledgement of receipt"),
+            _("Learner withdrawal - Notification of order cancellation"),
+        ],
+        "withdrawal_rejection": [
+            _("Withdrawal request rejected – Order remains active"),
+        ],
+    }
+
+    if index > 0:
+        index = -1
+    try:
+        return subjects[template_name][index]
+    except KeyError:
+        raise ValueError(
+            f"Unknown withdrawal email template: {template_name!r}"
+        ) from None
+
+
+def _send_withdrawal_email(order, template_name):
     """
     Send a withdrawal-related mail to the order owner.
     The first recipient is the buyer, the second is the support, and finally the
@@ -175,6 +203,7 @@ def _send_withdrawal_email(order, subject, template_name):
     """
     email_recipients = _prepare_withdrawal_recipients(order)
     for index, recipient in enumerate(email_recipients.items()):
+        # Prepare context dependending receiver
         is_support_email = index == 1
         is_organization_admin = index >= 2  # noqa : PLR2004
         context = _prepare_withdrawal_context(
@@ -183,6 +212,8 @@ def _send_withdrawal_email(order, subject, template_name):
             is_support_email=is_support_email,
             is_organization_admin=is_organization_admin,
         )
+        # Prepare subject dependending receiver
+        subject = _prepare_subject_withdrawal_email(template_name, index)
         context["fullname"] = recipient[0]
         send(
             subject=subject,
@@ -199,7 +230,8 @@ def send_withdrawal_request(order):
     """
     with override(order.owner.language):
         _send_withdrawal_email(
-            order, _("Withdrawal request received"), "withdrawal_request"
+            order,
+            "withdrawal_request",
         )
 
 
@@ -209,11 +241,7 @@ def send_withdrawal_confirmation(order):
     confirmed and their order cancelled.
     """
     with override(order.owner.language):
-        _send_withdrawal_email(
-            order,
-            _("Confirmation of withdrawal - Acknowledgement of receipt"),
-            "withdrawal_confirmation"
-        )
+        _send_withdrawal_email(order, "withdrawal_confirmation")
 
 
 def send_withdrawal_rejection(order):
@@ -223,5 +251,6 @@ def send_withdrawal_rejection(order):
     """
     with override(order.owner.language):
         _send_withdrawal_email(
-            order, _("Withdrawal request rejected"), "withdrawal_rejection"
+            order,
+            "withdrawal_rejection",
         )
