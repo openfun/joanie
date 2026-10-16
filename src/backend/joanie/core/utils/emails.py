@@ -256,4 +256,5 @@ def send_withdrawal_rejection(order):
         _send_withdrawal_email(
             order,
             "withdrawal_rejection",
+            include_organization=False,
         )

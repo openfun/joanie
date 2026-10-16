@@ -220,7 +220,7 @@ class OrdersAdminApiRejectWithdrawalTestCase(BaseAPITestCase):
         )
         self.assertEqual(mail.outbox[0].to[0], order.owner.email)
         email_content = " ".join(mail.outbox[0].body.split())
-        self.assertIn("remains active and resumes its normal course", email_content)
+        self.assertIn("Your order remains active",  email_content)
 
         self.assertEqual(
             "Withdrawal request rejected – Order remains active", mail.outbox[1].subject
@@ -229,11 +229,4 @@ class OrdersAdminApiRejectWithdrawalTestCase(BaseAPITestCase):
             mail.outbox[1].to[0], settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE
         )
         email_content = " ".join(mail.outbox[1].body.split())
-        self.assertIn("remains active and resumes its normal course", email_content)
-
-        self.assertEqual(
-            "Withdrawal request rejected – Order remains active", mail.outbox[2].subject
-        )
-        self.assertEqual(mail.outbox[2].to[0], access.user.email)
-        email_content = " ".join(mail.outbox[2].body.split())
-        self.assertIn("remains active and resumes its normal course", email_content)
+        self.assertIn("accessed the exam and thus waived their 14-day", email_content)
