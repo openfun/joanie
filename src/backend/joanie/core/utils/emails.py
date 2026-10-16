@@ -195,7 +195,7 @@ def _prepare_subject_withdrawal_email(template_name, index):
         ) from None
 
 
-def _send_withdrawal_email(order, template_name):
+def _send_withdrawal_email(order, template_name, include_organization=True):
     """
     Send a withdrawal-related mail to the order owner.
     The first recipient is the buyer, the second is the support, and finally the
@@ -206,6 +206,8 @@ def _send_withdrawal_email(order, template_name):
         # Prepare context dependending receiver
         is_support_email = index == 1
         is_organization_admin = index >= 2  # noqa : PLR2004
+        if not include_organization and is_organization_admin:
+            continue
         context = _prepare_withdrawal_context(
             order,
             to_email=recipient[1],
@@ -232,6 +234,7 @@ def send_withdrawal_request(order):
         _send_withdrawal_email(
             order,
             "withdrawal_request",
+            include_organization=False,
         )
 
 
