@@ -7,25 +7,52 @@
         <mj-column>
           <mj-text padding="0">
           {% if is_support_email %}
+          <!-- Support section -->
             {% blocktranslate with title=product_title %}
-              A withdrawal request is made for the <strong>{{ title }}</strong>.
-              The order '{{ order_id }}' for {{ buyer_fullname }} needs your review to validate
-              the withdrawal.
+              A withdrawal request has been submitted for:
+              <div>
+                <ul>
+                  <li><strong>Certificate</strong>: {{ title }}</li>
+                  <li><strong>Order ID</strong>: '{{ order_id }}'</li>
+                  <li><strong>Learner</strong>: {{ buyer_fullname }} </li>
+                </ul>
+              </div>
             {% endblocktranslate %}
-          {% elif is_organization_admin %}
-            {% blocktranslate with title=product_title %}
-              A withdrawal request has been made on an order on the course <strong>{{ title }}</strong>.
-              The order for {{ buyer_fullname }} will go under investigation by the support team to see if it is eligible
-              to be withdrawn.
+          {% else %}
+          <!-- Buyer section -->
+            {% blocktranslate with title=product_title withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT"%}
+              We acknowledge receipt of your withdrawal request for:
+              <div>
+                <ul>
+                  <li><strong>Certificate</strong>: {{ title }}</li>
+                  <li><strong>Ref.</strong> {{ course_code }} </li>
+                  <li><strong>Order ID</strong>: '{{ order_id }}'</li>
+                </ul>
+              </div>
+              <br>
+              Your request, registered on <strong>{{ withdrawal_request_date }}</strong>, is being processed.
             {% endblocktranslate %}
-          {% elif not is_support_email or not is_organization_admin %}
-            {% with withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
-            {% blocktranslate with title=product_title %}
-              We have received a withdrawal request for <strong>{{ title }}</strong> for your order '{{ order_id }}'.
-              </br>
-              We registered your withdrawal request on <strong>{{ withdrawal_request_date }}</strong>, and it is now being processed.
+          {% endif %}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
+        <mj-column>
+          <mj-text padding="0">
+          {% if is_support_email %}
+          <!-- Support section -->
+            {% blocktranslate %}
+              <strong>Action required</strong>: Please review and validate the withdrawal in the backoffice. If the request is
+              approved, ensure the refund is processed promptly.
             {% endblocktranslate %}
-            {% endwith %}
+          {% else %}
+          <!-- Buyer section -->
+            {% blocktranslate %}
+              Our team will review your request shortly. If approved, your refund will be processed promptly
+              and credited to the original payment method used.
+              <br><br>
+              You will receive a confirmation once the review is complete.
+            {% endblocktranslate %}
           {% endif %}
           </mj-text>
         </mj-column>
@@ -35,15 +62,15 @@
           <mj-text padding="0">
           {% if is_support_email %}
             {% blocktranslate %}
-              Please find the order in the <a href="{{ backoffice_dashboard_order_link }}">backoffice</a>
-            {% endblocktranslate %}
-          {% elif is_organization_admin %}
-            {% blocktranslate %}
-              A confirmation or rejection email will soon follow up about the state of this order.
+            <!-- Support section closing -->
+            <strong><a href="{{ backoffice_dashboard_order_link }}">Link to backoffice</a></strong>
             {% endblocktranslate %}
           {% else %}
             {% blocktranslate %}
-              Our team will review your request.
+            <!-- Buyer section -->
+              Best regards,
+              <br>
+              {{ signature_by }}
             {% endblocktranslate %}
           {% endif %}
           </mj-text>
