@@ -174,6 +174,7 @@ class DebugWithdrawal(TemplateView):
                 "name": settings.JOANIE_CATALOG_NAME,
                 "url": settings.JOANIE_CATALOG_BASE_URL,
             }
+            context["signature_by"] = settings.JOANIE_EMAIL_WITHDRAWAL_SIGNATURE
 
             return self.update_context(context)
 
