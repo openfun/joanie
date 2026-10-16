@@ -370,7 +370,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 email_content = " ".join(mail.outbox[1].body.split())
                                 self.assertIn(
-                                    "needs your review to validate",
+                                    "Please review and validate the withdrawal",
                                     email_content,
                                 )
                                 mail.outbox.clear()
