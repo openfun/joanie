@@ -530,19 +530,21 @@ class OrderFlow:
             )
             or (
                 target == enums.ORDER_STATE_CANCELED
-                and self.instance.product.type == enums.PRODUCT_TYPE_CREDENTIAL
                 and self.instance.withdrawn_requested_at
                 and self.instance.withdrawn_confirmation_at
             )
             or (
                 source == enums.ORDER_STATE_COMPLETED
                 and target == enums.ORDER_STATE_CANCELED
-                and self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+                and self.instance.is_certificate_product
                 and self.instance.withdrawn_requested_at
                 and self.instance.withdrawn_confirmation_at
             )
         ):
-            send_withdrawal_confirmation(self.instance)
+            include_organization = True
+            if self.instance.is_certificate_product:
+                include_organization = False
+            send_withdrawal_confirmation(self.instance, include_organization)
 
         # The order withdrawal request has been rejected, the order resumes its normal course
         # It happens for certificate products only

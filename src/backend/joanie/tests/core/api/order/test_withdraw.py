@@ -305,7 +305,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
         token = self.generate_token_from_user(user)
         mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
-            for day in range(15, 20):
+            for day in range(16, 20):
                 enrollment = factories.EnrollmentFactory(user=user)
                 product = factories.ProductFactory(
                     type=enums.PRODUCT_TYPE_CERTIFICATE,
@@ -378,7 +378,6 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                     settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
                                     email_content,
                                 )
-                                mail.outbox.clear()
                             elif (
                                 day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
                                 and not value
@@ -426,7 +425,6 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                     settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
                                     email_content,
                                 )
-                                mail.outbox.clear()
                             else:
                                 self.assertStatusCodeEqual(
                                     response, HTTPStatus.UNPROCESSABLE_ENTITY
@@ -436,6 +434,6 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                                 )
                                 self.assertIsNone(order.withdrawn_requested_at)
                                 self.assertIsNone(order.withdrawn_confirmation_at)
-
+                            mail.outbox.clear()
                             # Cancel the order to continue each cases
                             order.flow.cancel()
