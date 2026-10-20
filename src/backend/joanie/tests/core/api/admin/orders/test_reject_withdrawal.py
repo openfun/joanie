@@ -220,7 +220,7 @@ class OrdersAdminApiRejectWithdrawalTestCase(BaseAPITestCase):
         )
         self.assertEqual(mail.outbox[0].to[0], order.owner.email)
         email_content = " ".join(mail.outbox[0].body.split())
-        self.assertIn("Your order remains active",  email_content)
+        self.assertIn("Your order remains active", email_content)
 
         self.assertEqual(
             "Withdrawal request rejected – Order remains active", mail.outbox[1].subject

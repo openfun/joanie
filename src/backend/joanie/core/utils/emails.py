@@ -238,13 +238,17 @@ def send_withdrawal_request(order):
         )
 
 
-def send_withdrawal_confirmation(order):
+def send_withdrawal_confirmation(order, include_organization=True):
     """
     Send a mail to the order owner confirming that their withdrawal has been
     confirmed and their order cancelled.
     """
     with override(order.owner.language):
-        _send_withdrawal_email(order, "withdrawal_confirmation")
+        _send_withdrawal_email(
+            order,
+            "withdrawal_confirmation",
+            include_organization=include_organization,
+        )
 
 
 def send_withdrawal_rejection(order):

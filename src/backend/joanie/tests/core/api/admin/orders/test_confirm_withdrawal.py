@@ -232,11 +232,3 @@ class OrdersAdminApiConfirmWithdrawalTestCase(BaseAPITestCase):
         )
         email_content = " ".join(mail.outbox[1].body.split())
         self.assertIn("A withdrawal request has been confirmed", email_content)
-
-        self.assertEqual(
-            "Student withdrawal - Notification of order cancellation",
-            mail.outbox[2].subject,
-        )
-        self.assertEqual(mail.outbox[2].to[0], access.user.email)
-        email_content = " ".join(mail.outbox[2].body.split())
-        self.assertIn("We inform you that the order", email_content)

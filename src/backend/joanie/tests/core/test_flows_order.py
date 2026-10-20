@@ -1869,7 +1869,7 @@ class OrderFlowsTestCase(LoggingTestCase):
     def test_flows_order_transition_completed_to_canceled_on_withdrawal(self):
         """
         Test when the order has product certificate with state `completed` transitions to
-        canceled should send mail to 3 recipients (organization administrator, support, and
+        canceled should send mail to 2 recipients (organization administrator, support, and
         buyer).
         """
         course = factories.CourseFactory()
@@ -1901,7 +1901,6 @@ class OrderFlowsTestCase(LoggingTestCase):
         order.withdrawn_confirmation_at = timezone.now()
         order.flow.cancel()
 
-        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to[0], order.owner.email)
         self.assertEqual(mail.outbox[1].to[0], "johndoe@support.acme")
-        self.assertEqual(mail.outbox[2].to[0], access.user.email)
