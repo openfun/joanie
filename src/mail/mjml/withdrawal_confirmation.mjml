@@ -7,7 +7,7 @@
         <mj-column>
           <mj-text padding="0">
           {% if not is_organization_admin and not is_support_email and course_code %}
-            <!--Student section credential product-->
+            <!--Learner section credential product-->
             {% blocktranslate with title=product_title withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
               We acknowledge receipt of your withdrawal request submitted on <strong>{{ withdrawal_request_date }}</strong> for :
               <div>
@@ -19,48 +19,47 @@
               </div>
             {% endblocktranslate %}
           {% elif not is_organization_admin and not is_support_email and not course_code %}
-            <!--Student section certificate product-->
+            <!--Learner section certificate product-->
             {% blocktranslate with title=product_title withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
               We acknowledge receipt of your withdrawal request submitted on <strong>{{ withdrawal_request_date }}</strong> for :
               <div>
                 <ul>
-                  <li><strong>Training course</strong>: {{ title }}</li>
+                  <li><strong>Certificate</strong>: {{ title }}</li>
                   <li><strong>Order ID</strong>: {{ order_id }}</li>
                 </ul>
               </div>
             {% endblocktranslate %}
-          {% elif is_support_email and not is_organization_admin %}
+          {% elif is_support_email and not is_organization_admin and course_code %}
             {% blocktranslate with title=product_title withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
-              <!--Support section-->
+              <!--Support credential section-->
               A withdrawal request has been confirmed for the following order:
               <div>
                 <ul>
                   <li><strong>Order ID</strong>: {{ order_id }}</li>
                   <li><strong>Training course</strong>: {{ title }}</li>
                   <li><strong>Ref.</strong> {{ course_code }}</li>
-                  <li><strong>Student</strong>: {{ buyer_fullname }}
+                  <li><strong>Learner</strong>: {{ buyer_fullname }}
                   <li><strong>Request submitted on</strong>: {{ withdrawal_request_date }}
                 </ul>
               </div>
             {% endblocktranslate %}
           {% elif is_support_email and not is_organization_admin and not course_code %}
             {% blocktranslate with title=product_title withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
-              <!--Support section-->
+              <!--Support certificate section-->
               A withdrawal request has been confirmed for the following order:
               <div>
                 <ul>
                   <li><strong>Order ID</strong>: {{ order_id }}</li>
-                  <li><strong>Training course</strong>: {{ title }}</li>
-                  <li><strong>Student</strong>: {{ buyer_fullname }}
+                  <li><strong>Certificate</strong>: {{ title }}</li>
+                  <li><strong>Learner</strong>: {{ buyer_fullname }}
                   <li><strong>Request submitted on</strong>: {{ withdrawal_request_date }}
                 </ul>
               </div>
             {% endblocktranslate %}
           {% elif is_organization_admin and not is_support_email %}
             {% blocktranslate with title=product_title withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
-              <br>
               We inform you that the order <strong>'{{ order_id }}'</strong> for the training <strong>{{ title }}</strong> has been cancelled
-              following a withdrawal request from the student <strong>{{ buyer_fullname }}</strong> (submitted on <strong>{{withdrawal_request_date}}</strong>).
+              following a withdrawal request from the learner <strong>{{ buyer_fullname }}</strong> (submitted on <strong>{{withdrawal_request_date}}</strong>).
             {% endblocktranslate %}
           {% endif %}
           </mj-text>
@@ -71,7 +70,7 @@
           <mj-text padding="0">
             {% if not course_code and not is_support_email and not is_organization_admin %}
               {% blocktranslate %}
-                <!-- Certificate product - Student section-->
+                <!--Certificate product - Learner section-->
                 This request has been processed, and your order has been cancelled accordingly. You may verify
                 the status of your orders at any time via your <strong><a href="{{ dashboard_order_link }}">dashboard</a></strong>.
                 <br><br>
@@ -79,16 +78,10 @@
               {% endblocktranslate %}
             {% elif course_code and not is_support_email and not is_organization_admin %}
               {% blocktranslate %}
-                <!--Credential product - Student section-->
+                <!--Credential product - Learner section-->
                 This request has been processed, and your order has been cancelled accordingly.
                 You may verify the status of your orders at any time via
                 your <strong><a href="{{ dashboard_order_link }}">dashboard</a></strong>.
-              {% endblocktranslate %}
-            {% elif course_code and is_support_email and not is_organization_admin %}
-              {% blocktranslate %}
-                <!--Support section-->
-                The <strong><a href="{{ backoffice_dashboard_order_link }}">order</a></strong> has been automatically
-                cancelled in the backoffice.
               {% endblocktranslate %}
             {% elif course_code and not is_support_email and is_organization_admin %}
               <!--Organization section-->
@@ -103,19 +96,19 @@
       <mj-section mj-class="bg--blue-100" padding="0 50px 20px 50px">
         <mj-column>
           <mj-text padding="0">
-            <!-- Student section -->
-            {% if not is_support_email and not is_organization_email %}
+            <!--Learner section-->
+            {% if not is_support_email and not is_organization_admin %}
               {% blocktranslate %}
                 Should you have any questions, please do not hesitate to contact our support team.
               {% endblocktranslate %}
-            {% elif is_organization_email and not is_support_email %}
+            {% elif is_organization_admin and not is_support_email %}
               {% blocktranslate %}
-                <!-- Organization section -->
+                <!--Organization section-->
                 Should you need additional information, please contact us.
               {% endblocktranslate %}
-            {% elif is_support_email and not is_organization_email %}
+            {% elif is_support_email and not is_organization_admin %}
               {% blocktranslate %}
-                <!-- Support section -->
+                <!--Support section-->
                 The <strong><a href="{{ backoffice_dashboard_order_link }}">order</a></strong> has been automatically
                 cancelled in the backoffice.
               {% endblocktranslate %}
@@ -127,12 +120,12 @@
         <mj-column>
           <mj-text padding="0">
             <!--Support section-->
-            {% if is_support_email and not is_organization_email %}
+            {% if is_support_email and not is_organization_admin and not course_code %}
               {% blocktranslate %}
                 <strong>Action required</strong>: Please follow the refund procedure for this order.
               {% endblocktranslate %}
-            <!-- Student section -->
-            {% elif not is_support_email or is_organization_email %}
+            <!-- Learner section -->
+            {% elif not is_support_email or is_organization_admin %}
               {% blocktranslate %}
                 Best regards,
                 <br>

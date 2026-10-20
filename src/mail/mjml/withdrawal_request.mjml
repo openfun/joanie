@@ -6,8 +6,8 @@
       <mj-section mj-class="bg--blue-100" border-radius="6px 6px 0 0" padding="0 50px 20px 50px">
         <mj-column>
           <mj-text padding="0">
-          {% if is_support_email %}
-          <!-- Support section -->
+          {% if is_support_email and not course_code %}
+          <!--Support section-->
             {% blocktranslate with title=product_title %}
               A withdrawal request has been submitted for:
               <div>
@@ -18,14 +18,13 @@
                 </ul>
               </div>
             {% endblocktranslate %}
-          {% else %}
-          <!-- Buyer section -->
+          {% elif not is_support_email and not course_code%}
+          <!--Learner certificate section-->
             {% blocktranslate with title=product_title withdrawal_request_date=withdrawal_requested_at|date:"DATETIME_FORMAT"%}
               We acknowledge receipt of your withdrawal request for:
               <div>
                 <ul>
                   <li><strong>Certificate</strong>: {{ title }}</li>
-                  <li><strong>Ref.</strong> {{ course_code }} </li>
                   <li><strong>Order ID</strong>: '{{ order_id }}'</li>
                 </ul>
               </div>
@@ -40,13 +39,13 @@
         <mj-column>
           <mj-text padding="0">
           {% if is_support_email %}
-          <!-- Support section -->
+          <!--Support section-->
             {% blocktranslate %}
               <strong>Action required</strong>: Please review and validate the withdrawal in the backoffice. If the request is
               approved, ensure the refund is processed promptly.
             {% endblocktranslate %}
           {% else %}
-          <!-- Buyer section -->
+          <!--Learner section-->
             {% blocktranslate %}
               Our team will review your request shortly. If approved, your refund will be processed promptly
               and credited to the original payment method used.
@@ -62,12 +61,12 @@
           <mj-text padding="0">
           {% if is_support_email %}
             {% blocktranslate %}
-            <!-- Support section closing -->
+            <!--Support section closing-->
             <strong><a href="{{ backoffice_dashboard_order_link }}">Link to backoffice</a></strong>
             {% endblocktranslate %}
           {% else %}
             {% blocktranslate %}
-            <!-- Buyer section -->
+            <!--Buyer section-->
               Best regards,
               <br>
               {{ signature_by }}

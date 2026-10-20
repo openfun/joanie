@@ -24,6 +24,7 @@ and this project adheres to
 
 ### Changed
 
+- Update withdrawal email templates sentences
 - Upgrade Joanie to use python 3.13
 
 ## [3.5.0] - 2026-08-13
