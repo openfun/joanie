@@ -7,24 +7,23 @@
         <mj-column>
           <mj-text padding="0">
             {% if is_support_email %}
-            {% blocktranslate with title=product_title withdrawal_requested_at=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
-              The withdrawal request for:
-              <div>
-                <ul>
-                  <li><strong>Certificate</strong>: {{ title }}</li>
-                  <li><strong>Ref</strong>: {{course_code }}</li>
-                  <li><strong>Order ID</strong>: '{{ order_id }}'</li>
-                  <li><strong>Request submitted on</strong>: {{ withdrawal_requested_at }} has been rejected</li>
-                </ul>
-              </div>
-            {% endblocktranslate %}
+              {% blocktranslate with title=product_title withdrawal_requested_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
+                <!--Support certificate case section-->
+                The withdrawal request for:
+                <div>
+                  <ul>
+                    <li><strong>Certificate</strong>: {{ title }}</li>
+                    <li><strong>Order ID</strong>: '{{ order_id }}'</li>
+                    <li><strong>Request submitted on</strong>: {{ withdrawal_requested_date }} has been rejected.</li>
+                  </ul>
+                </div>
+              {% endblocktranslate %}
             {% else %}
-            {% blocktranslate with title=product_title withdrawal_requested_at=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
-              After review by our support team, your withdrawal request submitted on {{ withdrawal_request_date }} for:
+            {% blocktranslate with title=product_title withdrawal_requested_date=withdrawal_requested_at|date:"DATETIME_FORMAT" %}
+              After review by our support team, your withdrawal request submitted on {{ withdrawal_requested_date }} for:
               <div>
                 <ul>
                   <li><strong>Certificate</strong>: {{ title }}</li>
-                  <li><strong>Ref</strong>: {{ course_code }}</li>
                   <li><strong>Order ID</strong>: '{{ order_id }}'</li>
                 </ul>
               </div>
@@ -42,13 +41,13 @@
               <div>
                 <ul>
                   <li>
-                  <strong>Reason</strong>: The leaner ({{buyer_fullname}}) accessed the exam and thus waived their
+                  <strong>Reason</strong>: The learner ({{ buyer_fullname }}) accessed the exam and thus waived their
                   14-day right of withdrawal, in accordance with the checkbox agreed during purchase:
                   "By accessing th exam, you acknowledge that you waive your 14-day right of withdrawal
                   as provided for in Article L221-18 of the French Consumer Code".
                   </li>
-                  <li>Order status: Active (no refund to process)</li>
-                  <li>Next steps: No action required unless the learner appeals the decision.</li>
+                  <li><strong>Order status</strong>: Active (no refund to process)</li>
+                  <li><strong>Next steps</strong>: No action required unless the learner appeals the decision.</li>
                 </ul>
               </div>
               <br><br>
@@ -60,15 +59,12 @@
                 <ul>
                   <li>
                   <strong>Reason</strong>: You waived your 14-day right of
-                    withdrawal by accessing the exam for this
-                    certificate. This waiver was explicitly
-                    accepted by you during the purchase
-                    process, via the following checkbox: "By accessing the exam, you acknowledge that
-                    you waive your 14-day right of withdrawal
-                    as provided for in Article L221-18 of the
-                    French Consumer Code."
+                    withdrawal by accessing the exam for this certificate. This waiver was
+                    explicitly accepted by you during the purchase process, via the following
+                    checkbox: "By accessing the exam, you acknowledge that you waive your 14-day
+                    right of withdrawal as provided for in Article L221-18 of the French Consumer Code."
                   </li>
-                  <li>Consequence: Your order remains active and will continue as planned.</li>
+                  <li><strong>Consequence</strong>: Your order remains active and will continue as planned.</li>
                 </ul>
               </div>
             {% endblocktranslate %}
@@ -81,10 +77,9 @@
           <mj-text padding="0">
           {% if not is_support_email %}
             {% blocktranslate %}
-            <!-- Buyer section closing -->
-              If you believe this decision is incorrect or need
-              further clarification, please contact our support
-              team.
+            <!--Learner section closing-->
+              If you believe this decision is incorrect or need further clarification,
+              please contact our support team.
               <br><br>
               Best regards,
               <br>
