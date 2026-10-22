@@ -29,8 +29,22 @@ class MoodleUserCreateException(Exception):
     """Raised when a user creation fails in Moodle."""
 
 
+class MoodleGroupCourseCreateException(Exception):
+    """Raised when group course creation fails in Moodle."""
+
+
+class MoodleAddUserGroupException(Exception):
+    """Raised when adding user to group course fails in Moodle."""
+
+
+class MoodleGetGroupException(Exception):
+    """Raised when fetching groups in course fails in Moodle."""
+
+
 class MoodleLMSBackend(BaseLMSBackend):
     """LMS Backend to connect Joanie to Moodle LMS"""
+
+    name = "moodle"
 
     def __init__(self, configuration, *args, **kwargs):
         """Attach configuration to the LMS backend instance."""
@@ -44,13 +58,13 @@ class MoodleLMSBackend(BaseLMSBackend):
         """Build a Moodle API url."""
         return f"{self.base_url}?wstoken={self.token}&wsfunction={function}&moodlewsrestformat=json"
 
-    def extract_course_id(self, resource_link):
+    def extract_course_id(self, resource_link: str):
         """Extract the LMS course id from the course run url."""
         parsed_url = urlparse(resource_link)
         query_parameters = parse_qs(parsed_url.query)
         return int(query_parameters.get("id")[0])
 
-    def get_enrollment(self, username, resource_link):
+    def get_enrollment(self, username: str, resource_link: str):
         """
         Retrieve an enrollment according to a username and a resource_link.
         """
@@ -71,7 +85,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             )
             return None
 
-    def get_enrollments(self, resource_link):
+    def get_enrollments(self, resource_link: str):
         """Retrieve enrollments according to a resource_link."""
         course_id: int = self.extract_course_id(resource_link)
         try:
@@ -83,7 +97,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             return None
 
     # pylint: disable=invalid-name
-    def get_user_id(self, username):
+    def get_user_id(self, username: str):
         """Retrieve user id."""
         username = username.lower()
         criteria = {"key": "username", "value": username}
@@ -117,6 +131,56 @@ class MoodleLMSBackend(BaseLMSBackend):
         except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
             logger.error("Moodle error while creating user %s: %s", user.username, e)
             raise MoodleUserCreateException() from e
+
+    def get_course_group_id(self, resource_link: str):
+        """Get the first group of a course in Moodle LMS"""
+        course_id = self.extract_course_id(resource_link)
+        try:
+            return self.moodle.post(
+                "core_group_get_course_groups", courseid=course_id, options=None
+            )[0].get("id")
+        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
+            logger.error(
+                "Moodle error while retrieving course group %s: %s", course_id, e
+            )
+            raise MoodleGetGroupException() from e
+
+    def create_group_in_course(self, resource_link: str, name: str):
+        """Create the course's group for certificate when it's the first user to enter"""
+        course_id = self.extract_course_id(resource_link)
+        group_data = {
+            "name": name.capitalize(),
+            "courseid": course_id,
+            "description": "Group dedicated for certificate students",
+            "idnumber": name.lower(),
+        }
+        try:
+            return self.moodle.post(
+                "core_group_create_groups", groups=[group_data], options=None
+            )[0]["id"]
+        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
+            logger.error(
+                "Moodle error while creating group in course id %s: %s", course_id, e
+            )
+            raise MoodleGroupCourseCreateException() from e
+
+    def add_user_to_group(self, username: str, group_id: int):
+        """Add learner to specific group id in course"""
+        group_user_data = {
+            "userid": self.get_user_id(username),
+            "groupid": group_id,
+        }
+        try:
+            self.moodle("core_group_add_group_members", members=[group_user_data])
+        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
+            logger.error(
+                "Moodle error while adding user %s to group %s : %s",
+                username,
+                group_id,
+                e,
+            )
+            raise MoodleAddUserGroupException() from e
+        return True
 
     # pylint: disable=too-many-branches
     def set_enrollment(self, enrollment):
@@ -163,7 +227,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             pass
         return True
 
-    def get_grades(self, username, resource_link):
+    def get_grades(self, username: str, resource_link: str):
         """Get user's grades for a course run given its url."""
         try:
             user_id = self.get_user_id(username)
