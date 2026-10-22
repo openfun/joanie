@@ -118,6 +118,15 @@ class MoodleLMSBackend(BaseLMSBackend):
             logger.error("Moodle error while creating user %s: %s", user.username, e)
             raise MoodleUserCreateException() from e
 
+    def get_course_groups(self, course_id):
+        """Get groups of a course in Moodle LMS"""
+        # core_group_get_course_groups
+        pass
+
+    def add_to_group(self, user, group_id):
+        """Add learner to specific group id in course"""
+        # core_group_add_group_members
+
     # pylint: disable=too-many-branches
     def set_enrollment(self, enrollment):
         """Activate/deactivate an enrollment."""
