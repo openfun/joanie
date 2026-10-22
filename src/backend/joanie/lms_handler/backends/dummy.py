@@ -14,6 +14,8 @@ from joanie.lms_handler.backends.base import BaseLMSBackend
 class DummyLMSBackend(BaseLMSBackend):
     """Dummy LMS Backend to mock behavior of a LMS using cache."""
 
+    name = "dummy"
+
     @staticmethod
     def get_cache_key(username, course_id):
         """Process a cache key related to the username and the course_id provided."""
