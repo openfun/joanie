@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Create group and add user for product certificate order
+  in moodle LMS backend
+
 ## [3.6.0] - 2026-11-25
 
 ### Added

@@ -35,10 +35,12 @@ class LMSHandlerTestCase(TestCase):
         backend = LMSHandler.select_lms("http://openedx.test/courses/42")
         self.assertIsInstance(backend, OpenEdXLMSBackend)
         self.assertEqual(backend.configuration["BASE_URL"], "http://openedx.test")
+        self.assertEqual(backend.name, "edx")
 
         backend = LMSHandler.select_lms("http://moodle.test/courses/42")
         self.assertIsInstance(backend, MoodleLMSBackend)
         self.assertEqual(backend.configuration["BASE_URL"], "http://moodle.test")
+        self.assertEqual(backend.name, "moodle")
 
         backend = LMSHandler.select_lms("http://unknown-lms.test/courses/42")
         self.assertIsNone(backend)
