@@ -1549,6 +1549,20 @@ class Enrollment(BaseModel):
         self.state = state
         Enrollment.objects.filter(pk=self.pk).update(state=state)
 
+        # Enrollments that are linked to certificate product should be added into a specific
+        # group in moodle.
+        if not lms.name == "moodle":
+            logger.info("Enrollment inside lms: %s", lms.name)
+            return
+        # try:
+        # except exceptions.AddMemberToGroupError:
+        group_id = lms.get_course_group_id(resource_link=link)
+        if not group_id:
+            group_id = lms.create_group_in_course(
+                resource_link=link, name="certificate"
+            )
+        lms.add_user_to_group(username=self.user.username, group_id=group_id)
+
     def save(self, *args, **kwargs):
         """
         Call full clean before saving instance and sync enrollment active state
