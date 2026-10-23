@@ -78,7 +78,14 @@ def course_runs_sync(request):
                 code=course_number, title=request.data.get("title", course_number)
             )
 
-        # Instantiate a new course run
-        models.CourseRun.objects.create(**serializer.validated_data, course=course)
+        # Instantiate a new course run. `title` is not part of `SyncCourseRunSerializer`
+        # (it only applies to the course), so it is set here explicitly: fall back to the
+        # course's title when the LMS does not submit one, so the course run is never left
+        # without a title in the back office.
+        models.CourseRun.objects.create(
+            **serializer.validated_data,
+            course=course,
+            title=request.data.get("title", course.title),
+        )
 
     return Response({"success": True})

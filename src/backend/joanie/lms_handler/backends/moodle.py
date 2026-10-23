@@ -3,6 +3,7 @@ Backend to connect Joanie to Moodle LMS
 """
 
 import logging
+import re
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
@@ -13,12 +14,25 @@ from moodle.exception import (
     MoodleException,
     NetworkMoodleException,
 )
+from rest_framework.exceptions import ValidationError
 
 from joanie.core.exceptions import EnrollmentError, GradeError
+from joanie.lms_handler.serializers import SyncCourseRunSerializer
 
 from .base import BaseLMSBackend
 
 logger = logging.getLogger(__name__)
+
+# FUN's unified course key nomenclature, shared across OpenEdX, Moodle,
+# Joanie and Richie: [course_number]-session[N][M], e.g. "71015-session01M".
+# Unlike the historical edX-only format, the establishment code is no longer
+# part of this field (it is carried by the Moodle course's category instead).
+# The session segment and the Moodle platform indicator ("M") are
+# intentionally dropped when deriving the Joanie course code, so that every
+# session of the same course maps to the same `Course` (one new `CourseRun`
+# per session), matching OpenEdXLMSBackend.extract_course_number's behavior
+# on the course-v1 key.
+MOODLE_COURSE_NUMBER_REGEX = r"^(?P<course_number>\d+)-session\d+M$"
 
 
 class MoodleUserException(Exception):
@@ -189,3 +203,40 @@ class MoodleLMSBackend(BaseLMSBackend):
             )
 
         raise GradeError()
+
+    def extract_course_number(self, data):
+        """Extract the LMS course number from data dictionary.
+
+        Moodle's `idnumber` is expected to follow FUN's unified course key
+        nomenclature. We reject the sync outright if it doesn't match: a
+        malformed idnumber would otherwise silently create an orphan Course
+        or split a course's sessions across several Courses.
+        """
+        idnumber = data.get("idnumber") or ""
+        regex = self.configuration.get(
+            "COURSE_NUMBER_REGEX", MOODLE_COURSE_NUMBER_REGEX
+        )
+        match = re.match(regex, idnumber)
+        if not match:
+            raise ValidationError(
+                {
+                    "idnumber": [
+                        f"idnumber {idnumber!r} does not match the expected "
+                        "course key format (coursenumber-sessionNM)."
+                    ]
+                }
+            )
+        return match.group("course_number")
+
+    def clean_course_run_data(self, data):
+        """Remove course run's protected fields from the data dictionary."""
+        return {
+            key: value
+            for (key, value) in data.items()
+            if key not in self.configuration.get("COURSE_RUN_SYNC_NO_UPDATE_FIELDS", [])
+        }
+
+    @staticmethod
+    def get_course_run_serializer(data, partial=False):
+        """Prepare data and return a bound serializer."""
+        return SyncCourseRunSerializer(data=data, partial=partial)
