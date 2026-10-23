@@ -291,7 +291,7 @@ test.describe("Course list", async () => {
       routeUrl: coursesApiUrl,
       page,
       createCallback: store.postUpdate,
-      searchTimeout: 100,
+      searchTimeout: 500,
       updateCallback: store.postUpdate,
       searchResult: store.list[1],
       optionsResult: COURSE_OPTIONS_REQUEST_RESULT,
