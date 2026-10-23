@@ -46,13 +46,13 @@ class MoodleLMSBackend(BaseLMSBackend):
         """Build a Moodle API url."""
         return f"{self.base_url}?wstoken={self.token}&wsfunction={function}&moodlewsrestformat=json"
 
-    def extract_course_id(self, resource_link):
+    def extract_course_id(self, resource_link: str):
         """Extract the LMS course id from the course run url."""
         parsed_url = urlparse(resource_link)
         query_parameters = parse_qs(parsed_url.query)
         return int(query_parameters.get("id")[0])
 
-    def get_enrollment(self, username, resource_link):
+    def get_enrollment(self, username: str, resource_link: str):
         """
         Retrieve an enrollment according to a username and a resource_link.
         """
@@ -73,7 +73,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             )
             return None
 
-    def get_enrollments(self, resource_link):
+    def get_enrollments(self, resource_link: str):
         """Retrieve enrollments according to a resource_link."""
         course_id: int = self.extract_course_id(resource_link)
         try:
@@ -85,7 +85,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             return None
 
     # pylint: disable=invalid-name
-    def get_user_id(self, username):
+    def get_user_id(self, username: str):
         """Retrieve user id."""
         username = username.lower()
         criteria = {"key": "username", "value": username}
@@ -120,70 +120,37 @@ class MoodleLMSBackend(BaseLMSBackend):
             logger.error("Moodle error while creating user %s: %s", user.username, e)
             raise MoodleUserCreateException() from e
 
-    def get_course_groups(
-        self,
-    ):
-        """Get groups of a course in Moodle LMS"""
-        # core_group_get_course_groups
-        #  Structure
-        #  int   //id of course
-        # course_id = self.extract_course_id("https://dev-jon-moodle.lt.openfun.fr/course/view.php?id=2")
+    def get_course_group_id(self, resource_link: str):
+        """Get the first group of a course in Moodle LMS"""
+        course_id = self.extract_course_id(resource_link)
         return self.moodle.post(
-            "core_group_get_course_groups", courseid=2, options=None
-        )
+            "core_group_get_course_groups", courseid=course_id, options=None
+        )[0].get("id")
 
-    def create_group_in_course(self, course_id=None):
+    def create_group_in_course(self, resource_link: str, name: str):
         """Create the course's group for certificate when it's the first user to enter"""
-        # core_group_create_groups
         group_data = {
-            "name": "Certificate",
-            "courseid": 2,
+            "name": name.capitalize(),
+            "courseid": self.extract_course_id(resource_link),
             "description": "Group dedicated for certificate students",
-            "idnumber": "certificate",
+            "idnumber": name.lower(),
         }
+        # try
         return self.moodle.post(
             "core_group_create_groups", groups=[group_data], options=None
-        )
-        # Structure générale
+        )[0]["id"]
+        # except
 
-        # //List of group object. A group has a courseid, a name, a description and an enrolment key.
-        # list of (
-        # object {
-        # courseid int   //id of course
-        # name string   //multilang compatible name, course unique
-        # description string   //group description text
-        # descriptionformat int  Défaut pour « 1 » //description format (1 = HTML, 0 = MOODLE, 2 = PLAIN, or 4 = MARKDOWN)
-        # enrolmentkey string  Optionnel //group enrol secret phrase
-        # idnumber string  Optionnel //id number
-        # visibility int  Défaut pour « 0 » //group visibility mode. 0 = Visible to all. 1 = Visible to members. 2 = See own membership. 3 = Membership is hidden. default: 0
-        # participation int  Défaut pour « 1 » //activity participation enabled? Only for "all" and "members" visibility. Default true.
-        # customfields  Optionnel //Custom fields
-        # list of (
-        # object {
-        # shortname string   //The shortname of the custom field
-        # value string   //The value of the custom field
-        # }
-        # )}
-        # )
-        # Check if group exists in this course
-        #  if course exists, take it (self.get_course_groups())
-        #  else: create course group for user and add him into it.
-
-    def add_user_to_group(self, user=None, group_id=None):
+    def add_user_to_group(self, username: str, group_id: int):
         """Add learner to specific group id in course"""
-        # core_group_add_group_members
-        # Structure générale
         group_user_data = {
-            "userid": 2,
-            "groupid": 2,
+            "userid": self.get_user_id(username),
+            "groupid": group_id,
         }
-        return self.moodle("core_group_add_group_members", members=[group_user_data])
-        #  list of (
-        #  object {
-        #  groupid int   //group record id
-        #  userid int   //user id
-        #  }
-        #  )
+        # try
+        self.moodle("core_group_add_group_members", members=[group_user_data])
+        # except
+        return True
 
     # pylint: disable=too-many-branches
     def set_enrollment(self, enrollment):
@@ -230,7 +197,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             pass
         return True
 
-    def get_grades(self, username, resource_link):
+    def get_grades(self, username: str, resource_link: str):
         """Get user's grades for a course run given its url."""
         try:
             user_id = self.get_user_id(username)
