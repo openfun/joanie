@@ -7,6 +7,7 @@ class BaseLMSBackend:
     """
     Base backend to hold all LMS common methods and provide a skeleton for others.
     """
+
     name = "base"
 
     def __init__(self, configuration, *args, **kwargs):
