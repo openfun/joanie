@@ -15,6 +15,7 @@ from moodle.exception import (
 )
 
 from joanie.core.exceptions import EnrollmentError, GradeError
+from joanie.lms_handler.serializers import SyncCourseRunSerializer
 
 from .base import BaseLMSBackend
 
@@ -189,3 +190,30 @@ class MoodleLMSBackend(BaseLMSBackend):
             )
 
         raise GradeError()
+
+    def extract_course_number(self, data):
+        """Extract the LMS course number from data dictionary.
+
+        Moodle has no org/course/run structure like OpenEdX. We prefer the
+        course's `idnumber` (an admin-defined stable identifier, usually
+        the organization's own course code) when provided, since the
+        auto-incrementing Moodle course id is meaningless outside of this
+        Moodle instance. Fall back to the course id if idnumber is unset.
+        """
+        idnumber = data.get("idnumber")
+        if idnumber:
+            return str(idnumber)
+        return str(self.extract_course_id(data.get("resource_link")))
+
+    def clean_course_run_data(self, data):
+        """Remove course run's protected fields from the data dictionary."""
+        return {
+            key: value
+            for (key, value) in data.items()
+            if key not in self.configuration.get("COURSE_RUN_SYNC_NO_UPDATE_FIELDS", [])
+        }
+
+    @staticmethod
+    def get_course_run_serializer(data, partial=False):
+        """Prepare data and return a bound serializer."""
+        return SyncCourseRunSerializer(data=data, partial=partial)
