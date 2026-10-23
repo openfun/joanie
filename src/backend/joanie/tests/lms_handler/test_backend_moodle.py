@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 
 import responses
 from requests import RequestException
+from rest_framework.exceptions import ValidationError
 
 from joanie.core import factories, models
 from joanie.core.exceptions import EnrollmentError, GradeError
@@ -1422,6 +1423,57 @@ class MoodleLMSBackendTestCase(TestCase):
                 "A Network error occurred: "
             ],
         )
+
+    def test_backend_moodle_extract_course_number(self):
+        """
+        `extract_course_number` should extract the course number from a valid
+        `idnumber`, stripping the session and platform indicator segments so that
+        several sessions of the same course map to the same Joanie `Course`.
+        """
+        self.assertEqual(
+            self.backend.extract_course_number({"idnumber": "71015-session01M"}),
+            "71015",
+        )
+        # A different session of the same course should extract the same course number.
+        self.assertEqual(
+            self.backend.extract_course_number({"idnumber": "71015-session02M"}),
+            "71015",
+        )
+
+    def test_backend_moodle_extract_course_number_missing_idnumber(self):
+        """
+        If `idnumber` is missing or empty, `extract_course_number` should raise
+        a ValidationError instead of silently falling back to something else.
+        """
+        with self.assertRaises(ValidationError) as context:
+            self.backend.extract_course_number({})
+
+        self.assertIn("idnumber", context.exception.detail)
+
+        with self.assertRaises(ValidationError):
+            self.backend.extract_course_number({"idnumber": ""})
+
+    def test_backend_moodle_extract_course_number_invalid_format(self):
+        """
+        If `idnumber` does not match the expected `coursenumber-sessionNM` format,
+        `extract_course_number` should raise a ValidationError rather than create
+        an orphan Course or split a course's sessions across several Courses.
+        """
+        invalid_idnumbers = [
+            # Historical establishment-prefixed format, no longer valid for Moodle.
+            "87_046_session01_m",
+            # Lowercase platform indicator is not accepted (strict uppercase "M" only).
+            "71015-session01m",
+            # Missing platform indicator.
+            "71015-session01",
+            # Missing session segment entirely.
+            "71015",
+            # Garbage value.
+            "not-a-course-number",
+        ]
+        for idnumber in invalid_idnumbers:
+            with self.assertRaises(ValidationError):
+                self.backend.extract_course_number({"idnumber": idnumber})
 
     @responses.activate(assert_all_requests_are_fired=True)
     def test_backend_moodle_get_grades_moodle_error(self):
