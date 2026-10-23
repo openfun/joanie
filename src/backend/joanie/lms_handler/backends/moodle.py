@@ -32,6 +32,8 @@ class MoodleUserCreateException(Exception):
 class MoodleLMSBackend(BaseLMSBackend):
     """LMS Backend to connect Joanie to Moodle LMS"""
 
+    name = "moodle"
+
     def __init__(self, configuration, *args, **kwargs):
         """Attach configuration to the LMS backend instance."""
         super().__init__(configuration, *args, **kwargs)
