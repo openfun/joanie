@@ -118,14 +118,70 @@ class MoodleLMSBackend(BaseLMSBackend):
             logger.error("Moodle error while creating user %s: %s", user.username, e)
             raise MoodleUserCreateException() from e
 
-    def get_course_groups(self, course_id):
+    def get_course_groups(
+        self,
+    ):
         """Get groups of a course in Moodle LMS"""
         # core_group_get_course_groups
-        pass
+        #  Structure
+        #  int   //id of course
+        # course_id = self.extract_course_id("https://dev-jon-moodle.lt.openfun.fr/course/view.php?id=2")
+        return self.moodle.post(
+            "core_group_get_course_groups", courseid=2, options=None
+        )
 
-    def add_to_group(self, user, group_id):
+    def create_group_in_course(self, course_id=None):
+        """Create the course's group for certificate when it's the first user to enter"""
+        # core_group_create_groups
+        group_data = {
+            "name": "Certificate",
+            "courseid": 2,
+            "description": "Group dedicated for certificate students",
+            "idnumber": "certificate",
+        }
+        return self.moodle.post(
+            "core_group_create_groups", groups=[group_data], options=None
+        )
+        # Structure générale
+
+        # //List of group object. A group has a courseid, a name, a description and an enrolment key.
+        # list of (
+        # object {
+        # courseid int   //id of course
+        # name string   //multilang compatible name, course unique
+        # description string   //group description text
+        # descriptionformat int  Défaut pour « 1 » //description format (1 = HTML, 0 = MOODLE, 2 = PLAIN, or 4 = MARKDOWN)
+        # enrolmentkey string  Optionnel //group enrol secret phrase
+        # idnumber string  Optionnel //id number
+        # visibility int  Défaut pour « 0 » //group visibility mode. 0 = Visible to all. 1 = Visible to members. 2 = See own membership. 3 = Membership is hidden. default: 0
+        # participation int  Défaut pour « 1 » //activity participation enabled? Only for "all" and "members" visibility. Default true.
+        # customfields  Optionnel //Custom fields
+        # list of (
+        # object {
+        # shortname string   //The shortname of the custom field
+        # value string   //The value of the custom field
+        # }
+        # )}
+        # )
+        # Check if group exists in this course
+        #  if course exists, take it (self.get_course_groups())
+        #  else: create course group for user and add him into it.
+
+    def add_user_to_group(self, user=None, group_id=None):
         """Add learner to specific group id in course"""
         # core_group_add_group_members
+        # Structure générale
+        group_user_data = {
+            "userid": 2,
+            "groupid": 2,
+        }
+        return self.moodle("core_group_add_group_members", members=[group_user_data])
+        #  list of (
+        #  object {
+        #  groupid int   //group record id
+        #  userid int   //user id
+        #  }
+        #  )
 
     # pylint: disable=too-many-branches
     def set_enrollment(self, enrollment):
