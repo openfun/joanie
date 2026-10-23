@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 
+- Add Moodle course run synchronization support
 - Allow credential orders to withdraw in save payment method state
 - Add withdraw state in order list view of backoffice
 - Add confirm and reject withdrawal backoffice

@@ -174,6 +174,7 @@ class SyncCourseRunApiTestCase(BaseAPITestCase):
 
         # Check the new course run
         course_run = CourseRun.objects.get(course=course)
+        self.assertEqual(course_run.title, "my course run")
         serializer = SyncCourseRunSerializer(instance=course_run)
         data.pop("title")
         self.assertEqual(serializer.data, data)
@@ -210,8 +211,10 @@ class SyncCourseRunApiTestCase(BaseAPITestCase):
         course = Course.objects.get()
         self.assertEqual(course.title, "DEMOX")
 
-        # Check the new course run
+        # Check the new course run: no title was submitted, it should fall back to the
+        # course's title rather than being left empty.
         course_run = CourseRun.objects.get(course=course)
+        self.assertEqual(course_run.title, "DEMOX")
         serializer = SyncCourseRunSerializer(instance=course_run)
         self.assertEqual(serializer.data, data)
 
@@ -246,6 +249,7 @@ class SyncCourseRunApiTestCase(BaseAPITestCase):
 
         # Check the new course run
         course_run = CourseRun.objects.get()
+        self.assertEqual(course_run.title, "my course run")
         serializer = SyncCourseRunSerializer(instance=course_run)
         data.pop("title")
         self.assertEqual(serializer.data, data)
