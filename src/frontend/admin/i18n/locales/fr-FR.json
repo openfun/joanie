@@ -1203,6 +1203,10 @@
     "description": "Label for the cancel order action",
     "message": "Annuler cette commande"
   },
+  "components.templates.orders.buttons.orderActionsButton.confirmWithdrawal": {
+    "description": "Label for the confirm withdrawal order action",
+    "message": "Confirmer la rétractation"
+  },
   "components.templates.orders.buttons.orderActionsButton.generateCertificate": {
     "description": "Label for the generate certificate order action",
     "message": "Générer le certificat"
@@ -1215,6 +1219,10 @@
     "description": "Text for generateCertificate when the order is not completed",
     "message": "Impossible de générer un certificat pour une commande inachevée"
   },
+  "components.templates.orders.buttons.orderActionsButton.notPendingWithdrawalTooltip": {
+    "description": "Text when the order has no withdrawal request awaiting review",
+    "message": "Aucune demande de rétractation en attente de traitement pour cette commande"
+  },
   "components.templates.orders.buttons.orderActionsButton.orderActionsLabel": {
     "description": "Label for the actions button",
     "message": "Actions"
@@ -1222,6 +1230,10 @@
   "components.templates.orders.buttons.orderActionsButton.refundOrder": {
     "description": "Label for the refund order action",
     "message": "Rembourser cette commande"
+  },
+  "components.templates.orders.buttons.orderActionsButton.rejectWithdrawal": {
+    "description": "Label for the reject withdrawal order action",
+    "message": "Refuser la rétractation"
   },
   "components.templates.orders.filters.OrderFilters.searchPlaceholder": {
     "description": "Text for the search input placeholder",
@@ -1471,6 +1483,10 @@
     "description": "Text for pending payment order state",
     "message": "En attente de paiement"
   },
+  "components.templates.orders.view.orderStatesMessages.pending_withdraw": {
+    "description": "Text for pending withdraw order state",
+    "message": "Rétractation à traiter"
+  },
   "components.templates.orders.view.orderStatesMessages.refunded": {
     "description": "Text for refunded order state",
     "message": "Remboursée"
@@ -1494,6 +1510,10 @@
   "components.templates.orders.view.orderStatesMessages.to_sign": {
     "description": "Text for to sign order state",
     "message": "À signer"
+  },
+  "components.templates.orders.view.orderStatesMessages.withdrawn": {
+    "description": "Text for a canceled order state that was actually canceled by the owner exercising their withdrawal right",
+    "message": "Rétractation confirmée"
   },
   "components.templates.orders.view.orderStatus.paid": {
     "description": "Text for paid status",
@@ -1566,6 +1586,14 @@
   "components.templates.orders.view.voucher": {
     "description": "Voucher code field",
     "message": "Code du coupon"
+  },
+  "components.templates.orders.view.withdrawnConfirmationAt": {
+    "description": "Label for the withdrawal confirmation date field",
+    "message": "Rétractation confirmée le"
+  },
+  "components.templates.orders.view.withdrawnRequestedAt": {
+    "description": "Label for the withdrawal request date field",
+    "message": "Rétraction demandée le"
   },
   "components.templates.organizations.address.form.translations.addressLabel": {
     "description": "Label for address organization address input",
@@ -2411,9 +2439,17 @@
     "description": "Success message shown to the user when the certificate has been generated.",
     "message": "Certificat créé avec succès."
   },
+  "hooks.useOrders.successConfirmWithdrawal": {
+    "description": "Success message shown to the user when the withdrawal request has been confirmed.",
+    "message": "Demande de rétractation confirmée."
+  },
   "hooks.useOrders.successRefund": {
     "description": "Success message shown to the user when the order is being refunded.",
     "message": "Demande de remboursement prise en compte."
+  },
+  "hooks.useOrders.successRejectWithdrawal": {
+    "description": "Success message shown to the user when the withdrawal request has been rejected.",
+    "message": "Demande de rétractation refusée."
   },
   "hooks.useOrganizations.errorCreate": {
     "description": "Error message shown to the user when organization creation request fails.",
