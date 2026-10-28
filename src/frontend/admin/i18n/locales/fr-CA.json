@@ -1203,6 +1203,10 @@
     "description": "Label for the cancel order action",
     "message": "Cancel this order"
   },
+  "components.templates.orders.buttons.orderActionsButton.confirmWithdrawal": {
+    "description": "Label for the confirm withdrawal order action",
+    "message": "Confirm withdrawal"
+  },
   "components.templates.orders.buttons.orderActionsButton.generateCertificate": {
     "description": "Label for the generate certificate order action",
     "message": "Generate certificate"
@@ -1215,6 +1219,10 @@
     "description": "Text for generateCertificate when the order is not completed",
     "message": "Cannot generate certificate for uncompleted order"
   },
+  "components.templates.orders.buttons.orderActionsButton.notPendingWithdrawalTooltip": {
+    "description": "Text when the order has no withdrawal request awaiting review",
+    "message": "This order has no withdrawal request awaiting review"
+  },
   "components.templates.orders.buttons.orderActionsButton.orderActionsLabel": {
     "description": "Label for the actions button",
     "message": "Actions"
@@ -1222,6 +1230,10 @@
   "components.templates.orders.buttons.orderActionsButton.refundOrder": {
     "description": "Label for the refund order action",
     "message": "Refund this order"
+  },
+  "components.templates.orders.buttons.orderActionsButton.rejectWithdrawal": {
+    "description": "Label for the reject withdrawal order action",
+    "message": "Reject withdrawal"
   },
   "components.templates.orders.filters.OrderFilters.searchPlaceholder": {
     "description": "Text for the search input placeholder",
@@ -1471,6 +1483,10 @@
     "description": "Text for pending payment order state",
     "message": "Pending payment"
   },
+  "components.templates.orders.view.orderStatesMessages.pending_withdraw": {
+    "description": "Text for pending withdraw order state",
+    "message": "To withdraw"
+  },
   "components.templates.orders.view.orderStatesMessages.refunded": {
     "description": "Text for refunded order state",
     "message": "Refunded"
@@ -1494,6 +1510,10 @@
   "components.templates.orders.view.orderStatesMessages.to_sign": {
     "description": "Text for to sign order state",
     "message": "To sign"
+  },
+  "components.templates.orders.view.orderStatesMessages.withdrawn": {
+    "description": "Text for a canceled order state that was actually canceled by the owner exercising their withdrawal right",
+    "message": "Withdrawn"
   },
   "components.templates.orders.view.orderStatus.paid": {
     "description": "Text for paid status",
@@ -1566,6 +1586,14 @@
   "components.templates.orders.view.voucher": {
     "description": "Voucher code field",
     "message": "Voucher code"
+  },
+  "components.templates.orders.view.withdrawnConfirmationAt": {
+    "description": "Label for the withdrawal confirmation date field",
+    "message": "Withdrawal confirmed on"
+  },
+  "components.templates.orders.view.withdrawnRequestedAt": {
+    "description": "Label for the withdrawal request date field",
+    "message": "Withdrawal requested on"
   },
   "components.templates.organizations.address.form.translations.addressLabel": {
     "description": "Label for address organization address input",
@@ -2411,9 +2439,17 @@
     "description": "Success message shown to the user when the certificate has been generated.",
     "message": "Certificate successfully generated."
   },
+  "hooks.useOrders.successConfirmWithdrawal": {
+    "description": "Success message shown to the user when the withdrawal request has been confirmed.",
+    "message": "Withdrawal request confirmed."
+  },
   "hooks.useOrders.successRefund": {
     "description": "Success message shown to the user when the order is being refunded.",
     "message": "Refunding order."
+  },
+  "hooks.useOrders.successRejectWithdrawal": {
+    "description": "Success message shown to the user when the withdrawal request has been rejected.",
+    "message": "Withdrawal request rejected."
   },
   "hooks.useOrganizations.errorCreate": {
     "description": "Error message shown to the user when organization creation request fails.",
