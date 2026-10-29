@@ -7,6 +7,10 @@ class EnrollmentError(Exception):
     """An exception to raise if an enrollment fails."""
 
 
+class AddMemberToGroupError(Exception):
+    """An exception to raise if adding a student to a group fails."""
+
+
 class GradeError(Exception):
     """An exception to raise when grade processing fails."""
 
