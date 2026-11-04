@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as Yup from "yup";
-import { useForm } from "react-hook-form";
+import { Resolver, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Grid from "@mui/material/Grid2";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -98,8 +98,8 @@ export function OrganizationGeneralSection(props: Props) {
     dpo_email: Yup.string().email(),
   });
 
-  const methods = useForm({
-    resolver: yupResolver(RegisterSchema),
+  const methods = useForm<FormValues>({
+    resolver: yupResolver(RegisterSchema) as Resolver<FormValues>,
     defaultValues: getDefaultValues() as any, // To not trigger type validation for default value
   });
 

@@ -54,7 +54,7 @@ export function FullScreenModal({
   );
 }
 
-const Transition = React.forwardRef(function Transition(
+const Transition = React.forwardRef(function TransitionSlide(
   props: PropsWithChildren<{}>,
   ref,
 ) {

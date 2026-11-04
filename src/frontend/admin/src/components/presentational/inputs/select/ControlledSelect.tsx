@@ -10,8 +10,10 @@ import AddIcon from "@mui/icons-material/Add";
 import { ResourceWithId } from "@/services/api/models/Ressource";
 import { Maybe } from "@/types/utils";
 
-export interface ControlledSelectProps<T extends ResourceWithId>
-  extends Omit<AutocompleteProps<T, false, false, false>, "renderInput"> {
+export interface ControlledSelectProps<T extends ResourceWithId> extends Omit<
+  AutocompleteProps<T, false, false, false>,
+  "renderInput"
+> {
   onSelectItem?: (item: T) => void;
   label?: string;
   selectedOptions?: T[];

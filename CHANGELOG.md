@@ -26,6 +26,7 @@ and this project adheres to
 
 - Update withdrawal email templates sentences
 - Upgrade Joanie to use python 3.13
+- Upgrade Node to 24.21.0
 
 ## [3.5.0] - 2026-08-13
 

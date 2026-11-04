@@ -22,12 +22,11 @@ export const contractDefinitionRoutes: BaseEntityRoutesPaths = {
   delete: (id: string) => `/contract-definitions/${id}/`,
 };
 
-interface Repository
-  extends AbstractRepository<
-    ContractDefinition,
-    ResourcesQuery,
-    DTOContractDefinition
-  > {
+interface Repository extends AbstractRepository<
+  ContractDefinition,
+  ResourcesQuery,
+  DTOContractDefinition
+> {
   getAllLanguages: () => Promise<SelectOption[]>;
   getAllTemplates: () => Promise<SelectOption[]>;
 }

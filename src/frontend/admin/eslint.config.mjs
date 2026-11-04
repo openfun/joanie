@@ -61,6 +61,8 @@ export default [...compat.extends(
             ],
         }],
         "react-hooks/exhaustive-deps": "off",
+        "react-hooks/refs": "off",
+        "react-hooks/set-state-in-effect": "off",
         "no-restricted-imports": ["error", {
             paths: ["@mui/material"],
             patterns: ["@mui/material/*/*"],

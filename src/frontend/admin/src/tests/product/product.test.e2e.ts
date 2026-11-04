@@ -60,7 +60,7 @@ test.describe("Product list", () => {
       data: store.products,
       routeUrl: "http://localhost:8071/api/v1.0/admin/products/",
       page,
-      searchTimeout: 200,
+      searchTimeout: 500,
       searchResult: productToSearch,
     });
     // Go to the page

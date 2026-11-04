@@ -20,8 +20,11 @@ export const coursesRunsRoute: BaseEntityRoutesPaths = {
   delete: (id: string) => `/course-runs/${id}/`,
 };
 
-interface Repository
-  extends AbstractRepository<CourseRun, ResourcesQuery, DTOCourseRun> {
+interface Repository extends AbstractRepository<
+  CourseRun,
+  ResourcesQuery,
+  DTOCourseRun
+> {
   getAllLanguages: () => Promise<JoanieLanguage[]>;
 }
 

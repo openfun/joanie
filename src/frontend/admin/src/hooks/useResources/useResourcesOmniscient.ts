@@ -19,8 +19,8 @@ import {
 export const useResourcesOmniscient = <
   TData extends Resource,
   TResourceQuery extends ResourcesQuery = ResourcesQuery,
-  TApiResource extends
-    ApiResourceInterface<TData> = ApiResourceInterface<TData>,
+  TApiResource extends ApiResourceInterface<TData> =
+    ApiResourceInterface<TData>,
 >({
   filters,
   ...props
@@ -32,6 +32,7 @@ export const useResourcesOmniscient = <
     () => ({ ...messages, ...props.messages }),
     [props.messages],
   );
+  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
   const filter = useCallback(() => {
     // The following condition is important, let's illustrate it with the following situation:
     // - enabled: false ( happens when waiting for filters values, like `id` for useResource )
@@ -73,7 +74,7 @@ export const useResourcesOmniscient = <
       return;
     }
     setData(tmpData);
-  }, [useResources.items, JSON.stringify(filters), actualMessages]);
+  }, [useResources.items, filtersKey, actualMessages]);
 
   useEffect(() => {
     if (useResources.states.fetching) {

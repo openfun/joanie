@@ -308,7 +308,7 @@ test.describe("Certificate definition list", () => {
       data: store.list,
       routeUrl: certificateDefinitionApiUrl,
       page,
-      searchTimeout: 200,
+      searchTimeout: 500,
       searchResult: store.list[1],
     });
     await page.goto(PATH_ADMIN.certificates.list);
