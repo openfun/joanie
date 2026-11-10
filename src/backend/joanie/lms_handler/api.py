@@ -78,7 +78,11 @@ def course_runs_sync(request):
                 code=course_number, title=request.data.get("title", course_number)
             )
 
-        # Instantiate a new course run
-        models.CourseRun.objects.create(**serializer.validated_data, course=course)
+        # Instantiate a new course run, falling back to the course's title if none is given
+        models.CourseRun.objects.create(
+            **serializer.validated_data,
+            course=course,
+            title=request.data.get("title", course.title),
+        )
 
     return Response({"success": True})
