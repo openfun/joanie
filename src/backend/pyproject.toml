@@ -52,6 +52,7 @@ dependencies = [
     "easy_thumbnails==2.10.1",
     "factory_boy==3.3.3",
     "gunicorn==25.1.0",
+    "kombu==5.6.2",
     "markdown==3.10.2",
     "moodlepy==0.24.1",
     "nested-multipart-parser==1.6.0",
