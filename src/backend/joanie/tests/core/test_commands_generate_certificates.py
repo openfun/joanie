@@ -150,6 +150,8 @@ class CreateCertificatesTestCase(BaseAPITestCase):
                         "department": "",
                         "firstaccess": 1704716076,
                         "lastaccess": 1704716076,
+                        "idnumber": "admin",
+                        "alternatename": "admin",
                         "auth": "manual",
                         "suspended": False,
                         "confirmed": True,
