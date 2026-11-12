@@ -97,8 +97,8 @@ class MoodleLMSBackend(BaseLMSBackend):
             return None
 
     # pylint: disable=invalid-name
-    def get_user_id(self, username: str):
-        """Retrieve user id."""
+    def get_user(self, username: str):
+        """Retrieve user data response."""
         username = username.lower()
         criteria = {"key": "username", "value": username}
         try:
@@ -108,11 +108,10 @@ class MoodleLMSBackend(BaseLMSBackend):
             raise MoodleUserException() from e
         try:
             # username is unique in Moodle
-            user_id = res.get("users", [])[0].get("id")
+            return res.get("users", [])[0]
         except IndexError as e:
             logger.info("User %s not found in Moodle", username)
             raise MoodleUserException() from e
-        return user_id
 
     def create_user(self, user):
         """Create a user."""
@@ -130,6 +129,19 @@ class MoodleLMSBackend(BaseLMSBackend):
             return self.moodle("core_user_create_users", users=[user_data])[0]
         except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
             logger.error("Moodle error while creating user %s: %s", user.username, e)
+            raise MoodleUserCreateException() from e
+
+    def update_user_info(self, user_moodle_id: str, username: str):
+        """Update user `alternatename` and `idnumber` fields"""
+        user_data = {
+            "id": user_moodle_id,
+            "idnumber": username.lower(),
+            "alternatename": username.lower(),
+        }
+        try:
+            return self.moodle("core_user_update_users", users=[user_data])
+        except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
+            logger.error("Moodle error while updating user %s: %s", username, e)
             raise MoodleUserCreateException() from e
 
     def get_course_group_id(self, resource_link: str):
@@ -167,7 +179,7 @@ class MoodleLMSBackend(BaseLMSBackend):
     def add_user_to_group(self, username: str, group_id: int):
         """Add learner to specific group id in course"""
         group_user_data = {
-            "userid": self.get_user_id(username),
+            "userid": self.get_user(username)["id"],
             "groupid": group_id,
         }
         try:
@@ -186,11 +198,18 @@ class MoodleLMSBackend(BaseLMSBackend):
     def set_enrollment(self, enrollment):
         """Activate/deactivate an enrollment."""
         user_id = None
+        username = enrollment.user.username
+
         try:
-            user_id = self.get_user_id(enrollment.user.username)
+            user = self.get_user(username)
         except MoodleUserException as e:
             if not enrollment.is_active:
                 raise EnrollmentError() from e
+        else:
+            user_id = user.get("id")
+            # Make sure `idnumber` and `alternatename` are filled, otherwise update them
+            if not user.get("idnumber") or not user.get("alternatename"):
+                self.update_user_info(user_id, username)
 
         if user_id is None:
             try:
@@ -230,7 +249,7 @@ class MoodleLMSBackend(BaseLMSBackend):
     def get_grades(self, username: str, resource_link: str):
         """Get user's grades for a course run given its url."""
         try:
-            user_id = self.get_user_id(username)
+            user_id = self.get_user(username)["id"]
         except MoodleUserException as e:
             raise GradeError() from e
         course_id = self.extract_course_id(resource_link)

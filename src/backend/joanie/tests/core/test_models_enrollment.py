@@ -417,7 +417,14 @@ class EnrollmentModelsTestCase(TestCase):
         self.assertFalse(order_enrollment.was_created_by_order)
 
     @mock.patch.object(MoodleLMSBackend, "set_enrollment", return_value=True)
-    def test_models_enrollment_was_created_by_order_flag_moodle(self, _mock_set):
+    @mock.patch.object(MoodleLMSBackend, "get_course_group_id", return_value=1)
+    @mock.patch.object(MoodleLMSBackend, "add_user_to_group", return_value=True)
+    def test_models_enrollment_was_created_by_order_flag_moodle(
+        self,
+        _mock_set,
+        _mock_get_course_group_id,
+        _mock_add_user_to_group,
+    ):
         """
         For a course run which is listed (available for free enrollment) and also
         linked to a product, the `was_created_by_order` flag can be set to store

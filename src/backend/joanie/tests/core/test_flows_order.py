@@ -23,6 +23,7 @@ from joanie.core.factories import CourseRunFactory
 from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
+from joanie.lms_handler.backends.moodle import MoodleLMSBackend
 from joanie.lms_handler.backends.openedx import (
     OPENEDX_MODE_HONOR,
     OPENEDX_MODE_VERIFIED,
@@ -563,7 +564,11 @@ class OrderFlowsTestCase(LoggingTestCase):
         factories.CourseRunFactory(
             course=course, state=CourseState.ONGOING_OPEN, is_listed=True
         )
-        product = factories.ProductFactory(target_courses=[course], price="0.00")
+        product = factories.ProductFactory(
+            target_courses=[course],
+            price="0.00",
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
         backend = LMSHandler.select_lms(resource_link)
 
         responses.add(
@@ -590,6 +595,8 @@ class OrderFlowsTestCase(LoggingTestCase):
                         "department": "",
                         "firstaccess": 1704716076,
                         "lastaccess": 1704716076,
+                        "alternatename": "student",
+                        "idnumber": "student",
                         "auth": "manual",
                         "suspended": False,
                         "confirmed": True,
@@ -609,6 +616,23 @@ class OrderFlowsTestCase(LoggingTestCase):
                 ],
                 "warnings": [],
             },
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_user_update_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][id]": "5",
+                        "users[0][idnumber]": "student",
+                        "users[0][alternatename]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            body="null",
+            content_type="application/json",
         )
 
         responses.add(
@@ -695,16 +719,20 @@ class OrderFlowsTestCase(LoggingTestCase):
         )
 
         # Create a pre-existing free enrollment
-        factories.EnrollmentFactory(
+        enrollment = factories.EnrollmentFactory(
             course_run=course_run, user__username="student", is_active=True
         )
-        order = factories.OrderFactory(product=product, owner__username="student")
+        order = factories.OrderFactory(
+            product=product,
+            enrollment=enrollment,
+            course=None,
+            owner__username="student",
+        )
 
         order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
-
-        self.assertEqual(len(responses.calls), 5)
+        self.assertEqual(len(responses.calls), 4)
 
     @responses.activate
     @override_settings(
@@ -880,7 +908,13 @@ class OrderFlowsTestCase(LoggingTestCase):
         ],
         COURSE_WEB_HOOKS=[],
     )
-    def test_flows_order_cancel_certificate_product_moodle(self):
+    @mock.patch.object(MoodleLMSBackend, "get_course_group_id", return_value=1)
+    @mock.patch.object(MoodleLMSBackend, "add_user_to_group", return_value=True)
+    def test_flows_order_cancel_certificate_product_moodle(
+        self,
+        _mock_get_course_group_id,
+        _mock_add_user_to_group,
+    ):
         """
         Test that the source enrollment is set back to "honor" in the LMS when a related order
         is canceled.
@@ -930,6 +964,8 @@ class OrderFlowsTestCase(LoggingTestCase):
                         "department": "",
                         "firstaccess": 1704716076,
                         "lastaccess": 1704716076,
+                        "alternatename": "student",
+                        "idnumber": "student",
                         "auth": "manual",
                         "suspended": False,
                         "confirmed": True,
@@ -949,22 +985,6 @@ class OrderFlowsTestCase(LoggingTestCase):
                 ],
                 "warnings": [],
             },
-        )
-
-        responses.add(
-            responses.POST,
-            backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=[
-                {
-                    "id": 5,
-                    "name": "",
-                    "shortname": "student",
-                    "description": "",
-                    "sortorder": 5,
-                    "archetype": "student",
-                },
-            ],
         )
 
         responses.add(
