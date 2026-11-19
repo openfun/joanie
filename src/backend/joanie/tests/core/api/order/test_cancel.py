@@ -140,10 +140,7 @@ class OrderCancelApiTest(BaseAPITestCase):
                         synchronized_course_run,
                         {
                             "catalog_visibility": enums.COURSE_AND_SEARCH,
-                            "certificate_discount": None,
-                            "certificate_discounted_price": None,
                             "certificate_offer": enums.COURSE_OFFER_PAID,
-                            "certificate_price": None,
                             "course": offering.course.code,
                             "discount": None,
                             "discounted_price": None,
@@ -154,6 +151,7 @@ class OrderCancelApiTest(BaseAPITestCase):
                             "languages": course_run.languages,
                             "offer": enums.COURSE_OFFER_PAID,
                             "price": product.price,
+                            "price_currency": "EUR",
                             "resource_link": f"https://example.com/api/v1.0/courses/{course.code}"
                             f"/products/{product.id}/",
                         },

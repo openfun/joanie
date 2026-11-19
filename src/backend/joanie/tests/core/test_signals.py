@@ -610,6 +610,37 @@ class SignalsTestCase(TestCase):
             self.assertEqual(course_run["catalog_visibility"], enums.HIDDEN)
         mock_clear_cache.assert_called_once()
 
+    def test_signals_on_save_offering_create(self, mock_sync, mock_clear_cache):
+        """
+        An offering created directly (e.g. from the admin API) should be synchronized.
+        """
+        course_run = factories.CourseRunFactory(
+            state=CourseState.ONGOING_OPEN, is_listed=False
+        )
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            target_courses=[course_run.course],
+            courses=[],
+        )
+        mock_sync.reset_mock()
+
+        offering = models.CourseProductRelation.objects.create(
+            course=course_run.course, product=product
+        )
+
+        self.assertEqual(mock_sync.call_count, 1)
+        synchronized_course_runs = mock_sync.call_args_list[0][0][0]
+        self.assertEqual(len(synchronized_course_runs), 1)
+        self.assertEqual(synchronized_course_runs[0]["resource_link"], offering.uri)
+        self.assertEqual(
+            synchronized_course_runs[0]["catalog_visibility"], enums.COURSE_AND_SEARCH
+        )
+
+        # Saving it again should not synchronize
+        mock_sync.reset_mock()
+        offering.save()
+        mock_sync.assert_not_called()
+
     def test_signals_on_change_offering_remove(self, mock_sync, mock_clear_cache):
         """Product synchronization should be triggered when a product is removed from a course."""
         course_run = factories.CourseRunFactory()
@@ -931,9 +962,11 @@ class SignalsTestCase(TestCase):
         )
         product = factories.ProductFactory(
             courses=[course_run.course],
+            target_courses=[course_run.course],
             price="100.00",
             type=enums.PRODUCT_TYPE_CREDENTIAL,
         )
+        product.target_course_relations.update(is_graded=False)
         offering = product.offerings.get()
         mock_sync.reset_mock()
         mock_clear_cache.reset_mock()
@@ -966,16 +999,11 @@ class SignalsTestCase(TestCase):
         )
         product = factories.ProductFactory(
             courses=[course_run.course],
+            target_courses=[course_run.course],
             price="100.00",
             type=enums.PRODUCT_TYPE_CREDENTIAL,
         )
-        product.target_course_relations.set(
-            [
-                factories.ProductTargetCourseRelationFactory(
-                    is_graded=True,
-                )
-            ]
-        )
+        product.target_course_relations.update(is_graded=True)
         offering = product.offerings.get()
         mock_sync.reset_mock()
         mock_clear_cache.reset_mock()
@@ -1001,10 +1029,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_run,
             {
                 "catalog_visibility": enums.COURSE_AND_SEARCH,
-                "certificate_discount": None,
-                "certificate_discounted_price": None,
                 "certificate_offer": enums.COURSE_OFFER_PAID,
-                "certificate_price": None,
                 "course": course_run.course.code,
                 "discount": offering.rules.get("discount"),
                 "discounted_price": offering.rules.get("discounted_price"),
@@ -1015,6 +1040,7 @@ class SignalsTestCase(TestCase):
                 "languages": course_run.languages,
                 "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
+                "price_currency": "EUR",
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{course_run.course.code}/products/{product.id}/",
             },
@@ -1115,10 +1141,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_run,
             {
                 "catalog_visibility": enums.COURSE_AND_SEARCH,
-                "certificate_discount": None,
-                "certificate_discounted_price": None,
                 "certificate_offer": enums.COURSE_OFFER_PAID,
-                "certificate_price": None,
                 "course": course_run.course.code,
                 "discount": offering.rules.get("discount"),
                 "discounted_price": offering.rules.get("discounted_price"),
@@ -1129,6 +1152,7 @@ class SignalsTestCase(TestCase):
                 "languages": course_run.languages,
                 "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
+                "price_currency": "EUR",
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{course_run.course.code}/products/{product.id}/",
             },
@@ -1152,13 +1176,7 @@ class SignalsTestCase(TestCase):
             price="100.00",
             type=enums.PRODUCT_TYPE_CREDENTIAL,
         )
-        product.target_course_relations.set(
-            [
-                factories.ProductTargetCourseRelationFactory(
-                    is_graded=True,
-                )
-            ]
-        )
+        product.target_course_relations.update(is_graded=True)
         offering = product.offerings.get()
 
         offering_rule = factories.OfferingRuleFactory(
@@ -1180,10 +1198,7 @@ class SignalsTestCase(TestCase):
             synchronized_course_run,
             {
                 "catalog_visibility": enums.COURSE_AND_SEARCH,
-                "certificate_discount": None,
-                "certificate_discounted_price": None,
                 "certificate_offer": enums.COURSE_OFFER_PAID,
-                "certificate_price": None,
                 "course": course_run.course.code,
                 "discount": offering.rules.get("discount"),
                 "discounted_price": offering.rules.get("discounted_price"),
@@ -1194,6 +1209,7 @@ class SignalsTestCase(TestCase):
                 "languages": course_run.languages,
                 "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
+                "price_currency": "EUR",
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{course_run.course.code}/products/{product.id}/",
             },
@@ -2154,7 +2170,6 @@ class SignalsTestCase(TestCase):
         mock_sync.reset_mock()
         mock_clear_cache.reset_mock()
 
-        # Create the product should not trigger a synchronization
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CREDENTIAL,
             price="50.00",
@@ -2164,6 +2179,9 @@ class SignalsTestCase(TestCase):
                 course_run_archived.course,
             ],
         )
+        # Creating the offerings synchronizes them, only the update below is tested here
+        mock_sync.reset_mock()
+        mock_clear_cache.reset_mock()
 
         # Update the product price should
         product.price = "52.00"
