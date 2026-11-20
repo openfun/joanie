@@ -10,12 +10,17 @@ from django.conf import settings
 from django.core import mail
 from django.test import override_settings
 
+from parler.utils.context import switch_language
+
 from joanie.core import enums, factories
 from joanie.core.models import OrderTargetCourseRelation
 from joanie.tests.base import BaseAPITestCase
 
 
-@override_settings(JOANIE_WITHDRAWAL_PERIOD_DAYS=16)
+@override_settings(
+    JOANIE_WITHDRAWAL_PERIOD_DAYS=16,
+    LANGUAGES=(("fr-fr", "French"), ("en-us", "English")),
+)
 class OrderWithdrawApiTest(BaseAPITestCase):
     """Test the API of the Order withdraw endpoint."""
 
@@ -293,6 +298,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                 self.assertIsNone(order.withdrawn_confirmation_at)
 
     # pylint: disable=too-many-statements
+    # ruff: noqa: PLR0915
     def test_api_order_withdraw_authenticated_product_certificate(self):
         """
         Authenticated user should be able to withdraw an order with product type certificate
@@ -301,7 +307,7 @@ class OrderWithdrawApiTest(BaseAPITestCase):
         the order gets updated in the field `withdrawn_requested_at` and the state passes to
         `pending_withdraw`.
         """
-        user = factories.UserFactory()
+        user = factories.UserFactory(language="en-us")
         token = self.generate_token_from_user(user)
         mocked_now = datetime(2026, 7, 29, 14, tzinfo=ZoneInfo("UTC"))
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
@@ -314,126 +320,138 @@ class OrderWithdrawApiTest(BaseAPITestCase):
                     courses=[enrollment.course_run.course],
                     price=10.00,
                 )
-                for value in [True, False]:
-                    with self.subTest(value=value, day=day):
-                        order = factories.OrderGeneratorFactory(
-                            owner=user,
-                            product=product,
-                            enrollment=enrollment,
-                            course=None,
-                            state=enums.ORDER_STATE_COMPLETED,
-                            has_waived_withdrawal_right=value,
-                        )
-
-                        withdrawal_date_request = mocked_now + timedelta(days=day)
-                        with mock.patch(
-                            "django.utils.timezone.now",
-                            return_value=withdrawal_date_request,
-                        ):
-                            response = self.client.post(
-                                f"/api/v1.0/orders/{order.id}/withdraw/",
-                                HTTP_AUTHORIZATION=f"Bearer {token}",
+                with switch_language(product, "en-us"):
+                    for value in [True, False]:
+                        with self.subTest(value=value, day=day):
+                            order = factories.OrderGeneratorFactory(
+                                owner=user,
+                                product=product,
+                                enrollment=enrollment,
+                                course=None,
+                                state=enums.ORDER_STATE_COMPLETED,
+                                has_waived_withdrawal_right=value,
                             )
 
-                            order.refresh_from_db()
-
-                            if day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS and value:
-                                self.assertStatusCodeEqual(response, HTTPStatus.OK)
-                                self.assertEqual(
-                                    order.state, enums.ORDER_STATE_PENDING_WITHDRAW
-                                )
-                                self.assertEqual(
-                                    order.withdrawn_requested_at,
-                                    withdrawal_date_request,
-                                )
-                                self.assertIsNone(order.withdrawn_confirmation_at)
-                                # Check email confirming cancelled order
-                                self.assertEqual(
-                                    "Withdrawal request – Acknowledgement of receipt",
-                                    mail.outbox[0].subject,
-                                )
-                                self.assertEqual(
-                                    mail.outbox[0].to[0], order.owner.email
-                                )
-                                email_content = " ".join(mail.outbox[0].body.split())
-                                self.assertIn(
-                                    "will review your request",
-                                    email_content,
-                                )
-                                self.assertIn(order.owner.email, email_content)
-                                self.assertEqual(
-                                    "Withdrawal - Validation request",
-                                    mail.outbox[1].subject,
-                                )
-                                self.assertEqual(
-                                    mail.outbox[1].to[0],
-                                    settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
-                                )
-                                email_content = " ".join(mail.outbox[1].body.split())
-                                self.assertIn(
-                                    "Please review and validate the withdrawal",
-                                    email_content,
-                                )
-                                self.assertIn(
-                                    settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
-                                    email_content,
-                                )
-                            elif (
-                                day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
-                                and not value
+                            withdrawal_date_request = mocked_now + timedelta(days=day)
+                            with mock.patch(
+                                "django.utils.timezone.now",
+                                return_value=withdrawal_date_request,
                             ):
-                                self.assertStatusCodeEqual(response, HTTPStatus.OK)
-                                self.assertEqual(
-                                    order.state, enums.ORDER_STATE_CANCELED
+                                response = self.client.post(
+                                    f"/api/v1.0/orders/{order.id}/withdraw/",
+                                    HTTP_AUTHORIZATION=f"Bearer {token}",
                                 )
-                                self.assertEqual(
-                                    order.withdrawn_requested_at,
-                                    withdrawal_date_request,
-                                )
-                                self.assertEqual(
-                                    order.withdrawn_confirmation_at,
-                                    withdrawal_date_request,
-                                )
-                                # Check email confirming cancelled order
-                                self.assertEqual(
-                                    "Confirmation of withdrawal - Acknowledgement of receipt",
-                                    mail.outbox[0].subject,
-                                )
-                                self.assertEqual(
-                                    mail.outbox[0].to[0], order.owner.email
-                                )
-                                email_content = " ".join(mail.outbox[0].body.split())
-                                self.assertIn(
-                                    "has been cancelled accordingly",
-                                    email_content,
-                                )
-                                self.assertIn(order.owner.email, email_content)
-                                self.assertEqual(
-                                    "Learner withdrawal - Notification of order cancellation",
-                                    mail.outbox[1].subject,
-                                )
-                                self.assertEqual(
-                                    mail.outbox[1].to[0],
-                                    settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
-                                )
-                                email_content = " ".join(mail.outbox[1].body.split())
-                                self.assertIn(
-                                    "request has been confirmed for the following order",
-                                    email_content,
-                                )
-                                self.assertIn(
-                                    settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
-                                    email_content,
-                                )
-                            else:
-                                self.assertStatusCodeEqual(
-                                    response, HTTPStatus.UNPROCESSABLE_ENTITY
-                                )
-                                self.assertEqual(
-                                    order.state, enums.ORDER_STATE_COMPLETED
-                                )
-                                self.assertIsNone(order.withdrawn_requested_at)
-                                self.assertIsNone(order.withdrawn_confirmation_at)
-                            mail.outbox.clear()
-                            # Cancel the order to continue each cases
-                            order.flow.cancel()
+
+                                order.refresh_from_db()
+
+                                if (
+                                    day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
+                                    and value
+                                ):
+                                    self.assertStatusCodeEqual(response, HTTPStatus.OK)
+                                    self.assertEqual(
+                                        order.state, enums.ORDER_STATE_PENDING_WITHDRAW
+                                    )
+                                    self.assertEqual(
+                                        order.withdrawn_requested_at,
+                                        withdrawal_date_request,
+                                    )
+                                    self.assertIsNone(order.withdrawn_confirmation_at)
+                                    # Check email confirming cancelled order
+                                    self.assertEqual(
+                                        "Withdrawal request – Acknowledgement of receipt",
+                                        mail.outbox[0].subject,
+                                    )
+                                    self.assertEqual(
+                                        mail.outbox[0].to[0], order.owner.email
+                                    )
+                                    email_content = " ".join(
+                                        mail.outbox[0].body.split()
+                                    )
+                                    self.assertIn(
+                                        "will review your request",
+                                        email_content,
+                                    )
+                                    self.assertIn(order.owner.email, email_content)
+                                    self.assertEqual(
+                                        "Withdrawal - Validation request",
+                                        mail.outbox[1].subject,
+                                    )
+                                    self.assertEqual(
+                                        mail.outbox[1].to[0],
+                                        settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
+                                    )
+                                    email_content = " ".join(
+                                        mail.outbox[1].body.split()
+                                    )
+                                    self.assertIn(
+                                        "Please review and validate the withdrawal",
+                                        email_content,
+                                    )
+                                    self.assertIn(
+                                        settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
+                                        email_content,
+                                    )
+                                elif (
+                                    day <= settings.JOANIE_WITHDRAWAL_PERIOD_DAYS
+                                    and not value
+                                ):
+                                    self.assertStatusCodeEqual(response, HTTPStatus.OK)
+                                    self.assertEqual(
+                                        order.state, enums.ORDER_STATE_CANCELED
+                                    )
+                                    self.assertEqual(
+                                        order.withdrawn_requested_at,
+                                        withdrawal_date_request,
+                                    )
+                                    self.assertEqual(
+                                        order.withdrawn_confirmation_at,
+                                        withdrawal_date_request,
+                                    )
+                                    # Check email confirming cancelled order
+                                    self.assertEqual(
+                                        "Confirmation of withdrawal - Acknowledgement of receipt",
+                                        mail.outbox[0].subject,
+                                    )
+                                    self.assertEqual(
+                                        mail.outbox[0].to[0], order.owner.email
+                                    )
+                                    email_content = " ".join(
+                                        mail.outbox[0].body.split()
+                                    )
+                                    self.assertIn(
+                                        "has been cancelled accordingly",
+                                        email_content,
+                                    )
+                                    self.assertIn(order.owner.email, email_content)
+                                    self.assertEqual(
+                                        "Learner withdrawal - Notification of order cancellation",
+                                        mail.outbox[1].subject,
+                                    )
+                                    self.assertEqual(
+                                        mail.outbox[1].to[0],
+                                        settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
+                                    )
+                                    email_content = " ".join(
+                                        mail.outbox[1].body.split()
+                                    )
+                                    self.assertIn(
+                                        "request has been confirmed for the following order",
+                                        email_content,
+                                    )
+                                    self.assertIn(
+                                        settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE,
+                                        email_content,
+                                    )
+                                else:
+                                    self.assertStatusCodeEqual(
+                                        response, HTTPStatus.UNPROCESSABLE_ENTITY
+                                    )
+                                    self.assertEqual(
+                                        order.state, enums.ORDER_STATE_COMPLETED
+                                    )
+                                    self.assertIsNone(order.withdrawn_requested_at)
+                                    self.assertIsNone(order.withdrawn_confirmation_at)
+                                mail.outbox.clear()
+                                # Cancel the order to continue each cases
+                                order.flow.cancel()

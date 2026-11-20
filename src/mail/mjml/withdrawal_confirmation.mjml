@@ -72,7 +72,7 @@
               {% blocktranslate %}
                 <!--Certificate product - Learner section-->
                 This request has been processed, and your order has been cancelled accordingly. You may verify
-                the status of your orders at any time via your <strong><a href="{{ dashboard_order_link }}">dashboard</a></strong>.
+                the status of your orders at any time via your dashboard.
                 <br><br>
                 Your refund will be processed as soon as possible and credited to the original payment method used.
               {% endblocktranslate %}
@@ -81,7 +81,7 @@
                 <!--Credential product - Learner section-->
                 This request has been processed, and your order has been cancelled accordingly.
                 You may verify the status of your orders at any time via
-                your <strong><a href="{{ dashboard_order_link }}">dashboard</a></strong>.
+                your dashboard.
               {% endblocktranslate %}
             {% elif course_code and not is_support_email and is_organization_admin %}
               <!--Organization section-->
