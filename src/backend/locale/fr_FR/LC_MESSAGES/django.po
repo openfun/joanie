@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-20 13:14+0000\n"
-"PO-Revision-Date: 2026-11-20 13:39\n"
+"PO-Revision-Date: 2026-11-20 17:02\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -3096,11 +3096,11 @@ msgstr " Nous vous informons que la commande <strong>'%(order_id)s'</strong> pou
 
 #: joanie/core/templates/mail/html/withdrawal_confirmation.html:261
 msgid " <!--Certificate product - Learner section--> This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard. <br><br> Your refund will be processed as soon as possible and credited to the original payment method used. "
-msgstr ""
+msgstr " <!--Certificate product - Learner section--> Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre tableau de bord. <br><br> Votre remboursement sera traité dans les meilleurs délais et crédité sur le compte de paiement utilisé initialement. "
 
 #: joanie/core/templates/mail/html/withdrawal_confirmation.html:261
 msgid " <!--Credential product - Learner section--> This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard. "
-msgstr " <!--Credential product - Learner section--> Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre tableau de bord. "
+msgstr " <!--Diplômant product - Learner section--> Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre tableau de bord. "
 
 #: joanie/core/templates/mail/html/withdrawal_confirmation.html:261
 msgid " <br> No further action is required on your part. "
@@ -3422,7 +3422,7 @@ msgstr " Cette demande a été traitée, et votre commande a été annulée en c
 
 #: joanie/core/templates/mail/text/withdrawal_confirmation.txt:38
 msgid " This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard. "
-msgstr ""
+msgstr " Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre tableau de bord. "
 
 #: joanie/core/templates/mail/text/withdrawal_confirmation.txt:38
 msgid "\n"
