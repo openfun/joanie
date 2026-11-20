@@ -146,10 +146,7 @@ class OrderCreateApiTest(BaseAPITestCase):
             [
                 {
                     "catalog_visibility": enums.COURSE_AND_SEARCH,
-                    "certificate_discount": None,
-                    "certificate_discounted_price": None,
                     "certificate_offer": enums.COURSE_OFFER_PAID,
-                    "certificate_price": None,
                     "course": offering.course.code,
                     "discount": None,
                     "discounted_price": None,
@@ -160,6 +157,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                     "languages": course_run.languages,
                     "offer": enums.COURSE_OFFER_PAID,
                     "price": product.price,
+                    "price_currency": "EUR",
                     "resource_link": f"https://example.com/api/v1.0/courses/{course.code}"
                     f"/products/{product.id}/",
                 }
@@ -2457,8 +2455,15 @@ class OrderCreateApiTest(BaseAPITestCase):
         course_run = factories.CourseRunFactory(
             state=CourseState.ONGOING_OPEN,
         )
-        offering = factories.OfferingFactory(course__course_runs=[course_run])
+        course = factories.CourseFactory(course_runs=[course_run])
+        offering = factories.OfferingFactory(
+            course=course,
+            product=factories.ProductFactory(
+                type=enums.PRODUCT_TYPE_CREDENTIAL, target_courses=[course]
+            ),
+        )
         product = offering.product
+        product.target_course_relations.update(is_graded=False)
         offering_rule = factories.OfferingRuleFactory(
             course_product_relation=offering,
             is_active=True,
@@ -2497,10 +2502,7 @@ class OrderCreateApiTest(BaseAPITestCase):
         self.assertEqual(
             {
                 "catalog_visibility": enums.COURSE_AND_SEARCH,
-                "certificate_discount": None,
-                "certificate_discounted_price": None,
                 "certificate_offer": None,
-                "certificate_price": None,
                 "course": offering.course.code,
                 "discount": None,
                 "discounted_price": None,
@@ -2511,6 +2513,7 @@ class OrderCreateApiTest(BaseAPITestCase):
                 "languages": course_run.languages,
                 "offer": enums.COURSE_OFFER_PAID,
                 "price": product.price,
+                "price_currency": "EUR",
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{offering.course.code}/products/{product.id}/",
             },

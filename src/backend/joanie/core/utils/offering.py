@@ -73,28 +73,46 @@ def get_deep_link(offering) -> str | None:
 
 def get_serialized_course_runs(offering, visibility=None):
     """
-    Synchronize course runs related to an offering.
+    Serialize the course runs to synchronize for an offering.
+
+    A credential/other product is synchronized as one single equivalent course run
+    (the same one the "Product" signals send), otherwise each course run of the
+    course would overwrite the previous one in the remote catalog as they all
+    share the offering uri as resource link.
     """
     product = offering.product
-    certifying = product.type == enums.PRODUCT_TYPE_CERTIFICATE
-    course = offering.course
-    course_runs = course.course_runs.all()
+    course_run_data = product.get_equivalent_course_run_data(
+        visibility=visibility, ignore_archived=True
+    )
+    if course_run_data is not None:
+        if not any(
+            course_run_data[k]
+            for k in ("start", "end", "enrollment_start", "enrollment_end")
+        ):
+            return None
+        rules = offering.rules
+        return [
+            {
+                **course_run_data,
+                "resource_link": offering.uri,
+                "course": offering.course.code,
+                "discounted_price": rules.get("discounted_price"),
+                "discount": rules.get("discount"),
+            }
+        ]
+
+    # Certificate products are synchronized with one course run per course run
     serialized_course_runs = []
-    for course_run in course_runs:
+    for course_run in offering.course.course_runs.all():
         if course_run.is_archived:
             continue
         if serialized_runs := course_run.get_serialized(
-            visibility=visibility,
-            certifying=certifying,
-            product=product,
+            visibility=visibility, certifying=True, product=product
         ):
             logger.debug("[SYNC] %s", serialized_runs)
             serialized_course_runs.append(serialized_runs)
 
-    if serialized_course_runs:
-        return serialized_course_runs
-
-    return None
+    return serialized_course_runs or None
 
 
 @app.task

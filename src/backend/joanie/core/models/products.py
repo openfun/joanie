@@ -235,7 +235,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
             )
         )
 
-    def get_equivalent_course_run_data(self, visibility=None):
+    def get_equivalent_course_run_data(self, visibility=None, ignore_archived=False):
         """
         Return data for the virtual course run equivalent to this product when, taking
         into account all course runs targeted by the product if any.
@@ -253,7 +253,7 @@ class Product(parler_models.TranslatableModel, BaseModel):
         if self.type == enums.PRODUCT_TYPE_CERTIFICATE:
             return None
 
-        dates = self.get_equivalent_course_run_dates()
+        dates = self.get_equivalent_course_run_dates(ignore_archived=ignore_archived)
 
         logger.debug(
             "[SYNC] Calculating equivalent course run data for product %s", self.pk
@@ -264,7 +264,9 @@ class Product(parler_models.TranslatableModel, BaseModel):
         return {
             "catalog_visibility": visibility
             or (enums.COURSE_AND_SEARCH if any(dates.values()) else enums.HIDDEN),
-            "languages": self.get_equivalent_course_run_languages(),
+            "languages": self.get_equivalent_course_run_languages(
+                ignore_archived=ignore_archived
+            ),
             # Get dates from aggregate
             **self.get_equivalent_course_run_offer(),
             **{
@@ -273,11 +275,12 @@ class Product(parler_models.TranslatableModel, BaseModel):
             },
         }
 
-    def get_equivalent_course_run_languages(self):
+    def get_equivalent_course_run_languages(self, ignore_archived=False):
         """Return a list of distinct languages available in alphabetical order."""
-        languages = self.target_course_runs.values_list(
-            "languages", flat=True
-        ).distinct()
+        course_runs = self.target_course_runs
+        if ignore_archived:
+            course_runs = course_runs.filter(end__gt=timezone.now())
+        languages = course_runs.values_list("languages", flat=True).distinct()
         # Go through a set for uniqueness of each language then return an ordered list
         return sorted(set(itertools.chain.from_iterable(languages)))
 

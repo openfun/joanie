@@ -10,6 +10,7 @@ from joanie.core.utils import webhooks
 from joanie.core.utils.offering import (
     get_generated_certificates,
     get_orders,
+    get_serialized_course_runs,
     synchronize_offerings,
 )
 from joanie.tests.base import LoggingTestCase
@@ -172,10 +173,16 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
         """
         mocked_now = datetime(2024, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
 
+        course_1 = factories.CourseFactory(
+            course_runs=factories.CourseRunFactory.create_batch(3)
+        )
         offering_rule_starts_in_10_min = factories.OfferingRuleFactory(
             start=mocked_now + timedelta(minutes=10),
-            course_product_relation__course__course_runs=factories.CourseRunFactory.create_batch(
-                3
+            course_product_relation=factories.OfferingFactory(
+                course=course_1,
+                product=factories.ProductFactory(
+                    type=enums.PRODUCT_TYPE_CREDENTIAL, target_courses=[course_1]
+                ),
             ),
         )
         offering_1 = offering_rule_starts_in_10_min.offering
@@ -190,10 +197,16 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
             end=mocked_now + timedelta(minutes=10),
         )
         offering_2 = offering_rule_ends_in_10_min.offering
+        course_3 = factories.CourseFactory(
+            course_runs=factories.CourseRunFactory.create_batch(1)
+        )
         offering_rule_ends_in_59_min = factories.OfferingRuleFactory(
             end=mocked_now + timedelta(minutes=59),
-            course_product_relation__course__course_runs=factories.CourseRunFactory.create_batch(
-                1
+            course_product_relation=factories.OfferingFactory(
+                course=course_3,
+                product=factories.ProductFactory(
+                    type=enums.PRODUCT_TYPE_CREDENTIAL, target_courses=[course_3]
+                ),
             ),
         )
         offering_3 = offering_rule_ends_in_59_min.offering
@@ -218,12 +231,13 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
                 ("INFO", f"Get serialized course runs for offering {offering_2.id}"),
                 ("INFO", "  No course runs serialized"),
                 ("INFO", f"Get serialized course runs for offering {offering_1.id}"),
-                ("INFO", "  3 course runs serialized"),
-                ("INFO", "Synchronizing 4 course runs for offerings"),
+                # One equivalent course run per offering, whatever its number of sessions
+                ("INFO", "  1 course runs serialized"),
+                ("INFO", "Synchronizing 2 course runs for offerings"),
             ],
         )
 
-        self.assertEqual(len(synchronized_course_runs), 4)
+        self.assertEqual(len(synchronized_course_runs), 2)
         self.assertEqual(
             synchronized_course_runs[0]["resource_link"],
             f"https://example.com/api/v1.0/courses/{offering_3.course.code}/"
@@ -234,15 +248,50 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
             f"https://example.com/api/v1.0/courses/{offering_1.course.code}/"
             f"products/{offering_1.product.id}/",
         )
+
+    def test_utils_offering_get_serialized_course_runs_credential_restricted_course_runs(
+        self,
+    ):
+        """
+        A credential offering should be synchronized with one single course run, equivalent
+        to the course runs targeted by the product. The other course runs of the course
+        (here an older one, closed to enrollment) share the offering uri as resource link, so
+        sending them would overwrite the right one in the remote catalog.
+        """
+        course = factories.CourseFactory()
+        closed_course_run = factories.CourseRunFactory(
+            course=course, state=CourseState.ONGOING_CLOSED, is_listed=True
+        )
+        open_course_run = factories.CourseRunFactory(
+            course=course, state=CourseState.FUTURE_OPEN, is_listed=False
+        )
+        product = factories.ProductFactory(
+            type=enums.PRODUCT_TYPE_CREDENTIAL,
+            courses=[course],
+            target_courses=[course],
+            price=300,
+        )
+        product.target_course_relations.get(course=course).course_runs.set(
+            [open_course_run]
+        )
+        offering = product.offerings.get()
+
+        serialized_course_runs = get_serialized_course_runs(
+            offering, visibility=enums.COURSE_AND_SEARCH
+        )
+
+        self.assertEqual(len(serialized_course_runs), 1)
+        self.assertEqual(serialized_course_runs[0]["resource_link"], offering.uri)
         self.assertEqual(
-            synchronized_course_runs[2]["resource_link"],
-            f"https://example.com/api/v1.0/courses/{offering_1.course.code}/"
-            f"products/{offering_1.product.id}/",
+            serialized_course_runs[0]["enrollment_end"],
+            open_course_run.enrollment_end.isoformat(),
         )
         self.assertEqual(
-            synchronized_course_runs[3]["resource_link"],
-            f"https://example.com/api/v1.0/courses/{offering_1.course.code}/"
-            f"products/{offering_1.product.id}/",
+            serialized_course_runs[0]["start"], open_course_run.start.isoformat()
+        )
+        self.assertNotEqual(
+            serialized_course_runs[0]["enrollment_end"],
+            closed_course_run.enrollment_end.isoformat(),
         )
 
     @mock.patch.object(webhooks, "synchronize_course_runs")
@@ -374,10 +423,7 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
             synchronized_course_run,
             {
                 "catalog_visibility": enums.COURSE_AND_SEARCH,
-                "certificate_discount": None,
-                "certificate_discounted_price": None,
                 "certificate_offer": enums.COURSE_OFFER_PAID,
-                "certificate_price": None,
                 "course": course_run.course.code,
                 "discount": offering.rules.get("discount"),
                 "discounted_price": offering.rules.get("discounted_price"),
@@ -388,6 +434,7 @@ class UtilsCourseProductRelationTestCase(LoggingTestCase):
                 "languages": course_run.languages,
                 "offer": enums.COURSE_OFFER_PAID,
                 "price": credential_product.price,
+                "price_currency": "EUR",
                 "resource_link": "https://example.com/api/v1.0/courses/"
                 f"{course_run.course.code}/products/{credential_product.id}/",
             },

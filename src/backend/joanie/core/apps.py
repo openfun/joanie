@@ -33,6 +33,11 @@ class CoreConfig(AppConfig):
             dispatch_uid="save_product",
         )
         post_save.connect(
+            signals.on_save_offering,
+            sender=models.CourseProductRelation,
+            dispatch_uid="save_offering",
+        )
+        post_save.connect(
             signals.on_save_offering_rule,
             sender=models.OfferingRule,
             dispatch_uid="save_offering_rule",

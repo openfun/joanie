@@ -220,6 +220,26 @@ def on_save_offering_rule(instance: models.OfferingRule, **kwargs):
         instance.offering.clear_cache()
 
 
+def on_save_offering(instance, created, **kwargs):
+    """
+    Synchronize an offering created directly (e.g. from the admin API), which does not
+    go through the `Course.products` relation signals.
+    """
+    if not created:
+        return
+    visibility = (
+        enums.COURSE_AND_SEARCH
+        if instance.product.type == enums.PRODUCT_TYPE_CREDENTIAL
+        else None
+    )
+    if serialized_course_runs := get_serialized_course_runs(
+        instance, visibility=visibility
+    ):
+        logger.debug("[SYNC] %s", serialized_course_runs)
+        webhooks.synchronize_course_runs(serialized_course_runs)
+        instance.clear_cache()
+
+
 def on_save_product(instance, created, **kwargs):
     """
     Synchronize product or all ongoing and future course runs
