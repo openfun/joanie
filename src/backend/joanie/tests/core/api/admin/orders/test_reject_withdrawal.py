@@ -5,6 +5,9 @@ from http import HTTPStatus
 
 from django.conf import settings
 from django.core import mail
+from django.test.utils import override_settings
+
+from parler.utils.context import switch_language
 
 from joanie.core import enums, factories
 from joanie.tests.base import BaseAPITestCase
@@ -171,23 +174,36 @@ class OrdersAdminApiRejectWithdrawalTestCase(BaseAPITestCase):
 
                 self.assertStatusCodeEqual(response, HTTPStatus.UNPROCESSABLE_ENTITY)
 
+    @override_settings(
+        LANGUAGES=(("fr-fr", "French"), ("en-us", "English")),
+    )
     def test_api_admin_orders_reject_withdrawal(self):
         """
         Authenticated admin user should be able to reject a withdrawal of an order
         with product type certificate when the state is in `pending_withdraw`. When the reject
         is operated, the order should go back to `completed` state.
         """
-        admin = factories.UserFactory(is_staff=True, is_superuser=True)
+        admin = factories.UserFactory(
+            is_staff=True, is_superuser=True, language="en-us"
+        )
         self.client.login(username=admin.username, password="password")
 
-        enrollment = factories.EnrollmentFactory()
+        enrollment = factories.EnrollmentFactory(
+            user=factories.UserFactory(language="en-us")
+        )
         product = factories.ProductFactory(
             type=enums.PRODUCT_TYPE_CERTIFICATE,
             contract_definition_order=None,
             certificate_definition=factories.CertificateDefinitionFactory(),
             courses=[enrollment.course_run.course],
             price=10.00,
+            title="Product Certificate 1",
         )
+        product.translations.create(
+            language_code="fr-fr",
+            title="Produit Certificate 1",
+        )
+        product.save()
         access = factories.UserOrganizationAccessFactory(role=enums.ADMIN)
         order = factories.OrderFactory(
             state=enums.ORDER_STATE_PENDING_WITHDRAW,
@@ -204,29 +220,33 @@ class OrdersAdminApiRejectWithdrawalTestCase(BaseAPITestCase):
                 },
             ],
         )
+        with switch_language(order.product, "en-us"):
+            response = self.client.post(
+                f"/api/v1.0/admin/orders/{order.id}/reject-withdrawal/"
+            )
 
-        response = self.client.post(
-            f"/api/v1.0/admin/orders/{order.id}/reject-withdrawal/"
-        )
+            order.refresh_from_db()
 
-        order.refresh_from_db()
+            self.assertStatusCodeEqual(response, HTTPStatus.OK)
+            self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
-        self.assertStatusCodeEqual(response, HTTPStatus.OK)
-        self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
+            # Check email rejecting withdrawal of order
+            self.assertEqual(
+                "Withdrawal request rejected – Order remains active",
+                mail.outbox[0].subject,
+            )
+            self.assertEqual(mail.outbox[0].to[0], order.owner.email)
+            email_content = " ".join(mail.outbox[0].body.split())
+            self.assertIn("Your order remains active", email_content)
 
-        # Check email rejecting withdrawal of order
-        self.assertEqual(
-            "Withdrawal request rejected – Order remains active", mail.outbox[0].subject
-        )
-        self.assertEqual(mail.outbox[0].to[0], order.owner.email)
-        email_content = " ".join(mail.outbox[0].body.split())
-        self.assertIn("Your order remains active", email_content)
-
-        self.assertEqual(
-            "Withdrawal request rejected – Order remains active", mail.outbox[1].subject
-        )
-        self.assertEqual(
-            mail.outbox[1].to[0], settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE
-        )
-        email_content = " ".join(mail.outbox[1].body.split())
-        self.assertIn("accessed the exam and thus waived their 14-day", email_content)
+            self.assertEqual(
+                "Withdrawal request rejected – Order remains active",
+                mail.outbox[1].subject,
+            )
+            self.assertEqual(
+                mail.outbox[1].to[0], settings.JOANIE_EMAIL_SUPPORT_CERTIFICATE
+            )
+            email_content = " ".join(mail.outbox[1].body.split())
+            self.assertIn(
+                "accessed the exam and thus waived their 14-day", email_content
+            )

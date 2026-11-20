@@ -24,6 +24,7 @@ and this project adheres to
 
 ### Changed
 
+- Pin down Kombu version used by Celery
 - Update withdrawal email templates sentences
 - Upgrade Joanie to use python 3.13
 
