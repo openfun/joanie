@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: joanie\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-22 14:26+0000\n"
-"PO-Revision-Date: 2026-10-27 16:00\n"
+"POT-Creation-Date: 2026-11-20 13:14+0000\n"
+"PO-Revision-Date: 2026-11-20 13:39\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -3095,14 +3095,12 @@ msgid " We inform you that the order <strong>'%(order_id)s'</strong> for the tra
 msgstr " Nous vous informons que la commande <strong>'%(order_id)s'</strong> pour la formation <strong>%(title)s</strong> a été annulée suite à une demande de rétractation de la part du stagiaire <strong>%(buyer_fullname)s</strong> (soumise le <strong>%(withdrawal_request_date)s</strong>). "
 
 #: joanie/core/templates/mail/html/withdrawal_confirmation.html:261
-#, python-format
-msgid " <!--Certificate product - Learner section--> This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your <strong><a href=\"%(dashboard_order_link)s\">dashboard</a></strong>. <br><br> Your refund will be processed as soon as possible and credited to the original payment method used. "
-msgstr " <!--Certificate product - Learner section--> Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre <strong><a href=\"%(dashboard_order_link)s\">tableau de bord</a></strong>. <br><br> Votre remboursement sera traité dans les meilleurs délais et crédité sur le compte de paiement utilisé initialement. "
+msgid " <!--Certificate product - Learner section--> This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard. <br><br> Your refund will be processed as soon as possible and credited to the original payment method used. "
+msgstr ""
 
 #: joanie/core/templates/mail/html/withdrawal_confirmation.html:261
-#, python-format
-msgid " <!--Credential product - Learner section--> This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your <strong><a href=\"%(dashboard_order_link)s\">dashboard</a></strong>. "
-msgstr " <!--Credential product - Learner section--> Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre <strong><a href=\"%(dashboard_order_link)s\">tableau de bord</a></strong>. "
+msgid " <!--Credential product - Learner section--> This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard. "
+msgstr " <!--Credential product - Learner section--> Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre tableau de bord. "
 
 #: joanie/core/templates/mail/html/withdrawal_confirmation.html:261
 msgid " <br> No further action is required on your part. "
@@ -3417,16 +3415,14 @@ msgid " We inform you that the order '%(order_id)s' for the training %(title)s h
 msgstr " Nous vous informons que la commande '%(order_id)s' pour la formation %(title)s a été annulée suite à une demande de rétractation de la part du stagiaire %(buyer_fullname)s (soumise le %(withdrawal_request_date)s). "
 
 #: joanie/core/templates/mail/text/withdrawal_confirmation.txt:36
-#, python-format
-msgid " This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard [%(dashboard_order_link)s].\n\n"
+msgid " This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard.\n\n"
 "Your refund will be processed as soon as possible and credited to the original payment method used. "
-msgstr " Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre [%(dashboard_order_link)s].\n\n"
+msgstr " Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre tableau de bord.\n\n"
 "Votre remboursement sera traité dans les meilleurs délais et crédité sur le compte de paiement utilisé initialement. "
 
 #: joanie/core/templates/mail/text/withdrawal_confirmation.txt:38
-#, python-format
-msgid " This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard [%(dashboard_order_link)s]. "
-msgstr " Cette demande a été traitée, et votre commande a été annulée en conséquence. Vous pouvez consulter l’état de vos commandes à tout moment depuis votre [%(dashboard_order_link)s]. "
+msgid " This request has been processed, and your order has been cancelled accordingly. You may verify the status of your orders at any time via your dashboard. "
+msgstr ""
 
 #: joanie/core/templates/mail/text/withdrawal_confirmation.txt:38
 msgid "\n"
