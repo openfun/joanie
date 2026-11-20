@@ -64,7 +64,7 @@ describe("<CertificateSearch />", () => {
     await userEvent.type(definitionSearch, "Tes");
     await userEvent.click(screen.getByText(definition.title));
     await userEvent.click(screen.getByRole("button", { name: "Submit" }));
-    expect(onSubmit).toBeCalledWith({ definition });
+    expect(onSubmit).toHaveBeenCalledWith({ definition });
   });
   it("render and add", async () => {
     const onSubmit = jest.fn();
@@ -75,6 +75,6 @@ describe("<CertificateSearch />", () => {
     await userEvent.type(definitionSearch, "Tes");
     await userEvent.click(screen.getByText(definition.title));
     await userEvent.click(screen.getByRole("button", { name: "Submit" }));
-    expect(onSubmit).toBeCalledWith({ definition });
+    expect(onSubmit).toHaveBeenCalledWith({ definition });
   });
 });

@@ -47,7 +47,7 @@ type Props = WizardStepProps & {
 const Schema = Yup.object().shape({
   title: Yup.string().required(),
   type: Yup.string<ProductType>().required(),
-  description: Yup.string(),
+  description: Yup.string().defined(),
   price: Yup.number().min(0.0).required(),
   price_currency: Yup.string().required(),
   instructions: Yup.string().defined(),
