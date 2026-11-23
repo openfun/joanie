@@ -650,6 +650,48 @@ class OrderFlowsTestCase(LoggingTestCase):
             status=HTTPStatus.OK,
         )
 
+        responses.add(
+            responses.POST,
+            backend.build_url("core_group_get_course_groups"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "courseid": "2",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=[
+                {
+                    "id": 2,
+                    "courseid": 2,
+                    "name": "Certificate",
+                    "description": "Group dedicated for certificate students",
+                    "descriptionformat": 1,
+                    "enrolmentkey": None,
+                    "idnumber": "certificate",
+                    "visibility": 0,
+                    "participation": True,
+                },
+            ],
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_group_add_group_members"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "members[0][userid]": "5",
+                        "members[0][groupid]": "2",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            body="null",
+            content_type="application/json",
+        )
+
         # Create a pre-existing free enrollment
         enrollment = factories.EnrollmentFactory(
             course_run=course_run, user__username="student", is_active=True
@@ -664,7 +706,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
-        self.assertEqual(len(responses.calls), 6)
+        self.assertEqual(len(responses.calls), 9)
 
     @responses.activate
     @override_settings(

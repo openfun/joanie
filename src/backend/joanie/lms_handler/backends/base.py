@@ -15,6 +15,14 @@ class BaseLMSBackend:
         super().__init__(*args, **kwargs)
         self.configuration = configuration
 
+    @property
+    def _is_group_enabled(self):
+        """
+        Returns False, you must override this method if you want to enable groups
+        in the subclasses
+        """
+        return False
+
     def get_enrollment(self, username, resource_link):
         """Retrieve an enrollment according to a username and a resource_link."""
         raise NotImplementedError(

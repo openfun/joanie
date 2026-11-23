@@ -58,10 +58,18 @@ class MoodleLMSBackend(BaseLMSBackend):
         self.token = self.configuration["API_TOKEN"]
         self.moodle = Moodle(self.base_url, self.token)
         self.role_id = settings.JOANIE_LMS_MOODLE_STUDENT_ROLE_ID
+        self.group_enabled_instances = (
+            settings.JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES
+        )
 
     def build_url(self, function):
         """Build a Moodle API url."""
         return f"{self.base_url}?wstoken={self.token}&wsfunction={function}&moodlewsrestformat=json"
+
+    @property
+    def _is_group_enabled(self):
+        """Whether groups are managed on this Moodle instance."""
+        return self.base_url in self.group_enabled_instances
 
     def extract_course_id(self, resource_link: str):
         """Extract the LMS course id from the course run url."""
@@ -203,6 +211,7 @@ class MoodleLMSBackend(BaseLMSBackend):
             "userid": user_id,
             "groupid": group_id,
         }
+        logger.info("adding user %s to group %s", user_id, group_id)
         try:
             self.moodle("core_group_add_group_members", members=[group_user_data])
         except (MoodleException, NetworkMoodleException, EmptyResponseException) as e:
@@ -255,9 +264,8 @@ class MoodleLMSBackend(BaseLMSBackend):
             user_id = user_created.get("id")
         return user_id
 
-    def _add_user_to_group(self, enrollment, user_id, group_name):
+    def _add_user_to_group(self, resource_link, user_id, group_name):
         """Add the user to the course's group, creating the group if needed."""
-        resource_link = enrollment.course_run.resource_link
         group_id = self.get_course_group_id(resource_link=resource_link)
         if not group_id:
             group_id = self.create_group_in_course(

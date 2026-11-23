@@ -1920,3 +1920,42 @@ class MoodleLMSBackendTestCase(TestCase):
                 "Debug Info: : Yes Moodle is able to return a 200 while there is an error."
             ],
         )
+
+
+@override_settings(
+    JOANIE_LMS_BACKENDS=[
+        {
+            "API_TOKEN": "a_secure_api_token",
+            "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+            "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+            "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+            "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+        },
+        {
+            "API_TOKEN": "a_secure_api_token_1",
+            "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+            "BASE_URL": "http://moodle-mooc.test/webservice/rest/server.php",
+            "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+            "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+        },
+    ],
+    JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES=[
+        "http://moodle.test/webservice/rest/server.php"
+    ],
+)
+def test_backend_moodle_is_group_enabled():
+    """
+    The property `_is_group_enabled` should only return True when
+    the backend base url is set in the configuration list called
+    JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES.
+    Even when their course regex
+    and select regex are the same, it should find the match with the base url
+    and the resource link.
+    """
+    resource_link_1 = "http://moodle-mooc.test/course/view.php?id=2"
+    backend = LMSHandler.select_lms(resource_link_1)
+    assert backend._is_group_enabled is False  # pylint:disable=protected-access
+
+    resource_link_2 = "http://moodle.test/course/view.php?id=2"
+    backend = LMSHandler.select_lms(resource_link_2)
+    assert backend._is_group_enabled is True  # pylint:disable=protected-access
