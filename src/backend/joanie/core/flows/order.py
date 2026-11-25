@@ -387,7 +387,7 @@ class OrderFlow:
                 return
 
     @state.on_success()
-    # ruff: noqa: PLR0912, PLR0915
+    # ruff: noqa: PLR0912
     def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument, too-many-branches, too-many-locals, too-many-statements
         """Post transition actions"""
         self.instance.save()
@@ -487,11 +487,11 @@ class OrderFlow:
             ):
                 resource_link = self.instance.enrollment.course_run.resource_link
                 backend = LMSHandler.select_lms(resource_link)
-                if backend._is_group_enabled:
+                if backend._is_group_enabled:  # pylint:disable=protected-access
                     lms_user_id = backend.get_user(
                         value=self.instance.owner.username
                     ).get("id")
-                    backend._add_user_to_group(
+                    backend._add_user_to_group(  # pylint:disable=protected-access
                         resource_link, lms_user_id, group_name="certificate"
                     )
 
