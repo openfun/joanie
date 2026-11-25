@@ -1,5 +1,6 @@
 """Test suite for the Moodle LMS Backend."""
 
+import copy
 from http import HTTPStatus
 from logging import ERROR, INFO
 
@@ -13,8 +14,12 @@ from joanie.core import factories, models
 from joanie.core.exceptions import EnrollmentError, GradeError
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.moodle import (
+    MoodleAddUserGroupException,
+    MoodleGetGroupException,
+    MoodleGroupCourseCreateException,
     MoodleLMSBackend,
     MoodleUserCreateException,
+    MoodleUserUpdateException,
 )
 
 # pylint: disable=unexpected-keyword-arg,no-value-for-parameter,too-many-lines,too-many-public-methods
@@ -101,6 +106,8 @@ MOODLE_RESPONSE_USERS = {
             "department": "",
             "firstaccess": 1704716076,
             "lastaccess": 1704716076,
+            "idnumber": "student",
+            "alternatename": "student",
             "auth": "manual",
             "suspended": False,
             "confirmed": True,
@@ -533,6 +540,426 @@ class MoodleLMSBackendTestCase(TestCase):
             ],
         )
 
+    def _moodle_user_missing_fields(self):
+        """Moodle `get_users` response for a user without alternatename/idnumber."""
+        # Work on a copy so the module-level constant isn't modified for other tests
+        response = copy.deepcopy(MOODLE_RESPONSE_USERS)
+        # ASSUMPTION: the user is the first item of a "users" list
+        del response["users"][0]["alternatename"]
+        response["users"][0]["idnumber"] = ""
+        return response
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_update_user_info(self):
+        """
+        `update_user_info` should send the user's id with `idnumber` and
+        `alternatename` set to the lowercased username.
+        """
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_update_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][id]": "5",
+                        "users[0][idnumber]": "student",
+                        "users[0][alternatename]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            body="null",
+        )
+
+        # Uppercase username to check it is lowercased in the request
+        self.backend.update_user_info("5", "StUdEnT")
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_update_user_info_error(self):
+        """
+        If Moodle returns an error, `update_user_info` should log it and raise
+        a `MoodleUserCreateException`.
+        """
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_update_users"),
+            status=HTTPStatus.OK,
+            json={
+                "exception": "moodle_exception",
+                "errorcode": "invaliduser",
+                "message": "Invalid user",
+            },
+        )
+
+        with self.assertLogs(level="ERROR") as logs:
+            with self.assertRaises(MoodleUserUpdateException):
+                self.backend.update_user_info("5", "student")
+
+        self.assertIn("Moodle error while updating user student", logs.output[0])
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_update_user_missing_alternatename_and_idnumber(self):
+        """
+        Updating a user's enrollment to a course should check if the user's data has
+        alternatename and idnumber, otherwise, it should update those fields.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(username="student", email="student@example.com")
+        enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=self._moodle_user_missing_fields(),
+        )
+
+        # The missing fields must trigger a user update
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_update_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][id]": "5",
+                        "users[0][idnumber]": "student",
+                        "users[0][alternatename]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            body="null",
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_enrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+        )
+
+        result = self.backend.set_enrollment(enrollment)
+
+        self.assertTrue(result)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_course_group_id(self):
+        """
+        `get_course_group_id` should return the id of the first group
+        of the course.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_group_get_course_groups"),
+            match=[
+                responses.matchers.urlencoded_params_matcher({"courseid": course_id})
+            ],
+            status=HTTPStatus.OK,
+            json=[
+                {"id": 7, "courseid": int(course_id), "name": "Group A"},
+            ],
+        )
+
+        group_id = self.backend.get_course_group_id(course_run.resource_link)
+
+        self.assertEqual(group_id, 7)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_get_course_group_id_error(self):
+        """
+        If Moodle returns an error, `get_course_group_id` should log it and
+        raise a `MoodleGetGroupException`.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_group_get_course_groups"),
+            status=HTTPStatus.OK,
+            json={
+                "exception": "moodle_exception",
+                "errorcode": "invalidcourseid",
+                "message": "Invalid course id",
+            },
+        )
+
+        with self.assertLogs(level="ERROR") as logs:
+            with self.assertRaises(MoodleGetGroupException):
+                self.backend.get_course_group_id(course_run.resource_link)
+
+        self.assertIn(
+            f"Moodle error while retrieving course group {course_id}",
+            logs.output[0],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_create_group_in_course(self):
+        """
+        `create_group_in_course` should create a group with a capitalized name
+        and a lowercased idnumber, and return the id of the created group.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_group_create_groups"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "groups[0][name]": "Certificate",
+                        "groups[0][courseid]": course_id,
+                        "groups[0][description]": (
+                            "Group dedicated for certificate students"
+                        ),
+                        "groups[0][idnumber]": "certificate",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=[
+                {
+                    "id": 12,
+                    "courseid": int(course_id),
+                    "name": "Certificate",
+                    "idnumber": "certificate",
+                }
+            ],
+        )
+
+        # Mixed case name to check it is capitalized / lowercased in the request
+        group_id = self.backend.create_group_in_course(
+            course_run.resource_link, "cErTiFiCaTe"
+        )
+
+        self.assertEqual(group_id, 12)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_create_group_in_course_error(self):
+        """
+        If Moodle returns an error, `create_group_in_course` should log it and
+        raise a `MoodleGroupCourseCreateException`.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_group_create_groups"),
+            status=HTTPStatus.OK,
+            json={
+                "exception": "moodle_exception",
+                "errorcode": "invalidcourseid",
+                "message": "Invalid course id",
+            },
+        )
+
+        with self.assertLogs(level="ERROR") as logs:
+            with self.assertRaises(MoodleGroupCourseCreateException):
+                self.backend.create_group_in_course(
+                    course_run.resource_link, "certificate"
+                )
+
+        self.assertIn(
+            f"Moodle error while creating group in course id {course_id}",
+            logs.output[0],
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_add_user_to_group(self):
+        """
+        `add_user_to_group` should look up the user by username, then add them
+        to the group and return True.
+        """
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_group_add_group_members"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "members[0][userid]": "5",
+                        "members[0][groupid]": "12",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            body="null",
+        )
+
+        result = self.backend.add_user_to_group("5", 12)
+
+        self.assertTrue(result)
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_add_user_to_group_error(self):
+        """
+        If Moodle returns an error while adding the user to the group,
+        `add_user_to_group` should log it and raise a `MoodleAddUserGroupException`.
+        """
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_group_add_group_members"),
+            status=HTTPStatus.OK,
+            json={
+                "exception": "moodle_exception",
+                "errorcode": "cannotaddmember",
+                "message": "Cannot add member to group",
+            },
+        )
+
+        with self.assertLogs(level="ERROR") as logs:
+            with self.assertRaises(MoodleAddUserGroupException):
+                self.backend.add_user_to_group("5", 12)
+
+        self.assertIn(
+            "Moodle error while adding user 5 to group 12",
+            logs.output[0],
+        )
+
+    def _add_update_and_enrol_mocks(self, course_id):
+        """Register the mocks for get_users -> update_users -> enrol_users."""
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "criteria[0][key]": "username",
+                        "criteria[0][value]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=self._moodle_user_missing_fields(),
+        )
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_update_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][id]": "5",
+                        "users[0][idnumber]": "student",
+                        "users[0][alternatename]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            body="null",
+        )
+        responses.add(
+            responses.POST,
+            self.backend.build_url("enrol_manual_enrol_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "enrolments[0][courseid]": course_id,
+                        "enrolments[0][userid]": "5",
+                        "enrolments[0][roleid]": "5",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+        )
+
+    def _add_create_group_mock(self, course_id, error=False):
+        """Register the mock for core_group_create_groups (success or error)."""
+        kwargs = {
+            "match": [
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "groups[0][name]": "Certificate",
+                        "groups[0][courseid]": course_id,
+                        "groups[0][description]": (
+                            "Group dedicated for certificate students"
+                        ),
+                        "groups[0][idnumber]": "certificate",
+                    }
+                )
+            ]
+        }
+        if error:
+            kwargs = {}
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_group_create_groups"),
+            status=HTTPStatus.OK,
+            json=(
+                {
+                    "exception": "moodle_exception",
+                    "errorcode": "invalidcourseid",
+                    "message": "Invalid course id",
+                }
+                if error
+                else [{"id": 12, "courseid": int(course_id), "name": "Certificate"}]
+            ),
+            **kwargs,
+        )
+
+    @responses.activate(assert_all_requests_are_fired=True)
+    def test_backend_moodle_existing_user_update_enrol_group_success(self):
+        """
+        An existing user missing `alternatename` and `idnumber` is updated and
+        enrolled, then the certificate group is created and the user added to it.
+        """
+        course_run = factories.CourseRunMoodleFactory(
+            is_listed=True,
+            state=models.CourseState.ONGOING_OPEN,
+        )
+        course_id = course_run.resource_link.split("=")[-1]
+        user = factories.UserFactory(username="student", email="student@example.com")
+        enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
+
+        self._add_update_and_enrol_mocks(course_id)
+        self.assertTrue(self.backend.set_enrollment(enrollment))
+        self.assertEqual(
+            [
+                "core_user_get_users",
+                "core_user_update_users",
+                "enrol_manual_enrol_users",
+            ],
+            [
+                call.request.url.split("wsfunction=")[-1].split("&")[0]
+                for call in responses.calls
+            ],
+        )
+
     @responses.activate(assert_all_requests_are_fired=True)
     def test_backend_moodle_set_enrollment_enroll(self):
         """
@@ -546,6 +973,7 @@ class MoodleLMSBackendTestCase(TestCase):
         course_id = course_run.resource_link.split("=")[-1]
         user = factories.UserFactory(
             username="student",
+            email="student@example.com",
         )
         enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
 
@@ -594,9 +1022,7 @@ class MoodleLMSBackendTestCase(TestCase):
             state=models.CourseState.ONGOING_OPEN,
         )
         course_id = course_run.resource_link.split("=")[-1]
-        user = factories.UserFactory(
-            username="student",
-        )
+        user = factories.UserFactory(username="student")
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=False
         )
@@ -693,7 +1119,8 @@ class MoodleLMSBackendTestCase(TestCase):
         course_id = course_run.resource_link.split("=")[-1]
         user = factories.UserFactory(
             username="student",
-            first_name="John Doe",
+            first_name="Student User",
+            email="student@example.com",
         )
         enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
 
@@ -702,17 +1129,26 @@ class MoodleLMSBackendTestCase(TestCase):
             self.backend.build_url("core_user_get_users"),
             match=[
                 responses.matchers.urlencoded_params_matcher(
+                    {"criteria[0][key]": "username", "criteria[0][value]": "student"}
+                )
+            ],
+            status=HTTPStatus.OK,
+            json={"users": [], "warnings": []},
+        )
+
+        responses.add(
+            responses.POST,
+            self.backend.build_url("core_user_get_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
                     {
-                        "criteria[0][key]": "username",
-                        "criteria[0][value]": "student",
+                        "criteria[0][key]": "email",
+                        "criteria[0][value]": "student@example.com",
                     }
                 )
             ],
             status=HTTPStatus.OK,
-            json={
-                "users": [],
-                "warnings": [],
-            },
+            json={"users": [], "warnings": []},
         )
 
         responses.add(
@@ -752,6 +1188,18 @@ class MoodleLMSBackendTestCase(TestCase):
 
         result = self.backend.set_enrollment(enrollment)
 
+        self.assertEqual(
+            [
+                "core_user_get_users",
+                "core_user_get_users",
+                "core_user_create_users",
+                "enrol_manual_enrol_users",
+            ],
+            [
+                call.request.url.split("wsfunction=")[-1].split("&")[0]
+                for call in responses.calls
+            ],
+        )
         self.assertTrue(result)
 
     @responses.activate(assert_all_requests_are_fired=True)
@@ -815,6 +1263,8 @@ class MoodleLMSBackendTestCase(TestCase):
         course_id = course_run.resource_link.split("=")[-1]
         user = factories.UserFactory(
             username="student",
+            first_name="John Doe",
+            email="student@example.com",
         )
         enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
 
@@ -877,9 +1327,7 @@ class MoodleLMSBackendTestCase(TestCase):
             state=models.CourseState.ONGOING_OPEN,
         )
         course_id = course_run.resource_link.split("=")[-1]
-        user = factories.UserFactory(
-            username="student",
-        )
+        user = factories.UserFactory(username="student")
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=False
         )
@@ -945,6 +1393,7 @@ class MoodleLMSBackendTestCase(TestCase):
         course_id = course_run.resource_link.split("=")[-1]
         user = factories.UserFactory(
             username="student",
+            email="student@example.com",
         )
         enrollment = models.Enrollment(course_run=course_run, user=user, is_active=True)
 
@@ -997,9 +1446,7 @@ class MoodleLMSBackendTestCase(TestCase):
             state=models.CourseState.ONGOING_OPEN,
         )
         course_id = course_run.resource_link.split("=")[-1]
-        user = factories.UserFactory(
-            username="student",
-        )
+        user = factories.UserFactory(username="student", email="student@example.com")
         enrollment = models.Enrollment(
             course_run=course_run, user=user, is_active=False
         )
@@ -1473,3 +1920,42 @@ class MoodleLMSBackendTestCase(TestCase):
                 "Debug Info: : Yes Moodle is able to return a 200 while there is an error."
             ],
         )
+
+
+@override_settings(
+    JOANIE_LMS_BACKENDS=[
+        {
+            "API_TOKEN": "a_secure_api_token",
+            "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+            "BASE_URL": "http://moodle.test/webservice/rest/server.php",
+            "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+            "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+        },
+        {
+            "API_TOKEN": "a_secure_api_token_1",
+            "BACKEND": "joanie.lms_handler.backends.moodle.MoodleLMSBackend",
+            "BASE_URL": "http://moodle-mooc.test/webservice/rest/server.php",
+            "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
+            "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
+        },
+    ],
+    JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES=[
+        "http://moodle.test/webservice/rest/server.php"
+    ],
+)
+def test_backend_moodle_is_group_enabled():
+    """
+    The property `_is_group_enabled` should only return True when
+    the backend base url is set in the configuration list called
+    JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES.
+    Even when their course regex
+    and select regex are the same, it should find the match with the base url
+    and the resource link.
+    """
+    resource_link_1 = "http://moodle-mooc.test/course/view.php?id=2"
+    backend = LMSHandler.select_lms(resource_link_1)
+    assert backend._is_group_enabled is False  # pylint:disable=protected-access
+
+    resource_link_2 = "http://moodle.test/course/view.php?id=2"
+    backend = LMSHandler.select_lms(resource_link_2)
+    assert backend._is_group_enabled is True  # pylint:disable=protected-access

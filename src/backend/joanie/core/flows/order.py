@@ -22,6 +22,7 @@ from joanie.core.utils.payment_schedule import (
     has_only_refunded_or_canceled_installments,
     is_installment_to_debit,
 )
+from joanie.lms_handler import LMSHandler
 from joanie.payment import get_payment_backend
 from joanie.payment.backends.base import BasePaymentBackend
 
@@ -387,7 +388,7 @@ class OrderFlow:
 
     @state.on_success()
     # ruff: noqa: PLR0912
-    def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument, too-many-branches
+    def _post_transition_success(self, descriptor, source, target, **kwargs):  # pylint: disable=unused-argument, too-many-branches, too-many-locals, too-many-statements
         """Post transition actions"""
         self.instance.save()
         # When an order's subscription is confirmed, we send an email to the user about the
@@ -479,6 +480,20 @@ class OrderFlow:
                 self.instance.enroll_user_to_course_run()
             except Exception as error:
                 capture_exception(error)
+            # Orders for certificate product exclusively, add the student to the group
+            if (
+                self.instance.product.type == enums.PRODUCT_TYPE_CERTIFICATE
+                and not self.instance.course
+            ):
+                resource_link = self.instance.enrollment.course_run.resource_link
+                backend = LMSHandler.select_lms(resource_link)
+                if backend._is_group_enabled:  # pylint:disable=protected-access
+                    lms_user_id = backend.get_user(
+                        value=self.instance.owner.username
+                    ).get("id")
+                    backend._add_user_to_group(  # pylint:disable=protected-access
+                        resource_link, lms_user_id, group_name="certificate"
+                    )
 
         if self.instance.payment_schedule and target in [
             enums.ORDER_STATE_CANCELED,

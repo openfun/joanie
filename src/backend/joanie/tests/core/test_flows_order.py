@@ -23,6 +23,7 @@ from joanie.core.factories import CourseRunFactory
 from joanie.core.models import CourseState, Enrollment
 from joanie.lms_handler import LMSHandler
 from joanie.lms_handler.backends.dummy import DummyLMSBackend
+from joanie.lms_handler.backends.moodle import MoodleLMSBackend
 from joanie.lms_handler.backends.openedx import (
     OPENEDX_MODE_HONOR,
     OPENEDX_MODE_VERIFIED,
@@ -563,7 +564,11 @@ class OrderFlowsTestCase(LoggingTestCase):
         factories.CourseRunFactory(
             course=course, state=CourseState.ONGOING_OPEN, is_listed=True
         )
-        product = factories.ProductFactory(target_courses=[course], price="0.00")
+        product = factories.ProductFactory(
+            target_courses=[course],
+            price="0.00",
+            type=enums.PRODUCT_TYPE_CERTIFICATE,
+        )
         backend = LMSHandler.select_lms(resource_link)
 
         responses.add(
@@ -590,6 +595,8 @@ class OrderFlowsTestCase(LoggingTestCase):
                         "department": "",
                         "firstaccess": 1704716076,
                         "lastaccess": 1704716076,
+                        "alternatename": "",
+                        "idnumber": "",
                         "auth": "manual",
                         "suspended": False,
                         "confirmed": True,
@@ -613,6 +620,23 @@ class OrderFlowsTestCase(LoggingTestCase):
 
         responses.add(
             responses.POST,
+            backend.build_url("core_user_update_users"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "users[0][id]": "5",
+                        "users[0][idnumber]": "student",
+                        "users[0][alternatename]": "student",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            body="null",
+            content_type="application/json",
+        )
+
+        responses.add(
+            responses.POST,
             backend.build_url("enrol_manual_enrol_users"),
             match=[
                 responses.matchers.urlencoded_params_matcher(
@@ -626,17 +650,63 @@ class OrderFlowsTestCase(LoggingTestCase):
             status=HTTPStatus.OK,
         )
 
+        responses.add(
+            responses.POST,
+            backend.build_url("core_group_get_course_groups"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "courseid": "2",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            json=[
+                {
+                    "id": 2,
+                    "courseid": 2,
+                    "name": "Certificate",
+                    "description": "Group dedicated for certificate students",
+                    "descriptionformat": 1,
+                    "enrolmentkey": None,
+                    "idnumber": "certificate",
+                    "visibility": 0,
+                    "participation": True,
+                },
+            ],
+        )
+
+        responses.add(
+            responses.POST,
+            backend.build_url("core_group_add_group_members"),
+            match=[
+                responses.matchers.urlencoded_params_matcher(
+                    {
+                        "members[0][userid]": "5",
+                        "members[0][groupid]": "2",
+                    }
+                )
+            ],
+            status=HTTPStatus.OK,
+            body="null",
+            content_type="application/json",
+        )
+
         # Create a pre-existing free enrollment
-        factories.EnrollmentFactory(
+        enrollment = factories.EnrollmentFactory(
             course_run=course_run, user__username="student", is_active=True
         )
-        order = factories.OrderFactory(product=product, owner__username="student")
+        order = factories.OrderFactory(
+            product=product,
+            enrollment=enrollment,
+            course=None,
+            owner__username="student",
+        )
 
         order.init_flow()
 
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
-
-        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(len(responses.calls), 9)
 
     @responses.activate
     @override_settings(
@@ -710,7 +780,7 @@ class OrderFlowsTestCase(LoggingTestCase):
         order.refresh_from_db()
         self.assertEqual(order.state, enums.ORDER_STATE_COMPLETED)
 
-        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(len(responses.calls), 3)
 
     def test_flows_order_cancel_success(self):
         """Test that the cancel transition is successful from any state"""
@@ -812,30 +882,18 @@ class OrderFlowsTestCase(LoggingTestCase):
         ],
         COURSE_WEB_HOOKS=[],
     )
-    def test_flows_order_cancel_certificate_product_moodle(self):
+    @mock.patch.object(MoodleLMSBackend, "get_course_group_id", return_value=1)
+    @mock.patch.object(MoodleLMSBackend, "add_user_to_group", return_value=True)
+    def test_flows_order_cancel_certificate_product_moodle(
+        self,
+        _mock_add_user_to_group,
+        _mock_get_course_group_id,
+    ):
         """
         Test that the source enrollment is set back to "honor" in the LMS when a related order
         is canceled.
         """
-        course = factories.CourseFactory()
-        product = factories.ProductFactory(courses=[course], type="certificate")
-
         resource_link = "http://moodle.test/course/view.php?id=2"
-
-        enrollment = factories.EnrollmentFactory(
-            course_run__course=course,
-            course_run__state=CourseState.FUTURE_OPEN,
-            course_run__is_listed=True,
-            course_run__resource_link=resource_link,
-            is_active=True,
-        )
-        order = factories.OrderFactory(
-            course=None,
-            product=product,
-            enrollment=enrollment,
-            state=enums.ORDER_STATE_COMPLETED,
-        )
-
         backend = LMSHandler.select_lms(resource_link)
 
         responses.add(
@@ -845,7 +903,7 @@ class OrderFlowsTestCase(LoggingTestCase):
                 responses.matchers.urlencoded_params_matcher(
                     {
                         "criteria[0][key]": "username",
-                        "criteria[0][value]": enrollment.user.username,
+                        "criteria[0][value]": "student",
                     }
                 )
             ],
@@ -855,28 +913,9 @@ class OrderFlowsTestCase(LoggingTestCase):
                     {
                         "id": 5,
                         "username": "student",
-                        "firstname": "Student",
-                        "lastname": "User",
-                        "fullname": "Student User",
                         "email": "student@example.com",
-                        "department": "",
-                        "firstaccess": 1704716076,
-                        "lastaccess": 1704716076,
-                        "auth": "manual",
-                        "suspended": False,
-                        "confirmed": True,
-                        "lang": "en",
-                        "theme": "",
-                        "timezone": "99",
-                        "mailformat": 1,
-                        "description": "",
-                        "descriptionformat": 1,
-                        "profileimageurlsmall": (
-                            "https://moodle.test/theme/image.php/boost/core/1704714971/u/f2"
-                        ),
-                        "profileimageurl": (
-                            "https://moodle.test/theme/image.php/boost/core/1704714971/u/f1"
-                        ),
+                        "alternatename": "student",
+                        "idnumber": "student",
                     }
                 ],
                 "warnings": [],
@@ -885,27 +924,7 @@ class OrderFlowsTestCase(LoggingTestCase):
 
         responses.add(
             responses.POST,
-            backend.build_url("local_wsgetroles_get_roles"),
-            status=HTTPStatus.OK,
-            json=[
-                {
-                    "id": 5,
-                    "name": "",
-                    "shortname": "student",
-                    "description": "",
-                    "sortorder": 5,
-                    "archetype": "student",
-                },
-            ],
-        )
-
-        responses.add(
-            responses.POST,
-            backend.build_url(
-                "enrol_manual_enrol_users"
-                if enrollment.is_active
-                else "enrol_manual_unenrol_users"
-            ),
+            backend.build_url("enrol_manual_enrol_users"),
             match=[
                 responses.matchers.urlencoded_params_matcher(
                     {
@@ -918,11 +937,31 @@ class OrderFlowsTestCase(LoggingTestCase):
             status=HTTPStatus.OK,
         )
 
+        course = factories.CourseFactory()
+        product = factories.ProductFactory(courses=[course], type="certificate")
+        user = factories.UserFactory(username="student", email="student@example.com")
+        enrollment = factories.EnrollmentFactory(
+            course_run__course=course,
+            course_run__state=CourseState.FUTURE_OPEN,
+            course_run__is_listed=True,
+            course_run__resource_link=resource_link,
+            is_active=True,
+            user=user,
+        )
+        order = factories.OrderFactory(
+            course=None,
+            product=product,
+            enrollment=enrollment,
+            state=enums.ORDER_STATE_COMPLETED,
+        )
+
         order.flow.cancel()
 
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.state, "set")
 
+        # Two `set_enrollment` calls (creation, then cancel), each doing
+        # a username lookup and an enroll call.
         self.assertEqual(len(responses.calls), 4)
 
     def test_flows_order_cancel_certificate_product_enrollment_state_failed(self):

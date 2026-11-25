@@ -243,6 +243,11 @@ class Base(Configuration):
     JOANIE_LMS_MOODLE_STUDENT_ROLE_ID = values.Value(
         "", environ_name="JOANIE_LMS_MOODLE_STUDENT_ROLE_ID", environ_prefix=None
     )
+    JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES = values.ListValue(
+        [],
+        environ_name="JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES",
+        environ_prefix=None,
+    )
     JOANIE_BADGE_PROVIDERS = {
         "obf": {
             "client_id": values.Value(
@@ -850,7 +855,9 @@ class Test(Base):
     ]
     # This environment variable is only used for moodle student role id
     JOANIE_LMS_MOODLE_STUDENT_ROLE_ID = "5"
-
+    JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES = [
+        "http://moodle.test/webservice/rest/server.php"
+    ]
     JOANIE_EMAIL_SUPPORT_CERTIFICATE = values.Value("certificate@fun.org")
     JOANIE_EMAIL_SUPPORT_CREDENTIAL = values.Value("credential@fun.org")
     JOANIE_EMAIL_WITHDRAWAL_SIGNATURE = values.Value("School of Glory")

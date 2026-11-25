@@ -111,7 +111,8 @@ class CreateCertificatesTestCase(BaseAPITestCase):
                 "COURSE_REGEX": r"^.*/course/view.php\?id=.*$",
                 "SELECTOR_REGEX": r"^.*/course/view.php\?id=.*$",
             },
-        ]
+        ],
+        JOANIE_LMS_MOODLE_GROUP_ENABLED_INSTANCES=[],
     )
     @mock.patch("joanie.core.models.courses.Enrollment.set")
     @responses.activate(assert_all_requests_are_fired=True)
@@ -150,6 +151,8 @@ class CreateCertificatesTestCase(BaseAPITestCase):
                         "department": "",
                         "firstaccess": 1704716076,
                         "lastaccess": 1704716076,
+                        "idnumber": "admin",
+                        "alternatename": "admin",
                         "auth": "manual",
                         "suspended": False,
                         "confirmed": True,
@@ -170,7 +173,6 @@ class CreateCertificatesTestCase(BaseAPITestCase):
                 "warnings": [],
             },
         )
-
         # Response for the passed run
         responses.add(
             responses.POST,

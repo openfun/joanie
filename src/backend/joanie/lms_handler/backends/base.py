@@ -8,10 +8,20 @@ class BaseLMSBackend:
     Base backend to hold all LMS common methods and provide a skeleton for others.
     """
 
+    name = "base"
+
     def __init__(self, configuration, *args, **kwargs):
         """Attach configuration to the LMS backend instance."""
         super().__init__(*args, **kwargs)
         self.configuration = configuration
+
+    @property
+    def _is_group_enabled(self):
+        """
+        Returns False, you must override this method if you want to enable groups
+        in the subclasses
+        """
+        return False
 
     def get_enrollment(self, username, resource_link):
         """Retrieve an enrollment according to a username and a resource_link."""
