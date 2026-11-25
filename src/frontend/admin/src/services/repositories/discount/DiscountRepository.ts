@@ -17,8 +17,11 @@ export const discountRoutes: DiscountRoutes = {
   delete: (id: string) => `/discounts/${id}/`,
 };
 
-interface Repository
-  extends AbstractRepository<Discount, ResourcesQuery, DTODiscount> {}
+interface Repository extends AbstractRepository<
+  Discount,
+  ResourcesQuery,
+  DTODiscount
+> {}
 
 export const DiscountRepository: Repository = class DiscountRepository {
   static get(id: string, filters?: Maybe<ResourcesQuery>): Promise<Discount> {

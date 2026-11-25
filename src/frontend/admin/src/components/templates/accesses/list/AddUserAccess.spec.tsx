@@ -53,6 +53,6 @@ describe("<AddUserAccess />", () => {
     // Click on add button
     const addButton = screen.getByRole("button", { name: "Add" });
     await userEvent.click(addButton);
-    expect(onAdd).toBeCalledWith(returnedUser, roles[0].value);
+    expect(onAdd).toHaveBeenCalledWith(returnedUser, roles[0].value);
   }, 10000);
 });

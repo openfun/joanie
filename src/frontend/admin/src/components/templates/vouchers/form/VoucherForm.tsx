@@ -94,7 +94,7 @@ export function VoucherForm({ voucher, fromVoucher, ...props }: Props) {
   const base = voucher ?? fromVoucher;
 
   const RegisterSchema = Yup.object().shape({
-    code: Yup.string(),
+    code: Yup.string().defined(),
     discount_id: Yup.string().defined().nullable(),
     is_active: Yup.boolean().required(),
     multiple_use: Yup.boolean().required(),

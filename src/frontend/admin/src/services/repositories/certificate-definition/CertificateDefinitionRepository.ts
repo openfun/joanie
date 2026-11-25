@@ -22,12 +22,11 @@ export const certificateDefinitionRoutes: BaseEntityRoutesPaths = {
   delete: (id: string) => `/certificate-definitions/${id}/`,
 };
 
-interface Repository
-  extends AbstractRepository<
-    CertificateDefinition,
-    ResourcesQuery,
-    DTOCertificateDefinition
-  > {
+interface Repository extends AbstractRepository<
+  CertificateDefinition,
+  ResourcesQuery,
+  DTOCertificateDefinition
+> {
   getAllTemplates: () => Promise<SelectOption[]>;
 }
 
