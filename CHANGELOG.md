@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Transition from error to refused state the installment in
+  payment schedule when second attempt fails.
+
 ## [3.6.0] - 2026-11-25
 
 ### Added

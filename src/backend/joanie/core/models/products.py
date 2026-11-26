@@ -1840,6 +1840,7 @@ class Order(BaseModel):
         """
         Set the state of an installment to `error` in the payment schedule.
         """
+        ActivityLog.create_payment_error_activity_log(self)
         self._set_installment_state(installment_id, enums.PAYMENT_STATE_ERROR)
 
     def cancel_remaining_installments(self):

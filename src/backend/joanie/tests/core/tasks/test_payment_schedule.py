@@ -21,6 +21,7 @@ from joanie.core.enums import (
     ORDER_STATE_PENDING,
     ORDER_STATE_PENDING_PAYMENT,
     ORDER_STATE_TO_SAVE_PAYMENT_METHOD,
+    PAYMENT_STATE_ERROR,
     PAYMENT_STATE_PAID,
     PAYMENT_STATE_PENDING,
     PAYMENT_STATE_REFUSED,
@@ -509,3 +510,58 @@ class PaymentScheduleTasksTestCase(LoggingTestCase):
         self.assertIn("We will try to debit an amount of", email_content_2)
         self.assertIn("1.5", email_content_2)
         self.assertIn("Product 2", email_content_2)
+
+    @mock.patch.object(
+        DummyPaymentBackend,
+        "create_zero_click_payment",
+        side_effect=DummyPaymentBackend().create_zero_click_payment,
+    )
+    def test_tasks_payment_schedule_debit_pending_installment_update_error_state_to_refused(
+        self, mock_create_zero_click_payment
+    ):
+        """
+        Check when an installment is in error state that is transitions again
+        the state to pending before the task is called
+        """
+        owner = UserFactory(
+            email="john.doe@acme.org",
+            first_name="John",
+            last_name="Doe",
+            language="en-us",
+        )
+        UserAddressFactory(owner=owner)
+        order = OrderFactory(
+            id="6134df5e-a7eb-4cb3-aceb-d0abfe330af6",
+            owner=owner,
+            state=ORDER_STATE_PENDING,
+            main_invoice=InvoiceFactory(),
+            payment_schedule=[
+                {
+                    "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                    "amount": "200.00",
+                    "due_date": "2024-01-17",
+                    "state": PAYMENT_STATE_ERROR,
+                },
+                {
+                    "id": "1932fbc5-d971-48aa-8fee-6d637c3154a5",
+                    "amount": "300.00",
+                    "due_date": "2024-02-17",
+                    "state": PAYMENT_STATE_PENDING,
+                },
+            ],
+        )
+
+        mocked_now = datetime(2024, 1, 17, 0, 0, tzinfo=ZoneInfo("UTC"))
+        with mock.patch("django.utils.timezone.now", return_value=mocked_now):
+            debit_pending_installment.run(order.id)
+
+        mock_create_zero_click_payment.assert_called_once_with(
+            order=order,
+            credit_card_token=order.credit_card.token,
+            installment={
+                "id": "d9356dd7-19a6-4695-b18e-ad93af41424a",
+                "amount": Money("200.00"),
+                "due_date": date(2024, 1, 17),
+                "state": PAYMENT_STATE_REFUSED,
+            },
+        )

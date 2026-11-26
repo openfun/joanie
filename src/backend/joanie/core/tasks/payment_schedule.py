@@ -5,6 +5,7 @@ from logging import getLogger
 from django.apps import apps
 
 from joanie.celery_app import app
+from joanie.core.enums import PAYMENT_STATE_ERROR, PAYMENT_STATE_REFUSED
 from joanie.core.utils.payment_schedule import (
     is_installment_to_debit,
     send_mail_reminder_for_installment_debit,
@@ -31,6 +32,11 @@ def debit_pending_installment(order_id):
                 order.set_installment_refused(installment["id"])
                 continue
 
+            transition_to_refused_state = None
+            if installment["state"] == PAYMENT_STATE_ERROR:
+                order.set_installment_refused(installment["id"])
+                transition_to_refused_state = installment["state"]
+
             if payment_backend.is_already_paid(order, installment):
                 logger.info(
                     "Installment %s for order %s already paid.",
@@ -51,7 +57,11 @@ def debit_pending_installment(order_id):
                     installment["id"],
                     order.id,
                 )
-                order.set_installment_error(installment["id"])
+                if not transition_to_refused_state == PAYMENT_STATE_REFUSED:
+                    order.set_installment_error(installment["id"])
+                # Leave in refused state the installment that failed second time
+                # to let the frontend consumer solve his payment with another credit
+                # card
                 continue
 
 
