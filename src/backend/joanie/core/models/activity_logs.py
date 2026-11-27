@@ -124,6 +124,18 @@ class ActivityLog(BaseModel):
             type=enums.ACTIVITY_LOG_TYPE_PAYMENT_REFUNDED,
         )
 
+    @classmethod
+    def create_payment_error_activity_log(cls, order: "Order | BatchOrder"):
+        """
+        Create a payment error activity log because payment backend returns timeout
+        """
+        return cls.objects.create(
+            user=order.owner,
+            level=enums.ACTIVITY_LOG_LEVEL_ERROR,
+            context={f"{order.class_name}_id": str(order.id)},
+            type=enums.ACTIVITY_LOG_TYPE_PAYMENT_FAILED,
+        )
+
     def __str__(self):
         return f"{self.user}: {self.level} {self.type}"
 
